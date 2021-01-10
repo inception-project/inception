@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,14 +38,14 @@ import org.springframework.stereotype.Component;
 
 /**
  * Listens to HTTP sessions being created and destroyed and (un)registers accordingly in the
- * {@link SessionRegistry}. This is mainly required when using pre-authentication since the
- * login page usually takes care of registering the session.
+ * {@link SessionRegistry}. This is mainly required when using pre-authentication since the login
+ * page usually takes care of registering the session.
  */
 @Component
 public class SessionListener
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final SessionRegistry sessionRegistry;
 
     @Autowired
@@ -51,10 +55,11 @@ public class SessionListener
     }
 
     @EventListener
-    public void onEvent(ApplicationEvent e) {
-//        log.trace(e.toString());
+    public void onEvent(ApplicationEvent e)
+    {
+        // log.trace(e.toString());
     }
-    
+
     @EventListener
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void onSessionCreated(HttpSessionCreatedEvent aEvent)
@@ -68,7 +73,7 @@ public class SessionListener
             // session.
             return;
         }
-        
+
         String username = authentication.getName();
         log.trace("Session created for user [{}] [{}]", username, aEvent.getSession().getId());
         sessionRegistry.registerNewSession(aEvent.getSession().getId(), username);
@@ -82,11 +87,9 @@ public class SessionListener
             log.trace("Session destroyed for anonymous user [{}]", aEvent.getSession().getId());
             return;
         }
-        
-        String username = aEvent.getSecurityContexts().stream()
-                .findFirst()
-                .map(SecurityContext::getAuthentication)
-                .map(Authentication::getName)
+
+        String username = aEvent.getSecurityContexts().stream().findFirst()
+                .map(SecurityContext::getAuthentication).map(Authentication::getName)
                 .orElse("<UNKNOWN>");
         log.trace("Session destroyed for user [{}] [{}]", username, aEvent.getSession().getId());
         sessionRegistry.removeSessionInformation(aEvent.getSession().getId());

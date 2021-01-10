@@ -1,13 +1,13 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.footer;
+
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.Locale;
 import java.util.Properties;
@@ -28,7 +30,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -45,41 +46,42 @@ public class WarningsFooterPanel
     private static final long serialVersionUID = 2586844743503672765L;
 
     private final static Logger LOG = LoggerFactory.getLogger(WarningsFooterPanel.class);
-    
+
     private @SpringBean DatabaseDriverService dbDriverService;
-    
+
     private Label embeddedDbWarning;
     private Label browserWarning;
 
     public WarningsFooterPanel(String aId)
     {
         super(aId);
-        
+
         Properties settings = SettingsUtil.getSettings();
-        
+
         // set up warnings shown when using an embedded DB or some unsupported browser
         boolean isBrowserWarningVisible = isBrowserWarningVisible(settings);
         boolean isDatabaseWarningVisible = isDatabaseWarningVisible(settings);
-        
+
         embeddedDbWarning = new Label("embeddedDbWarning", new ResourceModel("warning.database"));
         embeddedDbWarning.setVisible(isDatabaseWarningVisible);
         add(embeddedDbWarning);
         browserWarning = new Label("browserWarning", new ResourceModel("warning.browser"));
         browserWarning.setVisible(isBrowserWarningVisible);
         add(browserWarning);
-        
+
         WebMarkupContainer warningsContainer = new WebMarkupContainer("warnings");
-        warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);  
+        warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);
         add(warningsContainer);
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         aResponse.render(JavaScriptHeaderItem.forReference(
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
+        // @formatter:off
         String script = String.join("\n",
                 "$(function () {",
                 "  $('[data-toggle=\"popover\"]').popover({",
@@ -90,15 +92,18 @@ public class WarningsFooterPanel
                 "    }",
                 "  });",
                 "});");
+        // @formatter:on
         aResponse.render(JavaScriptHeaderItem.forScript(script, "popover"));
     }
-    
-    private boolean isDatabaseWarningVisible(Properties settings) {
+
+    private boolean isDatabaseWarningVisible(Properties settings)
+    {
         boolean isUsingEmbeddedDatabase;
         try {
             String driver = dbDriverService.getDatabaseDriverName();
             isUsingEmbeddedDatabase = StringUtils.contains(driver.toLowerCase(Locale.US), "hsql");
-        } catch (Throwable e) {
+        }
+        catch (Throwable e) {
             LOG.warn("Unable to determine which database is being used", e);
             isUsingEmbeddedDatabase = false;
         }
@@ -107,20 +112,23 @@ public class WarningsFooterPanel
 
         return isUsingEmbeddedDatabase && !ignoreWarning;
     }
-    
-    private boolean isBrowserWarningVisible(Properties settings) { 
+
+    private boolean isBrowserWarningVisible(Properties settings)
+    {
         RequestCycle requestCycle = RequestCycle.get();
         WebClientInfo clientInfo;
         if (Session.exists()) {
             WebSession session = WebSession.get();
             clientInfo = session.getClientInfo();
-        } else {
+        }
+        else {
             clientInfo = new WebClientInfo(requestCycle);
         }
-        ClientProperties clientProperties = clientInfo.getProperties();
-        boolean isUsingUnsupportedBrowser = !clientProperties.isBrowserSafari()
-                && !clientProperties.isBrowserChrome();
-        
+
+        String userAgent = defaultString(clientInfo.getUserAgent(), "").toLowerCase();
+        boolean isUsingUnsupportedBrowser = !(userAgent.contains("safari")
+                || userAgent.contains("chrome"));
+
         boolean ignoreWarning = "false".equalsIgnoreCase(
                 settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER));
 

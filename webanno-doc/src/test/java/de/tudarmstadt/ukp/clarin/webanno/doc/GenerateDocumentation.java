@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,20 +35,24 @@ import org.asciidoctor.SafeMode;
 
 public class GenerateDocumentation
 {
-    private static Path asciiDocPath = Paths.get("src", "main", "resources", "META-INF", "asciidoc");
+    private static Path asciiDocPath = Paths.get("src", "main", "resources", "META-INF",
+            "asciidoc");
 
     private static List<Path> getAsciiDocs(Path dir) throws Exception
     {
+        // @formatter:off
         return Files.list(dir)
                 .filter(Files::isDirectory)
                 .filter(p -> Files.exists(p.resolve("pom.xml")))
                 .map(p -> p.resolve(asciiDocPath))
                 .filter(Files::isDirectory)
                 .collect(Collectors.toList());
+        // @formatter:on
     }
 
     private static void buildDoc(String type, Path outputDir)
     {
+        // @formatter:off
         Attributes attributes = AttributesBuilder.attributes()
                 .attribute("source-dir", getWebannoDir() + "/")
                 .attribute("include-dir", outputDir.resolve("asciidoc").resolve(type)
@@ -65,16 +69,16 @@ public class GenerateDocumentation
                 .attribute("product-website-url", "https://webanno.github.io/webanno/")
                 .attribute("icons", "font")
                 .attribute("toc", "preamble")
-                .attribute("sourceHighlighter", "coderay")
                 .get();
         OptionsBuilder options = OptionsBuilder.options()
                 .toDir(outputDir.toFile())
                 .safe(SafeMode.UNSAFE)
                 .attributes(attributes);
+        // @formatter:on
         Asciidoctor asciidoctor = Asciidoctor.Factory.create();
         asciidoctor.requireLibrary("asciidoctor-diagram");
         File f = new File(outputDir.resolve("asciidoc").resolve(type).toString() + ".adoc");
-        asciidoctor.convertFile(f , options);
+        asciidoctor.convertFile(f, options);
     }
 
     public static void main(String... args) throws Exception
@@ -91,12 +95,12 @@ public class GenerateDocumentation
 
         for (Path module : modules) {
             System.out.printf("Including module: %s\n", module);
-            
+
             for (File f : FileUtils.listFiles(module.toFile(), TrueFileFilter.INSTANCE,
                     TrueFileFilter.INSTANCE)) {
                 Path p = f.toPath();
-                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount()
-                        , p.toAbsolutePath().getNameCount());
+                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount(),
+                        p.toAbsolutePath().getNameCount());
                 FileUtils.copyFile(f, outputDir.resolve("asciidoc").resolve(targetPath).toFile());
             }
         }
@@ -104,7 +108,7 @@ public class GenerateDocumentation
         buildDoc("user-guide", outputDir);
         buildDoc("developer-guide", outputDir);
         buildDoc("admin-guide", outputDir);
-        
+
         System.out.printf("Documentation written to: %s\n", outputDir);
     }
 

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,10 +34,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -53,14 +53,15 @@ public class AutomationCasStorageServiceImpl
 
     private final Object lock = new Object();
 
-    @Value(value = "${repository.path}")
-    private File dir;
-    
-    private @Autowired CasDoctor casDoctor;
-    
-    public AutomationCasStorageServiceImpl()
+    private final File dir;
+    private final CasDoctor casDoctor;
+
+    @Autowired
+    public AutomationCasStorageServiceImpl(RepositoryProperties aRepositoryProperties,
+            CasDoctor aCasDoctor)
     {
-        // Nothing to do
+        dir = aRepositoryProperties.getPath();
+        casDoctor = aCasDoctor;
     }
 
     /**
@@ -72,15 +73,14 @@ public class AutomationCasStorageServiceImpl
      *            The annotated CAS object
      */
     @Override
-    public void writeCas(TrainingDocument aDocument, CAS aCas)
-        throws IOException
+    public void writeCas(TrainingDocument aDocument, CAS aCas) throws IOException
     {
         File annotationFolder = getAutomationFolder(aDocument);
         File targetPath = getAutomationFolder(aDocument);
         writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aCas,
                 annotationFolder, targetPath);
     }
-    
+
     private void writeCas(Project aProject, String aDocumentName, long aDocumentId, CAS aCas,
             File aAnnotationFolder, File aTargetPath)
         throws IOException
@@ -97,8 +97,8 @@ public class AutomationCasStorageServiceImpl
                     .append("] (").append(aDocumentId).append(") in project[")
                     .append(aProject.getName()).append("] (").append(aProject.getId())
                     .append(")\n");
-            e.getDetails().forEach(m -> 
-                    detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
+            e.getDetails().forEach(
+                    m -> detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
 
             throw new DataRetrievalFailureException(detailMsg.toString());
         }
@@ -123,10 +123,9 @@ public class AutomationCasStorageServiceImpl
             }
         }
     }
-    
+
     @Override
-    public CAS readCas(TrainingDocument aDocument)
-        throws IOException
+    public CAS readCas(TrainingDocument aDocument) throws IOException
     {
         log.debug("Reading CAs for Automation document [{}] ({}) in project [{}] ({})",
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
@@ -160,7 +159,7 @@ public class AutomationCasStorageServiceImpl
             }
         }
     }
-    
+
     @Override
     public void analyzeAndRepair(TrainingDocument aDocument, CAS aCas)
     {
@@ -172,17 +171,15 @@ public class AutomationCasStorageServiceImpl
             String aUsername, CAS aCas)
     {
         // Check if repairs are active - if this is the case, we only need to run the repairs
-        // because the repairs do an analysis as a pre- and post-condition. 
+        // because the repairs do an analysis as a pre- and post-condition.
         if (casDoctor.isRepairsActive()) {
             try {
                 casDoctor.repair(aProject, aCas);
             }
             catch (Exception e) {
-                throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                        + aUsername + "] for document ["
-                        + aDocumentName + "] (" + aDocumentId + ") in project["
-                        + aProject.getName() + "] ("
-                        + aProject.getId() + ")", e);
+                throw new DataRetrievalFailureException("Error repairing CAS of user [" + aUsername
+                        + "] for document [" + aDocumentName + "] (" + aDocumentId + ") in project["
+                        + aProject.getName() + "] (" + aProject.getId() + ")", e);
             }
         }
         // If the repairs are not active, then we run the analysis explicitly
@@ -193,25 +190,22 @@ public class AutomationCasStorageServiceImpl
             catch (CasDoctorException e) {
                 StringBuilder detailMsg = new StringBuilder();
                 detailMsg.append("CAS Doctor found problems for user [").append(aUsername)
-                    .append("] in document [")
-                    .append(aDocumentName).append("] (").append(aDocumentId)
-                    .append(") in project [")
-                    .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
-                e.getDetails().forEach(m -> detailMsg.append(
-                        String.format("- [%s] %s%n", m.level, m.message)));
-                
+                        .append("] in document [").append(aDocumentName).append("] (")
+                        .append(aDocumentId).append(") in project [").append(aProject.getName())
+                        .append("] (").append(aProject.getId()).append(")\n");
+                e.getDetails().forEach(
+                        m -> detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
+
                 throw new DataRetrievalFailureException(detailMsg.toString());
             }
             catch (Exception e) {
-                throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                        + aUsername + "] in document [" + aDocumentName + "] ("
-                        + aDocumentId + ") in project["
-                        + aProject.getName() + "] ("
-                        + aProject.getId() + ")", e);
+                throw new DataRetrievalFailureException("Error analyzing CAS of user [" + aUsername
+                        + "] in document [" + aDocumentName + "] (" + aDocumentId + ") in project["
+                        + aProject.getName() + "] (" + aProject.getId() + ")", e);
             }
         }
     }
-    
+
     /**
      * Get the folder where the Automation document annotations are stored. Creates the folder if
      * necessary.
@@ -220,8 +214,7 @@ public class AutomationCasStorageServiceImpl
      *             if the folder cannot be created.
      */
     @Override
-    public File getAutomationFolder(TrainingDocument aDocument)
-        throws IOException
+    public File getAutomationFolder(TrainingDocument aDocument) throws IOException
     {
         File annotationFolder = new File(dir,
                 "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + TRAIN
@@ -229,7 +222,7 @@ public class AutomationCasStorageServiceImpl
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
     }
-    
+
     /**
      * Renames a file.
      *
@@ -237,8 +230,7 @@ public class AutomationCasStorageServiceImpl
      *             if the file cannot be renamed.
      * @return the target file.
      */
-    private static File renameFile(File aFrom, File aTo)
-        throws IOException
+    private static File renameFile(File aFrom, File aTo) throws IOException
     {
         if (!aFrom.renameTo(aTo)) {
             throw new IOException("Cannot renamed file [" + aFrom + "] to [" + aTo + "]");

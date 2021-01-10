@@ -1,13 +1,13 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,11 +24,15 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 public interface MenuItem
 {
     String getPath();
+
     String getIcon();
+
     String getLabel();
+
     Class<? extends Page> getPageClass();
+
     boolean applies();
-    
+
     /**
      * {@link WicketApplicationBase} introduces a custom authorization service which prevents access
      * to a page if the user is not able to see the corresponding menu item (cf.
@@ -39,7 +43,8 @@ public interface MenuItem
      * {@code true}. Use this very carefully and ensure that the proper access checks are performed
      * on the target page.
      */
-    default boolean isDirectAccessAllowed() {
+    default boolean isDirectAccessAllowed()
+    {
         return false;
     }
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 public interface AutomationService
 {
     String SERVICE_NAME = "automationService";
-    
+
     /**
      * Return list of training documents that are in the TOKEN TAB FEAURE formats
      *
@@ -44,9 +44,9 @@ public interface AutomationService
      * @return the source documents.
      */
     List<TrainingDocument> listTabSepDocuments(Project aProject);
-    
+
     boolean existsTrainingDocument(Project project, String fileName);
-    
+
     /**
      * Get the directory of this {@link TrainingDocument} usually to read the content of the
      * document.
@@ -57,31 +57,29 @@ public interface AutomationService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    File getDocumentFolder(TrainingDocument trainingDocument)
-        throws IOException;
-    
+    File getDocumentFolder(TrainingDocument trainingDocument) throws IOException;
+
     /**
      * Return list of WebAnno supported training documents
+     * 
      * @param aProject
      * @return
      */
     List<TrainingDocument> listTrainingDocuments(Project aProject);
 
     TrainingDocument getTrainingDocument(Project aProject, String aDocumentName);
-    
+
     /**
      * Remove {@link TrainingDocument}
      * 
      * @throws IOException
      */
-    void removeTrainingDocument(TrainingDocument aDocument)
-        throws IOException;
-    
-    CAS readTrainingAnnotationCas(TrainingDocument trainingAnnotationDocument)
-            throws IOException;
-    
+    void removeTrainingDocument(TrainingDocument aDocument) throws IOException;
+
+    CAS readTrainingAnnotationCas(TrainingDocument trainingAnnotationDocument) throws IOException;
+
     void createTrainingDocument(TrainingDocument document) throws IOException;
-    
+
     /**
      * List MIRA template files
      * 
@@ -103,8 +101,7 @@ public interface AutomationService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void removeTemplate(Project project, String fileName, String username)
-        throws IOException;
+    void removeTemplate(Project project, String fileName, String username) throws IOException;
 
     /**
      * Create a MIRA template and save the configurations in a database
@@ -115,7 +112,7 @@ public interface AutomationService
     void createTemplate(MiraTemplate template);
 
     void createTemplate(Project project, File content, String fileName, String username)
-            throws IOException;
+        throws IOException;
 
     /**
      * Get the MIRA template (and hence the template configuration) for a given layer
@@ -138,7 +135,8 @@ public interface AutomationService
     /**
      * List all the MIRA templates created, hence know which layer do have a training conf already!
      * 
-     * @param project the project.
+     * @param project
+     *            the project.
      * @return the templates.
      */
     List<MiraTemplate> listMiraTemplates(Project project);
@@ -165,29 +163,33 @@ public interface AutomationService
      * @return the directory.
      */
     File getMiraDir(AnnotationFeature feature);
+
     File getCasFile(TrainingDocument aDocument);
+
     void removeMiraTemplate(MiraTemplate template);
 
     void removeAutomationStatus(AutomationStatus status);
 
     void createAutomationStatus(AutomationStatus status);
 
-    boolean existsAutomationStatus(MiraTemplate template);  
+    boolean existsAutomationStatus(MiraTemplate template);
+
     AutomationStatus getAutomationStatus(MiraTemplate template);
-    
-    
+
     CAS createInitialCas(TrainingDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException;
+
     File getTrainingDocumentFile(TrainingDocument aDocument);
+
     CAS readInitialCas(TrainingDocument aDocument)
         throws CASException, ResourceInitializationException, IOException;
-    
+
     CAS createOrReadInitialCas(TrainingDocument aDocument)
         throws IOException, UIMAException, ClassNotFoundException;
-    boolean existsInitialCas(TrainingDocument aDocument)
-            throws IOException;
+
+    boolean existsInitialCas(TrainingDocument aDocument) throws IOException;
+
     boolean existsCas(TrainingDocument aDocument) throws IOException;
-    
-    void uploadTrainingDocument(File aFile, TrainingDocument aDocument)
-            throws IOException;
+
+    void uploadTrainingDocument(File aFile, TrainingDocument aDocument) throws IOException;
 }

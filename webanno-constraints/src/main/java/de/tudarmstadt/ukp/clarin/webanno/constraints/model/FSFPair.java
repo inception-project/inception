@@ -1,13 +1,13 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,23 +19,26 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
 import java.io.Serializable;
 
-public class FSFPair implements Serializable
+public class FSFPair
+    implements Serializable
 {
     /**
-     * Pair of input Feature Structure and target feature which can
-     * be affected by a Constraint rule.
+     * Pair of input Feature Structure and target feature which can be affected by a Constraint
+     * rule.
      */
     private static final long serialVersionUID = -7207254925786134633L;
     private String featureStructure;
     private String affectedFeature;
-    
+
     public FSFPair(String featureStructure, String affectedFeature)
     {
         this.featureStructure = featureStructure;
         this.affectedFeature = affectedFeature;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -48,7 +51,9 @@ public class FSFPair implements Serializable
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -86,7 +91,7 @@ public class FSFPair implements Serializable
     @Override
     public String toString()
     {
-        return "FSFPair [featureStructure=" + featureStructure +
-            ", affectedFeature=" + affectedFeature + "]";
+        return "FSFPair [featureStructure=" + featureStructure + ", affectedFeature="
+                + affectedFeature + "]";
     }
 }

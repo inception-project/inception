@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,8 +24,11 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
 /**
  * Represents a span position in the text.
  */
-public class RelationPosition extends Position_ImplBase
+public class RelationPosition
+    extends Position_ImplBase
 {
+    private static final long serialVersionUID = 2389265017101957950L;
+
     private final int sourceBegin;
     private final int sourceEnd;
     private final String sourceText;
@@ -34,10 +37,9 @@ public class RelationPosition extends Position_ImplBase
     private final String targetText;
 
     public RelationPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
-            int aSourceBegin, int aSourceEnd, String aSourceText, int aTargetBegin,
-            int aTargetEnd, String aTargetText, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, String aLinkTargetText,
-            LinkCompareBehavior aLinkCompareBehavior)
+            int aSourceBegin, int aSourceEnd, String aSourceText, int aTargetBegin, int aTargetEnd,
+            String aTargetText, String aFeature, String aRole, int aLinkTargetBegin,
+            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
                 aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
@@ -48,7 +50,7 @@ public class RelationPosition extends Position_ImplBase
         targetEnd = aTargetEnd;
         targetText = aTargetText;
     }
-    
+
     /**
      * @return the source begin offset.
      */
@@ -114,20 +116,18 @@ public class RelationPosition extends Position_ImplBase
         StringBuilder builder = new StringBuilder();
         builder.append("Relation [");
         toStringFragment(builder);
-        builder.append(", source=(").append(sourceBegin).append('-').append(sourceEnd)
-                .append(')');
+        builder.append(", source=(").append(sourceBegin).append('-').append(sourceEnd).append(')');
         builder.append('[').append(sourceText).append(']');
-        builder.append(", target=(").append(targetBegin).append('-').append(targetEnd)
-                .append(')');
+        builder.append(", target=(").append(targetBegin).append('-').append(targetEnd).append(')');
         builder.append('[').append(targetText).append(']');
         builder.append("]");
         return builder.toString();
     }
-    
+
     @Override
     public String toMinimalString()
     {
-        return "(" + sourceBegin + '-' + sourceEnd + ')' + '[' + sourceText + ']' +
-            " -> (" + targetBegin + '-' + targetEnd + ')' + " [" + targetText + ']';
+        return "(" + sourceBegin + '-' + sourceEnd + ')' + '[' + sourceText + ']' + " -> ("
+                + targetBegin + '-' + targetEnd + ')' + " [" + targetText + ']';
     }
 }

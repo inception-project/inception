@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,15 +33,15 @@ public class ProjectExportRequest
     private String format;
     private boolean includeInProgress;
     private String filenameTag;
-    
+
     public ProjectExportRequest()
     {
         // Nothing to do;
     }
-    
+
     /**
-     * Create a new project export request. Use this constructor if the project is not known yet
-     * or may change. Make sure to set the project via the setter before starting the export.
+     * Create a new project export request. Use this constructor if the project is not known yet or
+     * may change. Make sure to set the project via the setter before starting the export.
      */
     public ProjectExportRequest(String aFormat, boolean aIncludeInProgress)
     {
@@ -49,24 +49,24 @@ public class ProjectExportRequest
         project = null;
         includeInProgress = aIncludeInProgress;
     }
-    
+
     public ProjectExportRequest(Project aProject, String aFormat, boolean aIncludeInProgress)
     {
         format = aFormat;
         project = aProject;
         includeInProgress = aIncludeInProgress;
     }
-    
+
     public void setProject(Project aProject)
     {
         project = aProject;
     }
-    
+
     public Project getProject()
     {
         return project;
     }
-    
+
     /**
      * Set the ID of the export format.
      * 
@@ -76,7 +76,7 @@ public class ProjectExportRequest
     {
         format = aFormat;
     }
-    
+
     /**
      * Get the ID of the export format.
      * 
@@ -91,7 +91,7 @@ public class ProjectExportRequest
     {
         includeInProgress = aIncludeInProgress;
     }
-    
+
     public boolean isIncludeInProgress()
     {
         return includeInProgress;

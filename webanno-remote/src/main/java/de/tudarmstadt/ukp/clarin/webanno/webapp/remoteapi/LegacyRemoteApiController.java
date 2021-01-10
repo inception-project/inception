@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -116,41 +116,33 @@ public class LegacyRemoteApiController
      *            the type of the files contained in the ZIP.
      * @param aFile
      *            a ZIP file containing the project data.
-     * @throws Exception if there was an error.
+     * @throws Exception
+     *             if there was an error.
      */
-    @RequestMapping(
-            value = ("/" + PROJECTS), 
-            method = RequestMethod.POST, 
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)    
-    public ResponseEntity<String> projectCreate(
-            @RequestParam(PARAM_FILE) MultipartFile aFile,
-            @RequestParam(PARAM_NAME) String aName, 
-            @RequestParam(PARAM_FILETYPE) String aFileType)
+    @RequestMapping(value = ("/"
+            + PROJECTS), method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> projectCreate(@RequestParam(PARAM_FILE) MultipartFile aFile,
+            @RequestParam(PARAM_NAME) String aName, @RequestParam(PARAM_FILETYPE) String aFileType)
         throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("User [" + username + "] not found.");
+            return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
 
         // Check for the access
-        boolean hasAccess = 
-                userRepository.isProjectCreator(user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = userRepository.isProjectCreator(user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("User [" + username + "] is not allowed to create projects");
         }
 
         // Existing project
         if (projectRepository.existsProject(aName)) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
+            return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("A project with name [" + aName + "] already exists");
         }
 
@@ -166,8 +158,8 @@ public class LegacyRemoteApiController
         Project project = new Project();
         project.setName(aName);
         projectRepository.createProject(project);
-        annotationService.initializeProject(project);
-        
+        projectRepository.initializeProject(project);
+
         // Create permission for the project creator
         projectRepository.createProjectPermission(
                 new ProjectPermission(project, username, PermissionLevel.MANAGER));
@@ -189,8 +181,8 @@ public class LegacyRemoteApiController
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // If it is the zip name, ignore it
-            if ((FilenameUtils.removeExtension(aFile.getOriginalFilename()) + "/").equals(entry
-                    .toString())) {
+            if ((FilenameUtils.removeExtension(aFile.getOriginalFilename()) + "/")
+                    .equals(entry.toString())) {
                 continue;
             }
             // IF the current filename is META-INF/webanno/source-meta-data.properties store it as
@@ -214,11 +206,11 @@ public class LegacyRemoteApiController
                 uploadSourceDocument(zip, entry, project, aFileType);
             }
         }
-                
+
         LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");
-        
+
         JSONObject projectJSON = new JSONObject();
-        long pId = projectRepository.getProject(aName).getId();        
+        long pId = projectRepository.getProject(aName).getId();
         projectJSON.append(aName, pId);
         return ResponseEntity.ok(projectJSON.toString());
     }
@@ -235,19 +227,14 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(
-            value = ("/" + PROJECTS), 
-            method = RequestMethod.GET)
-    public ResponseEntity<String> projectList()
-        throws Exception
+    @RequestMapping(value = ("/" + PROJECTS), method = RequestMethod.GET)
+    public ResponseEntity<String> projectList() throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("User [" + username + "] not found.");
+            return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
 
         // Get projects with permission
@@ -284,42 +271,36 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(
-            value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}"), 
-            method = RequestMethod.DELETE)
-    public ResponseEntity<String> projectDelete(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+    @RequestMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
+            + "}"), method = RequestMethod.DELETE)
+    public ResponseEntity<String> projectDelete(@PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("User [" + username + "] not found.");
+            return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
-        
+
         // Get project
         Project project;
         try {
             project = projectRepository.getProject(aProjectId);
         }
         catch (NoResultException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
-        boolean hasAccess = 
-                projectRepository.isManager(project, user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = projectRepository.isManager(project, user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
         }
-        
+
         // remove project is user has admin access
         LOG.info("Deleting project [" + aProjectId + "]");
         projectRepository.removeProject(project);
@@ -332,55 +313,51 @@ public class LegacyRemoteApiController
      * 
      * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/sourcedocs
      * 
-     * @param aProjectId the project ID
+     * @param aProjectId
+     *            the project ID
      * @return JSON with {@link SourceDocument} : id
      */
-    @RequestMapping(
-            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
-            method = RequestMethod.GET)
+    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
+            + DOCUMENTS, method = RequestMethod.GET)
     public ResponseEntity<String> sourceDocumentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
-    {               
+    {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("User [" + username + "] not found.");
+            return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
-        
+
         // Get project
         Project project;
         try {
             project = projectRepository.getProject(aProjectId);
         }
         catch (NoResultException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Project [" + aProjectId + "] not found.");
         }
-        
+
         // Check for the access
-        boolean hasAccess = 
-                projectRepository.isManager(project, user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = projectRepository.isManager(project, user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
         }
-            
+
         List<SourceDocument> srcDocumentList = documentRepository.listSourceDocuments(project);
         JSONArray sourceDocumentJSONArr = new JSONArray();
-        for (SourceDocument s : srcDocumentList) { 
-            JSONObject sourceDocumentJSONObj = new JSONObject();                 
+        for (SourceDocument s : srcDocumentList) {
+            JSONObject sourceDocumentJSONObj = new JSONObject();
             sourceDocumentJSONObj.put("id", s.getId());
             sourceDocumentJSONObj.put("name", s.getName());
             sourceDocumentJSONObj.put("state", s.getState());
-            sourceDocumentJSONArr.put(sourceDocumentJSONObj);                                 
+            sourceDocumentJSONArr.put(sourceDocumentJSONObj);
         }
-        
+
         return ResponseEntity.ok(sourceDocumentJSONArr.toString());
     }
 
@@ -405,56 +382,49 @@ public class LegacyRemoteApiController
     public ResponseEntity<String> sourceDocumentDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
-                throws Exception
+        throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("User [" + username + "] not found.");
+            return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
-        
+
         // Get project
         Project project;
         try {
             project = projectRepository.getProject(aProjectId);
         }
         catch (NoResultException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
-        boolean hasAccess = 
-                projectRepository.isManager(project, user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = projectRepository.isManager(project, user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
         }
-        
+
         LOG.info("Deleting document [" + project.getName() + "]");
-        
+
         // Get source document
         SourceDocument srcDocument;
         try {
-            srcDocument = documentRepository.getSourceDocument(aProjectId,
-                    aSourceDocumentId);
+            srcDocument = documentRepository.getSourceDocument(aProjectId, aSourceDocumentId);
         }
         catch (NoResultException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Source document [" + aSourceDocumentId + "] not found in project [" + 
-                            aProjectId + "] not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Source document ["
+                    + aSourceDocumentId + "] not found in project [" + aProjectId + "] not found.");
         }
 
         documentRepository.removeSourceDocument(srcDocument);
-        
+
         LOG.info("Successfully deleted project : [" + aProjectId + "]");
-        
+
         return ResponseEntity.ok("Source document [" + aSourceDocumentId + "] in project ["
                 + aProjectId + "] deleted.");
     }
@@ -478,23 +448,19 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(
-            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
-            method = RequestMethod.POST, 
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
+            + DOCUMENTS, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> sourceDocumentCreate(
             @RequestParam(PARAM_FILE) MultipartFile aFile,
-            @RequestParam(PARAM_FILETYPE) String aFileType, 
+            @RequestParam(PARAM_FILETYPE) String aFileType,
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
-                throws Exception
+        throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("User [" + username + "] not found.");
+            return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
 
         // Get project
@@ -503,32 +469,29 @@ public class LegacyRemoteApiController
             project = projectRepository.getProject(aProjectId);
         }
         catch (NoResultException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
-        boolean hasAccess = 
-                projectRepository.isManager(project, user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = projectRepository.isManager(project, user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
         }
-        
+
         // Existing project
         if (documentRepository.existsSourceDocument(project, aFile.getOriginalFilename())) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body("A document with name [" + aFile.getOriginalFilename() + "] already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                    "A document with name [" + aFile.getOriginalFilename() + "] already exists");
         }
-        
+
         // Check if file already present or not
         try (InputStream is = aFile.getInputStream()) {
-            uploadSourceDocumentFile(is,aFile.getOriginalFilename(), project, aFileType);
+            uploadSourceDocumentFile(is, aFile.getOriginalFilename(), project, aFileType);
         }
-        
+
         // add id of added source document in return json string
         JSONObject returnJSON = new JSONObject();
         returnJSON.put("id",
@@ -557,32 +520,28 @@ public class LegacyRemoteApiController
     public ResponseEntity<String> annotationDocumentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
-                throws Exception
+        throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("User [" + username + "] not found.");
+            return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
-        
+
         // Get project
         Project project;
         try {
             project = projectRepository.getProject(aProjectId);
         }
         catch (NoResultException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
-        boolean hasAccess = 
-                projectRepository.isManager(project, user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = projectRepository.isManager(project, user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -591,37 +550,32 @@ public class LegacyRemoteApiController
         // Get source document
         SourceDocument srcDocument;
         try {
-            srcDocument = documentRepository.getSourceDocument(aProjectId,
-                    aSourceDocumentId);
+            srcDocument = documentRepository.getSourceDocument(aProjectId, aSourceDocumentId);
         }
         catch (NoResultException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Source document [" + aSourceDocumentId + "] not found in project [" + 
-                            aProjectId + "] not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Source document ["
+                    + aSourceDocumentId + "] not found in project [" + aProjectId + "] not found.");
         }
 
         List<AnnotationDocument> annList = documentRepository
                 .listAllAnnotationDocuments(srcDocument);
         JSONArray annDocArr = new JSONArray();
         for (AnnotationDocument annDoc : annList) {
-            if (
-                    annDoc.getState().equals(AnnotationDocumentState.FINISHED) || 
-                    annDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS))
-            {
+            if (annDoc.getState().equals(AnnotationDocumentState.FINISHED)
+                    || annDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
                 SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ssZ");
                 JSONObject annDocObj = new JSONObject();
                 annDocObj.put("user", annDoc.getUser());
-                annDocObj.put("state", annDoc.getState().getId());         
+                annDocObj.put("state", annDoc.getState().getId());
                 if (annDoc.getTimestamp() != null) {
                     annDocObj.put("timestamp", sdf.format(annDoc.getTimestamp()));
                 }
                 annDocArr.put(annDocObj);
-            }                
+            }
         }
-        
+
         JSONObject returnJSON = new JSONObject();
-        returnJSON.put(srcDocument.getName(),annDocArr);
+        returnJSON.put(srcDocument.getName(), annDocArr);
         return ResponseEntity.ok(returnJSON.toString());
     }
 
@@ -646,42 +600,39 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(
-            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_USERNAME
-                    + "}",
-            method = RequestMethod.GET)
-    public void annotationDocumentRead(HttpServletResponse response, 
+    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_USERNAME
+            + "}", method = RequestMethod.GET)
+    public void annotationDocumentRead(HttpServletResponse response,
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId, 
+            @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId,
             @PathVariable(PARAM_USERNAME) String annotatorName,
             @RequestParam(value = PARAM_FORMAT, required = false) String aFormatId)
-                throws Exception
+        throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            response.sendError(HttpStatus.BAD_REQUEST.value(), 
+            response.sendError(HttpStatus.BAD_REQUEST.value(),
                     "User [" + username + "] not found.");
             return;
         }
-        
+
         // Get project
         Project project;
         try {
             project = projectRepository.getProject(aProjectId);
         }
         catch (NoResultException e) {
-            response.sendError(HttpStatus.NOT_FOUND.value(), 
+            response.sendError(HttpStatus.NOT_FOUND.value(),
                     "Project" + aProjectId + "] not found.");
             return;
         }
 
         // Check for the access
-        boolean hasAccess = 
-                projectRepository.isManager(project, user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = projectRepository.isManager(project, user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
@@ -691,22 +642,22 @@ public class LegacyRemoteApiController
         // Get annotator user
         User annotator = userRepository.get(annotatorName);
         if (annotator == null) {
-            response.sendError(HttpStatus.BAD_REQUEST.value(), 
+            response.sendError(HttpStatus.BAD_REQUEST.value(),
                     "Annotator user [" + annotatorName + "] not found.");
             return;
         }
-        
+
         // Get source document
         SourceDocument srcDoc;
         try {
             srcDoc = documentRepository.getSourceDocument(aProjectId, aSourceDocumentId);
         }
         catch (NoResultException e) {
-            response.sendError(HttpStatus.NOT_FOUND.value(),
-                    "Document [" + aSourceDocumentId + "] not found in project [" + aProjectId + "].");
+            response.sendError(HttpStatus.NOT_FOUND.value(), "Document [" + aSourceDocumentId
+                    + "] not found in project [" + aProjectId + "].");
             return;
         }
-        
+
         // Get annotation document
         AnnotationDocument annDoc;
         try {
@@ -726,24 +677,21 @@ public class LegacyRemoteApiController
         else {
             formatId = aFormatId;
         }
-        
+
         // Determine the format
-        FormatSupport format = importExportService.getWritableFormatById(formatId)
-                .orElseGet(() -> {
-                    LOG.info(
-                            "[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
-                            srcDoc.getName(), formatId);
-                    return new WebAnnoTsv3FormatSupport();
-                });
+        FormatSupport format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
+            LOG.info("[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+                    srcDoc.getName(), formatId);
+            return new WebAnnoTsv3FormatSupport();
+        });
 
         // Temporary file of annotation document
-        File downloadableFile = importExportService.exportAnnotationDocument(srcDoc,
-                annotatorName, format, annDoc.getName(), Mode.ANNOTATION);
+        File downloadableFile = importExportService.exportAnnotationDocument(srcDoc, annotatorName,
+                format, annDoc.getName(), Mode.ANNOTATION);
 
         try {
             // Set mime type
-            String mimeType = URLConnection
-                    .guessContentTypeFromName(downloadableFile.getName());
+            String mimeType = URLConnection.guessContentTypeFromName(downloadableFile.getName());
             if (mimeType == null) {
                 LOG.info("mimetype is not detectable, will take default");
                 mimeType = "application/octet-stream";
@@ -753,7 +701,7 @@ public class LegacyRemoteApiController
             response.setContentType(mimeType);
             response.setContentType("application/force-download");
             response.setHeader("Content-Disposition",
-                "inline; filename=\"" + downloadableFile.getName() + "\"");
+                    "inline; filename=\"" + downloadableFile.getName() + "\"");
             response.setContentLength((int) downloadableFile.length());
             InputStream inputStream = new BufferedInputStream(
                     new FileInputStream(downloadableFile));
@@ -788,70 +736,61 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(
-            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + CURATION + "/{"
-                    + PARAM_DOCUMENT_ID + "}",
-            method = RequestMethod.GET)
-    public void curationDocumentRead(HttpServletResponse response, 
+    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + CURATION + "/{"
+            + PARAM_DOCUMENT_ID + "}", method = RequestMethod.GET)
+    public void curationDocumentRead(HttpServletResponse response,
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId,
             @RequestParam(value = PARAM_FORMAT, required = false) String aFormatId)
-                throws Exception
+        throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         if (user == null) {
-            response.sendError(
-                    HttpStatus.BAD_REQUEST.value(), 
+            response.sendError(HttpStatus.BAD_REQUEST.value(),
                     "User [" + username + "] not found.");
             return;
         }
-        
+
         // Get project
         Project project;
         try {
             project = projectRepository.getProject(aProjectId);
         }
         catch (NoResultException e) {
-            response.sendError(
-                    HttpStatus.NOT_FOUND.value(), 
+            response.sendError(HttpStatus.NOT_FOUND.value(),
                     "Project" + aProjectId + "] not found.");
             return;
         }
 
         // Check for the access
-        boolean hasAccess = 
-                projectRepository.isManager(project, user) ||
-                userRepository.isAdministrator(user);
+        boolean hasAccess = projectRepository.isManager(project, user)
+                || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
                     + "] is not allowed to access project [" + aProjectId + "]");
             return;
-        }        
-        
+        }
+
         // Get source document
         SourceDocument srcDocument;
         try {
-            srcDocument = documentRepository.getSourceDocument(aProjectId,
-                    aSourceDocumentId);
+            srcDocument = documentRepository.getSourceDocument(aProjectId, aSourceDocumentId);
         }
         catch (NoResultException e) {
-            response.sendError(
-                    HttpStatus.NOT_FOUND.value(), 
-                    "Source document [" + aSourceDocumentId + "] not found in project [" + 
-                            aProjectId + "] not found.");
+            response.sendError(HttpStatus.NOT_FOUND.value(), "Source document [" + aSourceDocumentId
+                    + "] not found in project [" + aProjectId + "] not found.");
             return;
         }
 
         // Check if curation is complete
         if (!SourceDocumentState.CURATION_FINISHED.equals(srcDocument.getState())) {
-            response.sendError(
-                    HttpStatus.NOT_FOUND.value(), 
+            response.sendError(HttpStatus.NOT_FOUND.value(),
                     "Curation of source document [" + aSourceDocumentId + "] not yet complete.");
             return;
         }
-        
+
         String formatId;
         if (aFormatId == null) {
             formatId = srcDocument.getFormat();
@@ -859,15 +798,13 @@ public class LegacyRemoteApiController
         else {
             formatId = aFormatId;
         }
-        
+
         // Determine the format
-        FormatSupport format = importExportService.getWritableFormatById(formatId)
-                .orElseGet(() -> {
-                    LOG.info(
-                            "[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
-                            srcDocument.getName(), formatId);
-                    return new WebAnnoTsv3FormatSupport();
-                });
+        FormatSupport format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
+            LOG.info("[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+                    srcDocument.getName(), formatId);
+            return new WebAnnoTsv3FormatSupport();
+        });
 
         // Temporary file of annotation document
         File downloadableFile = importExportService.exportAnnotationDocument(srcDocument,
@@ -875,8 +812,7 @@ public class LegacyRemoteApiController
 
         try {
             // Set mime type
-            String mimeType = URLConnection
-                    .guessContentTypeFromName(downloadableFile.getName());
+            String mimeType = URLConnection.guessContentTypeFromName(downloadableFile.getName());
             if (mimeType == null) {
                 LOG.info("mimetype is not detectable, will take default");
                 mimeType = "application/octet-stream";
@@ -885,7 +821,8 @@ public class LegacyRemoteApiController
             // Set response
             response.setContentType(mimeType);
             response.setContentType("application/force-download");
-            response.setHeader("Content-Disposition", "inline; filename=\"" + downloadableFile.getName() + "\"");
+            response.setHeader("Content-Disposition",
+                    "inline; filename=\"" + downloadableFile.getName() + "\"");
             response.setContentLength((int) downloadableFile.length());
             InputStream inputStream = new BufferedInputStream(
                     new FileInputStream(downloadableFile));
@@ -900,7 +837,7 @@ public class LegacyRemoteApiController
             }
         }
     }
-    
+
     private void uploadSourceDocumentFile(InputStream is, String name, Project project,
             String aFileType)
         throws IOException, UIMAException

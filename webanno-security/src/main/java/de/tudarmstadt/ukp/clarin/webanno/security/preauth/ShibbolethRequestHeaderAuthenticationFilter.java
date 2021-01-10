@@ -1,14 +1,14 @@
 /*
- * Copyright 2014
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String EMPTY_PASSWORD = "";
-    
+
     private UserDetailsManager userDetailsManager;
     private UserDao userRepository;
 
@@ -50,11 +50,11 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         u.setUsername((String) super.getPreAuthenticatedPrincipal(aRequest));
         u.setPassword(EMPTY_PASSWORD);
         u.setEnabled(true);
-        
+
         Set<Role> s = new HashSet<>();
         s.add(Role.ROLE_USER);
         Properties settings = SettingsUtil.getSettings();
-        
+
         String extraRoles = settings.getProperty(SettingsUtil.CFG_AUTH_PREAUTH_NEWUSER_ROLES);
         if (StringUtils.isNotBlank(extraRoles)) {
             for (String role : extraRoles.split(",")) {
@@ -68,7 +68,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
             }
         }
         u.setRoles(s);
-        
+
         userRepository.create(u);
         log.debug("Created new user [" + u.getUsername() + "] with roles " + u.getRoles());
     }

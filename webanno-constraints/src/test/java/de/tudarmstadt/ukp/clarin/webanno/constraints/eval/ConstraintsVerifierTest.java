@@ -1,13 +1,13 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.eval;
 
+import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parse;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,23 +32,16 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsVerifier;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Verifiable;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 
 @Ignore("Not fully implemented yet")
 public class ConstraintsVerifierTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+        ParsedConstraints constraints = parse(new File("src/test/resources/rules/6.rules"));
 
         // Get imports
         Map<String, String> imports = new LinkedHashMap<>();

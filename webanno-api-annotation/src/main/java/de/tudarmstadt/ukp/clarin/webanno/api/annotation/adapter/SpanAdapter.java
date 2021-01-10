@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ import static java.util.Collections.emptyList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -41,6 +42,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -54,15 +57,16 @@ public class SpanAdapter
     extends TypeAdapter_ImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final List<SpanLayerBehavior> behaviors;
-    
-    public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+
+    public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
-        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-        
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
@@ -96,7 +100,7 @@ public class SpanAdapter
     {
         return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aCas, aBegin, aEnd));
     }
-    
+
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
         CreateSpanAnnotationRequest request = aRequest;
@@ -113,7 +117,7 @@ public class SpanAdapter
 
         return newAnnotation;
     }
-    
+
     /**
      * A Helper method to add annotation to CAS
      */
@@ -122,7 +126,10 @@ public class SpanAdapter
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-        
+
+        log.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
+                newAnnotation.getEnd(), newAnnotation.getCoveredText());
+
         // If if the layer attaches to a feature, then set the attach-feature to the newly
         // created annotation.
         if (getAttachFeatureName() != null) {
@@ -132,12 +139,12 @@ public class SpanAdapter
                 throw new IllegalPlacementException("No annotation of type [" + getAttachTypeName()
                         + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
             }
-            CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
-                    .setFeatureValue(attachFeature, newAnnotation);
+            CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0).setFeatureValue(attachFeature,
+                    newAnnotation);
         }
-        
+
         aCas.addFsToIndexes(newAnnotation);
-        
+
         return newAnnotation;
     }
 
@@ -156,10 +163,10 @@ public class SpanAdapter
                         .setFeatureValue(attachFeature, null);
             }
         }
-        
+
         publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
@@ -171,5 +178,11 @@ public class SpanAdapter
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
+    }
+
+    @Override
+    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    {
+        aState.getSelection().selectSpan(aAnno);
     }
 }

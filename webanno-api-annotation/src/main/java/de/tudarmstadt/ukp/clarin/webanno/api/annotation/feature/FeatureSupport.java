@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -45,17 +46,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDet
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
 /**
- * Extension point for new types of annotation features. 
+ * Extension point for new types of annotation features.
  * 
- * @param <T> the traits type. If no traits are supported, this should be {@link Void}.
+ * @param <T>
+ *            the traits type. If no traits are supported, this should be {@link Void}.
  */
 public interface FeatureSupport<T>
-    extends BeanNameAware
+    extends BeanNameAware, Extension<AnnotationFeature>
 {
+    @Override
     String getId();
-    
+
     /**
      * Checks whether the given feature is provided by the current feature support.
      * 
@@ -63,14 +67,15 @@ public interface FeatureSupport<T>
      *            a feature definition.
      * @return whether the given feature is provided by the current feature support.
      */
+    @Override
     boolean accepts(AnnotationFeature aFeature);
-    
+
     /**
      * Get the feature type for the given annotation feature. If the current feature support does
-     * not provide any feature type for the given feature, an empty value is returned. As we
-     * usually use {@link FeatureType} objects in feature type selection lists, this method is
-     * helpful in obtaining the selected value of such a list from the {@link AnnotationFeature}
-     * object being edited.
+     * not provide any feature type for the given feature, an empty value is returned. As we usually
+     * use {@link FeatureType} objects in feature type selection lists, this method is helpful in
+     * obtaining the selected value of such a list from the {@link AnnotationFeature} object being
+     * edited.
      * 
      * @param aAnnotationFeature
      *            an annotation feature.
@@ -119,7 +124,7 @@ public interface FeatureSupport<T>
     {
         // Nothing to do
     }
-    
+
     /**
      * Returns a Wicket component to configure the specific traits of this feature type. Note that
      * every {@link FeatureSupport} has to return a <b>different class</b> here. So it is not
@@ -139,12 +144,12 @@ public interface FeatureSupport<T>
     {
         return new EmptyPanel(aId);
     }
-    
+
     /**
      * Read the traits for the given {@link AnnotationFeature}. If traits are supported, then this
      * method must be overwritten. A typical implementation would read the traits from a JSON string
-     * stored in {@link AnnotationFeature#getTraits}, but it would also possible to load the
-     * traits from a database table.
+     * stored in {@link AnnotationFeature#getTraits}, but it would also possible to load the traits
+     * from a database table.
      * 
      * @param aFeature
      *            the feature whose traits should be obtained.
@@ -158,8 +163,8 @@ public interface FeatureSupport<T>
     /**
      * Write the traits for the given {@link AnnotationFeature}. If traits are supported, then this
      * method must be overwritten. A typical implementation would write the traits from to JSON
-     * string stored in {@link AnnotationFeature#setTraits}, but it would also possible to store
-     * the traits from a database table.
+     * string stored in {@link AnnotationFeature#setTraits}, but it would also possible to store the
+     * traits from a database table.
      * 
      * @param aFeature
      *            the feature whose traits should be written.
@@ -170,7 +175,7 @@ public interface FeatureSupport<T>
     {
         aFeature.setTraits(null);
     }
-    
+
     /**
      * Create a feature value editor for use in the annotation detail editor pane and similar
      * locations.
@@ -209,20 +214,23 @@ public interface FeatureSupport<T>
     default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        if (labelFeature == null) {
+            return null;
+        }
         return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
     }
-    
+
     default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
     {
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        
-        if (labelFeature.getRange().isPrimitive()) {
+
+        if (labelFeature != null && labelFeature.getRange().isPrimitive()) {
             return getLazyDetails(aFeature, aFs.getFeatureValueAsString(labelFeature));
         }
         else {
             return Collections.emptyList();
         }
-        
+
     }
 
     default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
@@ -244,22 +252,22 @@ public interface FeatureSupport<T>
     {
         return aLabel;
     }
-    
+
     default List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
     {
         return Collections.emptyList();
     }
 
     /**
-     * Update this feature with a new value. This method should not be called directly but
-     * rather via {@link TypeAdapter#setFeatureValue}.
+     * Update this feature with a new value. This method should not be called directly but rather
+     * via {@link TypeAdapter#setFeatureValue}.
      * <p>
-     * Normally, this method accepts a primitive UIMA-supported type as value. However, if may
-     * also accept a different type which needs to be converted to a primitive UIMA-supported
-     * type. If this is the case, the method should also always still accept a value of the
-     * primitive type to which the value is converted. For example, if the method accepts a
-     * {@code Pair<Integer, String>} and then stores the integer key to the CAS, then it should
-     * also accept {@code Integer} values.
+     * Normally, this method accepts a primitive UIMA-supported type as value. However, if may also
+     * accept a different type which needs to be converted to a primitive UIMA-supported type. If
+     * this is the case, the method should also always still accept a value of the primitive type to
+     * which the value is converted. For example, if the method accepts a
+     * {@code Pair<Integer, String>} and then stores the integer key to the CAS, then it should also
+     * accept {@code Integer} values.
      *
      * @param aCas
      *            the CAS.
@@ -270,11 +278,10 @@ public interface FeatureSupport<T>
      * @param aValue
      *            the value.
      */
-    default void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress,
-            Object aValue)
+    default void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
         FeatureStructure fs = selectFsByAddr(aCas, aAddress);
-        
+
         Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         setFeature(fs, aFeature, value);
     }
@@ -282,7 +289,7 @@ public interface FeatureSupport<T>
     default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         Object value;
-        
+
         Feature f = aFS.getType().getFeatureByBaseName(aFeature.getName());
         if (f.getRange().isPrimitive()) {
             value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
@@ -293,7 +300,7 @@ public interface FeatureSupport<T>
         else {
             value = FSUtil.getFeature(aFS, aFeature.getName(), FeatureStructure.class);
         }
-        
+
         return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
     }
 
@@ -306,7 +313,7 @@ public interface FeatureSupport<T>
      *            the value provided from the feature editor.
      * @return the CAS value.
      */
-    <V> V  unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+    <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
 
     /**
      * Convert a CAS representation of the feature value to the type of value which the feature
@@ -320,8 +327,8 @@ public interface FeatureSupport<T>
      *            string representation of the value
      * @return feature editor representation of the value.
      */
-    Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
-    
+    Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+
     default IllegalArgumentException unsupportedFeatureTypeException(AnnotationFeature aFeature)
     {
         return new IllegalArgumentException("Unsupported type [" + aFeature.getType()
@@ -334,13 +341,12 @@ public interface FeatureSupport<T>
                 + "] on feature [" + aFeature.getName() + "]");
     }
 
-    default IllegalArgumentException unsupportedMultiValueModeException(
-            AnnotationFeature aFeature)
+    default IllegalArgumentException unsupportedMultiValueModeException(AnnotationFeature aFeature)
     {
         return new IllegalArgumentException("Unsupported multi-value mode ["
                 + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
     }
-    
+
     /**
      * @deprecated Use {@link #unsupportedFeatureTypeException(AnnotationFeature)} instead.
      */
@@ -358,7 +364,7 @@ public interface FeatureSupport<T>
     {
         return unsupportedLinkModeException(aFeatureState.feature);
     }
-    
+
     /**
      * @deprecated Use {@link #unsupportedMultiValueModeException(AnnotationFeature)} instead.
      */
@@ -366,5 +372,19 @@ public interface FeatureSupport<T>
     default IllegalArgumentException unsupportedMultiValueModeException(FeatureState aFeatureState)
     {
         return unsupportedMultiValueModeException(aFeatureState.feature);
+    }
+
+    /**
+     * By default, the annotation editors should receive a focus if possible. However, in some
+     * situations, doing this is contraproductive, e.g. if single-key shortcuts are defined. These
+     * shortcuts should not trigger if an input field is in focus because otherwise one could never
+     * ever enter something into an input field. But that also means that if an editor gets the
+     * focus automatically, then the shortcuts won't be available and the user has to unfocus the
+     * editor before the shortcuts can be used. So it is better to suppress the auto-focus in such a
+     * case.
+     */
+    default boolean suppressAutoFocus(AnnotationFeature aFeature)
+    {
+        return false;
     }
 }

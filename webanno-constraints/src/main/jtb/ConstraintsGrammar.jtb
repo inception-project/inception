@@ -1,31 +1,0 @@
-/*******************************************************************************
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
-
-
-/***
- *
- JavaCC template file for parsing conditions for web-anno project
- Grammar based on presentation by Dr. Richard Eckart de Castilho
- @author: aakash
- @version: 1.0
- 
- */options{  IGNORE_CASE = true;
-  JAVA_UNICODE_ESCAPE = true ;
-  STATIC = false;}PARSER_BEGIN(ConstraintsGrammar)package de.tudarmstadt.ukp.clarin.webanno.constraints.grammar;public class ConstraintsGrammar{}PARSER_END(ConstraintsGrammar)SKIP :{  " "| "\r"| "\t"| "\n"}SPECIAL_TOKEN :{  /* Only multi-line comments are currently supported */  < MULTI_LINE_COMMENT :    "/*" (~[ "*" ])* "*"    (      "*"    |      (        ~[ "*", "/" ] (~[ "*" ])* "*"      )    )*    "/" >}TOKEN :{  < IMPORT : "import" >| < AS : "as" >| < SEMICOLON : ";" >| < IMPLIES : "->" >| < EQUALS : "=" >| < MODIFIER : "@" >| < FLAG : "!" >| < RCB : "}" >| < LCB : "{" >| < IDENTIFIER :    < LETTER >    (      < LETTER >    | < DIGIT >    )* >| < PATH_LIKE : < IDENTIFIER > ("." < IDENTIFIER >)* >| < PATH :    (< MODIFIER >)? < IDENTIFIER > ( "()" )?    (      "." (< MODIFIER >)? < IDENTIFIER > ( "()" )?    )* >| < #LETTER : [ "a"-"z", "A"-"Z", "_" ] >| < #DIGIT : [ "0"-"9" ] >| < QUOTED :    "\""    (      "\\" ~[ ]    | ~[ "\"", "\\" ]    )*    "\"" >}/*
-ACTUAL GRAMMAR IMPLEMENTATION
-*/void Parse() :{}{  (    Imports()  )?  (    ScopedDeclarations()  )+  < EOF >}void ScopedDeclarations() :{}{  < IDENTIFIER > "{"  (    Rules()  )*  "}"}void Imports() :{}{  (    ImportDeclaration()  )+}void Rules() :{}{  (    RuleDeclaration()  )+}void ImportDeclaration() :{}{  "import" < PATH_LIKE > "as" < IDENTIFIER > ";"}void RuleDeclaration() :{}{  Conditions() "->" Restrictions() ";"}void Conditions() :{}{  Condition()  (    LOOKAHEAD(2)    "&" Condition()  )*}void Condition() :{}{  Path() "=" < QUOTED >}void Restrictions() :{}{  Restriction()  (    LOOKAHEAD(2)    "|" Restriction()  )*}void Restriction() :{}{  Path() "=" < QUOTED > ("(" < FLAG > ")")?}void Path() :{}{  (    < PATH >  | < PATH_LIKE >  | < IDENTIFIER >  )}

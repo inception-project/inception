@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,13 +23,16 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -37,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public interface ProjectService
 {
     String SERVICE_NAME = "projectService";
-    
+
     String PROJECT_FOLDER = "project";
     String DOCUMENT_FOLDER = "document";
     String SOURCE_FOLDER = "source";
@@ -46,7 +49,7 @@ public interface ProjectService
     String SETTINGS_FOLDER = "settings";
     String META_INF_FOLDER = "META-INF";
     String LOG_FOLDER = "log";
-    
+
     /**
      * creates a project permission, adding permission level for the user in the given project
      *
@@ -110,7 +113,7 @@ public interface ProjectService
 
     void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels);
-    
+
     /**
      * List Users those with some {@link PermissionLevel}s in the project
      *
@@ -160,8 +163,7 @@ public interface ProjectService
      *             If the specified webanno.home directory is not available no write permission
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
-    void createProject(Project project)
-        throws IOException;
+    void createProject(Project project) throws IOException;
 
     /**
      * Update a project. This is only necessary when dealing with a detached project entity.
@@ -268,8 +270,7 @@ public interface ProjectService
      *             if the project to be deleted is not available in the file system
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProject(Project project)
-        throws IOException;
+    void removeProject(Project project) throws IOException;
 
     /**
      * List projects accessible by current user
@@ -285,6 +286,19 @@ public interface ProjectService
      */
     List<Project> listManageableProjects(User aUser);
 
+    /**
+     * List projects in which the given user is curator or manager
+     *
+     * @return list of projects manageable by the user.
+     */
+    List<Project> listManageableCuratableProjects(User aUser);
+
+    /**
+     * List projects that allow calculation of pairwise agreement
+     */
+    List<Project> listProjectsForAgreement();
+
+    File getProjectFolder(Project aProject);
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
@@ -296,7 +310,7 @@ public interface ProjectService
     File getProjectLogFile(Project project);
 
     File getMetaInfFolder(Project project);
-    
+
     /**
      * Save some properties file associated to a project, such as meta-data.properties
      *
@@ -309,9 +323,8 @@ public interface ProjectService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void savePropertiesFile(Project project, InputStream is, String fileName)
-        throws IOException;
-    
+    void savePropertiesFile(Project project, InputStream is, String fileName) throws IOException;
+
     // --------------------------------------------------------------------------------------------
     // Methods related to guidelines
     // --------------------------------------------------------------------------------------------
@@ -362,6 +375,15 @@ public interface ProjectService
     List<String> listGuidelines(Project project);
 
     /**
+     * Checks if the given project defines any guidelines.
+     *
+     * @param project
+     *            the project.
+     * @return the filenames.
+     */
+    boolean hasGuidelines(Project project);
+
+    /**
      * Remove an annotation guideline document from the file system
      *
      * @param project
@@ -371,9 +393,8 @@ public interface ProjectService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void removeGuideline(Project project, String fileName)
-        throws IOException;
-    
+    void removeGuideline(Project project, String fileName) throws IOException;
+
     // --------------------------------------------------------------------------------------------
     // Methods related to permissions
     // --------------------------------------------------------------------------------------------
@@ -388,12 +409,12 @@ public interface ProjectService
      */
     @Deprecated
     List<Authority> listAuthorities(User user);
-    
+
     /**
-     * Can the given user access the project setting of <b>some</b> project. 
+     * Can the given user access the project setting of <b>some</b> project.
      */
     public boolean managesAnyProject(User user);
-    
+
     /**
      * Determine if the user is allowed to update a project.
      *
@@ -404,12 +425,13 @@ public interface ProjectService
      * @return if the user may update a project.
      */
     boolean isManager(Project aProject, User aUser);
-    
+
     /**
      * @deprecated Use {@link #isManager(Project, User)}
      */
     @Deprecated
-    default boolean isProjectAdmin(Project aProject, User aUser) {
+    default boolean isProjectAdmin(Project aProject, User aUser)
+    {
         return isManager(aProject, aUser);
     }
 
@@ -441,16 +463,26 @@ public interface ProjectService
      */
     boolean isAnnotator(Project aProject, User aUser);
 
-    
-    
     // --------------------------------------------------------------------------------------------
     // Methods related to other things
     // --------------------------------------------------------------------------------------------
 
-    void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
-            Project aProject)
-        throws Exception;
-    
     List<ProjectType> listProjectTypes();
+
+    /**
+     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
+     * s. This is done per Project.
+     * 
+     * @param aProject
+     *            the project.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void initializeProject(Project aProject) throws IOException;
+
+    void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+        throws IOException;
+
+    List<ProjectInitializer> listProjectInitializers();
+
 }

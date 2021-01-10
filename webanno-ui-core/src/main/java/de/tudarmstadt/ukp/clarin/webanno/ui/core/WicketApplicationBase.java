@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
+import static io.bit3.jsass.OutputStyle.EXPANDED;
+import static io.bit3.jsass.OutputStyle.NESTED;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -28,7 +32,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authorization.strategies.page.SimplePageAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
@@ -36,9 +39,11 @@ import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestMapper;
-import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.Response;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
@@ -53,31 +58,31 @@ import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
-import com.github.sommeri.less4j.LessCompiler.Configuration;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
-import de.agilecoders.wicket.less.BootstrapLess;
-import de.agilecoders.wicket.less.LessCompilerConfigurationFactory;
+import de.agilecoders.wicket.sass.BootstrapSass;
+import de.agilecoders.wicket.sass.SassCacheManager;
+import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.BaseLayoutCssResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
+import io.bit3.jsass.Options;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -88,44 +93,41 @@ public abstract class WicketApplicationBase
 {
     protected boolean isInitialized = false;
 
-    @Autowired
-    private MenuItemRegistry menuItemRegistry;
-    
+    private @Autowired MenuItemRegistry menuItemRegistry;
+
     @Override
     protected void init()
     {
         super.init();
 
         CompoundAuthorizationStrategy authorizationStrategy = new CompoundAuthorizationStrategy();
-        // Custom authorization strategy which prevents access to pages if the corresponding 
+        // Custom authorization strategy which prevents access to pages if the corresponding
         // menu item does not permit it.
-        authorizationStrategy.add(
-                new SimplePageAuthorizationStrategy(Page.class, getHomePage())
-                {
-                    @Override
-                    protected <T extends Page> boolean isPageAuthorized(Class<T> aPageClass)
-                    {
-                        return menuItemRegistry.getMenuItem(aPageClass)
-                                .map(item -> item.isDirectAccessAllowed() || item.applies())
-                                .orElse(true);
-                    }
+        authorizationStrategy.add(new SimplePageAuthorizationStrategy(Page.class, getHomePage())
+        {
+            @Override
+            protected <T extends Page> boolean isPageAuthorized(Class<T> aPageClass)
+            {
+                return menuItemRegistry.getMenuItem(aPageClass)
+                        .map(item -> item.isDirectAccessAllowed() || item.applies()).orElse(true);
+            }
 
-                    @Override
-                    protected boolean isAuthorized()
-                    {
-                        throw new IllegalStateException("This should not be called");
-                    }
-                });
+            @Override
+            protected boolean isAuthorized()
+            {
+                throw new IllegalStateException("This should not be called");
+            }
+        });
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
-        getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);        
-        
-//        initSpring();
-        
+        getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
+
+        getCspSettings().blocking().disabled();
+
         initStatelessChecker();
-        
+
         if (!isInitialized) {
             initOnce();
-            
+
             isInitialized = true;
         }
     }
@@ -134,26 +136,28 @@ public abstract class WicketApplicationBase
     {
         // Allow nested string resource resolving using "#(key)"
         initNestedStringResourceLoader();
-        
-//        // This should avoid some application-reloading while working on I18N
-//        getResourceSettings().setThrowExceptionOnMissingResource(false);
-//        getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
-        
+
+        // // This should avoid some application-reloading while working on I18N
+        // getResourceSettings().setThrowExceptionOnMissingResource(false);
+        // getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
+
         initWebFrameworks();
-        
+
         initDefaultPageMounts();
-        
+
         initLogoReference();
 
         // Display stack trace instead of internal error
         initShowExceptionPage();
 
         initMDCLifecycle();
-        
+
         // Allow fetching the current page from non-Wicket code
         initPageRequestTracker();
+
+        initServerTimeReporting();
     }
-    
+
     private void initPageRequestTracker()
     {
         getRequestCycleListeners().add(new PageRequestHandlerTracker());
@@ -162,47 +166,41 @@ public abstract class WicketApplicationBase
     protected void initWebFrameworks()
     {
         initJQueryResourceReference();
- 
+
         addJQueryJavascriptToAllPages();
-        
+
         initBootstrap();
-        
+
         addKendoResourcesToAllPages();
-        
+
         addJQueryUIResourcesToAllPages();
-        
+
         addFontAwesomeToAllPages();
-        
+
         addCssBrowserSelectorToAllPages();
-        
-        // Loading base layout CSS here so it can override JQuery/Kendo CSS
-        initAddBaseLayoutCssToAllPages();
-    }
-    
-    protected void initBootstrap()
-    {
-        LessCompilerConfigurationFactory lessConfigFactory = () -> {
-            Configuration lessConfig = new Configuration();
-            lessConfig.setCompressing(DEPLOYMENT.equals(getConfigurationType()));
-            return lessConfig;
-        };
-        
-        WicketWebjars.install(this);
-        BootstrapLess.install(this, lessConfigFactory);
-        Bootstrap.install(this);
-        
-        IBootstrapSettings settings = Bootstrap.getSettings(this);
-        settings.setCssResourceReference(CustomBootstrapLessReference.get());
     }
 
-    protected void initAddBaseLayoutCssToAllPages()
+    protected void initBootstrap()
     {
-        getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
-                component.add(BaseLayoutCssResourceBehavior.get());
-            }
-        });
+        SassCompilerOptionsFactory sassOptionsFactory = () -> {
+            Options options = new Options();
+            options.setOutputStyle(DEPLOYMENT.equals(getConfigurationType()) ? EXPANDED : NESTED);
+            return options;
+        };
+
+        WicketWebjars.install(this);
+
+        BootstrapSass.install(this, sassOptionsFactory);
+        // Install a customized cache manager which can deal with SCSS files in JARs
+        SassCacheManager cacheManager = new SassCacheManager(sassOptionsFactory);
+        cacheManager.install(this);
+
+        Bootstrap.install(this);
+
+        IBootstrapSettings settings = Bootstrap.getSettings(this);
+        settings.setCssResourceReference(CustomBootstrapSassReference.get());
     }
+
     protected void addKendoResourcesToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
@@ -221,7 +219,7 @@ public abstract class WicketApplicationBase
             }
         });
     }
-    
+
     protected void addCssBrowserSelectorToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
@@ -230,7 +228,7 @@ public abstract class WicketApplicationBase
             }
         });
     }
-    
+
     protected void addJQueryUIResourcesToAllPages()
     {
         JQueryUILibrarySettings jqueryUiCfg = JQueryUILibrarySettings.get();
@@ -238,14 +236,14 @@ public abstract class WicketApplicationBase
         // JQuery UI tooltip that we use e.g. on the annotation page takes precedence over
         // the less powerful Bootstrap tooltip (both are JQuery plugins using the same name!)
         jqueryUiCfg.setJavaScriptReference(BootstrapAwareJQueryUIJavaScriptResourceReference.get());
-        
+
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
                 component.add(new JQueryUIResourceBehavior());
             }
         });
     }
-    
+
     protected void addJQueryJavascriptToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
@@ -254,9 +252,10 @@ public abstract class WicketApplicationBase
             }
         });
     }
+
     protected void initMDCLifecycle()
     {
-        getRequestCycleListeners().add(new AbstractRequestCycleListener()
+        getRequestCycleListeners().add(new IRequestCycleListener()
         {
             @Override
             public void onBeginRequest(RequestCycle cycle)
@@ -284,8 +283,8 @@ public abstract class WicketApplicationBase
     {
         Properties settings = SettingsUtil.getSettings();
         if ("true".equalsIgnoreCase(settings.getProperty("debug.showExceptionPage"))) {
-            getExceptionSettings().setUnexpectedExceptionDisplay(
-                    ExceptionSettings.SHOW_EXCEPTION_PAGE);
+            getExceptionSettings()
+                    .setUnexpectedExceptionDisplay(ExceptionSettings.SHOW_EXCEPTION_PAGE);
         }
     }
 
@@ -301,7 +300,7 @@ public abstract class WicketApplicationBase
             mountResource("/assets/logo.png", new PackageResourceReference(getLogoLocation()));
         }
     }
-    
+
     protected String getLogoLocation()
     {
         return "/de/tudarmstadt/ukp/clarin/webanno/ui/core/logo/logo.png";
@@ -311,7 +310,7 @@ public abstract class WicketApplicationBase
     {
         mountPage("/login.html", getSignInPageClass());
         mountPage("/welcome.html", getHomePage());
-        
+
         // Mount the other pages via @MountPath annotation on the page classes
         AnnotatedMountList mounts = new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp");
         for (IRequestMapper mapper : mounts) {
@@ -324,7 +323,7 @@ public abstract class WicketApplicationBase
 
     protected void initJQueryResourceReference()
     {
-        // See: 
+        // See:
         // https://github.com/webanno/webanno/issues/1397
         // https://github.com/sebfz1/wicket-jquery-ui/issues/311
         getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV2());
@@ -342,16 +341,34 @@ public abstract class WicketApplicationBase
 
     protected void initStatelessChecker()
     {
-        if (RuntimeConfigurationType.DEVELOPMENT.equals(getConfigurationType())) {
+        if (DEVELOPMENT.equals(getConfigurationType())) {
             getComponentPostOnBeforeRenderListeners().add(new StatelessChecker());
         }
     }
 
-//    protected void initSpring()
-//    {
-//        getComponentInstantiationListeners().add(new SpringComponentInjector(this));
-//    }
-    
+    protected void initServerTimeReporting()
+    {
+        Properties settings = SettingsUtil.getSettings();
+        if (!DEVELOPMENT.equals(getConfigurationType())
+                && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+            return;
+        }
+
+        getRequestCycleListeners().add(new IRequestCycleListener()
+        {
+            @Override
+            public void onEndRequest(RequestCycle cycle)
+            {
+                final Response response = cycle.getResponse();
+                if (response instanceof WebResponse) {
+                    final long serverTime = currentTimeMillis() - cycle.getStartTime();
+                    ((WebResponse) response).addHeader("Server-Timing",
+                            "Server-Side;desc=\"Server-side total\";dur=" + serverTime);
+                }
+            }
+        });
+    }
+
     @Override
     public Class<? extends WebPage> getSignInPageClass()
     {
@@ -363,7 +380,7 @@ public abstract class WicketApplicationBase
     {
         return ApplicationSession.class;
     }
-    
+
     public Class<? extends Component> getMenubarClass()
     {
         return MenuBar.class;

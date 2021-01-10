@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,11 +63,11 @@ public class SlotFeatureSupport
     implements FeatureSupport<LinkFeatureTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final AnnotationSchemaService annotationService;
 
     private String featureSupportId;
-    
+
     @Autowired
     public SlotFeatureSupport(AnnotationSchemaService aAnnotationService)
     {
@@ -79,42 +79,40 @@ public class SlotFeatureSupport
     {
         return featureSupportId;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
         featureSupportId = aBeanName;
     }
-    
+
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
-        
+
         // Slot features are only supported on span layers
         if (!WebAnnoConst.CHAIN_TYPE.equals(aAnnotationLayer.getType())
                 && !WebAnnoConst.RELATION_TYPE.equals(aAnnotationLayer.getType())) {
             // Add layers of type SPAN available in the project
             for (AnnotationLayer spanLayer : annotationService
                     .listAnnotationLayer(aAnnotationLayer.getProject())) {
-                
-                if (
-                        Token.class.getName().equals(spanLayer.getName()) ||
-                        Sentence.class.getName().equals(spanLayer.getName()))
-                {
+
+                if (Token.class.getName().equals(spanLayer.getName())
+                        || Sentence.class.getName().equals(spanLayer.getName())) {
                     continue;
                 }
 
                 if (WebAnnoConst.SPAN_TYPE.equals(spanLayer.getType())) {
-                    types.add(new FeatureType(spanLayer.getName(),
-                            "Link: " + spanLayer.getUiName(), featureSupportId));
+                    types.add(new FeatureType(spanLayer.getName(), "Link: " + spanLayer.getUiName(),
+                            featureSupportId));
                 }
             }
-            
+
             // Also allow the user to use any annotation type as slot filler
             types.add(new FeatureType(CAS.TYPE_NAME_ANNOTATION, "Link: <Any>", featureSupportId));
         }
-        
+
         return types;
     }
 
@@ -136,11 +134,11 @@ public class SlotFeatureSupport
     }
 
     @Override
-    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new LinkFeatureTraitsEditor(aId, this, aFeatureModel);
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -148,7 +146,7 @@ public class SlotFeatureSupport
     {
         AnnotationFeature feature = aFeatureStateModel.getObject().feature;
         final FeatureEditor editor;
-        
+
         switch (feature.getMultiValueMode()) {
         case ARRAY:
             switch (feature.getLinkMode()) {
@@ -165,10 +163,10 @@ public class SlotFeatureSupport
         default:
             throw unsupportedMultiValueModeException(feature);
         }
-        
+
         return editor;
     }
-    
+
     @Override
     public void configureFeature(AnnotationFeature aFeature)
     {
@@ -177,39 +175,35 @@ public class SlotFeatureSupport
         aFeature.setLinkMode(LinkMode.WITH_ROLE);
         aFeature.setLinkTypeRoleFeatureName("role");
         aFeature.setLinkTypeTargetFeatureName("target");
-        aFeature.setLinkTypeName(aFeature.getLayer().getName()
-                + WordUtils.capitalize(aFeature.getName()) + "Link");
+        aFeature.setLinkTypeName(
+                aFeature.getLayer().getName() + WordUtils.capitalize(aFeature.getName()) + "Link");
     }
-    
+
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
         // Link type
-        TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "",
-                CAS.TYPE_NAME_TOP);
+        TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
         linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
-        
+
         // Link feature
         aTD.addFeature(aFeature.getName(), aFeature.getDescription(), CAS.TYPE_NAME_FS_ARRAY,
                 linkTD.getName(), false);
     }
-    
+
     @Override
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
     }
-    
+
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        if (
-                aValue instanceof List &&
-                aFeature.getTagset() != null
-        ) {
+        if (aValue instanceof List && aFeature.getTagset() != null) {
             for (LinkWithRoleModel link : (List<LinkWithRoleModel>) aValue) {
                 if (!annotationService.existsTag(link.role, aFeature.getTagset())) {
                     if (!aFeature.getTagset().isCreateTag()) {
@@ -225,10 +219,10 @@ public class SlotFeatureSupport
                 }
             }
         }
-        
+
         FeatureSupport.super.setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
-    
+
     @Override
     public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
@@ -247,33 +241,31 @@ public class SlotFeatureSupport
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
     }
-    
+
     @Override
-    public List<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
+    public ArrayList<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
     {
         if (aValue instanceof ArrayFS) {
             ArrayFS array = (ArrayFS) aValue;
 
             Type linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
-            Feature roleFeat = linkType.getFeatureByBaseName(aFeature
-                    .getLinkTypeRoleFeatureName());
-            Feature targetFeat = linkType.getFeatureByBaseName(aFeature
-                    .getLinkTypeTargetFeatureName());
+            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+            Feature targetFeat = linkType
+                    .getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
-            List<LinkWithRoleModel> links = new ArrayList<>();
+            ArrayList<LinkWithRoleModel> links = new ArrayList<>();
             for (FeatureStructure link : array.toArray()) {
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = link.getStringValue(roleFeat);
                 m.targetAddr = WebAnnoCasUtil.getAddr(link.getFeatureValue(targetFeat));
-                m.label = ((AnnotationFS) link.getFeatureValue(targetFeat))
-                        .getCoveredText();
+                m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
                 links.add(m);
             }
-            
+
             return links;
         }
-        else if (aValue == null ) {
+        else if (aValue == null) {
             return new ArrayList<>();
         }
         else {
@@ -292,14 +284,14 @@ public class SlotFeatureSupport
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-        
+
         if (traits == null) {
             traits = new LinkFeatureTraits();
         }
-        
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationFeature aFeature, LinkFeatureTraits aTraits)
     {

@@ -1,13 +1,13 @@
 /*
- * Copyright 2014
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,8 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -52,31 +52,31 @@ public class StandaloneShutdownDialog
 
     private static final String ACTION_OPEN_BROWSER = "Open browser";
     private static final String ACTION_SHUTDOWN = "Shut down";
-    
+
     @Autowired
     private ApplicationEventPublisher eventPublisher;
-    
+
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
-    
+
     @Value("${spring.application.name}")
     private String applicationName;
-    
+
     private int port = -1;
-    
+
     @EventListener
     public void onApplicationEvent(ApplicationReadyEvent aEvt)
     {
         log.info("Console: " + ((System.console() != null) ? "available" : "not available"));
         log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
-        
+
         // Show this only when run from the standalone JAR via a double-click
         if (port != -1 && System.console() == null && !GraphicsEnvironment.isHeadless()
                 && runningFromCommandline) {
             log.info("If you are running " + applicationName
                     + " in a server environment, please use '-Djava.awt.headless=true'");
-            eventPublisher.publishEvent(
-                    new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
+            eventPublisher
+                    .publishEvent(new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
 
             final int style;
             final String[] options;
@@ -88,12 +88,11 @@ public class StandaloneShutdownDialog
                 style = JOptionPane.OK_OPTION;
                 options = new String[] { ACTION_SHUTDOWN };
             }
-            
+
             EventQueue.invokeLater(() -> {
                 final JOptionPane optionPane = new JOptionPane(
                         new JLabel("<HTML>" + applicationName + " is running now and can be "
-                                + "accessed via <b>http://localhost:8080</b>.<br>"
-                                + applicationName
+                                + "accessed via <b>http://localhost:8080</b>.<br>" + applicationName
                                 + " works best with the browsers Google Chrome or Safari.<br>"
                                 + "Use this dialog to shut " + applicationName + " down.</HTML>"),
                         JOptionPane.INFORMATION_MESSAGE, style, null, options);
@@ -115,15 +114,17 @@ public class StandaloneShutdownDialog
             });
         }
         else {
-            log.info("Running in server environment or from command line: disabling interactive shutdown dialog.");
+            log.info(
+                    "Running in server environment or from command line: disabling interactive shutdown dialog.");
         }
     }
-    
+
     @EventListener
-    public void onApplicationEvent(EmbeddedServletContainerInitializedEvent aEvt) {
-        port = aEvt.getEmbeddedServletContainer().getPort();
+    public void onApplicationEvent(WebServerInitializedEvent aEvt)
+    {
+        port = aEvt.getWebServer().getPort();
     }
-    
+
     private void handleCloseEvent(PropertyChangeEvent aEvt)
     {
         if (aEvt.getPropertyName().equals(JOptionPane.VALUE_PROPERTY)) {

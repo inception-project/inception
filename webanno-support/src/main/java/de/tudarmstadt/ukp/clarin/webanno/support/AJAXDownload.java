@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
@@ -31,7 +32,9 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
 /**
- * @see <a href="https://cwiki.apache.org/confluence/display/WICKET/AJAX+update+and+file+download+in+one+blow">AJAX update and file download in one blow</a>
+ * @see <a href=
+ *      "https://cwiki.apache.org/confluence/display/WICKET/AJAX+update+and+file+download+in+one+blow">AJAX
+ *      update and file download in one blow</a>
  * @author Sven Meier
  * @author Ernesto Reinaldo Barreiro (reiern70@gmail.com)
  * @author Jordi Deu-Pons (jordi@jordeu.net)
@@ -57,8 +60,10 @@ public class AJAXDownload
     /**
      * Call this method to initiate the download.
      * 
-     * @param aTarget the AJAX target.
-     * @param aFileName the filename.
+     * @param aTarget
+     *            the AJAX target.
+     * @param aFileName
+     *            the filename.
      */
     public void initiate(AjaxRequestTarget aTarget, String aFileName)
     {
@@ -77,8 +82,8 @@ public class AJAXDownload
     @Override
     public void onRequest()
     {
-        ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
-                getResourceStream(), getFileName());
+        ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(getResourceStream(),
+                getFileName());
         handler.setContentDisposition(ContentDisposition.ATTACHMENT);
         getComponent().getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
     }
@@ -101,13 +106,14 @@ public class AJAXDownload
      */
     protected IResourceStream getResourceStream()
     {
+        return new AbstractResourceStream()
+        {
+            private static final long serialVersionUID = 1L;
 
-        return new AbstractResourceStream() {
-            private static final long serialVersionUID1 = 1L;
-            InputStream inStream;
+            private InputStream inStream;
+
             @Override
-            public InputStream getInputStream()
-                throws ResourceStreamNotFoundException
+            public InputStream getInputStream() throws ResourceStreamNotFoundException
             {
                 try {
                     inStream = new FileInputStream(fileName);
@@ -117,9 +123,11 @@ public class AJAXDownload
                 }
                 return inStream;
             }
+
             @Override
-            public void close() throws IOException {
-                inStream.close();
+            public void close() throws IOException
+            {
+                IOUtils.closeQuietly(inStream);
                 inStream = null;
                 FileUtils.forceDelete(new File(fileName));
             }

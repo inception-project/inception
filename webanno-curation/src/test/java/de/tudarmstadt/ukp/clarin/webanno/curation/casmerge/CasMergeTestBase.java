@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.HOST_
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.SENTENCE_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.TOKEN_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
@@ -41,9 +43,11 @@ import org.junit.Before;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -68,9 +72,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class CasMergeTestBase
 {
     protected @Mock AnnotationSchemaService schemaService;
-    
+
     protected CasMerge sut;
-    
+
     protected LayerSupportRegistryImpl layerSupportRegistry;
     protected FeatureSupportRegistryImpl featureSupportRegistry;
     protected Project project;
@@ -96,43 +100,33 @@ public class CasMergeTestBase
     protected AnnotationFeature multiValSpanF1;
     protected AnnotationFeature multiValSpanF2;
     protected SourceDocument document;
-    protected List<String> entryTypes;
     protected List<DiffAdapter> diffAdapters;
-    
+
     protected static final RelationDiffAdapter MULTIVALREL_DIFF_ADAPTER = new RelationDiffAdapter(
             "webanno.custom.Multivalrel", "Dependent", "Governor", "rel1", "rel2");
     protected static final SpanDiffAdapter MULTIVALSPAN_DIFF_ADAPTER = new SpanDiffAdapter(
             "webanno.custom.Multivalspan", "f1", "f2");
-    
+
     @Before
     public void setup() throws Exception
     {
         initMocks(this);
-        
-        
+
         SpanDiffAdapter slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
         slotHostDiffAdapter.addLinkFeature("links", "role", "target");
 
         diffAdapters = new ArrayList<>();
+        diffAdapters.add(TOKEN_DIFF_ADAPTER);
+        diffAdapters.add(SENTENCE_DIFF_ADAPTER);
         diffAdapters.add(POS_DIFF_ADAPTER);
         diffAdapters.add(NER_DIFF_ADAPTER);
         diffAdapters.add(DEPENDENCY_DIFF_ADAPTER);
         diffAdapters.add(MULTIVALREL_DIFF_ADAPTER);
         diffAdapters.add(MULTIVALSPAN_DIFF_ADAPTER);
         diffAdapters.add(slotHostDiffAdapter);
-        
-        entryTypes = new ArrayList<>();
-        entryTypes.add(Sentence.class.getName());
-        entryTypes.add(Token.class.getName());
-        entryTypes.add(POS.class.getName());
-        entryTypes.add(NamedEntity.class.getName());
-        entryTypes.add(Dependency.class.getName());
-        entryTypes.add(CurationTestUtils.HOST_TYPE);
-        entryTypes.add("webanno.custom.Multivalrel");
-        entryTypes.add("webanno.custom.Multivalspan");
-        
+
         project = new Project();
-        
+
         document = new SourceDocument();
         document.setProject(project);
         document.setName("document");
@@ -142,7 +136,7 @@ public class CasMergeTestBase
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
                 CHARACTERS, NO_OVERLAP);
-        
+
         tokenPosFeature = new AnnotationFeature();
         tokenPosFeature.setName("pos");
         tokenPosFeature.setEnabled(true);
@@ -151,12 +145,12 @@ public class CasMergeTestBase
         tokenPosFeature.setLayer(tokenLayer);
         tokenPosFeature.setProject(project);
         tokenPosFeature.setVisible(true);
-        
+
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
                 SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
-        
+
         posFeature = new AnnotationFeature();
         posFeature.setName("PosValue");
         posFeature.setEnabled(true);
@@ -177,7 +171,7 @@ public class CasMergeTestBase
 
         neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE,
                 project, true, TOKENS, OVERLAP_ONLY);
-        
+
         neFeature = new AnnotationFeature();
         neFeature.setName("value");
         neFeature.setEnabled(true);
@@ -221,7 +215,7 @@ public class CasMergeTestBase
 
         slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SPAN_TYPE, project, false,
                 SINGLE_TOKEN, NO_OVERLAP);
-        
+
         slotFeature = new AnnotationFeature();
         slotFeature.setName("links");
         slotFeature.setEnabled(true);
@@ -235,7 +229,7 @@ public class CasMergeTestBase
         slotFeature.setLayer(slotLayer);
         slotFeature.setProject(project);
         slotFeature.setVisible(true);
-        
+
         stringFeature = new AnnotationFeature();
         stringFeature.setName("f1");
         stringFeature.setEnabled(true);
@@ -244,10 +238,10 @@ public class CasMergeTestBase
         stringFeature.setLayer(slotLayer);
         stringFeature.setProject(project);
         stringFeature.setVisible(true);
-        
+
         multiValSpan = new AnnotationLayer("webanno.custom.Multivalspan", "Multivalspan", SPAN_TYPE,
                 project, true, TOKENS, OVERLAP_ONLY);
-        
+
         multiValSpanF1 = new AnnotationFeature();
         multiValSpanF1.setName("f1");
         multiValSpanF1.setEnabled(true);
@@ -256,7 +250,7 @@ public class CasMergeTestBase
         multiValSpanF1.setLayer(multiValSpan);
         multiValSpanF1.setProject(project);
         multiValSpanF1.setVisible(true);
-        
+
         multiValSpanF2 = new AnnotationFeature();
         multiValSpanF2.setName("f2");
         multiValSpanF2.setEnabled(true);
@@ -265,11 +259,11 @@ public class CasMergeTestBase
         multiValSpanF2.setLayer(multiValSpan);
         multiValSpanF2.setProject(project);
         multiValSpanF2.setVisible(true);
-        
+
         multiValRel = new AnnotationLayer("webanno.custom.Multivalrel", "Multivalrel",
                 RELATION_TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         multiValRel.setAttachType(multiValSpan);
-        
+
         multiValRelRel1 = new AnnotationFeature();
         multiValRelRel1.setName("rel1");
         multiValRelRel1.setEnabled(true);
@@ -278,7 +272,7 @@ public class CasMergeTestBase
         multiValRelRel1.setLayer(multiValSpan);
         multiValRelRel1.setProject(project);
         multiValRelRel1.setVisible(true);
-        
+
         multiValRelRel2 = new AnnotationFeature();
         multiValRelRel2.setName("rel2");
         multiValRelRel2.setEnabled(true);
@@ -286,8 +280,8 @@ public class CasMergeTestBase
         multiValRelRel2.setUiName("rel2");
         multiValRelRel2.setLayer(multiValSpan);
         multiValRelRel2.setProject(project);
-        multiValRelRel2.setVisible(true);        
-        
+        multiValRelRel2.setVisible(true);
+
         when(schemaService.findLayer(any(Project.class), any(String.class))).thenAnswer(call -> {
             String type = call.getArgument(1, String.class);
             if (type.equals(Sentence.class.getName())) {
@@ -316,8 +310,12 @@ public class CasMergeTestBase
             }
             throw new IllegalStateException("Unknown layer type: " + type);
         });
-        
-        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class))).thenAnswer(call -> { 
+
+        when(schemaService.listSupportedFeatures((any(AnnotationLayer.class))))
+                .thenAnswer(call -> schemaService
+                        .listAnnotationFeature(call.getArgument(0, AnnotationLayer.class)));
+
+        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class))).thenAnswer(call -> {
             AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
             if (type.getName().equals(Sentence.class.getName())) {
                 return asList();
@@ -346,28 +344,26 @@ public class CasMergeTestBase
             throw new IllegalStateException("Unknown layer type: " + type.getName());
         });
 
-        when(schemaService.getAdapter(any(AnnotationLayer.class))).thenAnswer(call -> { 
+        when(schemaService.getAdapter(any(AnnotationLayer.class))).thenAnswer(call -> {
             AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
-            return layerSupportRegistry.getLayerSupport(type).createAdapter(type);
+            return layerSupportRegistry.getLayerSupport(type).createAdapter(type,
+                    () -> schemaService.listAnnotationFeature(type));
         });
-        
+
         featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new PrimitiveUimaFeatureSupport(),
-                        new SlotFeatureSupport(schemaService)));
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerSupportRegistry.init();
-        
+
         sut = new CasMerge(schemaService);
     }
 }

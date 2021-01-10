@@ -1,13 +1,13 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.eval;
 
+import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parseFile;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,10 +43,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -57,14 +55,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class ConstraintsGeneratorTest
 {
     @Test
-    public void testSimpleFeature()
-        throws Exception
+    public void testSimpleFeature() throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/9.rules"));
-        Parse p = parser.Parse();
-
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/9.rules");
 
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("is");
@@ -78,21 +71,13 @@ public class ConstraintsGeneratorTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
-        List<PossibleValue> expectedOutput = new LinkedList<>();
-        expectedOutput.add(new PossibleValue("be", true));
-
-        assertEquals(expectedOutput, possibleValues);
+        assertThat(possibleValues).containsExactly(new PossibleValue("be", true));
     }
 
     @Test
-    public void testSimplePath()
-        throws Exception
+    public void testSimplePath() throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/10.rules"));
-        Parse p = parser.Parse();
-
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/10.rules");
 
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("The sun.");
@@ -124,8 +109,8 @@ public class ConstraintsGeneratorTest
 
         Evaluator constraintsEvaluator = new ValuesGenerator();
 
-        List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(
-                dep_the_sun, "DependencyType", constraints);
+        List<PossibleValue> possibleValues = constraintsEvaluator
+                .generatePossibleValues(dep_the_sun, "DependencyType", constraints);
 
         List<PossibleValue> expectedOutput = new LinkedList<>();
         expectedOutput.add(new PossibleValue("det", false));
@@ -134,42 +119,38 @@ public class ConstraintsGeneratorTest
     }
 
     @Test
-    public void testTwoConditions()
-        throws Exception
+    public void testTwoConditions() throws Exception
     {
         JCas jcas = makeJCasOneSentence();
         CAS cas = jcas.getCas();
-        
+
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
-        
+
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
 
         NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
         gov.setValue("Animal");
         gov.addToIndexes();
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        NamedEntity dep = new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
         dep.setValue("NotWeight");
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
-        
+
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
-        
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/twoConditions.rules"));
-        Parse p = parser.Parse();
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/twoConditions.rules");
 
         Evaluator constraintsEvaluator = new ValuesGenerator();
-        List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(
-                fs1, "label", constraints);
-        
+        List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(fs1,
+                "label", constraints);
+
         System.out.println(possibleValues);
-        
+
         // "Weight" != "NotWeight", so the rule should not match
         assertEquals(0, possibleValues.size());
     }
@@ -180,17 +161,16 @@ public class ConstraintsGeneratorTest
         TypeSystemDescription local = TypeSystemDescriptionFactory
                 .createTypeSystemDescriptionFromPath(
                         "src/test/resources/desc/types/webannoTestTypes.xml");
-       
+
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-        
+
         JCas jcas = JCasFactory.createJCas(merged);
-        
+
         DocumentMetaData.create(jcas).setDocumentId("doc");
-        
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
-                Sentence.class);
+
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
         tb.buildTokens(jcas, "This is a test .");
-        
+
         return jcas;
     }
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,20 +18,25 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.RuntimeConfigurationType;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -53,16 +58,19 @@ public abstract class ApplicationPageBase
 
     private static final long serialVersionUID = -1690130604031181803L;
 
-    public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = 
+    public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = //
             new MetaDataKey<Class<? extends Component>>()
-    {
-        private static final long serialVersionUID = 1L;
-    };
-    
+            {
+                private static final long serialVersionUID = 1L;
+            };
+
     private FeedbackPanel feedbackPanel;
+    private WebMarkupContainer footer;
 
     private @SpringBean GlobalInterceptorsRegistry interceptorsRegistry;
     private @SpringBean FooterItemRegistry footerItemRegistry;
+
+    private IModel<List<Component>> footerItems;
 
     protected ApplicationPageBase()
     {
@@ -81,23 +89,33 @@ public abstract class ApplicationPageBase
             interceptor.intercept(this);
         }
 
-        List<Component> footerItems = footerItemRegistry.getFooterItems().stream()
-                .map(c -> c.create("item"))
-                .collect(Collectors.toList());
-        
-        add(new ListView<Component>("footerItems", footerItems)
+        footerItems = new ListModel<>(new ArrayList<>());
+
+        footerItemRegistry.getFooterItems().stream().map(c -> c.create("item"))
+                .forEach(c -> footerItems.getObject().add(c));
+
+        footer = new WebMarkupContainer("footer");
+        footer.setOutputMarkupId(true);
+        add(footer);
+
+        footer.add(new ListView<Component>("footerItems", footerItems)
         {
             private static final long serialVersionUID = 5912513189482015963L;
+
+            {
+                setReuseItems(true);
+            }
 
             @Override
             protected void populateItem(ListItem<Component> aItem)
             {
+                aItem.setOutputMarkupPlaceholderTag(true);
                 aItem.add(aItem.getModelObject());
             }
         });
-        
+
         Properties settings = SettingsUtil.getSettings();
-        
+
         // Override locale to be used by application
         String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
         switch (locale) {
@@ -109,7 +127,7 @@ public abstract class ApplicationPageBase
             getSession().setLocale(Locale.forLanguageTag(locale));
             break;
         }
-        
+
         // Add menubar
         try {
             Class<? extends Component> menubarClass = getApplication().getMetaData(MENUBAR_CLASS);
@@ -165,5 +183,34 @@ public abstract class ApplicationPageBase
     public FeedbackPanel getFeedbackPanel()
     {
         return feedbackPanel;
+    }
+
+    public IModel<List<Component>> getFooterItems()
+    {
+        return footerItems;
+    }
+
+    public void addToFooter(Component aComponent)
+    {
+        List<Component> items = footerItems.getObject();
+
+        if (!items.contains(aComponent)) {
+            items.add(aComponent);
+        }
+
+        RequestCycle.get().find(IPartialPageRequestHandler.class).ifPresent(handler -> {
+            handler.add(footer);
+        });
+    }
+
+    public void removeFromFooter(Component aComponent)
+    {
+        List<Component> items = footerItems.getObject();
+
+        items.remove(aComponent);
+
+        RequestCycle.get().find(IPartialPageRequestHandler.class).ifPresent(handler -> {
+            handler.add(footer);
+        });
     }
 }

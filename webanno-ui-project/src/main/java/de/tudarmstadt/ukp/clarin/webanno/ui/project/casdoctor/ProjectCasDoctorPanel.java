@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.Arrays.asList;
@@ -86,7 +87,7 @@ public class ProjectCasDoctorPanel
         super(id, aProjectModel);
 
         setOutputMarkupId(true);
-        
+
         Form<FormModel> form = new Form<>("casDoctorForm", PropertyModel.of(this, "formModel"));
         add(form);
 
@@ -99,19 +100,19 @@ public class ProjectCasDoctorPanel
         repairs.setSuffix("</div>");
         repairs.setLabelPosition(LabelPosition.WRAP_AFTER);
         form.add(repairs);
-            
+
         form.add(new LambdaAjaxButton<FormModel>("check", this::actionCheck));
         form.add(new LambdaAjaxButton<FormModel>("repair", this::actionRepair));
         add(createMessageSetsView());
     }
-    
+
     @Override
     protected void onModelChanged()
     {
         super.onModelChanged();
         formModel = new FormModel();
     }
-    
+
     private ListView<LogMessageSet> createMessageSetsView()
     {
         return new ListView<LogMessageSet>("messageSets",
@@ -128,7 +129,7 @@ public class ProjectCasDoctorPanel
             }
         };
     }
-    
+
     private ListView<LogMessage> createMessagesView(IModel<LogMessageSet> aModel)
     {
         return new ListView<LogMessage>("messages", PropertyModel.of(aModel, "messages"))
@@ -140,7 +141,7 @@ public class ProjectCasDoctorPanel
             {
                 IModel<LogMessage> msg = aItem.getModel();
                 aItem.add(new Label("level", PropertyModel.of(msg, "level")));
-                aItem.add(new Label("source", PropertyModel.of(msg, "source.simpleName")));
+                aItem.add(new Label("source", PropertyModel.of(msg, "source")));
                 aItem.add(new Label("message", PropertyModel.of(msg, "message")));
             }
         };
@@ -149,8 +150,6 @@ public class ProjectCasDoctorPanel
     private void actionRepair(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        casStorageService.disableCache();
-        
         CasDoctor casDoctor = new CasDoctor();
         casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
         casDoctor.setFatalChecks(false);
@@ -164,7 +163,7 @@ public class ProjectCasDoctorPanel
             // Repair INITIAL CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                
+
                 try {
                     CAS initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
                     casDoctor.repair(project, initialCas, messageSet.messages);
@@ -174,19 +173,20 @@ public class ProjectCasDoctorPanel
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
                             "Error repairing initial CAS for [" + sd.getName() + "]: "
                                     + e.getMessage()));
-                    LOG.error("Error repairing initial CAS for [{}]",  sd.getName(), e);
+                    LOG.error("Error repairing initial CAS for [{}]", sd.getName(), e);
                 }
-                
+
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Repair CORRECTION_USER CAS if necessary
             if (PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CORRECTION_USER + "]");
                 try {
-                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER, false);
+                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.repair(project, correctionCas, messageSet.messages);
                     CasPersistenceUtils.writeSerializedCas(correctionCas,
                             documentService.getCasFile(sd, CORRECTION_USER));
@@ -195,8 +195,8 @@ public class ProjectCasDoctorPanel
                     // If there is no CAS for the correction user, then correction has not started
                     // yet. This is not a problem, so we can ignore it. (REC: I wonder if this
                     // assumption is correct in curation mode...)
-                    messageSet.messages.add(
-                            LogMessage.info(getClass(), "Correction seems to have not yet started."));
+                    messageSet.messages.add(LogMessage.info(getClass(),
+                            "Correction seems to have not yet started."));
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
@@ -209,21 +209,22 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Repair CURATION_USER CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CURATION_USER + "]");
                 try {
-                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER, false);
+                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.repair(project, curationCas, messageSet.messages);
                     CasPersistenceUtils.writeSerializedCas(curationCas,
                             documentService.getCasFile(sd, CURATION_USER));
                 }
                 catch (FileNotFoundException e) {
                     if (asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(sd.getState())) {
-                        messageSet.messages.add(
-                                LogMessage.error(getClass(), "Curation CAS missing."));
+                        messageSet.messages
+                                .add(LogMessage.error(getClass(), "Curation CAS missing."));
                     }
                     else {
                         // If there is no CAS for the curation user, then curation has not started
@@ -243,7 +244,7 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Repair regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
                 if (documentService.existsAnnotationCas(ad)) {
@@ -251,7 +252,7 @@ public class ProjectCasDoctorPanel
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         CAS userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
-                                false);
+                                UNMANAGED_NON_INITIALIZING_ACCESS);
                         casDoctor.repair(project, userCas, messageSet.messages);
                         CasPersistenceUtils.writeSerializedCas(userCas,
                                 documentService.getCasFile(ad.getDocument(), ad.getUser()));
@@ -275,8 +276,6 @@ public class ProjectCasDoctorPanel
     private void actionCheck(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        casStorageService.disableCache();
-        
         CasDoctor casDoctor = new CasDoctor();
         casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
         casDoctor.setFatalChecks(false);
@@ -290,7 +289,7 @@ public class ProjectCasDoctorPanel
             // Check INITIAL CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                
+
                 try {
                     CAS initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
                     casDoctor.analyze(project, initialCas, messageSet.messages);
@@ -301,7 +300,7 @@ public class ProjectCasDoctorPanel
                                     + e.getMessage()));
                     LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
                 }
-                
+
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
@@ -311,15 +310,16 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CORRECTION_USER + "]");
                 try {
-                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER, false);
+                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.analyze(project, correctionCas, messageSet.messages);
                 }
                 catch (FileNotFoundException e) {
                     // If there is no CAS for the correction user, then correction has not started
                     // yet. This is not a problem, so we can ignore it. (REC: I wonder if this
                     // assumption is correct in curation mode...)
-                    messageSet.messages.add(
-                            LogMessage.info(getClass(), "Correction seems to have not yet started."));
+                    messageSet.messages.add(LogMessage.info(getClass(),
+                            "Correction seems to have not yet started."));
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
@@ -332,13 +332,14 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Check CURATION_USER CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CURATION_USER + "]");
                 try {
-                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER, false);
+                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.analyze(project, curationCas, messageSet.messages);
                 }
                 catch (FileNotFoundException e) {
@@ -358,7 +359,7 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Check regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
                 if (documentService.existsAnnotationCas(ad)) {
@@ -366,7 +367,7 @@ public class ProjectCasDoctorPanel
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         CAS userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
-                                false);
+                                UNMANAGED_NON_INITIALIZING_ACCESS);
                         casDoctor.analyze(project, userCas, messageSet.messages);
                     }
                     catch (Exception e) {
@@ -376,7 +377,7 @@ public class ProjectCasDoctorPanel
                         LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
                                 sd.getName(), e);
                     }
-                        
+
                     noticeIfThereAreNoMessages(messageSet);
                     formModel.messageSets.add(messageSet);
                 }
@@ -385,14 +386,15 @@ public class ProjectCasDoctorPanel
 
         aTarget.add(this);
     }
-    
+
     private CAS createOrReadInitialCasWithoutSaving(SourceDocument aDocument,
             LogMessageSet aMessageSet)
         throws IOException, UIMAException
     {
         CAS cas;
         if (casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER)) {
-            cas = casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER, false);
+            cas = casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER,
+                    UNMANAGED_NON_INITIALIZING_ACCESS);
         }
         else {
             cas = importExportService.importCasFromFile(
@@ -410,15 +412,15 @@ public class ProjectCasDoctorPanel
             aSet.messages.add(new LogMessage(getClass(), LogLevel.INFO, "Nothing to report."));
         }
     }
-    
+
     private static class FormModel
         implements Serializable
     {
         private static final long serialVersionUID = 5421427363671176637L;
-        
+
         private List<LogMessageSet> messageSets = new ArrayList<>();
         private List<Class<? extends Repair>> repairs;
-        
+
         {
             // Fetch only the safe/non-destructive repairs
             List<Class<? extends Repair>> allRepairs = CasDoctor.scanRepairs();
@@ -433,7 +435,7 @@ public class ProjectCasDoctorPanel
         implements Serializable
     {
         private static final long serialVersionUID = 997324549494420840L;
-        
+
         private String name;
         private List<LogMessage> messages = new ArrayList<>();
 

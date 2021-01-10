@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,11 +32,11 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -51,7 +51,7 @@ public class ImportGuidelinesPanel
     private @SpringBean ProjectService projectRepository;
     private @SpringBean ImportExportService importExportService;
 
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     private IModel<Project> projectModel;
 
@@ -64,7 +64,11 @@ public class ImportGuidelinesPanel
         Form<Void> form = new Form<>("form");
         add(form);
 
-        form.add(fileUpload = new FileUploadField("guidelines"));
+        form.add(fileUpload = new BootstrapFileInputField("guidelines"));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
+        fileUpload.setRequired(true);
 
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
     }

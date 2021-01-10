@@ -319,7 +319,13 @@ var VisualizerUI = (function($, window, undefined) {
 /* slight "tooltip" delay to allow highlights to be seen
            before the popup obstructs them. */
                     displayCommentTimer = setTimeout(function() {
-                        commentPopup.stop(true, true).fadeIn();
+// BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+// - Show/hide comments immediately instead of using an animation to avoid costly reflows
+/*
+                        commentPopup.stop(true, true).fadeIn(0);
+*/
+                        commentPopup.show();
+// END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
                         commentDisplayed = true;
                     }, immediately ? 0 : 500);
                 };
@@ -409,7 +415,7 @@ var VisualizerUI = (function($, window, undefined) {
                             }
                             
                             comment += ```
-                                  <span class="norm_info_value">${Util.escapeHTML(value)}</span>
+                                  <span class="norm_info_value">${Util.escapeHTML(value).replace(/\n/g, "<br/>")}</span>
                                   <br/>
                                   ```;
                         } else {
@@ -491,7 +497,7 @@ var VisualizerUI = (function($, window, undefined) {
                                                 value = value.substr(0, 300) + ' ...';
                                             }
 
-                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ':' + Util.escapeHTML(value) + '</span>' + '<br/>');
+                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ':' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
                                         }
                                     }
                                 }
@@ -526,9 +532,16 @@ var VisualizerUI = (function($, window, undefined) {
             var hideComment = function() {
                     clearTimeout(displayCommentTimer);
                     if (commentDisplayed) {
-                        commentPopup.stop(true, true).fadeOut(function() {
+// BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+// - Show/hide comments immediately instead of using an animation to avoid costly reflows
+/*
+                        commentPopup.stop(true, true).fadeOut(0, function() {
                             commentDisplayed = false;
                         });
+*/
+                        commentPopup.hide();
+                        commentDisplayed = false;
+// END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
                     }
                 };
 
@@ -679,11 +692,11 @@ var VisualizerUI = (function($, window, undefined) {
 
             var onDoneRendering = function(coll, doc, args) {
                     if (args && !args.edited) {
-                        var svgtop = $('svg').offset().top;
                         var $inFocus = $('#svg animate[data-type="focus"]:first').parent();
                         if ($inFocus.length) {
+                            var svgtop = $('svg').offset().top;
                             $('html,body').
-                				animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing'});
+                            animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing'});
                         }
                     }
                     dispatcher.post('allowReloadByURL');
@@ -794,14 +807,19 @@ var VisualizerUI = (function($, window, undefined) {
             });
 
             var resizeFunction = function(evt) {
+// WEBANNO EXTENSION BEGIN - #1519 - Optimize re-rendering of brat view when window is resizes
+/*
             	window.location.reload();
-              };
+*/
+            	dispatcher.post('rerender');
+// WEBANNO EXTENSION BEGIN - #1519 - Optimize re-rendering of brat view when window is resizes
+            };
 
               var resizerTimeout = null;
               var onResize = function(evt) {
                 if (evt.target === window) {
                   clearTimeout(resizerTimeout);
-                  resizerTimeout = setTimeout(resizeFunction, 2000); // TODO is 2000ms okay?
+                  resizerTimeout = setTimeout(resizeFunction, 300);
                 }
               };
               
@@ -1031,6 +1049,42 @@ var VisualizerUI = (function($, window, undefined) {
 */
 // WEBANNO EXTENSION END
 
+// WEBANNO EXTENSION BEGIN
+      var contextMenu = function(evt) {
+        // If the user shift-right-clicks, open the normal browser context menu. This is useful
+        // e.g. during debugging / developing
+        if (evt.shiftKey) {
+          return;
+        }
+  
+        var target = $(evt.target);
+        var id;
+        var type;
+        
+        if (target.attr('data-arc-ed')) {
+          id = target.attr('data-arc-ed');
+          type = target.attr('data-arc-role');
+        }
+  
+        if (target.attr('data-span-id')) {
+          id = target.attr('data-span-id');
+          type = data.spans[id].type;
+        }
+  
+        if (id) {
+          evt.preventDefault();
+          dispatcher.post('ajax', [ {
+            action: 'contextMenu',
+            id: id,
+            type: type,
+            clientX: evt.clientX,
+            clientY: evt.clientY
+          }, 'serverResult']);
+        }
+      }
+// WEBANNO EXTENSION END
+      
+      
       dispatcher.
           on('init', init).
           on('dataReady', rememberData).
@@ -1084,7 +1138,8 @@ var VisualizerUI = (function($, window, undefined) {
 */
 // WEBANNO EXTENSION END
           on('keydown', onKeyDown).
-          on('mousemove', onMouseMove);
+          on('mousemove', onMouseMove).
+          on('contextmenu', contextMenu);
 // WEBANNO EXTENSION BEGIN
 /*
           on('dblclick', onDblClick).
@@ -1100,6 +1155,6 @@ var VisualizerUI = (function($, window, undefined) {
 */
 // WEBANNO EXTENSION END
     };
-
+    
     return VisualizerUI;
 })(jQuery, window);

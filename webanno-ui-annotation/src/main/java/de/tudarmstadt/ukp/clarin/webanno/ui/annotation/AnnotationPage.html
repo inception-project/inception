@@ -1,103 +1,36 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2012
-#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-#Technische Universität Darmstadt
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
     <div class="flex-content flex-v-container">
-      <div wicket:id=openDocumentsModal></div>
-      <div wicket:id="preferencesDialog"></div>
-      <div wicket:id="exportDialog"></div>
-      <div wicket:id="guidelinesDialog"></div>
-      <div wicket:id="resetDocumentDialog"></div>
-      <div wicket:id="finishDocumentDialog"></div>
-      <div style="display: none;">
-        <a wicket:id="initialLoadComplete" id="initialLoadComplete"></a>
-      </div>
-  
-      <div class="actionbar">
-        <div>
-          <ul class="horizontal">
-            <li>
-              <fieldset>
-                <legend>Document</legend>
-                <ul class="horizontal">
-                  <li><a wicket:id="showOpenDocumentDialog" id="showOpenDocumentDialog"> <img
-                      src="images/drawer_open.png" title="Open" /><br />Open
-                  </a></li>
-                  
-                  <li wicket:id="showPreviousDocument" />
-                  <li wicket:id="showNextDocument" />
-                  <li wicket:id="showExportDialog" />
-                  <li wicket:id="showPreferencesDialog" />
-                </ul>
-              </fieldset>
-            </li>
-  
-            <li wicket:id="pageNavigator">
-            </li>
-  
-            <li>
-              <fieldset>
-                <legend>Script</legend>
-                <ul class="horizontal">
-                  <li wicket:id="toggleScriptDirection" />
-                </ul>
-              </fieldset>
-            </li>
-  
-            <li>
-              <fieldset>
-                <legend>Help</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showGuidelinesDialog" />
-                </ul>
-              </fieldset>
-            </li>
-  
-            <li>
-              <fieldset>
-                <legend>Workflow</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showResetDocumentDialog" />
-  
-                  <li><a wicket:id="showFinishDocumentDialog"> <img wicket:id="finishImage" /><br />Finish
-                  </a></li>
-                </ul>
-              </fieldset>
-            </li>
-          </ul>
-        </div>
-        <div class="locationbar">
-          <span wicket:id="documentNamePanel"></span> <span style="float: right;">
-          <span wicket:id="numberOfPages"></span>
-          </span>
-        </div>
-      </div>
-      
       <div class="annotation-editor-container flex-content flex-h-container flex-gutter flex-no-initial-gutter">
         <div wicket:id="leftSidebar" class="flex-sidebar flex-v-container flex-gutter"></div>
-        <div class="flex-content flex-v-container flex-gutter" wicket:enclosure="editor">
-          <div class="flex-content panel panel-primary panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title">Annotation</h3>
+        <div wicket:id="centerArea" class="flex-content flex-v-container flex-gutter">
+          <div class="flex-content card">
+            <div class="card-header border-bottom-0">
+              <span wicket:id="documentNamePanel"/> 
+              <span wicket:id="numberOfPages" class="small text-muted float-right"/>
             </div>
-            <div wicket:id="editor" class="panel-body flex-v-container" style="padding: 0px;">
+            <div class="card-body flex-v-container" style="padding: 0px;">
+              <nav wicket:id="actionBar" class="action-bar"/>
+              <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
             </div>
           </div>
         </div>

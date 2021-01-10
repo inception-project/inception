@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,31 +40,30 @@ public class LineOrientedPagingStrategy
     {
         // We need to preserve all tokens so we can add a +1 for the line breaks of empty lines.
         String[] lines = splitPreserveAllTokens(aCas.getDocumentText(), '\n');
-        
+
         List<Unit> units = new ArrayList<>();
         int beginOffset = 0;
         for (int i = 0; i < Math.min(lines.length, aLastIndex); i++) {
-            
+
             if (i >= aFirstIndex) {
                 units.add(new Unit(i + 1, beginOffset, beginOffset + lines[i].length()));
             }
-            
+
             // The +1 below accounts for the line break which is not included in the token
             beginOffset += lines[i].length() + 1;
         }
-        
+
         return units;
     }
-    
+
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
         Label label = new Label(aId, () -> {
             AnnotatorState state = aModel.getObject();
-            return String.format("Showing %d-%d of %d lines [document %d of %d]",
-                    state.getFirstVisibleUnitIndex(), state.getLastVisibleUnitIndex(),
-                    state.getUnitCount(), state.getDocumentIndex() + 1,
-                    state.getNumberOfDocuments());
+            return String.format("%d-%d / %d lines [doc %d / %d]", state.getFirstVisibleUnitIndex(),
+                    state.getLastVisibleUnitIndex(), state.getUnitCount(),
+                    state.getDocumentIndex() + 1, state.getNumberOfDocuments());
         });
         label.setOutputMarkupPlaceholderTag(true);
         return label;

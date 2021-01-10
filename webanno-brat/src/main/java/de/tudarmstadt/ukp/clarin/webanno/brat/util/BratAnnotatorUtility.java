@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
@@ -35,6 +35,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.CasFactory;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -67,7 +69,7 @@ public class BratAnnotatorUtility
                 // if annotationDocument is finished, disable editing
                 AnnotationDocument adoc = aRepository.getAnnotationDocument(
                         aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-                
+
                 return adoc.getState().equals(AnnotationDocumentState.FINISHED);
             }
         }
@@ -76,24 +78,23 @@ public class BratAnnotatorUtility
         }
     }
 
-    public static CAS clearAnnotations(CAS aCas)
-        throws IOException
+    public static CAS clearAnnotations(CAS aCas) throws IOException
     {
         CAS target;
         try {
-            target = createCas();
+            target = CasFactory.createCas((TypeSystemDescription) null);
         }
         catch (UIMAException e) {
             throw new IOException(e);
         }
-        
+
         // Copy the CAS - basically we do this just to keep the full type system information
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
-        deserializeCASComplete(serializer, (CASImpl) target);
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        deserializeCASComplete(serializer, (CASImpl) getRealCas(target));
 
         // Remove all annotations from the target CAS but we keep the type system!
         target.reset();
-        
+
         // Copy over essential information
         if (exists(aCas, getType(aCas, DocumentMetaData.class))) {
             copyDocumentMetadata(aCas, target);
@@ -103,7 +104,7 @@ public class BratAnnotatorUtility
         }
         target.setDocumentLanguage(aCas.getDocumentLanguage()); // DKPro Core Issue 435
         target.setDocumentText(aCas.getDocumentText());
-        
+
         // Transfer token boundaries
         for (AnnotationFS t : selectTokens(aCas)) {
             target.addFsToIndexes(createToken(target, t.getBegin(), t.getEnd()));

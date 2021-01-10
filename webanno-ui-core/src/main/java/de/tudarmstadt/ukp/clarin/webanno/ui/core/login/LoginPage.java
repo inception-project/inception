@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.EnumSet;
@@ -30,7 +31,9 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
-import org.apache.wicket.markup.html.basic.MultiLineLabel;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.HiddenField;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
@@ -54,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 /**
@@ -72,16 +76,26 @@ public class LoginPage
 
     private @SpringBean UserDao userRepository;
     private @SpringBean(required = false) SessionRegistry sessionRegistry;
+    private @SpringBean LoginProperties loginProperties;
 
     private LoginForm form;
-    
+    private final WebMarkupContainer tooManyUsersLabel;
+    private final Button signInBtn;
+
     public LoginPage()
     {
         setStatelessHint(true);
         setVersioned(false);
-        
+
         add(form = new LoginForm("loginForm"));
-        
+        signInBtn = new Button("signInBtn");
+        signInBtn.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
+        tooManyUsersLabel = new WebMarkupContainer("usersLabel");
+        tooManyUsersLabel.add(LambdaBehavior.visibleWhen(this::isTooManyUsers));
+        form.add(signInBtn);
+        form.add(tooManyUsersLabel);
+        form.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
+
         redirectIfAlreadyLoggedIn();
 
         // Create admin user if there is no user yet
@@ -100,15 +114,25 @@ public class LoginPage
             warn(msg);
         }
     }
-    
+
+    /**
+     * Check if settings property is set and there will be more users logged in (with current one)
+     * than max users allowed.
+     */
+    private boolean isTooManyUsers()
+    {
+        long maxUsers = loginProperties.getMaxConcurrentSessions();
+        return maxUsers > 0 && sessionRegistry.getAllPrincipals().size() >= maxUsers;
+    }
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         redirectIfAlreadyLoggedIn();
     }
-    
+
     private void redirectIfAlreadyLoggedIn()
     {
         // If we are already logged in, redirect to the welcome page. This tries to a void a
@@ -119,7 +143,7 @@ public class LoginPage
             log.debug("Already logged in, forwarding to home page");
             throw new RestartResponseException(getApplication().getHomePage());
         }
-        
+
         String redirectUrl = getRedirectUrl();
         if (redirectUrl == null) {
             log.debug("Authentication required");
@@ -146,7 +170,8 @@ public class LoginPage
             add(new HiddenField<>("urlfragment"));
             Properties settings = SettingsUtil.getSettings();
             String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
-            add(new MultiLineLabel("loginMessage", loginMessage).setEscapeModelStrings(false));
+            add(new Label("loginMessage", loginMessage).setEscapeModelStrings(false)
+                    .add(visibleWhen(() -> isNotBlank(loginMessage))));
         }
 
         @Override
@@ -175,7 +200,7 @@ public class LoginPage
             // Wicket continueToOriginalDestination();
 
             String redirectUrl = getRedirectUrl();
-            
+
             if (redirectUrl == null || redirectUrl.contains(".IBehaviorListener.")
                     || redirectUrl.contains("-logoutPanel-")) {
                 log.debug("Redirecting to welcome page");
@@ -196,7 +221,7 @@ public class LoginPage
             }
         }
     }
-    
+
     private String getRedirectUrl()
     {
         String redirectUrl = null;

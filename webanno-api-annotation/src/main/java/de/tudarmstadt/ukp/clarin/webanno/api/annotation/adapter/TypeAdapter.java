@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -30,6 +31,7 @@ import org.apache.uima.fit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -175,24 +177,48 @@ public interface TypeAdapter
      * @return the feature value.
      */
     <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs);
-    
+
     /**
      * Initialize the layer when it is created. This can be used e.g. to add default features. This
      * is mainly called when a layer is created through the UI, in other cases (e.g. during import)
      * all necessary information should be included in the imported data.
      */
     void initialize(AnnotationSchemaService aSchemaService);
-    
+
     /**
      * Check if all annotations of this layer conform with the layer configuration. This is usually
      * called when a document is marked as finished to prevent invalid annotations ending up in the
      * finished document.
      */
     List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas);
-    
+
     /**
      * Disable the adapter from dispatching any events. This is useful for backend bulk operations
      * that should not be tracked in detail.
      */
     void silenceEvents();
+
+    void select(AnnotatorState aState, AnnotationFS aAnnotation);
+
+    /**
+     * @return the encoded type name sent to the browser.
+     * @see #decodeTypeName(String)
+     */
+    default String getEncodedTypeName()
+    {
+        return TypeUtil.getUiTypeName(getLayer());
+    }
+
+    /**
+     * @param aType
+     *            a encoded type name from {@link #getEncodedTypeName()}
+     * @return the layer ID.
+     * @see #getEncodedTypeName()
+     */
+    static long decodeTypeName(String aType)
+    {
+        return TypeUtil.getLayerId(aType);
+    }
+
+    <T> Optional<T> getTraits(Class<T> aInterface);
 }

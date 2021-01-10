@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,16 +24,18 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
 /**
  * Represents a span position in the text.
  */
-public class SpanPosition extends Position_ImplBase
+public class SpanPosition
+    extends Position_ImplBase
 {
+    private static final long serialVersionUID = 7672904919600263605L;
+
     private final int begin;
     private final int end;
     private final String text;
 
     public SpanPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
-            int aBegin, int aEnd, String aText, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, String aLinkTargetText,
-            LinkCompareBehavior aLinkCompareBehavior)
+            int aBegin, int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
+            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
                 aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
@@ -41,7 +43,7 @@ public class SpanPosition extends Position_ImplBase
         end = aEnd;
         text = aText;
     }
-    
+
     /**
      * @return the begin offset.
      */
@@ -108,8 +110,8 @@ public class SpanPosition extends Position_ImplBase
                         .append(']');
                 break;
             default:
-                throw new IllegalStateException("Unknown link target comparison mode ["
-                        + linkCompareBehavior + "]");
+                throw new IllegalStateException(
+                        "Unknown link target comparison mode [" + linkCompareBehavior + "]");
             }
         }
         return builder.toString();

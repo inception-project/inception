@@ -1,14 +1,14 @@
 /*
- * Copyright 2016
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,15 +32,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * UIMA collection reader for plain text files, one sentence per line.
  */
-@TypeCapability(
-        outputs = {
-                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData"})
+@TypeCapability(outputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData" })
 public class LineOrientedTextReader
     extends JCasResourceCollectionReader_ImplBase
 {
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
+    public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);
@@ -68,8 +65,7 @@ public class LineOrientedTextReader
         }
     }
 
-    protected Sentence createSentence(final JCas aJCas, final int aBegin,
-            final int aEnd)
+    protected Sentence createSentence(final JCas aJCas, final int aBegin, final int aEnd)
     {
         int[] span = new int[] { aBegin, aEnd };
         trim(aJCas.getDocumentText(), span);
@@ -82,7 +78,7 @@ public class LineOrientedTextReader
             return null;
         }
     }
-    
+
     /**
      * Remove trailing or leading whitespace from the annotation.
      * 
@@ -116,15 +112,22 @@ public class LineOrientedTextReader
     public boolean trimChar(final char aChar)
     {
         switch (aChar) {
-        case '\n':     return true; // Line break
-        case '\r':     return true; // Carriage return
-        case '\t':     return true; // Tab
-        case '\u200E': return true; // LEFT-TO-RIGHT MARK
-        case '\u200F': return true; // RIGHT-TO-LEFT MARK
-        case '\u2028': return true; // LINE SEPARATOR
-        case '\u2029': return true; // PARAGRAPH SEPARATOR
+        case '\n':
+            return true; // Line break
+        case '\r':
+            return true; // Carriage return
+        case '\t':
+            return true; // Tab
+        case '\u200E':
+            return true; // LEFT-TO-RIGHT MARK
+        case '\u200F':
+            return true; // RIGHT-TO-LEFT MARK
+        case '\u2028':
+            return true; // LINE SEPARATOR
+        case '\u2029':
+            return true; // PARAGRAPH SEPARATOR
         default:
-            return  Character.isWhitespace(aChar);
+            return Character.isWhitespace(aChar);
         }
     }
 }

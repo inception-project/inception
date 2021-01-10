@@ -1,36 +1,45 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2017
-#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-#Technische Universität Darmstadt
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content panel panel-default panel-flex" style="min-height: 10em;">
-      <div class="panel-heading">
-        <h3 class="panel-title">
-          <wicket:message key="tagsets" />
-        </h3>
+    <div class="flex-content card" style="min-height: 10em;">
+      <div class="card-header">
+        <wicket:message key="tagsets" />
+        <div class="actions">
+          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+              <i class="fas fa-file-upload"></i>&nbsp;
+              <wicket:message key="import"/>
+            </button>
+            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
+              <wicket:container wicket:id="importPanel" />
+            </div>
+          </span>
+          <button wicket:id="create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>&nbsp;
+            <wicket:message key="create"/>
+          </button>
+        </div>
       </div>
-      <div class="scrolling panel-body fit-child-snug">
+      <div class="scrolling card-body fit-child-snug">
         <select wicket:id="tagset" class="form-control"></select>
-      </div>
-      <div class="panel-footer text-right">
-        <input type="button" wicket:id="create" wicket:message="value:create"
-          class="btn btn-primary" />
       </div>
     </div>
   </wicket:panel>

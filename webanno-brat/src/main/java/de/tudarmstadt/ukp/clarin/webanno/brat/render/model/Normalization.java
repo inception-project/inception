@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,12 +39,12 @@ public class Normalization
     public static final String TYPE_NAME = "name";
     public static final String TYPE_ATTR = "attr";
     public static final String TYPE_INFO = "info";
-    
+
     // The UI JS code used the ID is only used to generate an error message if the target is missing
     // and otherwise this ID doesn't matter
     private String id;
-    // The type seems to be entirely unused in the JS code 
-    private String type; 
+    // The type seems to be entirely unused in the JS code
+    private String type;
     private VID target;
     private String refDb;
     private String refId;
@@ -59,7 +59,7 @@ public class Normalization
         type = TYPE_INFO;
         refText = aReftext;
     }
-    
+
     public Normalization(VID aTarget, String aRefDb, String aRefId)
     {
         id = aTarget.toString();

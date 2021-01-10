@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class Tsv3XCasSchemaAnalyzer
 {
     private static final Logger LOG = LoggerFactory.getLogger(Tsv3XCasSchemaAnalyzer.class);
-    
+
     public static TsvSchema analyze(TypeSystem aTypeSystem)
     {
         TsvSchema schema = new TsvSchema();
@@ -62,7 +62,7 @@ public class Tsv3XCasSchemaAnalyzer
         Set<Type> ignoredTypes = new HashSet<>();
 
         Set<Type> chainLinkTypes = new HashSet<>();
-        
+
         // Consider only direct subtypes of the UIMA Annotation type. Currently, WebAnno only
         // supports such layers.
         Type annotationType = aTypeSystem.getType(CAS.TYPE_NAME_ANNOTATION);
@@ -71,13 +71,13 @@ public class Tsv3XCasSchemaAnalyzer
             if (aTypeSystem.subsumes(documentAnnotationType, type)) {
                 continue;
             }
-            
+
             if (type.getName().equals(Token.class.getName())
                     || type.getName().equals(Sentence.class.getName())) {
                 continue;
             }
-            
-            switch (schema.getLayerType(type))  {
+
+            switch (schema.getLayerType(type)) {
             case RELATION:
                 schema.addColumn(new TsvColumn(type, RELATION,
                         type.getFeatureByBaseName(FEAT_REL_SOURCE), RELATION_REF));
@@ -85,11 +85,9 @@ public class Tsv3XCasSchemaAnalyzer
                 break;
             case CHAIN:
                 schema.addColumn(new TsvColumn(type, CHAIN,
-                        type.getFeatureByBaseName(COREFERENCE_TYPE_FEATURE),
-                        CHAIN_ELEMENT_TYPE));
+                        type.getFeatureByBaseName(COREFERENCE_TYPE_FEATURE), CHAIN_ELEMENT_TYPE));
                 schema.addColumn(new TsvColumn(type, CHAIN,
-                        type.getFeatureByBaseName(COREFERENCE_RELATION_FEATURE),
-                        CHAIN_LINK_TYPE));
+                        type.getFeatureByBaseName(COREFERENCE_RELATION_FEATURE), CHAIN_LINK_TYPE));
                 chainLinkTypes.add(type);
                 break;
             case SPAN:
@@ -102,7 +100,7 @@ public class Tsv3XCasSchemaAnalyzer
                 break;
             }
         }
-        
+
         // Scan again for the chain head types
         Type topType = aTypeSystem.getType(CAS.TYPE_NAME_ANNOTATION_BASE);
         for (Type type : aTypeSystem.getDirectSubtypes(topType)) {
@@ -112,20 +110,18 @@ public class Tsv3XCasSchemaAnalyzer
                 ignoredTypes.remove(type);
             }
         }
-        
+
         ignoredTypes.forEach(schema::ignoreType);
-        
+
         return schema;
     }
 
     private static void generateColumns(TypeSystem aTypeSystem, TsvSchema aSchema,
             LayerType aLayerType, Type aType)
     {
-        List<String> specialFeatures = asList(
-                CAS.FEATURE_FULL_NAME_BEGIN,
-                CAS.FEATURE_FULL_NAME_END,
-                CAS.FEATURE_FULL_NAME_SOFA);
-        
+        List<String> specialFeatures = asList(CAS.FEATURE_FULL_NAME_BEGIN,
+                CAS.FEATURE_FULL_NAME_END, CAS.FEATURE_FULL_NAME_SOFA);
+
         for (Feature feat : aType.getFeatures()) {
             if (specialFeatures.contains(feat.getName())) {
                 continue;
@@ -150,21 +146,21 @@ public class Tsv3XCasSchemaAnalyzer
     {
         // This could be written more efficiently using a single conjunction. The reason this
         // has not been done is to facilitate debugging.
-        
+
         boolean multiValued = feat.getRange().isArray() || aTypeSystem
                 .subsumes(aTypeSystem.getType(CAS.TYPE_NAME_LIST_BASE), feat.getRange());
-        
+
         if (!multiValued) {
             return false;
         }
-        
+
         boolean linkInheritsFromTop = CAS.TYPE_NAME_TOP
                 .equals(aTypeSystem.getParent(feat.getRange().getComponentType()).getName());
         boolean hasTargetFeature = feat.getRange().getComponentType()
                 .getFeatureByBaseName(FEAT_SLOT_TARGET) != null;
         boolean hasRoleFeature = feat.getRange().getComponentType()
                 .getFeatureByBaseName(FEAT_SLOT_ROLE) != null;
-        
+
         return linkInheritsFromTop && hasTargetFeature && hasRoleFeature;
     }
 
@@ -174,24 +170,22 @@ public class Tsv3XCasSchemaAnalyzer
         boolean hasSourceFeature = relSourceFeat != null && !isPrimitiveFeature(relSourceFeat);
         Feature relTargetFeat = aType.getFeatureByBaseName(FEAT_REL_TARGET);
         boolean hasTargetFeature = relTargetFeat != null && !isPrimitiveFeature(relTargetFeat);
-        
+
         boolean compatible = true;
         for (Feature feat : aType.getFeatures()) {
-            if (
-                    CAS.FEATURE_BASE_NAME_SOFA.equals(feat.getShortName()) ||
-                    FEAT_REL_SOURCE.equals(feat.getShortName()) || 
-                    FEAT_REL_TARGET.equals(feat.getShortName())
-            ) {
+            if (CAS.FEATURE_BASE_NAME_SOFA.equals(feat.getShortName())
+                    || FEAT_REL_SOURCE.equals(feat.getShortName())
+                    || FEAT_REL_TARGET.equals(feat.getShortName())) {
                 continue;
             }
-            
+
             if (!isPrimitiveFeature(feat)) {
                 compatible = false;
-                //LOG.debug("Incompatible feature in type [" + aType + "]: " + feat);
+                // LOG.debug("Incompatible feature in type [" + aType + "]: " + feat);
                 break;
             }
         }
-        
+
         return hasSourceFeature && hasTargetFeature && compatible;
     }
 
@@ -204,15 +198,13 @@ public class Tsv3XCasSchemaAnalyzer
 
         boolean compatible = true;
         for (Feature feat : aType.getFeatures()) {
-            if (
-                    CAS.FEATURE_BASE_NAME_SOFA.equals(feat.getShortName()) ||
-                    CHAIN_NEXT_FEAT.equals(feat.getShortName()) || 
-                    COREFERENCE_TYPE_FEATURE.equals(feat.getShortName()) || 
-                    COREFERENCE_RELATION_FEATURE.equals(feat.getShortName())
-            ) {
+            if (CAS.FEATURE_BASE_NAME_SOFA.equals(feat.getShortName())
+                    || CHAIN_NEXT_FEAT.equals(feat.getShortName())
+                    || COREFERENCE_TYPE_FEATURE.equals(feat.getShortName())
+                    || COREFERENCE_RELATION_FEATURE.equals(feat.getShortName())) {
                 continue;
             }
-            
+
             if (!isPrimitiveFeature(feat)) {
                 compatible = false;
                 LOG.debug("Incompatible feature in type [" + aType + "]: " + feat);
@@ -230,27 +222,27 @@ public class Tsv3XCasSchemaAnalyzer
             if (CAS.FEATURE_BASE_NAME_SOFA.equals(feat.getShortName())) {
                 continue;
             }
-            
+
             if (!(isPrimitiveFeature(feat) || isSlotFeature(feat))) {
                 compatible = false;
-                //LOG.debug("Incompatible feature in type [" + aType + "]: " + feat);
+                // LOG.debug("Incompatible feature in type [" + aType + "]: " + feat);
                 break;
             }
 
         }
-        
+
         return compatible;
     }
-    
+
     public static boolean isSlotFeature(Feature aFeature)
     {
         if (aFeature.getRange().isArray()) {
             Type elementType = aFeature.getRange().getComponentType();
-            
+
             return elementType.getFeatureByBaseName(FEAT_SLOT_TARGET) != null
                     && elementType.getFeatureByBaseName(FEAT_SLOT_ROLE) != null;
         }
-        
+
         return false;
     }
 

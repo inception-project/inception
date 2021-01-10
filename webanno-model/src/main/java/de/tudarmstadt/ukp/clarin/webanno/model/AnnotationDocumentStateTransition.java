@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,8 +33,8 @@ public enum AnnotationDocumentStateTransition
      */
     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED,
     /**
-     * explicit annotator action, only possible if associated document in states
-     * "annotation in progress" or "annotation finished"
+     * explicit annotator action, only possible if associated document in states "annotation in
+     * progress" or "annotation finished"
      */
     ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS,
     /**
@@ -42,7 +42,7 @@ public enum AnnotationDocumentStateTransition
      */
     NEW_TO_IGNORE,
     /**
-     * Change document state from IGNOR back to NEW
+     * Change document state from IGNORE back to NEW
      */
     IGNORE_TO_NEW;
 

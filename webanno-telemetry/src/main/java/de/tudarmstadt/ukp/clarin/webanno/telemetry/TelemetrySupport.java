@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,26 +26,27 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 
 /**
-* @param <T> the traits type. If no traits are supported, this should be {@link Void}.
-*/
+ * @param <T>
+ *            the traits type. If no traits are supported, this should be {@link Void}.
+ */
 public interface TelemetrySupport<T>
 {
     String getId();
-    
+
     String getName();
-    
+
     /**
      * The support is valid if the user has made all necessary choices. While a support does not
      * have valid settings, no telemetry must be submitted.
      */
     boolean hasValidSettings();
-    
+
     /**
-     * When the version of a telemetry support changes, the user should be presented with the 
+     * When the version of a telemetry support changes, the user should be presented with the
      * settings again.
      */
     int getVersion();
-    
+
     /**
      * Returns a Wicket component to configure the telemetry support.
      * 
@@ -59,13 +60,13 @@ public interface TelemetrySupport<T>
     default Panel createTraitsEditor(String aId, IModel<TelemetrySettings> aTelemetryModel)
     {
         return new EmptyPanel(aId);
-    }    
-    
+    }
+
     /**
-     * Read the traits for this {@link TelemetrySupport}. If traits are supported, then this
-     * method must be overwritten. A typical implementation would read the traits from a JSON string
-     * stored in {@link TelemetrySettings#getTraits}, but it would also possible to load the
-     * traits from a database table.
+     * Read the traits for this {@link TelemetrySupport}. If traits are supported, then this method
+     * must be overwritten. A typical implementation would read the traits from a JSON string stored
+     * in {@link TelemetrySettings#getTraits}, but it would also possible to load the traits from a
+     * database table.
      * 
      * @param aSettings
      *            the settings whose traits should be obtained.
@@ -77,10 +78,10 @@ public interface TelemetrySupport<T>
     }
 
     /**
-     * Write the traits for this {@link TelemetrySupport}. If traits are supported, then this
-     * method must be overwritten. A typical implementation would write the traits from to JSON
-     * string stored in {@link TelemetrySettings#setTraits}, but it would also possible to store
-     * the traits from a database table.
+     * Write the traits for this {@link TelemetrySupport}. If traits are supported, then this method
+     * must be overwritten. A typical implementation would write the traits from to JSON string
+     * stored in {@link TelemetrySettings#setTraits}, but it would also possible to store the traits
+     * from a database table.
      * 
      * @param aSettings
      *            the settings whose traits should be written.
@@ -96,9 +97,9 @@ public interface TelemetrySupport<T>
      * Returns a list of details containing the data which the telemetry support sends home.
      * 
      * <b>Note:</b> Make sure this map actually contains all the data that is being sent! This is
-     * used to display the details of what is being sent to the user - it is not used to pick up
-     * the actual data which is sent home! So make sure the method which sents the data and this
-     * method are in sync.
+     * used to display the details of what is being sent to the user - it is not used to pick up the
+     * actual data which is sent home! So make sure the method which sents the data and this method
+     * are in sync.
      */
     List<TelemetryDetail> getDetails();
 }

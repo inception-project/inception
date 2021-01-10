@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -41,14 +41,10 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -63,12 +59,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -88,19 +84,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
@@ -108,9 +96,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationCon
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
@@ -132,7 +117,6 @@ public class AutomationPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -141,24 +125,14 @@ public class AutomationPage
 
     private long currentprojectId;
 
-    // Open the dialog window on first load
-    private boolean firstLoad = true;
-
-    private ModalWindow openDocumentsModal;
-    private AnnotationPreferencesDialog preferencesModal;
-    private ExportDocumentDialog exportDialog;
-    private GuidelinesDialog guidelinesDialog;
-
-    private FinishImage finishDocumentIcon;
-    private ConfirmationDialog finishDocumentDialog;
-    private LambdaAjaxLink finishDocumentLink;
-
+    private WebMarkupContainer centerArea;
+    private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
-    private AnnotationDetailEditorPanel detailEditor;    
+    private AnnotationDetailEditorPanel detailEditor;
     private SuggestionViewPanel suggestionView;
-    
-    private final Map<String, Map<Integer, AnnotationSelection>> 
-            annotationSelectionByUsernameAndAddress = new HashMap<>();
+
+    private final Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = //
+            new HashMap<>();
 
     private final SourceListView curationSegment = new SourceListView();
 
@@ -168,20 +142,12 @@ public class AutomationPage
     {
         commonInit();
     }
-    
+
     private void commonInit()
     {
         setVersioned(false);
-        
+
         setModel(Model.of(new AnnotatorStateImpl(Mode.AUTOMATION)));
-        
-        getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy()
-                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
-                .add(visibleWhen(() -> getModelObject().getDocument() != null))
-                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
-                    (c, e) -> e.getRequestHandler().add(c))));
 
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         // Override sidebar width from preferencesa
@@ -189,6 +155,29 @@ public class AutomationPage
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         rightSidebar.setOutputMarkupId(true);
         add(rightSidebar);
+
+        centerArea = new WebMarkupContainer("centerArea");
+        centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
+        centerArea.setOutputMarkupPlaceholderTag(true);
+
+        centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
+
+        actionBar = new ActionBar("actionBar");
+        centerArea.add(actionBar);
+
+        rightSidebar.add(detailEditor = createDetailEditor());
+
+        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
+                this::getEditorCas);
+        centerArea.add(annotationEditor);
+        add(centerArea);
+
+        getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
+        centerArea.add(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null))
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                        (c, e) -> e.getRequestHandler().add(c))));
 
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegment = new UserAnnotationSegment();
@@ -198,7 +187,7 @@ public class AutomationPage
             userAnnotationSegment.setAnnotatorState(getModelObject());
             segments.add(userAnnotationSegment);
         }
-        
+
         suggestionView = new SuggestionViewPanel("automateView", new ListModel<>(segments))
         {
             private static final long serialVersionUID = 2583509126979792202L;
@@ -215,9 +204,9 @@ public class AutomationPage
                     CAS editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
-                    suggestionView.updatePanel(aTarget, curationContainer,
+                    suggestionView.requestUpdate(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
-                    
+
                     annotationEditor.requestRender(aTarget);
                     update(aTarget);
                 }
@@ -226,130 +215,14 @@ public class AutomationPage
                 }
             }
         };
-        add(suggestionView);
-
-        rightSidebar.add(detailEditor = createDetailEditor());
-
-        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
-            this::getEditorCas);
-        add(annotationEditor);
+        centerArea.add(suggestionView);
 
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
-
-        add(new DocumentNamePanel("documentNamePanel", getModel()));
-
-        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
-                getAllowedProjects())
-        {
-            private static final long serialVersionUID = 5474030848589262638L;
-
-            @Override
-            public void onDocumentSelected(AjaxRequestTarget aTarget)
-            {
-                // Reload the page using AJAX. This does not add the project/document ID to the URL,
-                // but being AJAX it flickers less.
-                actionLoadDocument(aTarget);
-                
-//                if (state.getDocument() == null) {
-//                    setResponsePage(getApplication().getHomePage());
-//                    return;
-//                }
-//
-//                try {
-//                    aCallbackTarget.addChildren(getPage(), IFeedback.class);
-//
-//                    String username = SecurityContextHolder.getContext().getAuthentication()
-//                            .getName();
-//
-//                    actionLoadDocument(aCallbackTarget);
-//                    User user = userRepository.get(username);
-//                    detailEditor.setEnabled(!FinishImage.isFinished(
-//                            new Model<AnnotatorState>(state), user, documentService));
-//                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
-//                }
-//                catch (Exception e) {
-//                    handleException(aCallbackTarget, e);
-//                }
-//                finishDocumentIcon.setModelObject(state);
-//                aCallbackTarget.add(finishDocumentIcon.setOutputMarkupId(true));
-//                aCallbackTarget.appendJavaScript(
-//                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
-//                aCallbackTarget.add(documentNamePanel.setOutputMarkupId(true));
-//                aCallbackTarget.add(getOrCreatePositionInfoLabel());
-            }
-        });
-
-        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
-        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
-
-        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
-
-        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
-        
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-       
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-
-        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
-
-        add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
-            private static final long serialVersionUID = -3082002656840117267L;
-
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                setVisible(state.getProject() != null
-                        && (projectService.isAdmin(state.getProject(), state.getUser())
-                                || !state.getProject().isDisableExport()));
-            }
-        });
-        
-        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
-                        EventType.click)));
-
-        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
-                        EventType.click)));
-
-        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
-        
-        add(createOrGetResetDocumentDialog());
-        add(createOrGetResetDocumentLink());
-        
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser()));
-            }
-        });
-        finishDocumentIcon = new FinishImage("finishImage", getModel());
-        finishDocumentIcon.setOutputMarkupId(true);
-        finishDocumentLink.add(finishDocumentIcon);
     }
-    
-    private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
+
+    @Override
+    public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
         return LambdaModel.of(() -> {
             User user = userRepository.getCurrentUser();
@@ -374,9 +247,9 @@ public class AutomationPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 AnnotatorState state = getModelObject();
-                
+
                 aTarget.addChildren(getPage(), IFeedback.class);
-                
+
                 try {
                     annotationEditor.requestRender(aTarget);
                 }
@@ -393,21 +266,21 @@ public class AutomationPage
                     setCurationSegmentBeginEnd(getEditorCas());
                     curationContainer.setState(state);
 
-                    suggestionView.updatePanel(aTarget, curationContainer,
+                    suggestionView.requestUpdate(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
-                    
+
                     update(aTarget);
                 }
                 catch (Exception e) {
                     handleException(this, aTarget, e);
                 }
             }
-            
+
             @Override
             public void onAnnotate(AjaxRequestTarget aTarget)
             {
                 AnnotatorState state = getModelObject();
-                
+
                 if (state.isForwardAnnotation()) {
                     return;
                 }
@@ -468,7 +341,7 @@ public class AutomationPage
             {
                 annotationEditor.requestRender(aTarget);
             }
-            
+
             @Override
             public void onDelete(AjaxRequestTarget aTarget, AnnotationFS aFS)
             {
@@ -501,7 +374,7 @@ public class AutomationPage
                     }
                 }
             }
-            
+
             @Override
             public CAS getEditorCas() throws IOException
             {
@@ -511,31 +384,15 @@ public class AutomationPage
     }
 
     @Override
-    protected List<SourceDocument> getListOfDocs()
+    public List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
-    /**
-     * for the first time the page is accessed, open the <b>open document dialog</b>
-     */
     @Override
-    public void renderHead(IHeaderResponse response)
-    {
-        super.renderHead(response);
-
-        if (firstLoad) {
-            response.render(OnLoadHeaderItem
-                    .forScript("jQuery('#showOpenDocumentModal').trigger('click');"));
-            firstLoad = false;
-        }
-    }
-    
-    @Override
-    public CAS getEditorCas()
-        throws IOException
+    public CAS getEditorCas() throws IOException
     {
         AnnotatorState state = getModelObject();
 
@@ -550,10 +407,12 @@ public class AutomationPage
         return documentService.readAnnotationCas(getModelObject().getDocument(),
                 state.getUser().getUsername());
     }
-    
+
     @Override
-    public void writeEditorCas(CAS aCas) throws IOException
+    public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
+        ensureIsEditable();
+
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
@@ -564,7 +423,7 @@ public class AutomationPage
             state.setAnnotationDocumentTimestamp(diskTimestamp.get());
         }
     }
-    
+
     private void setCurationSegmentBeginEnd(CAS aEditorCas)
         throws UIMAException, ClassNotFoundException, IOException
     {
@@ -576,91 +435,17 @@ public class AutomationPage
     private void update(AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        suggestionView.updatePanel(target, curationContainer,
+        suggestionView.requestUpdate(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
     }
 
-    
-    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        openDocumentsModal.show(aTarget);
-    }
-
-    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        preferencesModal.show(aTarget);
-    }
-    
-    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
-            throws Exception
-    {
-        getModelObject().toggleScriptDirection();
-        annotationEditor.requestRender(aTarget);
-
-        curationContainer.setState(getModelObject());
-        suggestionView.updatePanel(aTarget, curationContainer,
-                annotationSelectionByUsernameAndAddress, curationSegment);
-    }
-    
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        try {
-            AnnotatorState state = getModelObject();
-
-            CAS editorCas = getEditorCas();
-            
-            // The number of visible sentences may have changed - let the state recalculate 
-            // the visible sentences 
-            state.getPagingStrategy().recalculatePage(state, editorCas);
-            
-            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
-                    correctionDocumentService, curationDocumentService, annotationService,
-                    userRepository);
-            curationContainer = builder.buildCurationContainer(state);
-            setCurationSegmentBeginEnd(editorCas);
-            curationContainer.setState(state);
-            
-            update(aTarget);
-            aTarget.appendJavaScript(
-                    "Wicket.Window.unloadConfirmation = false;window.location.reload()");
-            
-            // Re-render the whole page because the width of the sidebar may have changed
-            aTarget.add(this);
-        }
-        catch (Exception e) {
-            handleException(aTarget, e);
-        }
-    }
-    
-    private void actionFinishDocument(AjaxRequestTarget aTarget)
-    {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            actionValidateDocument(aCallbackTarget, getEditorCas());
-            
-            AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                    state.getDocument(), state.getUser());
-
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-            
-            aCallbackTarget.add(finishDocumentIcon);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(detailEditor);
-            aCallbackTarget.add(createOrGetResetDocumentLink());
-        });
-        finishDocumentDialog.show(aTarget);
-    }
-    
     @Override
-    protected void actionLoadDocument(AjaxRequestTarget aTarget)
+    public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
 
         AnnotatorState state = getModelObject();
-        
+
         state.setUser(userRepository.getCurrentUser());
         state.setDocument(state.getDocument(), getListOfDocs());
 
@@ -681,17 +466,10 @@ public class AutomationPage
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
-            CAS editorCas;
-            if (documentService.existsCas(state.getDocument(), state.getUser().getUsername())) {
-                editorCas = documentService.readAnnotationCas(annotationDocument);
-            }
-            else {
-                editorCas = documentService.createOrReadInitialCas(state.getDocument());
-                // In automation mode, we do not remove the existing annotations from the documents
-            }
+            CAS editorCas = documentService.readAnnotationCas(annotationDocument,
+                    FORCE_CAS_UPGRADE);
 
             // Update the CASes
-            annotationService.upgradeCas(editorCas, annotationDocument);
             correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
@@ -714,7 +492,7 @@ public class AutomationPage
 
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
-            
+
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
@@ -742,11 +520,9 @@ public class AutomationPage
                 documentService.transitionAnnotationDocumentState(annotationDocument,
                         AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
             }
-            
+
             // Reset the editor
             detailEditor.reset(aTarget);
-            // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(editorCas, aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -754,7 +530,7 @@ public class AutomationPage
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
-    
+
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
@@ -768,7 +544,7 @@ public class AutomationPage
             curationContainer.setState(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);
-            aTarget.add(get(MID_NUMBER_OF_PAGES));
+            aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);

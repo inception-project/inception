@@ -1,14 +1,14 @@
 /*
-# * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+# * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -54,29 +53,20 @@ public class CorrectionDocumentServiceImpl
     }
 
     @Override
-    public boolean existsCorrectionCas(SourceDocument aSourceDocument)
-        throws IOException
+    public boolean existsCorrectionCas(SourceDocument aSourceDocument) throws IOException
     {
-        try {
-            readCorrectionCas(aSourceDocument);
-            return true;
-        }
-        catch (FileNotFoundException e) {
-            return false;
-        }
+        return casStorageService.existsCas(aSourceDocument, CORRECTION_USER);
     }
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void writeCorrectionCas(CAS aCas, SourceDocument aDocument)
-        throws IOException
+    public void writeCorrectionCas(CAS aCas, SourceDocument aDocument) throws IOException
     {
         casStorageService.writeCas(aDocument, aCas, CORRECTION_USER);
     }
 
     @Override
-    public CAS readCorrectionCas(SourceDocument aDocument)
-        throws IOException
+    public CAS readCorrectionCas(SourceDocument aDocument) throws IOException
     {
         return casStorageService.readCas(aDocument, CORRECTION_USER);
     }
@@ -87,12 +77,12 @@ public class CorrectionDocumentServiceImpl
     {
         annotationService.upgradeCas(aCas, aDocument, CORRECTION_USER);
     }
-    
+
     @Override
     public Optional<Long> getCorrectionCasTimestamp(SourceDocument aDocument) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        
+
         return casStorageService.getCasTimestamp(aDocument, CORRECTION_USER);
     }
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,16 +48,18 @@ public class MenuBar
 
         add(new LogoutPanel("logoutPanel"));
 
-        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", ""),
-                new ResourceModel("page.help", "")) {
+        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", ""))
+        {
             private static final long serialVersionUID = -2510064191732926764L;
 
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 try {
+                    // Trying to access the resources - if we can, then we show the link, but if
+                    // we fail, then we hide the link
                     getString("page.help.link");
                     getString("page.help");
                     helpLink.setVisible(true);
@@ -69,7 +71,7 @@ public class MenuBar
         });
         helpLink.setContextRelative(true);
         helpLink.setPopupSettings(new PopupSettings("_blank"));
-        
+
         links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
         {
             private static final long serialVersionUID = 1768830545639450786L;

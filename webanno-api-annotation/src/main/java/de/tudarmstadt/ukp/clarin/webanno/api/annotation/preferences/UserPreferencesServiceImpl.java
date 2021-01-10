@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,12 +42,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.PropertyAccessorFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -61,20 +61,22 @@ public class UserPreferencesServiceImpl
      * The annotation preference properties file name.
      */
     private static final String ANNOTATION_PREFERENCE_PROPERTIES_FILE = "annotation.properties";
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    private final BratProperties defaultPreferences;
+
+    private final AnnotationEditorProperties defaultPreferences;
     private final AnnotationSchemaService annotationService;
-    
-    @Value(value = "${repository.path}")
-    private File dir;
-    
-    public UserPreferencesServiceImpl(BratProperties aDefaultPreferences,
-            AnnotationSchemaService aAnnotationService)
+    private final RepositoryProperties repositoryProperties;
+    private final ColoringService coloringService;
+
+    public UserPreferencesServiceImpl(AnnotationEditorProperties aDefaultPreferences,
+            AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
+            ColoringService aColoringService)
     {
         defaultPreferences = aDefaultPreferences;
         annotationService = aAnnotationService;
+        repositoryProperties = aRepositoryProperties;
+        coloringService = aColoringService;
     }
 
     @Override
@@ -84,7 +86,7 @@ public class UserPreferencesServiceImpl
     {
         // TODO Use modular preference loading once it is available and if there is a corresponding
         // data file. Otherwise, fall back to loading the legacy preferences
-        
+
         return loadLegacyPreferences(aProject, aUsername, aMode);
     }
 
@@ -94,7 +96,7 @@ public class UserPreferencesServiceImpl
         throws IOException
     {
         // TODO Switch to a new and modular way of writing preferences
-        
+
         saveLegacyPreferences(aProject, aUsername, aMode, aPref);
     }
 
@@ -127,8 +129,8 @@ public class UserPreferencesServiceImpl
             props.setProperty(aMode + "." + value.getName(),
                     wrapper.getPropertyValue(value.getName()).toString());
         }
-        String propertiesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
+        String propertiesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
         // append existing preferences for the other mode
         if (new File(propertiesPath, ANNOTATION_PREFERENCE_PROPERTIES_FILE).exists()) {
             Properties properties = loadLegacyPreferencesFile(aUsername, aProject);
@@ -149,20 +151,20 @@ public class UserPreferencesServiceImpl
         props.store(new FileOutputStream(
                 new File(propertiesPath, ANNOTATION_PREFERENCE_PROPERTIES_FILE)), null);
 
-//        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-//                String.valueOf(aProject.getId()))) {
-//            log.info("Saved preferences for user [{}] in project [{}]({})", aUsername,
-//                    aProject.getName(), aProject.getId());
-//        }
+        // try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+        // String.valueOf(aProject.getId()))) {
+        // log.info("Saved preferences for user [{}] in project [{}]({})", aUsername,
+        // aProject.getName(), aProject.getId());
+        // }
     }
 
     private AnnotationPreference loadLegacyPreferences(Project aProject, String aUsername,
             Mode aMode)
     {
         AnnotationPreference preference = new AnnotationPreference();
-        
+
         BeanWrapper wrapper = new BeanWrapperImpl(preference);
-        
+
         // get annotation preference from file system
         try {
             Properties props = loadLegacyPreferencesFile(aUsername, aProject);
@@ -176,7 +178,8 @@ public class UserPreferencesServiceImpl
                             .getGenericType() instanceof ParameterizedType) {
                         if (entry.getValue().toString().startsWith("[")) { // its a list
                             List<String> value = Arrays.asList(
-                                    StringUtils.replaceChars(entry.getValue().toString(), "[]", "").split(","));
+                                    StringUtils.replaceChars(entry.getValue().toString(), "[]", "")
+                                            .split(","));
                             if (!value.get(0).equals("")) {
                                 wrapper.setPropertyValue(propertyName, value);
                             }
@@ -203,7 +206,7 @@ public class UserPreferencesServiceImpl
             preference.setScrollPage(defaultPreferences.isAutoScroll());
             preference.setRememberLayer(defaultPreferences.isRememberLayer());
         }
-        
+
         // Get color preferences for each layer, init with default if not found
         Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
         if (colorPerLayer == null) {
@@ -212,14 +215,14 @@ public class UserPreferencesServiceImpl
         }
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             if (!colorPerLayer.containsKey(layer.getId())) {
-                colorPerLayer.put(layer.getId(), ColoringStrategy
-                        .getBestInitialStrategy(annotationService, layer, preference));
+                colorPerLayer.put(layer.getId(),
+                        coloringService.getBestInitialStrategy(layer, preference));
             }
         }
-        
+
         return preference;
     }
-    
+
     /**
      * Load annotation preferences from a property file.
      *
@@ -235,9 +238,9 @@ public class UserPreferencesServiceImpl
         throws IOException
     {
         Properties property = new Properties();
-        property.load(new FileInputStream(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername + "/"
-                + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
+        property.load(new FileInputStream(new File(repositoryProperties.getPath().getAbsolutePath()
+                + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/"
+                + aUsername + "/" + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
         return property;
     }
 }

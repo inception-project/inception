@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,36 +57,35 @@ public class CasMergeSuiteTest
     @Parameters(name = "{index}: running on data {0}")
     public static Iterable<File> tsvFiles()
     {
-        return asList(new File("src/test/resources/testsuite/").listFiles(
-                (FilenameFilter) new SuffixFileFilter(asList("Test"))));
+        return asList(new File("src/test/resources/testsuite/")
+                .listFiles((FilenameFilter) new SuffixFileFilter(asList("Test"))));
     }
-    
+
     private File referenceFolder;
 
     public CasMergeSuiteTest(File aFolder) throws Exception
     {
         referenceFolder = aFolder;
     }
-    
+
     @Test
-    public void runTest()
-        throws Exception
+    public void runTest() throws Exception
     {
         Map<String, List<CAS>> casByUser = new HashMap<>();
-        
+
         List<File> inputFiles = asList(
                 referenceFolder.listFiles((FilenameFilter) new RegexFileFilter("user.*\\.tsv")));
-        
+
         for (File inputFile : inputFiles) {
             casByUser.put(inputFile.getName(), asList(loadWebAnnoTsv3(inputFile).getCas()));
         }
-        
+
         JCas curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
 
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
@@ -102,30 +101,30 @@ public class CasMergeSuiteTest
 
         return casByUserSingle;
     }
-    
-    private void writeAndAssertEquals(JCas curatorCas)
-        throws Exception
+
+    private void writeAndAssertEquals(JCas curatorCas) throws Exception
     {
         String targetFolder = "target/test-output/" + testContext.getClassName() + "/"
                 + referenceFolder.getName();
-        
+
         DocumentMetaData dmd = DocumentMetaData.get(curatorCas);
         dmd.setDocumentId("curator");
-        runPipeline(curatorCas, createEngineDescription(WebannoTsv3XWriter.class,
-                WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
-                WebannoTsv3XWriter.PARAM_OVERWRITE, true));
-        
+        runPipeline(curatorCas,
+                createEngineDescription(WebannoTsv3XWriter.class,
+                        WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
+                        WebannoTsv3XWriter.PARAM_OVERWRITE, true));
+
         File referenceFile = new File(referenceFolder, "curator.tsv");
         assumeTrue("No reference data available for this test.", referenceFile.exists());
-        
+
         File actualFile = new File(targetFolder, "curator.tsv");
-        
+
         String reference = FileUtils.readFileToString(referenceFile, "UTF-8");
         String actual = FileUtils.readFileToString(actualFile, "UTF-8");
-        
+
         assertEquals(reference, actual);
     }
-    
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

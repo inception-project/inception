@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public interface CurationDocumentService
 {
     String SERVICE_NAME = "curationDocumentService";
-    
+
     // --------------------------------------------------------------------------------------------
     // Methods related to curation
     // --------------------------------------------------------------------------------------------
@@ -50,9 +50,8 @@ public interface CurationDocumentService
     void writeCurationCas(CAS aCas, SourceDocument document, boolean aUpdateTimestamp)
         throws IOException;
 
-    void upgradeCurationCas(CAS aCurCas, SourceDocument document)
-            throws UIMAException, IOException;
-    
+    void upgradeCurationCas(CAS aCurCas, SourceDocument document) throws UIMAException, IOException;
+
     /**
      * Get a curation document for the given {@link SourceDocument}
      *
@@ -62,29 +61,14 @@ public interface CurationDocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    CAS readCurationCas(SourceDocument document)
-        throws IOException;
+    CAS readCurationCas(SourceDocument document) throws IOException;
 
-    void deleteCurationCas(SourceDocument document)
-            throws IOException;
+    void deleteCurationCas(SourceDocument document) throws IOException;
 
-    /**
-     * Remove a curation annotation document from the file system, for this {@link SourceDocument}
-     *
-     * @param sourceDocument
-     *            the source document.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void removeCurationDocumentContent(SourceDocument sourceDocument, String username)
-        throws IOException;
-    
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
     Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;
-    
+
     /**
      * List all curated source documents.
      *
@@ -93,4 +77,13 @@ public interface CurationDocumentService
      * @return the source documents.
      */
     List<SourceDocument> listCuratedDocuments(Project project);
+
+    boolean isCurationFinished(SourceDocument aDocument);
+
+    /**
+     * Check if there already is a curation CAS for the given document
+     * 
+     * @throws IOException
+     */
+    boolean existsCurationCas(SourceDocument aDocument) throws IOException;
 }

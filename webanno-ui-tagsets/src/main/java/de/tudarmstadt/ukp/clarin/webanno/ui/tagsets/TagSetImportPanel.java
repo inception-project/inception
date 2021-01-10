@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
+import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.JSON_FORMAT;
+import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.TAB_FORMAT;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +36,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -44,17 +45,16 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
 public class TagSetImportPanel
     extends Panel
@@ -62,40 +62,43 @@ public class TagSetImportPanel
     private static final long serialVersionUID = 4612767288793876015L;
 
     private static final Logger LOG = LoggerFactory.getLogger(TagSetImportPanel.class);
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
-    
+
     private IModel<Project> selectedProject;
     private IModel<Preferences> preferences;
-    private IModel<TagSet> selectedTagSet;
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     private AjaxCallback importCompleteAction;
-    
-    public TagSetImportPanel(String aId, IModel<Project> aModel, IModel<TagSet> aTagSet)
+
+    public TagSetImportPanel(String aId, IModel<Project> aModel)
     {
         super(aId);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         preferences = Model.of(new Preferences());
         selectedProject = aModel;
-        selectedTagSet = aTagSet;
-        
+
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        form.add(new BootstrapSelect<>("format", LambdaModel.of(this::supportedFormats))
-                .setRequired(true));
-        form.add(new CheckBox("overwrite"));
-        form.add(fileUpload = new FileUploadField("content", new ListModel<>()));
+
+        BootstrapSelect<String> format = new BootstrapSelect<>("format",
+                asList(JSON_FORMAT, TAB_FORMAT));
+        form.add(format);
+        format.setModelObject(JSON_FORMAT); // Set after adding to form to have access to for model
+        format.setRequired(true);
+        form.add(new CheckBox("overwrite").setOutputMarkupId(true));
+
+        form.add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
         fileUpload.setRequired(true);
+
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
+
         add(form);
-    }
-    
-    private List<String> supportedFormats()
-    {
-        return Arrays.asList(ExportedTagSetConstant.JSON_FORMAT, ExportedTagSetConstant.TAB_FORMAT);
     }
 
     private void actionImport(AjaxRequestTarget aTarget, Form<Preferences> aForm)
@@ -111,15 +114,14 @@ public class TagSetImportPanel
             error("Project not yet created, please save project details!");
             return;
         }
-        if (aForm.getModelObject().format.equals(
-                ExportedTagSetConstant.JSON_FORMAT)) {
+        if (aForm.getModelObject().format.equals(JSON_FORMAT)) {
             for (FileUpload tagFile : uploadedFiles) {
                 InputStream tagInputStream;
                 try {
                     tagInputStream = tagFile.getInputStream();
                     if (aForm.getModelObject().overwrite) {
-                        JsonImportUtil.importTagSetFromJsonWithOverwrite(project,
-                                tagInputStream, annotationService);
+                        JsonImportUtil.importTagSetFromJsonWithOverwrite(project, tagInputStream,
+                                annotationService);
                     }
                     else {
                         JsonImportUtil.importTagSetFromJson(project, tagInputStream,
@@ -127,20 +129,17 @@ public class TagSetImportPanel
                     }
                 }
                 catch (IOException e) {
-                    error("Error Importing TagSet "
-                            + ExceptionUtils.getRootCauseMessage(e));
+                    error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
                 }
             }
         }
-        else if (aForm.getModelObject().format.equals(
-                ExportedTagSetConstant.TAB_FORMAT)) {
+        else if (aForm.getModelObject().format.equals(TAB_FORMAT)) {
             for (FileUpload tagFile : uploadedFiles) {
                 InputStream tagInputStream;
                 try {
                     tagInputStream = tagFile.getInputStream();
                     String text = IOUtils.toString(tagInputStream, "UTF-8");
-                    Map<String, String> tabbedTagsetFromFile = ImportUtil
-                            .getTagSetFromFile(text);
+                    Map<String, String> tabbedTagsetFromFile = ImportUtil.getTagSetFromFile(text);
 
                     Set<String> listOfTagsFromFile = tabbedTagsetFromFile.keySet();
                     int i = 0;
@@ -163,22 +162,20 @@ public class TagSetImportPanel
                             if (annotationService.existsTagSet(tagSetName, project)) {
                                 // If overwrite is enabled
                                 if (aForm.getModelObject().overwrite) {
-                                    tagSet = annotationService.getTagSet(tagSetName,
-                                            project);
+                                    tagSet = annotationService.getTagSet(tagSetName, project);
                                     annotationService.removeAllTags(tagSet);
                                 }
                                 else {
                                     tagSet = new TagSet();
-                                    tagSet.setName(JsonImportUtil.copyTagSetName(
-                                            annotationService, tagSetName, project));
+                                    tagSet.setName(JsonImportUtil.copyTagSetName(annotationService,
+                                            tagSetName, project));
                                 }
                             }
                             else {
                                 tagSet = new TagSet();
                                 tagSet.setName(tagSetName);
                             }
-                            tagSet.setDescription(tagSetDescription
-                                    .replace("\\n", "\n"));
+                            tagSet.setDescription(tagSetDescription.replace("\\n", "\n"));
                             tagSet.setLanguage(tagsetLanguage);
                             tagSet.setProject(project);
                             annotationService.createTagSet(tagSet);
@@ -187,8 +184,7 @@ public class TagSetImportPanel
                         // to the tagset
                         else {
                             Tag tag = new Tag();
-                            tag.setDescription(tabbedTagsetFromFile.get(key).replace(
-                                    "\\n", "\n"));
+                            tag.setDescription(tabbedTagsetFromFile.get(key).replace("\\n", "\n"));
                             tag.setName(key);
                             tag.setTagSet(tagSet);
                             annotationService.createTag(tag);
@@ -197,13 +193,12 @@ public class TagSetImportPanel
                     }
                 }
                 catch (Exception e) {
-                    error("Error importing tag set: "
-                            + ExceptionUtils.getRootCauseMessage(e));
+                    error("Error importing tag set: " + ExceptionUtils.getRootCauseMessage(e));
                     LOG.error("Error importing tag set", e);
                 }
             }
         }
-        
+
         try {
             onImportComplete(aTarget);
         }
@@ -212,7 +207,7 @@ public class TagSetImportPanel
             LOG.error("Error importing tag set", e);
         }
     }
-    
+
     protected void onImportComplete(AjaxRequestTarget aTarget) throws Exception
     {
         if (importCompleteAction != null) {
@@ -226,10 +221,11 @@ public class TagSetImportPanel
         return this;
     }
 
-    static class Preferences implements Serializable
+    static class Preferences
+        implements Serializable
     {
         private static final long serialVersionUID = -8602845573913839851L;
-        
+
         String format;
         boolean overwrite;
     }

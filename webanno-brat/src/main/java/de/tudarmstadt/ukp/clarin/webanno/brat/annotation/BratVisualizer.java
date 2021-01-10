@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import org.apache.commons.lang3.StringUtils;
@@ -50,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 /**
  * Base class for displaying a BRAT visualization. Override methods {@code #getCollectionData()} and
@@ -146,100 +146,44 @@ public abstract class BratVisualizer
         aResponse.render(OnLoadHeaderItem.forScript("\n" + StringUtils.join(script, "\n")));
     }
 
-    protected abstract String getDocumentData();
+    public abstract String getDocumentData();
 
     protected String getCollectionData()
     {
         return "{}";
     }
-    
+
     private String bratRenderCommand(String aJson)
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + aJson
-                + "]);";
+        String str = WicketUtil.wrapInTryCatch("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + aJson + "]);");
+        return str;
     }
 
-    protected void render(AjaxRequestTarget aTarget)
+    public void render(AjaxRequestTarget aTarget)
     {
-        aTarget.appendJavaScript(
-                "setTimeout(function() { " + bratRenderCommand(getDocumentData()) + " }, 0);");
-    }
-    
-    /**
-     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be
-     * called multiple times, even for the same annotation editor, but only resulting in a single
-     * rendering call.
-     */
-    public final void requestRender(AjaxRequestTarget aTarget)
-    {
-        aTarget.registerRespondListener(new RenderListener());
-    }
-    
-    /**
-     * This is a special AJAX target response listener which implements hashCode and equals.
-     * It useds the markup ID of its host component to identify itself. This enables us to add
-     * multiple instances of this listener to an AJAX response without *actually* adding
-     * multiple instances since the AJAX response internally keeps track of the listeners
-     * using a set.
-     */
-    private class RenderListener
-        implements AjaxRequestTarget.ITargetRespondListener
-    {
-        private String markupId;
+        LOG.debug("[{}][{}] render", getMarkupId(), vis.getMarkupId());
 
-        public RenderListener()
-        {
-            markupId = BratVisualizer.this.getMarkupId();
+        // Controls whether rendering should happen within the AJAX request or after the AJAX
+        // request. Doing it within the request has the benefit of the browser only having to
+        // recalculate the layout once at the end of the AJAX request (at least theoretically)
+        // while deferring the rendering causes the AJAX request to complete faster, but then
+        // the browser needs to recalculate its layout twice - once of any Wicket components
+        // being re-rendered and once for the brat view to re-render.
+        final boolean deferredRendering = false;
+
+        StringBuilder js = new StringBuilder();
+
+        if (deferredRendering) {
+            js.append("setTimeout(function() {");
         }
 
-        @Override
-        public void onTargetRespond(AjaxRequestTarget aTarget)
-        {
-            if (isNotBlank(getDocumentData())) {
-                render(aTarget);
-            }
+        js.append(bratRenderCommand(getDocumentData()));
+
+        if (deferredRendering) {
+            js.append("}, 0);");
         }
 
-        private BratVisualizer getOuterType()
-        {
-            return BratVisualizer.this;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getOuterType().hashCode();
-            result = prime * result + ((markupId == null) ? 0 : markupId.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            RenderListener other = (RenderListener) obj;
-            if (!getOuterType().equals(other.getOuterType())) {
-                return false;
-            }
-            if (markupId == null) {
-                if (other.markupId != null) {
-                    return false;
-                }
-            }
-            else if (!markupId.equals(other.markupId)) {
-                return false;
-            }
-            return true;
-        }
+        aTarget.appendJavaScript(js);
     }
 }

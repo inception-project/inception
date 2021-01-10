@@ -4,7 +4,7 @@
   <Appenders>
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
       <!--SHORT PATTERN -->
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger{1} - %msg%n" />
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger - %msg%n" />
       <!--ROBUST PATTERN
         <PatternLayout pattern="%d{ISO8601} %level{length=5} [%thread] %logger - %msg%n"/> -->
     </Console>
@@ -39,9 +39,14 @@
 
   <Loggers>
     <Logger name="de.tudarmstadt" level="INFO"/>
+    
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
     <Logger name="ch.rasc.piwik.tracking.PiwikTracker" level="FATAL"/>
+    <Logger name="uima" level="ERROR"/>
+    <Logger name="liquibase" level="ERROR"/>
+    <!-- Avoid warning when components is not rerendered because it has been removed from page -->
+    <Logger name="org.apache.wicket.page.PartialPageUpdate" level="ERROR"/>
     
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />

@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -40,27 +41,39 @@ public interface AnnotationActionHandler
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      */
-    void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
-        throws AnnotationException;
+    void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
+
+    void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
+        throws IOException, AnnotationException;
+
+    void actionSelect(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
+
+    void actionSelectAndJump(AjaxRequestTarget aTarget, VID aVid)
+        throws IOException, AnnotationException;
+
+    void actionJump(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
+
+    void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
+        throws IOException, AnnotationException;
+
+    void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
+        throws IOException, AnnotationException;
 
     /**
      * Delete currently selected annotation.
      */
-    void actionDelete(AjaxRequestTarget aTarget)
-        throws IOException, AnnotationException;
+    void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
     /**
      * Clear the currently selected annotation from the editor panel.
      */
-    void actionClear(AjaxRequestTarget aTarget)
-        throws AnnotationException;
+    void actionClear(AjaxRequestTarget aTarget) throws AnnotationException;
 
     /**
      * Reverse the currently selected relation.
      */
-    void actionReverse(AjaxRequestTarget aTarget)
-        throws IOException, AnnotationException;
-    
+    void actionReverse(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
+
     /**
      * Fill the currently armed slot with the given annotation.
      * 
@@ -81,7 +94,6 @@ public interface AnnotationActionHandler
     void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
             int aSlotFillerEnd, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;
-    
-    CAS getEditorCas()
-            throws IOException;
+
+    CAS getEditorCas() throws IOException;
 }

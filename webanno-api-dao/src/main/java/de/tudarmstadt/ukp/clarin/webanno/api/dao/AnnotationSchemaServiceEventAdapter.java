@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,20 +32,19 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 public class AnnotationSchemaServiceEventAdapter
 {
     private @Autowired AnnotationSchemaService service;
-    
+
     @EventListener
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
-        throws Exception
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
         Project project = aEvent.getProject();
-        
+
         for (AnnotationFeature feature : service.listAnnotationFeature(project)) {
-            service.removeAnnotationFeature(feature);
+            service.removeFeature(feature);
         }
 
         // remove the layers too
         for (AnnotationLayer layer : service.listAnnotationLayer(project)) {
-            service.removeAnnotationLayer(layer);
+            service.removeLayer(layer);
         }
 
         for (TagSet tagSet : service.listTagSets(project)) {

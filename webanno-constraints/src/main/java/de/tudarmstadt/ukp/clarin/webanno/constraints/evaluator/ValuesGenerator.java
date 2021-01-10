@@ -1,13 +1,13 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
+
+import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 
 /**
  * Class for getting list of PossibleValues after evaluating context and applicable rules.
- * 
- *
  */
 public class ValuesGenerator
     implements Evaluator
@@ -58,27 +59,26 @@ public class ValuesGenerator
     {
         imports = parsedConstraints.getImports();
         List<PossibleValue> possibleValues = new ArrayList<>();
-        //If there are no rules for the FS, don't execute further
-        //Enabling the second option might take too much time for rules to execute.
-//        if(!areThereRulesFor(aContext, parsedConstraints)){
-//        if(!isThisAffectedByConstraintRules(aContext, aFeature, parsedConstraints)){
+        // If there are no rules for the FS, don't execute further
+        // Enabling the second option might take too much time for rules to execute.
+        // if(!areThereRulesFor(aContext, parsedConstraints)){
+        // if(!isThisAffectedByConstraintRules(aContext, aFeature, parsedConstraints)){
         if (!parsedConstraints.areThereRules(aContext.getType().getName(), aFeature)) {
             return possibleValues;
         }
-       
-//        String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
-//        if (shortTypeName == null) {
-//            //If no relevant rules are there for a particular type, just return empty list
-//            log.error("No import for [" + aContext.getType().getName()
-//                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
-//            return possibleValues;
-////            throw new IllegalStateException("No import for [" + aContext.getType().getName()
-////                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
-//        }
+
+        // String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
+        // if (shortTypeName == null) {
+        // //If no relevant rules are there for a particular type, just return empty list
+        // log.error("No import for [" + aContext.getType().getName()
+        // + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+        // return possibleValues;
+        //// throw new IllegalStateException("No import for [" + aContext.getType().getName()
+        //// + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+        // }
         shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
         scope = parsedConstraints.getScopeByName(shortTypeName);
 
-      
         for (Rule rule : scope.getRules()) {
             // Check if conditions apply
             if (!ruleTriggers(aContext, rule)) {
@@ -97,8 +97,7 @@ public class ValuesGenerator
         return possibleValues;
     }
 
-    private boolean ruleTriggers(FeatureStructure aContext, Rule aRule)
-        throws UIMAException
+    private boolean ruleTriggers(FeatureStructure aContext, Rule aRule) throws UIMAException
     {
         boolean doAllConditionsMatch = false;
         for (Condition condition : aRule.getConditions()) {
@@ -117,40 +116,40 @@ public class ValuesGenerator
     private boolean conditionMatches(FeatureStructure aContext, Condition aCondition)
         throws UIMAException
     {
-        ArrayList<String> value = getValue(aContext, aCondition.getPath());
+        List<String> value = getValue(aContext, aCondition.getPath());
+
         if (log.isTraceEnabled()) {
             log.trace("comparing [" + aCondition.getValue() + "] to [" + value + "]");
         }
+
         return aCondition.matches(value);
     }
 
-    private ArrayList<String> getValue(FeatureStructure aContext, String aPath)
-        throws UIMAException
+    private List<String> getValue(FeatureStructure aContext, String aPath) throws UIMAException
     {
         String head, tail;
+
         if (aPath.contains(".")) {
-            head = aPath.substring(0, aPath.indexOf(".")); // Separate first part of path to be
-                                                           // processed.
-            tail = aPath.substring(aPath.indexOf(".") + 1); // The remaining part
+            // Separate first part of path to be processed.
+            head = aPath.substring(0, aPath.indexOf("."));
+            tail = aPath.substring(aPath.indexOf(".") + 1);
         }
         else {
             head = aPath;
             tail = "";
         }
 
-        List<String> values = new ArrayList<>();
-
         if (head.startsWith("@")) {
             String typename = imports.get(head.substring(1));
             Type type = aContext.getCAS().getTypeSystem().getType(typename);
             AnnotationFS ctxAnnFs = (AnnotationFS) aContext;
-            // List<String> values = new ArrayList<>();
+
+            List<String> values = new ArrayList<>();
             for (AnnotationFS fs : selectAt(aContext.getCAS(), type, ctxAnnFs.getBegin(),
                     ctxAnnFs.getEnd())) {
                 values.addAll(getValue(fs, tail));
-
             }
-            return (ArrayList<String>) values;
+            return values;
         }
         else if (head.endsWith("()")) {
             if (StringUtils.isNotEmpty(tail)) {
@@ -158,45 +157,44 @@ public class ValuesGenerator
             }
 
             if ("text()".equals(head)) {
-                if (aContext instanceof AnnotationFS) {
-                    values.add(((AnnotationFS) aContext).getCoveredText());
-                    return (ArrayList<String>) values;
-                }
-                else {
+                if (!(aContext instanceof AnnotationFS)) {
                     throw new IllegalStateException("Cannot use [text()] on non-annotations");
                 }
+
+                return asList(((AnnotationFS) aContext).getCoveredText());
             }
             else {
                 throw new IllegalStateException("Unknown path function [" + aPath + "]");
             }
         }
         else if (StringUtils.isNotEmpty(tail)) {
-
-            /*
-             * Extracting feature and passing FeatureStructure based on that. Shortening the path
-             * variable by removing first element in the aPath separated by "." (dot)
-             */
-            Feature feature = aContext.getType().getFeatureByBaseName(
-                    aPath.substring(0, aPath.indexOf(".")));
+            Feature feature = aContext.getType().getFeatureByBaseName(head);
             if (feature == null) {
-                throw new IllegalStateException("Feature [" + aPath + "] does not exist on type ["
+                throw new IllegalStateException("Feature [" + head + "] does not exist on type ["
                         + aContext.getType().getName() + "]");
             }
-            return getValue(aContext.getFeatureValue(feature),
-                    aPath.substring(aPath.indexOf(".") + 1));
 
-            // throw new UnsupportedOperationException("Error in rule");
+            if (FSUtil.isMultiValuedFeature(aContext, head)) {
+                List<String> values = new ArrayList<>();
+                for (FeatureStructure fs : FSUtil.getFeature(aContext, head,
+                        FeatureStructure[].class)) {
+                    values.addAll(getValue(fs, tail));
+                }
+
+                return values;
+            }
+
+            return getValue(aContext.getFeatureValue(feature), tail);
         }
         else {
-            Feature feature = aContext.getType().getFeatureByBaseName(aPath);
+            Feature feature = aContext.getType().getFeatureByBaseName(head);
             if (feature == null) {
-                throw new IllegalStateException("Feature [" + aPath + "] does not exist on type ["
+                throw new IllegalStateException("Feature [" + head + "] does not exist on type ["
                         + aContext.getType().getName() + "]");
             }
-            values.add(aContext.getFeatureValueAsString(feature));
-            return (ArrayList<String>) values;
-        }
 
+            return asList(aContext.getFeatureValueAsString(feature));
+        }
     }
 
     public static List<AnnotationFS> selectAt(CAS aCas, final Type type, int aBegin, int aEnd)
@@ -208,60 +206,59 @@ public class ValuesGenerator
         return covered;
     }
 
-//    @Override
-//    public boolean areThereRulesFor(FeatureStructure aContext, 
-//            ParsedConstraints parsedConstraints)
-//    {
-//        if(imports==null){
-//            imports = parsedConstraints.getImports();
-//        }
-//        shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
-//        if (shortTypeName == null) {
-//          //If no relevant rules are there for a particular type, just return empty list
-//            log.error("No import for [" + aContext.getType().getName()
-//                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
-//            return false;
-//        }
-//        //If there's import statement but no scope rules defined for it
-//        else if(parsedConstraints.getScopeByName(shortTypeName)==null
-//              //If there's scope but no rules defined in it.
-//                || parsedConstraints.getScopeByName(shortTypeName).getRules().isEmpty()){
-//            log.debug("No rules found in scope [" + shortTypeName + "]");
-//            return false;
-//        }else{
-//            return true;
-//        }
-//         
-//    }
+    // @Override
+    // public boolean areThereRulesFor(FeatureStructure aContext,
+    // ParsedConstraints parsedConstraints)
+    // {
+    // if(imports==null){
+    // imports = parsedConstraints.getImports();
+    // }
+    // shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
+    // if (shortTypeName == null) {
+    // //If no relevant rules are there for a particular type, just return empty list
+    // log.error("No import for [" + aContext.getType().getName()
+    // + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+    // return false;
+    // }
+    // //If there's import statement but no scope rules defined for it
+    // else if(parsedConstraints.getScopeByName(shortTypeName)==null
+    // //If there's scope but no rules defined in it.
+    // || parsedConstraints.getScopeByName(shortTypeName).getRules().isEmpty()){
+    // log.debug("No rules found in scope [" + shortTypeName + "]");
+    // return false;
+    // }else{
+    // return true;
+    // }
+    //
+    // }
 
     /**
-     *Checks if it is necessary to evaluate rules based on 
-        1. whether there are rules for this FeatureStructure and
-        2. whether the target is affected by any of the restrictions within rules
-     
+     * Checks if it is necessary to evaluate rules based on 1. whether there are rules for this
+     * FeatureStructure and 2. whether the target is affected by any of the restrictions within
+     * rules
+     * 
      */
     @Override
     public boolean isThisAffectedByConstraintRules(FeatureStructure aContext, String aFeature,
             ParsedConstraints parsedConstraints)
     {
         return parsedConstraints.areThereRules(aContext.getType().getName(), aFeature);
-//        if (!areThereRulesFor(aContext, parsedConstraints)) {
-//            return false;
-//        }
-//        else {
-//            shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
-//            scope = parsedConstraints.getScopeByName(shortTypeName);
-//            //Check within every rule if any restriction affects aFeature
-//            for (Rule rule : scope.getRules()) {
-//                for (Restriction res : rule.getRestrictions()) {
-//                    if (aFeature.equals(res.getPath())) {
-//                        return true;
-//                    }
-//                }
-//            }
-//            return false;
-//
-//        }
+        // if (!areThereRulesFor(aContext, parsedConstraints)) {
+        // return false;
+        // }
+        // else {
+        // shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
+        // scope = parsedConstraints.getScopeByName(shortTypeName);
+        // //Check within every rule if any restriction affects aFeature
+        // for (Rule rule : scope.getRules()) {
+        // for (Restriction res : rule.getRestrictions()) {
+        // if (aFeature.equals(res.getPath())) {
+        // return true;
+        // }
+        // }
+        // }
+        // return false;
+        //
+        // }
     }
 }
-    

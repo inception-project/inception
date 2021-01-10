@@ -1,52 +1,67 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2015
-#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-#Technische Universität Darmstadt
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <head>
 <wicket:head>
   <script type="text/javascript">
-	$(document).ready(function() {
-		// Based on this accepted answer of so
-		// http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
-		function manageEnter() {			
-			$("#annotationFeatureForm :input").keyup(function(e) {
-				if (e.which == 13) {
-			        e.preventDefault();
-			        var inputs = $(this).parents("form").eq(0).find(":input");
-	                var idx = inputs.index(this);
-	                if (idx == inputs.length - 1) {
-	                    inputs[idx].blur();
-	                } else {
-	                    inputs[idx + 1].focus(); //  handles submit buttons
-	                    inputs[idx + 1].select();
-	                }
-	                // If it is a forward annotation on free text, trigger change even on Enter key up
-	                if($('#annotationFeatureForm :checkbox:checked').length > 0) {
-	                		$(this).trigger("change")
-	                }
-	                return false;
-			    }
-			});		
-		}
-		$(document).on("keypress", manageEnter);
-		manageEnter();
-	});
-	</script>
+  $(document).ready(function() {
+    // Based on this accepted answer of so
+    // http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
+    
+    function moveToNextInput(current) {
+      var inputs = $(current).parents("#annotationFeatureForm").eq(0).find(":input");
+      var idx = inputs.index(current);
+      if (idx == inputs.length - 1) {
+        inputs[idx].blur();
+      } else {
+        inputs[idx + 1].focus(); //  handles submit buttons
+        inputs[idx + 1].select();
+      }
+      // If it is a forward annotation on free text, trigger change even on Enter key up
+      if($('#annotationFeatureForm :checkbox:checked').length > 0) {
+        $(this).trigger("change")
+      }
+    }
+    
+    function manageEnter() {
+      $("#annotationFeatureForm :input").keydown(function(e) {
+        if (e.which == 13) {
+          // On a textarea, we consider the enter as a submit only if CTRL or CMD is pressed
+          if ($(this).is("textarea") && !(e.ctrlKey || e.metaKey)) {
+            return true;
+          }
+          
+          // Avoid Kendo Comboboxes submitting their value twice
+          if ($(this).attr('role') == 'combobox') {
+            return true;
+          }
+      
+          e.preventDefault();
+          moveToNextInput(this);
+          return false;
+        }
+      });    
+    }
+    $(document).on("keypress", manageEnter);
+    manageEnter();
+  });
+  </script>
 </wicket:head>
 </head>
 <body>
@@ -63,88 +78,35 @@
          -->
         <input wicket:id=forwardAnno tabindex="-1"></input>
       </form>
-      <form wicket:id="annotationFeatureForm" id="annotationFeatureForm" 
-          class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
-        <div wicket:id=deleteAnnotationDialog></div>
-        <div wicket:id=replaceAnnotationDialog></div>
-        <div wicket:id="layerContainer" class="panel panel-default">
-          <div class="panel-body">
-            <div class="col-sm-12">
-              <div class="form-horizontal">
-                <div class="form-group">
-                  <label wicket:for="defaultAnnotationLayer" class="col-sm-3 control-label">
-                    <wicket:label key="layer"/>
-                  </label>
-                  <div class="col-sm-9">
-                    <select wicket:id="defaultAnnotationLayer" class="form-control" 
-                        data-container="body"></select>
-                  </div>
-                  <div class="col-sm-offset-3 col-sm-9 small">
-                    <em wicket:id="relationHint"></em>
-                  </div>
-                </div>
-                <div class="form-group" wicket:enclosure="forwardAnnotation">
-                  <div class="col-sm-offset-3 col-sm-9">
-                    <div class="checkbox">
-                      <label wicket:for="forwardAnnotation">
-                        <input wicket:id="forwardAnnotation" type="checkbox"> Forward annotation
-                      </label>
-                    </div>
-                  </div>              
-                </div>
-              </div>
+      <div id="annotationFeatureForm" class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
+        <div wicket:id=deleteAnnotationDialog/>
+        <div wicket:id=replaceAnnotationDialog/>
+        <div wicket:id="layerContainer" class="card"/>
+        <div class="flex-content panel card">
+          <div class="card-header">
+            Annotation
+            <div wicket:id="buttonContainer" class="actions">
+              <button wicket:id="delete" class="btn btn-danger" wicket:message="title:delete">
+                <i class="fas fa-trash"></i>
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="delete"/></span>
+              </button>
+              <button wicket:id="reverse" class="btn btn-secondary" wicket:message="title:reverse">
+                <i class="fas fa-arrows-alt-h"></i>
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="reverse"/></span>
+              </button>
+              <button wicket:id="clear" class="btn btn-secondary" wicket:message="title:clear">
+                <i class="fas fa-times"></i>
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="clear"/></span>
+              </button>
             </div>
           </div>
-        </div>
-        <div class="flex-content panel panel-default panel-flex">
-          <div class="panel-heading">
-            <h3 class="panel-title">
-              Annotation
-              <span class="pull-right">
-                <input wicket:id="delete" type="button" class="btn btn-xs btn-danger" wicket:message="value:delete"/>
-                <input wicket:id="reverse" type="button" class="btn btn-xs btn-default" wicket:message="value:reverse"/>
-                <input wicket:id="clear" type="button" class="btn btn-xs btn-default" wicket:message="value:clear"/>
-              </span> 
-            </h3>
-          </div>
-          <div class="scrolling panel-body">
-            <div class="col-sm-12">
-              <span wicket:id="noAnnotationWarning"></span>
-              
-              <div class="form-group" wicket:enclosure="selectedAnnotationType" style="position: relative; height: 5em;">
-                <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0;" readonly>
-                  <wicket:container wicket:id="selectedAnnotationType"/>
-                </div>
-              </div>
-
-              <div wicket:id="featureEditorsContainer" class="form-horizontal">
-                <div class="form-group" wicket:enclosure="selectedAnnotationLayer">
-                  <label class="col-sm-3 control-label">Layer</label>
-                  <div class="col-sm-9">
-                    <span class="form-control" readonly><wicket:container wicket:id="selectedAnnotationLayer"/></span>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="col-sm-3 control-label">Text</label>
-                  <div class="col-sm-9" style="position: relative; height: 5em;">
-                    <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;" readonly>
-                      <a wicket:id="jumpToAnnotation"><wicket:container wicket:id="selectedText"/></a>
-                    </div>
-                  </div>
-                </div>
-                <hr/>
-                <div wicket:id="noFeaturesWarning"></div>
-                <div wicket:id="featureValues">
-                  <div wicket:id="editor"></div>
-                </div>
-                <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
-                  <input wicket:id="focusResetHelper" tabindex="-1"></input>
-                </div>
-              </div>
-            </div>
+          <div class="scrolling card-body flex-v-container">
+            <div wicket:id="infoContainer"/>
+            <div wicket:id="relationListContainer"/>
+            <div wicket:id="featureEditorContainer"/>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   </wicket:panel>
 </body>

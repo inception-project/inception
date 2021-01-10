@@ -1,20 +1,21 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Escaping.unescapeText;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XParserState.END;
@@ -122,13 +123,13 @@ public class Tsv3XDeserializer
 
     private static final Pattern CHAIN_SUFFIX_PATTERN = Pattern
             .compile("^.*(?<!\\\\)->" + "(?<CHAIN>\\d+-\\d+)$");
-    
+
     private ThreadLocal<List<Runnable>> deferredActions = new ThreadLocal<>();
 
     public void read(LineNumberReader aIn, JCas aJCas) throws IOException
     {
         deferredActions.set(new ArrayList<>());
-        
+
         TsvFormatHeader format = readFormat(aIn);
         TsvSchema schema = readSchema(aIn, aJCas);
 
@@ -137,29 +138,29 @@ public class Tsv3XDeserializer
         assert isEmpty(emptyLine);
 
         TsvDocument doc = new TsvDocument(format, schema, aJCas);
-        
+
         for (TsvColumn column : schema.getColumns()) {
             doc.activateColumn(column);
             doc.activateType(column.uimaType);
         }
-        
+
         readContent(aIn, doc);
-        
+
         // Complete the addition of the chains
         CAS cas = aJCas.getCas();
         for (TsvChain chain : doc.getChains()) {
             if (chain.getElements().isEmpty()) {
                 continue;
             }
-            
+
             Iterator<AnnotationFS> linkIterator = chain.getElements().iterator();
             AnnotationFS link = linkIterator.next();
-            
+
             // Create the chain head
             FeatureStructure head = cas.createFS(chain.getHeadType());
             setFeature(head, CHAIN_FIRST_FEAT, link);
             cas.addFsToIndexes(head);
-            
+
             // Connect the links to each other
             AnnotationFS prevLink = link;
             while (linkIterator.hasNext()) {
@@ -168,7 +169,7 @@ public class Tsv3XDeserializer
                 prevLink = link;
             }
         }
-        
+
         // Run deferred actions
         for (Runnable action : deferredActions.get()) {
             action.run();
@@ -266,28 +267,27 @@ public class Tsv3XDeserializer
                 throw new IOException("CAS type [" + aUimaType.getName()
                         + "] does not have a feature called [" + featureName + "]");
             }
-            
+
             column = new TsvColumn(aIndex, aUimaType, aLayerType, featureName, SLOT_ROLE);
-            
+
             String typeName = subFields[2];
             Type type = ts.getType(typeName);
             if (type == null) {
                 throw new IOException("CAS does not contain a type called [" + typeName + "]");
             }
-            
+
             column.setTargetTypeHint(type);
         }
         // RELATION_REF - starts with "BT_
         else if (RELATION.equals(aLayerType) && startsWith(aColDecl, HEADER_PREFIX_BASE_TYPE)) {
-            column = new TsvColumn(aIndex, aUimaType, aLayerType, FEAT_REL_SOURCE,
-                    RELATION_REF);
-            
+            column = new TsvColumn(aIndex, aUimaType, aLayerType, FEAT_REL_SOURCE, RELATION_REF);
+
             String typeName = substringAfter(aColDecl, HEADER_PREFIX_BASE_TYPE);
             Type type = ts.getType(typeName);
             if (type == null) {
                 throw new IOException("CAS does not contain a type called [" + typeName + "]");
             }
-            
+
             column.setTargetTypeHint(type);
         }
         // CHAIN_ELEMENT_TYPE - "referenceType"
@@ -319,12 +319,12 @@ public class Tsv3XDeserializer
 
             column = new TsvColumn(aIndex, aUimaType, aLayerType,
                     aPrevCol.uimaFeature.getShortName(), SLOT_TARGET);
-            
+
             Type type = ts.getType(aColDecl);
             if (type == null) {
                 throw new IOException("CAS does not contain a type called [" + aColDecl + "]");
             }
-            
+
             column.setTargetTypeHint(type);
         }
         // PRIMITIVE - feature name
@@ -356,7 +356,7 @@ public class Tsv3XDeserializer
 
         List<TsvColumn> headerColumns = aDoc.getSchema()
                 .getHeaderColumns(aDoc.getSchema().getColumns());
-        
+
         String line = aIn.readLine();
         try {
             while (!Tsv3XParserState.END.equals(state)) {
@@ -366,12 +366,10 @@ public class Tsv3XDeserializer
                 String[] offsets = null;
                 int begin = -1;
                 int end = -1;
-    
+
                 // Determine the status of the current line
-                if (
-                        (state == INTER_SENTENCE_SPACE || state == SENTENCE_HEADER) && 
-                        startsWith(line, PREFIX_SENTENCE_HEADER)
-                ) {
+                if ((state == INTER_SENTENCE_SPACE || state == SENTENCE_HEADER)
+                        && startsWith(line, PREFIX_SENTENCE_HEADER)) {
                     state = SENTENCE_HEADER;
                 }
                 else if (line == null) {
@@ -382,13 +380,13 @@ public class Tsv3XDeserializer
                 }
                 else {
                     fields = splitPreserveAllTokens(line, FIELD_SEPARATOR);
-    
+
                     // Get token metadata
                     id = fields[0];
                     offsets = split(fields[1], "-");
                     begin = Integer.valueOf(offsets[0]);
                     end = Integer.valueOf(offsets[1]);
-    
+
                     // TOKEN or SUBTOKEN?
                     if (id.contains(".")) {
                         state = SUBTOKEN;
@@ -397,7 +395,7 @@ public class Tsv3XDeserializer
                         state = TOKEN;
                     }
                 }
-    
+
                 // Assert that the order of information in the file is correct
                 switch (prevState) {
                 case INTER_SENTENCE_SPACE:
@@ -422,7 +420,7 @@ public class Tsv3XDeserializer
                     }
                     break;
                 }
-    
+
                 // Do the actual parsing
                 switch (state) {
                 case END:
@@ -437,7 +435,7 @@ public class Tsv3XDeserializer
                 case TOKEN:
                     // Note that the token value is not used here. When we get here, we have already
                     // added the complete sentence text to the text buffer.
-    
+
                     // End of sentence header action
                     if (SENTENCE_HEADER.equals(prevState)) {
                         // If there is no space between the previous sentence and the current
@@ -448,17 +446,17 @@ public class Tsv3XDeserializer
                             assert text.charAt(text.length() - 1) == LINE_BREAK;
                             text.setLength(text.length() - 1);
                         }
-                        
+
                         // If there is a gap between the current end of the text buffer and the
                         // offset of the first token in this sentence, then add whitespace to fill
                         // the gap.
                         if (text.length() < begin) {
                             text.append(repeat(' ', begin - text.length()));
                         }
-    
+
                         assert text.length() == begin;
                         assert sentence == null;
-    
+
                         Sentence uimaSentence = new Sentence(aDoc.getJCas());
                         if (isNotBlank(sentenceId)) {
                             uimaSentence.setId(sentenceId);
@@ -468,12 +466,12 @@ public class Tsv3XDeserializer
                         text.append(sentenceText);
                         sentenceText.setLength(0);
                     }
-    
+
                     // Token parsing action
                     Token uimaToken = new Token(aDoc.getJCas(), begin, end);
                     uimaToken.addToIndexes();
                     token = sentence.createToken(uimaToken);
-    
+
                     // Read annotations from the columns
                     parseAnnotations(aDoc, sentence, token, fields, headerColumns);
                     break;
@@ -496,13 +494,13 @@ public class Tsv3XDeserializer
                     }
                     break;
                 }
-    
+
                 prevState = state;
                 line = aIn.readLine();
             }
-    
+
             aDoc.getJCas().setDocumentText(text.toString());
-    
+
             // After all data has been read, we also add the annotations with disambiguation ID to
             // the CAS indexes. This ensures we only add them after their final begin/end offsets
             // have been determined since most of these annotations are actually multi-token
@@ -587,7 +585,7 @@ public class Tsv3XDeserializer
                 }
             }
         }
-        
+
         assert disambiguationInfo == null || disambiguationInfo.length() > 0;
 
         // Create the annotation of fetch an existing one
@@ -647,26 +645,26 @@ public class Tsv3XDeserializer
                     setFeature(annotation, col.uimaFeature.getShortName(), emptyList());
                 }
             }
-            
+
             // Special handling of DKPro Core Token-attached annotations
             if (Lemma.class.getName().equals(aCol.uimaType.getName())) {
                 TsvToken token = (TsvToken) aUnit;
-                token.getUimaToken().setLemma((Lemma) annotation); 
+                token.getUimaToken().setLemma((Lemma) annotation);
             }
             if (Stem.class.getName().equals(aCol.uimaType.getName())) {
                 TsvToken token = (TsvToken) aUnit;
-                token.getUimaToken().setStem((Stem) annotation); 
+                token.getUimaToken().setStem((Stem) annotation);
             }
             if (MorphologicalFeatures.class.getName().equals(aCol.uimaType.getName())) {
                 TsvToken token = (TsvToken) aUnit;
-                token.getUimaToken().setMorph((MorphologicalFeatures) annotation); 
+                token.getUimaToken().setMorph((MorphologicalFeatures) annotation);
             }
             if (POS.class.getName().equals(aCol.uimaType.getName())) {
                 TsvToken token = (TsvToken) aUnit;
-                token.getUimaToken().setPos((POS) annotation); 
+                token.getUimaToken().setPos((POS) annotation);
             }
         }
-        
+
         // If the current annotation carries an disambiguation ID, then register it in the
         // document so we can look up the annotation via its ID later. This is necessary
         // to extend the range of multi-token IDs.
@@ -702,7 +700,7 @@ public class Tsv3XDeserializer
         // Check if we have seen the same annotation already in the current unit but in
         // another column.
         annotation = aUnit.getUimaAnnotation(aCol.uimaType, aStackingIndex);
-        
+
         if (annotation == null && CHAIN_LINK_TYPE.equals(aCol.featureType)) {
             // Check if there is already an element with the same index/chain ID
             // No disambiguation info, only chain info: *-><chainId>-<elementIndex>
@@ -710,7 +708,7 @@ public class Tsv3XDeserializer
             int chainId = Integer.valueOf(ids[0]);
             int elementIndex = Integer.valueOf(ids[1]);
             annotation = aUnit.getDocument().getChainElement(chainId, elementIndex);
-            
+
             if (annotation != null) {
                 aUnit.addUimaAnnotation(annotation);
 
@@ -718,10 +716,10 @@ public class Tsv3XDeserializer
                 // Unfortunately, the AnnotationFS interface does not define a setEnd() method.
                 setFeature(annotation, CAS.FEATURE_BASE_NAME_END, aUnit.getEnd());
             }
-            
+
             // If not, then we have to create one - we do this only for link-type columns because
             // these columns include the chain id and the element index which we both need to
-            // determine if there is already an existing annotation for this chain/element from 
+            // determine if there is already an existing annotation for this chain/element from
             // an earlier unit (i.e. for multi-unit chain elements).
             if (annotation == null) {
                 annotation = aUnit.getDocument().getJCas().getCas().createAnnotation(aCol.uimaType,
@@ -729,7 +727,7 @@ public class Tsv3XDeserializer
                 aUnit.addUimaAnnotation(annotation);
             }
         }
-        
+
         return annotation;
     }
 
@@ -751,25 +749,23 @@ public class Tsv3XDeserializer
                 // Guess the head type using naming conventions.
                 String headTypeName = removeEnd(aCol.uimaType.getName(), "Link");
                 headTypeName += "Chain";
-                
-                Type headType = aUnit.getDocument().getJCas().getTypeSystem()
-                        .getType(headTypeName);
+
+                Type headType = aUnit.getDocument().getJCas().getTypeSystem().getType(headTypeName);
                 if (headType == null) {
                     throw new IllegalStateException(
-                            "CAS type system does not contain a type named [" + headTypeName
-                                    + "]");
+                            "CAS type system does not contain a type named [" + headTypeName + "]");
                 }
-                
+
                 chain = aUnit.getDocument().createChain(chainId, headType, aCol.uimaType);
             }
-            
+
             chain.putElement(elementIndex, aAnnotation);
             // fall-through (to set the relation type)
         }
         case CHAIN_ELEMENT_TYPE: {
             deferredActions.get().add(() -> {
                 // We need to do this later because first we need to wait until all the elements
-                // have been created from the link-type columns. Then we have to look the 
+                // have been created from the link-type columns. Then we have to look the
                 // annotations up via their unit/stacking index.
                 AnnotationFS annotation = aUnit.getUimaAnnotation(aCol.uimaType, aStackingIndex);
                 setPrimitiveValue(aCol, annotation, aValue);
@@ -799,7 +795,7 @@ public class Tsv3XDeserializer
             // annotations have been created.
             deferredActions.get().add(() -> {
                 Type attachType = aCol.getTargetTypeHint();
-                
+
                 // COMPATIBILITY NOTE:
                 // WebAnnoTsv3Writer hard-changes the target type for DKPro Core
                 // Dependency annotations from Token to POS - the reason is not really
@@ -809,7 +805,7 @@ public class Tsv3XDeserializer
                     attachType = aUnit.getDocument().getJCas().getTypeSystem()
                             .getType(Token.class.getName());
                 }
-                
+
                 AnnotationFS sourceAnnotation = aUnit.getDocument().resolveReference(attachType,
                         aValue, sourceDisambiguationId);
 
@@ -846,7 +842,7 @@ public class Tsv3XDeserializer
             break;
         }
         case SLOT_TARGET: {
-            // Setting the target feature has to be deferred until we have created all the 
+            // Setting the target feature has to be deferred until we have created all the
             // annotations.
             deferredActions.get().add(() -> {
                 String[] values;
@@ -856,20 +852,20 @@ public class Tsv3XDeserializer
                 else {
                     values = SLOT_SEP_PATTERN.split(aValue);
                 }
-                
-                FeatureStructure[] links = getFeature(aAnnotation,
-                        aCol.uimaFeature.getShortName(), FeatureStructure[].class);
-                
+
+                FeatureStructure[] links = getFeature(aAnnotation, aCol.uimaFeature.getShortName(),
+                        FeatureStructure[].class);
+
                 assert (links.length == 0 && values.length == 1 && NULL_VALUE.equals(values[0]))
                         || (values.length == links.length);
 
                 for (int i = 0; i < values.length; i++) {
                     String value = values[i];
-                    
+
                     if (NULL_VALUE.equals(value) || NULL_COLUMN.equals(value)) {
                         continue;
                     }
-                    
+
                     // Extract slot-local disambiguation info
                     int disambiguationId = -1;
                     if (value.endsWith("]") && !value.endsWith("\\]")) {
@@ -878,10 +874,10 @@ public class Tsv3XDeserializer
                                 .valueOf(substringBefore(disambiguationInfo, "]"));
                         value = substringBeforeLast(value, "[");
                     }
-                    
+
                     AnnotationFS targetAnnotation = aUnit.getDocument()
                             .resolveReference(aCol.getTargetTypeHint(), value, disambiguationId);
-                    
+
                     setFeature(links[i], FEAT_SLOT_TARGET, targetAnnotation);
                 }
             });
@@ -889,7 +885,7 @@ public class Tsv3XDeserializer
         }
         }
     }
-    
+
     private void setPrimitiveValue(TsvColumn aCol, AnnotationFS aAnnotation, String aValue)
     {
         // Unescape value - this needs to be done after extracting the disambiguation ID and
@@ -898,17 +894,17 @@ public class Tsv3XDeserializer
             String value = Escaping.unescapeValue(aValue);
             Feature feat = aAnnotation.getType()
                     .getFeatureByBaseName(aCol.uimaFeature.getShortName());
-            
+
             if (feat == null) {
                 throw new IllegalArgumentException(
                         "CAS type [" + aAnnotation.getType() + "] does not have a feature called ["
                                 + aCol.uimaFeature.getShortName() + "]");
             }
-            
+
             aAnnotation.setFeatureValueFromString(feat, value);
         }
     }
-    
+
     private void expectStartsWith(String aLine, String aPrefix) throws IOException
     {
         if (!startsWith(aLine, aPrefix)) {

@@ -1,12 +1,12 @@
 ////
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -51,7 +51,7 @@ A click on the *Help* button displays the Guidelines for the tool and *The Annot
 When you are finished with annotating or curating a document, please click on the *Done*
 button, so that the document may be further processed. If the button above the *Done* is a cross symbol, it means the documents have already been finished. If the symbol has a tick, it is still open.
 
-image::annotation4.jpg[align="center"]
+image::annotation4.png[align="center"]
 
 Annotation of spans works by selecting the span, or double-clicking on a word. This activates the *Actions*-box on the right, where you can choose a layer. One can also type in the initial letters and chose the needed layer. After having chosen a layer, the drop-down menu inside the *Features*-box displays the features you can use during the annotation. The tag can be selected out of the drop-down menu inside the *Features*-box which contains the tags of the chosen layer.
 

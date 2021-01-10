@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
 public class FeatureState
     implements Serializable
@@ -34,7 +34,7 @@ public class FeatureState
     private static final long serialVersionUID = 3512979848975446735L;
     public final AnnotationFeature feature;
     public Serializable value;
-    public List<Tag> tagset;
+    public List<ReorderableTag> tagset;
     public List<PossibleValue> possibleValues;
     public RulesIndicator indicator = new RulesIndicator();
     public VID vid;
@@ -53,17 +53,47 @@ public class FeatureState
         }
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FeatureState that = (FeatureState) o;
-        return feature.equals(that.feature) &&
-                vid.equals(that.vid);
+    public Serializable getValue()
+    {
+        return value;
+    }
+
+    public void setValue(Serializable aValue)
+    {
+        value = aValue;
+    }
+
+    public VID getVid()
+    {
+        return vid;
+    }
+
+    public void setVid(VID aVid)
+    {
+        vid = aVid;
+    }
+
+    public AnnotationFeature getFeature()
+    {
+        return feature;
     }
 
     @Override
-    public int hashCode() {
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        FeatureState that = (FeatureState) o;
+        return feature.equals(that.feature) && vid.equals(that.vid);
+    }
+
+    @Override
+    public int hashCode()
+    {
         return Objects.hash(feature, vid);
     }
 }

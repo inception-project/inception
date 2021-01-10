@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2012
-#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-#Technische Universität Darmstadt
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 <html
     xmlns="http://www.w3.org/1999/xhtml" 
@@ -50,11 +50,11 @@
               
           this.start = function() {
              const TICK_RATE = 1000; // 1 second
-             if (this.timer) {
+             if (instance.timer) {
                clearInterval(instance.timer);
              }
              started = new Date();
-             timer = setInterval(instance.tick, TICK_RATE);
+             instance.timer = setInterval(instance.tick, TICK_RATE);
              instance.tick();
           };
 
@@ -69,15 +69,27 @@
   </wicket:head>
   <body>
     <wicket:panel>
-      <p class="navbar-text navbar-right" style="margin-right: 1px;">
-        <i class="fa fa-sign-out" aria-hidden="true"></i>
-        <a class="navbar-link" wicket:id="logout">Log out</a>
-        <span wicket:id="logoutTimer"> (automatically in <span id="timer"></span>&thinsp;min)</span>
-      </p>
-      <p class="navbar-text navbar-right">
-        <i class="fa fa-user" aria-hidden="true"></i>
-        <a class="navbar-link" wicket:id="profile"><wicket:container wicket:id="username"/></a>
-      </p>
+    
+      <div class="nav-item">
+        <a class="nav-link" wicket:id="profile">
+        <i class="fas fa-user" aria-hidden="true"></i>
+          <span class="nav-link active p-0 d-none d-md-inline">
+            <wicket:container wicket:id="username"/>
+          </span>
+        </a>
+      </div>
+      
+      <div class="nav-item">
+        <a class="nav-link" wicket:id="logout">
+          <i class="fas fa-sign-out-alt"></i>
+          <span class="nav-link active p-0 d-none d-md-inline">
+            Log out
+          </span>
+        </a>
+      </div>
+      <div class="navbar-text d-none d-lg-inline" wicket:id="logoutTimer">
+        <i class="far fa-clock"></i> <span id="timer"/>&thinsp;min
+      </div>
     </wicket:panel>
   </body>
 </html>

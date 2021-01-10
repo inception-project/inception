@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,13 +34,14 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
  * before they can use the application.
  */
 @Component
-public class TelemetrySettingsInterceptor implements GlobalInterceptor
+public class TelemetrySettingsInterceptor
+    implements GlobalInterceptor
 {
     private final UserDao userService;
     private final TelemetryService telemetryService;
-    
+
     private boolean allValid = false;
-    
+
     @Autowired
     public TelemetrySettingsInterceptor(UserDao aUserService, TelemetryService aTelemetryService)
     {
@@ -57,7 +58,7 @@ public class TelemetrySettingsInterceptor implements GlobalInterceptor
         if (allValid) {
             return;
         }
-        
+
         // Do nothing if we are already on the telemetry settings page
         if (aPage instanceof TelemetrySettingsPage) {
             return;
@@ -68,19 +69,18 @@ public class TelemetrySettingsInterceptor implements GlobalInterceptor
                 .getAuthentication() instanceof AnonymousAuthenticationToken) {
             return;
         }
-        
+
         // Only direct admin users to the telemetry settings page
         if (!userService.isAdministrator(userService.getCurrentUser())) {
             return;
         }
-        
-        
+
         for (TelemetrySupport<?> support : telemetryService.getTelemetrySupports()) {
             if (!support.hasValidSettings()) {
                 throw new RestartResponseException(TelemetrySettingsPage.class);
             }
         }
-        
+
         allValid = true;
     }
 }

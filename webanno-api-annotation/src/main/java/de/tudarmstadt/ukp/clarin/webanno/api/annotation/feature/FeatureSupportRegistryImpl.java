@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,128 +17,86 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
+import static java.util.Comparator.comparing;
+
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.CachingContextLookupExtensionPoint_ImplBase;
 
 @Component
 public class FeatureSupportRegistryImpl
+    extends CachingContextLookupExtensionPoint_ImplBase<AnnotationFeature, FeatureSupport<?>>
     implements FeatureSupportRegistry
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private final List<FeatureSupport> featureSupportsProxy;
-    
-    private List<FeatureSupport> featureSupports;
-    
-    private final Map<Long, FeatureSupport> supportCache = new HashMap<>();
-
     public FeatureSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<FeatureSupport> aFeatureSupports)
+            @Lazy @Autowired(required = false) List<FeatureSupport<?>> aFeatureSupports)
     {
-        featureSupportsProxy = aFeatureSupports;
+        super(aFeatureSupports, AnnotationFeature::getId);
     }
-    
-    @EventListener
-    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
-    {
-        init();
-    }
-    
-    public void init()
-    {
-        List<FeatureSupport> fsp = new ArrayList<>();
 
-        if (featureSupportsProxy != null) {
-            fsp.addAll(featureSupportsProxy);
-            AnnotationAwareOrderComparator.sort(fsp);
-        
-            for (FeatureSupport<?> fs : fsp) {
-                log.info("Found feature support: {}",
-                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
-            }
-        }
-        
-        featureSupports = Collections.unmodifiableList(fsp);
-    }
-    
     @Override
-    public List<FeatureSupport> getFeatureSupports()
+    public <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature)
     {
-        return featureSupports;
+        return findExtension(aFeature);
     }
-    
+
+    @SuppressWarnings("unchecked")
     @Override
-    public FeatureSupport getFeatureSupport(AnnotationFeature aFeature)
+    public <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId)
     {
-        Validate.notNull(aFeature, "Annotation feature must be specified");
-        
-        // This method is called often during rendering, so we try to make it fast by caching
-        // the supports by feature. Since the set of annotation features is relatively stable,
-        // this should not be a memory leak - even if we don't remove entries if annotation
-        // features would be deleted from the DB.
-        FeatureSupport support = null;
-        
-        if (aFeature.getId() != null) {
-            support = supportCache.get(aFeature.getId());
-        }
-        
-        if (support == null) {
-            for (FeatureSupport<?> s : getFeatureSupports()) {
-                if (s.accepts(aFeature)) {
-                    support = s;
-                    if (aFeature.getId() != null) {
-                        // Store feature in the cache, but only when it has an ID, i.e. it has
-                        // actually been saved.
-                        supportCache.put(aFeature.getId(), s);
-                    }
-                    break;
-                }
-            }
-        }
-        
-        if (support == null) {
-            throw new IllegalArgumentException("Unsupported feature: [" + aFeature.getName() + "]");
-        }
-        
-        return support;
+        return (T) getExtension(aFeatureSupportId);
     }
-    
+
     @Override
-    public FeatureSupport getFeatureSupport(String aId)
+    public List<FeatureType> getAllTypes(AnnotationLayer aLayer)
     {
-        return getFeatureSupports().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
-                .orElse(null);
+        List<FeatureType> allTypes = new ArrayList<>();
+
+        for (FeatureSupport<?> featureSupport : getExtensions()) {
+            List<FeatureType> types = featureSupport.getSupportedFeatureTypes(aLayer);
+            types.stream().forEach(allTypes::add);
+        }
+
+        allTypes.sort(comparing(FeatureType::getUiName));
+
+        return allTypes;
     }
-    
+
+    @Override
+    public List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer)
+    {
+        List<FeatureType> allTypes = new ArrayList<>();
+
+        for (FeatureSupport<?> featureSupport : getExtensions()) {
+            List<FeatureType> types = featureSupport.getSupportedFeatureTypes(aLayer);
+            types.stream().filter(it -> !it.isInternal()).forEach(allTypes::add);
+        }
+
+        allTypes.sort(comparing(FeatureType::getUiName));
+
+        return allTypes;
+    }
+
     @Override
     public FeatureType getFeatureType(AnnotationFeature aFeature)
     {
         if (aFeature.getType() == null) {
             return null;
         }
-        
+
         // Figure out which feature support provides the given type.
         // If we can find a suitable feature support, then use it to resolve the type to a
         // FeaatureType
         FeatureType featureType = null;
-        for (FeatureSupport<?> s : getFeatureSupports()) {
+        for (FeatureSupport<?> s : getExtensions()) {
             Optional<FeatureType> ft = s.getFeatureType(aFeature);
             if (ft.isPresent()) {
                 featureType = ft.get();

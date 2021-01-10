@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
@@ -33,13 +36,12 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -52,12 +54,12 @@ public class ChainRenderer
     extends Renderer_ImplBase<ChainAdapter>
 {
     private final List<SpanLayerBehavior> behaviors;
-    
-    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
-            List<SpanLayerBehavior> aBehaviors)
+
+    public ChainRenderer(ChainAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
-        super(aTypeAdapter, aFeatureSupportRegistry);
-        
+        super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
+
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
@@ -72,32 +74,40 @@ public class ChainRenderer
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             int aPageBegin, int aPageEnd)
     {
+        ChainAdapter typeAdapter = getTypeAdapter();
+        Type chainType;
+        try {
+            chainType = getType(aCas, typeAdapter.getChainTypeName());
+        }
+        catch (IllegalArgumentException e) {
+            // If the type is not defined, then we do not need to try and render it because the
+            // CAS does not contain any instances of it
+            return;
+        }
+
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled())
-                .collect(Collectors.toList());
-        
+                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
         AnnotationFeature spanLabelFeature = null;
         AnnotationFeature arcLabelFeature = null;
         for (AnnotationFeature f : visibleFeatures) {
-            if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
+            if (COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
                 spanLabelFeature = f;
             }
-            if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
+            if (COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
                 arcLabelFeature = f;
             }
         }
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
 
-        ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = CasUtil.getType(aCas, typeAdapter.getChainTypeName());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
-        
+
         int colorIndex = 0;
         // Iterate over the chains
         for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
@@ -117,14 +127,13 @@ public class ChainRenderer
 
                 // Is link before window? We only need links that being within the window and that
                 // end within the window
-                if (!(linkFs.getBegin() >= aPageBegin)
-                        && (linkFs.getEnd() <= aPageEnd)) {
+                if (!(linkFs.getBegin() >= aPageBegin) && (linkFs.getEnd() <= aPageEnd)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
                 }
 
-                String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
+                String bratTypeName = typeAdapter.getEncodedTypeName();
 
                 // Render span
                 {
@@ -136,11 +145,11 @@ public class ChainRenderer
                             linkFs.getEnd() - aPageBegin);
 
                     VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, singletonMap("label", bratLabelText), 
+                            colorIndex, singletonMap("label", bratLabelText),
                             singletonMap("label", bratHoverText));
-                    
+
                     annoToSpanIdx.put(linkFs, span);
-                    
+
                     aResponse.add(span);
                 }
 
@@ -171,13 +180,13 @@ public class ChainRenderer
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
             }
-            
+
             // The color index is updated even for chains that have no visible links in the current
             // window because we would like the chain color to be independent of visibility. In
             // particular the color of a chain should not change when switching pages/scrolling.
             colorIndex++;
         }
-        
+
         for (SpanLayerBehavior behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aPageBegin, aPageEnd);
         }

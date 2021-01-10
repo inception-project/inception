@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -49,19 +51,19 @@ public class AnnotationEditorExtensionRegistryImpl
     private final List<AnnotationEditorExtension> extensionsProxy;
 
     private List<AnnotationEditorExtension> extensions;
-    
+
     public AnnotationEditorExtensionRegistryImpl(
             @Lazy @Autowired(required = false) List<AnnotationEditorExtension> aExtensions)
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<AnnotationEditorExtension> exts = new ArrayList<>();
@@ -69,22 +71,22 @@ public class AnnotationEditorExtensionRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (AnnotationEditorExtension fs : exts) {
                 log.info("Found annotation editor extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
-    
+
     @Override
     public List<AnnotationEditorExtension> getExtensions()
     {
         return extensions;
     }
-    
+
     @Override
     public AnnotationEditorExtension getExtension(String aId)
     {
@@ -96,25 +98,35 @@ public class AnnotationEditorExtensionRegistryImpl
                     .orElse(null);
         }
     }
-    
+
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin,
-            int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws IOException, AnnotationException
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction,
-                    aBegin, aEnd);
+
+            if (!ext.getBeanName().equals(aParamId.getExtensionId())) {
+                continue;
+            }
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction);
         }
     }
-    
+
     @Override
     public void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
             int aWindowBeginOffset, int aWindowEndOffset)
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
             ext.render(aCas, aModelObject, aVdoc, aWindowBeginOffset, aWindowEndOffset);
+        }
+    }
+
+    @Override
+    public void generateContextMenuItems(List<IMenuItem> aItems)
+    {
+        for (AnnotationEditorExtension ext : getExtensions()) {
+            ext.generateContextMenuItems(aItems);
         }
     }
 }

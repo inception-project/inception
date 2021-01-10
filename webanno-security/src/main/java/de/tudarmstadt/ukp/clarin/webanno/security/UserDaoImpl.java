@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -95,21 +96,8 @@ public class UserDaoImpl
     public User get(String aUsername)
     {
         Validate.notBlank(aUsername, "User must be specified");
-        
-        String query = "FROM " + User.class.getName() + " o WHERE o.username = :username";
-        
-        List<User> users = entityManager
-                .createQuery(query, User.class)
-                .setParameter("username", aUsername)
-                .setMaxResults(1)
-                .getResultList();
-        
-        if (users.isEmpty()) {
-            return null;
-        }
-        else {
-            return users.get(0);
-        }
+
+        return entityManager.find(User.class, aUsername);
     }
 
     @Override
@@ -124,25 +112,19 @@ public class UserDaoImpl
     @Transactional
     public List<User> listEnabledUsers()
     {
-        String query = String.join("\n",
-                "FROM " +  User.class.getName(),
-                "WHERE enabled = :enabled");
-        
-        return entityManager.createQuery(query, User.class)
-                .setParameter("enabled", true)
+        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+
+        return entityManager.createQuery(query, User.class).setParameter("enabled", true)
                 .getResultList();
     }
-    
+
     @Override
     @Transactional
     public List<User> listDisabledUsers()
     {
-        String query = String.join("\n",
-                "FROM " +  User.class.getName(),
-                "WHERE enabled = :enabled");
-        
-        return entityManager.createQuery(query, User.class)
-                .setParameter("enabled", false)
+        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+
+        return entityManager.createQuery(query, User.class).setParameter("enabled", false)
                 .getResultList();
     }
 
@@ -150,22 +132,23 @@ public class UserDaoImpl
     @Transactional
     public User getCurrentUser()
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = getCurrentUsername();
+        if (username == null) {
+            return null;
+        }
         return get(username);
     }
-    
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
-        String query =
-                "FROM Authority " + 
-                "WHERE username = :username";
-        return entityManager
-                .createQuery(query, Authority.class)
-                .setParameter("username", aUser).getResultList();
+        String query = "FROM Authority " + "WHERE username = :username";
+        return entityManager.createQuery(query, Authority.class) //
+                .setParameter("username", aUser) //
+                .getResultList();
     }
-    
+
     /**
      * Check if the user has global administrator permissions.
      */
@@ -204,11 +187,16 @@ public class UserDaoImpl
     @Transactional
     public Set<String> getRoles(User aUser)
     {
+        if (aUser == null || aUser.getUsername() == null) {
+            System.out.println(aUser);
+        }
+
         // When looking up roles for the user who is currently logged in, then we look in the
         // security context - otherwise we ask the database.
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Set<String> roles = new HashSet<>();
-        if (aUser.getUsername().equals(username)) {
+        if (authentication != null && aUser.getUsername().equals(authentication.getName())) {
             for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
                     .getAuthorities()) {
                 roles.add(ga.getAuthority());
@@ -220,5 +208,23 @@ public class UserDaoImpl
             }
         }
         return roles;
+    }
+
+    @Override
+    public long countEnabledUsers()
+    {
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM " + User.class.getName(), //
+                "WHERE enabled = :enabled");
+
+        return entityManager.createQuery(query, Long.class).setParameter("enabled", true)
+                .getSingleResult();
+    }
+
+    @Override
+    public String getCurrentUsername()
+    {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

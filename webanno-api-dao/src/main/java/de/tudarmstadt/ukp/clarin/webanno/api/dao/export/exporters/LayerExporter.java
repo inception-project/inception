@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.zip.ZipFile;
 
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -44,13 +46,11 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeatureR
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 
@@ -58,8 +58,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 public class LayerExporter
     implements ProjectExporter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(LayerExporter.class);
+
     private final AnnotationSchemaService annotationService;
-    
+
     @Autowired
     public LayerExporter(AnnotationSchemaService aAnnotationService)
     {
@@ -72,17 +74,17 @@ public class LayerExporter
         // Need to have the tagsets imported first so we can assign them to the features
         return asList(TagSetExporter.class);
     }
-    
+
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
         throws Exception
     {
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
-        
+
         // Store map of layer and its equivalent exLayer so that the attach type is attached later
         Map<AnnotationLayer, ExportedAnnotationLayer> layerToExLayers = new HashMap<>();
-        
+
         // Store map of feature and its equivalent exFeature so that the attach feature is attached
         // later
         Map<AnnotationFeature, ExportedAnnotationFeature> featureToExFeatures = new HashMap<>();
@@ -96,17 +98,20 @@ public class LayerExporter
                 layerToExLayers.get(layer).setAttachType(
                         new ExportedAnnotationLayerReference(layer.getAttachType().getName()));
             }
-            
+
             if (layer.getAttachFeature() != null) {
                 layerToExLayers.get(layer).setAttachFeature(
                         new ExportedAnnotationFeatureReference(layer.getAttachFeature()));
             }
         }
-        
+
         aExProject.setLayers(exLayers);
+
+        LOG.info("Exported [{}] layers for project [{}]", exLayers.size(),
+                aRequest.getProject().getName());
     }
-    
-    public ExportedAnnotationLayer exportLayerDetails(
+
+    private ExportedAnnotationLayer exportLayerDetails(
             Map<AnnotationLayer, ExportedAnnotationLayer> aLayerToExLayer,
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
             AnnotationLayer aLayer)
@@ -128,6 +133,7 @@ public class LayerExporter
         exLayer.setProjectName(aLayer.getProject().getName());
         exLayer.setType(aLayer.getType());
         exLayer.setUiName(aLayer.getUiName());
+        exLayer.setTraits(aLayer.getTraits());
 
         if (aLayerToExLayer != null) {
             aLayerToExLayer.put(aLayer, exLayer);
@@ -138,17 +144,17 @@ public class LayerExporter
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
             ExportedAnnotationFeature exFeature = exportFeatureDetails(feature);
             exFeatures.add(exFeature);
-            
+
             if (aFeatureToExFeature != null) {
                 aFeatureToExFeature.put(feature, exFeature);
             }
         }
         exLayer.setFeatures(exFeatures);
-        
+
         return exLayer;
-    }    
-    
-    public ExportedAnnotationFeature exportFeatureDetails(AnnotationFeature feature)
+    }
+
+    private ExportedAnnotationFeature exportFeatureDetails(AnnotationFeature feature)
     {
         ExportedAnnotationFeature exFeature = new ExportedAnnotationFeature();
         exFeature.setDescription(feature.getDescription());
@@ -167,26 +173,16 @@ public class LayerExporter
         exFeature.setLinkTypeRoleFeatureName(feature.getLinkTypeRoleFeatureName());
         exFeature.setLinkTypeTargetFeatureName(feature.getLinkTypeTargetFeatureName());
         exFeature.setTraits(feature.getTraits());
-        
+
         if (feature.getTagset() != null) {
             TagSet tagSet = feature.getTagset();
+            // We export only the name here as a stub. The actual tag set is exported by
+            // the TagSetExporter.
             ExportedTagSet exTagSet = new ExportedTagSet();
-            exTagSet.setDescription(tagSet.getDescription());
-            exTagSet.setLanguage(tagSet.getLanguage());
             exTagSet.setName(tagSet.getName());
-            exTagSet.setCreateTag(tagSet.isCreateTag());
-
-            List<ExportedTag> exportedTags = new ArrayList<>();
-            for (Tag tag : annotationService.listTags(tagSet)) {
-                ExportedTag exTag = new ExportedTag();
-                exTag.setDescription(tag.getDescription());
-                exTag.setName(tag.getName());
-                exportedTags.add(exTag);
-            }
-            exTagSet.setTags(exportedTags);
             exFeature.setTagSet(exTagSet);
         }
-        
+
         return exFeature;
     }
 
@@ -197,7 +193,7 @@ public class LayerExporter
     {
         importLayers(aProject, aExProject);
     }
-    
+
     /**
      * Create a {@link TagSet} for the imported project,
      * 
@@ -208,7 +204,7 @@ public class LayerExporter
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public void importLayers(Project aProject, ExportedProject aExProject) throws IOException
+    private void importLayers(Project aProject, ExportedProject aExProject) throws IOException
     {
         // Round 1: layers and features
         for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
@@ -217,8 +213,8 @@ public class LayerExporter
                 importLayer(layer, exLayer, aProject);
                 for (ExportedAnnotationFeature exfeature : exLayer.getFeatures()) {
                     if (annotationService.existsFeature(exfeature.getName(), layer)) {
-                        AnnotationFeature feature = annotationService.getFeature(
-                                exfeature.getName(), layer);
+                        AnnotationFeature feature = annotationService
+                                .getFeature(exfeature.getName(), layer);
                         importFeature(feature, exfeature, aProject);
                         continue;
                     }
@@ -237,7 +233,7 @@ public class LayerExporter
                 }
             }
         }
-        
+
         // Round 2: attach-layers, attach-features
         for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
             if (exLayer.getAttachType() != null) {
@@ -254,8 +250,8 @@ public class LayerExporter
             }
         }
     }
-    
-    public void importLayer(AnnotationLayer aLayer, ExportedAnnotationLayer aExLayer,
+
+    private void importLayer(AnnotationLayer aLayer, ExportedAnnotationLayer aExLayer,
             Project aProject)
         throws IOException
     {
@@ -286,10 +282,11 @@ public class LayerExporter
         aLayer.setName(aExLayer.getName());
         aLayer.setProject(aProject);
         aLayer.setType(aExLayer.getType());
+        aLayer.setTraits(aExLayer.getTraits());
         annotationService.createLayer(aLayer);
     }
 
-    public void importFeature(AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature,
+    private void importFeature(AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature,
             Project aProject)
     {
         aFeature.setDescription(aExFeature.getDescription());
@@ -316,12 +313,12 @@ public class LayerExporter
         aFeature.setLinkTypeRoleFeatureName(aExFeature.getLinkTypeRoleFeatureName());
         aFeature.setLinkTypeTargetFeatureName(aExFeature.getLinkTypeTargetFeatureName());
         aFeature.setTraits(aExFeature.getTraits());
-        
+
         if (aExFeature.getTagSet() != null) {
             TagSet tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);
             aFeature.setTagset(tagset);
         }
-        
+
         annotationService.createFeature(aFeature);
     }
 }

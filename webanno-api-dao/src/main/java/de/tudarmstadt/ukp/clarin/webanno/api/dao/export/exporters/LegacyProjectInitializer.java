@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,12 +48,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor
 public class LegacyProjectInitializer
 {
     private AnnotationSchemaService annotationSchemaService;
-    
+
     public LegacyProjectInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
-    
+
     /**
      * This method only exists to support importing projects previous to WebAnno version 2.0.
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
@@ -88,18 +88,18 @@ public class LegacyProjectInitializer
     {
         createTokenLayer(aProject);
 
-        String[] posTags = aPostags.length > 0 ? aPostags : new String[] { "$(", "$,", "$.",
-                "ADJA", "ADJD", "ADV", "APPO", "APPR", "APPRART", "APZR", "ART", "CARD", "FM",
-                "ITJ", "KOKOM", "KON", "KOUI", "KOUS", "NE", "NN", "PAV", "PDAT", "PDS", "PIAT",
-                "PIDAT", "PIS", "PPER", "PPOSAT", "PPOSS", "PRELAT", "PRELS", "PRF", "PROAV",
-                "PTKA", "PTKANT", "PTKNEG", "PTKVZ", "PTKZU", "PWAT", "PWAV", "PWS", "TRUNC",
-                "VAFIN", "VAIMP", "VAINF", "VAPP", "VMFIN", "VMINF", "VMPP", "VVFIN", "VVIMP",
-                "VVINF", "VVIZU", "VVPP", "XY", "--" };
+        String[] posTags = aPostags.length > 0 ? aPostags
+                : new String[] { "$(", "$,", "$.", "ADJA", "ADJD", "ADV", "APPO", "APPR", "APPRART",
+                        "APZR", "ART", "CARD", "FM", "ITJ", "KOKOM", "KON", "KOUI", "KOUS", "NE",
+                        "NN", "PAV", "PDAT", "PDS", "PIAT", "PIDAT", "PIS", "PPER", "PPOSAT",
+                        "PPOSS", "PRELAT", "PRELS", "PRF", "PROAV", "PTKA", "PTKANT", "PTKNEG",
+                        "PTKVZ", "PTKZU", "PWAT", "PWAV", "PWS", "TRUNC", "VAFIN", "VAIMP", "VAINF",
+                        "VAPP", "VMFIN", "VMINF", "VMPP", "VVFIN", "VVIMP", "VVINF", "VVIZU",
+                        "VVPP", "XY", "--" };
         String[] posTagDescriptions = aPosTagDescriptions.length == posTags.length
-                ? aPosTagDescriptions : new String[] {
-                        "sonstige Satzzeichen; satzintern \nBsp: - [,]()",
-                        "Komma \nBsp: ,",
-                        "Satzbeendende Interpunktion \nBsp: . ? ! ; :   ",
+                ? aPosTagDescriptions
+                : new String[] { "sonstige Satzzeichen; satzintern \nBsp: - [,]()",
+                        "Komma \nBsp: ,", "Satzbeendende Interpunktion \nBsp: . ? ! ; :   ",
                         "attributives Adjektiv \nBsp: [das] große [Haus]",
                         "adverbiales oder prädikatives Adjektiv \nBsp: [er fährt] schnell, [er ist] schnell",
                         "Adverb \nBsp: schon, bald, doch ",
@@ -128,8 +128,7 @@ public class LegacyProjectInitializer
                         "substituierendes Possessivpronome \nBsp: meins, deiner",
                         "attribuierendes Relativpronomen \nBsp: [der Mann ,] dessen [Hund]   ",
                         "substituierendes Relativpronomen \nBsp: [der Hund ,] der  ",
-                        "reflexives Personalpronomen \nBsp: sich, einander, dich, mir",
-                        "PROAV",
+                        "reflexives Personalpronomen \nBsp: sich, einander, dich, mir", "PROAV",
                         "Partikel bei Adjektiv oder Adverb \nBsp: am [schönsten], zu [schnell]",
                         "Antwortpartikel \nBsp: ja, nein, danke, bitte  ",
                         "Negationspartikel \nBsp: nicht",
@@ -156,32 +155,34 @@ public class LegacyProjectInitializer
                 "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
                         + "STTS Tag Table (1995/1999): "
                         + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
-            "STTS", "de", posTags, posTagDescriptions, aProject);
-        
+                "STTS", "de", posTags, posTagDescriptions, aProject);
+
         createPOSLayer(aProject, posFeatureTagset);
 
-        String[] depTags = aDepTags.length > 0 ? aDepTags : new String[] { "ADV", "APP", "ATTR",
-                "AUX", "AVZ", "CJ", "DET", "ETH", "EXPL", "GMOD", "GRAD", "KOM", "KON", "KONJ",
-                "NEB", "OBJA", "OBJA2", "OBJA3", "OBJC", "OBJC2", "OBJC3", "OBJD", "OBJD2",
-                "OBJD3", "OBJG", "OBJG2", "OBJG3", "OBJI", "OBJI2", "OBJI3", "OBJP", "OBJP2",
-                "OBJP3", "PAR", "PART", "PN", "PP", "PRED", "-PUNCT-", "REL", "ROOT", "S", "SUBJ",
-                "SUBJ2", "SUBJ3", "SUBJC", "SUBJC2", "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE",
-                "CD", "DA", "SVP", "OP", "MO", "JU", "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC",
-                "OG", "SUBJI3", "VOK", "ZEIT", "$", "--", "OC", "OA", "MNR", "NK", "RC", "EP",
-                "CC", "CM", "UC", "AC", "PNC" };
+        String[] depTags = aDepTags.length > 0 ? aDepTags
+                : new String[] { "ADV", "APP", "ATTR", "AUX", "AVZ", "CJ", "DET", "ETH", "EXPL",
+                        "GMOD", "GRAD", "KOM", "KON", "KONJ", "NEB", "OBJA", "OBJA2", "OBJA3",
+                        "OBJC", "OBJC2", "OBJC3", "OBJD", "OBJD2", "OBJD3", "OBJG", "OBJG2",
+                        "OBJG3", "OBJI", "OBJI2", "OBJI3", "OBJP", "OBJP2", "OBJP3", "PAR", "PART",
+                        "PN", "PP", "PRED", "-PUNCT-", "REL", "ROOT", "S", "SUBJ", "SUBJ2", "SUBJ3",
+                        "SUBJC", "SUBJC2", "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE", "CD",
+                        "DA", "SVP", "OP", "MO", "JU", "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC",
+                        "OG", "SUBJI3", "VOK", "ZEIT", "$", "--", "OC", "OA", "MNR", "NK", "RC",
+                        "EP", "CC", "CM", "UC", "AC", "PNC" };
         String[] depTagsDescription = aDepTagDescriptions.length == depTags.length
-                ? aDepTagDescriptions : depTags;
+                ? aDepTagDescriptions
+                : depTags;
         TagSet deFeatureTagset = annotationSchemaService.createTagSet("Dependency annotation",
                 "Tiger", "de", depTags, depTagsDescription, aProject);
         createDepLayer(aProject, deFeatureTagset);
 
-        String[] neTags = aNeTags.length > 0 ? aNeTags : new String[] { "PER", "PERderiv",
-                "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH",
-                "OTHderiv", "OTHpart" };
+        String[] neTags = aNeTags.length > 0 ? aNeTags
+                : new String[] { "PER", "PERderiv", "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG",
+                        "ORGderiv", "ORGpart", "OTH", "OTHderiv", "OTHpart" };
         String[] neTagDescriptions = aNeTagDescriptions.length == neTags.length ? aNeTagDescriptions
                 : new String[] { "Person", "Person derivative", "Hyphenated part  is person",
-                        "Location", "Location derivative",
-                        "Hyphenated part is location", "Organization", "Organization derivative",
+                        "Location", "Location derivative", "Hyphenated part is location",
+                        "Organization", "Organization derivative",
                         "Hyphenated part is organization",
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" };
@@ -204,13 +205,12 @@ public class LegacyProjectInitializer
 
         createChunkLayer(aProject);
     }
-    
-    private void createLemmaLayer(Project aProject)
-            throws IOException
+
+    private void createLemmaLayer(Project aProject) throws IOException
     {
         AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
                 Token.class.getName());
-        
+
         AnnotationFeature tokenLemmaFeature = new AnnotationFeature(aProject, tokenLayer, "lemma",
                 "lemma", Lemma.class.getName());
         annotationSchemaService.createFeature(tokenLemmaFeature);
@@ -230,7 +230,6 @@ public class LegacyProjectInitializer
         lemmaFeature.setLayer(lemmaLayer);
         annotationSchemaService.createFeature(lemmaFeature);
     }
-    
 
     private AnnotationLayer createCorefLayer(Project aProject, TagSet aCorefTypeTags,
             TagSet aCorefRelTags)
@@ -241,7 +240,7 @@ public class LegacyProjectInitializer
                 CHAIN_TYPE, aProject, true, TOKENS, ANY_OVERLAP);
         base.setCrossSentence(true);
         annotationSchemaService.createLayer(base);
-        
+
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
                 "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", aCorefTypeTags));
         annotationSchemaService.createFeature(
@@ -251,19 +250,17 @@ public class LegacyProjectInitializer
         return base;
     }
 
-    private void createNeLayer(Project aProject, TagSet aTagSet)
-        throws IOException
+    private void createNeLayer(Project aProject, TagSet aTagSet) throws IOException
     {
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true, TOKENS, ANY_OVERLAP);
         annotationSchemaService.createLayer(neLayer);
-        
+
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
                 "value", CAS.TYPE_NAME_STRING, "Named entity type", aTagSet));
     }
 
-    private void createChunkLayer(Project aProject)
-        throws IOException
+    private void createChunkLayer(Project aProject) throws IOException
     {
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
                 aProject, true, TOKENS, NO_OVERLAP);
@@ -279,8 +276,7 @@ public class LegacyProjectInitializer
         annotationSchemaService.createFeature(chunkValueFeature);
     }
 
-    private void createDepLayer(Project aProject, TagSet aTagset)
-        throws IOException
+    private void createDepLayer(Project aProject, TagSet aTagset) throws IOException
     {
         // Dependency Layer
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
@@ -308,24 +304,23 @@ public class LegacyProjectInitializer
         String[] flavorDesc = { DependencyFlavor.BASIC, DependencyFlavor.ENHANCED };
         TagSet flavorsTagset = annotationSchemaService.createTagSet("Dependency flavors",
                 "Dependency flavors", "mul", flavors, flavorDesc, aProject);
-        
+
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, depLayer, "flavor",
                 "Flavor", CAS.TYPE_NAME_STRING, "Dependency relation", flavorsTagset));
     }
 
-    private void createPOSLayer(Project aProject, TagSet aPosTagset)
-        throws IOException
+    private void createPOSLayer(Project aProject, TagSet aPosTagset) throws IOException
     {
         AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
                 Token.class.getName());
-        
+
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
                 aProject, true, SINGLE_TOKEN, NO_OVERLAP);
-        
+
         AnnotationFeature tokenPosFeature = new AnnotationFeature(aProject, tokenLayer, "pos",
                 "pos", POS.class.getName());
         annotationSchemaService.createFeature(tokenPosFeature);
-        
+
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
         annotationSchemaService.createLayer(posLayer);
@@ -333,9 +328,8 @@ public class LegacyProjectInitializer
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, posLayer, "PosValue",
                 "PosValue", CAS.TYPE_NAME_STRING, "Part-of-speech tag", aPosTagset));
     }
-    
-    private AnnotationLayer createTokenLayer(Project aProject)
-        throws IOException
+
+    private AnnotationLayer createTokenLayer(Project aProject) throws IOException
     {
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
                 aProject, true, SINGLE_TOKEN, NO_OVERLAP);

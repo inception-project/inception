@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,39 +31,47 @@ import org.hibernate.usertype.UserType;
  * user-defined enum "types"
  *
  */
-public abstract class PersistentEnumUserType<T extends PersistentEnum> implements UserType {
+public abstract class PersistentEnumUserType<T extends PersistentEnum>
+    implements UserType, Serializable
+{
+    private static final long serialVersionUID = -3080625439869047088L;
 
     @Override
-    public Object assemble(Serializable cached, Object owner)
-            throws HibernateException {
+    public Object assemble(Serializable cached, Object owner) throws HibernateException
+    {
         return cached;
     }
 
     @Override
-    public Object deepCopy(Object value) throws HibernateException {
+    public Object deepCopy(Object value) throws HibernateException
+    {
         return value;
     }
 
     @Override
-    public Serializable disassemble(Object value) throws HibernateException {
-        return (Serializable)value;
+    public Serializable disassemble(Object value) throws HibernateException
+    {
+        return (Serializable) value;
     }
 
     @Override
-    public boolean equals(Object x, Object y) throws HibernateException {
+    public boolean equals(Object x, Object y) throws HibernateException
+    {
         return x == y;
     }
 
     @Override
-    public int hashCode(Object x) throws HibernateException {
+    public int hashCode(Object x) throws HibernateException
+    {
         return x == null ? 0 : x.hashCode();
     }
 
     @Override
-    public boolean isMutable() {
+    public boolean isMutable()
+    {
         return false;
     }
-    
+
     @Override
     public Object nullSafeGet(ResultSet rs, String[] names,
             SharedSessionContractImplementor session, Object owner)
@@ -89,14 +97,15 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum> implement
     {
         if (value == null) {
             st.setNull(index, Types.INTEGER);
-        } else {
-            st.setString(index, ((PersistentEnum)value).getId());
+        }
+        else {
+            st.setString(index, ((PersistentEnum) value).getId());
         }
     }
 
     @Override
-    public Object replace(Object original, Object target, Object owner)
-            throws HibernateException {
+    public Object replace(Object original, Object target, Object owner) throws HibernateException
+    {
         return original;
     }
 
@@ -104,8 +113,9 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum> implement
     public abstract Class<T> returnedClass();
 
     @Override
-    public int[] sqlTypes() {
-        return new int[]{Types.VARCHAR};
+    public int[] sqlTypes()
+    {
+        return new int[] { Types.VARCHAR };
     }
 
 }

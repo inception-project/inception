@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.DESKTOP;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR_DOCKER;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR_DOCKER;
+import static java.nio.file.Files.exists;
+import static java.nio.file.Files.isReadable;
+import static java.nio.file.Files.readString;
 import static java.util.Objects.isNull;
 
 import java.awt.GraphicsEnvironment;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -52,17 +61,17 @@ public class TelemetryServiceImpl
 
     @PersistenceContext
     private EntityManager entityManager;
-    
+
     private final List<TelemetrySupport> telemetrySupportsProxy;
     private final ApplicationEventPublisher eventPublisher;
-    
+
     private List<TelemetrySupport> telemetrySupports;
-    
+
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
-    
+
     private int port = -1;
-    
+
     public TelemetryServiceImpl(
             @Lazy @Autowired(required = false) List<TelemetrySupport> aTelemetrySupports,
             ApplicationEventPublisher aEventPublisher)
@@ -70,7 +79,7 @@ public class TelemetryServiceImpl
         telemetrySupportsProxy = aTelemetrySupports;
         eventPublisher = aEventPublisher;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
@@ -78,11 +87,11 @@ public class TelemetryServiceImpl
     }
 
     @EventListener
-    public void onApplicationEvent(EmbeddedServletContainerInitializedEvent aEvt)
+    public void onApplicationEvent(WebServerInitializedEvent aEvt)
     {
-        port = aEvt.getEmbeddedServletContainer().getPort();
+        port = aEvt.getWebServer().getPort();
     }
-    
+
     public void init()
     {
         List<TelemetrySupport> tsp = new ArrayList<>();
@@ -90,15 +99,15 @@ public class TelemetryServiceImpl
         if (telemetrySupportsProxy != null) {
             tsp.addAll(telemetrySupportsProxy);
             AnnotationAwareOrderComparator.sort(tsp);
-        
+
             for (TelemetrySupport ts : tsp) {
                 log.info("Found telemetry support: {}", ts.getId());
             }
         }
-        
+
         telemetrySupports = Collections.unmodifiableList(tsp);
     }
-    
+
     /**
      * The embedded server was used (i.e. not running as a WAR).
      */
@@ -106,86 +115,111 @@ public class TelemetryServiceImpl
     {
         return port != -1 && runningFromCommandline;
     }
-    
+
     public boolean isDesktopInstance()
     {
-        return  // The embedded server was used (i.e. not running as a WAR)
-                isEmbeddedServerDeployment() &&
-                // There is no console available (happens which double-clicking on the JAR)
-                System.console() == null && 
+        return // The embedded server was used (i.e. not running as a WAR)
+        isEmbeddedServerDeployment() &&
+        // There is no console available (happens which double-clicking on the JAR)
+                System.console() == null &&
                 // There is a graphical environment available
-                !GraphicsEnvironment.isHeadless() ;
+                !GraphicsEnvironment.isHeadless();
     }
-    
+
+    /**
+     * The embedded server was used (i.e. not running as a WAR) and running in Docker.
+     */
+    public boolean isDockerized()
+    {
+        final String cgroupPath = "/proc/1/cgroup";
+
+        try {
+            Path cgroup = Path.of(cgroupPath);
+            if (exists(cgroup) && isReadable(cgroup)) {
+                String content = readString(cgroup);
+                if (content.contains("docker")) {
+                    return true;
+                }
+            }
+        }
+        catch (Exception e) {
+            log.debug("Unable to check [{}]", cgroupPath, e);
+        }
+
+        return false;
+    }
+
     @Override
     public DeploymentMode getDeploymentMode()
     {
+        boolean dockerized = isDockerized();
+
         if (isDesktopInstance()) {
-            return DeploymentMode.DESKTOP;
+            return DESKTOP;
         }
-        else if (isEmbeddedServerDeployment()) {
-            return DeploymentMode.SERVER_JAR;
+
+        boolean embeddedServerDeployment = isEmbeddedServerDeployment();
+        if (dockerized && embeddedServerDeployment) {
+            return SERVER_JAR_DOCKER;
         }
-        else {
-            return DeploymentMode.SERVER_WAR;
+
+        if (embeddedServerDeployment) {
+            return SERVER_JAR;
         }
+
+        if (dockerized) {
+            return SERVER_WAR_DOCKER;
+        }
+
+        return SERVER_WAR;
     }
-    
+
     @Override
     public List<TelemetrySupport> getTelemetrySupports()
     {
         return telemetrySupports;
     }
-    
+
     @Override
     public Optional<TelemetrySupport> getTelemetrySuppport(String aSupport)
     {
-        return telemetrySupports.stream()
-                .filter(ts -> ts.getId().equals(aSupport))
-                .findFirst();
+        return telemetrySupports.stream().filter(ts -> ts.getId().equals(aSupport)).findFirst();
     }
-    
+
     @Override
     @Transactional
     public List<TelemetrySettings> listSettings()
     {
         String query = "FROM TelemetrySettings";
-        
-        return entityManager.createQuery(query, TelemetrySettings.class)
-            .getResultList();
+
+        return entityManager.createQuery(query, TelemetrySettings.class).getResultList();
     }
-    
+
     @Override
     @Transactional
     public <T> Optional<TelemetrySettings> readSettings(TelemetrySupport<T> aSupport)
     {
-        String query = 
-                "FROM TelemetrySettings " + 
-                "WHERE support = :support";
-        
+        String query = "FROM TelemetrySettings WHERE support = :support";
+
         List<TelemetrySettings> results = entityManager.createQuery(query, TelemetrySettings.class)
-            .setParameter("support", aSupport.getId())
-            .getResultList();
-        
+                .setParameter("support", aSupport.getId()).getResultList();
+
         if (results.isEmpty()) {
             return Optional.empty();
         }
-        
+
         return Optional.of(results.get(0));
-    }    
-    
+    }
+
     @Override
     @Transactional
     public <T> TelemetrySettings readOrCreateSettings(TelemetrySupport<T> aSupport)
     {
-        String query = 
-                "FROM TelemetrySettings " + 
-                "WHERE support = :support";
-        
+        String query = "FROM TelemetrySettings WHERE support = :support";
+
         List<TelemetrySettings> results = entityManager.createQuery(query, TelemetrySettings.class)
-            .setParameter("support", aSupport.getId())
-            .getResultList();
-        
+                .setParameter("support", aSupport.getId()).getResultList();
+
         if (!results.isEmpty()) {
             return results.get(0);
         }
@@ -193,7 +227,7 @@ public class TelemetryServiceImpl
             return new TelemetrySettings(aSupport);
         }
     }
-    
+
     @Transactional
     private void writeSettings(TelemetrySettings aSettings)
     {
@@ -204,7 +238,7 @@ public class TelemetryServiceImpl
             entityManager.merge(aSettings);
         }
     }
-    
+
     @Override
     @Transactional
     public void writeAllSettings(List<TelemetrySettings> aSettings)
@@ -212,7 +246,7 @@ public class TelemetryServiceImpl
         for (TelemetrySettings settings : aSettings) {
             writeSettings(settings);
         }
-        
+
         eventPublisher.publishEvent(new TelemetrySettingsSavedEvent(this, aSettings));
     }
 }

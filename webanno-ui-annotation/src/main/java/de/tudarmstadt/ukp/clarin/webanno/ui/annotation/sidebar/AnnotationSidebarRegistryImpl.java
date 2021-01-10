@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,7 +54,7 @@ public class AnnotationSidebarRegistryImpl
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<AnnotationSidebarFactory> exts = new ArrayList<>();
@@ -68,16 +68,16 @@ public class AnnotationSidebarRegistryImpl
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
-    
+
     @Override
     public List<AnnotationSidebarFactory> getSidebarFactories()
     {
         return extensions;
     }
-    
+
     @Override
     public AnnotationSidebarFactory getSidebarFactory(String aId)
     {
@@ -89,7 +89,7 @@ public class AnnotationSidebarRegistryImpl
                     .orElse(null);
         }
     }
-    
+
     @Override
     public AnnotationSidebarFactory getDefaultSidebarFactory()
     {
@@ -97,15 +97,15 @@ public class AnnotationSidebarRegistryImpl
     }
 
     /**
-     * Builds a comparator that sorts first by the order, if specified, then by the display
-     * name to break ties. It is assumed that the compared elements are all non-null
+     * Builds a comparator that sorts first by the order, if specified, then by the display name to
+     * break ties. It is assumed that the compared elements are all non-null
+     * 
      * @return The comparator
      */
     private Comparator<AnnotationSidebarFactory> buildComparator()
     {
         return (asf1, asf2) -> new CompareToBuilder()
                 .appendSuper(AnnotationAwareOrderComparator.INSTANCE.compare(asf1, asf2))
-                .append(asf1.getDisplayName(), asf2.getDisplayName())
-                .toComparison();
+                .append(asf1.getDisplayName(), asf2.getDisplayName()).toComparison();
     }
 }

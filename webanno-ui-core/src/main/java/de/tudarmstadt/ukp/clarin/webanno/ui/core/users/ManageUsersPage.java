@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,9 +77,9 @@ public class ManageUsersPage
         private boolean isCreate = false;
         private PasswordTextField passwordField;
         private PasswordTextField repeatPasswordField;
-        
+
         public transient String password;
-        
+
         @SuppressWarnings("unused")
         public transient String repeatPassword;
 
@@ -89,39 +89,36 @@ public class ManageUsersPage
 
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
-            
-            add(new TextField<String>("username")
-                    .setRequired(true)
-                    .add(this::validateUsername)
+
+            add(new TextField<String>("username").setRequired(true).add(this::validateUsername)
                     .add(enabledWhen(() -> isCreate)));
             add(new Label("lastLogin"));
             add(new EmailTextField("email"));
-            
+
             passwordField = new PasswordTextField("password");
             passwordField.setModel(PropertyModel.of(DetailForm.this, "password"));
             passwordField.setRequired(false);
             add(passwordField);
-            
+
             repeatPasswordField = new PasswordTextField("repeatPassword");
             repeatPasswordField.setModel(PropertyModel.of(DetailForm.this, "repeatPassword"));
             repeatPasswordField.setRequired(false);
             add(repeatPasswordField);
-            
+
             add(new EqualPasswordInputValidator(passwordField, repeatPasswordField));
-            
-            add(new ListMultipleChoice<>("roles", getRoles())
-                    .add(this::validateRoles)
-                    .add(visibleWhen(ManageUsersPage.this::isAdmin)));
-            
-            add(new CheckBox("enabled")
-                    .add(this::validateEnabled)
+
+            add(new ListMultipleChoice<>("roles", getRoles()).add(this::validateRoles)
                     .add(visibleWhen(ManageUsersPage.this::isAdmin)));
 
+            add(new CheckBox("enabled").add(this::validateEnabled)
+                    .add(visibleWhen(ManageUsersPage.this::isAdmin))
+                    .setOutputMarkupPlaceholderTag(true));
+
             add(new LambdaAjaxButton<>("save", ManageUsersPage.this::actionSave));
-            
+
             add(new LambdaAjaxLink("cancel", ManageUsersPage.this::actionCancel));
         }
-        
+
         private void validateUsername(IValidatable<String> aValidatable)
         {
             if (userRepository.exists(aValidatable.getValue()) && isCreate) {
@@ -135,13 +132,13 @@ public class ManageUsersPage
                 aValidatable.error(new ValidationError().addKey("username.invalidCharactersError"));
             }
         }
-        
+
         private void validateEnabled(IValidatable<Boolean> aValidatable)
         {
             if (!aValidatable.getValue()
                     && userRepository.getCurrentUser().equals(getModelObject())) {
-                aValidatable.error(new ValidationError()
-                        .setMessage("You cannot disable your own account."));
+                aValidatable.error(
+                        new ValidationError().setMessage("You cannot disable your own account."));
             }
         }
 
@@ -149,13 +146,13 @@ public class ManageUsersPage
         {
             Collection<Role> newRoles = aValidatable.getValue();
             if (newRoles.isEmpty()) {
-                aValidatable.error(new ValidationError()
-                        .setMessage("A user has to have at least one role."));
+                aValidatable.error(
+                        new ValidationError().setMessage("A user has to have at least one role."));
             }
             // enforce users to have at least the ROLE_USER role
             if (!newRoles.contains(Role.ROLE_USER)) {
-                aValidatable.error(new ValidationError()
-                        .setMessage("Every user must have 'ROLE_USER'."));
+                aValidatable.error(
+                        new ValidationError().setMessage("Every user must have 'ROLE_USER'."));
             }
             // don't let an admin user strip himself of admin rights
             if (userRepository.getCurrentUser().equals(getModelObject())
@@ -164,19 +161,19 @@ public class ManageUsersPage
                         .setMessage("You cannot remove your own admin status."));
             }
         }
-        
+
         @Override
         protected void onConfigure()
         {
             super.onConfigure();
-            
+
             setVisible(getModelObject() != null);
         }
     }
 
     private DetailForm detailForm;
     private UserSelectionPanel users;
-    
+
     private IModel<User> selectedUser;
 
     public ManageUsersPage()
@@ -184,7 +181,7 @@ public class ManageUsersPage
         super();
 
         commonInit();
-        
+
         // If the user is not an admin, then pre-load the current user to allow self-service
         // editing of the profile
         if (!isAdmin() && SecurityUtil.isProfileSelfServiceAllowed()) {
@@ -195,9 +192,9 @@ public class ManageUsersPage
     public ManageUsersPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
-        
+
         commonInit();
-        
+
         String username = aPageParameters.get(PARAM_USER).toOptionalString();
         User user = null;
         if (username != null) {
@@ -208,7 +205,7 @@ public class ManageUsersPage
                 selectedUser.setObject(user);
             }
             else if (SecurityUtil.isProfileSelfServiceAllowed()
-                    && userRepository.getCurrentUser().getUsername().equals(user.getUsername())) {
+                    && userRepository.getCurrentUsername().equals(user.getUsername())) {
                 selectedUser.setObject(userRepository.getCurrentUser());
             }
             else {
@@ -218,7 +215,7 @@ public class ManageUsersPage
             }
         }
     }
-    
+
     private void commonInit()
     {
         // If the user is not an admin and self-service is not allowed, go back to the main page
@@ -239,7 +236,7 @@ public class ManageUsersPage
             // sets it back to false.
             _target.registerRespondListener(__target -> detailForm.isCreate = true);
         });
-        users.setChangeAction(target -> { 
+        users.setChangeAction(target -> {
             detailForm.isCreate = false;
             // Make sure that any invalid forms are cleared now that we load the new project.
             // If we do not do this, then e.g. input fields may just continue showing the values
@@ -248,7 +245,7 @@ public class ManageUsersPage
             target.add(detailForm);
         });
         add(users);
-        
+
         detailForm = new DetailForm("detailForm", selectedUser);
         add(detailForm);
     }
@@ -273,7 +270,7 @@ public class ManageUsersPage
         }
 
         info("Details for user [" + user.getUsername() + "] have been saved.");
-        
+
         aTarget.add(detailForm);
         aTarget.add(users);
         aTarget.addChildren(getPage(), IFeedback.class);
@@ -290,12 +287,12 @@ public class ManageUsersPage
             setResponsePage(getApplication().getHomePage());
         }
     }
-    
+
     private boolean isAdmin()
     {
         return userRepository.isAdministrator(userRepository.getCurrentUser());
     }
-    
+
     private List<Role> getRoles()
     {
         List<Role> roles = new ArrayList<>(Arrays.asList(Role.values()));

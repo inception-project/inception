@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,10 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -41,6 +43,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEve
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -54,7 +58,7 @@ public class RelationAdapter
     extends TypeAdapter_ImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /**
      * The feature of an UIMA annotation containing the label to be used as a governor for arc
      * annotations
@@ -68,32 +72,16 @@ public class RelationAdapter
     private final String targetFeatureName;
 
     private final List<RelationLayerBehavior> behaviors;
-    
-    /**
-     * @deprecated
-     * @param aAttacheFeatureName argument is ignored and value obtained from layer instead.
-     * @param aAttachType argument is ignored and value obtained from layer instead.
-     * @param aTypeId argument is ignored and value obtained from layer instead.
-     * @param aLayer argument is ignored and value obtained from layer instead.
-     */
-    @Deprecated
-    public RelationAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, long aTypeId,
-            String aTypeName, String aTargetFeatureName, String aSourceFeatureName, 
-            /* String aArcSpanType, */ String aAttacheFeatureName, String aAttachType, 
-            Collection<AnnotationFeature> aFeatures)
-    {
-        this(aFeatureSupportRegistry, aEventPublisher, aLayer,
-                aTargetFeatureName, aSourceFeatureName, aFeatures, emptyList());
-    }
-    
-    public RelationAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+
+    public RelationAdapter(LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             String aTargetFeatureName, String aSourceFeatureName,
-            Collection<AnnotationFeature> aFeatures, List<RelationLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures,
+            List<RelationLayerBehavior> aBehaviors)
     {
-        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-        
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
@@ -102,7 +90,7 @@ public class RelationAdapter
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
-        
+
         sourceFeatureName = aSourceFeatureName;
         targetFeatureName = aTargetFeatureName;
     }
@@ -132,11 +120,10 @@ public class RelationAdapter
                 aTargetFs));
     }
 
-    public AnnotationFS handle(CreateRelationAnnotationRequest aRequest)
-        throws AnnotationException
+    public AnnotationFS handle(CreateRelationAnnotationRequest aRequest) throws AnnotationException
     {
         CreateRelationAnnotationRequest request = aRequest;
-        
+
         for (RelationLayerBehavior behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
@@ -180,18 +167,18 @@ public class RelationAdapter
     {
         AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
-        publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(),
-                fs, getTargetAnnotation(fs), getSourceAnnotation(fs)));
+        publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(), fs,
+                getTargetAnnotation(fs), getSourceAnnotation(fs)));
     }
 
-    private AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
     {
         Feature sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
         AnnotationFS sourceToken = (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
         return sourceToken;
     }
 
-    private AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
     {
         Feature targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
         AnnotationFS targetToken = (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
@@ -207,7 +194,7 @@ public class RelationAdapter
     {
         return targetFeatureName;
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
@@ -219,5 +206,19 @@ public class RelationAdapter
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
+    }
+
+    @Override
+    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    {
+        AnnotationFS src = getSourceAnnotation(aAnno);
+        AnnotationFS tgt = getTargetAnnotation(aAnno);
+
+        if (getLayer().getAttachFeature() != null) {
+            src = getFeature(src, getLayer().getAttachFeature().getName(), AnnotationFS.class);
+            tgt = getFeature(tgt, getLayer().getAttachFeature().getName(), AnnotationFS.class);
+        }
+
+        aState.getSelection().selectArc(new VID(aAnno), src, tgt);
     }
 }

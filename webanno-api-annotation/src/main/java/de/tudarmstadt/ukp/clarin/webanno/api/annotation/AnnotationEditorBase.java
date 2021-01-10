@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -53,23 +55,27 @@ public abstract class AnnotationEditorBase
     extends Panel
 {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationEditorBase.class);
-    
+
     private static final long serialVersionUID = 8637373389151630602L;
 
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
-    private AnnotationActionHandler actionHandler;
-    private CasProvider casProvider;
+    private final AnnotationActionHandler actionHandler;
+    private final CasProvider casProvider;
     private boolean enableHighlight = true;
-    
+
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel);
+
+        Validate.notNull(aActionHandler, "Annotation action handle must be provided");
+        Validate.notNull(aCasProvider, "CAS provider must be provided");
+
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
-        
+
         // Allow AJAX updates.
         setOutputMarkupId(true);
 
@@ -98,27 +104,34 @@ public abstract class AnnotationEditorBase
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
+
     public AnnotationActionHandler getActionHandler()
     {
         return actionHandler;
     }
-    
+
     public CasProvider getCasProvider()
     {
         return casProvider;
     }
-    
+
     /**
-     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be
-     * called multiple times, even for the same annotation editor, but only resulting in a single
-     * rendering call.
+     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be called
+     * multiple times, even for the same annotation editor, but only resulting in a single rendering
+     * call.
      */
     public final void requestRender(AjaxRequestTarget aTarget)
     {
-        aTarget.registerRespondListener(new RenderListener());
+        aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
+            // Is a document loaded?
+            if (getModelObject().getDocument() == null) {
+                return;
+            }
+
+            render(_target);
+        }));
     }
-    
+
     /**
      * Render the contents of the annotation editor again in this present AJAX request. This
      * typically happens by sending JavaScript commands including the complete data structures as
@@ -129,19 +142,19 @@ public abstract class AnnotationEditorBase
     protected VDocument render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset)
     {
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset,
-                aCas, getLayersToRender());
+        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset, aCas, getLayersToRender());
 
         // Fire render event into backend
-        extensionRegistry.fireRender(aCas, getModelObject(), vdoc,
-                aWindowBeginOffset, aWindowEndOffset);
+        extensionRegistry.fireRender(aCas, getModelObject(), vdoc, aWindowBeginOffset,
+                aWindowEndOffset);
 
         // Fire render event into UI
         Page page = null;
         Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
         if (handler.isPresent()) {
             page = (Page) handler.get().getPage();
-        };
+        }
+        ;
 
         if (page == null) {
             page = getPage();
@@ -161,8 +174,8 @@ public abstract class AnnotationEditorBase
             // }
 
             if (state.getSelection().getAnnotation().isSet()) {
-                vdoc.add(new VAnnotationMarker(
-                        VMarker.FOCUS, state.getSelection().getAnnotation()));
+                vdoc.add(
+                        new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
             }
         }
 
@@ -178,8 +191,8 @@ public abstract class AnnotationEditorBase
                     || layer.getName().equals(Sentence.class.getName());
             boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
                     && (state.getMode().equals(Mode.AUTOMATION)
-                    || state.getMode().equals(Mode.CORRECTION)
-                    || state.getMode().equals(Mode.CURATION));
+                            || state.getMode().equals(Mode.CORRECTION)
+                            || state.getMode().equals(Mode.CURATION));
 
             if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
                 layersToRender.add(layer);
@@ -187,83 +200,15 @@ public abstract class AnnotationEditorBase
         }
         return layersToRender;
     }
-    
+
     public void setHighlightEnabled(boolean aValue)
     {
         enableHighlight = aValue;
     }
-    
+
     public boolean isHighlightEnabled()
     {
         return enableHighlight;
     }
-    
-    /**
-     * This is a special AJAX target response listener which implements hashCode and equals.
-     * It useds the markup ID of its host component to identify itself. This enables us to add
-     * multiple instances of this listener to an AJAX response without *actually* adding
-     * multiple instances since the AJAX response internally keeps track of the listeners
-     * using a set.
-     */
-    private class RenderListener
-        implements AjaxRequestTarget.ITargetRespondListener
-    {
-        private String markupId;
 
-        public RenderListener()
-        {
-            markupId = AnnotationEditorBase.this.getMarkupId();
-        }
-
-        @Override
-        public void onTargetRespond(AjaxRequestTarget aTarget)
-        {
-            AnnotatorState state = getModelObject();
-            if (state.getDocument() != null) {
-                render(aTarget);
-            }
-        }
-
-        private AnnotationEditorBase getOuterType()
-        {
-            return AnnotationEditorBase.this;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getOuterType().hashCode();
-            result = prime * result + ((markupId == null) ? 0 : markupId.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            RenderListener other = (RenderListener) obj;
-            if (!getOuterType().equals(other.getOuterType())) {
-                return false;
-            }
-            if (markupId == null) {
-                if (other.markupId != null) {
-                    return false;
-                }
-            }
-            else if (!markupId.equals(other.markupId)) {
-                return false;
-            }
-            return true;
-        }
-    }
 }

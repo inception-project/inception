@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import javax.persistence.NoResultException;
 
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,17 +42,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class DocumentServiceImplTest
 {
     private DocumentService sut;
 
-    private @Mock UserDao userRepository;
     private @Mock ImportExportService importExportService;
     private @Mock ProjectService projectService;
     private @Mock ApplicationEventPublisher applicationEventPublisher;
@@ -69,6 +70,8 @@ public class DocumentServiceImplTest
     {
         initMocks(this);
 
+        CasStorageSession.open();
+
         backupProperties = new BackupProperties();
 
         repositoryProperties = new RepositoryProperties();
@@ -77,15 +80,22 @@ public class DocumentServiceImplTest
         storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
                 backupProperties);
 
-        sut = new DocumentServiceImpl(repositoryProperties, userRepository, storageService,
-                importExportService, projectService, applicationEventPublisher, entityManager);
+        sut = new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
+                projectService, applicationEventPublisher, entityManager);
+
+        when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
+                any())).thenReturn(JCasFactory.createText("Test").getCas());
+    }
+
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
     }
 
     @Test
     public void thatCreatingOrReadingInitialCasForNewDocumentCreatesNewCas() throws Exception
     {
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any())).thenReturn(JCasFactory.createText("Test").getCas());
 
         SourceDocument doc = makeSourceDocument(1l, 1l, "test");
 
@@ -101,10 +111,7 @@ public class DocumentServiceImplTest
     {
         SourceDocument sourceDocument = makeSourceDocument(1l, 1l, "test");
         User user = makeUser();
-        when(userRepository.get(user.getUsername())).thenReturn(user);
         when(entityManager.createQuery(anyString(), any())).thenThrow(NoResultException.class);
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any())).thenReturn(JCasFactory.createText("Test").getCas());
 
         JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername()).getJCas();
 
@@ -126,7 +133,8 @@ public class DocumentServiceImplTest
         return doc;
     }
 
-    private User makeUser() {
+    private User makeUser()
+    {
         User user = new User();
         user.setUsername("Test user");
         return user;

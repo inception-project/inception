@@ -1,14 +1,14 @@
 /*
- * Copyright 2014
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,8 +93,7 @@ public class WebannoTsv2Writer
     NavigableMap<Integer, Integer> tokenPositions;
 
     @Override
-    public void process(JCas aJCas)
-        throws AnalysisEngineProcessException
+    public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         OutputStream docOS = null;
         try {
@@ -114,7 +113,7 @@ public class WebannoTsv2Writer
         throws IOException, ResourceInitializationException, CASRuntimeException, CASException
     {
         LowLevelCAS llCas = aJCas.getLowLevelCas();
-        
+
         tokenIds = new HashMap<>();
         setTokenId(aJCas, tokenIds);
         tokenPositions = new TreeMap<>();
@@ -160,8 +159,8 @@ public class WebannoTsv2Writer
             for (AnnotationFS anno : CasUtil.select(aJCas.getCas(), type)) {
                 for (Feature feature : type.getFeatures()) {
                     if (feature.getShortName().equals(GOVERNOR)) {
-                        relationTypesMap.put(type, anno.getFeatureValue(feature).getType()
-                                .getName());
+                        relationTypesMap.put(type,
+                                anno.getFeatureValue(feature).getType().getName());
                     }
                 }
             }
@@ -182,9 +181,9 @@ public class WebannoTsv2Writer
             }
             IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")) {
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)) {
                     continue;
                 }
                 spanFeatures.put(feature, type);
@@ -197,9 +196,9 @@ public class WebannoTsv2Writer
         for (Type type : relationTypes) {
             IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                         || feature.getShortName().equals(GOVERNOR)
                         || feature.getShortName().equals(DEPENDENT)) {
                     continue;
@@ -222,9 +221,9 @@ public class WebannoTsv2Writer
                 }
             }
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")) {
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)) {
                     continue;
                 }
 
@@ -238,9 +237,9 @@ public class WebannoTsv2Writer
         Map<Feature, Map<Integer, String>> relAnnos = new HashMap<>();
         for (Type type : relationTypes) {
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                         || feature.getShortName().equals(GOVERNOR)
                         || feature.getShortName().equals(DEPENDENT)) {
                     continue;
@@ -289,9 +288,9 @@ public class WebannoTsv2Writer
 
                 for (Type type : relationTypes) {
                     for (Feature feature : type.getFeatures()) {
-                        if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                                || feature.toString().equals("uima.tcas.Annotation:begin")
-                                || feature.toString().equals("uima.tcas.Annotation:end")
+                        if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                                || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                                || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                                 || feature.getShortName().equals(GOVERNOR)
                                 || feature.getShortName().equals(DEPENDENT)) {
                             continue;
@@ -311,9 +310,8 @@ public class WebannoTsv2Writer
                         IOUtils.write("_\t", aOs, aEncoding);
                     }
                     else {
-                        IOUtils.write(
-                                governorAnnos.get(type).get(llCas.ll_getFSRef(token)) + "\t", aOs,
-                                aEncoding);
+                        IOUtils.write(governorAnnos.get(type).get(llCas.ll_getFSRef(token)) + "\t",
+                                aOs, aEncoding);
                     }
                 }
                 IOUtils.write("\n", aOs, aEncoding);
@@ -373,8 +371,8 @@ public class WebannoTsv2Writer
                                 aTokenAnnoMap.put(llCas.ll_getFSRef(token), annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), "O-_|"
-                                        + (first ? "B-" : "I-") + annotation);
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token),
+                                        "O-_|" + (first ? "B-" : "I-") + annotation);
                                 first = false;
                             }
                         }
@@ -383,8 +381,8 @@ public class WebannoTsv2Writer
                                 aTokenAnnoMap.put(llCas.ll_getFSRef(token), annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), (first ? "B-" : "I-")
-                                        + annotation);
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token),
+                                        (first ? "B-" : "I-") + annotation);
                                 first = false;
                             }
                         }
@@ -392,8 +390,7 @@ public class WebannoTsv2Writer
                     else {
                         if (!multipleSpans.contains(aType.getName())) {
                             aTokenAnnoMap.put(llCas.ll_getFSRef(token),
-                                    aTokenAnnoMap.get(llCas.ll_getFSRef(token)) + "|"
-                                            + annotation);
+                                    aTokenAnnoMap.get(llCas.ll_getFSRef(token)) + "|" + annotation);
                             previous = true;
                         }
                         else {
@@ -462,7 +459,7 @@ public class WebannoTsv2Writer
                 }
                 // TODO: remove the B- and I- code in the if/else above. no such a thing of
                 // multiple-span annotation on relations.
-                
+
                 // if the annotation gov/dep span annotation is on multiple tokens,
                 // we just need an arc to the first token.
                 break;
@@ -507,9 +504,9 @@ public class WebannoTsv2Writer
                                         tokenPositions.floorEntry(govAnno.getBegin()).getValue()));
                     }
                 }
-             // if the annotation gov/dep span annotation is on multiple tokens,
-             //we just need an arc to the first token.
-                break; 
+                // if the annotation gov/dep span annotation is on multiple tokens,
+                // we just need an arc to the first token.
+                break;
             }
         }
     }

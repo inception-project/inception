@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TAB_SEP;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
@@ -26,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,25 +37,24 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
 
 /**
@@ -70,11 +70,11 @@ public class ProjectTrainingDocumentsPanel
     private @SpringBean ImportExportService importExportService;
     private @SpringBean AutomationService automationService;
     private @SpringBean UserDao userRepository;
-    
+
     private ArrayList<String> documents = new ArrayList<>();
     private ArrayList<String> selectedDocuments = new ArrayList<>();
 
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     private List<String> readableFormats;
     private String selectedFormat;
@@ -90,19 +90,22 @@ public class ProjectTrainingDocumentsPanel
         this.selectedProjectModel = aProjectModel;
         feature = afeatureModel.getObject();
         if (aTabsDocModel.getObject().isTabSep()) {
-            readableFormats = new ArrayList<>(
-                    Arrays.asList(WebAnnoConst.TAB_SEP));
-            selectedFormat = WebAnnoConst.TAB_SEP;
+            readableFormats = asList(TAB_SEP);
+            selectedFormat = TAB_SEP;
         }
         else {
             readableFormats = importExportService.getReadableFormats().stream()
                     .map(FormatSupport::getName).sorted().collect(Collectors.toList());
             selectedFormat = readableFormats.get(0);
         }
-        add(fileUpload = new FileUploadField("content", new Model()));
 
-        add(readableFormatsChoice = new BootstrapSelect<String>("readableFormats", new Model(
-                selectedFormat), readableFormats)
+        add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
+
+        add(readableFormatsChoice = new BootstrapSelect<String>("readableFormats",
+                new Model(selectedFormat), readableFormats)
         {
             private static final long serialVersionUID = 2476274669926250023L;
 
@@ -113,7 +116,7 @@ public class ProjectTrainingDocumentsPanel
             }
         });
 
-        add(new Button("import", new StringResourceModel("label"))
+        add(new Button("import")
         {
             private static final long serialVersionUID = 1L;
 
@@ -164,8 +167,8 @@ public class ProjectTrainingDocumentsPanel
                         }
                         else {
                             String reader = importExportService
-                                    .getFormatByName(readableFormatsChoice.getModelObject())
-                                    .get().getId();
+                                    .getFormatByName(readableFormatsChoice.getModelObject()).get()
+                                    .getId();
                             document.setFormat(reader);
                         }
 
@@ -173,10 +176,8 @@ public class ProjectTrainingDocumentsPanel
 
                         // Workaround for WICKET-6425
                         File tempFile = File.createTempFile("webanno-training", null);
-                        try (
-                                InputStream is = documentToUpload.getInputStream();
-                                OutputStream os = new FileOutputStream(tempFile);
-                        ) {
+                        try (InputStream is = documentToUpload.getInputStream();
+                                OutputStream os = new FileOutputStream(tempFile);) {
                             IOUtils.copyLarge(is, os);
                             automationService.uploadTrainingDocument(tempFile, document);
                         }
@@ -245,7 +246,7 @@ public class ProjectTrainingDocumentsPanel
             }
         });
 
-        add(new Button("remove", new StringResourceModel("label"))
+        add(new Button("remove")
         {
             private static final long serialVersionUID = 1L;
 

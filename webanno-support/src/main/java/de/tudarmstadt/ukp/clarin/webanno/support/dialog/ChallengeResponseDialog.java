@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,21 +44,26 @@ public class ChallengeResponseDialog
     private IModel<String> titleModel;
     private IModel<String> challengeModel;
     private IModel<String> expectedResponseModel;
-    
+
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
 
     private ContentPanel contentPanel;
-    
+
+    public ChallengeResponseDialog(String aId)
+    {
+        this(aId, null, null, null);
+    }
+
     public ChallengeResponseDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
             IModel<String> aExpectedResponse)
     {
         super(aId);
-        
+
         titleModel = aTitle;
         challengeModel = aChallenge;
         expectedResponseModel = aExpectedResponse;
-        
+
         setOutputMarkupId(true);
         setInitialWidth(620);
         setInitialHeight(440);
@@ -67,22 +72,22 @@ public class ChallengeResponseDialog
         setHeightUnit("px");
         setCssClassName("w_blue w_flex");
         showUnloadConfirmation(false);
-        
+
         setModel(new CompoundPropertyModel<>(null));
-        
+
         setContent(contentPanel = new ContentPanel(getContentId(), getModel()));
-        
+
         setCloseButtonCallback((_target) -> {
             onCancelInternal(_target);
             return true;
         });
     }
-    
+
     public void setModel(IModel<State> aModel)
     {
         setDefaultModel(aModel);
     }
-    
+
     @SuppressWarnings("unchecked")
     public IModel<State> getModel()
     {
@@ -93,20 +98,48 @@ public class ChallengeResponseDialog
     {
         setDefaultModelObject(aModel);
     }
-    
+
     public State getModelObject()
     {
         return (State) getDefaultModelObject();
-    }    
-    
-    
-    
+    }
+
+    public IModel<String> getTitleModel()
+    {
+        return titleModel;
+    }
+
+    public void setTitleModel(IModel<String> aTitleModel)
+    {
+        titleModel = aTitleModel;
+    }
+
+    public IModel<String> getChallengeModel()
+    {
+        return challengeModel;
+    }
+
+    public void setChallengeModel(IModel<String> aChallengeModel)
+    {
+        challengeModel = aChallengeModel;
+    }
+
+    public IModel<String> getResponseModel()
+    {
+        return expectedResponseModel;
+    }
+
+    public void setResponseModel(IModel<String> aExpectedResponseModel)
+    {
+        expectedResponseModel = aExpectedResponseModel;
+    }
+
     @Override
     public void show(IPartialPageRequestHandler aTarget)
     {
         challengeModel.detach();
         expectedResponseModel.detach();
-        
+
         State state = new State();
         state.challenge = challengeModel.getObject();
         state.expectedResponse = expectedResponseModel.getObject();
@@ -115,10 +148,10 @@ public class ChallengeResponseDialog
         setModelObject(state);
 
         setTitle(titleModel.getObject());
-        
+
         super.show(aTarget);
     }
-    
+
     public AjaxCallback getConfirmAction()
     {
         return confirmAction;
@@ -142,16 +175,16 @@ public class ChallengeResponseDialog
     protected void onConfirmInternal(AjaxRequestTarget aTarget, Form<State> aForm)
     {
         State state = aForm.getModelObject();
-        
+
         // Check if the challenge was met
         if (!ObjectUtils.equals(state.expectedResponse, state.response)) {
             state.feedback = "Your response did not meet the challenge.";
             aTarget.add(aForm);
             return;
         }
-        
+
         boolean closeOk = true;
-        
+
         // Invoke callback if one is defined
         if (confirmAction != null) {
             try {
@@ -164,7 +197,7 @@ public class ChallengeResponseDialog
                 closeOk = false;
             }
         }
-        
+
         if (closeOk) {
             close(aTarget);
         }
@@ -213,9 +246,8 @@ public class ChallengeResponseDialog
             form.add(new TextField<>("response"));
             form.add(new LambdaAjaxButton<>("confirm",
                     ChallengeResponseDialog.this::onConfirmInternal));
-            form.add(new LambdaAjaxLink("cancel",
-                    ChallengeResponseDialog.this::onCancelInternal));
-            
+            form.add(new LambdaAjaxLink("cancel", ChallengeResponseDialog.this::onCancelInternal));
+
             add(form);
         }
     }

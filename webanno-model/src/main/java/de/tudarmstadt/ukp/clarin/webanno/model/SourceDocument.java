@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,8 +42,8 @@ import org.hibernate.annotations.Type;
  * stored in the file system.
  */
 @Entity
-@Table(name = "source_document", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
-        "project" }) })
+@Table(name = "source_document", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "project" }) })
 public class SourceDocument
     implements Serializable
 {
@@ -85,13 +85,27 @@ public class SourceDocument
      */
     @Deprecated
     private boolean trainingDocument = false;
-    
+
     /*
      * This field are only here because we still may have the non-nullable columns in the DB. Once
      * we can properly migrate the database schema, this can go away.
      */
     @Deprecated
     private boolean processed = false;
+
+    public SourceDocument()
+    {
+        // Nothing to do
+    }
+
+    public SourceDocument(String aName, Project aProject, String aFormat)
+    {
+        super();
+        name = aName;
+        project = aProject;
+        format = aFormat;
+        state = SourceDocumentState.NEW;
+    }
 
     public Long getId()
     {
@@ -162,11 +176,11 @@ public class SourceDocument
     {
         this.sentenceAccessed = sentenceAccessed;
     }
-    
+
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();
@@ -241,7 +255,7 @@ public class SourceDocument
         }
         return true;
     }
-    
+
     @Override
     public String toString()
     {

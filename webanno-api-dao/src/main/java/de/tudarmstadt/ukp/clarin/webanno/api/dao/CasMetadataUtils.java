@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -42,13 +43,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public class CasMetadataUtils
 {
     private static final Logger LOG = LoggerFactory.getLogger(CasMetadataUtils.class);
-    
+
     public static TypeSystemDescription getInternalTypeSystem()
     {
         return createTypeSystemDescription(
                 "de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal");
     }
-    
+
     public static void failOnConcurrentModification(CAS aCas, File aCasFile,
             SourceDocument aDocument, String aUsername)
         throws IOException
@@ -58,12 +59,11 @@ public class CasMetadataUtils
         if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
             LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
                     + "does not support CASMetadata yet - unable to detect concurrent modifications",
-                    aCasFile.getName(), aUsername, aDocument.getName(),
-                    aDocument.getId(), aDocument.getProject().getName(),
-                    aDocument.getProject().getId());
+                    aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
+                    aDocument.getProject().getName(), aDocument.getProject().getId());
             return;
         }
-        
+
         List<AnnotationFS> cmds = new ArrayList<>(
                 CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
         if (cmds.size() > 1) {
@@ -74,8 +74,8 @@ public class CasMetadataUtils
             long lastChangedOnDisk = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
             if (aCasFile.lastModified() != lastChangedOnDisk) {
                 throw new IOException(
-                        "Detected concurrent modification to file on disk (expected timestamp: "
-                                + lastChangedOnDisk + "; actual timestamp "
+                        "Detected concurrent modification to file in storage (expected timestamp: "
+                                + lastChangedOnDisk + "; actual timestamp in storage "
                                 + aCasFile.lastModified() + ") - "
                                 + "please try reloading before saving again.");
             }
@@ -89,7 +89,7 @@ public class CasMetadataUtils
                     aDocument.getProject().getName(), aDocument.getProject().getId());
         }
     }
-    
+
     public static void clearCasMetadata(CAS aCas) throws IllegalStateException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
@@ -97,7 +97,7 @@ public class CasMetadataUtils
         if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
             return;
         }
-        
+
         List<AnnotationFS> cmds = new ArrayList<>(
                 CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
         if (cmds.size() > 1) {
@@ -106,7 +106,15 @@ public class CasMetadataUtils
 
         cmds.forEach(aCas::removeFsFromIndexes);
     }
-    
+
+    public static long getLastChanged(CAS aCas)
+    {
+        Type casMetadataType = getType(aCas, CASMetadata.class);
+        Feature feature = casMetadataType.getFeatureByBaseName("lastChangedOnDisk");
+        return aCas.select(casMetadataType).map(cmd -> cmd.getLongValue(feature)).findFirst()
+                .orElse(-1l);
+    }
+
     public static void addOrUpdateCasMetadata(CAS aCas, File aCasFile, SourceDocument aDocument,
             String aUsername)
         throws IOException
@@ -114,14 +122,14 @@ public class CasMetadataUtils
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
         if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
-                    + "does not support CASMetadata yet - not adding",
-                    aCasFile.getName(), aUsername, aDocument.getName(),
-                    aDocument.getId(), aDocument.getProject().getName(),
-                    aDocument.getProject().getId());
+            LOG.info(
+                    "Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
+                            + "does not support CASMetadata yet - not adding",
+                    aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
+                    aDocument.getProject().getName(), aDocument.getProject().getId());
             return;
         }
-        
+
         Type casMetadataType = getType(aCas, CASMetadata.class);
         FeatureStructure cmd;
         List<AnnotationFS> cmds = new ArrayList<>(CasUtil.select(aCas, casMetadataType));
@@ -134,11 +142,11 @@ public class CasMetadataUtils
         else {
             cmd = aCas.createAnnotation(casMetadataType, 0, 0);
         }
-        
+
         if (cmd.getType().getFeatureByBaseName("username") != null) {
             FSUtil.setFeature(cmd, "username", aUsername);
         }
-        
+
         if (cmd.getType().getFeatureByBaseName("sourceDocumentId") != null) {
             FSUtil.setFeature(cmd, "sourceDocumentId", aDocument.getId());
         }
@@ -157,11 +165,13 @@ public class CasMetadataUtils
 
         if (cmd.getType().getFeatureByBaseName("lastChangedOnDisk") != null) {
             FSUtil.setFeature(cmd, "lastChangedOnDisk", aCasFile.lastModified());
+            LOG.trace("CAS [{}] for [{}]@[{}]({}): set lastChangedOnDisk: {}", aCas.hashCode(),
+                    aUsername, aDocument.getName(), aDocument.getId(), aCasFile.lastModified());
         }
-        
+
         aCas.addFsToIndexes(cmd);
     }
-    
+
     public static Optional<String> getSourceDocumentName(CAS aCas)
     {
         try {

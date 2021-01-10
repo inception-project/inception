@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -35,16 +36,14 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color", "hovertext" })
+@JsonPropertyOrder(value = { "vid", "type", "offsets", "attributes" })
 public class Entity
 {
     private VID vid;
     private String type;
     private List<Offsets> offsets = new ArrayList<>();
     // WEBANNO EXTENSION BEGIN
-    private String labelText;
-    private String color;
-    private String hovertext;
+    private EntityAttributes attributes = new EntityAttributes();
     // WEBANNO EXTENSION END
 
     public Entity()
@@ -76,9 +75,9 @@ public class Entity
         vid = aVid;
         type = aType;
         offsets = aOffsets;
-        labelText = aLabelText;
-        color = aColor;
-        hovertext = aHovertext;
+        attributes.setLabelText(aLabelText);
+        attributes.setColor(aColor);
+        attributes.setHoverText(aHovertext);
     }
 
     @Deprecated
@@ -123,33 +122,70 @@ public class Entity
         offsets = aOffsets;
     }
 
+    public EntityAttributes getAttributes()
+    {
+        return attributes;
+    }
+
+    public void setAttributes(EntityAttributes aAttributes)
+    {
+        attributes = aAttributes;
+    }
+
+    /**
+     * @deprecated Use {@code getAttributes().setLabelText(...)}.
+     */
+    @JsonIgnore
+    @Deprecated
     public void setLabelText(String aLabelText)
     {
-        labelText = aLabelText;
+        attributes.setLabelText(aLabelText);
     }
 
+    /**
+     * @deprecated Use {@code getAttributes().getLabelText()}.
+     */
+    @Deprecated
     public String getLabelText()
     {
-        return labelText;
+        return attributes.getLabelText();
     }
 
+    /**
+     * @deprecated Use {@code getAttributes().getColor()}.
+     */
+    @Deprecated
     public String getColor()
     {
-        return color;
+        return attributes.getColor();
     }
 
+    /**
+     * @deprecated Use {@code getAttributes().setColor(...)}.
+     */
+    @JsonIgnore
+    @Deprecated
     public void setColor(String aColor)
     {
-        color = aColor;
-    }
-    
-    public void setHovertext(String aHovertext)
-    {
-        hovertext = aHovertext;
+        attributes.setColor(aColor);
     }
 
+    /**
+     * @deprecated Use {@code getAttributes().setHoverText(...)}.
+     */
+    @JsonIgnore
+    @Deprecated
+    public void setHovertext(String aHovertext)
+    {
+        attributes.setHoverText(aHovertext);
+    }
+
+    /**
+     * @deprecated Use {@code getAttributes().getHoverText(...)}.
+     */
+    @Deprecated
     public String getHovertext()
     {
-        return hovertext;
+        return attributes.getHoverText();
     }
 }

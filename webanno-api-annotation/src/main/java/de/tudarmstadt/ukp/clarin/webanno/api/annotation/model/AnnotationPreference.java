@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ReadonlyColoringBehaviour;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ReadonlyColoringBehaviour;
 
 /**
  * This is a class representing the bean objects to store users preference of annotation settings
@@ -41,24 +41,24 @@ public class AnnotationPreference
     public static final int FONT_ZOOM_MIN = 10;
     public static final int FONT_ZOOM_MAX = 1000;
     public static final int FONT_ZOOM_DEFAULT = 100;
-    
+
     public static final int SIDEBAR_SIZE_MIN = 10;
     public static final int SIDEBAR_SIZE_MAX = 50;
     public static final int SIDEBAR_SIZE_DEFAULT = 20;
-    
+
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     @Deprecated
     private List<Long> annotationLayers;
-    
+
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     private Set<Long> hiddenAnnotationLayerIds = new HashSet<>();
 
     private long defaultLayer = -1;
-    
+
     private int windowSize;
 
     private boolean scrollPage = true;
-    
+
     // if a default layer is to be set
     private boolean rememberLayer;
 
@@ -70,18 +70,18 @@ public class AnnotationPreference
 
     private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
 
-    private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = 
-            ReadonlyColoringBehaviour.LEGACY;
+    private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = ReadonlyColoringBehaviour.LEGACY;
 
     private int sidebarSize;
     private int fontZoom;
-    
+
     private String editor;
-    
+
     private boolean collapseArcs = false;
 
     /**
      * working with preferred layers is deprecated, use hidden layers instead
+     * 
      * @return
      */
     @Deprecated
@@ -89,9 +89,9 @@ public class AnnotationPreference
     {
         return annotationLayers;
     }
-    
+
     /**
-     * working with preferred layers is deprecated, use hidden layers instead 
+     * working with preferred layers is deprecated, use hidden layers instead
      * 
      * @param aAnnotationLayers
      */
@@ -100,12 +100,12 @@ public class AnnotationPreference
     {
         annotationLayers = aAnnotationLayers;
     }
-    
+
     public Set<Long> getHiddenAnnotationLayerIds()
     {
         return hiddenAnnotationLayerIds;
     }
-    
+
     public void setHiddenAnnotationLayerIds(Set<Long> aAnnotationLayerIds)
     {
         hiddenAnnotationLayerIds = aAnnotationLayerIds;
@@ -126,7 +126,7 @@ public class AnnotationPreference
     {
         windowSize = aWindowSize;
     }
-    
+
     /**
      * Used to enable/disable auto-scrolling while annotation
      */
@@ -202,7 +202,7 @@ public class AnnotationPreference
             sidebarSize = aSidebarSize;
         }
     }
-    
+
     public int getFontZoom()
     {
         if (fontZoom < FONT_ZOOM_MIN || fontZoom > FONT_ZOOM_MAX) {
@@ -225,12 +225,12 @@ public class AnnotationPreference
             fontZoom = aFontZoom;
         }
     }
-    
+
     public String getEditor()
     {
         return editor;
     }
-    
+
     public void setEditor(String aEditor)
     {
         editor = aEditor;
@@ -240,7 +240,7 @@ public class AnnotationPreference
     {
         defaultLayer = aLayerId;
     }
-    
+
     public long getDefaultLayer()
     {
         return defaultLayer;

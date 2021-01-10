@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,16 +44,16 @@ public abstract class ProjectExportTask_ImplBase
     implements Runnable
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     // The task needs to hold on to the handle because it is used in a WeakHashMap in
     // ProjectExportService to allow access to tasks.
     private final ProjectExportTaskHandle handle;
     private final String username;
     private final ProjectExportTaskMonitor monitor;
     private final ProjectExportRequest request;
-    
+
     private @Autowired DocumentService documentService;
-    
+
     public ProjectExportTask_ImplBase(ProjectExportTaskHandle aHandle,
             ProjectExportTaskMonitor aMonitor, ProjectExportRequest aRequest, String aUsername)
     {
@@ -61,7 +61,7 @@ public abstract class ProjectExportTask_ImplBase
         request = aRequest;
         username = aUsername;
         monitor = aMonitor;
-        
+
         monitor.setCreateTime(System.currentTimeMillis());
     }
 
@@ -73,11 +73,11 @@ public abstract class ProjectExportTask_ImplBase
             MDC.put(KEY_USERNAME, username);
             MDC.put(KEY_PROJECT_ID, String.valueOf(request.getProject().getId()));
             MDC.put(KEY_REPOSITORY_PATH, documentService.getDir().toString());
-            
+
             monitor.setState(RUNNING);
-            
+
             File exportedFile = export(request, monitor);
-            
+
             monitor.setExportedFile(exportedFile);
             monitor.setStateAndProgress(COMPLETED, 100);
         }
@@ -89,11 +89,11 @@ public abstract class ProjectExportTask_ImplBase
             // to be called where we display the messages
             monitor.setStateAndProgress(FAILED, 100);
             monitor.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
-                            ExceptionUtils.getRootCauseMessage(e)));
+                    ExceptionUtils.getRootCauseMessage(e)));
             log.error("Unexpected error during project export", e);
         }
     }
-    
+
     public abstract File export(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws Exception;
 
@@ -101,12 +101,12 @@ public abstract class ProjectExportTask_ImplBase
     {
         return request;
     }
-    
+
     public ProjectExportTaskMonitor getMonitor()
     {
         return monitor;
     }
-    
+
     public ProjectExportTaskHandle getHandle()
     {
         return handle;
