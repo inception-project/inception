@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -126,7 +127,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
