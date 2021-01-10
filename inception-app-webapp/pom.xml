@@ -782,7 +782,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
