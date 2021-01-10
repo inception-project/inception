@@ -1566,6 +1566,7 @@ public class SPARQLQueryBuilderTest
                 .contains("http://www.wikidata.org/entity/Q35120");
     }
 
+    @Ignore("https://github.com/inception-project/inception/issues/1931")
     @Category(SlowTests.class)
     @Test
     public void thatRootsCanBeRetrieved_DBPedia()
@@ -1585,6 +1586,7 @@ public class SPARQLQueryBuilderTest
                 .contains("Thing");
     }
 
+    @Ignore("https://github.com/inception-project/inception/issues/1931")
     @Category(SlowTests.class)
     @Test
     public void thatParentsCanBeRetrieved_DBPedia()

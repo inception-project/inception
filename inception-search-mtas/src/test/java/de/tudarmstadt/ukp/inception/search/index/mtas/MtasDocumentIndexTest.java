@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -87,8 +88,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
@@ -519,7 +521,7 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public NamedEntityLayerInitializer NamedEntityLayerInitializer(
+        public NamedEntityLayerInitializer namedEntityLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationService)
         {
             return new NamedEntityLayerInitializer(aAnnotationService);
@@ -527,10 +529,26 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public PartOfSpeechLayerInitializer PartOfSpeechLayerInitializer(
+        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityTagSetInitializer(aAnnotationService);
+        }
+
+        @Lazy
+        @Bean
+        public PartOfSpeechLayerInitializer partOfSpeechLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
             return new PartOfSpeechLayerInitializer(aAnnotationSchemaService);
+        }
+
+        @Lazy
+        @Bean
+        public PartOfSpeechTagSetInitializer partOfSpeechTagSetInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
+        {
+            return new PartOfSpeechTagSetInitializer(aAnnotationSchemaService);
         }
 
         @Lazy

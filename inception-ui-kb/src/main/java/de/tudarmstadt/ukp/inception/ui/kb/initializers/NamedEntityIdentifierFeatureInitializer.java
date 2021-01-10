@@ -22,15 +22,17 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
@@ -55,10 +57,30 @@ public class NamedEntityIdentifierFeatureInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Named entity linking";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         // Because locks to token boundaries
         return asList(TokenLayerInitializer.class, NamedEntityLayerInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        AnnotationLayer neLayer;
+        try {
+            neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
+        }
+        catch (NoResultException e) {
+            return false;
+        }
+
+        return annotationSchemaService.existsFeature("identifier", neLayer);
     }
 
     @Override
