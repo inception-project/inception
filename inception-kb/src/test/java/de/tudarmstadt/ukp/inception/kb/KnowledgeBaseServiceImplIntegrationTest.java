@@ -62,6 +62,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -85,7 +86,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
 @Transactional
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceImplIntegrationTest
 {
 
