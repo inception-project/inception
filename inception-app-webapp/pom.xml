@@ -1,14 +1,14 @@
 <!--
-  Copyright 2017
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -419,10 +419,6 @@
     <!-- <artifactId>hibernate-entitymanager</artifactId> -->
     <!-- </dependency> -->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-dbcp2</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
     </dependency>
@@ -430,6 +426,14 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-jcache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
     </dependency>
 
     <dependency>
@@ -730,6 +734,13 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredDependencies>
+              <!-- 
+                - Detection of this dependency is flickering. We need it for a menu-item. So
+                - for the moment, completely ignore it in the dependency checking.
+                -->
+              <ignoredDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</ignoredDependency>
+            </ignoredDependencies>
             <ignoredUsedUndeclaredDependencies>
               <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
@@ -776,9 +787,6 @@
                 <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
                 <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
               -->
-              <!-- Detected because we include a special access menu item to the project settings
-                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
-              -->
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
@@ -789,11 +797,12 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
+              <usedDependency>org.hibernate:hibernate-jcache</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.liquibase:liquibase-core</usedDependency>
+              <usedDependency>org.ehcache:ehcache</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
               <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
