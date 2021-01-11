@@ -1,0 +1,118 @@
+# ===================================================================
+# INCEpTION Properties
+# ===================================================================
+
+database:
+  initial-pool-size=4
+  min-pool-size=4
+  max-pool-size=10
+
+backup:
+  keep:
+    time: 0
+    number: 0
+  interval: 0
+
+debug:
+  casDoctor:
+    checks: 
+    repairs: 
+    fatal: false
+    forceReleaseBehavior: false
+
+annotation:
+  default-preferences:
+    page-size: 5
+    auto-scroll: false
+    remember-sayer: true
+
+ui:
+  brat:
+    singleClickSelection: true
+
+# ===================================================================
+# Spring Boot Properties
+# ===================================================================
+
+# IDENTITY (ContextIdApplicationContextInitializer)
+spring:
+  application:
+    name: INCEpTION
+    
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+  resources:
+    cache:
+      cachecontrol:
+        max-age: 31536000
+
+  datasource:
+    url: ${database.url:${INCEPTION_DB_URL:jdbc:hsqldb:file:${inception.home:${user.home}/.inception}/db/inception;hsqldb.default_table_type=cached}}
+    username: ${database.username:${INCEPTION_DB_USERNAME:sa}}
+    password: ${database.password:${INCEPTION_DB_PASSWORD:}}
+    driver-class-name: ${database.driver:${INCEPTION_DB_DRIVER:}}
+
+  jpa:
+    show-sql: false 
+    open-in-view: true
+    properties:
+      javax:
+        persistence:
+          sharedCache: 
+            #required - enable selective caching mode - only entities with @Cacheable annotation will use L2 cache.
+            # mode: ENABLE_SELECTIVE     
+            mode: NONE     
+      hibernate:
+        dialect: ${database.dialect:${INCEPTION_DB_DIALECT:}}
+        #optional - enable SQL statements formatting.
+        format_sql: true 
+        #optional - generate statistics to check if L2/query cache is actually being used.
+        generate_statistics: true
+        jmx:
+          enabled: true
+        javax.cache:
+          provider: org.ehcache.jsr107.EhcacheCachingProvider
+          uri: classpath:ehcache.xml
+        cache:
+          #required - turn on L2 cache.
+          use_second_level_cache: FALSE
+          #optional - turn on query cache.
+          use_query_cache: FALSE 
+          region:
+            #required - classpath to cache region factory.
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+    hibernate:
+      ddl-auto: validate
+      naming:
+        # Fix @Column(name="...")
+        # https://github.com/spring-projects/spring-boot/issues/2129
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+  spring:
+    cache:
+      jcache:
+        config: classpath:/ehcache.xml
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+
+wicket:
+  external:
+    # Enables WebSocket support - dependency required 
+    websocket: true 
+  verifier:
+    dependencies:
+      throw-exception-on-dependency-version-mismatch: false
+  stuff:
+    htmlcompressor:
+      enabled: true
+      features:
+        removeComments: true
+        removeIntertagSpaces: true
+        preserveLineBreaks: true
+        compressJavaScript: false
+        compressCss: false

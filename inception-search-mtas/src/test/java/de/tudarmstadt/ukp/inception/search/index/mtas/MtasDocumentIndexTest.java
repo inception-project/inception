@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -79,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -87,8 +89,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
@@ -124,7 +127,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
@@ -519,7 +522,7 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public NamedEntityLayerInitializer NamedEntityLayerInitializer(
+        public NamedEntityLayerInitializer namedEntityLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationService)
         {
             return new NamedEntityLayerInitializer(aAnnotationService);
@@ -527,10 +530,26 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public PartOfSpeechLayerInitializer PartOfSpeechLayerInitializer(
+        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityTagSetInitializer(aAnnotationService);
+        }
+
+        @Lazy
+        @Bean
+        public PartOfSpeechLayerInitializer partOfSpeechLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
             return new PartOfSpeechLayerInitializer(aAnnotationSchemaService);
+        }
+
+        @Lazy
+        @Bean
+        public PartOfSpeechTagSetInitializer partOfSpeechTagSetInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
+        {
+            return new PartOfSpeechTagSetInitializer(aAnnotationSchemaService);
         }
 
         @Lazy
