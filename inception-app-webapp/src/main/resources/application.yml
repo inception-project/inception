@@ -63,7 +63,8 @@ spring:
         persistence:
           sharedCache: 
             #required - enable selective caching mode - only entities with @Cacheable annotation will use L2 cache.
-            mode: ENABLE_SELECTIVE     
+            # mode: ENABLE_SELECTIVE     
+            mode: NONE     
       hibernate:
         dialect: ${database.dialect:${INCEPTION_DB_DIALECT:}}
         #optional - enable SQL statements formatting.
@@ -77,9 +78,9 @@ spring:
           uri: classpath:ehcache.xml
         cache:
           #required - turn on L2 cache.
-          use_second_level_cache: true
+          use_second_level_cache: FALSE
           #optional - turn on query cache.
-          use_query_cache: true 
+          use_query_cache: FALSE 
           region:
             #required - classpath to cache region factory.
             factory_class: org.hibernate.cache.jcache.JCacheRegionFactory

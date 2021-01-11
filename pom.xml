@@ -76,7 +76,7 @@
     <spring.security.version>5.4.1</spring.security.version>
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.1.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>9.2.0</wicket-jquery-ui.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <log4j.version>2.14.0</log4j.version>
