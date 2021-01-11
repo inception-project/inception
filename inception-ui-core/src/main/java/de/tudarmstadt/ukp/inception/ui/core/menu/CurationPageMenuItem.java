@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.menu;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
+import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static java.lang.String.format;
 
 import javax.servlet.ServletContext;
@@ -28,13 +30,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
 @Order(200)
@@ -69,13 +69,10 @@ public class CurationPageMenuItem
         return "Curation";
     }
 
-    /**
-     * Only project admins and curators can see this page
-     */
     @Override
     public boolean applies()
     {
-        Project sessionProject = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
+        Project sessionProject = Session.get().getMetaData(CURRENT_PROJECT);
         if (sessionProject == null) {
             return false;
         }
@@ -87,7 +84,7 @@ public class CurationPageMenuItem
         // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
         return projectService.isCurator(project, user)
-                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode());
+                && PROJECT_TYPE_ANNOTATION.equals(project.getMode());
     }
 
     @Override

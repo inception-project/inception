@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.menu;
 
+import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
 public class ProjectSettingsPageMenuItem
@@ -61,7 +62,7 @@ public class ProjectSettingsPageMenuItem
     @Override
     public boolean applies()
     {
-        Project sessionProject = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
+        Project sessionProject = Session.get().getMetaData(CURRENT_PROJECT);
         if (sessionProject == null) {
             return false;
         }
@@ -70,20 +71,14 @@ public class ProjectSettingsPageMenuItem
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
 
-        // Visible if the current user is an annotator
+        // Visible if the current user is a project manager or global admin
         User user = userRepo.getCurrentUser();
-        return projectService.isAdmin(project, user);
+        return userRepo.isAdministrator(user) || projectService.isManager(project, user);
     }
 
     @Override
     public Class<? extends Page> getPageClass()
     {
         return ProjectPage.class;
-    }
-
-    @Override
-    public boolean isDirectAccessAllowed()
-    {
-        return true;
     }
 }
