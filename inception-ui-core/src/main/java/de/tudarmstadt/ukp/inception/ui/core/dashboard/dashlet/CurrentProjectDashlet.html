@@ -18,8 +18,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
+  <wicket:head>
+    <style>
+    .block-ajax-editable-label span {
+      display: block;
+    }
+    .block-ajax-editable-label input {
+      width: 100%;
+    }
+    </style>
+  </wicket:head>
   <wicket:panel>
-    <h1><wicket:container wicket:id="name"/></h1>
+    <h1><div wicket:id="name" class="block-ajax-editable-label"/></h1>
 
     <p><wicket:container wicket:id="description"/></p>
   </wicket:panel>
