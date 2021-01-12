@@ -79,7 +79,7 @@ public class NamedEntityLayerInitializer
 
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
-        annotationSchemaService.createLayer(neLayer);
+        annotationSchemaService.createOrUpdateLayer(neLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
                 "value", CAS.TYPE_NAME_STRING, "Named entity type", nerTagSet));

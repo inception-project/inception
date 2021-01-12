@@ -174,7 +174,7 @@ public class ImportUtil
         aLayer.setName(aExLayer.getName());
         aLayer.setProject(aProject);
         aLayer.setType(aExLayer.getType());
-        aAnnotationService.createLayer(aLayer);
+        aAnnotationService.createOrUpdateLayer(aLayer);
     }
 
     @Deprecated

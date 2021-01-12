@@ -97,7 +97,7 @@ public class DependencyLayerInitializer
         TagSet depTagSet = annotationSchemaService
                 .getTagSet(DependencyTypeTagSetInitializer.TAG_SET_NAME, aProject);
 
-        annotationSchemaService.createLayer(depLayer);
+        annotationSchemaService.createOrUpdateLayer(depLayer);
         annotationSchemaService
                 .createFeature(new AnnotationFeature(aProject, depLayer, "DependencyType",
                         "Relation", CAS.TYPE_NAME_STRING, "Dependency relation", depTagSet));

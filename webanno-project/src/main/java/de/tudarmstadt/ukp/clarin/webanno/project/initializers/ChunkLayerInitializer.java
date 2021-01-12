@@ -72,7 +72,7 @@ public class ChunkLayerInitializer
     {
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
                 aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
-        annotationSchemaService.createLayer(chunkLayer);
+        annotationSchemaService.createOrUpdateLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();
         chunkValueFeature.setDescription("Chunk tag");

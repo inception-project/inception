@@ -90,7 +90,7 @@ public class PartOfSpeechLayerInitializer
 
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
-        annotationSchemaService.createLayer(posLayer);
+        annotationSchemaService.createOrUpdateLayer(posLayer);
 
         AnnotationFeature xpos = new AnnotationFeature(aProject, posLayer, "PosValue", "XPOS",
                 CAS.TYPE_NAME_STRING, "XPOS", null);

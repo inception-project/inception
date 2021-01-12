@@ -77,7 +77,7 @@ public class OrthographyLayerInitializer
         AnnotationLayer orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
                 "Orthography Correction", SPAN_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN,
                 OverlapMode.NO_OVERLAP);
-        annotationSchemaService.createLayer(orthography);
+        annotationSchemaService.createOrUpdateLayer(orthography);
 
         AnnotationFeature correction = new AnnotationFeature();
         correction.setDescription("Correct this token using the specified operation.");

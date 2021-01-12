@@ -79,7 +79,7 @@ public class SemPredArgLayerInitializer
                 SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semArgLayer.setCrossSentence(false);
 
-        annotationSchemaService.createLayer(semArgLayer);
+        annotationSchemaService.createOrUpdateLayer(semArgLayer);
 
         AnnotationLayer semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred",
                 SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
@@ -104,6 +104,6 @@ public class SemPredArgLayerInitializer
         semPredArgumentsFeature.setLayer(semPredLayer);
         annotationSchemaService.createFeature(semPredArgumentsFeature);
 
-        annotationSchemaService.createLayer(semPredLayer);
+        annotationSchemaService.createOrUpdateLayer(semPredLayer);
     }
 }

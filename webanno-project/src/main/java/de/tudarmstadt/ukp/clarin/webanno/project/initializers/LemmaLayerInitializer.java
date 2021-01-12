@@ -82,7 +82,7 @@ public class LemmaLayerInitializer
                 aProject, true, SINGLE_TOKEN, NO_OVERLAP);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
-        annotationSchemaService.createLayer(lemmaLayer);
+        annotationSchemaService.createOrUpdateLayer(lemmaLayer);
 
         AnnotationFeature lemmaFeature = new AnnotationFeature();
         lemmaFeature.setDescription("lemma Annotation");

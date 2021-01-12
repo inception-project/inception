@@ -83,7 +83,7 @@ public class CoreferenceLayerInitializer
         AnnotationLayer base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference",
                 CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         base.setCrossSentence(true);
-        annotationSchemaService.createLayer(base);
+        annotationSchemaService.createOrUpdateLayer(base);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
                 "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", corefTypeTagSet));
