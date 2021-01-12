@@ -126,8 +126,11 @@ public class ProjectPage
         else {
             Optional<Project> project = getProjectFromParameters(projectParameter);
             if (project.isPresent()) {
+                User user = userRepository.getCurrentUser();
+
                 // Check access to project
-                if (!projectService.isAdmin(project.get(), userRepository.getCurrentUser())) {
+                if (!userRepository.isAdministrator(user)
+                        && !projectService.isManager(project.get(), user)) {
                     error("You have no permission to access project [" + project.get().getId()
                             + "]");
                     setResponsePage(getApplication().getHomePage());

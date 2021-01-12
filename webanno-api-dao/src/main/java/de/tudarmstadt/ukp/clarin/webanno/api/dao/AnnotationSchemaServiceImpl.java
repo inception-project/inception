@@ -835,7 +835,20 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeLayer(AnnotationLayer aLayer)
     {
+        // Remove all features in other layers that connect to the layer to be removed. This is
+        // necessary so Hibernate cache knows they are gone and also because the relation is
+        // modeled by name, so we couldn't use a DB-level CASCADE ON DELETE anyway.
+        // It is also necessary to that e.g. the "pos" feature in the built-in "Token" layer gets
+        // cleaned up - which the user could never do manually.
         for (AnnotationFeature f : listAttachingFeatures(aLayer)) {
+            removeFeature(f);
+        }
+
+        // We must not rely on the DB-level CASCADE ON DELETE if Hibernate 2nd-level caching is
+        // enabled because if we do, then Hibernate will not know that entries have gone from the
+        // DB, will still try to re-hydrate them from the cache and will fail filling in gaps
+        // from the DB. So we delete explicitly through Hibernate
+        for (AnnotationFeature f : listAnnotationFeature(aLayer)) {
             removeFeature(f);
         }
 

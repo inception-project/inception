@@ -52,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -420,9 +421,10 @@ public class ProjectServiceImpl
     public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
     {
         String query = String.join("\n", //
-                "FROM ProjectPermission ", //
-                "WHERE user =:user AND project =:project ", //
-                "ORDER BY level");
+                "SELECT level", //
+                "FROM ProjectPermission", //
+                "WHERE user = :user AND", //
+                "      project = :project");
 
         try {
             return entityManager.createQuery(query, PermissionLevel.class) //
@@ -941,7 +943,9 @@ public class ProjectServiceImpl
     @Transactional
     public void initializeProject(Project aProject) throws IOException
     {
-        initializeProject(aProject, initializers);
+        initializeProject(aProject, initializers.stream() //
+                .filter(ProjectInitializer::applyByDefault) //
+                .collect(Collectors.toList()));
     }
 
     private ProjectInitializer findProjectInitializer(Class<? extends ProjectInitializer> aType)

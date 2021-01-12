@@ -1225,6 +1225,13 @@
       </column>
     </addColumn>
   </changeSet>
+
+  <changeSet author="WebAnno Team" id="20210109-0" runAlways="true">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="WebAnno Team" id="1512223050574-2"/>
+    </preConditions>
+    <customChange class="de.tudarmstadt.ukp.clarin.webanno.api.dao.migration.RemoveDanglingFeatures"/>
+  </changeSet>
   
   <changeSet author="WebAnno Team" id="20210109-1">
     <preConditions onFail="WARN">
