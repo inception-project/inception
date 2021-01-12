@@ -421,9 +421,10 @@ public class ProjectServiceImpl
     public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
     {
         String query = String.join("\n", //
-                "FROM ProjectPermission ", //
-                "WHERE user =:user AND project =:project ", //
-                "ORDER BY level");
+                "SELECT level", //
+                "FROM ProjectPermission", //
+                "WHERE user = :user AND", //
+                "      project = :project");
 
         try {
             return entityManager.createQuery(query, PermissionLevel.class) //
