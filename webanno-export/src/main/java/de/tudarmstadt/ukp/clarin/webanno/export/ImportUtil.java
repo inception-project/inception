@@ -148,7 +148,6 @@ public class ImportUtil
             ExportedAnnotationLayer aExLayer, Project aProject, User aUser)
         throws IOException
     {
-        aLayer.setAllowStacking(aExLayer.isAllowStacking());
         aLayer.setBuiltIn(aExLayer.isBuiltIn());
         aLayer.setReadonly(aExLayer.isReadonly());
         aLayer.setCrossSentence(aExLayer.isCrossSentence());

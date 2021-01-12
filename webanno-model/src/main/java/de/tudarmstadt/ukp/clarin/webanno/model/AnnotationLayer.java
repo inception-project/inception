@@ -126,24 +126,6 @@ public class AnnotationLayer
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ValidationModeType")
     private ValidationMode validationMode = ValidationMode.ALWAYS;
 
-    // This column is no longer used and should be removed with the next major version.
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "multipleTokens")
-    private boolean multipleTokens;
-
-    // This column is no longer used and should be removed with the next major version
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "lockToTokenOffset")
-    private boolean lockToTokenOffset = true;
-
-    // This column is no longer used and should be removed with the next major version
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "allowSTacking")
-    private boolean allowStacking;
-
     @Lob
     @Column(length = 64000)
     private String traits;
@@ -475,12 +457,6 @@ public class AnnotationLayer
     public boolean isAllowStacking()
     {
         return asList(OverlapMode.ANY_OVERLAP, OverlapMode.STACKING_ONLY).contains(overlapMode);
-    }
-
-    @Deprecated
-    public void setAllowStacking(boolean allowStacking)
-    {
-        this.allowStacking = allowStacking;
     }
 
     public OverlapMode getOverlapMode()

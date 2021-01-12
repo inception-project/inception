@@ -53,6 +53,7 @@ public class ChainLayerTraitsEditor
         aForm.add(new OverlapModeSelect("overlapMode", getLayerModel()));
 
         CheckBox linkedListBehavior = new CheckBox("linkedListBehavior");
+        linkedListBehavior.setOutputMarkupId(true);
         linkedListBehavior.setModel(PropertyModel.of(getLayerModel(), "linkedListBehavior"));
         aForm.add(linkedListBehavior);
 
