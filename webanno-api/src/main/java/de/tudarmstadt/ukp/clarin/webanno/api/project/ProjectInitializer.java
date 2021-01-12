@@ -24,6 +24,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ProjectInitializer
 {
+    default boolean applyByDefault()
+    {
+        return true;
+    }
+
     String getName();
 
     boolean alreadyApplied(Project aProject);

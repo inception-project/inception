@@ -52,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -941,7 +942,9 @@ public class ProjectServiceImpl
     @Transactional
     public void initializeProject(Project aProject) throws IOException
     {
-        initializeProject(aProject, initializers);
+        initializeProject(aProject, initializers.stream() //
+                .filter(ProjectInitializer::applyByDefault) //
+                .collect(Collectors.toList()));
     }
 
     private ProjectInitializer findProjectInitializer(Class<? extends ProjectInitializer> aType)
