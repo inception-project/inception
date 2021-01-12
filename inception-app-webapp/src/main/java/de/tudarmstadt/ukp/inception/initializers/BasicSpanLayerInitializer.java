@@ -87,7 +87,7 @@ public class BasicSpanLayerInitializer
         AnnotationLayer spanLayer = new AnnotationLayer(BASIC_SPAN_LAYER_NAME, "Span", SPAN_TYPE,
                 aProject, false, TOKENS, OVERLAP_ONLY);
         spanLayer.setCrossSentence(false);
-        annotationSchemaService.createLayer(spanLayer);
+        annotationSchemaService.createOrUpdateLayer(spanLayer);
 
         TagSet spanTagSet = annotationSchemaService
                 .getTagSet(BasicSpanTagSetInitializer.BASIC_SPAN_TAG_SET_NAME, aProject);

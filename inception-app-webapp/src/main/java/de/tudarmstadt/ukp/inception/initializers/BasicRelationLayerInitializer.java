@@ -91,7 +91,7 @@ public class BasicRelationLayerInitializer
                 RELATION_TYPE, aProject, false, TOKENS, OVERLAP_ONLY);
         relationLayer.setCrossSentence(false);
         relationLayer.setAttachType(spanLayer);
-        annotationSchemaService.createLayer(relationLayer);
+        annotationSchemaService.createOrUpdateLayer(relationLayer);
 
         TagSet relationTagSet = annotationSchemaService.getTagSet(BASIC_RELATION_TAG_SET_NAME,
                 aProject);
