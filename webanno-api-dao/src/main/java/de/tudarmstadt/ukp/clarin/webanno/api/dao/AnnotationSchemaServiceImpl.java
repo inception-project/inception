@@ -65,6 +65,7 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
+import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,6 +107,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Implementation of methods defined in the {@link AnnotationSchemaService} interface
@@ -959,16 +962,15 @@ public class AnnotationSchemaServiceImpl
     public TypeSystemDescription getAllProjectTypes(Project aProject)
         throws ResourceInitializationException
     {
-        // Create a new type system from scratch
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
-
         List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
         List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
 
+        List<TypeSystemDescription> allTsds = new ArrayList<>();
         for (AnnotationLayer layer : allLayersInProject) {
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
 
             // for built-in layers, we clone the information from the built-in type descriptors
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
             if (layer.isBuiltIn()) {
                 for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
                     exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
@@ -978,9 +980,26 @@ public class AnnotationSchemaServiceImpl
             else {
                 layerSupport.generateTypes(tsd, layer, allFeaturesInProject);
             }
+            allTsds.add(tsd);
         }
 
-        return tsd;
+        {
+            // Explicitly add Token because the layer may not be declared in the project
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            exportBuiltInTypeDescription(builtInTypes, tsd, Token.class.getName());
+            allTsds.add(tsd);
+        }
+
+        {
+            // Explicitly add Sentence because the layer may not be declared in the project
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            exportBuiltInTypeDescription(builtInTypes, tsd, Sentence.class.getName());
+            allTsds.add(tsd);
+        }
+
+        // The merging action here takes care of removing/conflating potential duplicate
+        // declarations
+        return CasCreationUtils.mergeTypeSystems(allTsds);
     }
 
     private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
