@@ -86,7 +86,6 @@ public class FactLayerInitializer
     {
         AnnotationLayer factLayer = new AnnotationLayer(FactLinkingConstants.FACT_LAYER, "Fact",
                 SPAN_TYPE, aProject, false, TOKENS, OverlapMode.NO_OVERLAP);
-        factLayer.setAllowStacking(true);
         factLayer.setCrossSentence(false);
 
         annotationSchemaService.createFeature(
