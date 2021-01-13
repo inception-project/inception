@@ -22,13 +22,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_
 import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR_DOCKER;
 import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR;
 import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR_DOCKER;
-import static java.nio.file.Files.exists;
-import static java.nio.file.Files.isReadable;
-import static java.nio.file.Files.readString;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 import java.awt.GraphicsEnvironment;
-import java.nio.file.Path;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -134,9 +133,9 @@ public class TelemetryServiceImpl
         final String cgroupPath = "/proc/1/cgroup";
 
         try {
-            Path cgroup = Path.of(cgroupPath);
-            if (exists(cgroup) && isReadable(cgroup)) {
-                String content = readString(cgroup);
+            File cgroup = new File(cgroupPath);
+            if (cgroup.exists() && cgroup.canRead()) {
+                String content = readFileToString(cgroup, UTF_8);
                 if (content.contains("docker")) {
                     return true;
                 }
