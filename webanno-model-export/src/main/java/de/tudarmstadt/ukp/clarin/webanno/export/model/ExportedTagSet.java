@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * All required contents of a tagset to be exported. The tagsets to be exported are those created
  * for a project, hence project specific.
  */
-@JsonPropertyOrder(value = { "name", "description", "language", "tags", "createTag" })
+@JsonPropertyOrder(value = { "name", "description", "language", "typeName", "tags", "createTag" })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedTagSet
 {
@@ -37,6 +39,15 @@ public class ExportedTagSet
 
     @JsonProperty("description")
     private String description;
+
+    /**
+     * @deprecated Still kept for backwards compatibility with WebAnno prior to 2.0! during import.
+     *             The property is only used for deserialization/import but not for serialization
+     *             /export!
+     */
+    @Deprecated
+    @JsonProperty(value = "type_name", access = WRITE_ONLY)
+    private String typeName;
 
     @JsonProperty("language")
     private String language;
@@ -75,6 +86,28 @@ public class ExportedTagSet
     public void setLanguage(String aLanguage)
     {
         language = aLanguage;
+    }
+
+    /**
+     * @deprecated Still kept for backwards compatibility with WebAnno prior to 2.0! during import.
+     *             The property is only used for deserialization/import but not for serialization
+     *             /export!
+     */
+    @Deprecated
+    public String getTypeName()
+    {
+        return typeName;
+    }
+
+    /**
+     * @deprecated Still kept for backwards compatibility with WebAnno prior to 2.0! during import.
+     *             The property is only used for deserialization/import but not for serialization
+     *             /export!
+     */
+    @Deprecated
+    public void setTypeName(String aTypeName)
+    {
+        typeName = aTypeName;
     }
 
     public List<ExportedTag> getTags()
