@@ -46,6 +46,8 @@ public class ProjectTagSetsPanel
     {
         super(id, aProjectModel);
 
+        setOutputMarkupId(true);
+
         selectedProject = aProjectModel;
         selectedTagSet = Model.of();
         selectedTag = Model.of();

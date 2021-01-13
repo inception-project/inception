@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,40 +29,31 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * All required contents of a tagset to be exported. The tagsets to be exported are those created
  * for a project, hence project specific.
- *
  */
-@JsonPropertyOrder(value = { "name", "typeUiName", "description", "language", "type", "typeName",
-        "typeDescription", "tags" })
+@JsonPropertyOrder(value = { "name", "description", "language", "typeName", "tags", "createTag" })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedTagSet
 {
     @JsonProperty("name")
-    String name;
-
-    // back compatibility
-    @JsonProperty("typeUiName")
-    String typeUiName;
+    private String name;
 
     @JsonProperty("description")
-    String description;
+    private String description;
+
+    /**
+     * @deprecated Still kept for backwards compatibility with WebAnno prior to 2.0! during import.
+     *             The property is only used for deserialization/import but not for serialization
+     *             /export!
+     */
+    @Deprecated
+    @JsonProperty(value = "type_name", access = WRITE_ONLY)
+    private String typeName;
 
     @JsonProperty("language")
-    String language;
-
-    // back compatibility
-    @JsonProperty("type")
-    String type;
-
-    // back compatibility
-    @JsonProperty("type_name")
-    String typeName;
-
-    // back compatibility
-    @JsonProperty("type_description")
-    String typeDescription;
+    private String language;
 
     @JsonProperty("tags")
-    List<ExportedTag> tags = new ArrayList<>();
+    private List<ExportedTag> tags = new ArrayList<>();
 
     @JsonProperty("create_tag")
     private boolean createTag;
@@ -95,29 +88,26 @@ public class ExportedTagSet
         language = aLanguage;
     }
 
-    public String getType()
-    {
-        return type;
-    }
-
+    /**
+     * @deprecated Still kept for backwards compatibility with WebAnno prior to 2.0! during import.
+     *             The property is only used for deserialization/import but not for serialization
+     *             /export!
+     */
+    @Deprecated
     public String getTypeName()
     {
         return typeName;
     }
 
+    /**
+     * @deprecated Still kept for backwards compatibility with WebAnno prior to 2.0! during import.
+     *             The property is only used for deserialization/import but not for serialization
+     *             /export!
+     */
+    @Deprecated
     public void setTypeName(String aTypeName)
     {
         typeName = aTypeName;
-    }
-
-    public String getTypeDescription()
-    {
-        return typeDescription;
-    }
-
-    public void setTypeDescription(String aTypeDescription)
-    {
-        typeDescription = aTypeDescription;
     }
 
     public List<ExportedTag> getTags()
@@ -130,16 +120,6 @@ public class ExportedTagSet
         tags = aTags;
     }
 
-    public String getTypeUiName()
-    {
-        return typeUiName;
-    }
-
-    public void setTypeUiName(String typeUiName)
-    {
-        this.typeUiName = typeUiName;
-    }
-
     public boolean isCreateTag()
     {
         return createTag;
@@ -149,5 +129,4 @@ public class ExportedTagSet
     {
         this.createTag = createTag;
     }
-
 }
