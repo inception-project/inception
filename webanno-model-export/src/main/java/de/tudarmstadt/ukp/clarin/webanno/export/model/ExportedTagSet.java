@@ -27,40 +27,22 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * All required contents of a tagset to be exported. The tagsets to be exported are those created
  * for a project, hence project specific.
- *
  */
-@JsonPropertyOrder(value = { "name", "typeUiName", "description", "language", "type", "typeName",
-        "typeDescription", "tags" })
+@JsonPropertyOrder(value = { "name", "description", "language", "tags", "createTag" })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedTagSet
 {
     @JsonProperty("name")
-    String name;
-
-    // back compatibility
-    @JsonProperty("typeUiName")
-    String typeUiName;
+    private String name;
 
     @JsonProperty("description")
-    String description;
+    private String description;
 
     @JsonProperty("language")
-    String language;
-
-    // back compatibility
-    @JsonProperty("type")
-    String type;
-
-    // back compatibility
-    @JsonProperty("type_name")
-    String typeName;
-
-    // back compatibility
-    @JsonProperty("type_description")
-    String typeDescription;
+    private String language;
 
     @JsonProperty("tags")
-    List<ExportedTag> tags = new ArrayList<>();
+    private List<ExportedTag> tags = new ArrayList<>();
 
     @JsonProperty("create_tag")
     private boolean createTag;
@@ -95,31 +77,6 @@ public class ExportedTagSet
         language = aLanguage;
     }
 
-    public String getType()
-    {
-        return type;
-    }
-
-    public String getTypeName()
-    {
-        return typeName;
-    }
-
-    public void setTypeName(String aTypeName)
-    {
-        typeName = aTypeName;
-    }
-
-    public String getTypeDescription()
-    {
-        return typeDescription;
-    }
-
-    public void setTypeDescription(String aTypeDescription)
-    {
-        typeDescription = aTypeDescription;
-    }
-
     public List<ExportedTag> getTags()
     {
         return tags;
@@ -128,16 +85,6 @@ public class ExportedTagSet
     public void setTags(List<ExportedTag> aTags)
     {
         tags = aTags;
-    }
-
-    public String getTypeUiName()
-    {
-        return typeUiName;
-    }
-
-    public void setTypeUiName(String typeUiName)
-    {
-        this.typeUiName = typeUiName;
     }
 
     public boolean isCreateTag()
@@ -149,5 +96,4 @@ public class ExportedTagSet
     {
         this.createTag = createTag;
     }
-
 }
