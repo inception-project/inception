@@ -37,6 +37,12 @@ public class ReorderableTag
         tag = new ImmutableTag(null, aName, aDescription);
     }
 
+    public ReorderableTag(String aName, boolean aReordered)
+    {
+        this(aName, null);
+        setReordered(aReordered);
+    }
+
     public long getId()
     {
         return tag.getId();
