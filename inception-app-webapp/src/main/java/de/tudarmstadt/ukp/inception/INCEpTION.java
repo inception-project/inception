@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,7 @@ import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -59,8 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
@@ -71,6 +70,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  */
 // @formatter:off
 @SpringBootApplication
+@EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(
     basePackages = { 
@@ -84,14 +84,14 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
             // The INCEpTION dashboard uses a per-project view while WebAnno uses a global
             // activation strategies for menu items. Thus, we need to re-implement the menu
             // items for INCEpTION.
-            AnnotationPageMenuItem.class,
+            de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem.class,
+            de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem.class,
             MonitoringPageMenuItem.class,
             AgreementPageMenuItem.class,
 
             // INCEpTION uses its recommenders, not the WebAnno automation code
             AutomationService.class, 
             AutomationMiraTemplateExporter.class,
-            CurationPageMenuItem.class,
             AutomationTrainingDocumentExporter.class
     })})
 @EntityScan(basePackages = {
@@ -190,7 +190,7 @@ public class INCEpTION
 
         // Traditionally, the INCEpTION configuration file is called settings.properties and is
         // either located in inception.home or under the user's home directory. Make sure we pick
-        // it up from there in addition to reading the built-in application.properties file.
+        // it up from there in addition to reading the built-in application.yml file.
         aBuilder.properties("spring.config.additional-location="
                 + "optional:${inception.home:${user.home}/.inception}/settings.properties");
     }
