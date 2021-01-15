@@ -18,24 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static java.util.Comparator.comparing;
-import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.startsWith;
-import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
@@ -138,86 +125,13 @@ public class KendoAutoCompleteTextFeatureEditor
             @Override
             protected List<ReorderableTag> getChoices(String aTerm)
             {
-                List<ReorderableTag> matches = new ArrayList<>();
+                FeatureState state = KendoAutoCompleteTextFeatureEditor.this.getModelObject();
 
-                // If adding own tags is allowed, the always return the current input as the
-                // first choice.
-                boolean inputAsFirstResult = isNotBlank(aTerm)
-                        && KendoAutoCompleteTextFeatureEditor.this.getModelObject().feature
-                                .getTagset().isCreateTag();
-                if (inputAsFirstResult) {
-                    matches.add(new ReorderableTag(aTerm, "New unsaved tag..."));
-                }
+                TagRanker ranker = new TagRanker();
+                ranker.setMaxResults(maxResults);
+                ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
 
-                List<ReorderableTag> availableTags = new LinkedList<>(
-                        KendoAutoCompleteTextFeatureEditor.this.getModelObject().tagset);
-
-                // First add the re-ordered tags
-                ListIterator<ReorderableTag> tagIterator = availableTags.listIterator();
-                while (tagIterator.hasNext()) {
-                    ReorderableTag t = tagIterator.next();
-
-                    if (inputAsFirstResult && t.getName().equals(aTerm)) {
-                        tagIterator.remove();
-                        continue;
-                    }
-
-                    if (t.getReordered()) {
-                        matches.add(t);
-                        tagIterator.remove();
-                    }
-                }
-
-                if (isBlank(aTerm)) {
-                    availableTags.stream() //
-                            .limit(Math.max(maxResults - matches.size(), 0)) //
-                            .forEachOrdered(matches::add);
-                    return matches;
-                }
-
-                // Now go through the remaining tags and try ranking them sensibly
-                List<Pair<ReorderableTag, Integer>> scoredTags = new ArrayList<>();
-                for (ReorderableTag t : availableTags) {
-                    if (inputAsFirstResult && t.getName().equals(aTerm)) {
-                        continue;
-                    }
-
-                    if (!containsIgnoreCase(t.getName(), aTerm)) {
-                        continue;
-                    }
-
-                    if (!StringUtils.contains(t.getName(), aTerm)) {
-                        scoredTags.add(Pair.of(t, 1));
-                        continue;
-                    }
-
-                    if (!startsWithIgnoreCase(t.getName(), aTerm)) {
-                        scoredTags.add(Pair.of(t, 2));
-                        continue;
-                    }
-
-                    if (!startsWith(t.getName(), aTerm)) {
-                        scoredTags.add(Pair.of(t, 3));
-                        continue;
-                    }
-
-                    if (!t.getName().equals(aTerm)) {
-                        scoredTags.add(Pair.of(t, 4));
-                        continue;
-                    }
-
-                    scoredTags.add(Pair.of(t, 5));
-                }
-
-                Comparator<Pair<ReorderableTag, Integer>> cmp = comparing(Pair::getValue);
-                cmp = cmp.reversed();
-                Collections.sort(scoredTags, cmp);
-
-                scoredTags.stream().limit(Math.max(maxResults - matches.size(), 0)) //
-                        .map(Pair::getKey) //
-                        .forEachOrdered(matches::add);
-
-                return matches;
+                return ranker.rank(aTerm, state.tagset);
             }
 
             /*
