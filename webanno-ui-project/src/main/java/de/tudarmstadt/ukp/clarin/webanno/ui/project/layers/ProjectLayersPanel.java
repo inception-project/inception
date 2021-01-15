@@ -417,7 +417,7 @@ public class ProjectLayersPanel
                             .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                     layer.setAttachFeature(attachFeature);
                 }
-                annotationService.createLayer(layer);
+                annotationService.createOrUpdateLayer(layer);
             }
 
             layerDetailForm.setModelObject(layersMap.get(exLayers[0].getName()));

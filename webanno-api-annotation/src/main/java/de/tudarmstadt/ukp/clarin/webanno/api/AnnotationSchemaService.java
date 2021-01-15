@@ -92,7 +92,7 @@ public interface AnnotationSchemaService
      *            the type.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createLayer(AnnotationLayer type);
+    void createOrUpdateLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
 

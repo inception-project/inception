@@ -148,7 +148,6 @@ public class ImportUtil
             ExportedAnnotationLayer aExLayer, Project aProject, User aUser)
         throws IOException
     {
-        aLayer.setAllowStacking(aExLayer.isAllowStacking());
         aLayer.setBuiltIn(aExLayer.isBuiltIn());
         aLayer.setReadonly(aExLayer.isReadonly());
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
@@ -175,7 +174,7 @@ public class ImportUtil
         aLayer.setName(aExLayer.getName());
         aLayer.setProject(aProject);
         aLayer.setType(aExLayer.getType());
-        aAnnotationService.createLayer(aLayer);
+        aAnnotationService.createOrUpdateLayer(aLayer);
     }
 
     @Deprecated

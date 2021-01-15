@@ -120,7 +120,7 @@ public class LayerExporterTest
 
         // Import the project again
         ArgumentCaptor<AnnotationLayer> captor = ArgumentCaptor.forClass(AnnotationLayer.class);
-        doNothing().when(annotationService).createLayer(captor.capture());
+        doNothing().when(annotationService).createOrUpdateLayer(captor.capture());
 
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);

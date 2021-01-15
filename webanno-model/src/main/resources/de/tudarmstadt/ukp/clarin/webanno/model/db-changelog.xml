@@ -1242,4 +1242,15 @@
       onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id" 
       referencedTableName="annotation_type" />
   </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20210112-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="WebAnno Team" id="1512223050574-3"/>
+    </preConditions>
+    <dropColumn tableName="annotation_type">
+      <column name="multipleTokens"/>
+      <column name="lockToTokenOffset"/>
+      <column name="allowSTacking"/>
+    </dropColumn>  
+  </changeSet>
 </databaseChangeLog>

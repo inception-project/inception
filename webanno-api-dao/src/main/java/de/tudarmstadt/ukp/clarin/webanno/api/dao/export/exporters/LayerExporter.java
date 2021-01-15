@@ -246,7 +246,7 @@ public class LayerExporter
                             .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                     layer.setAttachFeature(attachFeature);
                 }
-                annotationService.createLayer(layer);
+                annotationService.createOrUpdateLayer(layer);
             }
         }
     }
@@ -255,7 +255,6 @@ public class LayerExporter
             Project aProject)
         throws IOException
     {
-        aLayer.setAllowStacking(aExLayer.isAllowStacking());
         aLayer.setBuiltIn(aExLayer.isBuiltIn());
         aLayer.setReadonly(aExLayer.isReadonly());
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
@@ -283,7 +282,7 @@ public class LayerExporter
         aLayer.setProject(aProject);
         aLayer.setType(aExLayer.getType());
         aLayer.setTraits(aExLayer.getTraits());
-        annotationService.createLayer(aLayer);
+        annotationService.createOrUpdateLayer(aLayer);
     }
 
     private void importFeature(AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature,

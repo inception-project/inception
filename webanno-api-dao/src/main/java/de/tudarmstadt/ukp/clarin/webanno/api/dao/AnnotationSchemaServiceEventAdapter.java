@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -34,12 +34,17 @@ public class AnnotationSchemaServiceEventAdapter
     private @Autowired AnnotationSchemaService service;
 
     @EventListener
+    @Transactional
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
         Project project = aEvent.getProject();
 
-        for (AnnotationFeature feature : service.listAnnotationFeature(project)) {
-            service.removeFeature(feature);
+        // clear the attach feature and attach type fields to clear up circular references
+        // on columns on which we have defined foreign key constraints
+        for (AnnotationLayer layer : service.listAnnotationLayer(project)) {
+            layer.setAttachFeature(null);
+            layer.setAttachType(null);
+            service.createOrUpdateLayer(layer);
         }
 
         // remove the layers too

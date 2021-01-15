@@ -76,6 +76,6 @@ public class TokenLayerInitializer
         // from the start.
         tokenLayer.setValidationMode(NEVER);
 
-        annotationSchemaService.createLayer(tokenLayer);
+        annotationSchemaService.createOrUpdateLayer(tokenLayer);
     }
 }

@@ -65,6 +65,7 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
+import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,6 +107,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Implementation of methods defined in the {@link AnnotationSchemaService} interface
@@ -248,7 +251,7 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void createLayer(AnnotationLayer aLayer)
+    public void createOrUpdateLayer(AnnotationLayer aLayer)
     {
         if (isNull(aLayer.getId())) {
             entityManager.persist(aLayer);
@@ -835,24 +838,23 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeLayer(AnnotationLayer aLayer)
     {
-        // Remove all features in other layers that connect to the layer to be removed. This is
-        // necessary so Hibernate cache knows they are gone and also because the relation is
-        // modeled by name, so we couldn't use a DB-level CASCADE ON DELETE anyway.
-        // It is also necessary to that e.g. the "pos" feature in the built-in "Token" layer gets
-        // cleaned up - which the user could never do manually.
-        for (AnnotationFeature f : listAttachingFeatures(aLayer)) {
-            removeFeature(f);
-        }
+        AnnotationLayer layer = entityManager.contains(aLayer) ? aLayer
+                : entityManager.merge(aLayer);
 
         // We must not rely on the DB-level CASCADE ON DELETE if Hibernate 2nd-level caching is
         // enabled because if we do, then Hibernate will not know that entries have gone from the
         // DB, will still try to re-hydrate them from the cache and will fail filling in gaps
         // from the DB. So we delete explicitly through Hibernate
-        for (AnnotationFeature f : listAnnotationFeature(aLayer)) {
-            removeFeature(f);
-        }
+        listAnnotationFeature(aLayer).forEach(this::removeFeature);
 
-        entityManager.remove(entityManager.contains(aLayer) ? aLayer : entityManager.merge(aLayer));
+        // Remove all features in other layers that connect to the layer to be removed. This is
+        // necessary so Hibernate cache knows they are gone and also because the relation is
+        // modeled by name, so we couldn't use a DB-level CASCADE ON DELETE anyway.
+        // It is also necessary to that e.g. the "pos" feature in the built-in "Token" layer gets
+        // cleaned up - which the user could never do manually.
+        listAttachingFeatures(aLayer).forEach(this::removeFeature);
+
+        entityManager.remove(layer);
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aLayer.getProject().getId()))) {
@@ -959,16 +961,15 @@ public class AnnotationSchemaServiceImpl
     public TypeSystemDescription getAllProjectTypes(Project aProject)
         throws ResourceInitializationException
     {
-        // Create a new type system from scratch
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
-
         List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
         List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
 
+        List<TypeSystemDescription> allTsds = new ArrayList<>();
         for (AnnotationLayer layer : allLayersInProject) {
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
 
             // for built-in layers, we clone the information from the built-in type descriptors
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
             if (layer.isBuiltIn()) {
                 for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
                     exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
@@ -978,9 +979,26 @@ public class AnnotationSchemaServiceImpl
             else {
                 layerSupport.generateTypes(tsd, layer, allFeaturesInProject);
             }
+            allTsds.add(tsd);
         }
 
-        return tsd;
+        {
+            // Explicitly add Token because the layer may not be declared in the project
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            exportBuiltInTypeDescription(builtInTypes, tsd, Token.class.getName());
+            allTsds.add(tsd);
+        }
+
+        {
+            // Explicitly add Sentence because the layer may not be declared in the project
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            exportBuiltInTypeDescription(builtInTypes, tsd, Sentence.class.getName());
+            allTsds.add(tsd);
+        }
+
+        // The merging action here takes care of removing/conflating potential duplicate
+        // declarations
+        return CasCreationUtils.mergeTypeSystems(allTsds);
     }
 
     private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
@@ -1316,13 +1334,13 @@ public class AnnotationSchemaServiceImpl
                         // If it does not exist in the project yet, then we create it
                         attachLayer = analysis.getLayer(relDetails.getAttachLayer());
                         attachLayer.setProject(aProject);
-                        createLayer(attachLayer);
+                        createOrUpdateLayer(attachLayer);
                     }
 
                     l.setAttachType(attachLayer);
                 }
 
-                createLayer(l);
+                createOrUpdateLayer(l);
             }
 
             // Import the features for the layer except if the layer is a built-in layer.

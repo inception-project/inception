@@ -385,7 +385,7 @@ public class LayerDetailForm
             return;
         }
 
-        annotationService.createLayer(layer);
+        annotationService.createOrUpdateLayer(layer);
 
         // Initialize default features if necessary but only after the layer has actually been
         // persisted in the database.

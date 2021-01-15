@@ -18,12 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -129,26 +125,13 @@ public class KendoAutoCompleteTextFeatureEditor
             @Override
             protected List<ReorderableTag> getChoices(String aTerm)
             {
-                List<ReorderableTag> matches = new ArrayList<>();
+                FeatureState state = KendoAutoCompleteTextFeatureEditor.this.getModelObject();
 
-                // If adding own tags is allowed, the always return the current input as the
-                // first choice.
-                boolean inputAsFirstResult = isNotBlank(aTerm)
-                        && KendoAutoCompleteTextFeatureEditor.this.getModelObject().feature
-                                .getTagset().isCreateTag();
-                if (inputAsFirstResult) {
-                    matches.add(new ReorderableTag(aTerm, "New unsaved tag..."));
-                }
+                TagRanker ranker = new TagRanker();
+                ranker.setMaxResults(maxResults);
+                ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
 
-                KendoAutoCompleteTextFeatureEditor.this.getModelObject().tagset.stream()
-                        .filter(t -> isBlank(aTerm) || containsIgnoreCase(t.getName(), aTerm))
-                        // If we added the input term as the first result and by freak accident
-                        // it is even returned as a result, then skip it.
-                        .filter(t -> !(inputAsFirstResult && t.getName().equals(aTerm)))
-                        .limit(maxResults).forEach(matches::add);
-                ;
-
-                return matches;
+                return ranker.rank(aTerm, state.tagset);
             }
 
             /*

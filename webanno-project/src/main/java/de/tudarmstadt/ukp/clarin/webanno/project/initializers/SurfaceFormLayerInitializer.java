@@ -73,7 +73,7 @@ public class SurfaceFormLayerInitializer
         // The surface form must be locked to tokens for CoNLL-U writer to work properly
         AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
                 "Surface form", SPAN_TYPE, aProject, true, TOKENS, NO_OVERLAP);
-        annotationSchemaService.createLayer(surfaceFormLayer);
+        annotationSchemaService.createOrUpdateLayer(surfaceFormLayer);
 
         AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();
         surfaceFormValueFeature.setDescription("Original surface text");

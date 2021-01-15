@@ -83,7 +83,7 @@ public class MorphologicalFeaturesLayerInitializer
                 "Morphological features", SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
         morphLayer.setAttachType(tokenLayer);
         morphLayer.setAttachFeature(tokenMorphFeature);
-        annotationSchemaService.createLayer(morphLayer);
+        annotationSchemaService.createOrUpdateLayer(morphLayer);
 
         AnnotationFeature valueFeature = new AnnotationFeature();
         valueFeature.setDescription("Morphological features");
