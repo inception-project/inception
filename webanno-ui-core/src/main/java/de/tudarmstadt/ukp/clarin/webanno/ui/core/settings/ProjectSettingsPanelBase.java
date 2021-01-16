@@ -37,6 +37,14 @@ public abstract class ProjectSettingsPanelBase
         super(id, aProjectModel);
     }
 
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        setOutputMarkupId(true);
+    }
+
     public void setModel(IModel<Project> aModel)
     {
         setDefaultModel(aModel);

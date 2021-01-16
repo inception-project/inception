@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 public class ImportDocumentsPanel
     extends Panel
@@ -177,6 +177,6 @@ public class ImportDocumentsPanel
             }
         }
 
-        WicketUtil.refreshPage(aTarget, getPage());
+        aTarget.add(findParent(ProjectSettingsPanelBase.class));
     }
 }

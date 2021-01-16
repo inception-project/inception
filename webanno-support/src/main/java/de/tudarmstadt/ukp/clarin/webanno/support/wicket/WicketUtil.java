@@ -84,7 +84,7 @@ public class WicketUtil
     public static void refreshPage(AjaxRequestTarget aTarget, Page aPage)
     {
         aPage.forEach(child -> {
-            if (child.getOutputMarkupId() && child.isVisibleInHierarchy()) {
+            if (child.getOutputMarkupId() /* && child.isVisibleInHierarchy() */) {
                 aTarget.add(child);
             }
         });
