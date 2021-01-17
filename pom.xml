@@ -59,28 +59,24 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
   
-    <mockito.version>3.6.0</mockito.version>
+    <mockito.version>3.7.0</mockito.version>
     <assertj.version>3.18.1</assertj.version>
-    <!-- 
-      - Need to wait for Spring 5.3.3
-      - See: https://github.com/spring-projects/spring-framework/issues/26261
-      -->
-    <spring.version>5.3.1</spring.version>
-    <spring.boot.version>2.4.1</spring.boot.version>
-    <spring.security.version>5.4.1</spring.security.version>
+    <spring.version>5.3.3</spring.version>
+    <spring.boot.version>2.4.2</spring.boot.version>
+    <spring.security.version>5.4.2</spring.security.version>
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.2.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>5.0.3</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>3.0.1</wicket-jquery-selectors.version>
-    <wicket-webjars.version>3.0.1</wicket-webjars.version>
+    <wicket-jquery-selectors.version>3.0.2</wicket-jquery-selectors.version>
+    <wicket-webjars.version>3.0.2</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
-    <bootstrap.version>4.5.2</bootstrap.version>
+    <bootstrap.version>4.5.3</bootstrap.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.1.0</uimafit.version>
     <slf4j.version>1.7.30</slf4j.version>
-    <log4j.version>2.13.2</log4j.version>
+    <log4j.version>2.14.0</log4j.version>
     <jboss.logging.version>3.4.1.Final</jboss.logging.version>
     <hibernate.version>5.4.15.Final</hibernate.version>
     <hibernate.validator.version>6.1.4.Final</hibernate.validator.version>
@@ -88,8 +84,8 @@
     <batik.version>1.12</batik.version>
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.11.0</jackson.version>
-    <tomcat.version>9.0.35</tomcat.version>
+    <jackson.version>2.12.1</jackson.version>
+    <tomcat.version>9.0.41</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <mysql-driver.version>8.0.20</mysql-driver.version>
   </properties>

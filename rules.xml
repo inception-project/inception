@@ -25,7 +25,8 @@
     <ignoreVersion type="regex">(?i).*[-_\.]rc[0-9\.-]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]alpha[0-9\.-]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]beta[0-9\.-]*</ignoreVersion>
-    <ignoreVersion type="regex">\d{4,}.*</ignoreVersion>  <!-- z.B. commons-collections:commons-collections ... 3.2.1.redhat-7 -> 20040117.000000 -->
+    <!-- e.g. commons-collections:commons-collections ... 3.2.1.redhat-7 -> 20040117.000000 -->
+    <ignoreVersion type="regex">\d{4,}.*</ignoreVersion>
   </ignoreVersions>
   <rules>
     <rule groupId="org.codehaus.mojo" artifactId="properties-maven-plugin" comparisonMethod="maven">
