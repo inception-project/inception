@@ -49,10 +49,22 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
     </dependency>
 
     <!-- Wicket -->
@@ -122,8 +134,8 @@
               <configuration>
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.js.map</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js.map</exclude>
                 </excludes>
               </configuration>
             </execution>

@@ -75,8 +75,9 @@ public class VueBehavior
             break;
         }
 
-        aResponse.render(
-                forReference(new JavaScriptResourceReference(getClass(), "vue3-sfc-loader.js")));
+        JavaScriptResourceReference vue3SfcLoaderRef = new JavaScriptResourceReference(getClass(),
+                "vue3-sfc-loader.min.js");
+        aResponse.render(forReference(vue3SfcLoaderRef));
 
         Object model = aComponent.getDefaultModelObject();
         String propsJson;
