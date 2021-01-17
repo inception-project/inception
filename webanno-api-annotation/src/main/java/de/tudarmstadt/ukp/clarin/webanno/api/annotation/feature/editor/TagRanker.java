@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.reverseOrder;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -34,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
+import de.tudarmstadt.ukp.clarin.webanno.support.NaturalStringComparator;
 
 public class TagRanker
 {
@@ -56,6 +58,8 @@ public class TagRanker
                     tagIterator.remove();
                 }
             }
+
+            availableTags.sort(comparing(ReorderableTag::getName, new NaturalStringComparator()));
 
             availableTags.stream() //
                     .limit(Math.max(maxResults - matches.size(), 0)) //
@@ -99,8 +103,8 @@ public class TagRanker
             exactMatchSeen = true;
         }
 
-        Comparator<Pair<ReorderableTag, Integer>> cmp = comparing(Pair::getValue);
-        cmp = cmp.reversed();
+        Comparator<Pair<ReorderableTag, Integer>> cmp = comparing(Pair::getValue, reverseOrder());
+        cmp = cmp.thenComparing(p -> p.getKey().getName(), new NaturalStringComparator());
         Collections.sort(scoredTags, cmp);
 
         // If adding own tags is allowed, the always return the current input as the
