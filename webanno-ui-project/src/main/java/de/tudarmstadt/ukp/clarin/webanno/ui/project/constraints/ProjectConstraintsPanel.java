@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -29,7 +30,6 @@ import java.util.List;
 
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -46,6 +46,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
@@ -144,6 +146,8 @@ public class ProjectConstraintsPanel
 
         private TextArea<String> script;
 
+        private ConfirmationDialog confirmationDialog;
+
         public DetailForm(String aId, IModel<ConstraintSet> aModel)
         {
             super(aId, new CompoundPropertyModel<>(aModel));
@@ -153,27 +157,8 @@ public class ProjectConstraintsPanel
             TextField<String> constraintNameTextField = new TextField<>("name");
             add(constraintNameTextField);
 
-            add(script = new TextArea<>("script", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected String load()
-                {
-                    try {
-                        return constraintsService
-                                .readConstrainSet(DetailForm.this.getModelObject());
-                    }
-                    catch (IOException e) {
-                        // Cannot call "Component.error()" here - it causes a
-                        // org.apache.wicket.WicketRuntimeException: Cannot modify component
-                        // hierarchy after render phase has started (page version cant change then
-                        // anymore)
-                        LOG.error("Unable to load script", e);
-                        return "Unable to load script: " + ExceptionUtils.getRootCauseMessage(e);
-                    }
-                }
-            }));
+            add(script = new TextArea<String>("script",
+                    LoadableDetachableModel.of(this::getScript)));
             script.setOutputMarkupId(true);
             // Script not editable - if we remove this flag, then the script area will not update
             // when switching set selection
@@ -199,33 +184,17 @@ public class ProjectConstraintsPanel
                     }
                 }
             };
+
+            confirmationDialog = new ConfirmationDialog("confirmationDialog");
+            confirmationDialog.setTitleModel(new StringResourceModel("DeleteDialog.title", this));
+            add(confirmationDialog);
+
             // The file that is returned by exportConstraintAsFile is the internal constraints
             // file - it must NOT be deleted after the export is complete!
             add(new DownloadLink("export", exportFileModel, exportFilenameModel));
 
-            Button deleteButton = new Button("delete")
-            {
-
-                private static final long serialVersionUID = -1195565364207114557L;
-
-                @Override
-                public void onSubmit()
-                {
-                    constraintsService.removeConstraintSet(DetailForm.this.getModelObject());
-                    DetailForm.this.setModelObject(null);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    setVisible(DetailForm.this.getModelObject().getId() != null);
-                }
-            };
-            // Add check to prevent accidental delete operation
-            deleteButton.add(new AttributeModifier("onclick",
-                    "if(!confirm('Do you really want to delete this Constraints rule?')) return false;"));
+            LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete", this::actionDelete);
+            deleteButton.add(visibleWhen(() -> DetailForm.this.getModelObject().getId() != null));
             add(deleteButton);
 
             add(new Button("save")
@@ -279,21 +248,41 @@ public class ProjectConstraintsPanel
                 }
             });
 
-            add(new Button("cancel")
-            {
-                private static final long serialVersionUID = 1L;
+            LambdaAjaxLink cancelButton = new LambdaAjaxLink("cancel", this::actionCancel);
+            add(cancelButton);
+        }
 
-                {
-                    // Avoid saving data
-                    setDefaultFormProcessing(false);
-                    setVisible(true);
-                }
+        private String getScript()
+        {
+            try {
+                return constraintsService.readConstrainSet(DetailForm.this.getModelObject());
+            }
+            catch (IOException e) {
+                // Cannot call "Component.error()" here - it causes a
+                // org.apache.wicket.WicketRuntimeException: Cannot modify component
+                // hierarchy after render phase has started (page version cant change then
+                // anymore)
+                LOG.error("Unable to load script", e);
+                return "Unable to load script: " + ExceptionUtils.getRootCauseMessage(e);
+            }
+        }
 
-                @Override
-                public void onSubmit()
-                {
-                    DetailForm.this.setModelObject(null);
-                }
+        private void actionCancel(AjaxRequestTarget aTarget)
+        {
+            DetailForm.this.setModelObject(null);
+            aTarget.add(findParent(ProjectSettingsPanelBase.class));
+        }
+
+        private void actionDelete(AjaxRequestTarget aTarget)
+        {
+            confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
+                    .setParameters(DetailForm.this.getModelObject().getName()));
+            confirmationDialog.show(aTarget);
+
+            confirmationDialog.setConfirmAction((_target) -> {
+                constraintsService.removeConstraintSet(DetailForm.this.getModelObject());
+                DetailForm.this.setModelObject(null);
+                _target.add(findParent(ProjectSettingsPanelBase.class));
             });
         }
 
