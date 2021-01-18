@@ -18,16 +18,21 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage.NEW_PROJECT_ID;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +47,7 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
@@ -57,6 +63,7 @@ import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -112,6 +119,7 @@ public class ProjectsOverviewPage
 
         // add tutorial
         add(createNewProjectLink());
+        add(createQuickProjectCreationDropdown());
         add(createStartTutorialLink());
 
         // add project import
@@ -133,6 +141,37 @@ public class ProjectsOverviewPage
 
         emptyListLabel = new Label(MID_EMPTY_LIST_LABEL, new ResourceModel("noProjects"));
         projectListContainer.add(emptyListLabel);
+    }
+
+    private WebMarkupContainer createQuickProjectCreationDropdown()
+    {
+        ListView<ProjectInitializer> initializers = new ListView<ProjectInitializer>("templates",
+                LambdaModel.of(this::listInitializers))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void populateItem(ListItem<ProjectInitializer> aItem)
+            {
+                LambdaAjaxLink link = new LambdaAjaxLink("createProjectUsingTemplate",
+                        _target -> actionCreateProject(_target, aItem.getModelObject()));
+                link.add(new Label("name", Model.of(aItem.getModelObject().getName())));
+                aItem.add(link);
+            }
+        };
+
+        WebMarkupContainer initializersContainer = new WebMarkupContainer("templatesContainer");
+        initializersContainer.setOutputMarkupId(true);
+        initializersContainer.add(initializers);
+        return initializersContainer;
+    }
+
+    private List<ProjectInitializer> listInitializers()
+    {
+        return projectService.listProjectInitializers().stream()
+                .filter(initializer -> initializer instanceof QuickProjectInitializer)
+                .sorted(comparing(ProjectInitializer::getName)) //
+                .collect(toList());
     }
 
     private LambdaAjaxLink createNewProjectLink()
@@ -340,4 +379,53 @@ public class ProjectsOverviewPage
         params.set(PAGE_PARAM_PROJECT_ID, NEW_PROJECT_ID);
         setResponsePage(ProjectPage.class, params);
     }
+
+    private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
+    {
+        String username = userRepository.getCurrentUsername();
+        aTarget.addChildren(getPage(), IFeedback.class);
+        String projectName = makeValidProjectName(username + " - New project");
+
+        try {
+            Project project = new Project(projectName);
+            projectService.createProject(project);
+
+            projectService
+                    .createProjectPermission(new ProjectPermission(project, username, MANAGER));
+            projectService
+                    .createProjectPermission(new ProjectPermission(project, username, CURATOR));
+            projectService
+                    .createProjectPermission(new ProjectPermission(project, username, ANNOTATOR));
+
+            projectService.initializeProject(project, asList(aInitializer));
+
+            PageParameters pageParameters = new PageParameters()
+                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT_ID, project.getId());
+            setResponsePage(ProjectDashboardPage.class, pageParameters);
+        }
+        catch (IOException e) {
+            LOG.error("Unable to create project [{}]", projectName, e);
+            error("Unable to create project [" + projectName + "]");
+        }
+    }
+
+    /**
+     * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
+     * conflicts
+     */
+    private String makeValidProjectName(String aProjectName)
+    {
+        String projectName = aProjectName;
+        int i = 1;
+        while (true) {
+            if (projectService.existsProject(projectName)) {
+                projectName = aProjectName + " (" + i + ")";
+                i++;
+            }
+            else {
+                return projectName;
+            }
+        }
+    }
+
 }
