@@ -185,6 +185,11 @@
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+    	<groupId>org.wicketstuff</groupId>
+    	<artifactId>wicketstuff-clipboardjs</artifactId>
+    	<version>9.2.0</version>
+    </dependency>
   </dependencies>
 
   <build>

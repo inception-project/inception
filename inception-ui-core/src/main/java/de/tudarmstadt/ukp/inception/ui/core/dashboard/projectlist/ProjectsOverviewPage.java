@@ -179,7 +179,7 @@ public class ProjectsOverviewPage
             protected void populateItem(ListItem<Project> aItem)
             {
                 PageParameters pageParameters = new PageParameters().add(
-                        ProjectDashboardPage.PAGE_PARAM_PROJECT_ID, aItem.getModelObject().getId());
+                        PAGE_PARAM_PROJECT_ID, aItem.getModelObject().getId());
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
