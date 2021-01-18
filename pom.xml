@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>24</version>
+    <version>25</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -72,7 +72,7 @@
     <wicket-webjars.version>3.0.2</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
     <bootstrap.version>4.5.3</bootstrap.version>
-    <dkpro.version>2.1.0</dkpro.version>
+    <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.1.0</uimafit.version>
     <slf4j.version>1.7.30</slf4j.version>

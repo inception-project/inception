@@ -283,6 +283,17 @@
        -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <!-- 
+          - Downgrade version to avoid exception during Eclipse builds:
+          - 
+          - Execution assemble-documentation of goal 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single failed: 
+          - An API incompatibility was encountered while executing 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
+          - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
+          -  .setFilenameComparator(java.util.Comparator)'
+         -->
+        <version>3.1.1</version>
         <executions>
           <execution>
             <id>assemble-documentation</id>
@@ -377,7 +388,7 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <mkdir dir="src/main/resources/public/doc" />
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
@@ -390,7 +401,7 @@
                     <include name="**/*.jpg" />
                   </fileset>
                 </sync>
-              </tasks>
+              </target>
             </configuration>
           </execution>
         </executions>
