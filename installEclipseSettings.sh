@@ -7,6 +7,7 @@ JDT_CORE_PREFS="webanno-build/src/main/resources/webanno/eclipse/org.eclipse.jdt
 JDT_UI_PREFS="webanno-build/src/main/resources/webanno/eclipse/org.eclipse.jdt.ui.prefs"
 
 function installPrefs {
+  mkdir -p $1/.settings/
   cp -v $JDT_CORE_PREFS $1/.settings/
   cp -v $JDT_UI_PREFS $1/.settings/
 }
