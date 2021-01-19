@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>24</version>
+    <version>25</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
@@ -73,7 +73,7 @@
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.2.0</wicket-jquery-ui.version>
-    <dkpro.version>2.1.0</dkpro.version>
+    <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <log4j.version>2.14.0</log4j.version>
     <groovy.version>3.0.3</groovy.version>
