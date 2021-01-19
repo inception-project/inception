@@ -177,6 +177,7 @@ public class LoginPage
         @Override
         protected void onSubmit()
         {
+            String redirectUrl = getRedirectUrl();
             AuthenticatedWebSession session = AuthenticatedWebSession.get();
             if (session.signIn(username, password)) {
                 log.debug("Login successful");
@@ -187,27 +188,25 @@ public class LoginPage
                             .getRequest()).getContainerRequest().getSession(false);
                     sessionRegistry.registerNewSession(containerSession.getId(), username);
                 }
-                setDefaultResponsePageIfNecessary();
+                setDefaultResponsePageIfNecessary(redirectUrl);
             }
             else {
                 error("Login failed");
             }
         }
 
-        private void setDefaultResponsePageIfNecessary()
+        private void setDefaultResponsePageIfNecessary(String aRedirectUrl)
         {
             // This does not work because it was Spring Security that intercepted the access, not
             // Wicket continueToOriginalDestination();
 
-            String redirectUrl = getRedirectUrl();
-
-            if (redirectUrl == null || redirectUrl.contains(".IBehaviorListener.")
-                    || redirectUrl.contains("-logoutPanel-")) {
+            if (aRedirectUrl == null || aRedirectUrl.contains(".IBehaviorListener.")
+                    || aRedirectUrl.contains("-logoutPanel-")) {
                 log.debug("Redirecting to welcome page");
                 setResponsePage(getApplication().getHomePage());
             }
             else {
-                log.debug("Redirecting to saved URL: [{}]", redirectUrl);
+                log.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
                 if (isNotBlank(form.urlfragment) && form.urlfragment.startsWith("!")) {
                     Url url = Url.parse("http://dummy?" + form.urlfragment.substring(1));
                     UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);
@@ -217,7 +216,7 @@ public class LoginPage
                     }
                     Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, params);
                 }
-                throw new NonResettingRestartException(redirectUrl);
+                throw new NonResettingRestartException(aRedirectUrl);
             }
         }
     }
