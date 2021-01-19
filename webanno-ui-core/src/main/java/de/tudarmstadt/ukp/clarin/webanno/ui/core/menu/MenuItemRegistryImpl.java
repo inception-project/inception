@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +66,11 @@ public class MenuItemRegistryImpl
 
             for (MenuItem fs : exts) {
                 log.info("Found menu item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+
+                if (fs.getPageClass() == null) {
+                    throw new IllegalStateException("Menu item [" + fs.getClass().getName()
+                            + "] does not declare a page class.");
+                }
             }
         }
 
@@ -73,12 +80,20 @@ public class MenuItemRegistryImpl
     @Override
     public Optional<MenuItem> getMenuItem(Class<? extends Page> aClass)
     {
+        if (extensions == null) {
+            return Optional.empty();
+        }
+
         return extensions.stream().filter(mi -> mi.getPageClass().equals(aClass)).findFirst();
     }
 
     @Override
     public List<MenuItem> getMenuItems()
     {
+        if (extensions == null) {
+            return emptyList();
+        }
+
         return extensions;
     }
 }
