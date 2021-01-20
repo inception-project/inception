@@ -117,21 +117,24 @@ public class ProjectsOverviewPage
     {
         add(projectListContainer = createProjectList());
 
+        WebMarkupContainer projectCreationGroup = new WebMarkupContainer("projectCreationGroup");
+        authorize(projectCreationGroup, RENDER,
+                join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
+        projectCreationGroup.add(createNewProjectLink());
+        projectCreationGroup.add(createQuickProjectCreationDropdown());
+        add(projectCreationGroup);
+
         // add tutorial
-        add(createNewProjectLink());
-        add(createQuickProjectCreationDropdown());
         add(createStartTutorialLink());
 
         // add project import
-        Label importProjectLabel = new Label(MID_IMPORT_PROJECT_BUTTON,
-                new StringResourceModel("importProject"));
-        ProjectImportPanel projectImport = new ProjectImportPanel(MID_IMPORT_PROJECT_PANEL,
-                Model.of());
-        authorize(projectImport, RENDER, join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
-        authorize(importProjectLabel, RENDER,
+        WebMarkupContainer projectImportGroup = new WebMarkupContainer("projectImportGroup");
+        authorize(projectImportGroup, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
-        add(projectImport);
-        add(importProjectLabel);
+        projectImportGroup.add(
+                new Label(MID_IMPORT_PROJECT_BUTTON, new StringResourceModel("importProject")));
+        projectImportGroup.add(new ProjectImportPanel(MID_IMPORT_PROJECT_PANEL, Model.of()));
+        add(projectImportGroup);
 
         add(roleFilters = createRoleFilters());
         add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
