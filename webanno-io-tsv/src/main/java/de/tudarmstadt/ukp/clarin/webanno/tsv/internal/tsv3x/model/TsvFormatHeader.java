@@ -16,15 +16,29 @@
  * limitations under the License.
  */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class TsvFormatHeader
 {
     private final String name;
     private final String version;
+    private final int majorVersion;
+    private final int minorVersion;
     
     public TsvFormatHeader(String aName, String aVersion)
     {
         name = aName;
         version = aVersion;
+        
+        if (StringUtils.isNoneBlank(version)) {
+            String[] parts = version.split("\\.");
+            majorVersion = Integer.valueOf(parts[0]);
+            minorVersion = Integer.valueOf(parts[1]);
+        }
+        else {
+            majorVersion = 1;
+            minorVersion = 0;
+        }
     }
 
     public String getName()
@@ -35,5 +49,15 @@ public class TsvFormatHeader
     public String getVersion()
     {
         return version;
+    }
+    
+    public int getMajorVersion()
+    {
+        return majorVersion;
+    }
+    
+    public int getMinorVersion()
+    {
+        return minorVersion;
     }
 }

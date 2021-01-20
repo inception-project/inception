@@ -68,7 +68,7 @@ public class Tsv3XCasDocumentBuilder
 {
     public static TsvDocument of(TsvSchema aSchema, JCas aJCas)
     {
-        TsvFormatHeader format = new TsvFormatHeader("WebAnno TSV", "3.2");
+        TsvFormatHeader format = new TsvFormatHeader("WebAnno TSV", "3.3");
         TsvDocument doc = new TsvDocument(format, aSchema, aJCas);
         
         // Fill document with all the sentences and tokens

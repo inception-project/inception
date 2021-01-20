@@ -45,6 +45,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 // This support is not a component because we do not want it to be auto-scanned. It uses the 
 // legacy TSV3 reader/writer code, not the new re-implementation.
 //@Component
+/**
+ * @deprecated Superseded by {@link WebAnnoTsv3FormatSupport}
+ */
+@Deprecated
 public class WebAnnoTsv3LegacyFormatSupport
     implements FormatSupport
 {
