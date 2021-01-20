@@ -18,6 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Escaping.unescapeText;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XParserState.END;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XParserState.INTER_SENTENCE_SPACE;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XParserState.SENTENCE_HEADER;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XParserState.SUBTOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XParserState.TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.CHAIN_ELEMENT_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.CHAIN_LINK_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.PRIMITIVE;
@@ -36,6 +41,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatC
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.LINE_BREAK;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.NULL_COLUMN;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.NULL_VALUE;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.PREFIX_SENTENCE_HEADER;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.PREFIX_SENTENCE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.PREFIX_TEXT;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.SLOT_SEP;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.STACK_SEP;
@@ -54,6 +61,7 @@ import static java.util.Collections.emptyList;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.apache.commons.lang3.StringUtils.split;
@@ -337,10 +345,11 @@ public class Tsv3XDeserializer
     {
         StringBuilder text = new StringBuilder();
 
-        State prevState = State.INTER_SENTENCE_SPACE;
-        State state = State.INTER_SENTENCE_SPACE;
+        Tsv3XParserState prevState = INTER_SENTENCE_SPACE;
+        Tsv3XParserState state = INTER_SENTENCE_SPACE;
 
         StringBuilder sentenceText = new StringBuilder();
+        String sentenceId = null;
         TsvSentence prevSentence = null;
         TsvSentence sentence = null;
         TsvToken token = null;
@@ -349,157 +358,172 @@ public class Tsv3XDeserializer
                 .getHeaderColumns(aDoc.getSchema().getColumns());
 
         String line = aIn.readLine();
-        while (!State.END.equals(state)) {
-            // These variables are only used in TOKEN and SUBTOKEN states.
-            String[] fields = null;
-            String id = null;
-            String[] offsets = null;
-            int begin = -1;
-            int end = -1;
+        try {
+            while (!Tsv3XParserState.END.equals(state)) {
+                // These variables are only used in TOKEN and SUBTOKEN states.
+                String[] fields = null;
+                String id = null;
+                String[] offsets = null;
+                int begin = -1;
+                int end = -1;
 
-            // Determine the status of the current line
-            if (startsWith(line, PREFIX_TEXT)) {
-                state = State.SENTENCE;
-            }
-            else if (line == null) {
-                state = State.END;
-            }
-            else if (isEmpty(line)) {
-                state = State.INTER_SENTENCE_SPACE;
-            }
-            else {
-                fields = splitPreserveAllTokens(line, FIELD_SEPARATOR);
-
-                // Get token metadata
-                id = fields[0];
-                offsets = split(fields[1], "-");
-                begin = Integer.valueOf(offsets[0]);
-                end = Integer.valueOf(offsets[1]);
-
-                // TOKEN or SUBTOKEN?
-                if (id.contains(".")) {
-                    state = State.SUBTOKEN;
+                // Determine the status of the current line
+                if ((state == INTER_SENTENCE_SPACE || state == SENTENCE_HEADER)
+                        && startsWith(line, PREFIX_SENTENCE_HEADER)) {
+                    state = SENTENCE_HEADER;
+                }
+                else if (line == null) {
+                    state = Tsv3XParserState.END;
+                }
+                else if (isEmpty(line)) {
+                    state = INTER_SENTENCE_SPACE;
                 }
                 else {
-                    state = State.TOKEN;
-                }
-            }
+                    fields = splitPreserveAllTokens(line, FIELD_SEPARATOR);
 
-            // Assert that the order of information in the file is correct
-            switch (prevState) {
-            case INTER_SENTENCE_SPACE:
-                if (!State.SENTENCE.equals(state)) {
-                    throw new IOException("Line " + aIn.getLineNumber()
-                            + ": Expected sentence header but got [" + state + "]");
-                }
-                break;
-            case SENTENCE:
-                if (!(State.SENTENCE.equals(state) || State.TOKEN.equals(state))) {
-                    throw new IOException("Line " + aIn.getLineNumber()
-                            + ": Expected sentence header or token but got [" + state + "]");
-                }
-                break;
-            case TOKEN:
-            case SUBTOKEN:
-                if (!(State.INTER_SENTENCE_SPACE.equals(state) || State.END.equals(state)
-                        || State.TOKEN.equals(state) || State.SUBTOKEN.equals(state))) {
-                    throw new IOException("Line " + aIn.getLineNumber()
-                            + ": Expected token, sub-token or sentence break but got [" + state
-                            + "]");
-                }
-                break;
-            }
+                    // Get token metadata
+                    id = fields[0];
+                    offsets = split(fields[1], "-");
+                    begin = Integer.valueOf(offsets[0]);
+                    end = Integer.valueOf(offsets[1]);
 
-            // Do the actual parsing
-            switch (state) {
-            case END:
-            case INTER_SENTENCE_SPACE:
-                // End of sentence action
-                // The -1 here is to account for the tailing line break
-                sentence.getUimaSentence().setEnd(text.length() - 1);
-                sentence.getUimaSentence().addToIndexes();
-                prevSentence = sentence;
-                sentence = null;
-                break;
-            case TOKEN:
-                // Note that the token value is not used here. When we get here, we have already
-                // added the complete sentence text to the text buffer.
+                    // TOKEN or SUBTOKEN?
+                    if (id.contains(".")) {
+                        state = SUBTOKEN;
+                    }
+                    else {
+                        state = TOKEN;
+                    }
+                }
 
-                // End of sentence header action
-                if (State.SENTENCE.equals(prevState)) {
-                    // If there is no space between the previous sentence and the current
-                    // sentence, then we have to strip off the trailing line break from the
-                    // last sentence!
-                    if (text.length() > begin) {
-                        assert text.length() == begin + 1;
-                        assert text.charAt(text.length() - 1) == LINE_BREAK;
-                        text.setLength(text.length() - 1);
+                // Assert that the order of information in the file is correct
+                switch (prevState) {
+                case INTER_SENTENCE_SPACE:
+                    if (!SENTENCE_HEADER.equals(state)) {
+                        throw new IOException("Line " + aIn.getLineNumber()
+                                + ": Expected sentence header but got [" + state + "]");
+                    }
+                    break;
+                case SENTENCE_HEADER:
+                    if (!(SENTENCE_HEADER.equals(state) || TOKEN.equals(state))) {
+                        throw new IOException("Line " + aIn.getLineNumber()
+                                + ": Expected sentence header or token but got [" + state + "]");
+                    }
+                    break;
+                case TOKEN:
+                case SUBTOKEN:
+                    if (!(INTER_SENTENCE_SPACE.equals(state) || END.equals(state)
+                            || TOKEN.equals(state) || SUBTOKEN.equals(state))) {
+                        throw new IOException("Line " + aIn.getLineNumber()
+                                + ": Expected token, sub-token or sentence break but got [" + state
+                                + "]");
+                    }
+                    break;
+                }
+
+                // Do the actual parsing
+                switch (state) {
+                case END:
+                case INTER_SENTENCE_SPACE:
+                    // End of sentence action
+                    // The -1 here is to account for the tailing line break
+                    sentence.getUimaSentence().setEnd(text.length() - 1);
+                    sentence.getUimaSentence().addToIndexes();
+                    prevSentence = sentence;
+                    sentence = null;
+                    break;
+                case TOKEN:
+                    // Note that the token value is not used here. When we get here, we have already
+                    // added the complete sentence text to the text buffer.
+
+                    // End of sentence header action
+                    if (SENTENCE_HEADER.equals(prevState)) {
+                        // If there is no space between the previous sentence and the current
+                        // sentence, then we have to strip off the trailing line break from the
+                        // last sentence!
+                        if (text.length() > begin) {
+                            assert text.length() == begin + 1;
+                            assert text.charAt(text.length() - 1) == LINE_BREAK;
+                            text.setLength(text.length() - 1);
+                        }
+
+                        // If there is a gap between the current end of the text buffer and the
+                        // offset of the first token in this sentence, then add whitespace to fill
+                        // the gap.
+                        if (text.length() < begin) {
+                            text.append(repeat(' ', begin - text.length()));
+                        }
+
+                        assert text.length() == begin;
+                        assert sentence == null;
+
+                        Sentence uimaSentence = new Sentence(aDoc.getJCas());
+                        if (isNotBlank(sentenceId)) {
+                            uimaSentence.setId(sentenceId);
+                        }
+                        uimaSentence.setBegin(text.length());
+                        sentence = aDoc.createSentence(uimaSentence);
+                        text.append(sentenceText);
+                        sentenceText.setLength(0);
                     }
 
-                    // If there is a gap between the current end of the text buffer and the
-                    // offset of the first token in this sentence, then add whitespace to fill
-                    // the gap.
-                    if (text.length() < begin) {
-                        text.append(repeat(' ', begin - text.length()));
+                    // Token parsing action
+                    Token uimaToken = new Token(aDoc.getJCas(), begin, end);
+                    uimaToken.addToIndexes();
+                    token = sentence.createToken(uimaToken);
+
+                    // Read annotations from the columns
+                    parseAnnotations(aDoc, sentence, token, fields, headerColumns);
+                    break;
+                case SUBTOKEN:
+                    // Read annotations from the columns
+                    TsvSubToken subToken = token.createSubToken(begin, end);
+                    parseAnnotations(aDoc, sentence, subToken, fields, headerColumns);
+                    break;
+                case SENTENCE_HEADER:
+                    // Header parsing action
+                    if (line.startsWith(PREFIX_SENTENCE_ID)) {
+                        sentenceId = substringAfter(line, "=");
+                        sentenceId = unescapeText(aDoc.getFormatHeader(), sentenceId);
                     }
-
-                    assert text.length() == begin;
-                    assert sentence == null;
-
-                    Sentence uimaSentence = new Sentence(aDoc.getJCas());
-                    uimaSentence.setBegin(text.length());
-                    sentence = aDoc.createSentence(uimaSentence);
-                    text.append(sentenceText);
-                    sentenceText.setLength(0);
+                    if (line.startsWith(PREFIX_TEXT)) {
+                        String textFragment = substringAfter(line, "=");
+                        textFragment = unescapeText(aDoc.getFormatHeader(), textFragment);
+                        sentenceText.append(textFragment);
+                        sentenceText.append(LINE_BREAK);
+                    }
+                    break;
                 }
 
-                // Token parsing action
-                Token uimaToken = new Token(aDoc.getJCas(), begin, end);
-                uimaToken.addToIndexes();
-                token = sentence.createToken(uimaToken);
-
-                // Read annotations from the columns
-                parseAnnotations(aDoc, sentence, token, fields, headerColumns);
-                break;
-            case SUBTOKEN:
-                // Read annotations from the columns
-                TsvSubToken subToken = token.createSubToken(begin, end);
-                parseAnnotations(aDoc, sentence, subToken, fields, headerColumns);
-                break;
-            case SENTENCE:
-                // Header parsing action
-                String textFragment = substringAfter(line, "=");
-                textFragment = unescapeText(aDoc.getFormatHeader(), textFragment);
-                sentenceText.append(textFragment);
-                sentenceText.append(LINE_BREAK);
-                break;
+                prevState = state;
+                line = aIn.readLine();
             }
 
-            prevState = state;
-            line = aIn.readLine();
+            aDoc.getJCas().setDocumentText(text.toString());
+
+            // After all data has been read, we also add the annotations with disambiguation ID to
+            // the CAS indexes. This ensures we only add them after their final begin/end offsets
+            // have been determined since most of these annotations are actually multi-token
+            // annotations.
+            CAS cas = aDoc.getJCas().getCas();
+            Set<FeatureStructure> fses = new LinkedHashSet<>();
+            for (TsvSentence s : aDoc.getSentences()) {
+                for (TsvToken t : s.getTokens()) {
+                    for (Type type : t.getUimaTypes()) {
+                        fses.addAll(t.getUimaAnnotations(type));
+                    }
+                    for (TsvSubToken st : t.getSubTokens()) {
+                        for (Type type : st.getUimaTypes()) {
+                            fses.addAll(st.getUimaAnnotations(type));
+                        }
+                    }
+                }
+            }
+            fses.forEach(cas::addFsToIndexes);
         }
-
-        aDoc.getJCas().setDocumentText(text.toString());
-
-        // After all data has been read, we also add the annotations with disambiguation ID to
-        // the CAS indexes. This ensures we only add them after their final begin/end offsets
-        // have been determined since most of these annotations are actually multi-token
-        // annotations.
-        CAS cas = aDoc.getJCas().getCas();
-        Set<FeatureStructure> fses = new LinkedHashSet<>();
-        for (TsvSentence s : aDoc.getSentences()) {
-            for (TsvToken t : s.getTokens()) {
-                for (Type type : t.getUimaTypes()) {
-                    fses.addAll(t.getUimaAnnotations(type));
-                }
-                for (TsvSubToken st : t.getSubTokens()) {
-                    for (Type type : st.getUimaTypes()) {
-                        fses.addAll(st.getUimaAnnotations(type));
-                    }
-                }
-            }
+        catch (Exception e) {
+            throw new IOException("Unable to parse line as [" + state + "]: [" + line + "]");
         }
-        fses.forEach(cas::addFsToIndexes);
     }
 
     private void parseAnnotations(TsvDocument aDoc, TsvSentence aSentence, TsvUnit aUnit,
@@ -887,10 +911,5 @@ public class Tsv3XDeserializer
             throw new IOException(
                     "Line does not start with expected prefix [" + aPrefix + "]: [" + aLine + "]");
         }
-    }
-
-    private enum State
-    {
-        END, SENTENCE, TOKEN, SUBTOKEN, INTER_SENTENCE_SPACE;
     }
 }

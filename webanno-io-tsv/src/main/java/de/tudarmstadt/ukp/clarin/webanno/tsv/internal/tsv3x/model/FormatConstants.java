@@ -29,7 +29,9 @@ public class FormatConstants
             + HEADER_LAYER_PREFIX_SEPARATOR;
     public static final String HEADER_PREFIX_SPAN_LAYER = "#T_SP" + HEADER_LAYER_PREFIX_SEPARATOR;
 
-    public static final String PREFIX_TEXT = "#Text=";
+    public static final String PREFIX_SENTENCE_HEADER = "#";
+    public static final String PREFIX_SENTENCE_ID = PREFIX_SENTENCE_HEADER + "Sentence.id=";
+    public static final String PREFIX_TEXT = PREFIX_SENTENCE_HEADER + "Text=";
 
     public static final String FIELD_SEPARATOR = "\t";
     public static final char LINE_BREAK = '\n';

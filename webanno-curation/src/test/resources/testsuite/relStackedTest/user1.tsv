@@ -1,4 +1,4 @@
-#FORMAT=WebAnno TSV 3.2
+#FORMAT=WebAnno TSV 3.3
 #T_SP=webanno.custom.Multivalspan|f1|f2
 #T_RL=webanno.custom.Multivalrel|rel1|rel2|BT_webanno.custom.Multivalspan
 

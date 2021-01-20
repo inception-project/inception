@@ -24,7 +24,15 @@ import java.util.Set;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.junit.Ignore;
 
+/**
+ * @deprecated These test were used during the development of the new {@link WebannoTsv3XReader} and
+ *             {@link WebannoTsv3XWriter} code to check that the two are reasonably compatible. Now
+ *             that the new code is done, these old tests are not really needed anymore.
+ */
+@Deprecated
+@Ignore("Ignoring because these produce WebAnno TSV 3.2 headers and we are now at TSV 3.3")
 public class WebAnnoTsv3WriterTest
     extends WebAnnoTsv3WriterTestBase
 {

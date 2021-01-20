@@ -81,10 +81,10 @@ public class Escaping
 
     public static String unescapeText(TsvFormatHeader aHeader, String aText)
     {
-        if ("3.1".equals(aHeader.getVersion())) {
+        if (aHeader.getMajorVersion() == 3 && aHeader.getMinorVersion() <= 1) {
             return unescapeJava(aText);
         }
-        else if ("3.2".equals(aHeader.getVersion())) {
+        else if (aHeader.getMajorVersion() == 3 && aHeader.getMinorVersion() >= 2) {
             List<String> pat = new ArrayList<>();
             List<String> esc = new ArrayList<>();
             for (int i = 0; i < 32; i++) {

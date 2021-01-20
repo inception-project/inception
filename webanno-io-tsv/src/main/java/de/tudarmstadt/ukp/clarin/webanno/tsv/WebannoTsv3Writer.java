@@ -60,7 +60,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * will be written first and subsequently all the relations. relation is given in the form of
  * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates
  * the source of the relation (the source of the arc drown)
+ *
+ * @deprecated Superseded by {@link WebannoTsv3XWriter}
  */
+@Deprecated
 public class WebannoTsv3Writer
     extends JCasFileWriter_ImplBase
 {
