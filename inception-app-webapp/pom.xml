@@ -659,11 +659,11 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <delete includeemptydirs="true" failonerror="false">
                   <fileset dir="src/main/resources/public/doc" includes="**/*" />
                 </delete>
-              </tasks>
+              </target>
             </configuration>
           </execution>
           <execution>
