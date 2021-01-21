@@ -100,7 +100,16 @@ spring:
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
 
+server:
+  error:
+    whitelabel:
+      enabled: false
+    path: /whoops
+
 wicket:
+  web:
+    servlet:
+      dispatcher-types: request, error, async, forward
   external:
     # Enables WebSocket support - dependency required 
     websocket: true 
