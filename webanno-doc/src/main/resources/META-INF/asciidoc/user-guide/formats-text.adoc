@@ -17,7 +17,7 @@
 [[sect_formats_text]]
 = Plain Text
 
-Basic UTF-8 plain text.
+Basic UTF-8 plain text. Automatic sentence and token detection will be performed.
 
 [cols="2,1,1,1,3"]
 |====
@@ -26,6 +26,39 @@ Basic UTF-8 plain text.
 | Plain text
 | yes
 | yes
+| no
+| No annotations
+|====
+
+[[sect_formats_text_sentence_per_line]]
+= Plain Text (one sentence per line)
+
+Basic UTF-8 plain text where each line is interpreted as one sentence.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| Plain text
+| yes
+| no
+| no
+| No annotations
+|====
+
+[[sect_formats_text_pretokenized]]
+= Plain Text (pretokenized)
+
+Basic UTF-8 plain text. Tokens are taken to be separated by spaces. Each line is interpreted as a
+sentence.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| Plain text
+| yes
+| no
 | no
 | No annotations
 |====
