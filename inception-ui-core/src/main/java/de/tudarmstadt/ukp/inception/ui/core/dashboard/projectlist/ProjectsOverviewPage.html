@@ -22,8 +22,23 @@
     <div class="flex-content flex-v-container flex-gutter">
       <div class="flex-h-container flex-gutter">
         <div>
-          <input wicket:id="newProject" type="button" class="btn btn-primary" wicket:message="value:newProject"/> 
-          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="btn-group" role="group">
+              <button wicket:id="newProject" class="btn btn-primary"><wicket:message key="newProject"/></button> 
+              <button class="btn btn-primary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+              <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
+                <div class="dropdown-header">Instantly create a project using one of these templates.</div>
+                <div wicket:id="templatesContainer">
+                  <div wicket:id="templates" class="flex-content flex-v-container">
+                    <button wicket:id="createProjectUsingTemplate" class="dropdown-item">
+                      <wicket:container wicket:id="name"/>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </span>
+          </span>
+          <span wicket:id="projectImportGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
             <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" name="projectImport">
             </button>
             <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">

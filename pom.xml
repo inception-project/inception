@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>24</version>
+    <version>25</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
@@ -65,19 +65,15 @@
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>nl.ru.test.category.SlowTests</excludedTestCategories>
 
-    <mockito.version>3.6.0</mockito.version>
+    <mockito.version>3.7.0</mockito.version>
     <assertj.version>3.18.1</assertj.version>
-    <!-- 
-      - Need to wait for Spring 5.3.3
-      - See: https://github.com/spring-projects/spring-framework/issues/26261
-      -->
-    <spring.version>5.3.1</spring.version>
-    <spring.boot.version>2.4.1</spring.boot.version>
-    <spring.security.version>5.4.1</spring.security.version>
+    <spring.version>5.3.3</spring.version>
+    <spring.boot.version>2.4.2</spring.boot.version>
+    <spring.security.version>5.4.2</spring.security.version>
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.2.0</wicket-jquery-ui.version>
-    <dkpro.version>2.1.0</dkpro.version>
+    <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <log4j.version>2.14.0</log4j.version>
     <groovy.version>3.0.3</groovy.version>
@@ -92,7 +88,7 @@
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <okhttp.version>3.14.2</okhttp.version>
 
-    <asciidoctor.plugin.version>2.0.0-RC.1</asciidoctor.plugin.version>
+    <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
     <asciidoctor.version>2.3.0</asciidoctor.version>
     <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
   </properties>
