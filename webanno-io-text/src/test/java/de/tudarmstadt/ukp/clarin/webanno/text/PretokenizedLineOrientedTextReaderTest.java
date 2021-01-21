@@ -43,7 +43,7 @@ public class PretokenizedLineOrientedTextReaderTest
         reader.getNext(doc.getCas());
 
         assertEquals(169, select(doc, Sentence.class).size());
-        assertEquals(1412, select(doc, Token.class).size());
+        assertEquals(1581, select(doc, Token.class).size());
     }
 
     @Test
