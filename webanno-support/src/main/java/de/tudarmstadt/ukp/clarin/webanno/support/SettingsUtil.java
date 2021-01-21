@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support;
 
+import static org.apache.commons.lang3.StringUtils.substring;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -103,9 +105,8 @@ public class SettingsUtil
             return "Version information not available";
         }
         else {
-            return props.getProperty(SettingsUtil.PROP_VERSION) + " ("
-                    + props.getProperty(SettingsUtil.PROP_TIMESTAMP) + ", build "
-                    + props.getProperty(SettingsUtil.PROP_BUILD_NUMBER) + ")";
+            return props.getProperty(PROP_VERSION) + " (" + props.getProperty(PROP_TIMESTAMP)
+                    + ", build " + substring(props.getProperty(PROP_BUILD_NUMBER), 0, 8) + ")";
         }
     }
 
@@ -156,6 +157,7 @@ public class SettingsUtil
      *             classes implementing a corresponding interface instead (e.g. @see
      *             de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
      */
+    @Deprecated
     public static Properties getSettings()
     {
         if (settings == null) {
