@@ -21,6 +21,7 @@ import org.apache.wicket.Page;
 import org.apache.wicket.RestartResponseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -65,8 +66,8 @@ public class TelemetrySettingsInterceptor
         }
 
         // Intercept only if the user is already logged in
-        if (SecurityContextHolder.getContext()
-                .getAuthentication() instanceof AnonymousAuthenticationToken) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
             return;
         }
 

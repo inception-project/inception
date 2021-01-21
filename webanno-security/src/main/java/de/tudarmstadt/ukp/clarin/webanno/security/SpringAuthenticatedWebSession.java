@@ -127,13 +127,19 @@ public class SpringAuthenticatedWebSession
     @Override
     public Roles getRoles()
     {
+        if (!isSignedIn()) {
+            return new Roles();
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Roles roles = new Roles();
-        if (isSignedIn()) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
             for (GrantedAuthority authority : authentication.getAuthorities()) {
                 roles.add(authority.getAuthority());
             }
         }
+
         return roles;
     }
 }
