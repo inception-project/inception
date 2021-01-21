@@ -17,17 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.util.Optional;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.protocol.http.servlet.ErrorAttributes;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Request;
+import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -67,8 +74,23 @@ public class ErrorPage
         message.add(visibleWhen(() -> message.getDefaultModelObject() != null));
         add(message);
 
+        Label exceptionMessage = new Label("exceptionMessage",
+                LoadableDetachableModel.of(this::getExceptionMessage));
+        exceptionMessage.add(visibleWhen(() -> exceptionMessage.getDefaultModelObject() != null));
+        add(exceptionMessage);
+
+        Label exceptionStackTrace = new Label("exceptionStackTrace",
+                LoadableDetachableModel.of(this::getExceptionStackTrace));
+        exceptionStackTrace
+                .add(visibleWhen(() -> exceptionStackTrace.getDefaultModelObject() != null
+                        && (isDeveloper() || isAdministrator())));
+        add(exceptionStackTrace);
+
         Label appVersion = new Label("appVersion", SettingsUtil.getVersionString());
         add(appVersion);
+
+        Label javaVendor = new Label("javaVendor", System.getProperty("java.vendor"));
+        add(javaVendor);
 
         Label javaVersion = new Label("javaVersion", System.getProperty("java.version"));
         add(javaVersion);
@@ -83,6 +105,24 @@ public class ErrorPage
         add(osArch);
     }
 
+    private boolean isDeveloper()
+    {
+        return DEVELOPMENT.equals(getApplication().getConfigurationType());
+    }
+
+    private boolean isAdministrator()
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream() //
+                .map(GrantedAuthority::getAuthority) //
+                .anyMatch(a -> ROLE_ADMIN.toString().equals(a));
+    }
+
     private Optional<ErrorAttributes> getErrorAttributes()
     {
         RequestCycle cycle = RequestCycle.get();
@@ -93,7 +133,7 @@ public class ErrorPage
             ErrorAttributes errorAttributes = ErrorAttributes.of(webRequest.getContainerRequest(),
                     webRequest.getFilterPrefix());
 
-            return Optional.of(errorAttributes);
+            return Optional.ofNullable(errorAttributes);
         }
 
         return Optional.empty();
@@ -121,7 +161,18 @@ public class ErrorPage
 
     private String getRequestUri()
     {
-        return getErrorAttributes().map(ErrorAttributes::getRequestUri).orElse(null);
+        Optional<String> uri = getErrorAttributes().map(ErrorAttributes::getRequestUri);
+
+        if (uri.isPresent()) {
+            return uri.get();
+        }
+
+        Url url = RequestCycle.get().getRequest().getOriginalUrl();
+        if (url != null) {
+            return "/" + url.toString();
+        }
+
+        return null;
     }
 
     private String getMessage()
@@ -134,8 +185,37 @@ public class ErrorPage
         return getErrorAttributes().map(ErrorAttributes::getServletName).orElse(null);
     }
 
+    private String getExceptionMessage()
+    {
+        Throwable e = getException();
+
+        if (e != null) {
+            return ExceptionUtils.getRootCauseMessage(e);
+        }
+
+        return null;
+    }
+
+    private String getExceptionStackTrace()
+    {
+        Throwable e = getException();
+
+        if (e != null) {
+            return String.join("\n", ExceptionUtils.getRootCauseStackTrace(e));
+        }
+
+        return null;
+    }
+
     private Throwable getException()
     {
+        RequestCycle cycle = RequestCycle.get();
+
+        Exception e = cycle.getMetaData(ErrorListener.EXCEPTION);
+        if (e != null) {
+            return e;
+        }
+
         return getErrorAttributes().map(ErrorAttributes::getException).orElse(null);
     }
 

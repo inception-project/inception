@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app;
 
+import static org.apache.wicket.settings.ExceptionSettings.SHOW_INTERNAL_ERROR_PAGE;
+
 import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.IPackageResourceGuard;
 import org.apache.wicket.markup.html.SecurePackageResourceGuard;
@@ -24,6 +26,8 @@ import org.apache.wicket.markup.html.SecurePackageResourceGuard;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.app.config.InceptionResourcesBehavior;
+import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
+import de.tudarmstadt.ukp.inception.ui.core.ErrorPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
 
@@ -39,6 +43,8 @@ public class WicketApplication
         initAccessToVueComponents();
 
         setMetaData(ApplicationPageBase.MENUBAR_CLASS, MenuBar.class);
+
+        initErrorPage();
     }
 
     /**
@@ -54,6 +60,15 @@ public class WicketApplication
     protected String getLogoLocation()
     {
         return "/de/tudarmstadt/ukp/inception/app/logo/ukp-logo.png";
+    }
+
+    private void initErrorPage()
+    {
+        getApplicationSettings().setInternalErrorPage(ErrorPage.class);
+        getApplicationSettings().setAccessDeniedPage(ErrorPage.class);
+        getApplicationSettings().setPageExpiredErrorPage(ErrorPage.class);
+        getExceptionSettings().setUnexpectedExceptionDisplay(SHOW_INTERNAL_ERROR_PAGE);
+        getRequestCycleListeners().add(new ErrorListener());
     }
 
     @Override
