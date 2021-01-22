@@ -185,6 +185,10 @@
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-sharing</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

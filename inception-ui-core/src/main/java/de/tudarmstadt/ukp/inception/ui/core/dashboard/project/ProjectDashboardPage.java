@@ -23,8 +23,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
+import static de.tudarmstadt.ukp.inception.sharing.panel.InviteLinkPanel.PAGE_PARAM_INVITE_ID;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,9 +35,11 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -43,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashlet;
@@ -51,7 +56,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOvervi
 /**
  * Project dashboard page
  */
-@MountPath(value = "/project/${" + PAGE_PARAM_PROJECT_ID + "}")
+@MountPath(value = "/project/${" + PAGE_PARAM_PROJECT_ID + "}/#{" + PAGE_PARAM_INVITE_ID + "}")
 public class ProjectDashboardPage
     extends ApplicationPageBase
 {
@@ -61,6 +66,7 @@ public class ProjectDashboardPage
     private static final long serialVersionUID = -2487663821276301436L;
 
     private @SpringBean ProjectService projectService;
+    private @SpringBean InviteService inviteService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
 
@@ -71,12 +77,21 @@ public class ProjectDashboardPage
         super(aPageParameters);
 
         User currentUser = userRepository.getCurrentUser();
-
-        // Check if use can access the project
-        Project project = projectService.listAccessibleProjects(currentUser).stream() //
-                .filter(p -> p.getId()
-                        .equals(aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong()))
-                .findFirst().orElse(null);
+        Long projectId = aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong();
+        Project project = null;
+        
+        // Compare invite param to invite id in db, if correct add user to project
+        StringValue inviteId = aPageParameters.get(PAGE_PARAM_INVITE_ID);
+        if (inviteService.isValidInviteLink(projectId, inviteId.toOptionalString())) {
+            project = projectService.getProject(projectId);
+            projectService.setProjectPermissionLevels(currentUser, project,
+                    Arrays.asList(PermissionLevel.ANNOTATOR));
+        }
+        else {
+            // Check if user can access the project
+            project = projectService.listAccessibleProjects(currentUser).stream() //
+                    .filter(p -> p.getId().equals(projectId)).findFirst().orElse(null);
+        }
 
         // If the user has no access, send the user back to the overview page
         if (project == null) {
