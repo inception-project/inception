@@ -108,10 +108,12 @@ public class ConceptFeatureEditor
         IModel<String> iriModel = LoadableDetachableModel.of(this::iriTooltipValue);
 
         iriBadge = new IriInfoBadge("iriInfoBadge", iriModel);
+        iriBadge.setOutputMarkupPlaceholderTag(true);
         iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(iriBadge);
 
         openIriLink = new ExternalLink("openIri", iriModel);
+        openIriLink.setOutputMarkupPlaceholderTag(true);
         openIriLink.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(openIriLink);
 
@@ -271,7 +273,7 @@ public class ConceptFeatureEditor
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                aTarget.add(descriptionContainer);
+                aTarget.add(descriptionContainer, iriBadge, openIriLink);
                 send(focusComponent, BUBBLE,
                         new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
             }
