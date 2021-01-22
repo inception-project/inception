@@ -1,13 +1,13 @@
-// Copyright 2020
-// Ubiquitous Knowledge Processing (UKP) Lab
-// Technische Universität Darmstadt
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,23 +15,22 @@
 // limitations under the License.
 
 [[sect_workload]]
-= Workload
+= Workload Management
 
 NOTE: This functionality is only available when the experimental feature dynamic-workload is enabled. This can be
-done by adding 'workload.dynamic.enabled=true' to the settings.properties file.
+done by adding `workload.dynamic.enabled=true` to the `settings.properties` file.
 
 After activating the workload feature in the settings.properties file, a project manager has the possibility
-to enable the utilization of the dynamic workload feature in the new "Workload" tab in the project settings.
+to enable the utilization of the dynamic workload feature in the new *Workload* tab in the project settings.
 In the dropdown, the project manager can decide, whether the standard monitoring or the dynamic workload feature shall be used.
 There can only be one of them in use at any time. Still, switching between them is always possible.
 Upon selecting the dynamic workload from the dropdown and confirming it with the corresponding button,
-the new workload page becomes available. It can be accessed from the dashboard by clicking on 'Workload'.
+the new workload page becomes available. It can be accessed from the dashboard by clicking on *Workload*.
 Furthermore, from now on the overall annotation workflow will also change. An annotator will no longer be able to choose which document he/she
 wants to annotate, but rather gets automatically a new document assigned upon finishing the current one. Therefore,
 switching between documents, which have not been finished yet, is no longer possible.
 
 image::workload_settings.png[align="center"]
-
 
 Similar to the monitoring page, the workload page gives the project manager a fast overview of all documents
 and users within the current project. Additionally, the automatic distribution of documents to annotators can be
@@ -43,22 +42,22 @@ Therefore, it mainly consists of a substantial, but easy to understand table con
 needs from their documents. This data is represented by a unique row for each individual document in the project. The following
 columns with the respective data are displayed:
 
-1. State: This represents the overall state of the document within the project.
-2. Document: The document name.
-3. Assigned: Represented by a number. This number reflects the amount of annotators, who are working currently on the document.
-4. Finished: Also represented by a number. However, other than the "Assigned" column, this column represents the number of annotators, who have already finished their work on the document.
-5. Annotators: This column represents the name of all annotators, who are either working on the document or have already finished it. The names of the annotators are separated by a ",".
-6. Updated: This column represents the time of the last change that has been made to the document. It either shows "today", "yesterday", "2 days ago" .. , or when the last change is longer than 6 days ago,
+1. *State:* state of the document within the project.
+2. *Document:* document name.
+3. *Assigned:* number of annotators, who are working currently on the document.
+4. *Finished:* number of annotators, who have already finished their work on the document.
+5. *Annotators:* names of all annotators, who are either working on the document or have already finished it.
+6. *Updated:* time of the last change that has been made to the document. It either shows "today", "yesterday", "2 days ago" ... , or when the last change is longer than 6 days ago,
 the exact date is shown.
 
 You can also configure display and workload settings using the three buttons on the top left corner of the table: Filter, Annotators and Settings.
 
-. Filters: You can apply different filters to the document list e.g. show only documents that are annotated by one user or were working on in a specific time period.
+. *Filters:* You can apply different filters to the document list e.g. show only documents that are annotated by one user or were working on in a specific time period.
 The filters are accumulative, which means that you can filter based on several criteria simultaneously.
-. Annotators: Here, a project manager is able to execute different tasks regarding the annotators of the project. For example,
+. *Annotators:* Here, a project manager is able to execute different tasks regarding the annotators of the project. For example,
 specific documents can be assigned to an annotator, or if an annotator has accidentally finished a document he / she was working
 on, the project manager can reset the documents' status.
-. Settings: In "Settings" a project manager has the opportunity to select values for two different categories.
+. *Settings:* Here, the project manager has the opportunity to select values for two different categories.
 The first one is the default number of annotations. This number is crucial for the documents distribution, as each document can
 only be assigned to annotators at a maximum of this number.
 The second option is the workflow for the documents. Right now, a project manager can select from two different workflow
@@ -66,11 +65,11 @@ strategies.
 Default workflow means, that the documents are simply passed to the annotators in alphabetical order.
 Randomized workflow, as the name already explains, selects randomly from all documents each time a new document is requested by an annotator.
 
-Finally, also a small "quick filter" is integrated to the workload page on the top right corner. Upon selecting different states, the table will be
-filtered towards these in real time. These states are the same as the ones represented in the first column "State".
+Finally, also a small *quick filter* is integrated to the workload page on the top right corner. Upon selecting different states, the table will be
+filtered towards these in real time. These states are the same as the ones represented in the first column *State*.
 As default, all states will be shown in the table.
 
 Overall, the workload feature shall support annotation projects in their organization. Thanks to the table, the filtering and the options
-for the annotation workflow and the annotators, the project manager now has more flexibility and surveillance on his projects' progress. Also,the
+for the annotation workflow and the annotators, the project manager now has more flexibility and insight in his projects' progress. Also,the
 redesigned annotation flow ensures better results from the annotations, as the data will be better distributed throughout the project.
 
