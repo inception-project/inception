@@ -28,6 +28,7 @@ about: Release checklist for feature releases (first or second digit increase)
 
 **Demo/test server**
 - [ ] *stable instance*: Update to release version
+- [ ] *community instance*: Update to release version
 - [ ] *testing instance*: Update auto-deployment script to match new SNAPSHOT version
 - [ ] *demo instance*: Update to release version
 
