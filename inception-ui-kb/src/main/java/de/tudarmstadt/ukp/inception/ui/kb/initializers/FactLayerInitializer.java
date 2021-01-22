@@ -86,7 +86,6 @@ public class FactLayerInitializer
     {
         AnnotationLayer factLayer = new AnnotationLayer(FactLinkingConstants.FACT_LAYER, "Fact",
                 SPAN_TYPE, aProject, false, TOKENS, OverlapMode.NO_OVERLAP);
-        factLayer.setAllowStacking(true);
         factLayer.setCrossSentence(false);
 
         annotationSchemaService.createFeature(
@@ -96,18 +95,18 @@ public class FactLayerInitializer
         AnnotationFeature subjectFeature = createLinkedFeature("subject", "2) Subject",
                 "The subject of a fact.", FactLinkingConstants.SUBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(subjectFeature);
-        annotationSchemaService.createLayer(factLayer);
+        annotationSchemaService.createOrUpdateLayer(factLayer);
 
         AnnotationFeature objectFeature = createLinkedFeature("object", "3) Object",
                 "The object of a fact.", FactLinkingConstants.OBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(objectFeature);
-        annotationSchemaService.createLayer(factLayer);
+        annotationSchemaService.createOrUpdateLayer(factLayer);
 
         AnnotationFeature qualifierFeature = createLinkedFeature("qualifiers", "4) Qualifiers",
                 "The qualifier of a fact.", FactLinkingConstants.QUALIFIER_LINK, factLayer,
                 aProject);
         annotationSchemaService.createFeature(qualifierFeature);
-        annotationSchemaService.createLayer(factLayer);
+        annotationSchemaService.createOrUpdateLayer(factLayer);
     }
 
     private AnnotationFeature createLinkedFeature(String featureName, String featureUiName,

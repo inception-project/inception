@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.kb.io;
+package de.tudarmstadt.ukp.inception.support.io;
 
 import java.io.File;
 import java.io.FileOutputStream;
