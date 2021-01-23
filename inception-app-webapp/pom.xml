@@ -29,6 +29,11 @@
   <name>INCEpTION - Web-Application</name>
   <packaging>war</packaging>
   <dependencies>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-api</artifactId>
+    </dependency>
+  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -48,6 +53,10 @@
     </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-kb</artifactId>
@@ -303,6 +312,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-doc</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
     </dependency>
 
     <!-- UIMA DEPENDENCIES -->
@@ -774,7 +788,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
+<!--               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
