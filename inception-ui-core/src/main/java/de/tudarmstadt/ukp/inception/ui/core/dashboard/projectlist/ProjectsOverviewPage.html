@@ -22,7 +22,7 @@
     <div class="flex-content flex-v-container flex-gutter">
       <div class="flex-h-container flex-gutter">
         <div>
-          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="btn-group" role="group">
               <button wicket:id="newProject" class="btn btn-primary"><wicket:message key="newProject"/></button> 
               <button class="btn btn-primary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
@@ -38,7 +38,7 @@
               </div>
             </span>
           </span>
-          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span wicket:id="projectImportGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
             <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" name="projectImport">
             </button>
             <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
