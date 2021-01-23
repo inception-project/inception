@@ -1520,7 +1520,7 @@
             <filtering>true</filtering>
             <directory>src/main/resources</directory>
             <includes>
-              <include>**</include>
+              <include>META-INF/version.properties</include>
             </includes>
           </resource>
           <resource>
