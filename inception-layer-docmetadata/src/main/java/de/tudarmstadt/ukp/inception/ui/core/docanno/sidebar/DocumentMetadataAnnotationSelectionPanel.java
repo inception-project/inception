@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -159,6 +160,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         annotationPage.writeEditorCas(cas);
 
         aTarget.add(this);
+
+        findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
     }
 
     private void actionDelete(AjaxRequestTarget aTarget,
@@ -182,6 +185,8 @@ public class DocumentMetadataAnnotationSelectionPanel
                 selectedDetailPanel = null;
             }
             remove(aDetailPanel);
+
+            findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
             aTarget.add(this);
         }
         catch (Exception e) {
@@ -338,6 +343,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         if (selectedDetailPanel != null) {
             aEvent.getRequestTarget().add(selectedDetailPanel);
         }
+
+        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
