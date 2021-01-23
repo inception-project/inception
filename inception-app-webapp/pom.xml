@@ -154,6 +154,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-pdf-editor</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-review-editor</artifactId>
+    </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
@@ -788,6 +792,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-json</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
@@ -956,11 +961,12 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory"/>
-                    <!--
-                      We want the original file to be the WAR and the repackaged all-inclusive runnable
-                      thing with the embedded Tomcat to be the JAR.
-                     -->
+                  <layoutFactory
+                    implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <!--
+                    We want the original file to be the WAR and the repackaged all-inclusive runnable
+                    thing with the embedded Tomcat to be the JAR.
+                  -->
                   <attach>false</attach>
                   <classifier>standalone</classifier>
                 </configuration>
@@ -1015,7 +1021,7 @@
               </execution>
             </executions>
           </plugin>
-              </plugins>
+        </plugins>
       </build>
     </profile>
     <profile>
