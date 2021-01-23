@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,11 +60,13 @@ import org.xml.sax.SAXException;
 import com.github.openjson.JSONObject;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -105,6 +107,7 @@ public class MtasUimaParser
     private static final String CAS_BEING_INDEXED = "casBeingIndexed";
 
     // Annotation schema and project services with knowledge base service
+    private @Autowired ProjectService projectService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
 
@@ -126,16 +129,24 @@ public class MtasUimaParser
 
         JSONObject jsonParserConfiguration = new JSONObject(
                 config.attributes.get(ARGUMENT_PARSER_ARGS));
-        MtasDocumentIndex index = MtasDocumentIndex
-                .getIndex(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
+        Project project = projectService
+                .getProject(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
 
         // Initialize and populate the hash maps for the layers and features
-        for (Entry<AnnotationLayer, List<AnnotationFeature>> e : index.getLayersAndFeaturesToIndex()
-                .entrySet()) {
-            layers.put(e.getKey().getName(), e.getKey());
-            layerFeatures.computeIfAbsent(e.getKey().getName(), key -> new ArrayList<>())
-                    .addAll(e.getValue());
-        }
+        annotationSchemaService.listAnnotationLayer(project).stream()
+                .filter(layer -> layer.isEnabled()) //
+                .forEach(layer -> {
+                    layers.put(layer.getName(), layer);
+                    layerFeatures.put(layer.getName(), new ArrayList<>());
+                });
+
+        annotationSchemaService.listAnnotationFeature(project).stream()
+                .filter(feature -> feature.isEnabled() && feature.getLayer().isEnabled())
+                .forEach(feature -> {
+                    layerFeatures
+                            .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
+                            .add(feature);
+                });
     }
 
     // This constructor is used for testing

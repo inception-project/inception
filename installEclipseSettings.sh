@@ -24,6 +24,7 @@ installPrefs inception-example-imls-data-majority
 installPrefs inception-external-search-core
 installPrefs inception-external-search-elastic
 installPrefs inception-external-search-pubannotation
+installPrefs inception-external-search-solr
 installPrefs inception-html-editor
 installPrefs inception-image
 installPrefs inception-imls-dl4j
@@ -38,7 +39,7 @@ installPrefs inception-log
 installPrefs inception-pdf-editor
 installPrefs inception-recommendation
 installPrefs inception-recommendation-api
-installPrefs inception-scheduling
+installPrefs inception-review-editor
 installPrefs inception-search-core
 installPrefs inception-search-mtas
 installPrefs inception-support

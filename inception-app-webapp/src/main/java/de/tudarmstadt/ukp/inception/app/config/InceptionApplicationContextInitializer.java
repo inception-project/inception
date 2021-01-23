@@ -1,14 +1,14 @@
 /*
- * Copyright 2014
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.app.config;
+
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.CFG_AUTH_MODE;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +29,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
+import org.springframework.util.unit.DataSize;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
@@ -63,7 +66,7 @@ public class InceptionApplicationContextInitializer
         }
 
         // Activate bean profile depending on authentication mode
-        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(SettingsUtil.CFG_AUTH_MODE))) {
+        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(CFG_AUTH_MODE))) {
             aEnvironment.setActiveProfiles(PROFILE_PREAUTH);
             log.info("Authentication: pre-auth");
         }
@@ -71,5 +74,9 @@ public class InceptionApplicationContextInitializer
             aEnvironment.setActiveProfiles(PROFILE_DATABASE);
             log.info("Authentication: database");
         }
+
+        Runtime rt = Runtime.getRuntime();
+        log.info("Max. application memory: {}MB", DataSize.ofBytes(rt.maxMemory()).toMegabytes());
+
     }
 }
