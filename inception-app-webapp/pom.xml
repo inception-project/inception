@@ -29,6 +29,11 @@
   <name>INCEpTION - Web-Application</name>
   <packaging>war</packaging>
   <dependencies>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-api</artifactId>
+    </dependency>
+  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -48,6 +53,10 @@
     </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-kb</artifactId>
@@ -153,6 +162,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-pdf-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-review-editor</artifactId>
     </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
@@ -299,6 +312,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-doc</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
     </dependency>
 
     <!-- UIMA DEPENDENCIES -->
@@ -770,7 +788,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
+<!--               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
@@ -788,6 +806,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-json</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
@@ -956,11 +975,12 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory"/>
-                    <!--
-                      We want the original file to be the WAR and the repackaged all-inclusive runnable
-                      thing with the embedded Tomcat to be the JAR.
-                     -->
+                  <layoutFactory
+                    implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <!--
+                    We want the original file to be the WAR and the repackaged all-inclusive runnable
+                    thing with the embedded Tomcat to be the JAR.
+                  -->
                   <attach>false</attach>
                   <classifier>standalone</classifier>
                 </configuration>
@@ -1015,7 +1035,7 @@
               </execution>
             </executions>
           </plugin>
-              </plugins>
+        </plugins>
       </build>
     </profile>
     <profile>
