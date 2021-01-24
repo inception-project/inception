@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.junit.Assume.assumeTrue;
 
@@ -31,6 +33,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -43,11 +46,15 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -60,10 +67,26 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridSe
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(JUnitParamsRunner.class)
 public class LappsGridRecommenderConformityTest
 {
+    private CasStorageSession casStorageSession;
+
+    @Before
+    public void setup() throws Exception
+    {
+        casStorageSession = CasStorageSession.open();
+    }
+
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
+    }
+
     @Test
     @Parameters(method = "getNerServices")
     public void testNerConformity(LappsGridService aService) throws Exception
@@ -74,11 +97,9 @@ public class LappsGridRecommenderConformityTest
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(JCasUtil.select(cas.getJCas(), Token.class))
-                .as("Prediction should contain Tokens")
-                .isNotEmpty();
+                .as("Prediction should contain Tokens").isNotEmpty();
         softly.assertThat(JCasUtil.select(cas.getJCas(), NamedEntity.class))
-                .as("Prediction should contain NER")
-                .isNotEmpty();
+                .as("Prediction should contain NER").isNotEmpty();
 
         softly.assertAll();
     }
@@ -93,11 +114,9 @@ public class LappsGridRecommenderConformityTest
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(JCasUtil.select(cas.getJCas(), Token.class))
-                .as("Prediction should contain Tokens")
-                .isNotEmpty();
+                .as("Prediction should contain Tokens").isNotEmpty();
         softly.assertThat(JCasUtil.select(cas.getJCas(), POS.class))
-                .as("Prediction should contain POS tags")
-                .isNotEmpty();
+                .as("Prediction should contain POS tags").isNotEmpty();
 
         softly.assertAll();
     }
@@ -105,16 +124,18 @@ public class LappsGridRecommenderConformityTest
     private void predict(String aUrl, CAS aCas) throws Exception
     {
         assumeTrue(isReachable(aUrl));
-        
+
         LappsGridRecommenderTraits traits = new LappsGridRecommenderTraits();
         traits.setUrl(aUrl);
         LappsGridRecommender recommender = new LappsGridRecommender(buildRecommender(), traits);
         recommender.predict(null, aCas);
     }
 
-    private CAS loadData() throws IOException, UIMAException {
+    private CAS loadData() throws IOException, UIMAException
+    {
         Path path = Paths.get("src", "test", "resources", "testdata", "tnf.xmi");
         CAS cas = loadData(path.toFile());
+        casStorageSession.add("test", EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
@@ -123,8 +144,7 @@ public class LappsGridRecommenderConformityTest
 
     private static CAS loadData(File aFile) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(XmiReader.class,
-                ConllUReader.PARAM_PATTERNS, aFile);
+        CollectionReader reader = createReader(XmiReader.class, ConllUReader.PARAM_PATTERNS, aFile);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
@@ -148,13 +168,14 @@ public class LappsGridRecommenderConformityTest
         return services.get("pos");
     }
 
-    private static Map<String, List<LappsGridService>> loadPredefinedServicesData()
-            throws Exception
+    private static Map<String, List<LappsGridService>> loadPredefinedServicesData() throws Exception
     {
-        try (InputStream is = LappsGridRecommenderTraitsEditor
-                .class.getResourceAsStream("services.json")) {
-            TypeReference<Map<String, List<LappsGridService>>> typeRef =
-                    new TypeReference<Map<String, List<LappsGridService>>>() {};
+        try (InputStream is = LappsGridRecommenderTraitsEditor.class
+                .getResourceAsStream("services.json")) {
+            TypeReference<Map<String, List<LappsGridService>>> typeRef = //
+                    new TypeReference<Map<String, List<LappsGridService>>>()
+                    {
+                    };
             return getObjectMapper().readValue(is, typeRef);
         }
     }
@@ -173,7 +194,7 @@ public class LappsGridRecommenderConformityTest
 
         return recommender;
     }
-    
+
     public static boolean isReachable(String aUrl)
     {
         try {
@@ -182,14 +203,23 @@ public class LappsGridRecommenderConformityTest
             con.setRequestMethod("GET");
             con.setConnectTimeout(2500);
             con.setReadTimeout(2500);
-            con.setRequestProperty("Content-Type", "application/sparql-query");
+            String userInfo = "tester:tester";
+            String basicAuth = "Basic "
+                    + new String(Base64.getEncoder().encode(userInfo.getBytes()));
+            con.setRequestProperty("Authorization", basicAuth);
             int status = con.getResponseCode();
-            
+
+            // should be open to all users (no password auth.),
+            // this is an indicator for the service being down
+            if (status == HTTP_UNAUTHORIZED) {
+                return false;
+            }
+
             if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
                 String location = con.getHeaderField("Location");
                 return isReachable(location);
             }
-            
+
             return true;
         }
         catch (Exception e) {
@@ -197,4 +227,3 @@ public class LappsGridRecommenderConformityTest
         }
     }
 }
-

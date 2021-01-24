@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ public class DocumentDetailsPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = -645134257384090420L;
-    
+
     public static final String REPOSITORY_ID = "repo";
     public static final String COLLECTION_ID = "col";
     public static final String DOCUMENT_ID = "doc";
@@ -52,36 +52,33 @@ public class DocumentDetailsPage
     private DocumentRepository repo;
     private String collectionId;
     private String documentId;
-    
+
     public DocumentDetailsPage(PageParameters aParameters)
     {
         StringValue repositoryIdStringValue = aParameters.get(REPOSITORY_ID);
         StringValue collectionIdStringValue = aParameters.get(COLLECTION_ID);
         StringValue documentIdStringValue = aParameters.get(DOCUMENT_ID);
 
-        if (
-                repositoryIdStringValue == null || 
-                documentIdStringValue == null || 
-                collectionIdStringValue == null
-        ) {
+        if (repositoryIdStringValue == null || documentIdStringValue == null
+                || collectionIdStringValue == null) {
             abort();
         }
-        
+
         repo = externalSearchService.getRepository(repositoryIdStringValue.toLong());
         collectionId = collectionIdStringValue.toString();
-        documentId = documentIdStringValue.toString();        
-        
+        documentId = documentIdStringValue.toString();
+
         // Check access to project
         User currentUser = userRepository.getCurrentUser();
         if (!projectService.isAnnotator(repo.getProject(), currentUser)) {
             abort();
         }
-        
+
         add(new Label("title", LoadableDetachableModel.of(this::getDocumentResult).map(
-            r -> r.getDocumentTitle() != null ? r.getDocumentTitle() : r.getDocumentId())));
+                r -> r.getDocumentTitle() != null ? r.getDocumentTitle() : r.getDocumentId())));
         add(new Label("text", LoadableDetachableModel.of(this::getDocumentText)));
     }
-    
+
     private String getDocumentText()
     {
         try {

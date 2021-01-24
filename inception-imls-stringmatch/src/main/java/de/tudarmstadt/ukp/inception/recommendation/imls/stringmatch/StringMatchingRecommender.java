@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,17 +92,17 @@ public class StringMatchingRecommender
     {
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
-    
+
     public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
-        
+
         if (aData != null) {
             for (GazeteerEntry entry : aData) {
                 learn(dict, entry.text, entry.label);
             }
         }
-        
+
         aContext.put(KEY_MODEL, dict);
     }
 
@@ -110,7 +110,7 @@ public class StringMatchingRecommender
     {
         return new Trie<>(WhitespaceNormalizingSanitizer.factory());
     }
-    
+
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
@@ -121,7 +121,8 @@ public class StringMatchingRecommender
                     pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
                 }
                 catch (IOException e) {
-                    log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
+                    log.info(
+                            "Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
                             gaz.getName(), gaz.getRecommender().getName(),
                             gaz.getRecommender().getId(),
                             gaz.getRecommender().getProject().getName(),
@@ -129,9 +130,9 @@ public class StringMatchingRecommender
                 }
             }
         }
-        
+
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
-        
+
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
             Feature predictedFeature = getPredictedFeature(cas);
@@ -140,17 +141,17 @@ public class StringMatchingRecommender
                 learn(dict, ann.getCoveredText(), ann.getFeatureValueAsString(predictedFeature));
             }
         }
-        
+
         aContext.put(KEY_MODEL, dict);
-        
+
         log.debug("Learned dictionary model with {} entries", dict.size());
     }
 
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(() -> 
-                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         Type predictedType = getPredictedType(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
@@ -158,7 +159,7 @@ public class StringMatchingRecommender
         Feature scoreFeature = getScoreFeature(aCas);
 
         List<Sample> data = predict(0, aCas, dict);
-        
+
         for (Sample sample : data) {
             for (Span span : sample.getSpans()) {
                 AnnotationFS annotation = aCas.createAnnotation(predictedType, span.getBegin(),
@@ -180,13 +181,13 @@ public class StringMatchingRecommender
 
         Type sentenceType = getType(aCas, Sentence.class);
         Type tokenType = getType(aCas, Token.class);
-        
+
         List<Sample> data = new ArrayList<>();
-        String text = aCas.getDocumentText();   
-            
-        for (Annotation sentence : aCas.<Annotation>select(sentenceType)) {
+        String text = aCas.getDocumentText();
+
+        for (Annotation sentence : aCas.<Annotation> select(sentenceType)) {
             List<Span> spans = new ArrayList<>();
-            List<Annotation> tokens = aCas.<Annotation>select(tokenType).coveredBy(sentence)
+            List<Annotation> tokens = aCas.<Annotation> select(tokenType).coveredBy(sentence)
                     .asList();
             for (Annotation token : tokens) {
                 Trie<DictEntry>.Node node = aDict.getNode(text, token.getBegin());
@@ -200,14 +201,11 @@ public class StringMatchingRecommender
                     }
 
                     // Need to check that the match actually ends at a token boundary!
-                    if (
-                            requireEndAtTokenBoundary && 
-                            !aCas.<Annotation>select(tokenType).startAt(token)
-                                    .filter(t -> t.getEnd() == end).findAny().isPresent()
-                    ) {
+                    if (requireEndAtTokenBoundary && !aCas.<Annotation> select(tokenType)
+                            .startAt(token).filter(t -> t.getEnd() == end).findAny().isPresent()) {
                         continue;
                     }
-                    
+
                     for (LabelStats lc : node.value.getBest(maxRecommendations)) {
                         String label = lc.getLabel();
                         // check instance equality to avoid collision with user labels
@@ -219,10 +217,10 @@ public class StringMatchingRecommender
                     }
                 }
             }
-            
+
             data.add(new Sample(aDocNo, aCas.getDocumentText(), tokens, spans));
         }
-        
+
         return data;
     }
 
@@ -257,16 +255,15 @@ public class StringMatchingRecommender
                     "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
                     trainingSetSize, testSetSize, data.size());
             log.info(info);
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
+            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+                    trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
         }
 
-        log.info(
-                "Training on [{}] items, predicting on [{}] of total [{}].",
-                trainingSet.size(), testSet.size(), data.size());
+        log.info("Training on [{}] items, predicting on [{}] of total [{}].", trainingSet.size(),
+                testSet.size(), data.size());
 
         // Train
         Trie<DictEntry> dict = createTrie();
@@ -301,8 +298,8 @@ public class StringMatchingRecommender
             }
         }
 
-        return labelPairs.stream().collect(EvaluationResult
-                .collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
+        return labelPairs.stream().collect(
+                EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
     }
 
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
@@ -318,23 +315,23 @@ public class StringMatchingRecommender
         entry.put(label);
 
     }
-    
+
     private List<Sample> extractData(List<CAS> aCasses, String aLayerName, String aFeatureName)
     {
         long start = System.currentTimeMillis();
-        
+
         List<Sample> data = new ArrayList<>();
-        
+
         int docNo = 0;
         for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
             Type annotationType = getType(cas, aLayerName);
             Feature predictedFeature = annotationType.getFeatureByBaseName(aFeatureName);
-            
+
             for (AnnotationFS sentence : select(cas, sentenceType)) {
                 List<Span> spans = new ArrayList<>();
-                
+
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
                     String label = annotation.getFeatureValueAsString(predictedFeature);
                     if (isNotEmpty(label)) {
@@ -343,20 +340,20 @@ public class StringMatchingRecommender
                                 annotation.getFeatureValueAsString(predictedFeature), -1.0));
                     }
                 }
-                
+
                 Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
 
                 data.add(new Sample(docNo, cas.getDocumentText(), tokens, spans));
             }
-            
+
             docNo++;
         }
-        
+
         log.trace("Extracting data took {}ms", System.currentTimeMillis() - start);
-        
+
         return data;
     }
-    
+
     private static class Sample
     {
         private final int docNo;
@@ -374,7 +371,7 @@ public class StringMatchingRecommender
                     .collect(Collectors.toList());
             spans = asList(aSpans.toArray(new Span[aSpans.size()]));
         }
-        
+
         public Optional<Span> getCoveringSpan(int aBegin, int aEnd)
         {
             return spans.stream().filter(s -> (s.getBegin() <= aBegin && s.getEnd() >= aEnd))
@@ -385,22 +382,22 @@ public class StringMatchingRecommender
         {
             return docNo;
         }
-        
+
         public String getText()
         {
             return text;
         }
-        
+
         public List<TokenSpan> getTokens()
         {
             return tokens;
         }
-        
+
         public List<Span> getSpans()
         {
             return spans;
         }
-        
+
         public boolean hasTokenEndingAt(int aOffset)
         {
             return tokens.stream().filter(t -> t.end == aOffset).findAny().isPresent();
@@ -429,7 +426,7 @@ public class StringMatchingRecommender
             return end;
         }
     }
-    
+
     private static class LabelStats
     {
         private final String label;
@@ -451,7 +448,7 @@ public class StringMatchingRecommender
         {
             return label;
         }
-        
+
         /**
          * How often the label was observed.
          */
@@ -477,7 +474,7 @@ public class StringMatchingRecommender
         private final String text;
         private final String label;
         private final double score;
-        
+
         public Span(int aBegin, int aEnd, String aText, String aLabel, double aScore)
         {
             super();
@@ -487,44 +484,44 @@ public class StringMatchingRecommender
             label = aLabel;
             score = aScore;
         }
-        
+
         public int getBegin()
         {
             return begin;
         }
-        
+
         public int getEnd()
         {
             return end;
         }
-        
+
         public String getText()
         {
             return text;
         }
-        
+
         public String getLabel()
         {
             return label;
         }
-        
+
         public double getScore()
         {
             return score;
         }
     }
-    
+
     private static class DictEntry
     {
         private String key;
         private String[] labels;
         private int[] counts;
-        
+
         public DictEntry(String aKey)
         {
             key = aKey;
         }
-        
+
         public void put(String aLabel)
         {
             // No data yet - create it
@@ -533,44 +530,42 @@ public class StringMatchingRecommender
                 counts = new int[] { 1 };
                 return;
             }
-            
+
             // Data is available
             int i = asList(labels).indexOf(aLabel);
-            
+
             // Label already exists
             if (i != -1) {
                 counts[i]++;
                 return;
             }
-            
+
             // Label does not exist yet
             String[] newLabels = new String[labels.length + 1];
             System.arraycopy(labels, 0, newLabels, 0, labels.length);
             labels = newLabels;
-            
+
             int[] newCounts = new int[counts.length + 1];
             System.arraycopy(counts, 0, newCounts, 0, counts.length);
             counts = newCounts;
-            
+
             labels[labels.length - 1] = aLabel;
             counts[counts.length - 1] = 1;
         }
-        
+
         public List<LabelStats> getBest(int aN)
         {
             int total = IntStream.of(counts).sum();
-            
+
             List<LabelStats> best = new ArrayList<>();
             for (int i = 0; i < labels.length; i++) {
                 best.add(new LabelStats(labels[i], counts[i], (double) counts[i] / (double) total));
             }
-            
-            return best.stream()
-                    .sorted(comparingInt(LabelStats::getCount).reversed())
-                    .limit(aN)
+
+            return best.stream().sorted(comparingInt(LabelStats::getCount).reversed()).limit(aN)
                     .collect(Collectors.toList());
         }
-        
+
         @Override
         public String toString()
         {

@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,22 +22,20 @@ import java.time.temporal.ChronoUnit;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties("inception.knowledge-base")
+@ConfigurationProperties("knowledge-base")
 public class KnowledgeBasePropertiesImpl
     implements KnowledgeBaseProperties
 {
     public static final int HARD_MIN_RESULTS = 10;
-    
+
     private int defaultMaxResults = 1_000;
     private int hardMaxResults = 10_000;
     private long cacheSize = 100_000;
-    
+
     @DurationUnit(ChronoUnit.MINUTES)
     private Duration cacheExpireDelay = Duration.ofMinutes(15);
-    
+
     @DurationUnit(ChronoUnit.MINUTES)
     private Duration cacheRefreshDelay = Duration.ofMinutes(5);
 
@@ -68,7 +66,7 @@ public class KnowledgeBasePropertiesImpl
     {
         return cacheSize;
     }
-    
+
     public void setCacheSize(long aCacheSize)
     {
         cacheSize = aCacheSize;
@@ -79,7 +77,7 @@ public class KnowledgeBasePropertiesImpl
     {
         return cacheExpireDelay;
     }
-    
+
     public void setCacheExpireDelay(Duration aCacheExpireDelay)
     {
         cacheExpireDelay = aCacheExpireDelay;
@@ -90,7 +88,7 @@ public class KnowledgeBasePropertiesImpl
     {
         return cacheRefreshDelay;
     }
-    
+
     public void setCacheRefreshDelay(Duration aCacheRefreshDelay)
     {
         cacheRefreshDelay = aCacheRefreshDelay;

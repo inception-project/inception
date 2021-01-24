@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,6 +48,7 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -69,6 +70,7 @@ import org.springframework.context.ApplicationEvent;
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
@@ -82,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -96,10 +99,11 @@ public class ConceptFeatureEditor
     extends FeatureEditor
 {
     private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureEditor.class);
-    
+
     private static final long serialVersionUID = 7763348613632105600L;
 
     private AutoCompleteField focusComponent;
+    private WebMarkupContainer descriptionContainer;
     private Label description;
     private IriInfoBadge iriBadge;
     private ExternalLink openIriLink;
@@ -110,19 +114,22 @@ public class ConceptFeatureEditor
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean ConceptLinkingService clService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
+    private @SpringBean EntityLinkingProperties entityLinkingProperties;
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-        
+
         IModel<String> iriModel = LoadableDetachableModel.of(this::iriTooltipValue);
-        
+
         iriBadge = new IriInfoBadge("iriInfoBadge", iriModel);
+        iriBadge.setOutputMarkupPlaceholderTag(true);
         iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(iriBadge);
-        
+
         openIriLink = new ExternalLink("openIri", iriModel);
+        openIriLink.setOutputMarkupPlaceholderTag(true);
         openIriLink.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(openIriLink);
 
@@ -132,17 +139,21 @@ public class ConceptFeatureEditor
 
         AnnotationFeature feat = getModelObject().feature;
         ConceptFeatureTraits traits = readFeatureTraits(feat);
-        
+
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
-                // editor is used in a "normal" context and not e.g. in the keybindings 
+                // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
-        
+
+        descriptionContainer = new WebMarkupContainer("descriptionContainer");
+        descriptionContainer.setOutputMarkupPlaceholderTag(true);
+        descriptionContainer.add(visibleWhen(
+                () -> getLabelComponent().isVisible() && getModelObject().getValue() != null));
+        add(descriptionContainer);
+
         description = new Label("description", LoadableDetachableModel.of(this::descriptionValue));
-        description.setOutputMarkupPlaceholderTag(true);
-        description.add(visibleWhen(() -> getLabelComponent().isVisible()));
-        add(description);
+        descriptionContainer.add(description);
     }
 
     @Override
@@ -155,20 +166,20 @@ public class ConceptFeatureEditor
 
     private String descriptionValue()
     {
-        return getModel().map(FeatureState::getValue)
-                .map(value -> (KBHandle) value)
-                .map(KBHandle::getDescription)
-                .map(value -> StringUtils.abbreviate(value, 130))
-                .orElse("no description")
+        return getModel().map(FeatureState::getValue)//
+                .map(value -> (KBHandle) value)//
+                .map(KBHandle::getDescription)//
+                .map(value -> StringUtils.abbreviate(value, 130))//
+                .orElse("no description")//
                 .getObject();
     }
 
     private String iriTooltipValue()
     {
-        return getModel().map(FeatureState::getValue)
-                .map(value -> (KBHandle) value)
-                .map(KBHandle::getIdentifier)
-                .orElse("")
+        return getModel().map(FeatureState::getValue)//
+                .map(value -> (KBHandle) value)//
+                .map(KBHandle::getIdentifier)//
+                .orElse("")//
                 .getObject();
     }
 
@@ -180,17 +191,17 @@ public class ConceptFeatureEditor
         }
 
         String input = aInput;
-        
+
         // Extract filter on the description
         final String descriptionFilter;
         if (input.contains("::")) {
-            descriptionFilter = substringAfter(input , "::").trim();
-            input = substringBefore(input , "::");
+            descriptionFilter = substringAfter(input, "::").trim();
+            input = substringBefore(input, "::");
         }
         else {
             descriptionFilter = null;
         }
-        
+
         // Extract exact match filter on the query
         boolean labelFilter = false;
         String trimmedInput = input.trim();
@@ -199,11 +210,10 @@ public class ConceptFeatureEditor
             input = StringUtils.substring(trimmedInput, 1, -1).trim();
             labelFilter = true;
         }
-        
+
         final String finalInput = input;
-        
         cachedQuery = finalInput;
-        
+
         List<KBHandle> choices;
         try {
             AnnotationFeature feat = getModelObject().feature;
@@ -211,9 +221,7 @@ public class ConceptFeatureEditor
             ConceptFeatureTraits traits = readFeatureTraits(feat);
             String repoId = traits.getRepositoryId();
             // Check if kb is actually enabled
-            if (!(repoId == null
-                || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId)))
-            {
+            if (!(repoId == null || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId))) {
                 return Collections.emptyList();
             }
 
@@ -223,11 +231,11 @@ public class ConceptFeatureEditor
             CAS cas = aHandler != null ? aHandler.getEditorCas() : null;
             String mention = aStateModel != null ? aStateModel.getObject().getSelection().getText()
                     : null;
-            int mentionBegin = aStateModel != null
-                    ? aStateModel.getObject().getSelection().getBegin()
+            int mentionBegin = aStateModel != null //
+                    ? aStateModel.getObject().getSelection().getBegin() //
                     : -1;
-            int mentionEnd = aStateModel != null
-                    ? aStateModel.getObject().getSelection().getEnd()
+            int mentionEnd = aStateModel != null //
+                    ? aStateModel.getObject().getSelection().getEnd() //
                     : -1;
 
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
@@ -246,14 +254,12 @@ public class ConceptFeatureEditor
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
             error("An error occurred while retrieving entity candidates: " + e.getMessage());
             LOG.error("An error occurred while retrieving entity candidates", e);
-            RequestCycle.get()
-                .find(IPartialPageRequestHandler.class)
-                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+            RequestCycle.get().find(IPartialPageRequestHandler.class)
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
 
         if (labelFilter) {
-            choices = choices.stream()
-                    .filter(kb -> containsIgnoreCase(kb.getUiLabel(), finalInput))
+            choices = choices.stream().filter(kb -> containsIgnoreCase(kb.getUiLabel(), finalInput))
                     .collect(Collectors.toList());
         }
 
@@ -262,8 +268,9 @@ public class ConceptFeatureEditor
                     .filter(kb -> containsIgnoreCase(kb.getDescription(), descriptionFilter))
                     .collect(Collectors.toList());
         }
-        
-        return choices;
+
+        return choices.stream().limit(entityLinkingProperties.getCandidateDisplayLimit())
+                .collect(Collectors.toList());
     }
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
@@ -273,14 +280,14 @@ public class ConceptFeatureEditor
         ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
         return traits;
     }
-    
+
     @Override
     public void addFeatureUpdateBehavior()
     {
         focusComponent.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = -8944946839865527412L;
-            
+
             @Override
             protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
             {
@@ -289,11 +296,11 @@ public class ConceptFeatureEditor
                         .add(focusComponent.getIdentifierDynamicAttributeScript());
                 addDelay(aAttributes, 250);
             }
-            
+
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                aTarget.add(description);
+                aTarget.add(descriptionContainer, iriBadge, openIriLink);
                 send(focusComponent, BUBBLE,
                         new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
             }
@@ -307,15 +314,17 @@ public class ConceptFeatureEditor
     }
 
     private AutoCompleteField buildAutoCompleteField(IModel<AnnotatorState> aStateModel,
-                                                         AnnotationActionHandler aHandler)
+            AnnotationActionHandler aHandler)
     {
+
         AutoCompleteField result = new AutoCompleteField(MID_VALUE,
-            _query -> getCandidates(aStateModel, aHandler, _query))
+                _query -> getCandidates(aStateModel, aHandler, _query))
         {
             private List<KBHandle> cachedChoices;
 
             @Override
-            protected void onModelChanged() {
+            protected void onModelChanged()
+            {
                 super.onModelChanged();
 
                 if (aStateModel == null || aHandler == null || cachedChoices == null) {
@@ -326,7 +335,8 @@ public class ConceptFeatureEditor
                 CAS cas;
                 try {
                     cas = aHandler.getEditorCas();
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     LOG.error("Could not read CAS", e);
                     return;
                 }
@@ -368,33 +378,33 @@ public class ConceptFeatureEditor
                 try {
                     AnnotationPageBase page = findParent(AnnotationPageBase.class);
                     page.writeEditorCas(cas);
-                } catch (IOException e) {
+                }
+                catch (IOException | AnnotationException e) {
                     LOG.error("Could not save preferences in CAS: ", e);
-                    e.printStackTrace();
                 }
             }
 
             @Override
-            protected List<KBHandle> getChoices(String aInput) {
-                List<KBHandle> result =  super.getChoices(aInput);
+            protected List<KBHandle> getChoices(String aInput)
+            {
+                List<KBHandle> result = super.getChoices(aInput);
                 cachedChoices = new ArrayList<>(result);
                 return result;
             }
         };
 
-
         return result;
     }
-    
+
     /**
      * Special version of the {@link KnowledgeBaseItemAutoCompleteField} for used in the concept
-     * feature editor. 
+     * feature editor.
      */
     public static class AutoCompleteField
         extends KnowledgeBaseItemAutoCompleteField
     {
         private static final long serialVersionUID = 5461442869971269291L;
-        
+
         private IConverter<KBHandle> converter;
         private List<KBHandle> choiceCache;
         private boolean allowChoiceCache = false;
@@ -405,12 +415,12 @@ public class ConceptFeatureEditor
             super(aId, aChoiceProvider);
             converter = newConverter();
         }
-        
+
         @Override
         public void onConfigure(JQueryBehavior aBehavior)
         {
             super.onConfigure(aBehavior);
-            
+
             // We need to explicitly trigger the change event on the input element in order to
             // trigger the Wicket AJAX update (if there is one). If we do not do this, then Kendo
             // will "forget" to trigger a change event if the label of the newly selected item is
@@ -418,12 +428,12 @@ public class ConceptFeatureEditor
             // Using the default select behavior of AutoCompleteTextField which is coupled to the
             // onSelected(AjaxRequestTarget aTarget) callback does unfortunatle not work well
             // because onSelected does not tell us when the auto-complete field is CLEARED!
-            aBehavior.setOption("select", String.join(" ",
-                    "function (e) {",
-                    "  e.sender.element.trigger('change');",
+            aBehavior.setOption("select", String.join(" ", //
+                    "function (e) {", //
+                    "  e.sender.element.trigger('change');", //
                     "}"));
         }
-        
+
         @Override
         protected List<KBHandle> getChoices(String aInput)
         {
@@ -432,7 +442,7 @@ public class ConceptFeatureEditor
             }
             return choiceCache;
         }
-        
+
         @Override
         public String[] getInputAsArray()
         {
@@ -443,14 +453,14 @@ public class ConceptFeatureEditor
             IRequestParameters requestParameters = request.getRequestParameters();
             StringValue identifier = requestParameters
                     .getParameterValue(getInputName() + ":identifier");
-            
+
             if (!identifier.isEmpty()) {
                 return new String[] { identifier.toString() };
             }
-            
+
             return super.getInputAsArray();
         }
-        
+
         /**
          * When using this input component with an {@link AjaxFormChoiceComponentUpdatingBehavior},
          * it is necessary to request the identifier of the selected item as an additional dynamic
@@ -458,30 +468,31 @@ public class ConceptFeatureEditor
          */
         public String getIdentifierDynamicAttributeScript()
         {
-            return String.join(" ", 
-                    "var item = $(attrs.event.target).data('kendoAutoComplete').dataItem();",
-                    "if (item) {",
-                    "  return [{",
-                    "    'name': '" + getInputName() + ":identifier', ",
-                    "    'value': $(attrs.event.target).data('kendoAutoComplete').dataItem().identifier",
-                    "  }]",
-                    "}",
+            return String.join(" ", //
+                    "var item = $(attrs.event.target).data('kendoAutoComplete').dataItem();", //
+                    "if (item) {", //
+                    "  return [{", //
+                    "    'name': '" + getInputName() + ":identifier', ", //
+                    "    'value': $(attrs.event.target).data('kendoAutoComplete').dataItem().identifier", //
+                    "  }]", //
+                    "}", //
                     "return [];");
         }
-        
+
         @Override
         public <C> IConverter<C> getConverter(Class<C> aType)
         {
             if (aType != null && aType.isAssignableFrom(this.getType())) {
                 return (IConverter<C>) converter;
             }
-            
+
             return super.getConverter(aType);
         }
-        
+
         private IConverter<KBHandle> newConverter()
         {
-            return new IConverter<KBHandle>() {
+            return new IConverter<KBHandle>()
+            {
 
                 private static final long serialVersionUID = 1L;
 
@@ -491,16 +502,16 @@ public class ConceptFeatureEditor
                     if (value == null) {
                         return null;
                     }
-                    
+
                     if (value.equals(getModelValue())) {
                         return getModelObject();
                     }
-                    
+
                     // Check choices only here since fetching choices can take some time. If we
                     // already have choices from a previous query, then we use them instead of
                     // reloading all the choices. This avoids having to load the choices when
                     // opening the dropdown AND when selecting one of the items from it.
-                    List<KBHandle> choices; 
+                    List<KBHandle> choices;
                     try {
                         allowChoiceCache = true;
                         choices = getChoices(value);
@@ -508,11 +519,11 @@ public class ConceptFeatureEditor
                     finally {
                         allowChoiceCache = false;
                     }
-                    
+
                     if (choices.isEmpty()) {
                         return null;
                     }
-                    
+
                     // Check if we can find a match by the identifier. The identifier is unique
                     // while the same label may appear on multiple items
                     for (KBHandle handle : choices) {
@@ -520,14 +531,16 @@ public class ConceptFeatureEditor
                             return handle;
                         }
                     }
-                    
+
+                    // @formatter:off
 //                    // Check labels if there was no match on the identifier
 //                    for (KBHandle handle : choices) {
 //                        if (value.equals(getRenderer().getText(handle))) {
 //                            return handle;
 //                        }
 //                    }
-                    
+                    // @formatter:on
+
                     // If there was no match at all, return null
                     return null;
                 }
@@ -538,6 +551,6 @@ public class ConceptFeatureEditor
                     return getRenderer().getText(value);
                 }
             };
-        } 
+        }
     }
 }

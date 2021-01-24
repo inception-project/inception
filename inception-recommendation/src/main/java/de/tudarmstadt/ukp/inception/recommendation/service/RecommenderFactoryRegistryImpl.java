@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,14 +36,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommenderFactoryRegistry}.
+ * </p>
+ */
 public class RecommenderFactoryRegistryImpl
     implements RecommenderFactoryRegistry
 {
@@ -50,7 +59,7 @@ public class RecommenderFactoryRegistryImpl
     private Map<String, RecommendationEngineFactory> extensions;
 
     public RecommenderFactoryRegistryImpl(
-        @Lazy @Autowired(required = false) List<RecommendationEngineFactory> aExtensions)
+            @Lazy @Autowired(required = false) List<RecommendationEngineFactory> aExtensions)
     {
         extensionsProxy = aExtensions;
     }
@@ -68,7 +77,7 @@ public class RecommenderFactoryRegistryImpl
         if (extensionsProxy != null) {
             for (RecommendationEngineFactory ext : extensionsProxy) {
                 log.info("Found recommendation engine: {}",
-                    ClassUtils.getAbbreviatedName(ext.getClass(), 20));
+                        ClassUtils.getAbbreviatedName(ext.getClass(), 20));
                 exts.put(ext.getId(), ext);
             }
         }
@@ -77,7 +86,8 @@ public class RecommenderFactoryRegistryImpl
     }
 
     @Override
-    public List<RecommendationEngineFactory> getAllFactories() {
+    public List<RecommendationEngineFactory> getAllFactories()
+    {
         List<RecommendationEngineFactory> factories = new ArrayList<>();
         factories.addAll(extensions.values());
         return Collections.unmodifiableList(factories);
@@ -85,15 +95,16 @@ public class RecommenderFactoryRegistryImpl
 
     @Override
     public List<RecommendationEngineFactory> getFactories(AnnotationLayer aLayer,
-                                                          AnnotationFeature aFeature) {
-        return extensions.values().stream()
-            .filter(factory -> factory.accepts(aLayer, aFeature))
-            .sorted(Comparator.comparing(RecommendationEngineFactory::getName))
-            .collect(Collectors.toList());
+            AnnotationFeature aFeature)
+    {
+        return extensions.values().stream().filter(factory -> factory.accepts(aLayer, aFeature))
+                .sorted(Comparator.comparing(RecommendationEngineFactory::getName))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public RecommendationEngineFactory getFactory(String aId) {
+    public RecommendationEngineFactory getFactory(String aId)
+    {
         return extensions.get(aId);
     }
 }

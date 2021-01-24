@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,13 +47,11 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public interface KnowledgeBaseService
 {
-    String SERVICE_NAME = "knowledgeBaseService";
-    
     /**
-     * Reads knowledgebase profiles from a YAML file and stores them in a HashMap with the key that
+     * Reads knowledge base profiles from a YAML file and stores them in a HashMap with the key that
      * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
      * 
-     * @return a HashMap with the knowledgebase profiles
+     * @return a HashMap with the knowledge base profiles
      * @throws IOException
      *             if an error occurs when reading the file
      */
@@ -63,13 +61,16 @@ public interface KnowledgeBaseService
 
     /**
      * Writes the contents of a knowledge base of type {@link RepositoryType#LOCAL} to a given
-     * {@link OutputStream} in a specificable format.<br>
+     * {@link OutputStream} in a specifiable format.<br>
      * No action will be taken if the given knowledge base is not of type
      * {@link RepositoryType#LOCAL} (nothing will be written to the output stream).
      *
-     * @param kb The knowledge base to export
-     * @param format Format of the data
-     * @param os The {@link OutputStream} variable
+     * @param kb
+     *            The knowledge base to export
+     * @param format
+     *            Format of the data
+     * @param os
+     *            The {@link OutputStream} variable
      */
     void exportData(KnowledgeBase kb, RDFFormat format, OutputStream os);
 
@@ -78,7 +79,8 @@ public interface KnowledgeBaseService
     /**
      * {@code False} if a knowledge base does not contain any statements.
      *
-     * @param kb a {@link KnowledgeBase}
+     * @param kb
+     *            a {@link KnowledgeBase}
      * @return a {@link Boolean} value
      */
     boolean isEmpty(KnowledgeBase kb);
@@ -90,36 +92,47 @@ public interface KnowledgeBaseService
 
     Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
 
+    Optional<KnowledgeBase> getKnowledgeBaseByName(Project project, String aId);
+
     /**
-     * Update the configuration of a knowledge base.
-     * The given knowledge base must have been added before.
-     * @param kb the {@link KnowledgeBase} to update
+     * Update the configuration of a knowledge base. The given knowledge base must have been added
+     * before.
+     * 
+     * @param kb
+     *            the {@link KnowledgeBase} to update
      */
     void updateKnowledgeBase(KnowledgeBase kb)
         throws RepositoryException, RepositoryConfigException;
 
     /**
-     * Update the configuration of a knowledge base.
-     * The given knowledge base must have been added before.
-     * @param kb the {@link KnowledgeBase} to update
-     * @param cfg the {@link RepositoryImplConfig} variable
+     * Update the configuration of a knowledge base. The given knowledge base must have been added
+     * before.
+     * 
+     * @param kb
+     *            the {@link KnowledgeBase} to update
+     * @param cfg
+     *            the {@link RepositoryImplConfig} variable
      */
     void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
         throws RepositoryException, RepositoryConfigException;
 
     void removeKnowledgeBase(KnowledgeBase kb)
         throws RepositoryException, RepositoryConfigException;
-    
+
     /**
      * Get knowledge bases from a given project.
-     * @param aProject The project that contains the knowledge bases.
+     * 
+     * @param aProject
+     *            The project that contains the knowledge bases.
      * @return All KBs sorted by name in lexicographical order, ignoring the case.
      */
     List<KnowledgeBase> getKnowledgeBases(Project aProject);
-    
+
     /**
      * Get enabled knowledge bases from a given project.
-     * @param aProject The project that contains the knowledge bases.
+     * 
+     * @param aProject
+     *            The project that contains the knowledge bases.
      * @return All enabled KBs sorted by name in lexicographical order, ignoring the case.
      */
     List<KnowledgeBase> getEnabledKnowledgeBases(Project aProject);
@@ -155,18 +168,24 @@ public interface KnowledgeBaseService
         throws QueryEvaluationException;
 
     /**
-     * Updates an existing concept in the given knowledge base. Does nothing if 
-     * the knowledge base is read only.
-     * @param kb The knowledge base in which the new concept will updated
-     * @param aType The concept to update
+     * Updates an existing concept in the given knowledge base. Does nothing if the knowledge base
+     * is read only.
+     * 
+     * @param kb
+     *            The knowledge base in which the new concept will updated
+     * @param aType
+     *            The concept to update
      */
     void updateConcept(KnowledgeBase kb, KBConcept aType);
 
     /**
-     * Deletes a concept in the given knowledge base if it exists. Does nothing if the 
-     * knowledge base is read only.
-     * @param kb The knowledge base from which the new concept will be deleted
-     * @param aType The concept to delete
+     * Deletes a concept in the given knowledge base if it exists. Does nothing if the knowledge
+     * base is read only.
+     * 
+     * @param kb
+     *            The knowledge base from which the new concept will be deleted
+     * @param aType
+     *            The concept to delete
      */
     void deleteConcept(KnowledgeBase kb, KBConcept aType);
 
@@ -185,18 +204,24 @@ public interface KnowledgeBaseService
         throws QueryEvaluationException;
 
     /**
-     * Updates an existing property in the given knowledge base. Does nothing
-     * if the knowledge base is read only.
-     * @param kb The knowledge base to which the new property will be added
-     * @param aProperty The property to add
+     * Updates an existing property in the given knowledge base. Does nothing if the knowledge base
+     * is read only.
+     * 
+     * @param kb
+     *            The knowledge base to which the new property will be added
+     * @param aProperty
+     *            The property to add
      */
     void updateProperty(KnowledgeBase kb, KBProperty aProperty);
 
     /**
-     * Deletes a property in the given knowledge base if it exists. Does
-     * nothing if the knowledge base is read only.
-     * @param kb The knowledge base from which the new concept will be deleted
-     * @param aType The property to delete
+     * Deletes a property in the given knowledge base if it exists. Does nothing if the knowledge
+     * base is read only.
+     * 
+     * @param kb
+     *            The knowledge base from which the new concept will be deleted
+     * @param aType
+     *            The property to delete
      */
     void deleteProperty(KnowledgeBase kb, KBProperty aType);
 
@@ -260,10 +285,13 @@ public interface KnowledgeBaseService
         throws QueryEvaluationException;
 
     /**
-     * Updates an existing instance in the given knowledge base. Does nothing
-     * if the knowledge base is read only.
-     * @param kb The knowledge base to which the new instance will be added
-     * @param aInstance The instance to add
+     * Updates an existing instance in the given knowledge base. Does nothing if the knowledge base
+     * is read only.
+     * 
+     * @param kb
+     *            The knowledge base to which the new instance will be added
+     * @param aInstance
+     *            The instance to add
      */
     void updateInstance(KnowledgeBase kb, KBInstance aInstance);
 
@@ -272,17 +300,22 @@ public interface KnowledgeBaseService
      * instance is the subject), but not statements pointing to the instance (i.e. where the
      * instance is the object). Does nothing if the knowledge base is read only.
      * 
-     * @param kb The knowledge base to which the instance will be deleted
-     * @param aInstance The instance to delete
+     * @param kb
+     *            The knowledge base to which the instance will be deleted
+     * @param aInstance
+     *            The instance to delete
      */
     void deleteInstance(KnowledgeBase kb, KBInstance aInstance);
 
     /**
      * Returns all instances for the given concept.
      *
-     * @param kb          The knowledge base to query
-     * @param aConceptIri The URI of the concept finding instances for
-     * @param aAll        True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param kb
+     *            The knowledge base to query
+     * @param aConceptIri
+     *            The URI of the concept finding instances for
+     * @param aAll
+     *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return All instances of the given concept
      */
     List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
@@ -296,28 +329,36 @@ public interface KnowledgeBaseService
      * attempt will be made, but the statement will be added as a new explicit statement. Does
      * nothing if the knowledge base is read only.
      * 
-     * @param kb The knowledge base the statement will be use in
-     * @param aStatement The statement itself
+     * @param kb
+     *            The knowledge base the statement will be use in
+     * @param aStatement
+     *            The statement itself
      */
     void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
     /**
-     * Deletes a statement in the given knowledge base if it exists. Does
-     * nothing if the knowledge base is read only.
-     * @param kb The knowledge base from which the new concept will be deleted
-     * @param aStatement The statement to delete
+     * Deletes a statement in the given knowledge base if it exists. Does nothing if the knowledge
+     * base is read only.
+     * 
+     * @param kb
+     *            The knowledge base from which the new concept will be deleted
+     * @param aStatement
+     *            The statement to delete
      */
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
-    
+
     /**
-     * Lists all statements in which the given identifier appears as predicate or object 
-     * @param kb The knowledge base to query
-     * @param aIdentifier The identifier of the entity
+     * Lists all statements in which the given identifier appears as predicate or object
+     * 
+     * @param kb
+     *            The knowledge base to query
+     * @param aIdentifier
+     *            The identifier of the entity
      * @return All statements that match the specification
      */
     List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
             String aIdentifier);
-    
+
     List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
         throws QueryEvaluationException;
 
@@ -327,14 +368,14 @@ public interface KnowledgeBaseService
     List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll);
-    
+
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll,
             int aLimit)
         throws QueryEvaluationException;
-    
+
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
@@ -352,8 +393,8 @@ public interface KnowledgeBaseService
     }
 
     /**
-     * List the properties for a specific accepted domain identifier and also 
-     * include properties which do not have any domain specified.
+     * List the properties for a specific accepted domain identifier and also include properties
+     * which do not have any domain specified.
      * 
      * @param kb
      *            The knowledge base
@@ -369,34 +410,46 @@ public interface KnowledgeBaseService
             boolean aIncludeInferred, boolean aAll);
 
     /**
-     * Adds a new qualifier in the given knowledge base. Does
-     * nothing if the knowledge base is read only.
-     * @param kb The knowledge base from which the new qualifier will be added
-     * @param newQualifier The qualifier to add
+     * Adds a new qualifier in the given knowledge base. Does nothing if the knowledge base is read
+     * only.
+     * 
+     * @param kb
+     *            The knowledge base from which the new qualifier will be added
+     * @param newQualifier
+     *            The qualifier to add
      */
     void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
 
     /**
-     * Deletes a qualifier in the given knowledge base if it exists. Does
-     * nothing if the knowledge base is read only.
-     * @param kb The knowledge base from which the new qualifier will be deleted
-     * @param oldQualifier The qualifier to delete
+     * Deletes a qualifier in the given knowledge base if it exists. Does nothing if the knowledge
+     * base is read only.
+     * 
+     * @param kb
+     *            The knowledge base from which the new qualifier will be deleted
+     * @param oldQualifier
+     *            The qualifier to delete
      */
     void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
 
     /**
-     * Updates a qualifier or inserts a new one. If the qualifier has an original qualifier,
-     * that old one is deleted before inserting the new one. Does nothing if the knowledge base is
-     * read only.
-     * @param kb The knowledge base from which the qualifier will be upserted
-     * @param aQualifier The qualifier to upsert
+     * Updates a qualifier or inserts a new one. If the qualifier has an original qualifier, that
+     * old one is deleted before inserting the new one. Does nothing if the knowledge base is read
+     * only.
+     * 
+     * @param kb
+     *            The knowledge base from which the qualifier will be upserted
+     * @param aQualifier
+     *            The qualifier to upsert
      */
     void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier);
 
     /**
      * Returns all qualifiers for the given statement
-     * @param kb The knowledge base to query
-     * @param aStatement The statement finding qualifiers for
+     * 
+     * @param kb
+     *            The knowledge base to query
+     * @param aStatement
+     *            The statement finding qualifiers for
      * @return all qualifiers for the given statement
      */
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
@@ -435,7 +488,7 @@ public interface KnowledgeBaseService
      * even if there is no statement about the given identifier present in the knowledge base.
      */
     Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier);
-    
+
     /**
      * Obtain basic information about the given identifier. This method always returns a KBHandle,
      * even if there is no statement about the given identifier present in the knowledge base.
@@ -446,20 +499,26 @@ public interface KnowledgeBaseService
      * Retrieves the distinct parent concepts till the root element for an identifier regardless of
      * it being an instance or concept
      *
-     * @param aKB The knowledge base
-     * @param aIdentifier a concept/instance identifier.
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param aKB
+     *            The knowledge base
+     * @param aIdentifier
+     *            a concept/instance identifier.
+     * @param aAll
+     *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of parent concept for an identifier
      */
     List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
-    
+
     /**
-     * Retrieves the concepts for an instance identifier 
+     * Retrieves the concepts for an instance identifier
      * 
-     * @param aKB The knowledge base
-     * @param aIdentifier an instance identifier.
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param aKB
+     *            The knowledge base
+     * @param aIdentifier
+     *            an instance identifier.
+     * @param aAll
+     *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of concepts for an instance identifier
      */
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
@@ -467,9 +526,12 @@ public interface KnowledgeBaseService
 
     /**
      * List all the concepts
-     * @param kb The knowledge base from which concepts will be listed
-     * @param aAll indicates whether to include everything
-     * @return list of all the properties {@link KBHandle} 
+     * 
+     * @param kb
+     *            The knowledge base from which concepts will be listed
+     * @param aAll
+     *            indicates whether to include everything
+     * @return list of all the properties {@link KBHandle}
      */
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
@@ -483,7 +545,7 @@ public interface KnowledgeBaseService
      * Retrieve all properties which are used to display labels for classes or instances.
      */
     List<String> listConceptOrInstanceLabelProperties(KnowledgeBase aKB);
-    
+
     /**
      * Retrieve all properties which are used to display labels for properties.
      */
@@ -491,8 +553,11 @@ public interface KnowledgeBaseService
 
     /**
      * Checks whether a property is a base property
-     * @param propertyIdentifier the property that is to be checked
-     * @param aKB the KB
+     * 
+     * @param propertyIdentifier
+     *            the property that is to be checked
+     * @param aKB
+     *            the KB
      * @return true if the property is a base property, false otherwise
      */
     boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB);
@@ -501,33 +566,36 @@ public interface KnowledgeBaseService
      * Can be used to re-index a local KB in case the full text index is corrupt.
      */
     void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
-    
+
     /**
-     * Read the concept with the given identifier from the given knowledge base with a 
-     * specific query
+     * Read the concept with the given identifier from the given knowledge base with a specific
+     * query
      * 
      * @param aKB
      *            a knowledge base.
      * @param aIdentifier
      *            a concept identifier.
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
+     * @param aAll
+     *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return the concept.
      */
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
-            throws QueryEvaluationException;
+        throws QueryEvaluationException;
 
     /**
      * Checks weather a knowledge base is present and enabled, given a repository id
-     * @param repositoryID id of the knowledge base
+     * 
+     * @param repositoryID
+     *            id of the knowledge base
      * @return whether the knowledge base with the given id is available or not
      */
     boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
-    
+
     /**
      * Execute the given query and return the results. The service will try to cache the results for
      * faster subsequent access.
      * <p>
-     * <b>NOTE:</b> Do <b>NOT</b> use this method when current data from the KB is required, in 
+     * <b>NOTE:</b> Do <b>NOT</b> use this method when current data from the KB is required, in
      * particular if it is a writable KB.
      * 
      * @param aQuery
@@ -535,6 +603,6 @@ public interface KnowledgeBaseService
      * @return a list of {@link KBHandle KBHandles}
      */
     List<KBHandle> listHandlesCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
-    
+
     Optional<KBHandle> fetchHandleCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
 }

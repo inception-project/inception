@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
-public class Span {
+public class Span
+{
 
     private String id;
 
@@ -28,10 +29,10 @@ public class Span {
     private String color;
 
     /**
-     * This field is part of the PDFAnno Anno File format for spans.
-     * It is redundant as startPos and endPos already can be used to obtain the text.
-     * It could be left out in toAnnoFileString method as PDFAnno still can render it.
-     * However this results in missing text when export functionality in PDFAnno is used.
+     * This field is part of the PDFAnno Anno File format for spans. It is redundant as startPos and
+     * endPos already can be used to obtain the text. It could be left out in toAnnoFileString
+     * method as PDFAnno still can render it. However this results in missing text when export
+     * functionality in PDFAnno is used.
      */
     private String text;
 
@@ -46,8 +47,8 @@ public class Span {
         color = aColor;
     }
 
-    public Span(String aId, int aPage, String aLabel, String aColor, String aText,
-                int aStartPos, int aEndPos)
+    public Span(String aId, int aPage, String aLabel, String aColor, String aText, int aStartPos,
+            int aEndPos)
     {
         id = aId;
         page = aPage;
@@ -115,13 +116,12 @@ public class Span {
 
     public String toAnnoFileString()
     {
-        return "[[spans]]\n" +
-            "id = \"" + id +  "\"\n" +
-            "page = " + page + "\n" +
-            "label = \"" + label.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" +
-            "color = \"" + color + "\"\n" +
-            "text = \"" + text.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" +
-            "textrange = [" + startPos + "," + endPos + "]\n";
+        return "[[spans]]\n" + //
+                "id = \"" + id + "\"\n" + //
+                "page = " + page + "\n" + //
+                "label = \"" + label.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
+                "color = \"" + color + "\"\n" + //
+                "text = \"" + text.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
+                "textrange = [" + startPos + "," + endPos + "]\n";
     }
-
 }

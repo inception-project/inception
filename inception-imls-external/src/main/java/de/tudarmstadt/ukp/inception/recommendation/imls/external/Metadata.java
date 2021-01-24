@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Metadata {
-
+public class Metadata
+{
     private final String layer;
     private final String feature;
     private final String projectId;
@@ -28,10 +28,10 @@ public class Metadata {
     private final boolean crossSentence;
 
     public Metadata(@JsonProperty(value = "layer", required = true) String aLayer,
-                    @JsonProperty(value = "feature", required = true) String aFeature,
-                    @JsonProperty(value = "projectId", required = true) String aProjectId,
-                    @JsonProperty(value = "anchoringMode", required = true) String aAnchoringMode,
-                    @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence)
+            @JsonProperty(value = "feature", required = true) String aFeature,
+            @JsonProperty(value = "projectId", required = true) String aProjectId,
+            @JsonProperty(value = "anchoringMode", required = true) String aAnchoringMode,
+            @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence)
     {
         layer = aLayer;
         feature = aFeature;

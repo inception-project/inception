@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +22,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.newSetFromMap;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.wicket.util.collections.ConcurrentHashSet;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -53,20 +59,20 @@ public class Predictions
     implements Serializable
 {
     private static final long serialVersionUID = -1598768729246662885L;
-    
+
     private Map<ExtendedId, AnnotationSuggestion> predictions = new ConcurrentHashMap<>();
-    private Set<String> seenDocumentsForPrediction = new ConcurrentHashSet<>();
-    
+    private Set<String> seenDocumentsForPrediction = newSetFromMap(new ConcurrentHashMap<>());
+
     private final Project project;
     private final User user;
     private final List<LogMessage> log = new ArrayList<>();
-    
+
     public Predictions(Project aProject, User aUser,
             Map<ExtendedId, AnnotationSuggestion> aPredictions)
     {
         Validate.notNull(aProject, "Project must be specified");
         Validate.notNull(aUser, "User must be specified");
-        
+
         project = aProject;
         user = aUser;
 
@@ -74,7 +80,7 @@ public class Predictions
             predictions = new ConcurrentHashMap<ExtendedId, AnnotationSuggestion>(aPredictions);
         }
     }
-    
+
     public Predictions(User aUser, Project aProject)
     {
         this(aProject, aUser, null);
@@ -100,51 +106,49 @@ public class Predictions
 
         return result;
     }
-    
+
     /**
      * TODO #176 use the document Id once it it available in the CAS
-     *         
+     * 
      * Get the predictions of a given window, where the outer list is a list of tokens and the inner
      * list is a list of predictions for a token
      */
-    public SuggestionDocumentGroup getPredictions(String aDocumentName,
-            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    public SuggestionDocumentGroup getPredictions(String aDocumentName, AnnotationLayer aLayer,
+            int aWindowBegin, int aWindowEnd)
     {
-        return new SuggestionDocumentGroup(getFlattenedPredictions(aDocumentName, aLayer,
-                aWindowBegin, aWindowEnd));
+        return new SuggestionDocumentGroup(
+                getFlattenedPredictions(aDocumentName, aLayer, aWindowBegin, aWindowEnd));
     }
 
     /**
-     *  TODO #176 use the document Id once it it available in the CAS
-     *         
-     * Get the predictions of a document for a given window in a flattened list.
-     * If the parameters {@code aWindowBegin} and {@code aWindowEnd} are {@code -1},
-     * then they are ignored respectively. This is useful when all suggestions should be fetched.
+     * TODO #176 use the document Id once it it available in the CAS
+     * 
+     * Get the predictions of a document for a given window in a flattened list. If the parameters
+     * {@code aWindowBegin} and {@code aWindowEnd} are {@code -1}, then they are ignored
+     * respectively. This is useful when all suggestions should be fetched.
      */
     private List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
-        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
         return predictions.entrySet().stream()
-            .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-            .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-            .filter(f -> aWindowBegin == -1 || (f.getKey().getBegin() >= aWindowBegin))
-            .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
-            .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
-            .map(Map.Entry::getValue)
-            .collect(Collectors.toList());
+                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
+                .filter(f -> f.getKey().getLayerId() == aLayer.getId())
+                .filter(f -> aWindowBegin == -1 || (f.getKey().getBegin() >= aWindowBegin))
+                .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
+                .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
+                .map(Map.Entry::getValue).collect(toList());
     }
 
     /**
-     * Returns the first prediction that matches recommendationId and recommenderId
-     * in the given document.
+     * Returns the first prediction that matches recommendationId and recommenderId in the given
+     * document.
      */
     public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
         return predictions.values().stream()
                 .filter(f -> f.getDocumentName().equals(aDocument.getName()))
                 .filter(f -> f.getId() == aVID.getSubId())
-                .filter(f -> f.getRecommenderId() == aVID.getId())
-                .findFirst();
+                .filter(f -> f.getRecommenderId() == aVID.getId()).findFirst();
     }
 
     /**
@@ -157,21 +161,21 @@ public class Predictions
                 .filter(f -> f.getDocumentName().equals(aDocument.getName()))
                 .filter(f -> f.getBegin() == aBegin && f.getEnd() == aEnd)
                 .filter(f -> f.getLabel().equals(aLabel))
-                .max(Comparator.comparingInt(AnnotationSuggestion::getId));
+                .max(comparingInt(AnnotationSuggestion::getId));
     }
-    
+
     /**
-     * @param aPredictions - list of sentences containing recommendations
+     * @param aPredictions
+     *            - list of sentences containing recommendations
      */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
-        aPredictions.forEach(prediction -> 
-            predictions.put(new ExtendedId(user.getUsername(), project.getId(),
-                    prediction.getDocumentName(), prediction.getLayerId(), prediction.getOffset(),
-                    prediction.getRecommenderId(), prediction.getId(), -1), prediction)
-        );
+        aPredictions.forEach(prediction -> predictions.put(new ExtendedId(user.getUsername(),
+                project.getId(), prediction.getDocumentName(), prediction.getLayerId(),
+                prediction.getOffset(), prediction.getRecommenderId(), prediction.getId(), -1),
+                prediction));
     }
-    
+
     public Project getProject()
     {
         return project;
@@ -186,7 +190,7 @@ public class Predictions
     {
         return predictions;
     }
-    
+
     public void clearPredictions()
     {
         predictions.clear();
@@ -195,53 +199,52 @@ public class Predictions
 
     public void removePredictions(Long recommenderId)
     {
-        predictions.entrySet()
-            .removeIf((p) -> p.getKey().getRecommenderId() == recommenderId);
+        predictions.entrySet().removeIf((p) -> p.getKey().getRecommenderId() == recommenderId);
     }
 
     /**
-     * TODO #176 use the document Id once it it available in the CAS
-     * Returns a list of predictions for a given token that matches the given layer and
-     * the annotation feature in the given document
+     * TODO #176 use the document Id once it it available in the CAS Returns a list of predictions
+     * for a given token that matches the given layer and the annotation feature in the given
+     * document
      *
-     * @param aDocumentName the given document name
-     * @param aLayer the given layer
-     * @param aBegin the offset character begin
-     * @param aEnd the offset character end
-     * @param aFeature the given annotation feature name
+     * @param aDocumentName
+     *            the given document name
+     * @param aLayer
+     *            the given layer
+     * @param aBegin
+     *            the offset character begin
+     * @param aEnd
+     *            the offset character end
+     * @param aFeature
+     *            the given annotation feature name
      * @return the annotation suggestions
      */
     public List<AnnotationSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
-        AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
+            AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {
         return predictions.entrySet().stream()
-            .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-            .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-            .filter(f -> f.getKey().getOffset().getBeginCharacter() == aBegin)
-            .filter(f -> f.getKey().getOffset().getEndCharacter() == aEnd)
-            .filter(f -> f.getValue().getFeature().equals(aFeature))
-            .map(Map.Entry::getValue)
-            .collect(Collectors.toList());
+                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
+                .filter(f -> f.getKey().getLayerId() == aLayer.getId())
+                .filter(f -> f.getKey().getOffset().getBeginCharacter() == aBegin)
+                .filter(f -> f.getKey().getOffset().getEndCharacter() == aEnd)
+                .filter(f -> f.getValue().getFeature().equals(aFeature)).map(Map.Entry::getValue)
+                .collect(Collectors.toList());
     }
 
     public List<AnnotationSuggestion> getPredictionsByRecommenderAndDocument(
             Recommender aRecommender, String aDocument)
     {
         return predictions.entrySet().stream()
-                .filter(f -> 
-                        f.getKey().getRecommenderId() == (long) aRecommender.getId() &&
-                        f.getKey().getDocumentName().equals(aDocument))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
+                .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId()
+                        && f.getKey().getDocumentName().equals(aDocument))
+                .map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
     public List<AnnotationSuggestion> getPredictionsByDocument(String aDocument)
     {
         return predictions.entrySet().stream()
-                .filter(f -> 
-                        f.getKey().getDocumentName().equals(aDocument))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
+                .filter(f -> f.getKey().getDocumentName().equals(aDocument))
+                .map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
     public void markDocumentAsPredictionCompleted(SourceDocument aDocument)
@@ -253,14 +256,14 @@ public class Predictions
     {
         return seenDocumentsForPrediction.contains(aDocument.getName());
     }
-    
+
     public void log(LogMessage aMessage)
     {
         synchronized (log) {
             log.add(aMessage);
         }
     }
-    
+
     public List<LogMessage> getLog()
     {
         synchronized (log) {

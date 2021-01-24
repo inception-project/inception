@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -48,7 +53,7 @@ public class PredictionTask
     private final SourceDocument currentDocument;
 
     public PredictionTask(User aUser, Project aProject, String aTrigger,
-                          SourceDocument aCurrentDocument)
+            SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
         currentDocument = aCurrentDocument;
@@ -57,34 +62,37 @@ public class PredictionTask
     @Override
     public void run()
     {
-        User user = getUser();
-        String username = user.getUsername();
+        try (CasStorageSession session = CasStorageSession.open()) {
+            User user = getUser();
+            String username = user.getUsername();
 
-        Project project = getProject();
+            Project project = getProject();
 
-        List<SourceDocument> docs = documentService.listSourceDocuments(project);
-        List<SourceDocument> inherit = Collections.emptyList();
-        
-        // Limit prediction to a single document and inherit the rest?
-        if (!recommendationService.isPredictForAllDocuments(username, project)) {
-            inherit = docs.stream().filter(d -> !d.equals(currentDocument))
-                    .collect(Collectors.toList());
-            docs = Collections.singletonList(currentDocument);
-            log.debug("[{}][{}]: Limiting prediction to [{}]", getId(), username,
-                    currentDocument.getName());
+            List<SourceDocument> docs = documentService.listSourceDocuments(project);
+            List<SourceDocument> inherit = Collections.emptyList();
+
+            // Limit prediction to a single document and inherit the rest?
+            if (!recommendationService.isPredictForAllDocuments(username, project)) {
+                inherit = docs.stream().filter(d -> !d.equals(currentDocument))
+                        .collect(Collectors.toList());
+                docs = Collections.singletonList(currentDocument);
+                log.debug("[{}][{}]: Limiting prediction to [{}]", getId(), username,
+                        currentDocument.getName());
+            }
+
+            log.debug(
+                    "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
+                    getId(), username, project, docs.size(), getTrigger());
+
+            long startTime = System.currentTimeMillis();
+
+            Predictions predictions = recommendationService.computePredictions(user, project, docs,
+                    inherit);
+
+            log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
+                    (System.currentTimeMillis() - startTime));
+
+            recommendationService.putIncomingPredictions(user, project, predictions);
         }
-
-        log.debug("[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
-                getId(), username, project, docs.size(), getTrigger());
-        
-        long startTime = System.currentTimeMillis();
-
-        Predictions predictions = recommendationService.computePredictions(user, project, docs,
-                inherit);
-        
-        log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
-                (System.currentTimeMillis() - startTime));
-
-        recommendationService.putIncomingPredictions(user, project, predictions);
     }
 }

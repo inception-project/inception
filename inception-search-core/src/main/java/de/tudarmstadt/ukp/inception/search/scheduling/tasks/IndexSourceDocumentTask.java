@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +23,7 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -30,7 +35,7 @@ public class IndexSourceDocumentTask
     extends Task
 {
     private @Autowired SearchService searchService;
-    
+
     public IndexSourceDocumentTask(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
         super(aSourceDocument, aBinaryCas);
@@ -44,16 +49,18 @@ public class IndexSourceDocumentTask
     @Override
     public void run()
     {
-        searchService.indexDocument(super.getSourceDocument(), super.getBinaryCas());
+        try (CasStorageSession session = CasStorageSession.open()) {
+            searchService.indexDocument(super.getSourceDocument(), super.getBinaryCas());
+        }
     }
-    
+
     @Override
     public boolean matches(Task aTask)
     {
         if (!(aTask instanceof IndexSourceDocumentTask)) {
             return false;
         }
-        
+
         return getSourceDocument().getId() == aTask.getSourceDocument().getId();
     }
 }

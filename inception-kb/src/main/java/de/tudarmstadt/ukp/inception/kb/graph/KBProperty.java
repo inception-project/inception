@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,8 +33,8 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
- * A property in the context of a knowledge base is the predicate
- * in a (subject, predicate, object) triple.
+ * A property in the context of a knowledge base is the predicate in a (subject, predicate, object)
+ * triple.
  */
 public class KBProperty
     implements KBObject
@@ -65,7 +65,7 @@ public class KBProperty
         this(aIdentifier, aName, null, null);
     }
 
-    public KBProperty(String aIdentifier, String aName,String aDomain, String aRange)
+    public KBProperty(String aIdentifier, String aName, String aDomain, String aRange)
     {
         name = aName;
         identifier = aIdentifier;
@@ -198,15 +198,15 @@ public class KBProperty
         }
 
         if (domain != null) {
-            Statement domainStmt = vf
-                .createStatement(subject, RDFS.DOMAIN, vf.createLiteral(domain.toString()));
+            Statement domainStmt = vf.createStatement(subject, RDFS.DOMAIN,
+                    vf.createLiteral(domain.toString()));
             originalStatements.add(domainStmt);
             aConn.add(domainStmt);
         }
 
         if (range != null) {
-            Statement rangeStmt = vf
-                .createStatement(subject, RDFS.RANGE, vf.createLiteral(range.toString()));
+            Statement rangeStmt = vf.createStatement(subject, RDFS.RANGE,
+                    vf.createLiteral(range.toString()));
             originalStatements.add(rangeStmt);
             aConn.add(rangeStmt);
         }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,7 +57,7 @@ public class BaselineRanker
             // Note that the comparator sorts ascending by value, so a match is represented using
             // a 0 while a mistmatch is represented using 1. The typical case is that neither
             // candidate matches the query which causes the next ranking criteria to be evaluated
-            .append(e1.get(KEY_QUERY).map(q -> q.equals(e1.getIRI()) ? 0 : 1).orElse(1), 
+            .append(e1.get(KEY_QUERY).map(q -> q.equals(e1.getIRI()) ? 0 : 1).orElse(1),
                     e2.get(KEY_QUERY).map(q -> q.equals(e2.getIRI()) ? 0 : 1).orElse(1))
             // Compare geometric mean of the Levenshtein distance to query and mention
             // since both are important and a very close similarity in say the mention outweighs
@@ -76,36 +76,36 @@ public class BaselineRanker
             // A low wikidata ID rank is preferred.
             .append(e1.get(KEY_ID_RANK).get(), e2.get(KEY_ID_RANK).get())
             // Finally order alphabetically
-            .append(e1.getLabel().toLowerCase(e1.getLocale()), 
+            .append(e1.getLabel().toLowerCase(e1.getLocale()),
                     e2.getLabel().toLowerCase(e2.getLocale()))
             .toComparison();
-    
+
     private static double weightedLevenshteinDistance(CandidateEntity aCandidate)
     {
         int query = aCandidate.get(KEY_LEVENSHTEIN_QUERY).get();
         int mention = aCandidate.get(KEY_LEVENSHTEIN_MENTION).get();
-        
+
         if (query == Integer.MAX_VALUE && mention == Integer.MAX_VALUE) {
             return Double.MAX_VALUE;
         }
-        
+
         if (query == Integer.MAX_VALUE) {
             return Math.sqrt(mention);
         }
-        
+
         if (mention == Integer.MAX_VALUE) {
             return Math.sqrt(query);
         }
-        
+
         // If the distance of the query and mention is the same, then give the query a slight
         // benefit so the user see's items matching the query he/she entered first
         if (query > 0 && query == mention) {
             query = query - 1;
         }
-        
+
         return Math.sqrt(query * mention);
     }
-    
+
     public static Comparator<CandidateEntity> getInstance()
     {
         return INSTANCE;

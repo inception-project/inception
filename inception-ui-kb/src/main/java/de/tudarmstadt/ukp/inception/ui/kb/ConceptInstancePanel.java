@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -75,19 +75,19 @@ public class ConceptInstancePanel
         kbModel = aKbModel;
         selectedInstanceHandle = Model.of();
         selectedConceptHandle = aSelectedConceptHandle;
-        
+
         add(new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()));
-        
+
         add(new ConceptInfoPanel("info", kbModel, aSelectedConceptHandle, aSelectedConceptModel));
-                
+
         instanceInfoPanel = new EmptyPanel(INSTANCE_INFO_MARKUP_ID).setVisibilityAllowed(false);
         add(instanceInfoPanel);
     }
-    
+
     private List<ITab> makeTabs()
     {
         List<ITab> tabs = new ArrayList<>();
-        
+
         tabs.add(new AbstractTab(Model.of("Instances"))
         {
             private static final long serialVersionUID = 6703144434578403272L;
@@ -99,7 +99,7 @@ public class ConceptInstancePanel
                         selectedInstanceHandle);
             }
         });
-        
+
         tabs.add(new AbstractTab(Model.of("Mentions"))
         {
             private static final long serialVersionUID = 6703144434578403272L;
@@ -108,14 +108,14 @@ public class ConceptInstancePanel
             public Panel getPanel(String panelId)
             {
                 if (selectedConceptHandle.getObject() != null) {
-                    return new AnnotatedListIdentifiers(panelId, kbModel,
-                            selectedConceptHandle, selectedInstanceHandle, false);
+                    return new AnnotatedListIdentifiers(panelId, kbModel, selectedConceptHandle,
+                            selectedInstanceHandle, false);
                 }
                 else {
                     return new EmptyPanel(panelId);
                 }
             }
-        });        
+        });
         return tabs;
     }
 
@@ -140,8 +140,7 @@ public class ConceptInstancePanel
         if (!isLabelStatement(event.getStatement())) {
             return;
         }
-        Optional<KBInstance> kbInstance = kbService
-            .readInstance(kbModel.getObject(),
+        Optional<KBInstance> kbInstance = kbService.readInstance(kbModel.getObject(),
                 statement.getInstance().getIdentifier());
         if (kbInstance.isPresent()) {
             instanceHandle.setName(kbInstance.get().getName());
@@ -150,31 +149,31 @@ public class ConceptInstancePanel
         event.getTarget().add(this);
     }
 
-//    /**
-//     * Checks whether the given event is about renaming a knowledge base instance i.e. checks
-//     * whether the label of an instance has been changed in the event.
-//     * An event is considered a renaming event if the changed property is:
-//     *
-//     * a main label (declared with {@link KnowledgeBase#getLabelIri()})
-//     * or
-//     * a subproperty label and there is no main label present for this instance
-//     *
-//     * @param aEvent the event that is checked
-//     * @return true if the event is a renaming event, false otherwise
-//     */
-//    private boolean isRenamingEvent(AjaxStatementChangedEvent aEvent)
-//    {
-//        KBStatement changedStatement = aEvent.getStatement();
-//        String propertyIdentifier = changedStatement.getProperty().getIdentifier();
-//        SimpleValueFactory vf = SimpleValueFactory.getInstance();
-//        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
-//            vf.createIRI(changedStatement.getInstance().getIdentifier()),
-//            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
-//        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
-//            kbService.isLabelProperty(kbModel.getObject(), propertyIdentifier)
-//                && !hasMainLabel);
-//    }
-    
+    // /**
+    // * Checks whether the given event is about renaming a knowledge base instance i.e. checks
+    // * whether the label of an instance has been changed in the event.
+    // * An event is considered a renaming event if the changed property is:
+    // *
+    // * a main label (declared with {@link KnowledgeBase#getLabelIri()})
+    // * or
+    // * a subproperty label and there is no main label present for this instance
+    // *
+    // * @param aEvent the event that is checked
+    // * @return true if the event is a renaming event, false otherwise
+    // */
+    // private boolean isRenamingEvent(AjaxStatementChangedEvent aEvent)
+    // {
+    // KBStatement changedStatement = aEvent.getStatement();
+    // String propertyIdentifier = changedStatement.getProperty().getIdentifier();
+    // SimpleValueFactory vf = SimpleValueFactory.getInstance();
+    // boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
+    // vf.createIRI(changedStatement.getInstance().getIdentifier()),
+    // kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
+    // return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
+    // kbService.isLabelProperty(kbModel.getObject(), propertyIdentifier)
+    // && !hasMainLabel);
+    // }
+
     /**
      * Checks if the given statement is (potentially) assigning the label to the item in subject
      * position. This is the case if the property is a label property.
@@ -184,7 +183,7 @@ public class ConceptInstancePanel
         if (labelProperties == null) {
             labelProperties = kbService.listConceptOrInstanceLabelProperties(kbModel.getObject());
         }
-        
+
         return labelProperties.contains(aStatement.getProperty().getIdentifier());
     }
 
@@ -202,7 +201,7 @@ public class ConceptInstancePanel
             String identifier = selectedInstanceHandle.getObject().getIdentifier();
             try {
                 replacementPanel = kbService.readInstance(kbModel.getObject(), identifier)
-                        .<Component>map(instance -> {
+                        .<Component> map(instance -> {
                             Model<KBInstance> model = Model.of(instance);
                             return new InstancePanel(INSTANCE_INFO_MARKUP_ID, kbModel,
                                     selectedConceptHandle, selectedInstanceHandle, model);
@@ -210,8 +209,8 @@ public class ConceptInstancePanel
             }
             catch (QueryEvaluationException e) {
                 replacementPanel = emptyPanel();
-                //replacementSearch = emptyPanel();
-                error("Unable to read instance: " + e.getLocalizedMessage()); 
+                // replacementSearch = emptyPanel();
+                error("Unable to read instance: " + e.getLocalizedMessage());
                 LOG.error("Unable to read instance.", e);
                 event.getTarget().addChildren(getPage(), IFeedback.class);
             }
@@ -220,7 +219,7 @@ public class ConceptInstancePanel
             replacementPanel = emptyPanel();
         }
         instanceInfoPanel = instanceInfoPanel.replaceWith(replacementPanel);
-        
+
         event.getTarget().add(this);
     }
 

@@ -1,11 +1,11 @@
-// Copyright 2018
-// Ubiquitous Knowledge Processing (UKP) Lab
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -20,7 +20,8 @@
 At the top of the screen, there is always a menu bar visible which allows a quick navigation within
 the application. It offers the following items:
 
-  * **Home** - always takes you back to the main menu.
+  * **Projects** - always takes you back to the <<user-guide.adoc#sect_projects_list,Project overview>>.
+  * **Dashboard** - is only visible if it is possible to take you to your last visited <<user-guide.adoc#sect_dashboard,Project dashboard>>.
   * **Help** - opens the integrated help system in a new browser window.
   * **Administration** - takes you to the administrator dashboard which allows configuring projects
     or managing users. This item is only available to administrators.

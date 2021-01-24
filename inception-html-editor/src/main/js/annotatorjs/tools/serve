@@ -1,0 +1,41 @@
+#!/usr/bin/env node
+var connect = require('connect');
+var jwt = require('jwt-simple');
+var iso8601 = require('iso8601');
+
+
+var CONSUMER_KEY = 'mockconsumer';
+var CONSUMER_SECRET = 'mockconsumersecret';
+var CONSUMER_TTL = 1800;
+
+var app = connect()
+
+app.use('/api/token', function(request, response) {
+  var payload = {
+    'consumerKey': CONSUMER_KEY,
+    'userId': 'alice',
+    'issuedAt': new Date().toISOString(),
+    'ttl': CONSUMER_TTL
+  };
+  var tok = jwt.encode(payload, CONSUMER_SECRET);
+
+  response.setHeader('Access-Control-Allow-Origin', request.headers['origin']);
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
+  response.setHeader('Access-Control-Expose-Headers', 'Location, Content-Type, Content-Length');
+
+  if (request.method == 'OPTIONS') {
+    response.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Content-Length');
+    response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    response.setHeader('Access-Control-Max-Age', '86400');
+  }
+
+  response.end(tok);
+});
+
+app.use(connect.static(process.cwd()));
+
+app.listen(4000);
+
+console.log("The development server is now running.");
+console.log("Live at: http://localhost:4000/dev.html");
+console.log("Test suite at: http://localhost:4000/test/runner.html");

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class KnowledgeBaseAccess implements Serializable
+public class KnowledgeBaseAccess
+    implements Serializable
 {
     @JsonProperty("access-url")
     private String accessUrl;
@@ -34,15 +35,17 @@ public class KnowledgeBaseAccess implements Serializable
     @JsonProperty("full-text-search")
     private IRI fullTextSearchIri;
 
-    @JsonCreator public KnowledgeBaseAccess(@JsonProperty("access-url") String aAccessUrl,
-        @JsonProperty("full-text-search") String aFullTestSearchIri)
+    @JsonCreator
+    public KnowledgeBaseAccess(@JsonProperty("access-url") String aAccessUrl,
+            @JsonProperty("full-text-search") String aFullTestSearchIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         accessUrl = aAccessUrl;
         fullTextSearchIri = vf.createIRI(aFullTestSearchIri);
     }
 
-    public KnowledgeBaseAccess() {
+    public KnowledgeBaseAccess()
+    {
 
     }
 
@@ -66,7 +69,8 @@ public class KnowledgeBaseAccess implements Serializable
         fullTextSearchIri = aFullTextSearchIri;
     }
 
-    @Override public boolean equals(Object o)
+    @Override
+    public boolean equals(Object o)
     {
         if (this == o) {
             return true;
@@ -79,7 +83,8 @@ public class KnowledgeBaseAccess implements Serializable
                 && Objects.equals(fullTextSearchIri, that.fullTextSearchIri);
     }
 
-    @Override public int hashCode()
+    @Override
+    public int hashCode()
     {
         return Objects.hash(accessUrl, fullTextSearchIri);
     }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,9 +41,12 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,9 +65,8 @@ import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
-@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseSubPropertyLabelTest
 {
     private static final String PROJECT_NAME = "Test project";
@@ -88,8 +90,9 @@ public class KnowledgeBaseSubPropertyLabelTest
 
     private TestFixtures testFixtures;
     private static Map<String, KnowledgeBaseProfile> PROFILES;
-    
-    public KnowledgeBaseSubPropertyLabelTest(Reification aReification) {
+
+    public KnowledgeBaseSubPropertyLabelTest(Reification aReification)
+    {
         reification = aReification;
     }
 
@@ -97,16 +100,18 @@ public class KnowledgeBaseSubPropertyLabelTest
     public static Collection<Object[]> data()
     {
         return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @BeforeClass
-    public static void setUpOnce() {
+    public static void setUpOnce()
+    {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
@@ -117,11 +122,12 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws Exception
+    {
         testEntityManager.clear();
         sut.destroy();
     }
-    
+
     @Ignore("#1522 - GND tests not running")
     @Test
     public void thatChildConceptsLabel() throws IOException
@@ -140,11 +146,9 @@ public class KnowledgeBaseSubPropertyLabelTest
         System.out.printf("Time required           : %d ms%n", duration);
         instanceKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
-        assertThat(instanceKBHandle).as("Check that instance list is not empty")
-                   .isNotEmpty();
+        assertThat(instanceKBHandle).as("Check that instance list is not empty").isNotEmpty();
         assertThat(instanceKBHandle.stream().map(KBHandle::getName))
-                    .as("Check that child concept is retreived")
-                    .contains("Abele, Familie");
+                .as("Check that child concept is retreived").contains("Abele, Familie");
     }
 
     @Ignore("#1522 - GND tests not running")
@@ -159,11 +163,9 @@ public class KnowledgeBaseSubPropertyLabelTest
         String instanceId = "http://d-nb.info/gnd/7509336-4";
         Optional<KBInstance> instance = sut.readInstance(kb, instanceId);
 
-        assertThat(instance).as("Check that instance is present")
-            .isPresent();
-        assertThat(instance.get().getName())
-            .as("Check that correct label is retrieved")
-            .contains("Abingdon, Bettine");
+        assertThat(instance).as("Check that instance is present").isPresent();
+        assertThat(instance.get().getName()).as("Check that correct label is retrieved")
+                .contains("Abingdon, Bettine");
     }
 
     @Test
@@ -175,7 +177,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         KBProperty subpropertylabel = createSubPropertyLabel(kb);
 
         KBProperty property = testFixtures.buildProperty();
-        //set name to null so that the subproperty label becomes the main label
+        // set name to null so that the subproperty label becomes the main label
         property.setName(null);
         sut.createProperty(kb, property);
 
@@ -183,17 +185,15 @@ public class KnowledgeBaseSubPropertyLabelTest
         createStmtWithLiteral(kb, KBHandle.of(property), subpropertylabel, labelLiteral);
 
         Optional<KBProperty> optProperty = sut.readProperty(kb, property.getIdentifier());
-        assertThat(optProperty).as("Check that property is present")
-            .isPresent();
-        assertThat(optProperty.get().getName())
-            .as("Check that correct label is retrieved")
-            .contains(labelLiteral);
+        assertThat(optProperty).as("Check that property is present").isPresent();
+        assertThat(optProperty.get().getName()).as("Check that correct label is retrieved")
+                .contains(labelLiteral);
     }
 
+    // Helper
 
-    //Helper
-    
-    private Project createProject(String name) {
+    private Project createProject(String name)
+    {
         return testFixtures.createProject(name);
     }
 
@@ -245,7 +245,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
 
     private void createStmtWithLiteral(KnowledgeBase aKB, KBHandle aSubject, KBProperty aProperty,
-        String aLiteral)
+            String aLiteral)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         KBStatement stmt = new KBStatement(null, aSubject, aProperty, vf.createLiteral(aLiteral));
@@ -254,7 +254,7 @@ public class KnowledgeBaseSubPropertyLabelTest
 
     private void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
     {
-        //set reification to NONE just for "upserting" the statement, then restore old value
+        // set reification to NONE just for "upserting" the statement, then restore old value
         Reification kbReification = kb.getReification();
         try {
             kb.setReification(Reification.NONE);
@@ -266,9 +266,17 @@ public class KnowledgeBaseSubPropertyLabelTest
         }
     }
 
-   
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
         return KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
+        // No content
     }
 }

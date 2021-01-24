@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,9 @@ public class SearchQueryRequest
     private final AnnotationLayer annoationLayer;
     private final AnnotationFeature annotationFeature;
 
+    private final long offset;
+    private final long count;
+
     public SearchQueryRequest(Project aProject, User aUser, String aQuery)
     {
         this(aProject, aUser, aQuery, null);
@@ -44,12 +47,12 @@ public class SearchQueryRequest
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
             SourceDocument aLimitedToDocument)
     {
-        this(aProject, aUser, aQuery, aLimitedToDocument, null, null);
+        this(aProject, aUser, aQuery, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
-        SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature)
+            SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
     {
         super();
         project = aProject;
@@ -58,6 +61,8 @@ public class SearchQueryRequest
         limitedToDocument = aLimitedToDocument;
         annoationLayer = aAnnotationLayer;
         annotationFeature = aAnnotationFeature;
+        offset = aOffset;
+        count = aCount;
     }
 
     public Project getProject()
@@ -88,5 +93,15 @@ public class SearchQueryRequest
     public AnnotationFeature getAnnotationFeature()
     {
         return annotationFeature;
+    }
+
+    public long getOffset()
+    {
+        return offset;
+    }
+
+    public long getCount()
+    {
+        return count;
     }
 }

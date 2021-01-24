@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.contentstream.PDFStreamEngine;
@@ -117,8 +118,8 @@ public class ImageExtractor
         addOperator(new SetMatrix());
     }
 
-    @Override protected void processOperator(Operator operator, List<COSBase> operands)
-        throws IOException
+    @Override
+    protected void processOperator(Operator operator, List<COSBase> operands) throws IOException
     {
         String operation = operator.getName();
         if ("Do".equals(operation)) {

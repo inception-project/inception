@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,54 +26,59 @@ import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.BooleanLiteralValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.BooleanLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#booleanLiteralValueSupport}.
+ * </p>
+ */
 public class BooleanLiteralValueSupport
     implements ValueTypeSupport
 {
     private String valueTypeSupportId;
-    
+
     @Override
     public String getId()
     {
         return valueTypeSupportId;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
         valueTypeSupportId = aBeanName;
     }
-    
+
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
                 new ValueType(XMLSchema.BOOLEAN.stringValue(), "Boolean", valueTypeSupportId));
     }
-    
+
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
     {
         if (aStatement.getValue() == null) {
             return false;
         }
-        
+
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
 
-        return iri != null && XMLSchema.BOOLEAN.equals(iri);        
+        return iri != null && XMLSchema.BOOLEAN.equals(iri);
     }
-    
+
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
@@ -82,9 +87,6 @@ public class BooleanLiteralValueSupport
         }
         return false;
     }
-
-    
-    
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,

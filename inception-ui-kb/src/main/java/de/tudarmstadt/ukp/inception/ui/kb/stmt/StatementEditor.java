@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,9 +59,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxQualifierChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 
-
-
-public class StatementEditor extends Panel
+public class StatementEditor
+    extends Panel
 {
 
     private static final long serialVersionUID = 7643837763550205L;
@@ -76,7 +75,8 @@ public class StatementEditor extends Panel
     private Component content;
 
     public StatementEditor(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBStatement> aStatement) {
+            IModel<KBStatement> aStatement)
+    {
         super(aId, aStatement);
 
         setOutputMarkupId(true);
@@ -90,18 +90,19 @@ public class StatementEditor extends Panel
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 
             // obtain AjaxRequestTarget and set the focus
-            RequestCycle.get()
-                    .find(AjaxRequestTarget.class)
+            RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
 
             content = editMode;
-        } else {
+        }
+        else {
             content = new ViewMode(CONTENT_MARKUP_ID, statement);
         }
         add(content);
     }
 
-    protected void actionEdit(AjaxRequestTarget aTarget) {
+    protected void actionEdit(AjaxRequestTarget aTarget)
+    {
         // Edit mode works on a model of a shallow copy of the original statement. Any floating
         // changes to the statement are either persisted by saving or undone by canceling. In
         // conjunction with onchange AjaxFormComponentUpdatingBehaviours, this makes sure that
@@ -116,30 +117,34 @@ public class StatementEditor extends Panel
         aTarget.add(this);
     }
 
-    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement) {
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement)
+    {
         KBQualifier qualifierPorto = new KBQualifier(statement);
         statement.addQualifier(qualifierPorto);
         aTarget.add(this);
     }
 
-    private void actionCancelExistingStatement(AjaxRequestTarget aTarget) {
+    private void actionCancelExistingStatement(AjaxRequestTarget aTarget)
+    {
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
         aTarget.add(this);
     }
 
-    private void actionCancelNewStatement(AjaxRequestTarget aTarget) {
+    private void actionCancelNewStatement(AjaxRequestTarget aTarget)
+    {
         // send a delete event to trigger the deletion in the UI
         AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
                 statement.getObject(), this, true);
         send(getPage(), Broadcast.BREADTH, deleteEvent);
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm) {
+    private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm)
+    {
         KBStatement modifiedStatement = aForm.getModelObject();
         try {
             String language = aForm.getModelObject().getLanguage() != null
-                ? aForm.getModelObject().getLanguage()
-                : kbModel.getObject().getDefaultLanguage();
+                    ? aForm.getModelObject().getLanguage()
+                    : kbModel.getObject().getDefaultLanguage();
             modifiedStatement.setLanguage(language);
 
             // persist the modified statement and replace the original, unchanged model
@@ -157,7 +162,8 @@ public class StatementEditor extends Panel
         }
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget) {
+    private void actionDelete(AjaxRequestTarget aTarget)
+    {
         try {
             kbService.deleteStatement(kbModel.getObject(), statement.getObject());
 
@@ -172,11 +178,12 @@ public class StatementEditor extends Panel
         }
     }
 
-    private void actionMakeExplicit(AjaxRequestTarget aTarget) {
+    private void actionMakeExplicit(AjaxRequestTarget aTarget)
+    {
         try {
             // add the statement as-is to the knowledge base
             kbService.upsertStatement(kbModel.getObject(), statement.getObject());
-    
+
             // to update the statement in the UI, one could either reload all statements of the
             // corresponding instance or (much easier) just set the inferred attribute of the
             // KBStatement to false, so that's what's done here
@@ -184,7 +191,7 @@ public class StatementEditor extends Panel
             aTarget.add(this);
             send(getPage(), Broadcast.BREADTH,
                     new AjaxStatementChangedEvent(aTarget, statement.getObject()));
-            
+
         }
         catch (RepositoryException e) {
             error("Unable to make statement explicit " + e.getLocalizedMessage());
@@ -193,50 +200,55 @@ public class StatementEditor extends Panel
         }
     }
 
-    public class ViewMode extends Fragment {
+    public class ViewMode
+        extends Fragment
+    {
         private static final long serialVersionUID = 2375450134740203778L;
 
         private WebMarkupContainer qualifierListWrapper;
 
-        public ViewMode(String aId, IModel<KBStatement> aStatement) {
+        public ViewMode(String aId, IModel<KBStatement> aStatement)
+        {
             super(aId, "viewMode", StatementEditor.this, aStatement);
 
             CompoundPropertyModel<KBStatement> compoundModel = new CompoundPropertyModel<>(
                     aStatement);
 
             add(new Label("value", compoundModel.bind("value")));
-            add(new Label("language", compoundModel.bind("language")) {
+            add(new Label("language", compoundModel.bind("language"))
+            {
                 private static final long serialVersionUID = 3436068825093393740L;
 
                 @Override
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    
+
                     setVisible(isNotEmpty(aStatement.getObject().getLanguage()));
                 }
             });
-            
+
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit)
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
 
             LambdaAjaxLink addQualifierLink = new LambdaAjaxLink("addQualifier",
-                t -> actionAddQualifier(t, aStatement.getObject()))
-                .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred() &&
-                    kbModel.getObject().getReification().supportsQualifier()));
+                    t -> actionAddQualifier(t, aStatement.getObject())).onConfigure(
+                            (_this) -> _this.setVisible(!statement.getObject().isInferred()
+                                    && kbModel.getObject().getReification().supportsQualifier()));
             addQualifierLink.add(new Label("label", new ResourceModel("qualifier.add")));
             addQualifierLink.add(new WriteProtectionBehavior(kbModel));
             add(addQualifierLink);
-            
+
             LambdaAjaxLink makeExplicitLink = new LambdaAjaxLink("makeExplicit",
                     StatementEditor.this::actionMakeExplicit).onConfigure(
-                        (_this) -> _this.setVisible(statement.getObject().isInferred()));
+                            (_this) -> _this.setVisible(statement.getObject().isInferred()));
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
 
-            RefreshingView<KBQualifier> qualifierList = new RefreshingView<KBQualifier>("qualifierList")
+            RefreshingView<KBQualifier> qualifierList = new RefreshingView<KBQualifier>(
+                    "qualifierList")
             {
                 private static final long serialVersionUID = -8342276415072873329L;
 
@@ -244,9 +256,10 @@ public class StatementEditor extends Panel
                 protected Iterator<IModel<KBQualifier>> getItemModels()
                 {
                     return new ModelIteratorAdapter<KBQualifier>(
-                        statement.getObject().getQualifiers())
+                            statement.getObject().getQualifiers())
                     {
-                        @Override protected IModel<KBQualifier> model(KBQualifier object)
+                        @Override
+                        protected IModel<KBQualifier> model(KBQualifier object)
                         {
                             return LambdaModel.of(() -> object);
                         }
@@ -257,7 +270,7 @@ public class StatementEditor extends Panel
                 protected void populateItem(Item<KBQualifier> aItem)
                 {
                     QualifierEditor editor = new QualifierEditor("qualifier", kbModel,
-                        aItem.getModel());
+                            aItem.getModel());
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }
@@ -274,11 +287,11 @@ public class StatementEditor extends Panel
         public void actionQualifierChanged(AjaxQualifierChangedEvent event)
         {
             boolean isEventForThisStatement = event.getQualifier().getStatement()
-                .equals(statement.getObject());
+                    .equals(statement.getObject());
             if (isEventForThisStatement) {
                 if (event.isDeleted()) {
                     event.getQualifier().getStatement().getQualifiers()
-                        .remove(event.getQualifier());
+                            .remove(event.getQualifier());
                 }
                 statement.setObject(event.getQualifier().getStatement());
                 event.getTarget().add(qualifierListWrapper);
@@ -287,7 +300,10 @@ public class StatementEditor extends Panel
 
     }
 
-    private class EditMode extends Fragment implements Focusable {
+    private class EditMode
+        extends Fragment
+        implements Focusable
+    {
         private static final long serialVersionUID = 2489925553729209190L;
 
         private Component initialFocusComponent;
@@ -311,7 +327,8 @@ public class StatementEditor extends Panel
          *            whether the statement being edited is new, meaning it has no corresponding
          *            statement in the KB backend
          */
-        public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement) {
+        public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement)
+        {
             super(aId, "editMode", StatementEditor.this, aStatement);
 
             Form<KBStatement> form = new Form<>("form", CompoundPropertyModel.of(aStatement));
@@ -332,7 +349,7 @@ public class StatementEditor extends Panel
             // FIXME Selection of the data type should only be possible if it is not
             // restricted to a single type in the property definition - take into account
             // inheritance?
-            //form.add(new TextField<>("datatype"));
+            // form.add(new TextField<>("datatype"));
 
             // We do not allow the user to change the property
 
@@ -345,7 +362,8 @@ public class StatementEditor extends Panel
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewStatement) {
                     StatementEditor.this.actionCancelNewStatement(t);
-                } else {
+                }
+                else {
                     StatementEditor.this.actionCancelExistingStatement(t);
                 }
             }));
@@ -355,7 +373,8 @@ public class StatementEditor extends Panel
         }
 
         @Override
-        public Component getFocusComponent() {
+        public Component getFocusComponent()
+        {
             return initialFocusComponent;
         }
     }

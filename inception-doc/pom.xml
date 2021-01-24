@@ -1,14 +1,14 @@
 <!--
-  Copyright 2015
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.15.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-doc</artifactId>
   <packaging>jar</packaging>
@@ -35,24 +35,33 @@
 
     <dependency>
       <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj-api</artifactId>
+      <version>${asciidoctor.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
       <artifactId>asciidoctorj</artifactId>
-      <version>1.5.8.1</version>
+      <version>${asciidoctor.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.asciidoctor</groupId>
       <artifactId>asciidoctorj-diagram</artifactId>
-      <version>1.5.12</version>
+      <version>${asciidoctor-diagram.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>jquery.tocify.js</artifactId>
       <version>1.9.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>jquery-migrate</artifactId>
       <version>3.0.0</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -66,6 +75,7 @@
               <!--
                 - Maven doesn't detect that we tell asciidoctor to use the diagram module
               -->
+              <usedDependency>org.asciidoctor:asciidoctorj</usedDependency>
               <usedDependency>org.asciidoctor:asciidoctorj-diagram</usedDependency>
               <!--
                 - Maven doesn't detect JS dependencies. We use this in docinfo.html

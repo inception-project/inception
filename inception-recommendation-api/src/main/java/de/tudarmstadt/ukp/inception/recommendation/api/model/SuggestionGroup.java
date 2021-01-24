@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +67,7 @@ public class SuggestionGroup
     implements Serializable
 {
     private static final long serialVersionUID = 8729617486073480240L;
-    
+
     private final List<AnnotationSuggestion> suggestions;
     private boolean sorted = true;
     private Offset offset;
@@ -75,7 +79,7 @@ public class SuggestionGroup
     {
         suggestions = new ArrayList<>();
     }
-    
+
     public SuggestionGroup(AnnotationSuggestion... aItems)
     {
         suggestions = new ArrayList<>(asList(aItems));
@@ -102,17 +106,17 @@ public class SuggestionGroup
     {
         return documentName;
     }
-    
+
     public Offset getOffset()
     {
         return offset;
     }
-    
+
     public AnnotationSuggestion get(int aIndex)
     {
         return suggestions.get(aIndex);
     }
-    
+
     private void ensureSortedState()
     {
         // To the outside, the group should appear to be sorted.
@@ -121,14 +125,14 @@ public class SuggestionGroup
             sorted = true;
         }
     }
-    
+
     @Override
     public Stream<AnnotationSuggestion> stream()
     {
         ensureSortedState();
         return suggestions.stream();
     }
-    
+
     /**
      * Get the deltas of all candidates. The deltas are calculated separately for each recommender
      * if the group contains recommendations from multiple recommenders. That is necessary because
@@ -158,7 +162,7 @@ public class SuggestionGroup
                 List<AnnotationSuggestion> candidates = e.getValue().stream()
                         .filter(AnnotationSuggestion::isVisible).collect(toList());
                 List<Delta> deltas = new ArrayList<>();
-                
+
                 Iterator<AnnotationSuggestion> i = candidates.iterator();
                 AnnotationSuggestion first = i.next();
                 while (i.hasNext()) {
@@ -167,10 +171,10 @@ public class SuggestionGroup
                     first = second;
                 }
                 deltas.add(new Delta(first));
-                
+
                 result.put(recommenderId, unmodifiableList(deltas));
             }
-            
+
             return unmodifiableMap(result);
         }
     }
@@ -210,9 +214,8 @@ public class SuggestionGroup
                 // We consider only candidates that are visible - note that the filtered list is
                 // still sorted
                 List<AnnotationSuggestion> visibleSuggestions = e.getValue().stream()
-                        .filter(AnnotationSuggestion::isVisible)
-                        .collect(toList());
-                
+                        .filter(AnnotationSuggestion::isVisible).collect(toList());
+
                 if (visibleSuggestions.isEmpty()) {
                     // If a recommender has no visible suggestions, we skip it - nothing to do here
                 }
@@ -227,7 +230,7 @@ public class SuggestionGroup
                             new Delta(visibleSuggestions.get(0), visibleSuggestions.get(1)));
                 }
             }
-            
+
             return unmodifiableMap(result);
         }
     }
@@ -236,19 +239,19 @@ public class SuggestionGroup
     public boolean add(AnnotationSuggestion aSuggestion)
     {
         boolean empty = isEmpty();
-        
+
         // When we add the second element to the group, then it is probably no longer sorted
         if (!empty) {
             sorted = false;
         }
-        
+
         // All suggestions in a group must come from the same document (because they must be
         // on the same position) and layer/feature
         if (!empty) {
             AnnotationSuggestion representative = get(0);
             Validate.isTrue(
-                    representative.getBegin() == aSuggestion.getBegin() && 
-                    representative.getEnd() == aSuggestion.getEnd(),
+                    representative.getBegin() == aSuggestion.getBegin()
+                            && representative.getEnd() == aSuggestion.getEnd(),
                     "All suggestions in a group must be at the same position: expected [%d-%d] but got [%d-%d]",
                     representative.getBegin(), representative.getEnd(), aSuggestion.getBegin(),
                     aSuggestion.getEnd());
@@ -262,7 +265,7 @@ public class SuggestionGroup
                     "All suggestions in a group must be for the same feature: expected [%s] but got [%s]",
                     representative.getFeature(), aSuggestion.getFeature());
         }
-        
+
         // Cache information that must be consistent in the group when the first item is added
         if (empty) {
             offset = aSuggestion.getOffset();
@@ -270,7 +273,7 @@ public class SuggestionGroup
             layerId = aSuggestion.getLayerId();
             documentName = aSuggestion.getDocumentName();
         }
-        
+
         return suggestions.add(aSuggestion);
     }
 
@@ -281,7 +284,7 @@ public class SuggestionGroup
         // Avoid changes to the group via the iterator since that might interfere with our sorting
         return unmodifiableIterator(suggestions.iterator());
     }
-    
+
     @Override
     public boolean isEmpty()
     {
@@ -298,7 +301,7 @@ public class SuggestionGroup
     {
         return new SuggestionGroupCollector();
     }
-    
+
     public static Collection<SuggestionGroup> group(Collection<AnnotationSuggestion> aSuggestions)
     {
         SortedMap<GroupKey, SuggestionGroup> grouped = aSuggestions.stream()
@@ -345,22 +348,20 @@ public class SuggestionGroup
         @Override
         public int compareTo(final GroupKey other)
         {
-            return new CompareToBuilder()
-                    .append(layerId, other.layerId)
+            return new CompareToBuilder().append(layerId, other.layerId)
                     .append(feature, other.feature)
                     // Sort by begin increasing
                     .append(begin, other.begin)
                     // Sort by end decreasing
-                    .append(other.end, end)
-                    .toComparison();
+                    .append(other.end, end).toComparison();
         }
     }
-    
+
     public static class Delta
         implements Serializable
     {
         private static final long serialVersionUID = -4892325166786170047L;
-        
+
         private final double delta;
         private final AnnotationSuggestion first;
         private final AnnotationSuggestion second;
@@ -400,7 +401,7 @@ public class SuggestionGroup
             return delta;
         }
     }
-    
+
     public static class SuggestionGroupCollector
         implements Collector<AnnotationSuggestion, SuggestionGroup, SuggestionGroup>
     {
