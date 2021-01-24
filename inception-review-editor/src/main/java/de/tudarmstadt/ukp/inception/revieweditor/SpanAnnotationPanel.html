@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <div wicket:id="featuresContainer" class="card">
+    <div class="card-body">
+      <div class="feature-editors-sidebar">
+        <div class="form-row form-group">
+          <label class="feature-editor-label col-form-label">
+            Text
+            <a wicket:id="select" class="float-right"><i class="fas fa-crosshairs"></i></a>
+          </label>
+          <div class="feature-editor-value">
+            <span class="scrolling form-control" readonly
+              style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"> <span
+              style="word-wrap: break-word;"> <span wicket:id="preContext"></span> <mark
+                  wicket:id="text"></mark><span wicket:id="postContext"></span>
+            </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div wicket:id="features" class="feature-editors-sidebar">
+        <div class="form-row form-group">
+          <label class="feature-editor-label col-form-label"> <span wicket:id="label" />
+          </label>
+          <div class="feature-editor-value">
+            <span wicket:id="value" class="scrolling form-control" readonly
+              style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div wicket:id="textFeatures" class="feature-editors-sidebar">
+        <div class="form-row form-group">
+          <label class="feature-editor-label col-form-label"> <span wicket:id="label" />
+          </label>
+          <div class="feature-editor-value">
+            <span wicket:id="value" class="scrolling form-control" readonly
+              style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+</html>

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -69,7 +70,7 @@ import nl.ru.test.category.SlowTests;
 @Category(SlowTests.class)
 @RunWith(Parameterized.class)
 @Transactional
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceRemoteTest
 {
     private final String PROJECT_NAME = "Test project";
@@ -251,26 +252,28 @@ public class KnowledgeBaseServiceRemoteTest
         // "http://www.wikidata.org/entity/Q19576436", rootConcepts));
         // }
 
-        {
-            KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
-            KnowledgeBase kb_dbpedia = new KnowledgeBase();
-            kb_dbpedia.setName(profile.getName());
-            kb_dbpedia.setType(profile.getType());
-            kb_dbpedia.setReification(profile.getReification());
-            kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_dbpedia.applyMapping(profile.getMapping());
-            kb_dbpedia.applyRootConcepts(profile);
-            kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_dbpedia.setMaxResults(maxResults);
-            kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
-            rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
-            parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
-                    "http://dbpedia.org/ontology/Biomolecule");
-            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
-                    "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
-        }
+        // See: #1931 - DBPedia tests time out and fail
+        // https://github.com/inception-project/inception/issues/1931
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
+        // KnowledgeBase kb_dbpedia = new KnowledgeBase();
+        // kb_dbpedia.setName(profile.getName());
+        // kb_dbpedia.setType(profile.getType());
+        // kb_dbpedia.setReification(profile.getReification());
+        // kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        // kb_dbpedia.applyMapping(profile.getMapping());
+        // kb_dbpedia.applyRootConcepts(profile);
+        // kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
+        // kb_dbpedia.setMaxResults(maxResults);
+        // kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
+        // rootConcepts = new HashSet<String>();
+        // rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+        // parentChildConcepts = new HashMap<String, String>();
+        // parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+        // "http://dbpedia.org/ontology/Biomolecule");
+        // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
+        // "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
+        // }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("yago");

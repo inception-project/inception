@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.assertj.core.api.Assertions.offset;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -108,6 +109,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -128,11 +130,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
