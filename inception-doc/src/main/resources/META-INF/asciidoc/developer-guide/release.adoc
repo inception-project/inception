@@ -66,7 +66,7 @@ Do this when you want to do a feature release.
 == Running the release process
 
 . Check that the release branch depends on the right WebAnno release or update it in the top-level `pom.xml` (properties -> `webanno.version`).
-. Check that the JDK version you are using corresponds to the minimum Java version specified in the system requirements section of the documentation. Building against a newer version might create a release that will not run on the minimum required version because usages of APIs not available in the minimum version may not be detected.
+. Check that the JDK version you are using corresponds to the minimum Java version specified in the system requirements section of the documentation. Building against a newer version might create a release that will not run on the minimum required version because usages of APIs not available in the minimum version may not be detected. You can check the JDK version that Maven is using with `mvn -version` and change it (temporarily) by setting `JAVA_HOME` to the path of the JDK version you need: `export JAVA_HOME="/path/to/jvm"`.
 . Run `mvn release:prepare`; this step will ask you for the release version (e.g. `0.9.0`) for the tag to be created (e.g. `inception-app-0.9.0`), and for the new development version (e.g. `0.10.0-SNAPSHOT`). After that, it will update the version (push), build the code, and create a tag (push).
 . Run `mvn release:perform`; this will check out the created tag into the folder `target/checkout` and build the release artifacts there.
 . Immediately after the release, again merge the released branch into the
@@ -119,7 +119,7 @@ Make sure that you configured your docker user in your Maven settings:
 ----
 
 Also, your user needs to have push rights to the `inceptionproject` Dockerhub group.
-If you have just made a release, change to `target/checkout/inception-docker`. Otherwise out the release
+If you have just made a release, change to `target/checkout/inception-docker`. Otherwise check out the release
 tag e.g. via `git checkout tags/inception-app-0.18.0`. 
 Make sure that in the master pom, the version is set to a release version (no snapshot suffix).
 Then go to the `inception-docker` module folder and there run the following commmands:
