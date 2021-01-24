@@ -8,7 +8,9 @@ about: Release checklist for feature releases (first or second digit increase)
 - [ ] Ensure all issues and PRs are resolved/merged
 
 **Local**
-- [ ] Run Maven release (usually increase second digit of version, not first)
+- [ ] Run Maven release (usually increase second digit of version, not first). Check that the JDK 
+      used to run the release is not newer than the Java version specified in the minium system
+      requirements!
 - [ ] Sign the standalone JAR
 
 **GitHub release page**
