@@ -32,16 +32,17 @@
 
   <module name="SuppressWithPlainTextCommentFilter"/>
 
+  <module name="LineLength">
+    <property name="max" value="120"/>
+    <property name="ignorePattern" value="^package.*|^import.*|JavaCCOptions|a href|href|http://|https://|ftp://|&quot;[ ]?[)}]*[,;]?$"/>
+  </module>
+
   <module name="TreeWalker">
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>
       <property name="format" value="\\u00(08|09|0(a|A)|0(c|C)|0(d|D)|22|27|5(C|c))|\\(0(10|11|12|14|15|42|47)|134)"/>
       <property name="message" value="Avoid using corresponding octal or Unicode escape."/>
-    </module>
-    <module name="LineLength">
-      <property name="max" value="100"/>
-      <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://|&quot;[)]*[,;]?$"/>
     </module>
     <module name="AvoidStarImport"/>
     <module name="UnusedImports"/>
@@ -69,6 +70,8 @@
       <message key="name.invalidPattern"
                value="Interface type name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    
+    <!--
     <module name="GenericWhitespace">
       <message key="ws.followed"
                value="GenericWhitespace ''{0}'' is followed by whitespace."/>
@@ -79,7 +82,9 @@
       <message key="ws.notPreceded"
                value="GenericWhitespace ''{0}'' is not preceded with whitespace."/>
     </module>
+    -->
     
+    <!--
     <module name="Indentation">
       <property name="basicOffset" value="4"/>
       <property name="braceAdjustment" value="0"/>
@@ -89,18 +94,18 @@
       <property name="arrayInitIndent" value="8"/>
       <property name="severity" value="error"/>
     </module>
+    -->
     
     <module name="EmptyCatchBlock">
       <property name="exceptionVariableName" value="expected|ignore"/>
     </module>
     
-    <!-- Match default Eclipse formatter configuration (Kepler / Luna) -->
-    <module name="CustomImportOrder">
-        <property name="customImportOrderRules"
-            value="STATIC###STANDARD_JAVA_PACKAGE###SPECIAL_IMPORTS"/>
-        <property name="specialImportsRegExp" value="^org\."/>
-        <property name="sortImportsInGroupAlphabetically" value="true"/>
-        <property name="separateLineBetweenGroups" value="true"/>
+    <module name="ImportOrder">
+      <property name="groups" value="/^java\./,javax,org,com"/>
+      <property name="ordered" value="true"/>
+      <property name="separated" value="true"/>
+      <property name="option" value="top"/>
+      <property name="sortStaticImportsAlphabetically" value="true"/>
     </module>
     
     <module name="EqualsHashCode"/>

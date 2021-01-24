@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.support.ui;
+
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -29,7 +30,7 @@ public class LinkProvider
 
     /**
      * Create an external link to a page which opens a document, codes the url as
-     * aPageClass?params#!p=projectId&d=docId
+     * {@code aPageClass?params#!p=projectId&d=docId}.
      */
     public static ExternalLink createDocumentPageLink(DocumentService aDocService, Project aProject,
             String aDocId, String aId, String aLinkLabel, Class<? extends WebPage> aPageClass)
@@ -38,25 +39,33 @@ public class LinkProvider
         if (aDocService.existsSourceDocument(aProject, aDocId)) {
             docId = aDocService.getSourceDocument(aProject, aDocId).getId();
         }
-        
+
         return createDocumentPageLink(aProject, docId, aId, aLinkLabel, aPageClass);
     }
-    
-    public static ExternalLink createDocumentPageLink(Project aProject, long aDocId, String aId,
+
+    public static String createDocumentPageLinkUrl(long aProjectId, long aDocId, String aId,
             String aLinkLabel, Class<? extends WebPage> aPageClass)
     {
         String url = "";
         if (aDocId >= 0) {
             url = String.format("%s#!p=%d&d=%d",
-                    RequestCycle.get().urlFor(aPageClass, new PageParameters()), aProject.getId(),
+                    RequestCycle.get().urlFor(aPageClass, new PageParameters()), aProjectId,
                     aDocId);
         }
+        return url;
+    }
+
+    public static ExternalLink createDocumentPageLink(Project aProject, long aDocId, String aId,
+            String aLinkLabel, Class<? extends WebPage> aPageClass)
+    {
+        String url = createDocumentPageLinkUrl(aProject.getId(), aDocId, aId, aLinkLabel,
+                aPageClass);
+
         if (aLinkLabel == null) {
             new ExternalLink(aId, url);
         }
-        
+
         return new ExternalLink(aId, url, aLinkLabel);
-        
     }
 
     public static ExternalLink createDocumentPageLink(DocumentService aDocService, Project aProject,
@@ -64,9 +73,9 @@ public class LinkProvider
     {
         return createDocumentPageLink(aDocService, aProject, aDocumentId, aId, null, aClass);
     }
-    
-    public static ExternalLink createDocumentPageLink(Project aProject,
-            long aDocumentId, String aId, Class<? extends WebPage> aClass)
+
+    public static ExternalLink createDocumentPageLink(Project aProject, long aDocumentId,
+            String aId, Class<? extends WebPage> aClass)
     {
         return createDocumentPageLink(aProject, aDocumentId, aId, null, aClass);
     }

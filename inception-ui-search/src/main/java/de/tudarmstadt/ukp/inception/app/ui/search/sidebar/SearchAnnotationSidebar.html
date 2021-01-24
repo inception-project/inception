@@ -1,95 +1,109 @@
 <!DOCTYPE html>
 <!--
- - Copyright 2017
- - Ubiquitous Knowledge Processing (UKP) Lab
- - Technische Universität Darmstadt
- - 
- - Licensed under the Apache License, Version 2.0 (the "License");
- - you may not use this file except in compliance with the License.
- - You may obtain a copy of the License at
- -  
- -  http://www.apache.org/licenses/LICENSE-2.0
- - 
- - Unless required by applicable law or agreed to in writing, software
- - distributed under the License is distributed on an "AS IS" BASIS,
- - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- - See the License for the specific language governing permissions and
- - limitations under the License.
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div wicket:id="mainContainer" class="panel panel-default panel-flex flex-content">
-      <div class="panel-heading">
-        <h3 class="panel-title">Search</h3>
+    <div wicket:id="mainContainer" class="card flex-content">
+      <div class="card-header">
+        Search
       </div>
-      <div class="panel-body flex-v-container">
+      <div class="card-body flex-v-container">
         <form wicket:id="searchForm">
-          <div class="col-sm-12" wicket:enclosure="queryInput">
-            <div class="flex-v-container form-horizontal">
-              <div class="form-group">
-                <textarea wicket:id="queryInput" class="form-control" style="resize: vertical; word-break: break-all;" rows="5"></textarea>
-              </div>
-              <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-                <button wicket:id="search" type="submit" class="btn btn-primary flex-content">
-                  <i class="fa fa-search" aria-hidden="true"></i>
-                  Search
-                </button>
-                <button wicket:id="toggleOptionsVisibility" type="button" class="btn btn-default">
-                  <i class="fa fa-cog" aria-hidden="true"></i>
-                </button>
-              </div>
+          <div class="flex-v-container" wicket:enclosure="queryInput">
+            <div class="form-group from-row">
+              <textarea wicket:id="queryInput" class="form-control" style="resize: vertical; word-break: break-all;" rows="5"></textarea>
+            </div>
+            <div class="form-group from-row flex-h-container flex-gutter flex-only-internal-gutter">
+              <button wicket:id="search" type="submit" class="btn btn-primary flex-content" wicket:message="title:search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="search"/></span>
+              </button>
+              <button wicket:id="toggleOptionsVisibility" type="button" class="btn btn-secondary">
+                <i class="fas fa-cog" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
           
-          <form wicket:id="searchOptionsForm" class="panel-small panel panel-default panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title">
-                <wicket:message key="options"/>
-              </h3>
+          <div wicket:id="searchOptionsPanel" class="card">
+            <div class="card-header small">
+              <wicket:message key="options"/>
+              <div class="actions">
+                <button wicket:id="reindexProject" type="button" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-sync" aria-hidden="true"></i>
+                  <wicket:message key="reindex"/>
+                </button>
+              </div>
             </div>
-            <div class="panel-body form-horizontal">
-              <div class="col-sm-12">
-                <div class="form-group" wicket:enclosure="limitedToCurrentDocument">
-                  <div class="checkbox">
-                    <label wicket:for="limitedToCurrentDocument">
-                      <input wicket:id="limitedToCurrentDocument" type="checkbox"> 
-                      <wicket:label key="limitedToCurrentDocument"/>
-                    </label>
-                  </div>
-                </div>
-                <h5><wicket:message key="groupingHeader"/></h5>
-                <div class="form-group">
-                  <label wicket:for="groupingLayer" class="control-label col-sm-3">
-                    <wicket:message key="groupingLayer"/>
+            <div class="card-body small">
+              <div class="form-group form-row" wicket:enclosure="limitedToCurrentDocument">
+                <div class="form-check">
+                  <input wicket:id="limitedToCurrentDocument" class="form-check-input" type="checkbox"/>
+                  <label wicket:for="limitedToCurrentDocument" class="form-check-label" >
+                    <wicket:label key="limitedToCurrentDocument"/>
                   </label>
-                  <div class="col-sm-9">
-                    <select wicket:id="groupingLayer" class="form-control" 
-                        data-container="body"></select>
-                  </div>
                 </div>
-                <div class="form-group">
-                  <label wicket:for="groupingFeature" class="control-label col-sm-3">
-                    <wicket:message key="groupingFeature"/>
+              </div>
+              <div class="form-group form-row" wicket:enclosure="lowLevelPaging">
+                <div class="form-check">
+                  <input wicket:id="lowLevelPaging" class="form-check-input" type="checkbox"/>
+                  <label wicket:for="lowLevelPaging" class="form-check-label" >
+                    <wicket:label key="lowLevelPaging"/>
                   </label>
-                  <div class="col-sm-9">
-                    <select wicket:id="groupingFeature" class="form-control" 
-                        data-container="body"></select>
-                  </div>
+                </div>
+              </div>
+              <div class="mt-3">
+                <strong><wicket:message key="groupingHeader"/></strong>
+              </div>
+              <div class="form-group form-row">
+                <label wicket:for="groupingLayer" class="col-form-label col-sm-4">
+                  <wicket:message key="groupingLayer"/>
+                </label>
+                <div class="col-sm-8">
+                  <select wicket:id="groupingLayer" class="form-control-sm" data-container="body"></select>
+                </div>
+              </div>
+              <div class="form-group form-row">
+                <label wicket:for="groupingFeature" class="col-form-label col-sm-4">
+                  <wicket:message key="groupingFeature"/>
+                </label>
+                <div class="col-sm-8">
+                  <select wicket:id="groupingFeature" class="form-control-sm" data-container="body"></select>
+                </div>
+              </div>
+              <div class="form-group form-row">
+                <label wicket:for="itemsPerPage" class="col-form-label col-sm-4">
+                  <wicket:message key="itemsPerPage"/>
+                </label>
+                <div class="col-sm-8">
+                  <select wicket:id="itemsPerPage" class="form-control-sm" data-container="body"></select>
                 </div>
               </div>
             </div>
-            <div class="panel-footer text-right">
-              <button wicket:id="reindexProject" type="button" class="btn btn-sm btn-default">
-                <i class="fa fa-refresh" aria-hidden="true"></i>
-                <wicket:message key="reindex"/>
-              </button>
-            </div>
-          </form>
+          </div>
         </form>
         
+        <div>
+          <span wicket:id="numberOfResults" class="float-right"/>
+          <span wicket:id="pagingNavigator"/>
+        </div>
         <div class="scrolling flex-content">
-          <table id="bd" class="table table-striped table-condensed">
+          <table wicket:id="resultsGroupContainer" class="table table-striped table-sm">
             <wicket:container wicket:id="searchResultGroups">
               <tr valign="middle" style="line-height: 2em;">
                 <th class="headers" style="text-align: center; width: 15%" colspan="1">
@@ -107,66 +121,61 @@
         </div>
         <form wicket:id="annotateForm" style="margin-top: 5px">
           <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-            <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content">
-              <i class="fa fa-plus" aria-hidden="true"></i>
-                Create Annotations
+            <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content" wicket:message="title:create">
+              <i class="fas fa-plus" aria-hidden="true"></i>
+              <span class="d-none d-xl-inline">&nbsp;<wicket:message key="create"/></span>
             </button>
-            <button wicket:id="toggleCreateOptionsVisibility" type="button" class="btn btn-default">
-              <i class="fa fa-cog" aria-hidden="true"></i>
+            <button wicket:id="toggleCreateOptionsVisibility" type="button" class="btn btn-secondary">
+              <i class="fas fa-cog" aria-hidden="true"></i>
             </button>
           </div>
-          <form wicket:id="createOptions" class="panel-small panel panel-default panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title">
-                <wicket:message key="options"/>
-              </h3>
+          <form wicket:id="createOptions" class="card">
+            <div class="card-header small">
+              <wicket:message key="options"/>
             </div>
-            <div class="panel-body form-horizontal">
-              <div class="col-sm-12">
-                <div class="form-group" wicket:enclosure="overrideExistingAnnotations">
-                  <div class="col-sm-12">
-                    <div class="checkbox">
-                      <label wicket:for="overrideExistingAnnotations">
-                        <input wicket:id="overrideExistingAnnotations" type="checkbox">
-                          <wicket:label key="overrideMode"/>
-                      </label>
-                    </div>
-                  </div>
+            <div class="card-body small">
+              <div class="form-group form-row" wicket:enclosure="overrideExistingAnnotations">
+                <div class="form-check">
+                  <input wicket:id="overrideExistingAnnotations" class="form-check-input" type="checkbox">
+                  <label wicket:for="overrideExistingAnnotations" class="form-check-label" >
+                    <wicket:label key="overrideMode"/>
+                  </label>
                 </div>
               </div>
             </div>
           </form>
 
           <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-            <button wicket:id="deleteButton" type="submit" class="btn btn-primary flex-content">
-              <i class="fa fa-trash" aria-hidden="true"></i>
-                Delete Annotations
+            <button wicket:id="deleteButton" type="submit" class="btn btn-danger flex-content" wicket:message="title:delete">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+              <span class="d-none d-xl-inline">&nbsp;<wicket:message key="delete"/></span>
             </button>
-            <button wicket:id="toggleDeleteOptionsVisibility" type="button" class="btn btn-default">
-              <i class="fa fa-cog" aria-hidden="true"></i>
+            <button wicket:id="toggleDeleteOptionsVisibility" type="button" class="btn btn-secondary">
+              <i class="fas fa-cog" aria-hidden="true"></i>
             </button>
           </div>
-          <form wicket:id="deleteOptions" class="panel-small panel panel-default panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title">
-                <wicket:message key="options"/>
-              </h3>
+          <form wicket:id="deleteOptions" class="card">
+            <div class="card-header small">
+              <wicket:message key="options"/>
             </div>
-            <div class="panel-body form-horizontal">
-              <div class="col-sm-12">
-                <div class="form-group" wicket:enclosure="deleteOnlyMatchingFeatureValues">
-                  <div class="col-sm-12">
-                    <div class="checkbox">
-                      <label wicket:for="deleteOnlyMatchingFeatureValues">
-                        <input wicket:id="deleteOnlyMatchingFeatureValues" type="checkbox">
-                          <wicket:label key="deleteOnlyMatchingFeatureValues"/>
-                      </label>
-                    </div>
-                  </div>
+            <div class="card-body small">
+              <div class="form-group form-row" wicket:enclosure="deleteOnlyMatchingFeatureValues">
+                <div class="form-check">
+                  <input wicket:id="deleteOnlyMatchingFeatureValues" class="form-check-input" type="checkbox">
+                  <label wicket:for="deleteOnlyMatchingFeatureValues" class="form-check-label">
+                    <wicket:label key="deleteOnlyMatchingFeatureValues"/>
+                  </label>
                 </div>
               </div>
             </div>
           </form>
+          
+          <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+            <button wicket:id="clearButton" class="btn btn-secondary flex-content" wicket:message="title:clear">
+              <i class="fas fa-times"></i>
+              <span class="d-none d-xl-inline">&nbsp;<wicket:message key="clear"/></span>
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -1,5 +1,5 @@
 [[sect_annotation_activeLearning]]
-== Active Learning
+= Active Learning
 
 Active learning is a family of methods which seeks to optimize the learning rate of classification algorithms by  soliciting labels from a human user in a particular order. This means that recommenders should be able to make better suggestions with fewer user interactions, allowing the user to perform quicker and more accurate annotations. Note that Active Learning only works if there are recommenders and if these recommenders actually generate recommendations which are usually shown as grey bubbles over the text.
 

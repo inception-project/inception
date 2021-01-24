@@ -1,0 +1,10 @@
+The copyright of the INCEpTION code belongs to the respective contributors who license their
+contribution under the terms of the Apache License 2.0.
+
+Besides invididual contributions, the copyright in this codebase largely belongs to:
+
+Copyright 2018-2021 Ubiquitous Knowledge Processing (UKP) Lab
+                    Technische Universität Darmstadt
+
+For individual contributions, please check the CONTRIBITORS.txt file as well as the history
+contained in this repository.

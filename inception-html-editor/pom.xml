@@ -1,14 +1,14 @@
 <!--
-  Copyright 2017
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-html-editor</artifactId>
   <name>INCEpTION - Editor - HTML</name>
@@ -47,12 +47,16 @@
     </dependency>
     
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.html-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-html-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-xml-asl</artifactId>
     </dependency>
     
     <dependency>
@@ -72,10 +76,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -128,9 +128,10 @@
               <id>default</id>
               <configuration>
                 <excludes combine.children="append">
-                  <!-- These test files contain license info but are not recognized by RAT -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator-full.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator.min.css</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator.*</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator-full.*</exclude>
+                  <exclude>src/main/js/annotatorjs/**/*</exclude>
+                  <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>

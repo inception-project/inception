@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,7 @@ public class EvaluationResultTest
     public void thatAccuracyWorks()
     {
         EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
-        
+
         assertThat(calc.computeAccuracyScore()).as("accuracy is correctly calculated")
                 .isEqualTo(4.0 / 9.0);
     }
@@ -59,7 +59,7 @@ public class EvaluationResultTest
     public void thatPrecisionWorks()
     {
         EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
-        
+
         assertThat(calc.computePrecisionScore()).as("precision is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
@@ -68,7 +68,7 @@ public class EvaluationResultTest
     public void thatRecallWorks()
     {
         EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
-        
+
         assertThat(calc.computeRecallScore()).as("recall is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
@@ -77,11 +77,11 @@ public class EvaluationResultTest
     public void thatF1Works()
     {
         EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
-        
+
         assertThat(calc.computeF1Score()).as("f1 is correctly calculated")
                 .isEqualTo(2 * (4.0 / 9.0 * 4.0 / 9.0) / (8.0 / 9.0));
     }
-    
+
     @Test
     public void thatIgnoringALabelWorks()
     {
@@ -106,13 +106,11 @@ public class EvaluationResultTest
         EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
         assertThat(calc.getNumOfLabels()).as("check num of labels for no ignoreLabel").isEqualTo(3);
 
-        calc = instances.stream()
-                .collect(EvaluationResult.collector(0, 0, 0, "PER"));
+        calc = instances.stream().collect(EvaluationResult.collector(0, 0, 0, "PER"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for one ignoreLabel")
                 .isEqualTo(2);
 
-        calc = instances.stream().collect(
-                EvaluationResult.collector(0, 0, 0, "PER", "ORG"));
+        calc = instances.stream().collect(EvaluationResult.collector(0, 0, 0, "PER", "ORG"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for two ignoreLabel")
                 .isEqualTo(1);
     }
@@ -124,9 +122,9 @@ public class EvaluationResultTest
         List<LabelPair> newInstances = new ArrayList<>(instances);
         newInstances.add(new LabelPair("PART", "ORG"));
         newInstances.add(new LabelPair("PER", "PUNC"));
-        
+
         EvaluationResult calc = newInstances.stream().collect(EvaluationResult.collector());
-        
+
         assertThat(calc.computeAccuracyScore())
                 .as("accuracy with missing classes is correctly calculated").isEqualTo(2.0 / 5);
         assertThat(calc.computePrecisionScore())

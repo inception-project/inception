@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,26 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static java.lang.Thread.MIN_PRIORITY;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 public class InspectableThreadPoolExecutor
-        extends ThreadPoolExecutor
+    extends ThreadPoolExecutor
 {
     private final BiConsumer<Thread, Runnable> beforeExecuteCallback;
     private final BiConsumer<Runnable, Throwable> afterExecuteCallback;
 
-    public InspectableThreadPoolExecutor(int aNumberOfThreads,
-                                         int queueSize,
-                                         BiConsumer<Thread, Runnable> aBeforeExecuteCallback,
-                                         BiConsumer<Runnable, Throwable> aAfterExecuteCallback)
+    public InspectableThreadPoolExecutor(int aNumberOfThreads, int queueSize,
+            BiConsumer<Thread, Runnable> aBeforeExecuteCallback,
+            BiConsumer<Runnable, Throwable> aAfterExecuteCallback)
     {
-        super(aNumberOfThreads, aNumberOfThreads, 0L, TimeUnit.MILLISECONDS,
+        super(aNumberOfThreads, aNumberOfThreads, 0L, MILLISECONDS,
                 new ArrayBlockingQueue<>(queueSize, true), buildThreadFactory());
 
         beforeExecuteCallback = aBeforeExecuteCallback;
@@ -61,9 +62,10 @@ public class InspectableThreadPoolExecutor
 
     private static ThreadFactory buildThreadFactory()
     {
-        return new BasicThreadFactory.Builder()
-                .daemon(true)
-                .priority(Thread.MIN_PRIORITY)
+        return new BasicThreadFactory.Builder() //
+                .daemon(true) //
+                .namingPattern("recommender-worker-%d") //
+                .priority(MIN_PRIORITY) //
                 .build();
     }
 }

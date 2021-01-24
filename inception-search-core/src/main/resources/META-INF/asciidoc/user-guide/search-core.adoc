@@ -29,6 +29,13 @@ Clicking on the search settings button (cog wheel) shows additional options:
 * **Grouping by** allows to group the search results by feature values of the selected annotation
   feature. By default the search results will be grouped by document title if no layer and no
   feature is selected.
+* **Low level paging** will apply paging of search results directly at query
+    level. This means only the next _n_ results are fetched every time a user switches to a new page
+    of results (where _n_ is the page size). Thus the total number of results for a result group is unknown. This option should
+    be activated if a query is expected to yield a very large number of results so that fetching all
+    results at once would slow down the application too much. +
+    This option can only be activated if results are being grouped by document.
+
 
 === Creating/Deleting Annotations for Search Results
 
@@ -38,7 +45,8 @@ results.
 This means that annotations will be created/deleted at the token offsets of the selected search
 results.
 Search results can be selected via the checkbox on the left. Per default all search
-results are selected.
+results are selected. If a result originates from a document which the user has already marked as
+*finished*, there is no checkbox since such documents cannot be modified anyway.
 
 The currently selected annotation in the annotation editor serves as template for the annotations
 that are to be created/deleted. Note that selecting an annotation first is necessary for

@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -44,7 +46,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 
 public class VisibilityCalculationTests
 {
@@ -56,7 +57,7 @@ public class VisibilityCalculationTests
     private String user;
     private String neName;
     private long layerId;
-    
+
     private RecommendationServiceImpl sut;
 
     // AnnotationSuggestion
@@ -66,6 +67,7 @@ public class VisibilityCalculationTests
     private final static String DOC_NAME = "TestDocument";
     private final static String UI_LABEL = "TestUiLabel";
     private final static double CONFIDENCE = 0.2;
+    private final static String CONFIDENCE_EXPLANATION = "Predictor A: 0.05 | Predictor B: 0.15";
     private final static String COVERED_TEXT = "TestText";
 
     @Before
@@ -88,9 +90,10 @@ public class VisibilityCalculationTests
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
         featureList.add(new AnnotationFeature("value", "uima.cas.String"));
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
-        
+        when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
+
         sut = new RecommendationServiceImpl(null, null, null, null, annoService, null,
-                recordService, null);
+                recordService, (EntityManager) null);
     }
 
     @Test
@@ -108,7 +111,7 @@ public class VisibilityCalculationTests
 
         // check the invisible suggestions' states
         assertThat(invisibleSuggestions).isNotEmpty();
-        //FIXME find out why suggestions are repeated/doubled
+        // FIXME find out why suggestions are repeated/doubled
         assertThat(invisibleSuggestions)
                 .as("Invisible suggestions are hidden because of overlapping")
                 .extracting(AnnotationSuggestion::getReasonForHiding).extracting(String::trim)
@@ -181,7 +184,7 @@ public class VisibilityCalculationTests
         for (int[] val : vals) {
             suggestions.add(new AnnotationSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
                     layerId, FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL,
-                    CONFIDENCE));
+                    CONFIDENCE, CONFIDENCE_EXPLANATION));
         }
 
         return SuggestionGroup.group(suggestions);

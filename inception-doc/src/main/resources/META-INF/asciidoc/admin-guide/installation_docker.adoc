@@ -2,10 +2,14 @@
 // Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 // Technische Universität Darmstadt
 // 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -14,15 +18,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_docker]]
 = Running via Docker
 
 == Quick start
 
 If you have Docker installed, you can run {product-name} using
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker run -it --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -it --name inception -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
 The command downloads {product-name} from Dockerhub and starts it on port 8080. If this port is not
@@ -32,16 +37,16 @@ The logs will be printed to the console. To stop the container, press `CTRL-C`.
 
 To run the {product-name} docker in the background use 
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
-Logs are accessible by typing 
+Logs are accessible by typing
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker logs inception
+$ docker logs inception
 ----
 
 NOTE: Use `docker run` only the first time that you run {product-name}. If you try it a second time, Docker
@@ -51,16 +56,16 @@ NOTE: Use `docker run` only the first time that you run {product-name}. If you t
       
 When you want to run {product-name} again later, use the command
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker start -ai inception
+$ docker start -ai inception
 ----
 
 or for the background mode 
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker start inception
+$ docker start inception
 ----
 
 == Storing data on the host
@@ -79,9 +84,9 @@ $ mkdir /srv/inception
 
 When you run {product-name} via Docker, you then mount this folder into the container:
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker run -it --name inception -v /srv/inception:/export -p8080:8080 inception/inception:{revnumber}
+$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
 == Settings file
@@ -90,47 +95,90 @@ The dockerized {product-name} expects the `settings.properties` file in the `/ex
 injecting a custom `settings.properties` file into the container, it is strongly recommender to
 use the instructions above (Storing data on the host) to mount a folder from the host system to 
 `/export` then to place the into the mounted folder `settings.properties`. Thus, if you follow
-the instructions above, the settings file would go to `/srv/webanno/settings.properties` on the host
+the instructions above, the settings file would go to `/srv/inception/settings.properties` on the host
 system.
 
-== Connecting to a MySQL database
+== Connecting to a dedicated database
 
 By default, {product-name} uses an embedded SQL database to store its metadata (not the texts,
 annotations and knowledge bases, these are stored in files on disk). For production use, it is highly
-recommended to use a separate MySQL database instead of the embedded SQL database.
+recommended to use a dedicated database server (i.e. MariaDB or compatible) instead of the embedded
+SQL database.
 
-You can do so by providing a second Docker for MySQL (see for example link:https://hub.docker.com/_/mysql/[this one]).
-We provide a docker-compose example file, which combines the two containers. In order to use this, download link:admin-guide/scripts/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands
+== Docker Compose
 
-[source,text,subs="+attributes"]
-----
-export INCEPTION_HOME=/srv/inception
-export INCEPTION_PORT=8080
-docker-compose -p inception up -d
-----
+Using Docker Compose, you can manage multiple related containers. This section illustrates how to use
+Docker Compose to jointly set up a {product-name} container as well as a database container (i.e. 
+link:https://hub.docker.com/_/mariadb/[this one]).
 
-This will start two docker containers: `inception_mysqlserver_1`, and `inception_webserver_1`. You can check the logs of each by running 
+The following Compose script sets these containers up.
 
 [source,text,subs="+attributes"]
+.Docker Compose script
 ----
-docker logs inception_mysqlserver_1
-docker logs inception_webserver_1
+include::scripts/docker-compose.yml[]
+----
+
+Place the script into any folder, change to that folder, and issue the following commands which
+define the username/password you wish to use for {product-name} to talk to the database, the
+folder on the host system where the application data is stored, and the port on which the 
+application will run. The last command starts the containers.
+
+[source,shell,subs="+attributes"]
+----
+$ docker-compose -p inception up -d
+----
+
+This will start two docker containers: `inception_db_1`, and `inception_app_1`. 
+You can check the logs of each by running 
+
+[source,shell,subs="+attributes"]
+----
+$ docker logs inception_db_1
+$ docker logs inception_app_1
 ----
 
 The actual name of these containers might vary. A list of running containers can be retrieved by
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker ps
-----
-
-Two directories in your {product-name} home folder will be created: `mysql-data` and `webserver-data`. No data is stored in the containers themselves, you are safe to delete them with 
-
-[source,text,subs="+attributes"]
-----
-docker-compose -p inception down
+$ docker ps
 ----
 
-You can also just stop or pause them, please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
+The data of the containers will be stored in Docker volumes. If you shut the containers down and
+start them again later, the data will still be there - try it out! 
 
-NOTE: The settings within the docker-compose.yml file are just examples. Adjust the database URL, username, and password accordingly.
+[source,shell,subs="+attributes"]
+----
+$ docker-compose -p inception down
+----
+
+You can list the Docker volumes on your system using
+
+[source,shell,subs="+attributes"]
+----
+$ docker volume ls
+----
+
+If you want to provide a custom `settings.properties` file, you can also choose to mount the data volume
+to your hosts file system instead of to a Docker volume by setting the `INCEPTION_HOME` environment
+variable to the path you want to store your data in and where you will also put the `settings.properties`
+file. You can also choose to override the default location for the database data by setting the
+`INCEPTION_DB_HOME` environment variable.
+
+[source,shell,subs="+attributes"]
+----
+$ export INCEPTION_HOME=/srv/inception/app-data 
+$ export INCEPTION_DB_HOME=/srv/inception/db-data
+$ docker-compose -f docker-compose.yml -p inception up
+----
+
+If you are running Docker on Linux, the data of the volumes should end up on the file system anyway
+in a special folder used by Docker. You can figure out which folder that is using 
+`docker volume inspect ...`. However, if you are running Docker on macOS or Windows, the data is likely to
+live in a special virtual machine that is owned by Docker and it will not be easily accessible unless
+you mount the data to folders on your host.
+
+NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-stored data. Choose wisely.
+
+There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.

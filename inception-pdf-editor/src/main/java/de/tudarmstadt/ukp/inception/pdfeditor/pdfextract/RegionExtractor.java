@@ -37,7 +37,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 public class RegionExtractor
 {
 
-    static int POINTS_IN_INCH = 72;
+    static final int POINTS_IN_INCH = 72;
 
     PDFRenderer renderer;
     int dpi;
@@ -56,7 +56,7 @@ public class RegionExtractor
         double bitmapWidth = rect.getWidth() * scale;
         double bitmapHeight = rect.getHeight() * scale;
         BufferedImage image = new BufferedImage((int) bitmapWidth, (int) bitmapHeight,
-            BufferedImage.TYPE_INT_RGB);
+                BufferedImage.TYPE_INT_RGB);
 
         AffineTransform transform = AffineTransform.getScaleInstance(scale, scale);
         transform.concatenate(AffineTransform.getTranslateInstance(-rect.getX(), -rect.getY()));

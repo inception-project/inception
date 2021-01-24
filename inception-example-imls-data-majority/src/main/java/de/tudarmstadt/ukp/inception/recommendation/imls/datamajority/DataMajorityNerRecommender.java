@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -39,13 +41,14 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 
 // tag::classDefinition[]
 public class DataMajorityNerRecommender
-        extends RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<DataMajorityModel> KEY_MODEL = new Key<>("model");
 
@@ -55,20 +58,32 @@ public class DataMajorityNerRecommender
     {
         super(aRecommender);
     }
-// end::classDefinition[]
-// tag::train[]
+    // end::classDefinition[]
+
+    // tag::train[]
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-            throws RecommendationException
+    public RecommendationEngineCapability getTrainingCapability()
+    {
+        return TRAINING_REQUIRED;
+    }
+
+    @Override
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
         List<Annotation> annotations = extractAnnotations(aCasses);
 
         DataMajorityModel model = trainModel(annotations);
         aContext.put(KEY_MODEL, model);
-        aContext.markAsReadyForPrediction();
     }
-// end::train[]
-// tag::extractAnnotations[]
+
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    // end::train[]
+
+    // tag::extractAnnotations[]
     private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
         List<Annotation> annotations = new ArrayList<>();
@@ -87,10 +102,11 @@ public class DataMajorityNerRecommender
 
         return annotations;
     }
-// end::extractAnnotations[]
-// tag::trainModel[]
+    // end::extractAnnotations[]
+
+    // tag::trainModel[]
     private DataMajorityModel trainModel(List<Annotation> aAnnotations)
-            throws RecommendationException
+        throws RecommendationException
     {
         Map<String, Integer> model = new HashMap<>();
         for (Annotation ann : aAnnotations) {
@@ -99,24 +115,23 @@ public class DataMajorityNerRecommender
         }
 
         Map.Entry<String, Integer> entry = model.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .orElseThrow(
-                        () -> new RecommendationException("Could not obtain data majority label")
-                );
+                .max(Map.Entry.comparingByValue()).orElseThrow(
+                        () -> new RecommendationException("Could not obtain data majority label"));
 
         String majorityLabel = entry.getKey();
         int numberOfAnnotations = model.values().stream().reduce(Integer::sum).get();
         double confidence = (float) entry.getValue() / numberOfAnnotations;
 
-        return new DataMajorityModel(majorityLabel, confidence);
+        return new DataMajorityModel(majorityLabel, confidence, numberOfAnnotations);
     }
-// end::trainModel[]
-// tag::predict1[]
+    // end::trainModel[]
+
+    // tag::predict1[]
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(() ->
-                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+        DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         // Make the predictions
         Type tokenType = CasUtil.getAnnotationType(aCas, Token.class);
@@ -126,6 +141,7 @@ public class DataMajorityNerRecommender
         // Add predictions to the CAS
         Type predictedType = getPredictedType(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
+        Feature scoreExplanationFeature = getScoreExplanationFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
@@ -133,14 +149,15 @@ public class DataMajorityNerRecommender
             AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
             annotation.setStringValue(predictedFeature, ann.label);
             annotation.setDoubleValue(scoreFeature, ann.score);
+            annotation.setStringValue(scoreExplanationFeature, ann.explanation);
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }
-// end::predict1[]
-// tag::predict2[]
-    private List<Annotation> predict(Collection<AnnotationFS> candidates,
-                                     DataMajorityModel aModel)
+    // end::predict1[]
+
+    // tag::predict2[]
+    private List<Annotation> predict(Collection<AnnotationFS> candidates, DataMajorityModel aModel)
     {
         List<Annotation> result = new ArrayList<>();
         for (AnnotationFS token : candidates) {
@@ -152,18 +169,19 @@ public class DataMajorityNerRecommender
             int begin = token.getBegin();
             int end = token.getEnd();
 
-            Annotation annotation = new Annotation(aModel.majorityLabel, begin, end);
-            annotation.score = aModel.confidence;
+            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.confidence,
+                    aModel.numberOfAnnotations, begin, end);
             result.add(annotation);
         }
 
         return result;
     }
-// end::predict2[]
-// tag::evaluate[]
+    // end::predict2[]
+
+    // tag::evaluate[]
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
-            throws RecommendationException
+        throws RecommendationException
     {
         List<Annotation> data = extractAnnotations(aCasses);
         List<Annotation> trainingData = new ArrayList<>();
@@ -181,7 +199,7 @@ public class DataMajorityNerRecommender
                 break;
             }
         }
-        
+
         int trainingSetSize = trainingData.size();
         int testSetSize = testData.size();
         double overallTrainingSize = data.size() - testSetSize;
@@ -189,45 +207,61 @@ public class DataMajorityNerRecommender
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
+            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+                    trainRatio);
             result.setEvaluationSkipped(true);
             return result;
         }
-        
+
         DataMajorityModel model = trainModel(trainingData);
 
         // evaluation: collect predicted and gold labels for evaluation
         EvaluationResult result = testData.stream()
                 .map(anno -> new LabelPair(anno.label, model.majorityLabel))
                 .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
-        
+
         return result;
     }
-// end::evaluate[]
-// tag::utility[]
-    private static class DataMajorityModel {
+    // end::evaluate[]
+
+    // tag::utility[]
+    private static class DataMajorityModel
+    {
         private final String majorityLabel;
         private final double confidence;
+        private final int numberOfAnnotations;
 
-        private DataMajorityModel(String aMajorityLabel, double aConfidence) {
+        private DataMajorityModel(String aMajorityLabel, double aConfidence,
+                int aNumberOfAnnotations)
+        {
             majorityLabel = aMajorityLabel;
             confidence = aConfidence;
+            numberOfAnnotations = aNumberOfAnnotations;
         }
     }
 
-    private static class Annotation {
+    private static class Annotation
+    {
         private final String label;
+        private final double score;
+        private final String explanation;
         private final int begin;
         private final int end;
-        private double score;
 
         private Annotation(String aLabel, int aBegin, int aEnd)
         {
+            this(aLabel, 0, 0, aBegin, aEnd);
+        }
+
+        private Annotation(String aLabel, double aScore, int aNumberOfAnnotations, int aBegin,
+                int aEnd)
+        {
             label = aLabel;
+            score = aScore;
+            explanation = "Based on " + aNumberOfAnnotations + " annotations";
             begin = aBegin;
             end = aEnd;
         }
     }
-// end::utility[]
+    // end::utility[]
 }

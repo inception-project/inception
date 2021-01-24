@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,10 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static java.util.Arrays.asList;
+import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -35,23 +38,25 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.TypeSystemUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -64,9 +69,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = SpringConfig.class)
+@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class RecommendationServiceImplIntegrationTest
 {
     private static final String PROJECT_NAME = "Test project";
@@ -115,7 +120,7 @@ public class RecommendationServiceImplIntegrationTest
     public void thatApplicationContextStarts()
     {
     }
-    
+
     @Test
     public void listRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
@@ -123,20 +128,36 @@ public class RecommendationServiceImplIntegrationTest
 
         List<Recommender> enabledRecommenders = sut.listEnabledRecommenders(rec.getLayer());
 
-        assertThat(enabledRecommenders)
-        .as("Check that the previously created recommender is found")
-                .hasSize(1)
-                .contains(rec);
+        assertThat(enabledRecommenders).as("Check that the previously created recommender is found")
+                .hasSize(1).contains(rec);
     }
-    
+
+    @Test
+    public void getNumOfEnabledRecommenders_WithOneEnabledRecommender()
+    {
+        sut.createOrUpdateRecommender(rec);
+
+        long numOfRecommenders = sut.countEnabledRecommenders();
+        assertThat(numOfRecommenders).isEqualTo(1);
+    }
+
+    @Test
+    public void getNumOfEnabledRecommenders_WithNoEnabledRecommender()
+    {
+        rec.setEnabled(false);
+        testEntityManager.persist(rec);
+
+        long numOfRecommenders = sut.countEnabledRecommenders();
+        assertThat(numOfRecommenders).isEqualTo(0);
+    }
+
     @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
         Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
 
         assertThat(enabledRecommenders)
-                .as("Check that only the previously created recommender is found")
-                .isPresent()
+                .as("Check that only the previously created recommender is found").isPresent()
                 .contains(rec);
     }
 
@@ -156,32 +177,35 @@ public class RecommendationServiceImplIntegrationTest
     {
 
         long otherId = 9999L;
-        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId );
+        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId);
 
-        assertThat(enabledRecommenders)
-                .as("Check that no recommender is found")
-                .isEmpty();
+        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();
     }
 
     @Test
     public void monkeyPatchTypeSystem_WithNer_CreatesScoreFeatures() throws Exception
     {
-        JCas jCas = JCasFactory.createText("I am text CAS", "de");
-        when(annoService.getFullProjectTypeSystem(project))
-                .thenReturn(TypeSystemUtil.typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
-        when(annoService.listAnnotationLayer(project))
-                .thenReturn(asList(layer));
-        doCallRealMethod().when(annoService)
-                .upgradeCas(any(CAS.class), any(TypeSystemDescription.class));
+        try (CasStorageSession session = CasStorageSession.open()) {
+            JCas jCas = JCasFactory.createText("I am text CAS", "de");
+            session.add("jCas", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
 
-        sut.monkeyPatchTypeSystem(project, jCas.getCas());
+            when(annoService.getFullProjectTypeSystem(project))
+                    .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
+            when(annoService.listAnnotationLayer(project)).thenReturn(asList(layer));
+            doCallRealMethod().when(annoService).upgradeCas(any(CAS.class),
+                    any(TypeSystemDescription.class));
+            doCallRealMethod().when(annoService).upgradeCas(any(CAS.class), any(CAS.class),
+                    any(TypeSystemDescription.class));
 
-        Type type = CasUtil.getType(jCas.getCas(), layer.getName());
+            sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
 
-        assertThat(type.getFeatures())
-                .extracting(Feature::getShortName)
-                .contains(feature.getName() + "_score")
-                .contains(FEATURE_NAME_IS_PREDICTION);
+            Type type = CasUtil.getType(jCas.getCas(), layer.getName());
+
+            assertThat(type.getFeatures()).extracting(Feature::getShortName)
+                    .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
+                    .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
+                    .contains(FEATURE_NAME_IS_PREDICTION);
+        }
     }
 
     // Helper
@@ -203,7 +227,7 @@ public class RecommendationServiceImplIntegrationTest
         layer.setType(NamedEntity.class.getName());
         layer.setUiName("test ui name");
         layer.setAnchoringMode(false, false);
-       
+
         return testEntityManager.persist(layer);
     }
 
@@ -234,7 +258,7 @@ public class RecommendationServiceImplIntegrationTest
         feature.setName(aName);
         feature.setUiName(aName);
         feature.setType(CAS.TYPE_NAME_STRING);
-               
+
         return testEntityManager.persist(feature);
     }
 }

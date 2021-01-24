@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,10 +52,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -72,7 +72,8 @@ import de.tudarmstadt.ukp.inception.support.ui.LinkProvider;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @MountPath("/search.html")
-public class SearchPage extends ApplicationPageBase
+public class SearchPage
+    extends ApplicationPageBase
 {
     private static final long serialVersionUID = 4090656233059899062L;
 
@@ -89,7 +90,7 @@ public class SearchPage extends ApplicationPageBase
     private Project project;
 
     ExternalResultDataProvider dataProvider;
-    
+
     public SearchPage()
     {
         project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
@@ -110,7 +111,7 @@ public class SearchPage extends ApplicationPageBase
                     String componentId, IModel<ExternalSearchResult> model)
             {
                 @SuppressWarnings("rawtypes")
-                Item rowItem = cellItem.findParent( Item.class );
+                Item rowItem = cellItem.findParent(Item.class);
                 int rowIndex = rowItem.getIndex();
                 ResultRowView rowView = new ResultRowView(componentId, rowIndex + 1, model);
                 cellItem.add(rowView);
@@ -134,20 +135,23 @@ public class SearchPage extends ApplicationPageBase
                     project, aResult.getCollectionId(), aResult.getDocumentId(),
                     aResult.getRepository());
             aTarget.add(dataTableContainer);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             LOG.error(e.getMessage(), e);
             error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
-    private class SearchFormModel implements Serializable
+    private class SearchFormModel
+        implements Serializable
     {
         private static final long serialVersionUID = 4857333535866668775L;
-        
+
         public DocumentRepository repository;
         public String query;
     }
-    
+
     private class SearchForm
         extends Form<SearchFormModel>
     {
@@ -156,29 +160,29 @@ public class SearchPage extends ApplicationPageBase
         public SearchForm(String id)
         {
             super(id);
-            
+
             setModel(CompoundPropertyModel.of(new SearchFormModel()));
-            
-            DropDownChoice<DocumentRepository> repositoryCombo = 
-                    new BootstrapSelect<DocumentRepository>("repository");
+
+            DropDownChoice<DocumentRepository> repositoryCombo = new BootstrapSelect<DocumentRepository>(
+                    "repository");
             repositoryCombo.setChoices(LoadableDetachableModel
                     .of(() -> externalSearchService.listDocumentRepositories(project)));
             repositoryCombo.setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
             repositoryCombo.setNullValid(false);
             add(repositoryCombo);
-            
+
             if (!repositoryCombo.getChoices().isEmpty()) {
                 repositoryCombo.setModelObject(repositoryCombo.getChoices().get(0));
             }
-            
+
             add(new TextField<>("query", String.class));
-            
+
             LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
                     this::actionSearch);
             add(searchLink);
             setDefaultButton(searchLink);
         }
-        
+
         private void actionSearch(AjaxRequestTarget aTarget, Form<?> aForm)
         {
             SearchFormModel model = getModelObject();
@@ -194,13 +198,14 @@ public class SearchPage extends ApplicationPageBase
 
             applicationEventPublisher.get()
                     .publishEvent(new ExternalSearchQueryEvent(this, model.repository.getProject(),
-                            userRepository.getCurrentUser().getUsername(), model.query));
+                            userRepository.getCurrentUsername(), model.query));
 
             aTarget.add(dataTableContainer);
         }
     }
 
-    private void abort() {
+    private void abort()
+    {
         throw new RestartResponseException(getApplication().getHomePage());
     }
 
@@ -214,7 +219,7 @@ public class SearchPage extends ApplicationPageBase
             super(id, model);
 
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
-            
+
             // FIXME: Should display all highlights
             String highlight = "NO MATCH PREVIEW AVAILABLE";
             if (!result.getHighlights().isEmpty()) {
@@ -228,31 +233,30 @@ public class SearchPage extends ApplicationPageBase
                 highlight = sb.toString();
             }
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
-            
+
             LambdaAjaxLink link = new LambdaAjaxLink("titleLink", _target -> {
                 PageParameters pageParameters = new PageParameters()
-                    .add(DocumentDetailsPage.REPOSITORY_ID, result.getRepository().getId())
-                    .add(DocumentDetailsPage.COLLECTION_ID, result.getCollectionId())
-                    .add(DocumentDetailsPage.DOCUMENT_ID, result.getDocumentId());
+                        .add(DocumentDetailsPage.REPOSITORY_ID, result.getRepository().getId())
+                        .add(DocumentDetailsPage.COLLECTION_ID, result.getCollectionId())
+                        .add(DocumentDetailsPage.DOCUMENT_ID, result.getDocumentId());
                 setResponsePage(DocumentDetailsPage.class, pageParameters);
 
             });
-            
-            String title = defaultIfBlank(result.getDocumentTitle(),
-                            defaultIfBlank(result.getDocumentId(), 
-                            defaultIfBlank(result.getOriginalUri(), "<no title>")));
+
+            String title = defaultIfBlank(result.getDocumentTitle(), defaultIfBlank(
+                    result.getDocumentId(), defaultIfBlank(result.getOriginalUri(), "<no title>")));
             boolean existsSourceDocument = documentService.existsSourceDocument(project,
                     result.getDocumentId());
-            
+
             link.add(new Label("title", title));
             add(link);
 
             add(new Label("score", result.getScore()));
-            add(new Label("importStatus", () ->
-                    existsSourceDocument ? "imported" : "not imported"));
+            add(new Label("importStatus",
+                    () -> existsSourceDocument ? "imported" : "not imported"));
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
                     .add(visibleWhen(() -> !existsSourceDocument)));
-            
+
             add(LinkProvider
                     .createDocumentPageLink(documentService, project, result.getDocumentId(),
                             "openLink", AnnotationPage.class)

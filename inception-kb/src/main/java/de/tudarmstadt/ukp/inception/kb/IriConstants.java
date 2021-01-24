@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,7 +68,7 @@ public class IriConstants
      * http://www.wikidata.org/prop/direct/P31
      */
     public static final IRI WIKIDATA_TYPE;
-    
+
     /**
      * http://www.wikidata.org/entity/Q18616576
      */
@@ -103,14 +103,14 @@ public class IriConstants
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        
+
         WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
-        WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
+        WIKIDATA_PROPERTY_TYPE = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         WIKIDATA_SUBPROPERTY = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P1647");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
-        
+
         FTS_FUSEKI = vf.createIRI("text:query");
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
@@ -128,17 +128,17 @@ public class IriConstants
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE);
     }
-    
+
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)
     {
-        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not 
+        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not
         // want to filter it out just because we consider the OWL namespace to be implicit.
         Set<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
                 .collect(Collectors.toSet());
         if (rootConceptsAsStrings.contains(s)) {
             return false;
         }
-        
+
         for (String ns : IMPLICIT_NAMESPACES) {
             if (s.startsWith(ns)) {
                 return true;
@@ -147,8 +147,8 @@ public class IriConstants
         return false;
     }
 
-    public static boolean isFromImplicitNamespace(KBObject handle) {
-        return IMPLICIT_NAMESPACES.stream()
-                .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
+    public static boolean isFromImplicitNamespace(KBObject handle)
+    {
+        return IMPLICIT_NAMESPACES.stream().anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 }

@@ -1,15 +1,15 @@
 /*
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2017 Hiroyuki Shindo
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
  *
@@ -104,9 +104,8 @@ public class PDFExtractor
     {
         String outPath = String.format("%s.0-3-1.txt.gz", file);
         try (PDDocument doc = PDDocument.load(file);
-            GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(outPath));
-            Writer w = new BufferedWriter(new OutputStreamWriter(gzip, "UTF-8"));
-        ) {
+                GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(outPath));
+                Writer w = new BufferedWriter(new OutputStreamWriter(gzip, "UTF-8"));) {
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w);
                 ext.processPage(doc.getPage(i));
@@ -149,7 +148,7 @@ public class PDFExtractor
         }
         else {
             this.translateMatrix = Matrix.getTranslateInstance(-this.pageSize.getLowerLeftX(),
-                -this.pageSize.getLowerLeftY());
+                    -this.pageSize.getLowerLeftY());
         }
 
         // taken from DrawPrintTextLocations for setting flipAT, rotateAT and transAT
@@ -180,8 +179,8 @@ public class PDFExtractor
             rotateAT.rotate(Math.toRadians(rotation));
         }
         // cropbox
-        transAT = AffineTransform
-            .getTranslateInstance(-cropBox.getLowerLeftX(), cropBox.getLowerLeftY());
+        transAT = AffineTransform.getTranslateInstance(-cropBox.getLowerLeftX(),
+                cropBox.getLowerLeftY());
     }
 
     float getPageHeight()
@@ -199,8 +198,8 @@ public class PDFExtractor
         for (Object obj : buffer) {
             if (obj instanceof TextOperator) {
                 TextOperator t = (TextOperator) obj;
-                output.write(String
-                    .format("%s\t%s\t%s %s %s %s", pageIndex, t.unicode, t.fx, t.fy, t.fw, t.fh));
+                output.write(String.format("%s\t%s\t%s %s %s %s", pageIndex, t.unicode, t.fx, t.fy,
+                        t.fw, t.fh));
                 if (isWriteGlyphCoords()) {
                     output.write(String.format("\t%s %s %s %s", t.gx, t.gy, t.gw, t.gh));
                 }
@@ -219,72 +218,87 @@ public class PDFExtractor
         }
     }
 
-    @Override public void drawImage(PDImage pdImage)
+    @Override
+    public void drawImage(PDImage pdImage)
     {
     }
 
-    @Override public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
+    @Override
+    public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
     {
         float h = getPageHeight();
         addDraw("RECTANGLE", (float) p0.getX(), h - (float) p0.getY(), (float) p1.getX(),
-            h - (float) p1.getY(), (float) p2.getX(), h - (float) p2.getY(), (float) p3.getX(),
-            h - (float) p3.getY());
+                h - (float) p1.getY(), (float) p2.getX(), h - (float) p2.getY(), (float) p3.getX(),
+                h - (float) p3.getY());
     }
 
-    @Override public void clip(int i)
+    @Override
+    public void clip(int i)
     {
     }
 
-    @Override public void moveTo(float x, float y)
+    @Override
+    public void moveTo(float x, float y)
     {
         addDraw("MOVE_TO", x, getPageHeight() - y);
     }
 
-    @Override public void lineTo(float x, float y)
+    @Override
+    public void lineTo(float x, float y)
     {
         addDraw("LINE_TO", x, getPageHeight() - y);
     }
 
-    @Override public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
+    @Override
+    public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
     {
         float h = getPageHeight();
         addDraw("CURVE_TO", x1, h - y1, x2, h - y2, x3, h - y3);
     }
 
-    @Override public Point2D getCurrentPoint()
+    @Override
+    public Point2D getCurrentPoint()
     {
         return new Point2D.Float(0.0f, 0.0f);
     }
 
-    @Override public void closePath()
+    @Override
+    public void closePath()
     {
     }
 
-    @Override public void endPath()
+    @Override
+    public void endPath()
     {
     }
 
-    @Override public void strokePath()
+    @Override
+    public void strokePath()
     {
         addDraw("STROKE_PATH");
     }
 
-    @Override public void fillPath(int i)
+    @Override
+    public void fillPath(int i)
     {
         addDraw("FILL_PATH");
     }
 
-    @Override public void fillAndStrokePath(int i)
+    @Override
+    public void fillAndStrokePath(int i)
     {
         addDraw("FILL_STROKE_PATH");
     }
 
-    @Override public void shadingFill(COSName cosName)
+    @Override
+    public void shadingFill(COSName cosName)
     {
     }
 
-    @Override public void showFontGlyph(Matrix textRenderingMatrix, PDFont font, int code,
-        String unicode, Vector displacement) throws IOException
+    @Override
+    public void showFontGlyph(Matrix textRenderingMatrix, PDFont font, int code, String unicode,
+            Vector displacement)
+        throws IOException
     {
         // taken from LegacyPDFStreamEngine.showGlyph
         PDGraphicsState state = this.getGraphicsState();
@@ -345,8 +359,8 @@ public class PDFExtractor
         try {
             spaceWidthText = font.getSpaceWidth() * glyphSpaceToTextSpaceFactor;
         }
-        catch (Throwable e) {
-            //LOG.warn(e, e);
+        catch (Exception e) {
+            // LOG.warn(e, e);
         }
 
         if (spaceWidthText == 0.0F) {
@@ -371,23 +385,24 @@ public class PDFExtractor
             translatedTextRenderingMatrix = textRenderingMatrix;
         }
         else {
-            translatedTextRenderingMatrix = Matrix
-                .concatenate(this.translateMatrix, textRenderingMatrix);
+            translatedTextRenderingMatrix = Matrix.concatenate(this.translateMatrix,
+                    textRenderingMatrix);
             nextX -= this.pageSize.getLowerLeftX();
             nextY -= this.pageSize.getLowerLeftY();
         }
 
         TextPosition text = new TextPosition(pageRotation, pageSize.getWidth(),
-            pageSize.getHeight(), translatedTextRenderingMatrix, nextX, nextY, Math.abs(dyDisplay),
-            dxDisplay, Math.abs(spaceWidthDisplay), unicode, new int[] { code }, font, fontSize,
-            (int) (fontSize * textMatrix.getScalingFactorX()));
+                pageSize.getHeight(), translatedTextRenderingMatrix, nextX, nextY,
+                Math.abs(dyDisplay), dxDisplay, Math.abs(spaceWidthDisplay), unicode,
+                new int[] { code }, font, fontSize,
+                (int) (fontSize * textMatrix.getScalingFactorX()));
 
         Shape fontShape = calculateFontBounds(text);
         Rectangle2D.Double f = (Rectangle2D.Double) fontShape.getBounds2D(); // font coordinates
         Shape glyphShape = calculateGlyphBounds(textRenderingMatrix, font, code);
         Rectangle2D.Double g = (Rectangle2D.Double) glyphShape.getBounds2D(); // glyph coordinates
         TextOperator t = new TextOperator(unicode, (float) f.x, (float) f.y, (float) f.width,
-            (float) f.height, (float) g.x, (float) g.y, (float) g.width, (float) g.height);
+                (float) f.height, (float) g.x, (float) g.y, (float) g.width, (float) g.height);
         buffer.add(t);
     }
 
@@ -404,10 +419,10 @@ public class PDFExtractor
         BoundingBox bbox = font.getBoundingBox();
 
         // advance width, bbox height (glyph space)
-        float xadvance = font
-            .getWidth(text.getCharacterCodes()[0]); // todo: should iterate all chars
+        float xadvance = font.getWidth(text.getCharacterCodes()[0]); // todo: should iterate all
+                                                                     // chars
         Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY(), xadvance,
-            bbox.getHeight());
+                bbox.getHeight());
 
         if (font instanceof PDType3Font) {
             // bbox and font matrix are unscaled
@@ -443,13 +458,13 @@ public class PDFExtractor
                 if (glyphBBox != null) {
                     // PDFBOX-3850: glyph bbox could be larger than the font bbox
                     glyphBBox.setLowerLeftX(
-                        Math.max(fontBBox.getLowerLeftX(), glyphBBox.getLowerLeftX()));
+                            Math.max(fontBBox.getLowerLeftX(), glyphBBox.getLowerLeftX()));
                     glyphBBox.setLowerLeftY(
-                        Math.max(fontBBox.getLowerLeftY(), glyphBBox.getLowerLeftY()));
+                            Math.max(fontBBox.getLowerLeftY(), glyphBBox.getLowerLeftY()));
                     glyphBBox.setUpperRightX(
-                        Math.min(fontBBox.getUpperRightX(), glyphBBox.getUpperRightX()));
+                            Math.min(fontBBox.getUpperRightX(), glyphBBox.getUpperRightX()));
                     glyphBBox.setUpperRightY(
-                        Math.min(fontBBox.getUpperRightY(), glyphBBox.getUpperRightY()));
+                            Math.min(fontBBox.getUpperRightY(), glyphBBox.getUpperRightY()));
                     path = glyphBBox.toGeneralPath();
                 }
             }
@@ -467,7 +482,7 @@ public class PDFExtractor
                 PDType0Font t0font = (PDType0Font) font;
                 if (t0font.getDescendantFont() instanceof PDCIDFontType2) {
                     int unitsPerEm = ((PDCIDFontType2) t0font.getDescendantFont()).getTrueTypeFont()
-                        .getHeader().getUnitsPerEm();
+                            .getHeader().getUnitsPerEm();
                     at.scale(1000d / unitsPerEm, 1000d / unitsPerEm);
                 }
             }

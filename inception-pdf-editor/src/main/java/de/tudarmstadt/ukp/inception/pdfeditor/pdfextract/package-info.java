@@ -22,29 +22,32 @@
  * SOFTWARE.
  */
 /**
- * <h1>pdfextract</h1>
+ * <h2>pdfextract</h2>
  * 
  * Copyright (c) 2017 Hiroyuki Shindo
  * 
  * Original source: https://github.com/yuichiro-s/pdfextract
  * 
- * PDF extractor using PDFBox.  
+ * PDF extractor using PDFBox.
  *
- * <h2>PDFExtractor</h2>
- * Extract texts and draws from PDF.
+ * <h3>PDFExtractor</h3> Extract texts and draws from PDF.
  * 
- * <pre>{@code
+ * <pre>
+ * {@code
  * java -classpath pdfextract.jar paperai.pdfextract.PDFExtractor [file or directory]
- * }</pre>
+ * }
+ * </pre>
  * 
  * For example,
- * <pre>{@code
- * java -classpath pdfextract.jar paperai.pdfextract.PDFExtractor xxx.pdf
- * }</pre>
  * 
- * <h3>Output Format</h3>
- * Gzip file is generated.  
- * Each line is either <b>Text</b> or <b>Draw</b> as follows.
+ * <pre>
+ * {@code
+ * java -classpath pdfextract.jar paperai.pdfextract.PDFExtractor xxx.pdf
+ * }
+ * </pre>
+ * 
+ * <h4>Output Format</h4> Gzip file is generated. Each line is either <b>Text</b> or <b>Draw</b> as
+ * follows.
  * 
  * <h4>Text</h4>
  * 
@@ -55,25 +58,27 @@
  * <li>Glyph coordinate (x, y, width, height)</li>
  * </ol>
  * 
- * <h4>Draw</h4>
+ * <h5>Draw</h5>
  * <ol>
  * <li>Page number</li>
  * <li>Draw operation, either one of
- *   <ul>
- *     <li><code>[STROKE_PATH]</code></li>
- *     <li><code>[FILL_PATH]</code></li>
- *     <li><code>[FILL_STROKE_PATH]</code></li>
- *     <li><code>[CURVE_TO]</code></li>
- *     <li><code>[LINE_TO]</code></li>
- *     <li><code>[MOVE_TO]</code></li>
- *     <li><code>[RECTANGLE]</code></li>
- *   </ul>
+ * <ul>
+ * <li><code>[STROKE_PATH]</code></li>
+ * <li><code>[FILL_PATH]</code></li>
+ * <li><code>[FILL_STROKE_PATH]</code></li>
+ * <li><code>[CURVE_TO]</code></li>
+ * <li><code>[LINE_TO]</code></li>
+ * <li><code>[MOVE_TO]</code></li>
+ * <li><code>[RECTANGLE]</code></li>
+ * </ul>
  * </li>
  * <li>Coordinate</li>
  * </ol>
  * 
- * <h3>Output Example</h3>
- * <pre>{@code
+ * <h4>Output Example</h4>
+ * 
+ * <pre>
+ * {@code
  * 1   P   107.551 793.155 5.478471 10.705882  107.551 795.58496 5.424672 5.8550596
  * 1   r   113.02947 793.155 3.4879298 10.705882   113.43296 797.48584 3.290669 3.9541826
  * 1   o   116.113914 793.155 4.4832 10.705882 116.35601 797.48584 3.9541826 4.052813
@@ -93,18 +98,24 @@
  * 4   [LINE_TO] 323.779 62.675964
  * 4   [RECTANGLE] 323.779 200.93103 509.279 200.93103 509.279 62.676025 323.779 62.676025
  * 4   [FILL_PATH]
- * }</pre>
+ * }
+ * </pre>
  * 
- * <h2>ImageExtractor</h2>
- * Extract images from PDF as PNG format.
- * <pre>{@code
+ * <h3>ImageExtractor</h3> Extract images from PDF as PNG format.
+ * 
+ * <pre>
+ * {@code
  * java -classpath pdfextract.jar paperai.pdfextract.ImageExtractor <file or directory> 
  *   -dpi <dpi> -o <output directory>
- * }</pre>
+ * }
+ * </pre>
  * 
  * For example,
- * <pre>{@code
+ * 
+ * <pre>
+ * {@code
  * java -classpath pdfextract.jar ImageExtractor xxx.pdf -dpi 300 -o /work
- * }</pre>
+ * }
+ * </pre>
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfextract;

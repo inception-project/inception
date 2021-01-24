@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <!--
- - Copyright 2017
- - Ubiquitous Knowledge Processing (UKP) Lab
- - Technische Universität Darmstadt
- - 
- - Licensed under the Apache License, Version 2.0 (the "License");
- - you may not use this file except in compliance with the License.
- - You may obtain a copy of the License at
- -  
- -  http://www.apache.org/licenses/LICENSE-2.0
- - 
- - Unless required by applicable law or agreed to in writing, software
- - distributed under the License is distributed on an "AS IS" BASIS,
- - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- - See the License for the specific language governing permissions and
- - limitations under the License.
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:head>
@@ -30,18 +30,20 @@
 </wicket:head>
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div class="panel panel-default panel-flex flex-content">
-      <div class="panel-heading">
-        <h3 class="panel-title">Images</h3>
+    <div class="card flex-content">
+      <div class="card-header">
+        Images
       </div>
-      <div class="scrolling panel-body flex-v-container" style="background-color: silver;">
+      <div class="scrolling card-body flex-v-container" style="background-color: silver;">
         <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter">
           <wicket:container wicket:id="images">
             <div style="position: relative;">
-              <img wicket:id="image" class="img-thumbnail img-responsive" crossorigin="anonymous"/>
+              <a wicket:id="jumpTo">
+                <img wicket:id="image" class="img-thumbnail img-responsive" crossorigin="anonymous"/>
+              </a>
               <div style="position: absolute; top: 5px; right: 5px;" class="showOnHover">
-                <a wicket:id="open" target="_blank" class="btn btn-xs btn-default">
-                  <i class="fa fa-external-link" aria-hidden="true"></i>
+                <a wicket:id="open" target="_blank" class="btn btn-xs btn-secondary">
+                  <i class="fas fa-external-link-alt"></i>
                 </a>
               </div>
             </div>
