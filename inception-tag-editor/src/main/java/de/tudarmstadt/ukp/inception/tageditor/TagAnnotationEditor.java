@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -39,8 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -66,7 +66,7 @@ public class TagAnnotationEditor
     private WebMarkupContainer vis;
     
     public TagAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aJCasProvider)
     {
         super(aId, aModel, aActionHandler, aJCasProvider);
 
@@ -132,7 +132,7 @@ public class TagAnnotationEditor
             converter.setExcludeTypes(excludes);
             
             BratAnnotationDocument doc = new BratAnnotationDocument();
-            JCas jcas = getJCasProvider().get();
+            CAS jcas = getCasProvider().get();
             converter.convert(jcas, doc);
             
             StringWriter buf = new StringWriter();

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.tageditor.brat;
 
-import static org.apache.uima.fit.util.JCasUtil.selectAll;
+import static org.apache.uima.fit.util.CasUtil.selectAll;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +41,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,7 +176,7 @@ public class DKPro2Brat
         warnings = new LinkedHashSet<>();
     }
     
-    public Set<String> convert(JCas aJCas, BratAnnotationDocument doc)
+    public Set<String> convert(CAS aJCas, BratAnnotationDocument doc)
     {
         init();
         
@@ -189,7 +188,7 @@ public class DKPro2Brat
         // other annotations.
         for (FeatureStructure fs : selectAll(aJCas)) {
             // Skip document annotation
-            if (fs == aJCas.getDocumentAnnotationFs()) {
+            if (fs == aJCas.getDocumentAnnotation()) {
                 continue;
             }
             
