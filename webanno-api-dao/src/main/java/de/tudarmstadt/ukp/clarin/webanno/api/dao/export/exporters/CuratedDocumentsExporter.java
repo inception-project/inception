@@ -133,11 +133,9 @@ public class CuratedDocumentsExporter
                     FormatSupport format = importExportService.getWritableFormatById(formatId)
                             .orElseGet(() -> {
                                 FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                                aMonitor.addMessage(LogMessage.error(this,
-                                        "Curation: [%s] No writer"
-                                                + " found for original format [%s] - exporting as [%s] "
-                                                + "instead.",
-                                        sourceDocument.getName(), formatId,
+                                aMonitor.addMessage(LogMessage.warn(this, "Curation: [%s] No writer"
+                                        + " found for original format [%s] - exporting as [%s] "
+                                        + "instead.", sourceDocument.getName(), formatId,
                                         fallbackFormat.getName()));
                                 return fallbackFormat;
                             });

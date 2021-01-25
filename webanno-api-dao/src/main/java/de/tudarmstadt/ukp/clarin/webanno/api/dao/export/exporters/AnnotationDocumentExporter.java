@@ -218,7 +218,7 @@ public class AnnotationDocumentExporter
                 FormatSupport format = importExportService.getWritableFormatById(formatId)
                         .orElseGet(() -> {
                             FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                            aMonitor.addMessage(LogMessage.error(this,
+                            aMonitor.addMessage(LogMessage.warn(this,
                                     "Annotation: [%s] No writer "
                                             + "found for original format [%s] - exporting as [%s] "
                                             + "instead.",
