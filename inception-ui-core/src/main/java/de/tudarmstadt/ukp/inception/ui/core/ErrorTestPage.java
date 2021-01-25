@@ -17,11 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core;
 
-import org.wicketstuff.annotation.mount.MountPath;
-
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
-@MountPath("/whoops/test")
 public class ErrorTestPage
     extends ApplicationPageBase
 {
@@ -30,5 +27,6 @@ public class ErrorTestPage
     @Override
     protected void onInitialize()
     {
+        // Not calling super here triggers a Wicket-level exception
     }
 }

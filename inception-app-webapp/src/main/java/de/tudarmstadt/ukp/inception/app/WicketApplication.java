@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app;
 
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.settings.ExceptionSettings.SHOW_INTERNAL_ERROR_PAGE;
 
 import org.apache.wicket.Page;
@@ -28,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.app.config.InceptionResourcesBehavior;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorPage;
+import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
 
@@ -115,6 +117,10 @@ public class WicketApplication
         // We don't want the project dashboard to be linked as "welcome.html" but rather only under
         // its default URL as defined in the ProjectDashboard class
         unmount("/welcome.html");
-    }
 
+        // When running in development mode, we mount the exception test page
+        if (DEVELOPMENT.equals(getConfigurationType())) {
+            mountPage("/whoops/test", ErrorTestPage.class);
+        }
+    }
 }
