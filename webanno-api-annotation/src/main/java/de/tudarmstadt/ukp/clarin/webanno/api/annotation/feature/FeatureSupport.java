@@ -291,7 +291,11 @@ public interface FeatureSupport<T>
         Object value;
 
         Feature f = aFS.getType().getFeatureByBaseName(aFeature.getName());
-        if (f.getRange().isPrimitive()) {
+
+        if (f == null) {
+            value = null;
+        }
+        else if (f.getRange().isPrimitive()) {
             value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
         }
         else if (FSUtil.isMultiValuedFeature(aFS, f)) {
