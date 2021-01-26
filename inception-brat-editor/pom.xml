@@ -22,8 +22,8 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>inception-brat</artifactId>
-  <name>WebAnno - UI - Annotation (brat)</name>
+  <artifactId>inception-brat-editor</artifactId>
+  <name>INCEpTION - Editor - brat</name>
   <packaging>jar</packaging>
   <properties>
     <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>

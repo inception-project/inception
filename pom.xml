@@ -522,7 +522,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-brat</artifactId>
+        <artifactId>inception-brat-editor</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1870,7 +1870,6 @@
     <!-- Build infrastructure modules -->
     <module>inception-build</module>
     <module>inception-boot-loader</module>
-    <!--<module>webanno-build</module> -->
     <!-- Core -->
     <module>webanno-support</module>
     <module>webanno-support-standalone</module>
@@ -1896,17 +1895,8 @@
     <module>webanno-plugin-parent</module>
     <module>inception-plugin-parent</module>
     -->
-    <!-- Legacy automation suppport -->
-    <!-- 
-    <module>webanno-automation</module>
-    <module>webanno-api-automation</module>
-    <module>webanno-ui-automation</module>
-    -->
     <!-- UI -->
     <module>webanno-ui-core</module>
-    <!-- <module>webanno-ui-menu</module> -->
-    <!-- <module>webanno-ui-correction</module> -->
-    <!-- <module>webanno-webapp</module> -->
     <!-- Documentation -->
     <module>webanno-doc</module>
     <!-- Core application modules -->
@@ -1944,7 +1934,7 @@
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
-    <module>inception-brat</module>
+    <module>inception-brat-editor</module>
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-review-editor</module>
