@@ -22,7 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-plugin-manager</artifactId>
+  <artifactId>inception-plugin-manager</artifactId>
   <name>WebAnno - Plugin manager</name>
   <dependencies>
     <dependency>
