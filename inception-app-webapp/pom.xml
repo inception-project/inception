@@ -207,7 +207,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-io-xmi</artifactId>
+      <artifactId>inception-io-xmi</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>

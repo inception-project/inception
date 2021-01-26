@@ -628,7 +628,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-io-xmi</artifactId>
+        <artifactId>inception-io-xmi</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>

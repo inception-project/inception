@@ -209,7 +209,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-io-xmi</artifactId>
+      <artifactId>inception-io-xmi</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
