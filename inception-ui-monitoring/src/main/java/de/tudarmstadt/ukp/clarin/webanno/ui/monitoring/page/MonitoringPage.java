@@ -59,7 +59,6 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.DataGridView;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
@@ -104,8 +103,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -149,7 +146,6 @@ public class MonitoringPage
     public static final String LAST_ACCESS_ROW = "last access";
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean(required = false) AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
@@ -160,11 +156,8 @@ public class MonitoringPage
     private SvgChart annotatorsProgressImage;
     private SvgChart annotatorsProgressPercentageImage;
     private SvgChart overallProjectProgressImage;
-    private TrainingResultForm trainingResultForm;
 
     private Panel annotationDocumentStatusTable;
-
-    private String result;
 
     private static final ResourceReference ICON_FINISHED = new PackageResourceReference(
             MonitoringPage.class, "accept.png");
@@ -238,11 +231,6 @@ public class MonitoringPage
 
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
         monitoringDetailForm.setOutputMarkupId(true);
-
-        trainingResultForm = new TrainingResultForm("trainingResultForm");
-        trainingResultForm.setVisible(false);
-        trainingResultForm.setVisibilityAllowed(automationService != null);
-        add(trainingResultForm);
 
         annotatorsProgressImage = new SvgChart("annotator",
                 LoadableDetachableModel.of(this::renderAnnotatorAbsoluteProgress));
@@ -402,9 +390,6 @@ public class MonitoringPage
 
             monitoringDetailForm.setModelObject(aNewSelection);
             monitoringDetailForm.setVisible(true);
-
-            updateTrainingResultForm(aNewSelection);
-            result = "";
 
             ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this
                     .getModelObject();
@@ -614,218 +599,6 @@ public class MonitoringPage
 
             add(new Label("name"));
         }
-    }
-
-    private void updateTrainingResultForm(Project aProject)
-    {
-        trainingResultForm.remove();
-        trainingResultForm = new TrainingResultForm("trainingResultForm");
-        trainingResultForm.setVisibilityAllowed(automationService != null);
-        add(trainingResultForm);
-        trainingResultForm
-                .setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
-    }
-
-    private class TrainingResultForm
-        extends Form<ResultModel>
-    {
-        private static final long serialVersionUID = 1037668483966897381L;
-
-        ListChoice<MiraTemplate> selectedTemplate;
-
-        public TrainingResultForm(String id)
-        {
-            super(id, new CompoundPropertyModel<>(new ResultModel()));
-
-            add(new Label("resultLabel", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
-
-                @Override
-                protected String load()
-                {
-                    return result;
-
-                }
-            }).setOutputMarkupId(true));
-
-            add(new Label("annoDocs", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
-
-                @Override
-                protected String load()
-                {
-                    MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getAnnoDocs() + "";
-                    }
-                    else {
-                        return "";
-                    }
-
-                }
-            }).setOutputMarkupId(true));
-
-            add(new Label("trainDocs", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
-
-                @Override
-                protected String load()
-                {
-                    MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getTrainDocs() + "";
-                    }
-                    else {
-                        return "";
-                    }
-
-                }
-            }).setOutputMarkupId(true));
-
-            add(new Label("totalDocs", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
-
-                @Override
-                protected String load()
-                {
-                    MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getTotalDocs() + "";
-                    }
-                    else {
-                        return "";
-                    }
-
-                }
-            }).setOutputMarkupId(true));
-
-            add(new Label("startTime", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
-
-                @Override
-                protected String load()
-                {
-                    MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getStartime()
-                                .toString();
-                    }
-                    else {
-                        return "";
-                    }
-                }
-            }).setOutputMarkupId(true));
-
-            add(new Label("endTime", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
-
-                @Override
-                protected String load()
-                {
-                    MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && automationService.existsAutomationStatus(template)) {
-                        if (automationService.getAutomationStatus(template).getEndTime().equals(
-                                automationService.getAutomationStatus(template).getStartime())) {
-                            return "---";
-                        }
-                        return automationService.getAutomationStatus(template).getEndTime()
-                                .toString();
-                    }
-                    else {
-                        return "";
-                    }
-
-                }
-            }).setOutputMarkupId(true));
-
-            add(new Label("status", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
-
-                @Override
-                protected String load()
-                {
-                    MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getStatus()
-                                .getName();
-                    }
-                    else {
-                        return "";
-                    }
-                }
-            }).setOutputMarkupId(true));
-            add(selectedTemplate = new ListChoice<MiraTemplate>("layerResult")
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setChoices(new LoadableDetachableModel<List<MiraTemplate>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<MiraTemplate> load()
-                        {
-                            return automationService.listMiraTemplates(
-                                    projectSelectionForm.getModelObject().project);
-                        }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<MiraTemplate>()
-                    {
-                        private static final long serialVersionUID = -2000622431037285685L;
-
-                        @Override
-                        public Object getDisplayValue(MiraTemplate aObject)
-                        {
-                            return "[" + aObject.getTrainFeature().getLayer().getUiName() + "] "
-                                    + (aObject.getTrainFeature().getTagset() == null
-                                            ? aObject.getTrainFeature().getUiName()
-                                            : aObject.getTrainFeature().getTagset().getName());
-                        }
-                    });
-                    setNullValid(false);
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
-            selectedTemplate.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 7492425689121761943L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    result = getModelObject().layerResult.getResult();
-                    aTarget.add(TrainingResultForm.this);
-                }
-            }).setOutputMarkupId(true);
-        }
-
-    }
-
-    public class ResultModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = 3611186385198494181L;
-        public MiraTemplate layerResult;
-        public String annoDocs;
-        public String trainDocs;
-        public String totalDocs;
-        public String startTime;
-        public String endTime;
-        public String status;
-
     }
 
     private JFreeChart createProgressChart(Map<String, Integer> chartValues, int aMaxValue,

@@ -95,49 +95,6 @@
             </div>
           </div>
         </form>
-
-        <form wicket:id="trainingResultForm" class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" style="flex: 0.4;">
-          <div class="panel card" style="flex: 0.5; margin-left: 0px;">
-            <div class="card-header">
-              <wicket:message key="features" />
-            </div>
-            <div class="scrolling card-body fit-child-snug">
-              <select wicket:id="layerResult" class="form-control"></select>
-            </div>
-          </div>
-          
-          <div class="flex-content card">
-            <div class="card-header">
-              Training results /status
-            </div>
-            <div class="scrolling card-body flex-v-container">
-                <div wicket:id="resultLabel"></div>
-              
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>Train.Doc</th>
-                      <th>Anno.Doc</th>
-                      <th>Total.Doc</th>
-                      <th>Start time</th>
-                      <th>End time</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><span wicket:id="trainDocs"></span></td>
-                      <td><span wicket:id="annoDocs"></span></td>
-                      <td><span wicket:id="totalDocs"></span></td>
-                      <td><span wicket:id="startTime"></span></td>
-                      <td><span wicket:id="endTime"></span></td>
-                      <td><span wicket:id="status"></span></td>
-                    </tr>
-                  </tbody>
-                </table>
-            </div>
-          </div>
-        </form>
       </div>
     </div>
   </wicket:extend>
