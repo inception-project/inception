@@ -36,7 +36,7 @@
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-plugin-api</artifactId>
+      <artifactId>inception-plugin-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>

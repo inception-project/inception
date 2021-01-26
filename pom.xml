@@ -633,7 +633,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-plugin-api</artifactId>
+        <artifactId>inception-plugin-api</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
