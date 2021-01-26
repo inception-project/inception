@@ -598,7 +598,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-io-tcf</artifactId>
+        <artifactId>inception-io-tcf</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
