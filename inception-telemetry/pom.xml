@@ -23,7 +23,7 @@
     <version>0.18.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-telemetry</artifactId>
-  <name>WebAnno - Telemetry</name>
+  <name>INCEpTION - Telemetry</name>
   <packaging>jar</packaging>
   <dependencies>
     <dependency>

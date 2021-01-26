@@ -786,11 +786,11 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
-              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
-              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
-<!--               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
+			  <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
@@ -828,8 +828,8 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-project</usedDependency> -->
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-remote</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-telemetry</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>org.hibernate:hibernate-jcache</usedDependency>

@@ -1872,14 +1872,14 @@
     <module>inception-boot-loader</module>
     <!-- Core -->
     <module>webanno-support</module>
-    <module>webanno-support-standalone</module>
+    <module>inception-support-standalone</module>
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
     <module>inception-remote</module>
     <module>inception-security</module>
     <module>webanno-curation</module>
-    <module>webanno-telemetry</module>
+    <module>inception-telemetry</module>
     <!-- IO -->
     <module>webanno-io-json</module>
     <module>webanno-io-tcf</module>

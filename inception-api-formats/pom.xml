@@ -23,7 +23,7 @@
     <version>0.18.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-api-formats</artifactId>
-  <name>WebAnno - Core - Formats API</name>
+  <name>INCEpTION - Core - Formats API</name>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

@@ -23,7 +23,7 @@
     <version>0.18.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-export</artifactId>
-  <name>WebAnno - Core - Export</name>
+  <name>INCEpTION - Core - Export</name>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
