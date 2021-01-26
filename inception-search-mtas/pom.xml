@@ -165,7 +165,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-io-text</artifactId>
+      <artifactId>inception-io-text</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

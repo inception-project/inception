@@ -22,7 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-io-text</artifactId>
+  <artifactId>inception-io-text</artifactId>
   <name>WebAnno - IO - Text</name>
   <dependencies>
     <dependency>
