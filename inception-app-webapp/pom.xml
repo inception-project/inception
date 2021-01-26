@@ -801,12 +801,12 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-io-json</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-io-tsv</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-io-tcf</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-io-xmi</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-io-conll</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-io-text</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-json</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-webanno-tsv</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tcf</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-xmi</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-text</usedDependency>
               <!-- WebAnno UI Modules - they auto-register via reflection -->
               <!-- Detected because we explicitly exclude their menu items
                 <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>

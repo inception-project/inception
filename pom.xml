@@ -601,11 +601,13 @@
         <artifactId>inception-io-tcf</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
+      <!--
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-tei</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
+      -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-support</artifactId>
@@ -1898,13 +1900,13 @@
     <module>inception-ui-annotation</module>
     <module>inception-ui-tagsets</module>
     <!-- IO -->
-    <module>webanno-io-json</module>
-    <module>webanno-io-tcf</module>
-    <module>webanno-io-tei</module>
-    <module>webanno-io-text</module>
-    <module>webanno-io-tsv</module>
-    <module>webanno-io-conll</module>
-    <module>webanno-io-xmi</module>
+    <module>inception-io-json</module>
+    <module>inception-io-tcf</module>
+    <!-- <module>inception-io-tei</module> -->
+    <module>inception-io-text</module>
+    <module>inception-io-webanno-tsv</module>
+    <module>inception-io-conll</module>
+    <module>inception-io-xmi</module>
     <!-- Curation -->
     <module>inception-curation</module>
     <module>inception-curation-legacy</module>
