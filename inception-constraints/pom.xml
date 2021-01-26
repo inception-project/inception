@@ -22,7 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-constraints</artifactId>
+  <artifactId>inception-constraints</artifactId>
   <name>WebAnno - Core - Constraints</name>
   <dependencies>
     <dependency>
@@ -56,7 +56,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-api</artifactId>
+      <artifactId>inception-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

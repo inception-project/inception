@@ -40,7 +40,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-export</artifactId>
+      <artifactId>inception-export</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -48,7 +48,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-api-annotation</artifactId>
+      <artifactId>inception-api-annotation</artifactId>
     </dependency>
 
     <dependency>

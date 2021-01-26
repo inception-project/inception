@@ -37,11 +37,11 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-api</artifactId>
+      <artifactId>inception-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-api-annotation</artifactId>
+      <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -138,7 +138,7 @@
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-api-dao</artifactId>
+      <artifactId>inception-api-dao</artifactId>
       <scope>test</scope>
     </dependency>
 
