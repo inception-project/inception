@@ -1,0 +1,55 @@
+= Obtaining a Let's Encrypt certificate
+
+The Certification Authority (CA) _Let's Encrypt_ provides free TLS/SSL certificates. These certificates allow for secure HTTPS connections on web servers. _Let's Encrypt_ provides the software Certbot which automates the obtaining process for NGINX.
+
+* link:https://backports.debian.org/Instructions/[Enable the Stretch backports repo] if needed
+
+* Install Certbot preconfigured for NGINX
+
+----
+$ apt-get install python-certbot-nginx -t stretch-backports
+----
+
+* Obtain the certificates for your domain `example.com`
+----
+$ certbot --nginx certonly -d example.com
+----
+
+* You will be prompted to enter your e-mail address and asked to agree to the terms of service. Certificate renewal information will be sent to this e-mail. If the certification process is successful it will yield the information where your certificates can be found.
+----
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at
+   /etc/letsencrypt/live/example.com/fullchain.pem. Your cert will
+   expire on 2019-04-22. To obtain a new or tweaked version of this
+   certificate in the future, simply run certbot again with the
+   "certonly" option. To non-interactively renew *all* of your
+   certificates, run "certbot renew"
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+----
+
+NOTE: Certificates issued by _Let's Encrypt_ are valid for 90 days. You will receive an expiry notification to the e-mail address you provided during the certification process.
+
+* Run Certbot with the command `renew` to renew all certificates that are due. You can also create a cron job for this purpose. The command for renewal is
+----
+$ certbot --nginx renew
+----
+
+* You can simulate the certificate renewal process with the command
+----
+$ certbot --nginx renew --dry-run
+----
+
+* The directory `/etc/letsencrypt/live/example.com/` now contains the necessary certificates to proceed
+----
+$ ls /etc/letsencrypt/live/example.com
+Output:
+cert.pem  chain.pem  fullchain.pem  privkey.pem
+----

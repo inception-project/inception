@@ -1,0 +1,49 @@
+##
+# docker-compose up [-d]
+# docker-compose down
+##
+version: '2.1'
+
+networks:
+  webanno-net:
+
+services:
+  mysqlserver:
+    image: "mysql:5"
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=webanno
+      - MYSQL_USER=DBUSER
+      - MYSQL_PORT=3306
+      - MYSQL_PASSWORD=DBPASSWORD
+    volumes:
+      - ${WEBANNO_HOME}/mysql-data:/var/lib/mysql
+    command: ["--character-set-server=utf8", "--collation-server=utf8_bin"]
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-pDBPASSWORD", "-uDBUSER"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    networks:
+      webanno-net:
+
+  webserver:
+    image: "webanno/webanno-snapshots:{revnumber}"
+    ports:
+      - "${WEBANNO_PORT}:8080"
+    environment:
+      - WEBANNO_DB_DIALECT=org.hibernate.dialect.MySQL5InnoDBDialect
+      - WEBANNO_DB_DRIVER=com.mysql.jdbc.Driver
+      - WEBANNO_DB_URL=jdbc:mysql://mysqlserver:3306/webanno?useSSL=false&useUnicode=true&characterEncoding=UTF-8
+      - WEBANNO_DB_USERNAME=DBUSER
+      - WEBANNO_DB_PASSWORD=DBPASSWORD
+    volumes:
+      - ${WEBANNO_HOME}/server-data:/export
+    depends_on:
+      mysqlserver:
+        condition: service_healthy
+    mem_limit: 1g
+    memswap_limit: 1g
+    restart: unless-stopped
+    networks:
+      webanno-net:

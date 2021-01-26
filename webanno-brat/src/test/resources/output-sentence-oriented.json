@@ -1,0 +1,58 @@
+{
+  "action" : "getDocument",
+  "messages" : [ ],
+  "modifications" : [ ],
+  "text" : "Karin fliegt nach New York . Sie will dort Urlaub machen .",
+  "ctime" : 0,
+  "mtime" : 0,
+  "info" : null,
+  "relations" : [ ],
+  "entities" : [ [ "15", "2", [ [ 0, 5 ] ], {
+    "l" : "NE",
+    "c" : "#8dd3c7"
+  } ], [ "16", "2", [ [ 6, 12 ] ], {
+    "l" : "VVFIN",
+    "c" : "#8dd3c7"
+  } ], [ "17", "2", [ [ 13, 17 ] ], {
+    "l" : "APPR",
+    "c" : "#8dd3c7"
+  } ], [ "18", "2", [ [ 18, 21 ] ], {
+    "l" : "NE",
+    "c" : "#8dd3c7"
+  } ], [ "19", "2", [ [ 22, 26 ] ], {
+    "l" : "NE",
+    "c" : "#8dd3c7"
+  } ], [ "20", "2", [ [ 27, 28 ] ], {
+    "l" : "$.",
+    "c" : "#8dd3c7"
+  } ], [ "21", "2", [ [ 29, 32 ] ], {
+    "l" : "PPER",
+    "c" : "#8dd3c7"
+  } ], [ "22", "2", [ [ 33, 37 ] ], {
+    "l" : "VMFIN",
+    "c" : "#8dd3c7"
+  } ], [ "23", "2", [ [ 38, 42 ] ], {
+    "l" : "ADV",
+    "c" : "#8dd3c7"
+  } ], [ "24", "2", [ [ 43, 49 ] ], {
+    "l" : "NN",
+    "c" : "#8dd3c7"
+  } ], [ "25", "2", [ [ 50, 56 ] ], {
+    "l" : "VVINF",
+    "c" : "#8dd3c7"
+  } ], [ "26", "2", [ [ 57, 58 ] ], {
+    "l" : "$.",
+    "c" : "#8dd3c7"
+  } ] ],
+  "attributes" : [ ],
+  "equivs" : [ ],
+  "comments" : [ ],
+  "normalizations" : [ ],
+  "args" : { },
+  "rtl_mode" : false,
+  "font_zoom" : 100,
+  "sentence_number_offset" : 1,
+  "source_files" : [ ],
+  "token_offsets" : [ [ 0, 5 ], [ 6, 12 ], [ 13, 17 ], [ 18, 21 ], [ 22, 26 ], [ 27, 28 ], [ 29, 32 ], [ 33, 37 ], [ 38, 42 ], [ 43, 49 ], [ 50, 56 ], [ 57, 58 ] ],
+  "sentence_offsets" : [ [ 0, 28 ], [ 29, 58 ] ]
+}

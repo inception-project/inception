@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+  <Appenders>
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <!--SHORT PATTERN -->
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger - %msg%n" />
+      <!--ROBUST PATTERN
+        <PatternLayout pattern="%d{ISO8601} %level{length=5} [%thread] %logger - %msg%n"/> -->
+    </Console>
+
+    <Routing name="ProjectAppender">
+      <Routes pattern="$${ctx:projectId}">
+        <!--
+          This route is used when we do *not* have a project ID set, i.e. the variable reference
+          "${ctx:projectId}" is not resolved and remains as the plain string "${ctx:projectId}"
+        -->
+        <Route key="${ctx:projectId}">
+          <!-- 
+            Do not log anywhere if there is no project ID. In this case logging is going only to
+            the console.
+           -->
+          <Null name="null"/>
+        </Route>
+
+        <!-- 
+          This route is used when we have a project ID set (i.e. in case the key is not
+          "${ctx:projectId}")
+        -->
+        <Route>
+          <File name="Project-${ctx:projectId}"
+            fileName="${ctx:repositoryPath}/project/project-${ctx:projectId}.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} [${ctx:username}] %msg%n" />
+          </File>
+        </Route>
+      </Routes>
+    </Routing>
+  </Appenders>
+
+  <Loggers>
+    <Logger name="de.tudarmstadt" level="INFO"/>
+    
+    <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
+    <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
+    <Logger name="ch.rasc.piwik.tracking.PiwikTracker" level="FATAL"/>
+    <Logger name="uima" level="ERROR"/>
+    <Logger name="liquibase" level="ERROR"/>
+    <!-- Avoid warning when components is not rerendered because it has been removed from page -->
+    <Logger name="org.apache.wicket.page.PartialPageUpdate" level="ERROR"/>
+    
+    <Root level="WARN">
+      <AppenderRef ref="ConsoleAppender" />
+      <AppenderRef ref="ProjectAppender" />
+    </Root>
+  </Loggers>
+</Configuration>

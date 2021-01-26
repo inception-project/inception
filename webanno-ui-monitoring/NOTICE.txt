@@ -1,0 +1,8 @@
+The following icon sets are licensed under a Creative Commons Attribution 3.0 License.(licenses/CC_BY_3.0.txt)
+Source: http://www.fatcow.com/free-icons
+
+accept.png
+lock.png
+new.png
+progressbar.png
+resultset_next.png

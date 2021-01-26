@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmlns:pos="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos.ecore"
+  xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI"
+  xmlns:cas="http:///uima/cas.ecore"
+  xmlns:tweet="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos/tweet.ecore"
+  xmlns:morph="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/morph.ecore"
+  xmlns:dependency="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/dependency.ecore"
+  xmlns:type5="http:///de/tudarmstadt/ukp/dkpro/core/api/semantics/type.ecore"
+  xmlns:type6="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type.ecore"
+  xmlns:type2="http:///de/tudarmstadt/ukp/dkpro/core/api/metadata/type.ecore"
+  xmlns:type3="http:///de/tudarmstadt/ukp/dkpro/core/api/ner/type.ecore"
+  xmlns:type4="http:///de/tudarmstadt/ukp/dkpro/core/api/segmentation/type.ecore"
+  xmlns:type="http:///de/tudarmstadt/ukp/dkpro/core/api/coref/type.ecore"
+  xmlns:constituent="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/constituent.ecore"
+  xmlns:chunk="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/chunk.ecore"
+  xmlns:custom="http:///webanno/custom.ecore" xmi:version="2.0">
+  <cas:NULL xmi:id="0" />
+  <type2:DocumentMetaData xmi:id="1" sofa="12" begin="0" end="35"
+    language="x-unspecified"
+    documentTitle="CDB63BB152C2B6657A02824CF6F1D422_14495097389004135881178029967508tabs_panel_content"
+    documentId="admin"
+    documentUri="file:/home/seid/.webanno/repository/project/1/document/10/source/tale.tsv"
+    collectionId="file:/home/seid/.webanno/repository/project/1/document/10/source/"
+    documentBaseUri="file:/home/seid/.webanno/repository/project/1/document/10/source/"
+    isLastSegment="false" />
+  <type4:Token xmi:id="19" sofa="12" begin="0" end="1" />
+  <type4:Token xmi:id="28" sofa="12" begin="2" end="6" />
+  <type4:Token xmi:id="43" sofa="12" begin="7" end="9" />
+  <type4:Token xmi:id="52" sofa="12" begin="10" end="11" />
+  <type4:Token xmi:id="61" sofa="12" begin="12" end="17" />
+  <type4:Token xmi:id="76" sofa="12" begin="18" end="20" />
+  <type4:Token xmi:id="85" sofa="12" begin="21" end="32" />
+  <type4:Token xmi:id="94" sofa="12" begin="33" end="34" />
+  <custom:Multivalspan xmi:id="37" sofa="12" begin="2" end="6" f1="A" f2="B" />
+  <custom:Multivalspan xmi:id="107" sofa="12" begin="2" end="6" f1="A" f2="C" />
+  <custom:Multivalspan xmi:id="113" sofa="12" begin="2" end="6" f1="B" f2="C" />
+  <custom:Multivalspan xmi:id="70" sofa="12" begin="12" end="17" f1="C" f2="D" />
+  <type4:Sentence xmi:id="103" sofa="12" begin="0" end="34" />
+  <custom:Multivalrel xmi:id="119" sofa="12" begin="2" end="17" Dependent="70"
+    Governor="107" rel1="r1" rel2="r1" />
+  <custom:Multivalrel xmi:id="135" sofa="12" begin="2" end="17" Dependent="70"
+    Governor="37" rel1="r2" rel2="r2" />
+  <custom:Multivalrel xmi:id="143" sofa="12" begin="2" end="17" Dependent="70"
+    Governor="113" rel1="r3" rel2="r3" />
+  <custom:Multivalrel xmi:id="127" sofa="12" begin="2" end="17" Dependent="70"
+    Governor="107" rel1="r2" rel2="r2" />
+  <type2:TagsetDescription xmi:id="151" sofa="12" begin="0" end="0"
+    layer="de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency" name="Tiger" />
+  <type2:TagsetDescription xmi:id="165" sofa="12" begin="0" end="0"
+    layer="de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS" name="STTS" />
+  <type2:TagsetDescription xmi:id="158" sofa="12" begin="0" end="0"
+    layer="de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity" name="NER_WebAnno" />
+  <cas:Sofa xmi:id="12" sofaNum="1" sofaID="_InitialView" mimeType="text"
+    sofaString="A tale of 3 kinds of annotations .&#10;" />
+  <cas:View sofa="12"
+    members="1 19 28 43 52 61 76 85 94 37 107 113 70 103 119 135 143 127 151 165 158" />
+</xmi:XMI>

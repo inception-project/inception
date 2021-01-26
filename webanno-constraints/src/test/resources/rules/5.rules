@@ -1,0 +1,3 @@
+database{
+localdb.schema.validatorAvailable.timezone = "utc1" -> @cityName="Berlin";
+}

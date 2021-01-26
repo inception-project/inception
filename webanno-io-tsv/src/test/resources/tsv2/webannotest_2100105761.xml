@@ -1,0 +1,1909 @@
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:svg="http://www.w3.org/2000/svg" xmlns:math="http://www.w3.org/1998/Math/MathML">
+    <teiHeader type="text">
+        <fileDesc>
+            <titleStmt>
+                <title>CTB version: Mere Fjæsbog</title>
+                <sponsor>DK-CLARIN</sponsor>
+                <respStmt>
+                    <resp>Data capture</resp>
+                    <name>dsl-dsn.dk 
+                        <note type="method">file</note>
+                        <date when="2011"/>
+                    </name>
+                </respStmt>
+            </titleStmt>
+            <extent>
+                <num n="words">239</num>
+                <num n="paragraphs">5</num>
+            </extent>
+            <publicationStmt>
+                <distributor>dsl-dsn.dk</distributor>
+                <idno type="ctb">2100105761</idno>
+                <availability status="restricted">
+                    <ab type="academic">
+                        <seg type="availDesc">full</seg>
+                        <seg type="anonymDesc">0</seg>
+                    </ab>
+                    <ab type="nonCommercial">
+                        <seg type="availDesc">partial</seg>
+                        <seg type="anonymDesc">0</seg>
+                    </ab>
+                    <ab type="all">
+                        <seg type="availDesc">partial</seg>
+                        <seg type="anonymDesc">0</seg>
+                    </ab>
+                </availability>
+            </publicationStmt>
+            <notesStmt>
+                <note resp="ja@dsl.dk">This text belongs to the DK-CLARIN Reference Corpus of General Danish, DK-CLARIN Repository Version, April 2012</note>
+            </notesStmt>
+            <sourceDesc>
+                <biblStruct>
+                    <analytic>
+                        <title xml:lang="nil" level="a">Mere Fjæsbog</title>
+                        <author>
+                            <name ref="#P210000000015">Hoffmann, Bente</name>
+                        </author>
+                        <respStmt n="translators">
+                            <resp>Translated by</resp>
+                            <name ref="#nil_person">empty</name>
+                        </respStmt>
+                    </analytic>
+                    <monogr>
+                        <title xml:lang="nil">Bentes blog. Strøtanker fra en skribents skrivebord</title>
+                        <editor>
+                            <name ref="#nil_person">empty</name>
+                        </editor>
+                        <imprint>
+                            <publisher n="16010">Bente Hoffmann</publisher>
+                            <date when="2008-05-27" cert="high"/>
+                            <biblScope type="issue">empty</biblScope>
+                            <biblScope type="sect">empty</biblScope>
+                            <biblScope type="vol">empty</biblScope>
+                            <biblScope type="chap">empty</biblScope>
+                            <biblScope type="pp">empty</biblScope>
+                        </imprint>
+                    </monogr>
+                    <idno type="uri">http://www.bentehoffmann.dk/blog/mere-fj%c3%a6sbog</idno>
+                    <idno type="file">nil</idno>
+                    <relatedItem type="nil">
+                        <bibl>
+                            <title>nil</title>
+                            <idno type="ctb">99999999</idno>
+                        </bibl>
+                    </relatedItem>
+                </biblStruct>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <samplingDecl>
+                <ab>CTB version</ab>
+            </samplingDecl>
+            <projectDesc>
+                <ab>DK-CLARIN-WP2.1</ab>
+            </projectDesc>
+            <appInfo>
+                <application xml:id="ePOSlemmatizer" type="a_annotation" subtype="lemmatizer" ident="ePOS-DSL" version="1.0" n="da-001" when="2012-04-04">
+                    <desc>Annotation with lemma forms of basic tokens</desc>
+                    <ref target="ePOS-config-201204"/>
+                </application>
+                <application xml:id="ePOStagger" type="a_annotation" subtype="pos-tagger" ident="ePOS-DSL" version="1.0" n="da-001" when="2012-04-04">
+                    <desc>Annotation with POS and inflection of basic tokens</desc>
+                    <ref target="ePOS-config-201204"/>
+                </application>
+            </appInfo>
+        </encodingDesc>
+        <profileDesc>
+            <creation>
+                <date when="2008-05-27" cert="high"/>
+            </creation>
+            <langUsage>
+                <language ident="da">Danish</language>
+            </langUsage>
+            <textDesc>
+                <channel mode="w">22</channel>
+                <constitution type="single"/>
+                <derivation type="original">
+                    <lang>nil</lang>
+                </derivation>
+                <domain type="general">99999999</domain>
+                <factuality type="fact"/>
+                <interaction active="singular" passive="world">
+                    <note type="interactRole">basic-basic</note>
+                    <note type="interactAge">adult-adult</note>
+                </interaction>
+                <preparedness type="revised"/>
+                <purpose type="express"/>
+            </textDesc>
+            <textClass>
+                <catRef scheme="nil" target="nil"/>
+                <classCode scheme="nil">nil</classCode>
+            </textClass>
+            <particDesc>
+                <person xml:id="P210000000015" role="major" age="adult" sex="2">
+                    <birth>
+                        <date when="1965" cert="high"/>
+                    </birth>
+                </person>
+            </particDesc>
+        </profileDesc>
+        <revisionDesc>
+            <change when="2011-03-30" who="dsn.dk">created</change>
+            <change when="2011-08" who="ja@dsl.dk">errors fixed with dk.dsl.ja.textjuggler.TextCleaner</change>
+            <change when="2012-04" who="ja@dsl.dk">lemmatized and POS-tagged with ePOS-DSL</change>
+        </revisionDesc>
+    </teiHeader>
+    <text>
+        <body>
+            <p>
+                <c xml:id="A-2100105761-1-2" type="p">"</c>
+                <w xml:id="A-2100105761-1-3">På</w>
+                <c xml:id="A-2100105761-1-4" type="s"/>
+                <w xml:id="A-2100105761-1-5">Facebook</w>
+                <c xml:id="A-2100105761-1-6" type="s"/>
+                <w xml:id="A-2100105761-1-7">handler</w>
+                <c xml:id="A-2100105761-1-8" type="s"/>
+                <w xml:id="A-2100105761-1-9">det</w>
+                <c xml:id="A-2100105761-1-10" type="s"/>
+                <w xml:id="A-2100105761-1-11">egentlig</w>
+                <c xml:id="A-2100105761-1-12" type="s"/>
+                <w xml:id="A-2100105761-1-13">bare</w>
+                <c xml:id="A-2100105761-1-14" type="s"/>
+                <w xml:id="A-2100105761-1-15">om</w>
+                <c xml:id="A-2100105761-1-16" type="s"/>
+                <w xml:id="A-2100105761-1-17">at</w>
+                <c xml:id="A-2100105761-1-18" type="s"/>
+                <w xml:id="A-2100105761-1-19">blive</w>
+                <c xml:id="A-2100105761-1-20" type="s"/>
+                <w xml:id="A-2100105761-1-21">set</w>
+                <c xml:id="A-2100105761-1-22" type="p">.</c>
+                <c xml:id="A-2100105761-1-23" type="s"/>
+                <w xml:id="A-2100105761-1-24">I</w>
+                <c xml:id="A-2100105761-1-25" type="s"/>
+                <w xml:id="A-2100105761-1-26">informationssamfundet</w>
+                <c xml:id="A-2100105761-1-27" type="s"/>
+                <w xml:id="A-2100105761-1-28">er</w>
+                <c xml:id="A-2100105761-1-29" type="s"/>
+                <w xml:id="A-2100105761-1-30">den</w>
+                <c xml:id="A-2100105761-1-31" type="s"/>
+                <w xml:id="A-2100105761-1-32">største</w>
+                <c xml:id="A-2100105761-1-33" type="s"/>
+                <w xml:id="A-2100105761-1-34">knaphedsressource</w>
+                <c xml:id="A-2100105761-1-35" type="s"/>
+                <w xml:id="A-2100105761-1-36">andres</w>
+                <c xml:id="A-2100105761-1-37" type="s"/>
+                <w xml:id="A-2100105761-1-38">opmærksomhed</w>
+                <c xml:id="A-2100105761-1-39" type="p">.</c>
+                <c xml:id="A-2100105761-1-40" type="s"/>
+                <w xml:id="A-2100105761-1-41">Vi</w>
+                <c xml:id="A-2100105761-1-42" type="s"/>
+                <w xml:id="A-2100105761-1-43">ser</w>
+                <c xml:id="A-2100105761-1-44" type="s"/>
+                <w xml:id="A-2100105761-1-45">det</w>
+                <c xml:id="A-2100105761-1-46" type="s"/>
+                <w xml:id="A-2100105761-1-47">også</w>
+                <c xml:id="A-2100105761-1-48" type="s"/>
+                <w xml:id="A-2100105761-1-49">på</w>
+                <c xml:id="A-2100105761-1-50" type="s"/>
+                <w xml:id="A-2100105761-1-51">den</w>
+                <c xml:id="A-2100105761-1-52" type="s"/>
+                <w xml:id="A-2100105761-1-53">måde</w>
+                <c xml:id="A-2100105761-1-54" type="p">,</c>
+                <c xml:id="A-2100105761-1-55" type="s"/>
+                <w xml:id="A-2100105761-1-56">vi</w>
+                <c xml:id="A-2100105761-1-57" type="s"/>
+                <w xml:id="A-2100105761-1-58">bruger</w>
+                <c xml:id="A-2100105761-1-59" type="s"/>
+                <w xml:id="A-2100105761-1-60">sms</w>
+                <c xml:id="A-2100105761-1-61" type="s"/>
+                <w xml:id="A-2100105761-1-62">og</w>
+                <c xml:id="A-2100105761-1-63" type="s"/>
+                <w xml:id="A-2100105761-1-64">e</w>
+                <c xml:id="A-2100105761-1-65" type="p">-</c>
+                <w xml:id="A-2100105761-1-66">mail</w>
+                <c xml:id="A-2100105761-1-67" type="p">.</c>
+                <c xml:id="A-2100105761-1-68" type="s"/>
+                <w xml:id="A-2100105761-1-69">Vældig</w>
+                <c xml:id="A-2100105761-1-70" type="s"/>
+                <w xml:id="A-2100105761-1-71">mange</w>
+                <c xml:id="A-2100105761-1-72" type="s"/>
+                <w xml:id="A-2100105761-1-73">af</w>
+                <c xml:id="A-2100105761-1-74" type="s"/>
+                <w xml:id="A-2100105761-1-75">beskederne</w>
+                <c xml:id="A-2100105761-1-76" type="s"/>
+                <w xml:id="A-2100105761-1-77">handler</w>
+                <c xml:id="A-2100105761-1-78" type="s"/>
+                <w xml:id="A-2100105761-1-79">sådan</w>
+                <c xml:id="A-2100105761-1-80" type="s"/>
+                <w xml:id="A-2100105761-1-81">set</w>
+                <c xml:id="A-2100105761-1-82" type="s"/>
+                <w xml:id="A-2100105761-1-83">bare</w>
+                <c xml:id="A-2100105761-1-84" type="s"/>
+                <w xml:id="A-2100105761-1-85">om</w>
+                <c xml:id="A-2100105761-1-86" type="s"/>
+                <w xml:id="A-2100105761-1-87">at</w>
+                <c xml:id="A-2100105761-1-88" type="s"/>
+                <w xml:id="A-2100105761-1-89">sige</w>
+                <c xml:id="A-2100105761-1-90" type="p">:</c>
+                <c xml:id="A-2100105761-1-91" type="s"/>
+                <w xml:id="A-2100105761-1-92">Hallo</w>
+                <c xml:id="A-2100105761-1-93" type="s"/>
+                <w xml:id="A-2100105761-1-94">hallo</w>
+                <c xml:id="A-2100105761-1-95" type="p">,</c>
+                <c xml:id="A-2100105761-1-96" type="s"/>
+                <w xml:id="A-2100105761-1-97">glem</w>
+                <c xml:id="A-2100105761-1-98" type="s"/>
+                <w xml:id="A-2100105761-1-99">ikke</w>
+                <c xml:id="A-2100105761-1-100" type="p">,</c>
+                <c xml:id="A-2100105761-1-101" type="s"/>
+                <w xml:id="A-2100105761-1-102">at</w>
+                <c xml:id="A-2100105761-1-103" type="s"/>
+                <w xml:id="A-2100105761-1-104">jeg</w>
+                <c xml:id="A-2100105761-1-105" type="s"/>
+                <w xml:id="A-2100105761-1-106">findes</w>
+                <c xml:id="A-2100105761-1-107" type="p">.</c>
+                <c xml:id="A-2100105761-1-108" type="s"/>
+                <w xml:id="A-2100105761-1-109">Det</w>
+                <c xml:id="A-2100105761-1-110" type="s"/>
+                <w xml:id="A-2100105761-1-111">samme</w>
+                <c xml:id="A-2100105761-1-112" type="s"/>
+                <w xml:id="A-2100105761-1-113">med</w>
+                <c xml:id="A-2100105761-1-114" type="s"/>
+                <w xml:id="A-2100105761-1-115">Facebook</w>
+                <c xml:id="A-2100105761-1-116" type="p">.</c>
+                <c xml:id="A-2100105761-1-117" type="s"/>
+                <w xml:id="A-2100105761-1-118">Og</w>
+                <c xml:id="A-2100105761-1-119" type="s"/>
+                <w xml:id="A-2100105761-1-120">det</w>
+                <c xml:id="A-2100105761-1-121" type="s"/>
+                <w xml:id="A-2100105761-1-122">at</w>
+                <c xml:id="A-2100105761-1-123" type="s"/>
+                <w xml:id="A-2100105761-1-124">have</w>
+                <c xml:id="A-2100105761-1-125" type="s"/>
+                <w xml:id="A-2100105761-1-126">2</w>
+                <c xml:id="A-2100105761-1-127" type="p">.</c>
+                <w xml:id="A-2100105761-1-128">000</w>
+                <c xml:id="A-2100105761-1-129" type="s"/>
+                <w xml:id="A-2100105761-1-130">såkaldte</w>
+                <c xml:id="A-2100105761-1-131" type="s"/>
+                <w xml:id="A-2100105761-1-132">Facebookvenner</w>
+                <c xml:id="A-2100105761-1-133" type="s"/>
+                <w xml:id="A-2100105761-1-134">giver</w>
+                <c xml:id="A-2100105761-1-135" type="s"/>
+                <w xml:id="A-2100105761-1-136">indtryk</w>
+                <c xml:id="A-2100105761-1-137" type="s"/>
+                <w xml:id="A-2100105761-1-138">af</w>
+                <c xml:id="A-2100105761-1-139" type="p">,</c>
+                <c xml:id="A-2100105761-1-140" type="s"/>
+                <w xml:id="A-2100105761-1-141">at</w>
+                <c xml:id="A-2100105761-1-142" type="s"/>
+                <w xml:id="A-2100105761-1-143">man</w>
+                <c xml:id="A-2100105761-1-144" type="s"/>
+                <w xml:id="A-2100105761-1-145">er</w>
+                <c xml:id="A-2100105761-1-146" type="s"/>
+                <w xml:id="A-2100105761-1-147">en</w>
+                <c xml:id="A-2100105761-1-148" type="s"/>
+                <w xml:id="A-2100105761-1-149">person</w>
+                <c xml:id="A-2100105761-1-150" type="p">,</c>
+                <c xml:id="A-2100105761-1-151" type="s"/>
+                <w xml:id="A-2100105761-1-152">der</w>
+                <c xml:id="A-2100105761-1-153" type="s"/>
+                <w xml:id="A-2100105761-1-154">sidder</w>
+                <c xml:id="A-2100105761-1-155" type="s"/>
+                <w xml:id="A-2100105761-1-156">som</w>
+                <c xml:id="A-2100105761-1-157" type="s"/>
+                <w xml:id="A-2100105761-1-158">en</w>
+                <c xml:id="A-2100105761-1-159" type="s"/>
+                <w xml:id="A-2100105761-1-160">edderkop</w>
+                <c xml:id="A-2100105761-1-161" type="s"/>
+                <w xml:id="A-2100105761-1-162">i</w>
+                <c xml:id="A-2100105761-1-163" type="s"/>
+                <w xml:id="A-2100105761-1-164">et</w>
+                <c xml:id="A-2100105761-1-165" type="s"/>
+                <w xml:id="A-2100105761-1-166">stort</w>
+                <c xml:id="A-2100105761-1-167" type="s"/>
+                <w xml:id="A-2100105761-1-168">netværk</w>
+                <c xml:id="A-2100105761-1-169" type="p">.</c>
+                <c xml:id="A-2100105761-1-170" type="s"/>
+                <w xml:id="A-2100105761-1-171">Og</w>
+                <c xml:id="A-2100105761-1-172" type="s"/>
+                <w xml:id="A-2100105761-1-173">i</w>
+                <c xml:id="A-2100105761-1-174" type="s"/>
+                <w xml:id="A-2100105761-1-175">et</w>
+                <c xml:id="A-2100105761-1-176" type="s"/>
+                <w xml:id="A-2100105761-1-177">netværkssamfund</w>
+                <c xml:id="A-2100105761-1-178" type="s"/>
+                <w xml:id="A-2100105761-1-179">er</w>
+                <c xml:id="A-2100105761-1-180" type="s"/>
+                <w xml:id="A-2100105761-1-181">det</w>
+                <c xml:id="A-2100105761-1-182" type="s"/>
+                <w xml:id="A-2100105761-1-183">en</w>
+                <c xml:id="A-2100105761-1-184" type="s"/>
+                <w xml:id="A-2100105761-1-185">stor</w>
+                <c xml:id="A-2100105761-1-186" type="s"/>
+                <w xml:id="A-2100105761-1-187">ressource</w>
+                <c xml:id="A-2100105761-1-188" type="s"/>
+                <w xml:id="A-2100105761-1-189">for</w>
+                <c xml:id="A-2100105761-1-190" type="s"/>
+                <w xml:id="A-2100105761-1-191">vældig</w>
+                <c xml:id="A-2100105761-1-192" type="s"/>
+                <w xml:id="A-2100105761-1-193">mange</w>
+                <c xml:id="A-2100105761-1-194" type="s"/>
+                <w xml:id="A-2100105761-1-195">mennesker</w>
+                <c xml:id="A-2100105761-1-196" type="p">"</c>
+                <c xml:id="A-2100105761-1-197" type="p">,</c>
+                <c xml:id="A-2100105761-1-198" type="s"/>
+                <w xml:id="A-2100105761-1-199">siger</w>
+                <c xml:id="A-2100105761-1-200" type="s"/>
+                <w xml:id="A-2100105761-1-201">Thomas</w>
+                <c xml:id="A-2100105761-1-202" type="s"/>
+                <w xml:id="A-2100105761-1-203">Hylland</w>
+                <c xml:id="A-2100105761-1-204" type="s"/>
+                <w xml:id="A-2100105761-1-205">Eriksen</w>
+                <c xml:id="A-2100105761-1-206" type="p">.</c>
+            </p>
+            <p>
+                <w xml:id="A-2100105761-2-1">Ovenstående</w>
+                <c xml:id="A-2100105761-2-2" type="s"/>
+                <w xml:id="A-2100105761-2-3">tankevækkende</w>
+                <c xml:id="A-2100105761-2-4" type="s"/>
+                <w xml:id="A-2100105761-2-5">ord</w>
+                <c xml:id="A-2100105761-2-6" type="s"/>
+                <w xml:id="A-2100105761-2-7">kunne</w>
+                <c xml:id="A-2100105761-2-8" type="s"/>
+                <w xml:id="A-2100105761-2-9">man</w>
+                <c xml:id="A-2100105761-2-10" type="s"/>
+                <w xml:id="A-2100105761-2-11">bl</w>
+                <c xml:id="A-2100105761-2-12" type="p">.</c>
+                <w xml:id="A-2100105761-2-13">a</w>
+                <c xml:id="A-2100105761-2-14" type="p">.</c>
+                <c xml:id="A-2100105761-2-15" type="s"/>
+                <w xml:id="A-2100105761-2-16">læse</w>
+                <c xml:id="A-2100105761-2-17" type="s"/>
+                <w xml:id="A-2100105761-2-18">i</w>
+                <c xml:id="A-2100105761-2-19" type="s"/>
+                <w xml:id="A-2100105761-2-20">går</w>
+                <c xml:id="A-2100105761-2-21" type="s"/>
+                <w xml:id="A-2100105761-2-22">i</w>
+                <c xml:id="A-2100105761-2-23" type="s"/>
+                <w xml:id="A-2100105761-2-24">Politikens</w>
+                <c xml:id="A-2100105761-2-25" type="s"/>
+                <w xml:id="A-2100105761-2-26">artikel</w>
+                <c xml:id="A-2100105761-2-27" type="s"/>
+                <w xml:id="A-2100105761-2-28">Danskerne</w>
+                <c xml:id="A-2100105761-2-29" type="s"/>
+                <w xml:id="A-2100105761-2-30">flokkes</w>
+                <c xml:id="A-2100105761-2-31" type="s"/>
+                <w xml:id="A-2100105761-2-32">på</w>
+                <c xml:id="A-2100105761-2-33" type="s"/>
+                <w xml:id="A-2100105761-2-34">Facebook</w>
+                <c xml:id="A-2100105761-2-35" type="p">,</c>
+                <c xml:id="A-2100105761-2-36" type="s"/>
+                <w xml:id="A-2100105761-2-37">som</w>
+                <c xml:id="A-2100105761-2-38" type="s"/>
+                <w xml:id="A-2100105761-2-39">fx</w>
+                <c xml:id="A-2100105761-2-40" type="s"/>
+                <w xml:id="A-2100105761-2-41">kunne</w>
+                <c xml:id="A-2100105761-2-42" type="s"/>
+                <w xml:id="A-2100105761-2-43">fortælle</w>
+                <c xml:id="A-2100105761-2-44" type="p">,</c>
+                <c xml:id="A-2100105761-2-45" type="s"/>
+                <w xml:id="A-2100105761-2-46">at</w>
+                <c xml:id="A-2100105761-2-47" type="s"/>
+                <w xml:id="A-2100105761-2-48">12</w>
+                <c xml:id="A-2100105761-2-49" type="s"/>
+                <w xml:id="A-2100105761-2-50">procent</w>
+                <c xml:id="A-2100105761-2-51" type="s"/>
+                <w xml:id="A-2100105761-2-52">af</w>
+                <c xml:id="A-2100105761-2-53" type="s"/>
+                <w xml:id="A-2100105761-2-54">os</w>
+                <c xml:id="A-2100105761-2-55" type="s"/>
+                <w xml:id="A-2100105761-2-56">har</w>
+                <c xml:id="A-2100105761-2-57" type="s"/>
+                <w xml:id="A-2100105761-2-58">en</w>
+                <c xml:id="A-2100105761-2-59" type="s"/>
+                <w xml:id="A-2100105761-2-60">profil</w>
+                <c xml:id="A-2100105761-2-61" type="p">.</c>
+            </p>
+            <p>
+                <w xml:id="A-2100105761-3-1">Min</w>
+                <c xml:id="A-2100105761-3-2" type="s"/>
+                <w xml:id="A-2100105761-3-3">holdning</w>
+                <c xml:id="A-2100105761-3-4" type="s"/>
+                <w xml:id="A-2100105761-3-5">til</w>
+                <c xml:id="A-2100105761-3-6" type="s"/>
+                <w xml:id="A-2100105761-3-7">Fjæsbogen</w>
+                <c xml:id="A-2100105761-3-8" type="s"/>
+                <w xml:id="A-2100105761-3-9">har</w>
+                <c xml:id="A-2100105761-3-10" type="s"/>
+                <w xml:id="A-2100105761-3-11">jeg</w>
+                <c xml:id="A-2100105761-3-12" type="s"/>
+                <w xml:id="A-2100105761-3-13">jo</w>
+                <c xml:id="A-2100105761-3-14" type="s"/>
+                <w xml:id="A-2100105761-3-15">tidligere</w>
+                <c xml:id="A-2100105761-3-16" type="s"/>
+                <w xml:id="A-2100105761-3-17">ytret</w>
+                <c xml:id="A-2100105761-3-18" type="s"/>
+                <c xml:id="A-2100105761-3-19" type="p">(</c>
+                <w xml:id="A-2100105761-3-20">og</w>
+                <c xml:id="A-2100105761-3-21" type="s"/>
+                <w xml:id="A-2100105761-3-22">min</w>
+                <c xml:id="A-2100105761-3-23" type="s"/>
+                <w xml:id="A-2100105761-3-24">profil</w>
+                <c xml:id="A-2100105761-3-25" type="s"/>
+                <w xml:id="A-2100105761-3-26">har</w>
+                <c xml:id="A-2100105761-3-27" type="s"/>
+                <w xml:id="A-2100105761-3-28">længe</w>
+                <c xml:id="A-2100105761-3-29" type="s"/>
+                <w xml:id="A-2100105761-3-30">været</w>
+                <c xml:id="A-2100105761-3-31" type="s"/>
+                <w xml:id="A-2100105761-3-32">deaktiveret</w>
+                <c xml:id="A-2100105761-3-33" type="p">;</c>
+                <c xml:id="A-2100105761-3-34" type="s"/>
+                <w xml:id="A-2100105761-3-35">til</w>
+                <c xml:id="A-2100105761-3-36" type="s"/>
+                <w xml:id="A-2100105761-3-37">min</w>
+                <c xml:id="A-2100105761-3-38" type="s"/>
+                <w xml:id="A-2100105761-3-39">store</w>
+                <c xml:id="A-2100105761-3-40" type="s"/>
+                <w xml:id="A-2100105761-3-41">irritation</w>
+                <c xml:id="A-2100105761-3-42" type="s"/>
+                <w xml:id="A-2100105761-3-43">kan</w>
+                <c xml:id="A-2100105761-3-44" type="s"/>
+                <w xml:id="A-2100105761-3-45">den</w>
+                <c xml:id="A-2100105761-3-46" type="s"/>
+                <w xml:id="A-2100105761-3-47">jo</w>
+                <c xml:id="A-2100105761-3-48" type="s"/>
+                <w xml:id="A-2100105761-3-49">ikke</w>
+                <c xml:id="A-2100105761-3-50" type="s"/>
+                <w xml:id="A-2100105761-3-51">slettes</w>
+                <c xml:id="A-2100105761-3-52" type="p">)</c>
+                <c xml:id="A-2100105761-3-53" type="p">.</c>
+                <c xml:id="A-2100105761-3-54" type="s"/>
+                <w xml:id="A-2100105761-3-55">Men</w>
+                <c xml:id="A-2100105761-3-56" type="s"/>
+                <w xml:id="A-2100105761-3-57">i</w>
+                <c xml:id="A-2100105761-3-58" type="s"/>
+                <w xml:id="A-2100105761-3-59">dag</w>
+                <c xml:id="A-2100105761-3-60" type="s"/>
+                <w xml:id="A-2100105761-3-61">fandt</w>
+                <c xml:id="A-2100105761-3-62" type="s"/>
+                <w xml:id="A-2100105761-3-63">jeg</w>
+                <c xml:id="A-2100105761-3-64" type="s"/>
+                <w xml:id="A-2100105761-3-65">et</w>
+                <c xml:id="A-2100105761-3-66" type="s"/>
+                <w xml:id="A-2100105761-3-67">meget</w>
+                <c xml:id="A-2100105761-3-68" type="s"/>
+                <w xml:id="A-2100105761-3-69">interessant</w>
+                <c xml:id="A-2100105761-3-70" type="s"/>
+                <w xml:id="A-2100105761-3-71">blogindlæg</w>
+                <c xml:id="A-2100105761-3-72" type="s"/>
+                <w xml:id="A-2100105761-3-73">hos</w>
+                <c xml:id="A-2100105761-3-74" type="s"/>
+                <w xml:id="A-2100105761-3-75">per</w>
+                <c xml:id="A-2100105761-3-76" type="p">-</c>
+                <w xml:id="A-2100105761-3-77">olof</w>
+                <c xml:id="A-2100105761-3-78" type="p">.</c>
+                <w xml:id="A-2100105761-3-79">dk</w>
+                <c xml:id="A-2100105761-3-80" type="p">,</c>
+                <c xml:id="A-2100105761-3-81" type="s"/>
+                <w xml:id="A-2100105761-3-82">som</w>
+                <c xml:id="A-2100105761-3-83" type="s"/>
+                <w xml:id="A-2100105761-3-84">har</w>
+                <c xml:id="A-2100105761-3-85" type="s"/>
+                <w xml:id="A-2100105761-3-86">været</w>
+                <c xml:id="A-2100105761-3-87" type="s"/>
+                <w xml:id="A-2100105761-3-88">i</w>
+                <c xml:id="A-2100105761-3-89" type="s"/>
+                <w xml:id="A-2100105761-3-90">dialog</w>
+                <c xml:id="A-2100105761-3-91" type="s"/>
+                <w xml:id="A-2100105761-3-92">med</w>
+                <c xml:id="A-2100105761-3-93" type="s"/>
+                <w xml:id="A-2100105761-3-94">en</w>
+                <c xml:id="A-2100105761-3-95" type="s"/>
+                <w xml:id="A-2100105761-3-96">af</w>
+                <c xml:id="A-2100105761-3-97" type="s"/>
+                <w xml:id="A-2100105761-3-98">eksperterne</w>
+                <c xml:id="A-2100105761-3-99" type="p">,</c>
+                <c xml:id="A-2100105761-3-100" type="s"/>
+                <w xml:id="A-2100105761-3-101">Gisle</w>
+                <c xml:id="A-2100105761-3-102" type="s"/>
+                <w xml:id="A-2100105761-3-103">Hannemyr</w>
+                <c xml:id="A-2100105761-3-104" type="p">,</c>
+                <c xml:id="A-2100105761-3-105" type="s"/>
+                <w xml:id="A-2100105761-3-106">bag</w>
+                <c xml:id="A-2100105761-3-107" type="s"/>
+                <w xml:id="A-2100105761-3-108">Politikens</w>
+                <c xml:id="A-2100105761-3-109" type="s"/>
+                <w xml:id="A-2100105761-3-110">artikel</w>
+                <c xml:id="A-2100105761-3-111" type="p">.</c>
+                <c xml:id="A-2100105761-3-112" type="s"/>
+                <w xml:id="A-2100105761-3-113">Læs</w>
+                <c xml:id="A-2100105761-3-114" type="s"/>
+                <w xml:id="A-2100105761-3-115">endelig</w>
+                <c xml:id="A-2100105761-3-116" type="s"/>
+                <w xml:id="A-2100105761-3-117">med</w>
+                <c xml:id="A-2100105761-3-118" type="p">,</c>
+                <c xml:id="A-2100105761-3-119" type="s"/>
+                <w xml:id="A-2100105761-3-120">hvis</w>
+                <c xml:id="A-2100105761-3-121" type="s"/>
+                <w xml:id="A-2100105761-3-122">du</w>
+                <c xml:id="A-2100105761-3-123" type="s"/>
+                <w xml:id="A-2100105761-3-124">også</w>
+                <c xml:id="A-2100105761-3-125" type="s"/>
+                <w xml:id="A-2100105761-3-126">er</w>
+                <c xml:id="A-2100105761-3-127" type="s"/>
+                <w xml:id="A-2100105761-3-128">skeptisk</w>
+                <c xml:id="A-2100105761-3-129" type="s"/>
+                <w xml:id="A-2100105761-3-130">over</w>
+                <c xml:id="A-2100105761-3-131" type="s"/>
+                <w xml:id="A-2100105761-3-132">for</w>
+                <c xml:id="A-2100105761-3-133" type="s"/>
+                <w xml:id="A-2100105761-3-134">Facebook</w>
+                <c xml:id="A-2100105761-3-135" type="p">.</c>
+            </p>
+            <p>
+                <w xml:id="A-2100105761-4-1">Tags</w>
+                <c xml:id="A-2100105761-4-2" type="p">:</c>
+                <c xml:id="A-2100105761-4-3" type="s"/>
+                <w xml:id="A-2100105761-4-4">citat</w>
+                <c xml:id="A-2100105761-4-5" type="p">,</c>
+                <c xml:id="A-2100105761-4-6" type="s"/>
+                <w xml:id="A-2100105761-4-7">Facebook</w>
+                <c xml:id="A-2100105761-4-8" type="p">,</c>
+                <c xml:id="A-2100105761-4-9" type="s"/>
+                <w xml:id="A-2100105761-4-10">Fjæsbog</w>
+                <c xml:id="A-2100105761-4-11" type="p">,</c>
+                <c xml:id="A-2100105761-4-12" type="s"/>
+                <w xml:id="A-2100105761-4-13">Netværk</w>
+                <c xml:id="A-2100105761-4-14" type="p">,</c>
+                <c xml:id="A-2100105761-4-15" type="s"/>
+                <w xml:id="A-2100105761-4-16">opmærksomhed</w>
+                <c xml:id="A-2100105761-4-17" type="p">,</c>
+                <c xml:id="A-2100105761-4-18" type="s"/>
+                <w xml:id="A-2100105761-4-19">Politiken</w>
+            </p>
+            <p>
+                <w xml:id="A-2100105761-5-1">Dette</w>
+                <c xml:id="A-2100105761-5-2" type="s"/>
+                <w xml:id="A-2100105761-5-3">indlæg</w>
+                <c xml:id="A-2100105761-5-4" type="s"/>
+                <w xml:id="A-2100105761-5-5">blev</w>
+                <c xml:id="A-2100105761-5-6" type="s"/>
+                <w xml:id="A-2100105761-5-7">udgivet</w>
+                <c xml:id="A-2100105761-5-8" type="s"/>
+                <w xml:id="A-2100105761-5-9">den</w>
+                <c xml:id="A-2100105761-5-10" type="s"/>
+                <w xml:id="A-2100105761-5-11">tirsdag</w>
+                <c xml:id="A-2100105761-5-12" type="p">,</c>
+                <c xml:id="A-2100105761-5-13" type="s"/>
+                <w xml:id="A-2100105761-5-14">27</w>
+                <c xml:id="A-2100105761-5-15" type="p">.</c>
+                <c xml:id="A-2100105761-5-16" type="s"/>
+                <w xml:id="A-2100105761-5-17">maj</w>
+                <c xml:id="A-2100105761-5-18" type="s"/>
+                <w xml:id="A-2100105761-5-19">2008</w>
+                <c xml:id="A-2100105761-5-20" type="s"/>
+                <w xml:id="A-2100105761-5-21">kl</w>
+                <c xml:id="A-2100105761-5-22" type="p">.</c>
+                <c xml:id="A-2100105761-5-23" type="s"/>
+                <w xml:id="A-2100105761-5-24">13</w>
+                <c xml:id="A-2100105761-5-25" type="p">:</c>
+                <w xml:id="A-2100105761-5-26">04</w>
+                <c xml:id="A-2100105761-5-27" type="s"/>
+                <w xml:id="A-2100105761-5-28">og</w>
+                <c xml:id="A-2100105761-5-29" type="s"/>
+                <w xml:id="A-2100105761-5-30">er</w>
+                <c xml:id="A-2100105761-5-31" type="s"/>
+                <w xml:id="A-2100105761-5-32">gemt</w>
+                <c xml:id="A-2100105761-5-33" type="s"/>
+                <w xml:id="A-2100105761-5-34">i</w>
+                <c xml:id="A-2100105761-5-35" type="s"/>
+                <w xml:id="A-2100105761-5-36">Citater</w>
+                <c xml:id="A-2100105761-5-37" type="p">,</c>
+                <c xml:id="A-2100105761-5-38" type="s"/>
+                <w xml:id="A-2100105761-5-39">Internettet</w>
+                <c xml:id="A-2100105761-5-40" type="p">,</c>
+                <c xml:id="A-2100105761-5-41" type="s"/>
+                <w xml:id="A-2100105761-5-42">Netværk</w>
+                <c xml:id="A-2100105761-5-43" type="p">.</c>
+                <w xml:id="A-2100105761-5-44">Du</w>
+                <c xml:id="A-2100105761-5-45" type="s"/>
+                <w xml:id="A-2100105761-5-46">kan</w>
+                <c xml:id="A-2100105761-5-47" type="s"/>
+                <w xml:id="A-2100105761-5-48">følge</w>
+                <c xml:id="A-2100105761-5-49" type="s"/>
+                <w xml:id="A-2100105761-5-50">alle</w>
+                <c xml:id="A-2100105761-5-51" type="s"/>
+                <w xml:id="A-2100105761-5-52">svar</w>
+                <c xml:id="A-2100105761-5-53" type="s"/>
+                <w xml:id="A-2100105761-5-54">til</w>
+                <c xml:id="A-2100105761-5-55" type="s"/>
+                <w xml:id="A-2100105761-5-56">dette</w>
+                <c xml:id="A-2100105761-5-57" type="s"/>
+                <w xml:id="A-2100105761-5-58">indlæg</w>
+                <c xml:id="A-2100105761-5-59" type="s"/>
+                <w xml:id="A-2100105761-5-60">via</w>
+                <c xml:id="A-2100105761-5-61" type="s"/>
+                <w xml:id="A-2100105761-5-62">RSS</w>
+                <c xml:id="A-2100105761-5-63" type="s"/>
+                <w xml:id="A-2100105761-5-64">2</w>
+                <c xml:id="A-2100105761-5-65" type="p">.</c>
+                <w xml:id="A-2100105761-5-66">0</w>
+                <c xml:id="A-2100105761-5-67" type="p">-</c>
+                <w xml:id="A-2100105761-5-68">feedet</w>
+                <c xml:id="A-2100105761-5-69" type="p">.</c>
+                <c xml:id="A-2100105761-5-70" type="s"/>
+                <w xml:id="A-2100105761-5-71">Du</w>
+                <c xml:id="A-2100105761-5-72" type="s"/>
+                <w xml:id="A-2100105761-5-73">kan</w>
+                <c xml:id="A-2100105761-5-74" type="s"/>
+                <w xml:id="A-2100105761-5-75">skrive</w>
+                <c xml:id="A-2100105761-5-76" type="s"/>
+                <w xml:id="A-2100105761-5-77">en</w>
+                <c xml:id="A-2100105761-5-78" type="s"/>
+                <w xml:id="A-2100105761-5-79">kommentar</w>
+                <c xml:id="A-2100105761-5-80" type="p">,</c>
+                <c xml:id="A-2100105761-5-81" type="s"/>
+                <w xml:id="A-2100105761-5-82">eller</w>
+                <c xml:id="A-2100105761-5-83" type="s"/>
+                <w xml:id="A-2100105761-5-84">sende</w>
+                <c xml:id="A-2100105761-5-85" type="s"/>
+                <w xml:id="A-2100105761-5-86">et</w>
+                <c xml:id="A-2100105761-5-87" type="s"/>
+                <w xml:id="A-2100105761-5-88">trackback</w>
+                <c xml:id="A-2100105761-5-89" type="s"/>
+                <w xml:id="A-2100105761-5-90">fra</w>
+                <c xml:id="A-2100105761-5-91" type="s"/>
+                <w xml:id="A-2100105761-5-92">dit</w>
+                <c xml:id="A-2100105761-5-93" type="s"/>
+                <w xml:id="A-2100105761-5-94">eget</w>
+                <c xml:id="A-2100105761-5-95" type="s"/>
+                <w xml:id="A-2100105761-5-96">site</w>
+                <c xml:id="A-2100105761-5-97" type="p">.</c>
+            </p>
+        </body>
+        <spanGrp ana="#ePOSlemmatizer">
+            <span xml:id="L-2100105761-1-2" from="#A-2100105761-1-2">"</span>
+            <span xml:id="L-2100105761-1-3" from="#A-2100105761-1-3">på</span>
+            <span xml:id="L-2100105761-1-5" from="#A-2100105761-1-5">Facebook</span>
+            <span xml:id="L-2100105761-1-7" from="#A-2100105761-1-7">handle</span>
+            <span xml:id="L-2100105761-1-9" from="#A-2100105761-1-9">det</span>
+            <span xml:id="L-2100105761-1-11" from="#A-2100105761-1-11">egentlig</span>
+            <span xml:id="L-2100105761-1-13" from="#A-2100105761-1-13">bare</span>
+            <span xml:id="L-2100105761-1-15" from="#A-2100105761-1-15">om</span>
+            <span xml:id="L-2100105761-1-17" from="#A-2100105761-1-17">at</span>
+            <span xml:id="L-2100105761-1-19" from="#A-2100105761-1-19">blive</span>
+            <span xml:id="L-2100105761-1-21" from="#A-2100105761-1-21">se</span>
+            <span xml:id="L-2100105761-1-22" from="#A-2100105761-1-22">.</span>
+            <span xml:id="L-2100105761-1-24" from="#A-2100105761-1-24">i</span>
+            <span xml:id="L-2100105761-1-26" from="#A-2100105761-1-26">informationssamfund</span>
+            <span xml:id="L-2100105761-1-28" from="#A-2100105761-1-28">være</span>
+            <span xml:id="L-2100105761-1-30" from="#A-2100105761-1-30">den</span>
+            <span xml:id="L-2100105761-1-32" from="#A-2100105761-1-32">stor</span>
+            <span xml:id="L-2100105761-1-34" from="#A-2100105761-1-34">knaphedsressource</span>
+            <span xml:id="L-2100105761-1-36" from="#A-2100105761-1-36">andres</span>
+            <span xml:id="L-2100105761-1-38" from="#A-2100105761-1-38">opmærksomhed</span>
+            <span xml:id="L-2100105761-1-39" from="#A-2100105761-1-39">.</span>
+            <span xml:id="L-2100105761-1-41" from="#A-2100105761-1-41">vi</span>
+            <span xml:id="L-2100105761-1-43" from="#A-2100105761-1-43">se</span>
+            <span xml:id="L-2100105761-1-45" from="#A-2100105761-1-45">det</span>
+            <span xml:id="L-2100105761-1-47" from="#A-2100105761-1-47">også</span>
+            <span xml:id="L-2100105761-1-49" from="#A-2100105761-1-49">på</span>
+            <span xml:id="L-2100105761-1-51" from="#A-2100105761-1-51">den</span>
+            <span xml:id="L-2100105761-1-53" from="#A-2100105761-1-53">måde</span>
+            <span xml:id="L-2100105761-1-54" from="#A-2100105761-1-54">,</span>
+            <span xml:id="L-2100105761-1-56" from="#A-2100105761-1-56">vi</span>
+            <span xml:id="L-2100105761-1-58" from="#A-2100105761-1-58">bruge</span>
+            <span xml:id="L-2100105761-1-60" from="#A-2100105761-1-60">sms</span>
+            <span xml:id="L-2100105761-1-62" from="#A-2100105761-1-62">og</span>
+            <span xml:id="L-2100105761-1-64" from="#A-2100105761-1-64">E</span>
+            <span xml:id="L-2100105761-1-65" from="#A-2100105761-1-65">-</span>
+            <span xml:id="L-2100105761-1-66" from="#A-2100105761-1-66">mail</span>
+            <span xml:id="L-2100105761-1-67" from="#A-2100105761-1-67">.</span>
+            <span xml:id="L-2100105761-1-69" from="#A-2100105761-1-69">vældig</span>
+            <span xml:id="L-2100105761-1-71" from="#A-2100105761-1-71">mangen</span>
+            <span xml:id="L-2100105761-1-73" from="#A-2100105761-1-73">af</span>
+            <span xml:id="L-2100105761-1-75" from="#A-2100105761-1-75">besked</span>
+            <span xml:id="L-2100105761-1-77" from="#A-2100105761-1-77">handle</span>
+            <span xml:id="L-2100105761-1-79" from="#A-2100105761-1-79">sådan</span>
+            <span xml:id="L-2100105761-1-81" from="#A-2100105761-1-81">se</span>
+            <span xml:id="L-2100105761-1-83" from="#A-2100105761-1-83">bare</span>
+            <span xml:id="L-2100105761-1-85" from="#A-2100105761-1-85">om</span>
+            <span xml:id="L-2100105761-1-87" from="#A-2100105761-1-87">at</span>
+            <span xml:id="L-2100105761-1-89" from="#A-2100105761-1-89">sige</span>
+            <span xml:id="L-2100105761-1-90" from="#A-2100105761-1-90">:</span>
+            <span xml:id="L-2100105761-1-92" from="#A-2100105761-1-92">hallo</span>
+            <span xml:id="L-2100105761-1-94" from="#A-2100105761-1-94">hallo</span>
+            <span xml:id="L-2100105761-1-95" from="#A-2100105761-1-95">,</span>
+            <span xml:id="L-2100105761-1-97" from="#A-2100105761-1-97">glem</span>
+            <span xml:id="L-2100105761-1-99" from="#A-2100105761-1-99">ikke</span>
+            <span xml:id="L-2100105761-1-100" from="#A-2100105761-1-100">,</span>
+            <span xml:id="L-2100105761-1-102" from="#A-2100105761-1-102">at</span>
+            <span xml:id="L-2100105761-1-104" from="#A-2100105761-1-104">jeg</span>
+            <span xml:id="L-2100105761-1-106" from="#A-2100105761-1-106">finde</span>
+            <span xml:id="L-2100105761-1-107" from="#A-2100105761-1-107">.</span>
+            <span xml:id="L-2100105761-1-109" from="#A-2100105761-1-109">den</span>
+            <span xml:id="L-2100105761-1-111" from="#A-2100105761-1-111">samme</span>
+            <span xml:id="L-2100105761-1-113" from="#A-2100105761-1-113">med</span>
+            <span xml:id="L-2100105761-1-115" from="#A-2100105761-1-115">Facebook</span>
+            <span xml:id="L-2100105761-1-116" from="#A-2100105761-1-116">.</span>
+            <span xml:id="L-2100105761-1-118" from="#A-2100105761-1-118">og</span>
+            <span xml:id="L-2100105761-1-120" from="#A-2100105761-1-120">det</span>
+            <span xml:id="L-2100105761-1-122" from="#A-2100105761-1-122">at</span>
+            <span xml:id="L-2100105761-1-124" from="#A-2100105761-1-124">have</span>
+            <span xml:id="L-2100105761-1-126" from="#A-2100105761-1-126">2</span>
+            <span xml:id="L-2100105761-1-127" from="#A-2100105761-1-127">.</span>
+            <span xml:id="L-2100105761-1-128" from="#A-2100105761-1-128">000</span>
+            <span xml:id="L-2100105761-1-130" from="#A-2100105761-1-130">såkaldt</span>
+            <span xml:id="L-2100105761-1-132" from="#A-2100105761-1-132">Facebookvenner</span>
+            <span xml:id="L-2100105761-1-134" from="#A-2100105761-1-134">give</span>
+            <span xml:id="L-2100105761-1-136" from="#A-2100105761-1-136">indtryk</span>
+            <span xml:id="L-2100105761-1-138" from="#A-2100105761-1-138">af</span>
+            <span xml:id="L-2100105761-1-139" from="#A-2100105761-1-139">,</span>
+            <span xml:id="L-2100105761-1-141" from="#A-2100105761-1-141">at</span>
+            <span xml:id="L-2100105761-1-143" from="#A-2100105761-1-143">man</span>
+            <span xml:id="L-2100105761-1-145" from="#A-2100105761-1-145">være</span>
+            <span xml:id="L-2100105761-1-147" from="#A-2100105761-1-147">en</span>
+            <span xml:id="L-2100105761-1-149" from="#A-2100105761-1-149">person</span>
+            <span xml:id="L-2100105761-1-150" from="#A-2100105761-1-150">,</span>
+            <span xml:id="L-2100105761-1-152" from="#A-2100105761-1-152">der</span>
+            <span xml:id="L-2100105761-1-154" from="#A-2100105761-1-154">sidde</span>
+            <span xml:id="L-2100105761-1-156" from="#A-2100105761-1-156">som</span>
+            <span xml:id="L-2100105761-1-158" from="#A-2100105761-1-158">en</span>
+            <span xml:id="L-2100105761-1-160" from="#A-2100105761-1-160">edderkop</span>
+            <span xml:id="L-2100105761-1-162" from="#A-2100105761-1-162">i</span>
+            <span xml:id="L-2100105761-1-164" from="#A-2100105761-1-164">en</span>
+            <span xml:id="L-2100105761-1-166" from="#A-2100105761-1-166">stor</span>
+            <span xml:id="L-2100105761-1-168" from="#A-2100105761-1-168">netværk</span>
+            <span xml:id="L-2100105761-1-169" from="#A-2100105761-1-169">.</span>
+            <span xml:id="L-2100105761-1-171" from="#A-2100105761-1-171">og</span>
+            <span xml:id="L-2100105761-1-173" from="#A-2100105761-1-173">i</span>
+            <span xml:id="L-2100105761-1-175" from="#A-2100105761-1-175">en</span>
+            <span xml:id="L-2100105761-1-177" from="#A-2100105761-1-177">netværkssamfund</span>
+            <span xml:id="L-2100105761-1-179" from="#A-2100105761-1-179">være</span>
+            <span xml:id="L-2100105761-1-181" from="#A-2100105761-1-181">det</span>
+            <span xml:id="L-2100105761-1-183" from="#A-2100105761-1-183">en</span>
+            <span xml:id="L-2100105761-1-185" from="#A-2100105761-1-185">stor</span>
+            <span xml:id="L-2100105761-1-187" from="#A-2100105761-1-187">ressource</span>
+            <span xml:id="L-2100105761-1-189" from="#A-2100105761-1-189">for</span>
+            <span xml:id="L-2100105761-1-191" from="#A-2100105761-1-191">vældig</span>
+            <span xml:id="L-2100105761-1-193" from="#A-2100105761-1-193">mangen</span>
+            <span xml:id="L-2100105761-1-195" from="#A-2100105761-1-195">menneske</span>
+            <span xml:id="L-2100105761-1-196" from="#A-2100105761-1-196">"</span>
+            <span xml:id="L-2100105761-1-197" from="#A-2100105761-1-197">,</span>
+            <span xml:id="L-2100105761-1-199" from="#A-2100105761-1-199">sige</span>
+            <span xml:id="L-2100105761-1-201" from="#A-2100105761-1-201">Thomas</span>
+            <span xml:id="L-2100105761-1-203" from="#A-2100105761-1-203">Hylland</span>
+            <span xml:id="L-2100105761-1-205" from="#A-2100105761-1-205">Eriksen</span>
+            <span xml:id="L-2100105761-1-206" from="#A-2100105761-1-206">.</span>
+            <span xml:id="L-2100105761-2-1" from="#A-2100105761-2-1">ovenstående</span>
+            <span xml:id="L-2100105761-2-3" from="#A-2100105761-2-3">tankevækkende</span>
+            <span xml:id="L-2100105761-2-5" from="#A-2100105761-2-5">ord</span>
+            <span xml:id="L-2100105761-2-7" from="#A-2100105761-2-7">kunne</span>
+            <span xml:id="L-2100105761-2-9" from="#A-2100105761-2-9">man</span>
+            <span xml:id="L-2100105761-2-11" from="#A-2100105761-2-11">blandt</span>
+            <span xml:id="L-2100105761-2-12" from="#A-2100105761-2-12">.</span>
+            <span xml:id="L-2100105761-2-13" from="#A-2100105761-2-13">anden</span>
+            <span xml:id="L-2100105761-2-14" from="#A-2100105761-2-14">.</span>
+            <span xml:id="L-2100105761-2-16" from="#A-2100105761-2-16">læse</span>
+            <span xml:id="L-2100105761-2-18" from="#A-2100105761-2-18">i</span>
+            <span xml:id="L-2100105761-2-20" from="#A-2100105761-2-20">går</span>
+            <span xml:id="L-2100105761-2-22" from="#A-2100105761-2-22">i</span>
+            <span xml:id="L-2100105761-2-24" from="#A-2100105761-2-24">Politiken</span>
+            <span xml:id="L-2100105761-2-26" from="#A-2100105761-2-26">artikel</span>
+            <span xml:id="L-2100105761-2-28" from="#A-2100105761-2-28">dansker</span>
+            <span xml:id="L-2100105761-2-30" from="#A-2100105761-2-30">flokkes</span>
+            <span xml:id="L-2100105761-2-32" from="#A-2100105761-2-32">på</span>
+            <span xml:id="L-2100105761-2-34" from="#A-2100105761-2-34">Facebook</span>
+            <span xml:id="L-2100105761-2-35" from="#A-2100105761-2-35">,</span>
+            <span xml:id="L-2100105761-2-37" from="#A-2100105761-2-37">som</span>
+            <span xml:id="L-2100105761-2-39" from="#A-2100105761-2-39">fx</span>
+            <span xml:id="L-2100105761-2-41" from="#A-2100105761-2-41">kunne</span>
+            <span xml:id="L-2100105761-2-43" from="#A-2100105761-2-43">fortælle</span>
+            <span xml:id="L-2100105761-2-44" from="#A-2100105761-2-44">,</span>
+            <span xml:id="L-2100105761-2-46" from="#A-2100105761-2-46">at</span>
+            <span xml:id="L-2100105761-2-48" from="#A-2100105761-2-48">12</span>
+            <span xml:id="L-2100105761-2-50" from="#A-2100105761-2-50">procent</span>
+            <span xml:id="L-2100105761-2-52" from="#A-2100105761-2-52">af</span>
+            <span xml:id="L-2100105761-2-54" from="#A-2100105761-2-54">vi</span>
+            <span xml:id="L-2100105761-2-56" from="#A-2100105761-2-56">have</span>
+            <span xml:id="L-2100105761-2-58" from="#A-2100105761-2-58">en</span>
+            <span xml:id="L-2100105761-2-60" from="#A-2100105761-2-60">profil</span>
+            <span xml:id="L-2100105761-2-61" from="#A-2100105761-2-61">.</span>
+            <span xml:id="L-2100105761-3-1" from="#A-2100105761-3-1">min</span>
+            <span xml:id="L-2100105761-3-3" from="#A-2100105761-3-3">holdning</span>
+            <span xml:id="L-2100105761-3-5" from="#A-2100105761-3-5">til</span>
+            <span xml:id="L-2100105761-3-7" from="#A-2100105761-3-7">Fjæsbogen</span>
+            <span xml:id="L-2100105761-3-9" from="#A-2100105761-3-9">have</span>
+            <span xml:id="L-2100105761-3-11" from="#A-2100105761-3-11">jeg</span>
+            <span xml:id="L-2100105761-3-13" from="#A-2100105761-3-13">jo</span>
+            <span xml:id="L-2100105761-3-15" from="#A-2100105761-3-15">tidlig</span>
+            <span xml:id="L-2100105761-3-17" from="#A-2100105761-3-17">ytre</span>
+            <span xml:id="L-2100105761-3-19" from="#A-2100105761-3-19">(</span>
+            <span xml:id="L-2100105761-3-20" from="#A-2100105761-3-20">og</span>
+            <span xml:id="L-2100105761-3-22" from="#A-2100105761-3-22">min</span>
+            <span xml:id="L-2100105761-3-24" from="#A-2100105761-3-24">profil</span>
+            <span xml:id="L-2100105761-3-26" from="#A-2100105761-3-26">have</span>
+            <span xml:id="L-2100105761-3-28" from="#A-2100105761-3-28">længe</span>
+            <span xml:id="L-2100105761-3-30" from="#A-2100105761-3-30">være</span>
+            <span xml:id="L-2100105761-3-32" from="#A-2100105761-3-32">deaktivere</span>
+            <span xml:id="L-2100105761-3-33" from="#A-2100105761-3-33">;</span>
+            <span xml:id="L-2100105761-3-35" from="#A-2100105761-3-35">til</span>
+            <span xml:id="L-2100105761-3-37" from="#A-2100105761-3-37">min</span>
+            <span xml:id="L-2100105761-3-39" from="#A-2100105761-3-39">stor</span>
+            <span xml:id="L-2100105761-3-41" from="#A-2100105761-3-41">irritation</span>
+            <span xml:id="L-2100105761-3-43" from="#A-2100105761-3-43">kunne</span>
+            <span xml:id="L-2100105761-3-45" from="#A-2100105761-3-45">den</span>
+            <span xml:id="L-2100105761-3-47" from="#A-2100105761-3-47">jo</span>
+            <span xml:id="L-2100105761-3-49" from="#A-2100105761-3-49">ikke</span>
+            <span xml:id="L-2100105761-3-51" from="#A-2100105761-3-51">slette</span>
+            <span xml:id="L-2100105761-3-52" from="#A-2100105761-3-52">)</span>
+            <span xml:id="L-2100105761-3-53" from="#A-2100105761-3-53">.</span>
+            <span xml:id="L-2100105761-3-55" from="#A-2100105761-3-55">men</span>
+            <span xml:id="L-2100105761-3-57" from="#A-2100105761-3-57">i</span>
+            <span xml:id="L-2100105761-3-59" from="#A-2100105761-3-59">dag</span>
+            <span xml:id="L-2100105761-3-61" from="#A-2100105761-3-61">finde</span>
+            <span xml:id="L-2100105761-3-63" from="#A-2100105761-3-63">jeg</span>
+            <span xml:id="L-2100105761-3-65" from="#A-2100105761-3-65">en</span>
+            <span xml:id="L-2100105761-3-67" from="#A-2100105761-3-67">megen</span>
+            <span xml:id="L-2100105761-3-69" from="#A-2100105761-3-69">interessant</span>
+            <span xml:id="L-2100105761-3-71" from="#A-2100105761-3-71">blogindlæg</span>
+            <span xml:id="L-2100105761-3-73" from="#A-2100105761-3-73">hos</span>
+            <span xml:id="L-2100105761-3-75" from="#A-2100105761-3-75">per</span>
+            <span xml:id="L-2100105761-3-76" from="#A-2100105761-3-76">-</span>
+            <span xml:id="L-2100105761-3-77" from="#A-2100105761-3-77">olof</span>
+            <span xml:id="L-2100105761-3-78" from="#A-2100105761-3-78">.</span>
+            <span xml:id="L-2100105761-3-79" from="#A-2100105761-3-79">dk</span>
+            <span xml:id="L-2100105761-3-80" from="#A-2100105761-3-80">,</span>
+            <span xml:id="L-2100105761-3-82" from="#A-2100105761-3-82">som</span>
+            <span xml:id="L-2100105761-3-84" from="#A-2100105761-3-84">have</span>
+            <span xml:id="L-2100105761-3-86" from="#A-2100105761-3-86">være</span>
+            <span xml:id="L-2100105761-3-88" from="#A-2100105761-3-88">i</span>
+            <span xml:id="L-2100105761-3-90" from="#A-2100105761-3-90">dialog</span>
+            <span xml:id="L-2100105761-3-92" from="#A-2100105761-3-92">med</span>
+            <span xml:id="L-2100105761-3-94" from="#A-2100105761-3-94">en</span>
+            <span xml:id="L-2100105761-3-96" from="#A-2100105761-3-96">af</span>
+            <span xml:id="L-2100105761-3-98" from="#A-2100105761-3-98">ekspert</span>
+            <span xml:id="L-2100105761-3-99" from="#A-2100105761-3-99">,</span>
+            <span xml:id="L-2100105761-3-101" from="#A-2100105761-3-101">Gisle</span>
+            <span xml:id="L-2100105761-3-103" from="#A-2100105761-3-103">Hannemyr</span>
+            <span xml:id="L-2100105761-3-104" from="#A-2100105761-3-104">,</span>
+            <span xml:id="L-2100105761-3-106" from="#A-2100105761-3-106">bag</span>
+            <span xml:id="L-2100105761-3-108" from="#A-2100105761-3-108">Politiken</span>
+            <span xml:id="L-2100105761-3-110" from="#A-2100105761-3-110">artikel</span>
+            <span xml:id="L-2100105761-3-111" from="#A-2100105761-3-111">.</span>
+            <span xml:id="L-2100105761-3-113" from="#A-2100105761-3-113">læse</span>
+            <span xml:id="L-2100105761-3-115" from="#A-2100105761-3-115">endelig</span>
+            <span xml:id="L-2100105761-3-117" from="#A-2100105761-3-117">med</span>
+            <span xml:id="L-2100105761-3-118" from="#A-2100105761-3-118">,</span>
+            <span xml:id="L-2100105761-3-120" from="#A-2100105761-3-120">hvis</span>
+            <span xml:id="L-2100105761-3-122" from="#A-2100105761-3-122">du</span>
+            <span xml:id="L-2100105761-3-124" from="#A-2100105761-3-124">også</span>
+            <span xml:id="L-2100105761-3-126" from="#A-2100105761-3-126">være</span>
+            <span xml:id="L-2100105761-3-128" from="#A-2100105761-3-128">skeptisk</span>
+            <span xml:id="L-2100105761-3-130" from="#A-2100105761-3-130">over</span>
+            <span xml:id="L-2100105761-3-132" from="#A-2100105761-3-132">for</span>
+            <span xml:id="L-2100105761-3-134" from="#A-2100105761-3-134">Facebook</span>
+            <span xml:id="L-2100105761-3-135" from="#A-2100105761-3-135">.</span>
+            <span xml:id="L-2100105761-4-1" from="#A-2100105761-4-1">tag</span>
+            <span xml:id="L-2100105761-4-2" from="#A-2100105761-4-2">:</span>
+            <span xml:id="L-2100105761-4-4" from="#A-2100105761-4-4">citat</span>
+            <span xml:id="L-2100105761-4-5" from="#A-2100105761-4-5">,</span>
+            <span xml:id="L-2100105761-4-7" from="#A-2100105761-4-7">Facebook</span>
+            <span xml:id="L-2100105761-4-8" from="#A-2100105761-4-8">,</span>
+            <span xml:id="L-2100105761-4-10" from="#A-2100105761-4-10">Fjæsbog</span>
+            <span xml:id="L-2100105761-4-11" from="#A-2100105761-4-11">,</span>
+            <span xml:id="L-2100105761-4-13" from="#A-2100105761-4-13">netværk</span>
+            <span xml:id="L-2100105761-4-14" from="#A-2100105761-4-14">,</span>
+            <span xml:id="L-2100105761-4-16" from="#A-2100105761-4-16">opmærksomhed</span>
+            <span xml:id="L-2100105761-4-17" from="#A-2100105761-4-17">,</span>
+            <span xml:id="L-2100105761-4-19" from="#A-2100105761-4-19">Politiken</span>
+            <span xml:id="L-2100105761-5-1" from="#A-2100105761-5-1">denne</span>
+            <span xml:id="L-2100105761-5-3" from="#A-2100105761-5-3">indlæg</span>
+            <span xml:id="L-2100105761-5-5" from="#A-2100105761-5-5">blive</span>
+            <span xml:id="L-2100105761-5-7" from="#A-2100105761-5-7">udgive</span>
+            <span xml:id="L-2100105761-5-9" from="#A-2100105761-5-9">den</span>
+            <span xml:id="L-2100105761-5-11" from="#A-2100105761-5-11">tirsdag</span>
+            <span xml:id="L-2100105761-5-12" from="#A-2100105761-5-12">,</span>
+            <span xml:id="L-2100105761-5-14" from="#A-2100105761-5-14">27</span>
+            <span xml:id="L-2100105761-5-15" from="#A-2100105761-5-15">.</span>
+            <span xml:id="L-2100105761-5-17" from="#A-2100105761-5-17">maj</span>
+            <span xml:id="L-2100105761-5-19" from="#A-2100105761-5-19">2008</span>
+            <span xml:id="L-2100105761-5-21" from="#A-2100105761-5-21">kl</span>
+            <span xml:id="L-2100105761-5-22" from="#A-2100105761-5-22">.</span>
+            <span xml:id="L-2100105761-5-24" from="#A-2100105761-5-24">13</span>
+            <span xml:id="L-2100105761-5-25" from="#A-2100105761-5-25">:</span>
+            <span xml:id="L-2100105761-5-26" from="#A-2100105761-5-26">04</span>
+            <span xml:id="L-2100105761-5-28" from="#A-2100105761-5-28">og</span>
+            <span xml:id="L-2100105761-5-30" from="#A-2100105761-5-30">være</span>
+            <span xml:id="L-2100105761-5-32" from="#A-2100105761-5-32">gemme</span>
+            <span xml:id="L-2100105761-5-34" from="#A-2100105761-5-34">i</span>
+            <span xml:id="L-2100105761-5-36" from="#A-2100105761-5-36">citat</span>
+            <span xml:id="L-2100105761-5-37" from="#A-2100105761-5-37">,</span>
+            <span xml:id="L-2100105761-5-39" from="#A-2100105761-5-39">internet</span>
+            <span xml:id="L-2100105761-5-40" from="#A-2100105761-5-40">,</span>
+            <span xml:id="L-2100105761-5-42" from="#A-2100105761-5-42">netværk</span>
+            <span xml:id="L-2100105761-5-43" from="#A-2100105761-5-43">.</span>
+            <span xml:id="L-2100105761-5-44" from="#A-2100105761-5-44">du</span>
+            <span xml:id="L-2100105761-5-46" from="#A-2100105761-5-46">kunne</span>
+            <span xml:id="L-2100105761-5-48" from="#A-2100105761-5-48">følge</span>
+            <span xml:id="L-2100105761-5-50" from="#A-2100105761-5-50">al</span>
+            <span xml:id="L-2100105761-5-52" from="#A-2100105761-5-52">svar</span>
+            <span xml:id="L-2100105761-5-54" from="#A-2100105761-5-54">til</span>
+            <span xml:id="L-2100105761-5-56" from="#A-2100105761-5-56">denne</span>
+            <span xml:id="L-2100105761-5-58" from="#A-2100105761-5-58">indlæg</span>
+            <span xml:id="L-2100105761-5-60" from="#A-2100105761-5-60">via</span>
+            <span xml:id="L-2100105761-5-62" from="#A-2100105761-5-62">rss</span>
+            <span xml:id="L-2100105761-5-64" from="#A-2100105761-5-64">2</span>
+            <span xml:id="L-2100105761-5-65" from="#A-2100105761-5-65">.</span>
+            <span xml:id="L-2100105761-5-66" from="#A-2100105761-5-66">0</span>
+            <span xml:id="L-2100105761-5-67" from="#A-2100105761-5-67">-</span>
+            <span xml:id="L-2100105761-5-68" from="#A-2100105761-5-68">feed</span>
+            <span xml:id="L-2100105761-5-69" from="#A-2100105761-5-69">.</span>
+            <span xml:id="L-2100105761-5-71" from="#A-2100105761-5-71">du</span>
+            <span xml:id="L-2100105761-5-73" from="#A-2100105761-5-73">kunne</span>
+            <span xml:id="L-2100105761-5-75" from="#A-2100105761-5-75">skrive</span>
+            <span xml:id="L-2100105761-5-77" from="#A-2100105761-5-77">en</span>
+            <span xml:id="L-2100105761-5-79" from="#A-2100105761-5-79">kommentar</span>
+            <span xml:id="L-2100105761-5-80" from="#A-2100105761-5-80">,</span>
+            <span xml:id="L-2100105761-5-82" from="#A-2100105761-5-82">eller</span>
+            <span xml:id="L-2100105761-5-84" from="#A-2100105761-5-84">sende</span>
+            <span xml:id="L-2100105761-5-86" from="#A-2100105761-5-86">en</span>
+            <span xml:id="L-2100105761-5-88" from="#A-2100105761-5-88">trackback</span>
+            <span xml:id="L-2100105761-5-90" from="#A-2100105761-5-90">fra</span>
+            <span xml:id="L-2100105761-5-92" from="#A-2100105761-5-92">din</span>
+            <span xml:id="L-2100105761-5-94" from="#A-2100105761-5-94">egen</span>
+            <span xml:id="L-2100105761-5-96" from="#A-2100105761-5-96">site</span>
+            <span xml:id="L-2100105761-5-97" from="#A-2100105761-5-97">.</span>
+        </spanGrp>
+        <spanGrp ana="#ePOStagger">
+            <span xml:id="T-2100105761-1-2" from="#A-2100105761-1-2">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-3" from="#A-2100105761-1-3">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-5" from="#A-2100105761-1-5">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-7" from="#A-2100105761-1-7">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-9" from="#A-2100105761-1-9">PP:s-un:--:-3n-</span>
+            <span xml:id="T-2100105761-1-11" from="#A-2100105761-1-11">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-1-13" from="#A-2100105761-1-13">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-1-15" from="#A-2100105761-1-15">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-17" from="#A-2100105761-1-17">UI:----:--:----</span>
+            <span xml:id="T-2100105761-1-19" from="#A-2100105761-1-19">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-1-21" from="#A-2100105761-1-21">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-1-22" from="#A-2100105761-1-22">ZP</span>
+            <span xml:id="T-2100105761-1-24" from="#A-2100105761-1-24">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-26" from="#A-2100105761-1-26">NC:sdun:--:----</span>
+            <span xml:id="T-2100105761-1-28" from="#A-2100105761-1-28">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-30" from="#A-2100105761-1-30">PM:s-uc:--:----</span>
+            <span xml:id="T-2100105761-1-32" from="#A-2100105761-1-32">AC:§du§:--:s---</span>
+            <span xml:id="T-2100105761-1-34" from="#A-2100105761-1-34">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-36" from="#A-2100105761-1-36">XY:----:--:----</span>
+            <span xml:id="T-2100105761-1-38" from="#A-2100105761-1-38">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-39" from="#A-2100105761-1-39">ZP</span>
+            <span xml:id="T-2100105761-1-41" from="#A-2100105761-1-41">PP:p-nc:--:-1n-</span>
+            <span xml:id="T-2100105761-1-43" from="#A-2100105761-1-43">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-45" from="#A-2100105761-1-45">PP:s-un:--:-3n-</span>
+            <span xml:id="T-2100105761-1-47" from="#A-2100105761-1-47">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-1-49" from="#A-2100105761-1-49">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-51" from="#A-2100105761-1-51">PM:s-uc:--:----</span>
+            <span xml:id="T-2100105761-1-53" from="#A-2100105761-1-53">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-54" from="#A-2100105761-1-54">ZD</span>
+            <span xml:id="T-2100105761-1-56" from="#A-2100105761-1-56">PP:p-nc:--:-1n-</span>
+            <span xml:id="T-2100105761-1-58" from="#A-2100105761-1-58">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-60" from="#A-2100105761-1-60">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-62" from="#A-2100105761-1-62">CC:----:--:----</span>
+            <span xml:id="T-2100105761-1-64" from="#A-2100105761-1-64">XS:----:--:----</span>
+            <span xml:id="T-2100105761-1-65" from="#A-2100105761-1-65">ZH</span>
+            <span xml:id="T-2100105761-1-66" from="#A-2100105761-1-66">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-67" from="#A-2100105761-1-67">ZP</span>
+            <span xml:id="T-2100105761-1-69" from="#A-2100105761-1-69">AD:----:--:p---</span>
+            <span xml:id="T-2100105761-1-71" from="#A-2100105761-1-71">AC:p#u#:--:p---</span>
+            <span xml:id="T-2100105761-1-73" from="#A-2100105761-1-73">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-75" from="#A-2100105761-1-75">NC:pdu#:--:----</span>
+            <span xml:id="T-2100105761-1-77" from="#A-2100105761-1-77">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-79" from="#A-2100105761-1-79">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-1-81" from="#A-2100105761-1-81">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-1-83" from="#A-2100105761-1-83">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-1-85" from="#A-2100105761-1-85">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-87" from="#A-2100105761-1-87">UI:----:--:----</span>
+            <span xml:id="T-2100105761-1-89" from="#A-2100105761-1-89">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-1-90" from="#A-2100105761-1-90">ZP</span>
+            <span xml:id="T-2100105761-1-92" from="#A-2100105761-1-92">I-:----:--:----</span>
+            <span xml:id="T-2100105761-1-94" from="#A-2100105761-1-94">I-:----:--:----</span>
+            <span xml:id="T-2100105761-1-95" from="#A-2100105761-1-95">ZD</span>
+            <span xml:id="T-2100105761-1-97" from="#A-2100105761-1-97">VM:----:--:----</span>
+            <span xml:id="T-2100105761-1-99" from="#A-2100105761-1-99">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-1-100" from="#A-2100105761-1-100">ZD</span>
+            <span xml:id="T-2100105761-1-102" from="#A-2100105761-1-102">CS:----:--:----</span>
+            <span xml:id="T-2100105761-1-104" from="#A-2100105761-1-104">PP:s-nc:--:-1n-</span>
+            <span xml:id="T-2100105761-1-106" from="#A-2100105761-1-106">VF:----:sp:----</span>
+            <span xml:id="T-2100105761-1-107" from="#A-2100105761-1-107">ZP</span>
+            <span xml:id="T-2100105761-1-109" from="#A-2100105761-1-109">PM:s-un:--:----</span>
+            <span xml:id="T-2100105761-1-111" from="#A-2100105761-1-111">AC:§§u§:--:p---</span>
+            <span xml:id="T-2100105761-1-113" from="#A-2100105761-1-113">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-115" from="#A-2100105761-1-115">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-116" from="#A-2100105761-1-116">ZP</span>
+            <span xml:id="T-2100105761-1-118" from="#A-2100105761-1-118">CC:----:--:----</span>
+            <span xml:id="T-2100105761-1-120" from="#A-2100105761-1-120">PP:s-un:--:-3n-</span>
+            <span xml:id="T-2100105761-1-122" from="#A-2100105761-1-122">UI:----:--:----</span>
+            <span xml:id="T-2100105761-1-124" from="#A-2100105761-1-124">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-1-126" from="#A-2100105761-1-126">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-1-127" from="#A-2100105761-1-127">ZP</span>
+            <span xml:id="T-2100105761-1-128" from="#A-2100105761-1-128">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-1-130" from="#A-2100105761-1-130">AC:p#u#:--:p---</span>
+            <span xml:id="T-2100105761-1-132" from="#A-2100105761-1-132">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-134" from="#A-2100105761-1-134">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-136" from="#A-2100105761-1-136">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-1-138" from="#A-2100105761-1-138">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-139" from="#A-2100105761-1-139">ZD</span>
+            <span xml:id="T-2100105761-1-141" from="#A-2100105761-1-141">CS:----:--:----</span>
+            <span xml:id="T-2100105761-1-143" from="#A-2100105761-1-143">PI:#-uc:--:----</span>
+            <span xml:id="T-2100105761-1-145" from="#A-2100105761-1-145">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-147" from="#A-2100105761-1-147">PI:s-uc:--:----</span>
+            <span xml:id="T-2100105761-1-149" from="#A-2100105761-1-149">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-150" from="#A-2100105761-1-150">ZD</span>
+            <span xml:id="T-2100105761-1-152" from="#A-2100105761-1-152">US:----:--:----</span>
+            <span xml:id="T-2100105761-1-154" from="#A-2100105761-1-154">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-156" from="#A-2100105761-1-156">US:----:--:----</span>
+            <span xml:id="T-2100105761-1-158" from="#A-2100105761-1-158">PI:s-uc:--:----</span>
+            <span xml:id="T-2100105761-1-160" from="#A-2100105761-1-160">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-162" from="#A-2100105761-1-162">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-164" from="#A-2100105761-1-164">PI:s-un:--:----</span>
+            <span xml:id="T-2100105761-1-166" from="#A-2100105761-1-166">AC:siun:--:p---</span>
+            <span xml:id="T-2100105761-1-168" from="#A-2100105761-1-168">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-1-169" from="#A-2100105761-1-169">ZP</span>
+            <span xml:id="T-2100105761-1-171" from="#A-2100105761-1-171">CC:----:--:----</span>
+            <span xml:id="T-2100105761-1-173" from="#A-2100105761-1-173">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-175" from="#A-2100105761-1-175">PI:s-un:--:----</span>
+            <span xml:id="T-2100105761-1-177" from="#A-2100105761-1-177">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-1-179" from="#A-2100105761-1-179">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-181" from="#A-2100105761-1-181">PP:s-un:--:-3n-</span>
+            <span xml:id="T-2100105761-1-183" from="#A-2100105761-1-183">PI:s-uc:--:----</span>
+            <span xml:id="T-2100105761-1-185" from="#A-2100105761-1-185">AC:siuc:--:p---</span>
+            <span xml:id="T-2100105761-1-187" from="#A-2100105761-1-187">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-1-189" from="#A-2100105761-1-189">T-:----:--:----</span>
+            <span xml:id="T-2100105761-1-191" from="#A-2100105761-1-191">AD:----:--:p---</span>
+            <span xml:id="T-2100105761-1-193" from="#A-2100105761-1-193">AC:p#u#:--:p---</span>
+            <span xml:id="T-2100105761-1-195" from="#A-2100105761-1-195">NC:piu#:--:----</span>
+            <span xml:id="T-2100105761-1-196" from="#A-2100105761-1-196">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-197" from="#A-2100105761-1-197">ZD</span>
+            <span xml:id="T-2100105761-1-199" from="#A-2100105761-1-199">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-1-201" from="#A-2100105761-1-201">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-203" from="#A-2100105761-1-203">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-205" from="#A-2100105761-1-205">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-1-206" from="#A-2100105761-1-206">ZP</span>
+            <span xml:id="T-2100105761-2-1" from="#A-2100105761-2-1">AC:§§u§:--:p---</span>
+            <span xml:id="T-2100105761-2-3" from="#A-2100105761-2-3">AC:§§u§:--:p---</span>
+            <span xml:id="T-2100105761-2-5" from="#A-2100105761-2-5">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-2-7" from="#A-2100105761-2-7">VF:----:ta:----</span>
+            <span xml:id="T-2100105761-2-9" from="#A-2100105761-2-9">PI:#-uc:--:----</span>
+            <span xml:id="T-2100105761-2-11" from="#A-2100105761-2-11">T-:----:--:----</span>
+            <span xml:id="T-2100105761-2-12" from="#A-2100105761-2-12">ZP</span>
+            <span xml:id="T-2100105761-2-13" from="#A-2100105761-2-13">PI:s-un:--:----</span>
+            <span xml:id="T-2100105761-2-14" from="#A-2100105761-2-14">ZP</span>
+            <span xml:id="T-2100105761-2-16" from="#A-2100105761-2-16">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-2-18" from="#A-2100105761-2-18">T-:----:--:----</span>
+            <span xml:id="T-2100105761-2-20" from="#A-2100105761-2-20">NC:§§u§:--:----</span>
+            <span xml:id="T-2100105761-2-22" from="#A-2100105761-2-22">T-:----:--:----</span>
+            <span xml:id="T-2100105761-2-24" from="#A-2100105761-2-24">NP:sig#:--:----</span>
+            <span xml:id="T-2100105761-2-26" from="#A-2100105761-2-26">XY:----:--:----</span>
+            <span xml:id="T-2100105761-2-28" from="#A-2100105761-2-28">NC:pdu#:--:----</span>
+            <span xml:id="T-2100105761-2-30" from="#A-2100105761-2-30">VF:----:sp:----</span>
+            <span xml:id="T-2100105761-2-32" from="#A-2100105761-2-32">T-:----:--:----</span>
+            <span xml:id="T-2100105761-2-34" from="#A-2100105761-2-34">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-2-35" from="#A-2100105761-2-35">ZD</span>
+            <span xml:id="T-2100105761-2-37" from="#A-2100105761-2-37">US:----:--:----</span>
+            <span xml:id="T-2100105761-2-39" from="#A-2100105761-2-39">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-2-41" from="#A-2100105761-2-41">VF:----:ta:----</span>
+            <span xml:id="T-2100105761-2-43" from="#A-2100105761-2-43">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-2-44" from="#A-2100105761-2-44">ZD</span>
+            <span xml:id="T-2100105761-2-46" from="#A-2100105761-2-46">CS:----:--:----</span>
+            <span xml:id="T-2100105761-2-48" from="#A-2100105761-2-48">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-2-50" from="#A-2100105761-2-50">NC:piu#:--:----</span>
+            <span xml:id="T-2100105761-2-52" from="#A-2100105761-2-52">T-:----:--:----</span>
+            <span xml:id="T-2100105761-2-54" from="#A-2100105761-2-54">PP:p-uc:--:-1#-</span>
+            <span xml:id="T-2100105761-2-56" from="#A-2100105761-2-56">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-2-58" from="#A-2100105761-2-58">PI:s-uc:--:----</span>
+            <span xml:id="T-2100105761-2-60" from="#A-2100105761-2-60">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-2-61" from="#A-2100105761-2-61">ZP</span>
+            <span xml:id="T-2100105761-3-1" from="#A-2100105761-3-1">PO:s--c:--:-1ns</span>
+            <span xml:id="T-2100105761-3-3" from="#A-2100105761-3-3">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-3-5" from="#A-2100105761-3-5">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-7" from="#A-2100105761-3-7">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-3-9" from="#A-2100105761-3-9">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-3-11" from="#A-2100105761-3-11">PP:s-nc:--:-1n-</span>
+            <span xml:id="T-2100105761-3-13" from="#A-2100105761-3-13">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-3-15" from="#A-2100105761-3-15">AD:----:--:c---</span>
+            <span xml:id="T-2100105761-3-17" from="#A-2100105761-3-17">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-3-19" from="#A-2100105761-3-19">ZD</span>
+            <span xml:id="T-2100105761-3-20" from="#A-2100105761-3-20">CC:----:--:----</span>
+            <span xml:id="T-2100105761-3-22" from="#A-2100105761-3-22">PO:s--c:--:-1ns</span>
+            <span xml:id="T-2100105761-3-24" from="#A-2100105761-3-24">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-3-26" from="#A-2100105761-3-26">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-3-28" from="#A-2100105761-3-28">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-3-30" from="#A-2100105761-3-30">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-3-32" from="#A-2100105761-3-32">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-3-33" from="#A-2100105761-3-33">ZP</span>
+            <span xml:id="T-2100105761-3-35" from="#A-2100105761-3-35">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-37" from="#A-2100105761-3-37">PO:s--c:--:-1ns</span>
+            <span xml:id="T-2100105761-3-39" from="#A-2100105761-3-39">AC:sdu#:--:p---</span>
+            <span xml:id="T-2100105761-3-41" from="#A-2100105761-3-41">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-3-43" from="#A-2100105761-3-43">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-3-45" from="#A-2100105761-3-45">PP:s-uc:--:-3n-</span>
+            <span xml:id="T-2100105761-3-47" from="#A-2100105761-3-47">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-3-49" from="#A-2100105761-3-49">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-3-51" from="#A-2100105761-3-51">VF:----:sp:----</span>
+            <span xml:id="T-2100105761-3-52" from="#A-2100105761-3-52">ZD</span>
+            <span xml:id="T-2100105761-3-53" from="#A-2100105761-3-53">ZP</span>
+            <span xml:id="T-2100105761-3-55" from="#A-2100105761-3-55">CC:----:--:----</span>
+            <span xml:id="T-2100105761-3-57" from="#A-2100105761-3-57">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-59" from="#A-2100105761-3-59">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-3-61" from="#A-2100105761-3-61">VF:----:ta:----</span>
+            <span xml:id="T-2100105761-3-63" from="#A-2100105761-3-63">PP:s-nc:--:-1n-</span>
+            <span xml:id="T-2100105761-3-65" from="#A-2100105761-3-65">PI:s-un:--:----</span>
+            <span xml:id="T-2100105761-3-67" from="#A-2100105761-3-67">AD:----:--:p---</span>
+            <span xml:id="T-2100105761-3-69" from="#A-2100105761-3-69">AC:siu§:--:p---</span>
+            <span xml:id="T-2100105761-3-71" from="#A-2100105761-3-71">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-3-73" from="#A-2100105761-3-73">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-75" from="#A-2100105761-3-75">XY:----:--:----</span>
+            <span xml:id="T-2100105761-3-76" from="#A-2100105761-3-76">ZH</span>
+            <span xml:id="T-2100105761-3-77" from="#A-2100105761-3-77">XF:----:--:----</span>
+            <span xml:id="T-2100105761-3-78" from="#A-2100105761-3-78">ZP</span>
+            <span xml:id="T-2100105761-3-79" from="#A-2100105761-3-79">XS:----:--:----</span>
+            <span xml:id="T-2100105761-3-80" from="#A-2100105761-3-80">ZD</span>
+            <span xml:id="T-2100105761-3-82" from="#A-2100105761-3-82">US:----:--:----</span>
+            <span xml:id="T-2100105761-3-84" from="#A-2100105761-3-84">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-3-86" from="#A-2100105761-3-86">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-3-88" from="#A-2100105761-3-88">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-90" from="#A-2100105761-3-90">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-3-92" from="#A-2100105761-3-92">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-94" from="#A-2100105761-3-94">PI:s-uc:--:----</span>
+            <span xml:id="T-2100105761-3-96" from="#A-2100105761-3-96">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-98" from="#A-2100105761-3-98">NC:pdu#:--:----</span>
+            <span xml:id="T-2100105761-3-99" from="#A-2100105761-3-99">ZD</span>
+            <span xml:id="T-2100105761-3-101" from="#A-2100105761-3-101">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-3-103" from="#A-2100105761-3-103">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-3-104" from="#A-2100105761-3-104">ZD</span>
+            <span xml:id="T-2100105761-3-106" from="#A-2100105761-3-106">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-108" from="#A-2100105761-3-108">NP:sig#:--:----</span>
+            <span xml:id="T-2100105761-3-110" from="#A-2100105761-3-110">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-3-111" from="#A-2100105761-3-111">ZP</span>
+            <span xml:id="T-2100105761-3-113" from="#A-2100105761-3-113">VM:----:--:----</span>
+            <span xml:id="T-2100105761-3-115" from="#A-2100105761-3-115">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-3-117" from="#A-2100105761-3-117">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-118" from="#A-2100105761-3-118">ZD</span>
+            <span xml:id="T-2100105761-3-120" from="#A-2100105761-3-120">CS:----:--:----</span>
+            <span xml:id="T-2100105761-3-122" from="#A-2100105761-3-122">PP:s-nc:--:-2n-</span>
+            <span xml:id="T-2100105761-3-124" from="#A-2100105761-3-124">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-3-126" from="#A-2100105761-3-126">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-3-128" from="#A-2100105761-3-128">AD:----:--:p---</span>
+            <span xml:id="T-2100105761-3-130" from="#A-2100105761-3-130">D-:----:--:u---</span>
+            <span xml:id="T-2100105761-3-132" from="#A-2100105761-3-132">T-:----:--:----</span>
+            <span xml:id="T-2100105761-3-134" from="#A-2100105761-3-134">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-3-135" from="#A-2100105761-3-135">ZP</span>
+            <span xml:id="T-2100105761-4-1" from="#A-2100105761-4-1">NC:piu#:--:----</span>
+            <span xml:id="T-2100105761-4-2" from="#A-2100105761-4-2">ZP</span>
+            <span xml:id="T-2100105761-4-4" from="#A-2100105761-4-4">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-4-5" from="#A-2100105761-4-5">ZD</span>
+            <span xml:id="T-2100105761-4-7" from="#A-2100105761-4-7">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-4-8" from="#A-2100105761-4-8">ZD</span>
+            <span xml:id="T-2100105761-4-10" from="#A-2100105761-4-10">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-4-11" from="#A-2100105761-4-11">ZD</span>
+            <span xml:id="T-2100105761-4-13" from="#A-2100105761-4-13">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-4-14" from="#A-2100105761-4-14">ZD</span>
+            <span xml:id="T-2100105761-4-16" from="#A-2100105761-4-16">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-4-17" from="#A-2100105761-4-17">ZD</span>
+            <span xml:id="T-2100105761-4-19" from="#A-2100105761-4-19">NP:siu#:--:----</span>
+            <span xml:id="T-2100105761-5-1" from="#A-2100105761-5-1">PM:s-un:--:----</span>
+            <span xml:id="T-2100105761-5-3" from="#A-2100105761-5-3">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-5-5" from="#A-2100105761-5-5">VF:----:ta:----</span>
+            <span xml:id="T-2100105761-5-7" from="#A-2100105761-5-7">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-5-9" from="#A-2100105761-5-9">PM:s-uc:--:----</span>
+            <span xml:id="T-2100105761-5-11" from="#A-2100105761-5-11">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-5-12" from="#A-2100105761-5-12">ZD</span>
+            <span xml:id="T-2100105761-5-14" from="#A-2100105761-5-14">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-5-15" from="#A-2100105761-5-15">ZP</span>
+            <span xml:id="T-2100105761-5-17" from="#A-2100105761-5-17">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-5-19" from="#A-2100105761-5-19">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-5-21" from="#A-2100105761-5-21">XS:----:--:----</span>
+            <span xml:id="T-2100105761-5-22" from="#A-2100105761-5-22">ZP</span>
+            <span xml:id="T-2100105761-5-24" from="#A-2100105761-5-24">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-5-25" from="#A-2100105761-5-25">ZP</span>
+            <span xml:id="T-2100105761-5-26" from="#A-2100105761-5-26">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-5-28" from="#A-2100105761-5-28">CC:----:--:----</span>
+            <span xml:id="T-2100105761-5-30" from="#A-2100105761-5-30">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-5-32" from="#A-2100105761-5-32">VT:siu#:t-:----</span>
+            <span xml:id="T-2100105761-5-34" from="#A-2100105761-5-34">T-:----:--:----</span>
+            <span xml:id="T-2100105761-5-36" from="#A-2100105761-5-36">NC:piu#:--:----</span>
+            <span xml:id="T-2100105761-5-37" from="#A-2100105761-5-37">ZD</span>
+            <span xml:id="T-2100105761-5-39" from="#A-2100105761-5-39">NC:sdun:--:----</span>
+            <span xml:id="T-2100105761-5-40" from="#A-2100105761-5-40">ZD</span>
+            <span xml:id="T-2100105761-5-42" from="#A-2100105761-5-42">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-5-43" from="#A-2100105761-5-43">ZP</span>
+            <span xml:id="T-2100105761-5-44" from="#A-2100105761-5-44">PP:s-nc:--:-2n-</span>
+            <span xml:id="T-2100105761-5-46" from="#A-2100105761-5-46">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-5-48" from="#A-2100105761-5-48">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-5-50" from="#A-2100105761-5-50">PI:p-u#:--:----</span>
+            <span xml:id="T-2100105761-5-52" from="#A-2100105761-5-52">NC:piu#:--:----</span>
+            <span xml:id="T-2100105761-5-54" from="#A-2100105761-5-54">T-:----:--:----</span>
+            <span xml:id="T-2100105761-5-56" from="#A-2100105761-5-56">PM:s-un:--:----</span>
+            <span xml:id="T-2100105761-5-58" from="#A-2100105761-5-58">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-5-60" from="#A-2100105761-5-60">T-:----:--:----</span>
+            <span xml:id="T-2100105761-5-62" from="#A-2100105761-5-62">XS:----:--:----</span>
+            <span xml:id="T-2100105761-5-64" from="#A-2100105761-5-64">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-5-65" from="#A-2100105761-5-65">ZP</span>
+            <span xml:id="T-2100105761-5-66" from="#A-2100105761-5-66">LC:--u-:--:----</span>
+            <span xml:id="T-2100105761-5-67" from="#A-2100105761-5-67">ZH</span>
+            <span xml:id="T-2100105761-5-68" from="#A-2100105761-5-68">NC:sdun:--:----</span>
+            <span xml:id="T-2100105761-5-69" from="#A-2100105761-5-69">ZP</span>
+            <span xml:id="T-2100105761-5-71" from="#A-2100105761-5-71">PP:s-nc:--:-2n-</span>
+            <span xml:id="T-2100105761-5-73" from="#A-2100105761-5-73">VF:----:sa:----</span>
+            <span xml:id="T-2100105761-5-75" from="#A-2100105761-5-75">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-5-77" from="#A-2100105761-5-77">PI:s-uc:--:----</span>
+            <span xml:id="T-2100105761-5-79" from="#A-2100105761-5-79">NC:siuc:--:----</span>
+            <span xml:id="T-2100105761-5-80" from="#A-2100105761-5-80">ZD</span>
+            <span xml:id="T-2100105761-5-82" from="#A-2100105761-5-82">CC:----:--:----</span>
+            <span xml:id="T-2100105761-5-84" from="#A-2100105761-5-84">VI:----:-a:----</span>
+            <span xml:id="T-2100105761-5-86" from="#A-2100105761-5-86">PI:s-un:--:----</span>
+            <span xml:id="T-2100105761-5-88" from="#A-2100105761-5-88">NC:siun:--:----</span>
+            <span xml:id="T-2100105761-5-90" from="#A-2100105761-5-90">T-:----:--:----</span>
+            <span xml:id="T-2100105761-5-92" from="#A-2100105761-5-92">PO:s--n:--:-2ns</span>
+            <span xml:id="T-2100105761-5-94" from="#A-2100105761-5-94">AC:siun:--:p---</span>
+            <span xml:id="T-2100105761-5-96" from="#A-2100105761-5-96">NC:siu#:--:----</span>
+            <span xml:id="T-2100105761-5-97" from="#A-2100105761-5-97">ZP</span>
+        </spanGrp>
+    <spanGrp ana="#automatic-supersense-from-dannet">
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-1">verb.social</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-2">noun.act</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-3">noun.cognition</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-4">noun.person</span>
+<span from="#A-2100105761-1-13" xml:id="U-2100105761-1-13-1">adj.phys</span>
+<span from="#A-2100105761-1-19" xml:id="U-2100105761-1-19-1">verb.static</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-1">verb.cognition</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-2">verb.act</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-3">verb.emotion</span>
+<span from="#A-2100105761-1-24" xml:id="U-2100105761-1-24-1">noun.artifact</span>
+<span from="#A-2100105761-1-26" xml:id="U-2100105761-1-26-1">noun.institution</span>
+<span from="#A-2100105761-1-28" xml:id="U-2100105761-1-28-1">verb.social</span>
+<span from="#A-2100105761-1-28" xml:id="U-2100105761-1-28-2">verb.static</span>
+<span from="#A-2100105761-1-32" xml:id="U-2100105761-1-32-1">adj.phys</span>
+<span from="#A-2100105761-1-38" xml:id="U-2100105761-1-38-1">noun.artifact</span>
+<span from="#A-2100105761-1-38" xml:id="U-2100105761-1-38-2">noun.motive</span>
+<span from="#A-2100105761-1-41" xml:id="U-2100105761-1-41-1">verb.cognition</span>
+<span from="#A-2100105761-1-41" xml:id="U-2100105761-1-41-2">verb.act</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-1">verb.cognition</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-2">verb.act</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-3">verb.emotion</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-1">noun.motive</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-2">noun.artifact</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-3">noun.TOP</span>
+<span from="#A-2100105761-1-56" xml:id="U-2100105761-1-56-1">verb.cognition</span>
+<span from="#A-2100105761-1-56" xml:id="U-2100105761-1-56-2">verb.act</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-1">verb.act</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-2">noun.person</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-3">verb.communication</span>
+<span from="#A-2100105761-1-60" xml:id="U-2100105761-1-60-1">noun.artifact</span>
+<span from="#A-2100105761-1-64" xml:id="U-2100105761-1-64-1">noun.artifact</span>
+<span from="#A-2100105761-1-64" xml:id="U-2100105761-1-64-2">noun.phenomenon</span>
+<span from="#A-2100105761-1-66" xml:id="U-2100105761-1-66-1">verb.act</span>
+<span from="#A-2100105761-1-69" xml:id="U-2100105761-1-69-1">adj.phys</span>
+<span from="#A-2100105761-1-75" xml:id="U-2100105761-1-75-1">noun.communication</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-1">verb.social</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-2">noun.act</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-3">noun.cognition</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-4">noun.person</span>
+<span from="#A-2100105761-1-79" xml:id="U-2100105761-1-79-1">adj.all</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-1">verb.cognition</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-2">verb.act</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-3">verb.emotion</span>
+<span from="#A-2100105761-1-83" xml:id="U-2100105761-1-83-1">adj.phys</span>
+<span from="#A-2100105761-1-89" xml:id="U-2100105761-1-89-1">verb.cognition</span>
+<span from="#A-2100105761-1-89" xml:id="U-2100105761-1-89-2">verb.communication</span>
+<span from="#A-2100105761-1-97" xml:id="U-2100105761-1-97-1">verb.cognition</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-1">verb.motion</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-2">verb.cognition</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-3">verb.static</span>
+<span from="#A-2100105761-1-113" xml:id="U-2100105761-1-113-1">verb.act</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-1">verb.cognition</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-2">noun.quantity</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-3">verb.act</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-4">noun.location</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-1">verb.act</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-2">noun.person</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-3">verb.communication</span>
+<span from="#A-2100105761-1-136" xml:id="U-2100105761-1-136-1">noun.cognition</span>
+<span from="#A-2100105761-1-136" xml:id="U-2100105761-1-136-2">noun.feeling</span>
+<span from="#A-2100105761-1-143" xml:id="U-2100105761-1-143-1">verb.act</span>
+<span from="#A-2100105761-1-145" xml:id="U-2100105761-1-145-1">verb.social</span>
+<span from="#A-2100105761-1-145" xml:id="U-2100105761-1-145-2">verb.static</span>
+<span from="#A-2100105761-1-149" xml:id="U-2100105761-1-149-1">noun.person</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-1">verb.motion</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-2">verb.act</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-3">verb.static</span>
+<span from="#A-2100105761-1-160" xml:id="U-2100105761-1-160-1">noun.animal</span>
+<span from="#A-2100105761-1-162" xml:id="U-2100105761-1-162-1">noun.artifact</span>
+<span from="#A-2100105761-1-166" xml:id="U-2100105761-1-166-1">adj.phys</span>
+<span from="#A-2100105761-1-168" xml:id="U-2100105761-1-168-1">noun.group</span>
+<span from="#A-2100105761-1-168" xml:id="U-2100105761-1-168-2">noun.artifact</span>
+<span from="#A-2100105761-1-173" xml:id="U-2100105761-1-173-1">noun.artifact</span>
+<span from="#A-2100105761-1-177" xml:id="U-2100105761-1-177-1">noun.person</span>
+<span from="#A-2100105761-1-179" xml:id="U-2100105761-1-179-1">verb.social</span>
+<span from="#A-2100105761-1-179" xml:id="U-2100105761-1-179-2">verb.static</span>
+<span from="#A-2100105761-1-185" xml:id="U-2100105761-1-185-1">adj.phys</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-1">noun.attribute</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-2">noun.artifact</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-3">noun.substance</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-1">verb.motion</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-2">noun.artifact</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-3">verb.emotion</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-4">verb.communication</span>
+<span from="#A-2100105761-1-191" xml:id="U-2100105761-1-191-1">adj.phys</span>
+<span from="#A-2100105761-1-195" xml:id="U-2100105761-1-195-1">noun.person</span>
+<span from="#A-2100105761-1-199" xml:id="U-2100105761-1-199-1">verb.cognition</span>
+<span from="#A-2100105761-1-199" xml:id="U-2100105761-1-199-2">verb.communication</span>
+<span from="#A-2100105761-2-5" xml:id="U-2100105761-2-5-1">noun.act</span>
+<span from="#A-2100105761-2-5" xml:id="U-2100105761-2-5-2">noun.artifact</span>
+<span from="#A-2100105761-2-7" xml:id="U-2100105761-2-7-1">verb.social</span>
+<span from="#A-2100105761-2-9" xml:id="U-2100105761-2-9-1">verb.act</span>
+<span from="#A-2100105761-2-13" xml:id="U-2100105761-2-13-1">noun.artifact</span>
+<span from="#A-2100105761-2-13" xml:id="U-2100105761-2-13-2">noun.phenomenon</span>
+<span from="#A-2100105761-2-16" xml:id="U-2100105761-2-16-1">verb.cognition</span>
+<span from="#A-2100105761-2-18" xml:id="U-2100105761-2-18-1">noun.artifact</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-1">verb.motion</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-2">verb.act</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-3">verb.static</span>
+<span from="#A-2100105761-2-22" xml:id="U-2100105761-2-22-1">noun.artifact</span>
+<span from="#A-2100105761-2-26" xml:id="U-2100105761-2-26-1">noun.artifact</span>
+<span from="#A-2100105761-2-26" xml:id="U-2100105761-2-26-2">noun.TOP</span>
+<span from="#A-2100105761-2-28" xml:id="U-2100105761-2-28-1">noun.person</span>
+<span from="#A-2100105761-2-30" xml:id="U-2100105761-2-30-1">noun.animal</span>
+<span from="#A-2100105761-2-30" xml:id="U-2100105761-2-30-2">noun.person</span>
+<span from="#A-2100105761-2-41" xml:id="U-2100105761-2-41-1">verb.social</span>
+<span from="#A-2100105761-2-50" xml:id="U-2100105761-2-50-1">noun.quantity</span>
+<span from="#A-2100105761-2-54" xml:id="U-2100105761-2-54-1">verb.weather</span>
+<span from="#A-2100105761-2-54" xml:id="U-2100105761-2-54-2">noun.attribute</span>
+<span from="#A-2100105761-2-56" xml:id="U-2100105761-2-56-1">verb.cognition</span>
+<span from="#A-2100105761-2-56" xml:id="U-2100105761-2-56-2">verb.act</span>
+<span from="#A-2100105761-2-60" xml:id="U-2100105761-2-60-1">noun.artifact</span>
+<span from="#A-2100105761-2-60" xml:id="U-2100105761-2-60-2">noun.person</span>
+<span from="#A-2100105761-3-3" xml:id="U-2100105761-3-3-1">noun.cognition</span>
+<span from="#A-2100105761-3-3" xml:id="U-2100105761-3-3-2">noun.phenomenon</span>
+<span from="#A-2100105761-3-9" xml:id="U-2100105761-3-9-1">verb.cognition</span>
+<span from="#A-2100105761-3-9" xml:id="U-2100105761-3-9-2">verb.act</span>
+<span from="#A-2100105761-3-15" xml:id="U-2100105761-3-15-1">adj.time</span>
+<span from="#A-2100105761-3-17" xml:id="U-2100105761-3-17-1">verb.communication</span>
+<span from="#A-2100105761-3-24" xml:id="U-2100105761-3-24-1">noun.artifact</span>
+<span from="#A-2100105761-3-24" xml:id="U-2100105761-3-24-2">noun.person</span>
+<span from="#A-2100105761-3-26" xml:id="U-2100105761-3-26-1">verb.cognition</span>
+<span from="#A-2100105761-3-26" xml:id="U-2100105761-3-26-2">verb.act</span>
+<span from="#A-2100105761-3-28" xml:id="U-2100105761-3-28-1">noun.artifact</span>
+<span from="#A-2100105761-3-30" xml:id="U-2100105761-3-30-1">verb.social</span>
+<span from="#A-2100105761-3-30" xml:id="U-2100105761-3-30-2">verb.static</span>
+<span from="#A-2100105761-3-39" xml:id="U-2100105761-3-39-1">adj.phys</span>
+<span from="#A-2100105761-3-41" xml:id="U-2100105761-3-41-1">noun.feeling</span>
+<span from="#A-2100105761-3-43" xml:id="U-2100105761-3-43-1">verb.social</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-1">verb.motion</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-2">noun.location</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-3">adj.all</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-1">noun.act</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-2">verb.cognition</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-3">verb.communication</span>
+<span from="#A-2100105761-3-57" xml:id="U-2100105761-3-57-1">noun.artifact</span>
+<span from="#A-2100105761-3-59" xml:id="U-2100105761-3-59-1">noun.time</span>
+<span from="#A-2100105761-3-61" xml:id="U-2100105761-3-61-1">verb.motion</span>
+<span from="#A-2100105761-3-61" xml:id="U-2100105761-3-61-2">verb.cognition</span>
+<span from="#A-2100105761-3-69" xml:id="U-2100105761-3-69-1">adj.mental</span>
+<span from="#A-2100105761-3-69" xml:id="U-2100105761-3-69-2">adj.all</span>
+<span from="#A-2100105761-3-84" xml:id="U-2100105761-3-84-1">verb.cognition</span>
+<span from="#A-2100105761-3-84" xml:id="U-2100105761-3-84-2">verb.act</span>
+<span from="#A-2100105761-3-86" xml:id="U-2100105761-3-86-1">verb.social</span>
+<span from="#A-2100105761-3-86" xml:id="U-2100105761-3-86-2">verb.static</span>
+<span from="#A-2100105761-3-88" xml:id="U-2100105761-3-88-1">noun.artifact</span>
+<span from="#A-2100105761-3-90" xml:id="U-2100105761-3-90-1">noun.act</span>
+<span from="#A-2100105761-3-90" xml:id="U-2100105761-3-90-2">noun.communication</span>
+<span from="#A-2100105761-3-92" xml:id="U-2100105761-3-92-1">verb.act</span>
+<span from="#A-2100105761-3-98" xml:id="U-2100105761-3-98-1">noun.person</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-1">verb.act</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-2">verb.social</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-3">noun.body</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-4">noun.artifact</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-5">noun.food</span>
+<span from="#A-2100105761-3-110" xml:id="U-2100105761-3-110-1">noun.artifact</span>
+<span from="#A-2100105761-3-110" xml:id="U-2100105761-3-110-2">noun.TOP</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-1">verb.motion</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-2">noun.TOP</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-3">verb.cognition</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-4">noun.group</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-5">noun.quantity</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-6">noun.artifact</span>
+<span from="#A-2100105761-3-115" xml:id="U-2100105761-3-115-1">adj.phys</span>
+<span from="#A-2100105761-3-115" xml:id="U-2100105761-3-115-2">adj.all</span>
+<span from="#A-2100105761-3-117" xml:id="U-2100105761-3-117-1">verb.act</span>
+<span from="#A-2100105761-3-126" xml:id="U-2100105761-3-126-1">verb.social</span>
+<span from="#A-2100105761-3-126" xml:id="U-2100105761-3-126-2">verb.static</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-1">verb.motion</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-2">noun.artifact</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-3">verb.emotion</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-4">verb.communication</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-1">noun.act</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-2">noun.artifact</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-3">noun.feeling</span>
+<span from="#A-2100105761-4-4" xml:id="U-2100105761-4-4-1">noun.artifact</span>
+<span from="#A-2100105761-4-13" xml:id="U-2100105761-4-13-1">noun.group</span>
+<span from="#A-2100105761-4-13" xml:id="U-2100105761-4-13-2">noun.artifact</span>
+<span from="#A-2100105761-4-16" xml:id="U-2100105761-4-16-1">noun.artifact</span>
+<span from="#A-2100105761-4-16" xml:id="U-2100105761-4-16-2">noun.motive</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-1">noun.act</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-2">verb.motion</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-3">noun.artifact</span>
+<span from="#A-2100105761-5-5" xml:id="U-2100105761-5-5-1">verb.static</span>
+<span from="#A-2100105761-5-11" xml:id="U-2100105761-5-11-1">noun.time</span>
+<span from="#A-2100105761-5-17" xml:id="U-2100105761-5-17-1">noun.time</span>
+<span from="#A-2100105761-5-30" xml:id="U-2100105761-5-30-1">verb.social</span>
+<span from="#A-2100105761-5-30" xml:id="U-2100105761-5-30-2">verb.static</span>
+<span from="#A-2100105761-5-32" xml:id="U-2100105761-5-32-1">verb.motion</span>
+<span from="#A-2100105761-5-34" xml:id="U-2100105761-5-34-1">noun.artifact</span>
+<span from="#A-2100105761-5-36" xml:id="U-2100105761-5-36-1">noun.artifact</span>
+<span from="#A-2100105761-5-39" xml:id="U-2100105761-5-39-1">noun.artifact</span>
+<span from="#A-2100105761-5-39" xml:id="U-2100105761-5-39-2">noun.phenomenon</span>
+<span from="#A-2100105761-5-42" xml:id="U-2100105761-5-42-1">noun.group</span>
+<span from="#A-2100105761-5-42" xml:id="U-2100105761-5-42-2">noun.artifact</span>
+<span from="#A-2100105761-5-46" xml:id="U-2100105761-5-46-1">verb.social</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-1">verb.motion</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-2">noun.person</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-3">noun.phenomenon</span>
+<span from="#A-2100105761-5-50" xml:id="U-2100105761-5-50-1">noun.location</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-1">noun.communication</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-2">noun.act</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-3">adj.phys</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-4">noun.cognition</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-5">noun.person</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-1">noun.act</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-2">verb.motion</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-3">noun.artifact</span>
+<span from="#A-2100105761-5-73" xml:id="U-2100105761-5-73-1">verb.social</span>
+<span from="#A-2100105761-5-75" xml:id="U-2100105761-5-75-1">verb.act</span>
+<span from="#A-2100105761-5-75" xml:id="U-2100105761-5-75-2">verb.communication</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-1">noun.act</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-2">noun.communication</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-3">noun.artifact</span>
+<span from="#A-2100105761-5-84" xml:id="U-2100105761-5-84-1">verb.weather</span>
+<span from="#A-2100105761-5-84" xml:id="U-2100105761-5-84-2">verb.act</span>
+<span from="#A-2100105761-5-96" xml:id="U-2100105761-5-96-1">noun.artifact</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-1">verb.social</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-2">noun.act</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-3">noun.cognition</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-4">noun.person</span>
+<span from="#A-2100105761-1-13" xml:id="U-2100105761-1-13-1">adj.phys</span>
+<span from="#A-2100105761-1-19" xml:id="U-2100105761-1-19-1">verb.static</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-1">verb.cognition</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-2">verb.act</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-3">verb.emotion</span>
+<span from="#A-2100105761-1-24" xml:id="U-2100105761-1-24-1">noun.artifact</span>
+<span from="#A-2100105761-1-26" xml:id="U-2100105761-1-26-1">noun.institution</span>
+<span from="#A-2100105761-1-28" xml:id="U-2100105761-1-28-1">verb.social</span>
+<span from="#A-2100105761-1-28" xml:id="U-2100105761-1-28-2">verb.static</span>
+<span from="#A-2100105761-1-32" xml:id="U-2100105761-1-32-1">adj.phys</span>
+<span from="#A-2100105761-1-38" xml:id="U-2100105761-1-38-1">noun.artifact</span>
+<span from="#A-2100105761-1-38" xml:id="U-2100105761-1-38-2">noun.motive</span>
+<span from="#A-2100105761-1-41" xml:id="U-2100105761-1-41-1">verb.cognition</span>
+<span from="#A-2100105761-1-41" xml:id="U-2100105761-1-41-2">verb.act</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-1">verb.cognition</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-2">verb.act</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-3">verb.emotion</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-1">noun.motive</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-2">noun.artifact</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-3">noun.TOP</span>
+<span from="#A-2100105761-1-56" xml:id="U-2100105761-1-56-1">verb.cognition</span>
+<span from="#A-2100105761-1-56" xml:id="U-2100105761-1-56-2">verb.act</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-1">verb.act</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-2">noun.person</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-3">verb.communication</span>
+<span from="#A-2100105761-1-60" xml:id="U-2100105761-1-60-1">noun.artifact</span>
+<span from="#A-2100105761-1-64" xml:id="U-2100105761-1-64-1">noun.artifact</span>
+<span from="#A-2100105761-1-64" xml:id="U-2100105761-1-64-2">noun.phenomenon</span>
+<span from="#A-2100105761-1-66" xml:id="U-2100105761-1-66-1">verb.act</span>
+<span from="#A-2100105761-1-69" xml:id="U-2100105761-1-69-1">adj.phys</span>
+<span from="#A-2100105761-1-75" xml:id="U-2100105761-1-75-1">noun.communication</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-1">verb.social</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-2">noun.act</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-3">noun.cognition</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-4">noun.person</span>
+<span from="#A-2100105761-1-79" xml:id="U-2100105761-1-79-1">adj.all</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-1">verb.cognition</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-2">verb.act</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-3">verb.emotion</span>
+<span from="#A-2100105761-1-83" xml:id="U-2100105761-1-83-1">adj.phys</span>
+<span from="#A-2100105761-1-89" xml:id="U-2100105761-1-89-1">verb.cognition</span>
+<span from="#A-2100105761-1-89" xml:id="U-2100105761-1-89-2">verb.communication</span>
+<span from="#A-2100105761-1-97" xml:id="U-2100105761-1-97-1">verb.cognition</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-1">verb.motion</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-2">verb.cognition</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-3">verb.static</span>
+<span from="#A-2100105761-1-113" xml:id="U-2100105761-1-113-1">verb.act</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-1">verb.cognition</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-2">noun.quantity</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-3">verb.act</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-4">noun.location</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-1">verb.act</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-2">noun.person</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-3">verb.communication</span>
+<span from="#A-2100105761-1-136" xml:id="U-2100105761-1-136-1">noun.cognition</span>
+<span from="#A-2100105761-1-136" xml:id="U-2100105761-1-136-2">noun.feeling</span>
+<span from="#A-2100105761-1-143" xml:id="U-2100105761-1-143-1">verb.act</span>
+<span from="#A-2100105761-1-145" xml:id="U-2100105761-1-145-1">verb.social</span>
+<span from="#A-2100105761-1-145" xml:id="U-2100105761-1-145-2">verb.static</span>
+<span from="#A-2100105761-1-149" xml:id="U-2100105761-1-149-1">noun.person</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-1">verb.motion</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-2">verb.act</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-3">verb.static</span>
+<span from="#A-2100105761-1-160" xml:id="U-2100105761-1-160-1">noun.animal</span>
+<span from="#A-2100105761-1-162" xml:id="U-2100105761-1-162-1">noun.artifact</span>
+<span from="#A-2100105761-1-166" xml:id="U-2100105761-1-166-1">adj.phys</span>
+<span from="#A-2100105761-1-168" xml:id="U-2100105761-1-168-1">noun.group</span>
+<span from="#A-2100105761-1-168" xml:id="U-2100105761-1-168-2">noun.artifact</span>
+<span from="#A-2100105761-1-173" xml:id="U-2100105761-1-173-1">noun.artifact</span>
+<span from="#A-2100105761-1-177" xml:id="U-2100105761-1-177-1">noun.person</span>
+<span from="#A-2100105761-1-179" xml:id="U-2100105761-1-179-1">verb.social</span>
+<span from="#A-2100105761-1-179" xml:id="U-2100105761-1-179-2">verb.static</span>
+<span from="#A-2100105761-1-185" xml:id="U-2100105761-1-185-1">adj.phys</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-1">noun.attribute</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-2">noun.artifact</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-3">noun.substance</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-1">verb.motion</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-2">noun.artifact</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-3">verb.emotion</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-4">verb.communication</span>
+<span from="#A-2100105761-1-191" xml:id="U-2100105761-1-191-1">adj.phys</span>
+<span from="#A-2100105761-1-195" xml:id="U-2100105761-1-195-1">noun.person</span>
+<span from="#A-2100105761-1-199" xml:id="U-2100105761-1-199-1">verb.cognition</span>
+<span from="#A-2100105761-1-199" xml:id="U-2100105761-1-199-2">verb.communication</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-1">verb.social</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-2">noun.act</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-3">noun.cognition</span>
+<span from="#A-2100105761-1-7" xml:id="U-2100105761-1-7-4">noun.person</span>
+<span from="#A-2100105761-1-13" xml:id="U-2100105761-1-13-1">adj.phys</span>
+<span from="#A-2100105761-1-19" xml:id="U-2100105761-1-19-1">verb.static</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-1">verb.cognition</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-2">verb.act</span>
+<span from="#A-2100105761-1-21" xml:id="U-2100105761-1-21-3">verb.emotion</span>
+<span from="#A-2100105761-1-24" xml:id="U-2100105761-1-24-1">noun.artifact</span>
+<span from="#A-2100105761-1-26" xml:id="U-2100105761-1-26-1">noun.institution</span>
+<span from="#A-2100105761-1-28" xml:id="U-2100105761-1-28-1">verb.social</span>
+<span from="#A-2100105761-1-28" xml:id="U-2100105761-1-28-2">verb.static</span>
+<span from="#A-2100105761-1-32" xml:id="U-2100105761-1-32-1">adj.phys</span>
+<span from="#A-2100105761-1-38" xml:id="U-2100105761-1-38-1">noun.artifact</span>
+<span from="#A-2100105761-1-38" xml:id="U-2100105761-1-38-2">noun.motive</span>
+<span from="#A-2100105761-1-41" xml:id="U-2100105761-1-41-1">verb.cognition</span>
+<span from="#A-2100105761-1-41" xml:id="U-2100105761-1-41-2">verb.act</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-1">verb.cognition</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-2">verb.act</span>
+<span from="#A-2100105761-1-43" xml:id="U-2100105761-1-43-3">verb.emotion</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-1">noun.motive</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-2">noun.artifact</span>
+<span from="#A-2100105761-1-53" xml:id="U-2100105761-1-53-3">noun.TOP</span>
+<span from="#A-2100105761-1-56" xml:id="U-2100105761-1-56-1">verb.cognition</span>
+<span from="#A-2100105761-1-56" xml:id="U-2100105761-1-56-2">verb.act</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-1">verb.act</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-2">noun.person</span>
+<span from="#A-2100105761-1-58" xml:id="U-2100105761-1-58-3">verb.communication</span>
+<span from="#A-2100105761-1-60" xml:id="U-2100105761-1-60-1">noun.artifact</span>
+<span from="#A-2100105761-1-64" xml:id="U-2100105761-1-64-1">noun.artifact</span>
+<span from="#A-2100105761-1-64" xml:id="U-2100105761-1-64-2">noun.phenomenon</span>
+<span from="#A-2100105761-1-66" xml:id="U-2100105761-1-66-1">verb.act</span>
+<span from="#A-2100105761-1-69" xml:id="U-2100105761-1-69-1">adj.phys</span>
+<span from="#A-2100105761-1-75" xml:id="U-2100105761-1-75-1">noun.communication</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-1">verb.social</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-2">noun.act</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-3">noun.cognition</span>
+<span from="#A-2100105761-1-77" xml:id="U-2100105761-1-77-4">noun.person</span>
+<span from="#A-2100105761-1-79" xml:id="U-2100105761-1-79-1">adj.all</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-1">verb.cognition</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-2">verb.act</span>
+<span from="#A-2100105761-1-81" xml:id="U-2100105761-1-81-3">verb.emotion</span>
+<span from="#A-2100105761-1-83" xml:id="U-2100105761-1-83-1">adj.phys</span>
+<span from="#A-2100105761-1-89" xml:id="U-2100105761-1-89-1">verb.cognition</span>
+<span from="#A-2100105761-1-89" xml:id="U-2100105761-1-89-2">verb.communication</span>
+<span from="#A-2100105761-1-97" xml:id="U-2100105761-1-97-1">verb.cognition</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-1">verb.motion</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-2">verb.cognition</span>
+<span from="#A-2100105761-1-106" xml:id="U-2100105761-1-106-3">verb.static</span>
+<span from="#A-2100105761-1-113" xml:id="U-2100105761-1-113-1">verb.act</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-1">verb.cognition</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-2">noun.quantity</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-3">verb.act</span>
+<span from="#A-2100105761-1-124" xml:id="U-2100105761-1-124-4">noun.location</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-1">verb.act</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-2">noun.person</span>
+<span from="#A-2100105761-1-134" xml:id="U-2100105761-1-134-3">verb.communication</span>
+<span from="#A-2100105761-1-136" xml:id="U-2100105761-1-136-1">noun.cognition</span>
+<span from="#A-2100105761-1-136" xml:id="U-2100105761-1-136-2">noun.feeling</span>
+<span from="#A-2100105761-1-143" xml:id="U-2100105761-1-143-1">verb.act</span>
+<span from="#A-2100105761-1-145" xml:id="U-2100105761-1-145-1">verb.social</span>
+<span from="#A-2100105761-1-145" xml:id="U-2100105761-1-145-2">verb.static</span>
+<span from="#A-2100105761-1-149" xml:id="U-2100105761-1-149-1">noun.person</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-1">verb.motion</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-2">verb.act</span>
+<span from="#A-2100105761-1-154" xml:id="U-2100105761-1-154-3">verb.static</span>
+<span from="#A-2100105761-1-160" xml:id="U-2100105761-1-160-1">noun.animal</span>
+<span from="#A-2100105761-1-162" xml:id="U-2100105761-1-162-1">noun.artifact</span>
+<span from="#A-2100105761-1-166" xml:id="U-2100105761-1-166-1">adj.phys</span>
+<span from="#A-2100105761-1-168" xml:id="U-2100105761-1-168-1">noun.group</span>
+<span from="#A-2100105761-1-168" xml:id="U-2100105761-1-168-2">noun.artifact</span>
+<span from="#A-2100105761-1-173" xml:id="U-2100105761-1-173-1">noun.artifact</span>
+<span from="#A-2100105761-1-177" xml:id="U-2100105761-1-177-1">noun.person</span>
+<span from="#A-2100105761-1-179" xml:id="U-2100105761-1-179-1">verb.social</span>
+<span from="#A-2100105761-1-179" xml:id="U-2100105761-1-179-2">verb.static</span>
+<span from="#A-2100105761-1-185" xml:id="U-2100105761-1-185-1">adj.phys</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-1">noun.attribute</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-2">noun.artifact</span>
+<span from="#A-2100105761-1-187" xml:id="U-2100105761-1-187-3">noun.substance</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-1">verb.motion</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-2">noun.artifact</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-3">verb.emotion</span>
+<span from="#A-2100105761-1-189" xml:id="U-2100105761-1-189-4">verb.communication</span>
+<span from="#A-2100105761-1-191" xml:id="U-2100105761-1-191-1">adj.phys</span>
+<span from="#A-2100105761-1-195" xml:id="U-2100105761-1-195-1">noun.person</span>
+<span from="#A-2100105761-1-199" xml:id="U-2100105761-1-199-1">verb.cognition</span>
+<span from="#A-2100105761-1-199" xml:id="U-2100105761-1-199-2">verb.communication</span>
+<span from="#A-2100105761-2-5" xml:id="U-2100105761-2-5-1">noun.act</span>
+<span from="#A-2100105761-2-5" xml:id="U-2100105761-2-5-2">noun.artifact</span>
+<span from="#A-2100105761-2-7" xml:id="U-2100105761-2-7-1">verb.social</span>
+<span from="#A-2100105761-2-9" xml:id="U-2100105761-2-9-1">verb.act</span>
+<span from="#A-2100105761-2-13" xml:id="U-2100105761-2-13-1">noun.artifact</span>
+<span from="#A-2100105761-2-13" xml:id="U-2100105761-2-13-2">noun.phenomenon</span>
+<span from="#A-2100105761-2-16" xml:id="U-2100105761-2-16-1">verb.cognition</span>
+<span from="#A-2100105761-2-18" xml:id="U-2100105761-2-18-1">noun.artifact</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-1">verb.motion</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-2">verb.act</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-3">verb.static</span>
+<span from="#A-2100105761-2-22" xml:id="U-2100105761-2-22-1">noun.artifact</span>
+<span from="#A-2100105761-2-26" xml:id="U-2100105761-2-26-1">noun.artifact</span>
+<span from="#A-2100105761-2-26" xml:id="U-2100105761-2-26-2">noun.TOP</span>
+<span from="#A-2100105761-2-28" xml:id="U-2100105761-2-28-1">noun.person</span>
+<span from="#A-2100105761-2-30" xml:id="U-2100105761-2-30-1">noun.animal</span>
+<span from="#A-2100105761-2-30" xml:id="U-2100105761-2-30-2">noun.person</span>
+<span from="#A-2100105761-2-41" xml:id="U-2100105761-2-41-1">verb.social</span>
+<span from="#A-2100105761-2-50" xml:id="U-2100105761-2-50-1">noun.quantity</span>
+<span from="#A-2100105761-2-54" xml:id="U-2100105761-2-54-1">verb.weather</span>
+<span from="#A-2100105761-2-54" xml:id="U-2100105761-2-54-2">noun.attribute</span>
+<span from="#A-2100105761-2-56" xml:id="U-2100105761-2-56-1">verb.cognition</span>
+<span from="#A-2100105761-2-56" xml:id="U-2100105761-2-56-2">verb.act</span>
+<span from="#A-2100105761-2-60" xml:id="U-2100105761-2-60-1">noun.artifact</span>
+<span from="#A-2100105761-2-60" xml:id="U-2100105761-2-60-2">noun.person</span>
+<span from="#A-2100105761-2-5" xml:id="U-2100105761-2-5-1">noun.act</span>
+<span from="#A-2100105761-2-5" xml:id="U-2100105761-2-5-2">noun.artifact</span>
+<span from="#A-2100105761-2-7" xml:id="U-2100105761-2-7-1">verb.social</span>
+<span from="#A-2100105761-2-9" xml:id="U-2100105761-2-9-1">verb.act</span>
+<span from="#A-2100105761-2-13" xml:id="U-2100105761-2-13-1">noun.artifact</span>
+<span from="#A-2100105761-2-13" xml:id="U-2100105761-2-13-2">noun.phenomenon</span>
+<span from="#A-2100105761-2-16" xml:id="U-2100105761-2-16-1">verb.cognition</span>
+<span from="#A-2100105761-2-18" xml:id="U-2100105761-2-18-1">noun.artifact</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-1">verb.motion</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-2">verb.act</span>
+<span from="#A-2100105761-2-20" xml:id="U-2100105761-2-20-3">verb.static</span>
+<span from="#A-2100105761-2-22" xml:id="U-2100105761-2-22-1">noun.artifact</span>
+<span from="#A-2100105761-2-26" xml:id="U-2100105761-2-26-1">noun.artifact</span>
+<span from="#A-2100105761-2-26" xml:id="U-2100105761-2-26-2">noun.TOP</span>
+<span from="#A-2100105761-2-28" xml:id="U-2100105761-2-28-1">noun.person</span>
+<span from="#A-2100105761-2-30" xml:id="U-2100105761-2-30-1">noun.animal</span>
+<span from="#A-2100105761-2-30" xml:id="U-2100105761-2-30-2">noun.person</span>
+<span from="#A-2100105761-2-41" xml:id="U-2100105761-2-41-1">verb.social</span>
+<span from="#A-2100105761-2-50" xml:id="U-2100105761-2-50-1">noun.quantity</span>
+<span from="#A-2100105761-2-54" xml:id="U-2100105761-2-54-1">verb.weather</span>
+<span from="#A-2100105761-2-54" xml:id="U-2100105761-2-54-2">noun.attribute</span>
+<span from="#A-2100105761-2-56" xml:id="U-2100105761-2-56-1">verb.cognition</span>
+<span from="#A-2100105761-2-56" xml:id="U-2100105761-2-56-2">verb.act</span>
+<span from="#A-2100105761-2-60" xml:id="U-2100105761-2-60-1">noun.artifact</span>
+<span from="#A-2100105761-2-60" xml:id="U-2100105761-2-60-2">noun.person</span>
+<span from="#A-2100105761-3-3" xml:id="U-2100105761-3-3-1">noun.cognition</span>
+<span from="#A-2100105761-3-3" xml:id="U-2100105761-3-3-2">noun.phenomenon</span>
+<span from="#A-2100105761-3-9" xml:id="U-2100105761-3-9-1">verb.cognition</span>
+<span from="#A-2100105761-3-9" xml:id="U-2100105761-3-9-2">verb.act</span>
+<span from="#A-2100105761-3-15" xml:id="U-2100105761-3-15-1">adj.time</span>
+<span from="#A-2100105761-3-17" xml:id="U-2100105761-3-17-1">verb.communication</span>
+<span from="#A-2100105761-3-24" xml:id="U-2100105761-3-24-1">noun.artifact</span>
+<span from="#A-2100105761-3-24" xml:id="U-2100105761-3-24-2">noun.person</span>
+<span from="#A-2100105761-3-26" xml:id="U-2100105761-3-26-1">verb.cognition</span>
+<span from="#A-2100105761-3-26" xml:id="U-2100105761-3-26-2">verb.act</span>
+<span from="#A-2100105761-3-28" xml:id="U-2100105761-3-28-1">noun.artifact</span>
+<span from="#A-2100105761-3-30" xml:id="U-2100105761-3-30-1">verb.social</span>
+<span from="#A-2100105761-3-30" xml:id="U-2100105761-3-30-2">verb.static</span>
+<span from="#A-2100105761-3-39" xml:id="U-2100105761-3-39-1">adj.phys</span>
+<span from="#A-2100105761-3-41" xml:id="U-2100105761-3-41-1">noun.feeling</span>
+<span from="#A-2100105761-3-43" xml:id="U-2100105761-3-43-1">verb.social</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-1">verb.motion</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-2">noun.location</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-3">adj.all</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-1">noun.act</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-2">verb.cognition</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-3">verb.communication</span>
+<span from="#A-2100105761-3-57" xml:id="U-2100105761-3-57-1">noun.artifact</span>
+<span from="#A-2100105761-3-59" xml:id="U-2100105761-3-59-1">noun.time</span>
+<span from="#A-2100105761-3-61" xml:id="U-2100105761-3-61-1">verb.motion</span>
+<span from="#A-2100105761-3-61" xml:id="U-2100105761-3-61-2">verb.cognition</span>
+<span from="#A-2100105761-3-69" xml:id="U-2100105761-3-69-1">adj.mental</span>
+<span from="#A-2100105761-3-69" xml:id="U-2100105761-3-69-2">adj.all</span>
+<span from="#A-2100105761-3-84" xml:id="U-2100105761-3-84-1">verb.cognition</span>
+<span from="#A-2100105761-3-84" xml:id="U-2100105761-3-84-2">verb.act</span>
+<span from="#A-2100105761-3-86" xml:id="U-2100105761-3-86-1">verb.social</span>
+<span from="#A-2100105761-3-86" xml:id="U-2100105761-3-86-2">verb.static</span>
+<span from="#A-2100105761-3-88" xml:id="U-2100105761-3-88-1">noun.artifact</span>
+<span from="#A-2100105761-3-90" xml:id="U-2100105761-3-90-1">noun.act</span>
+<span from="#A-2100105761-3-90" xml:id="U-2100105761-3-90-2">noun.communication</span>
+<span from="#A-2100105761-3-92" xml:id="U-2100105761-3-92-1">verb.act</span>
+<span from="#A-2100105761-3-98" xml:id="U-2100105761-3-98-1">noun.person</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-1">verb.act</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-2">verb.social</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-3">noun.body</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-4">noun.artifact</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-5">noun.food</span>
+<span from="#A-2100105761-3-110" xml:id="U-2100105761-3-110-1">noun.artifact</span>
+<span from="#A-2100105761-3-110" xml:id="U-2100105761-3-110-2">noun.TOP</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-1">verb.motion</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-2">noun.TOP</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-3">verb.cognition</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-4">noun.group</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-5">noun.quantity</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-6">noun.artifact</span>
+<span from="#A-2100105761-3-115" xml:id="U-2100105761-3-115-1">adj.phys</span>
+<span from="#A-2100105761-3-115" xml:id="U-2100105761-3-115-2">adj.all</span>
+<span from="#A-2100105761-3-117" xml:id="U-2100105761-3-117-1">verb.act</span>
+<span from="#A-2100105761-3-126" xml:id="U-2100105761-3-126-1">verb.social</span>
+<span from="#A-2100105761-3-126" xml:id="U-2100105761-3-126-2">verb.static</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-1">verb.motion</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-2">noun.artifact</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-3">verb.emotion</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-4">verb.communication</span>
+<span from="#A-2100105761-3-3" xml:id="U-2100105761-3-3-1">noun.cognition</span>
+<span from="#A-2100105761-3-3" xml:id="U-2100105761-3-3-2">noun.phenomenon</span>
+<span from="#A-2100105761-3-9" xml:id="U-2100105761-3-9-1">verb.cognition</span>
+<span from="#A-2100105761-3-9" xml:id="U-2100105761-3-9-2">verb.act</span>
+<span from="#A-2100105761-3-15" xml:id="U-2100105761-3-15-1">adj.time</span>
+<span from="#A-2100105761-3-17" xml:id="U-2100105761-3-17-1">verb.communication</span>
+<span from="#A-2100105761-3-24" xml:id="U-2100105761-3-24-1">noun.artifact</span>
+<span from="#A-2100105761-3-24" xml:id="U-2100105761-3-24-2">noun.person</span>
+<span from="#A-2100105761-3-26" xml:id="U-2100105761-3-26-1">verb.cognition</span>
+<span from="#A-2100105761-3-26" xml:id="U-2100105761-3-26-2">verb.act</span>
+<span from="#A-2100105761-3-28" xml:id="U-2100105761-3-28-1">noun.artifact</span>
+<span from="#A-2100105761-3-30" xml:id="U-2100105761-3-30-1">verb.social</span>
+<span from="#A-2100105761-3-30" xml:id="U-2100105761-3-30-2">verb.static</span>
+<span from="#A-2100105761-3-39" xml:id="U-2100105761-3-39-1">adj.phys</span>
+<span from="#A-2100105761-3-41" xml:id="U-2100105761-3-41-1">noun.feeling</span>
+<span from="#A-2100105761-3-43" xml:id="U-2100105761-3-43-1">verb.social</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-1">verb.motion</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-2">noun.location</span>
+<span from="#A-2100105761-3-51" xml:id="U-2100105761-3-51-3">adj.all</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-1">noun.act</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-2">verb.cognition</span>
+<span from="#A-2100105761-3-55" xml:id="U-2100105761-3-55-3">verb.communication</span>
+<span from="#A-2100105761-3-57" xml:id="U-2100105761-3-57-1">noun.artifact</span>
+<span from="#A-2100105761-3-59" xml:id="U-2100105761-3-59-1">noun.time</span>
+<span from="#A-2100105761-3-61" xml:id="U-2100105761-3-61-1">verb.motion</span>
+<span from="#A-2100105761-3-61" xml:id="U-2100105761-3-61-2">verb.cognition</span>
+<span from="#A-2100105761-3-69" xml:id="U-2100105761-3-69-1">adj.mental</span>
+<span from="#A-2100105761-3-69" xml:id="U-2100105761-3-69-2">adj.all</span>
+<span from="#A-2100105761-3-84" xml:id="U-2100105761-3-84-1">verb.cognition</span>
+<span from="#A-2100105761-3-84" xml:id="U-2100105761-3-84-2">verb.act</span>
+<span from="#A-2100105761-3-86" xml:id="U-2100105761-3-86-1">verb.social</span>
+<span from="#A-2100105761-3-86" xml:id="U-2100105761-3-86-2">verb.static</span>
+<span from="#A-2100105761-3-88" xml:id="U-2100105761-3-88-1">noun.artifact</span>
+<span from="#A-2100105761-3-90" xml:id="U-2100105761-3-90-1">noun.act</span>
+<span from="#A-2100105761-3-90" xml:id="U-2100105761-3-90-2">noun.communication</span>
+<span from="#A-2100105761-3-92" xml:id="U-2100105761-3-92-1">verb.act</span>
+<span from="#A-2100105761-3-98" xml:id="U-2100105761-3-98-1">noun.person</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-1">verb.act</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-2">verb.social</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-3">noun.body</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-4">noun.artifact</span>
+<span from="#A-2100105761-3-106" xml:id="U-2100105761-3-106-5">noun.food</span>
+<span from="#A-2100105761-3-110" xml:id="U-2100105761-3-110-1">noun.artifact</span>
+<span from="#A-2100105761-3-110" xml:id="U-2100105761-3-110-2">noun.TOP</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-1">verb.motion</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-2">noun.TOP</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-3">verb.cognition</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-4">noun.group</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-5">noun.quantity</span>
+<span from="#A-2100105761-3-113" xml:id="U-2100105761-3-113-6">noun.artifact</span>
+<span from="#A-2100105761-3-115" xml:id="U-2100105761-3-115-1">adj.phys</span>
+<span from="#A-2100105761-3-115" xml:id="U-2100105761-3-115-2">adj.all</span>
+<span from="#A-2100105761-3-117" xml:id="U-2100105761-3-117-1">verb.act</span>
+<span from="#A-2100105761-3-126" xml:id="U-2100105761-3-126-1">verb.social</span>
+<span from="#A-2100105761-3-126" xml:id="U-2100105761-3-126-2">verb.static</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-1">verb.motion</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-2">noun.artifact</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-3">verb.emotion</span>
+<span from="#A-2100105761-3-132" xml:id="U-2100105761-3-132-4">verb.communication</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-1">noun.act</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-2">noun.artifact</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-3">noun.feeling</span>
+<span from="#A-2100105761-4-4" xml:id="U-2100105761-4-4-1">noun.artifact</span>
+<span from="#A-2100105761-4-13" xml:id="U-2100105761-4-13-1">noun.group</span>
+<span from="#A-2100105761-4-13" xml:id="U-2100105761-4-13-2">noun.artifact</span>
+<span from="#A-2100105761-4-16" xml:id="U-2100105761-4-16-1">noun.artifact</span>
+<span from="#A-2100105761-4-16" xml:id="U-2100105761-4-16-2">noun.motive</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-1">noun.act</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-2">noun.artifact</span>
+<span from="#A-2100105761-4-1" xml:id="U-2100105761-4-1-3">noun.feeling</span>
+<span from="#A-2100105761-4-4" xml:id="U-2100105761-4-4-1">noun.artifact</span>
+<span from="#A-2100105761-4-13" xml:id="U-2100105761-4-13-1">noun.group</span>
+<span from="#A-2100105761-4-13" xml:id="U-2100105761-4-13-2">noun.artifact</span>
+<span from="#A-2100105761-4-16" xml:id="U-2100105761-4-16-1">noun.artifact</span>
+<span from="#A-2100105761-4-16" xml:id="U-2100105761-4-16-2">noun.motive</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-1">noun.act</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-2">verb.motion</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-3">noun.artifact</span>
+<span from="#A-2100105761-5-5" xml:id="U-2100105761-5-5-1">verb.static</span>
+<span from="#A-2100105761-5-11" xml:id="U-2100105761-5-11-1">noun.time</span>
+<span from="#A-2100105761-5-17" xml:id="U-2100105761-5-17-1">noun.time</span>
+<span from="#A-2100105761-5-30" xml:id="U-2100105761-5-30-1">verb.social</span>
+<span from="#A-2100105761-5-30" xml:id="U-2100105761-5-30-2">verb.static</span>
+<span from="#A-2100105761-5-32" xml:id="U-2100105761-5-32-1">verb.motion</span>
+<span from="#A-2100105761-5-34" xml:id="U-2100105761-5-34-1">noun.artifact</span>
+<span from="#A-2100105761-5-36" xml:id="U-2100105761-5-36-1">noun.artifact</span>
+<span from="#A-2100105761-5-39" xml:id="U-2100105761-5-39-1">noun.artifact</span>
+<span from="#A-2100105761-5-39" xml:id="U-2100105761-5-39-2">noun.phenomenon</span>
+<span from="#A-2100105761-5-42" xml:id="U-2100105761-5-42-1">noun.group</span>
+<span from="#A-2100105761-5-42" xml:id="U-2100105761-5-42-2">noun.artifact</span>
+<span from="#A-2100105761-5-46" xml:id="U-2100105761-5-46-1">verb.social</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-1">verb.motion</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-2">noun.person</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-3">noun.phenomenon</span>
+<span from="#A-2100105761-5-50" xml:id="U-2100105761-5-50-1">noun.location</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-1">noun.communication</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-2">noun.act</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-3">adj.phys</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-4">noun.cognition</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-5">noun.person</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-1">noun.act</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-2">verb.motion</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-3">noun.artifact</span>
+<span from="#A-2100105761-5-73" xml:id="U-2100105761-5-73-1">verb.social</span>
+<span from="#A-2100105761-5-75" xml:id="U-2100105761-5-75-1">verb.act</span>
+<span from="#A-2100105761-5-75" xml:id="U-2100105761-5-75-2">verb.communication</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-1">noun.act</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-2">noun.communication</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-3">noun.artifact</span>
+<span from="#A-2100105761-5-84" xml:id="U-2100105761-5-84-1">verb.weather</span>
+<span from="#A-2100105761-5-84" xml:id="U-2100105761-5-84-2">verb.act</span>
+<span from="#A-2100105761-5-96" xml:id="U-2100105761-5-96-1">noun.artifact</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-1">noun.act</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-2">verb.motion</span>
+<span from="#A-2100105761-5-3" xml:id="U-2100105761-5-3-3">noun.artifact</span>
+<span from="#A-2100105761-5-5" xml:id="U-2100105761-5-5-1">verb.static</span>
+<span from="#A-2100105761-5-11" xml:id="U-2100105761-5-11-1">noun.time</span>
+<span from="#A-2100105761-5-17" xml:id="U-2100105761-5-17-1">noun.time</span>
+<span from="#A-2100105761-5-30" xml:id="U-2100105761-5-30-1">verb.social</span>
+<span from="#A-2100105761-5-30" xml:id="U-2100105761-5-30-2">verb.static</span>
+<span from="#A-2100105761-5-32" xml:id="U-2100105761-5-32-1">verb.motion</span>
+<span from="#A-2100105761-5-34" xml:id="U-2100105761-5-34-1">noun.artifact</span>
+<span from="#A-2100105761-5-36" xml:id="U-2100105761-5-36-1">noun.artifact</span>
+<span from="#A-2100105761-5-39" xml:id="U-2100105761-5-39-1">noun.artifact</span>
+<span from="#A-2100105761-5-39" xml:id="U-2100105761-5-39-2">noun.phenomenon</span>
+<span from="#A-2100105761-5-42" xml:id="U-2100105761-5-42-1">noun.group</span>
+<span from="#A-2100105761-5-42" xml:id="U-2100105761-5-42-2">noun.artifact</span>
+<span from="#A-2100105761-5-46" xml:id="U-2100105761-5-46-1">verb.social</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-1">verb.motion</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-2">noun.person</span>
+<span from="#A-2100105761-5-48" xml:id="U-2100105761-5-48-3">noun.phenomenon</span>
+<span from="#A-2100105761-5-50" xml:id="U-2100105761-5-50-1">noun.location</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-1">noun.communication</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-2">noun.act</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-3">adj.phys</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-4">noun.cognition</span>
+<span from="#A-2100105761-5-52" xml:id="U-2100105761-5-52-5">noun.person</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-1">noun.act</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-2">verb.motion</span>
+<span from="#A-2100105761-5-58" xml:id="U-2100105761-5-58-3">noun.artifact</span>
+<span from="#A-2100105761-5-73" xml:id="U-2100105761-5-73-1">verb.social</span>
+<span from="#A-2100105761-5-75" xml:id="U-2100105761-5-75-1">verb.act</span>
+<span from="#A-2100105761-5-75" xml:id="U-2100105761-5-75-2">verb.communication</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-1">noun.act</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-2">noun.communication</span>
+<span from="#A-2100105761-5-79" xml:id="U-2100105761-5-79-3">noun.artifact</span>
+<span from="#A-2100105761-5-84" xml:id="U-2100105761-5-84-1">verb.weather</span>
+<span from="#A-2100105761-5-84" xml:id="U-2100105761-5-84-2">verb.act</span>
+<span from="#A-2100105761-5-96" xml:id="U-2100105761-5-96-1">noun.artifact</span>
+</spanGrp>
+</text>
+</TEI>
+

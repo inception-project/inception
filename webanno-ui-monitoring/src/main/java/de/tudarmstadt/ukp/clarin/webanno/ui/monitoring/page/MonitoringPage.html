@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+  <style type="text/css">
+    .page-content {
+      overflow: auto;
+    }
+  </style>
+</wicket:head>
+</head>
+<body>
+  <wicket:extend>
+    <div class="flex-content flex-h-container flex-gutter">
+      <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container flex-gutter">
+        <div class="flex-content card">
+          <div class="card-header">
+            <wicket:message key="projects" />
+          </div>
+          <div class="scrolling card-body fit-child-snug">
+            <select wicket:id="project" size="20" class="form-control"></select>
+          </div>
+        </div>
+      </form>
+
+      <div class="flex-content flex-v-container flex-gutter">
+        <div class="flex-content flex-v-container" wicket:enclosure="overallProjectProgressImage">
+          <div class="flex-content card">
+            <div class="card-header">
+              <wicket:message key="progress" />
+            </div>
+            <div class="scrolling card-body">
+              <div wicket:id="overallProjectProgressImage" style="max-width: 600px;"></div>
+            </div>
+          </div>
+        </div>
+     
+        <form wicket:id="monitoringDetailForm" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+          <div class="page-header">
+            <h1><wicket:container wicket:id="name"/></h1>
+          </div>
+          <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" style="margin-top: 0px; flex: 0.5;">
+            <div class="flex-content card" style="min-height: 220px;">
+              <div class="card-header">
+                Documents finished
+              </div>
+              <div class="scrolling card-body">
+                <div wicket:id="annotator" style="max-width: 300px;"></div>
+              </div>
+            </div>
+            
+            <div class="flex-content card" style="min-height: 220px;">
+              <div class="card-header">
+                <wicket:message key="progress" />
+              </div>
+              <div class="scrolling card-body">
+                <div wicket:id="annotatorPercentage" style="max-width: 300px;"></div>
+              </div>
+            </div>
+          </div>
+  
+          <div class="flex-content card" style="min-height: 220px;">
+            <div class="card-header">
+              <wicket:message key="document_status" />
+              <a target="_blank" wicket:message="href:document_status.help.link">
+                <i class="fas fa-question-circle"></i>
+              </a>
+            </div>
+            <div class="card-body flex-v-container">
+              <div>
+                <small class="text-muted"><wicket:message key="document_status.hint">[Status hint]</wicket:message></small>
+              </div>
+              <div class="flex-content scrolling">
+                <div class="fit-child-snug">
+                  <table class="table table-sm" wicket:id="rsTable"></table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <form wicket:id="trainingResultForm" class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" style="flex: 0.4;">
+          <div class="panel card" style="flex: 0.5; margin-left: 0px;">
+            <div class="card-header">
+              <wicket:message key="features" />
+            </div>
+            <div class="scrolling card-body fit-child-snug">
+              <select wicket:id="layerResult" class="form-control"></select>
+            </div>
+          </div>
+          
+          <div class="flex-content card">
+            <div class="card-header">
+              Training results /status
+            </div>
+            <div class="scrolling card-body flex-v-container">
+                <div wicket:id="resultLabel"></div>
+              
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Train.Doc</th>
+                      <th>Anno.Doc</th>
+                      <th>Total.Doc</th>
+                      <th>Start time</th>
+                      <th>End time</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span wicket:id="trainDocs"></span></td>
+                      <td><span wicket:id="annoDocs"></span></td>
+                      <td><span wicket:id="totalDocs"></span></td>
+                      <td><span wicket:id="startTime"></span></td>
+                      <td><span wicket:id="endTime"></span></td>
+                      <td><span wicket:id="status"></span></td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </wicket:extend>
+</body>
+</html>

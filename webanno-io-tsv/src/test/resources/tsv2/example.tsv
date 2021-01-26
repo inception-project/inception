@@ -1,0 +1,107 @@
+#id=1
+#text=Ms. Haag plays Elianti .
+1	Ms.	_	NNP	B-PER	O	3	SUBJ	_	_
+2	Haag	_	NNP	I-PER	O	3	SBJ	_	_
+3	plays	_	VBD	O	O	0	ROOT	_	_
+4	Elianti	_	NNP	B-OTH	O	3	OBJ	_	_
+5	.	_	.	O	O	0	ROOT	_	_
+
+#id=2
+#text=Rolls-Royce Motor Cars Inc. said it expects its U.S. sales to remain steady at about 1,200 cars in 1990 .
+1	Rolls-Royce	_	NNP	B-ORGpart|B-ORG	O	3	NAME	_	_
+2	Motor	_	NNP	I-ORGpart	O	3	NAME	_	_
+3	Cars	_	NNPS	O	O	5	SBJ	_	_
+4	Inc.	_	NNP	O	O	3	POSTHON	_	_
+5	said	_	VBD	O	O	0	ROOT	_	_
+6	it	_	PRP	O	O	7	SBJ	_	_
+7	expects	_	VBZ	O	O	11	OPRD	_	_
+8	its	_	PRP$	O	O	10	NMOD	_	_
+9	U.S.	_	NNP	B-LOC	O	10	NMOD	_	_
+10	sales	_	NNS	O	O	7	OBJ	_	_
+11	to	_	TO	O	O	0	ROOT	_	_
+12	remain	_	VB	O	O	11	IM	_	_
+13	steady	_	JJ	O	O	12	PRD	_	_
+14	at	_	IN	O	O	13	LOC	_	_
+15	about	_	IN	O	O	16	DEP	_	_
+16	1,200	_	CD	O	O	17	NMOD	_	_
+17	cars	_	NNS	O	O	18	TMP	_	_
+18	in	_	IN	O	O	0	ROOT	_	_
+19	1990	_	CD	O	O	18	PMOD	_	_
+20	.	_	.	O	O	5	P	_	_
+
+#id=3
+#text=The luxury auto maker last year sold 1,214 cars in the U.S.
+1	The	_	DT	O	O	4	NMOD	_	_
+2	luxury	_	NN	O	O	3	NMOD	_	_
+3	auto	_	NN	O	O	4	NMOD	_	_
+4	maker	_	NN	O	O	7	SBJ	_	_
+5	last	_	JJ	O	O	6	NMOD	_	_
+6	year	_	NN	O	O	4	TMP	_	_
+7	sold	_	VBD	O	O	0	ROOT	_	_
+8	1,214	_	CD	O	O	9	NMOD	_	_
+9	cars	_	NNS	O	O	7	OBJ	_	_
+10	in	_	IN	O	O	9	LOC	_	_
+11	the	_	DT	O	O	12	NMOD	_	_
+12	U.S.	_	NNP	B-LOC	O	10	PMOD	_	_
+
+#id=4
+#text=BELL INDUSTRIES Inc. increased its quarterly to 10 cents from seven cents a share .
+1	BELL	_	NNP	B-ORGpart|B-ORG|B-PER	O	2	NAME	_	_
+2	INDUSTRIES	_	NNP	I-ORGpart|I-ORG	O	4	SBJ	_	_
+3	Inc.	_	NNP	I-ORGpart	O	2	POSTHON	_	_
+4	increased	_	VBD	O	O	0	ROOT	_	_
+5	its	_	PRP$	O	O	6	NMOD	_	_
+6	quarterly	_	NN	O	O	4	OBJ	_	_
+7	to	_	TO	O	O	4	DIR	_	_
+8	10	_	CD	O	O	9	NMOD	_	_
+9	cents	_	NNS	O	O	7	PMOD	_	_
+10	from	_	IN	O	O	9	DIR	_	_
+11	seven	_	CD	O	O	12	NMOD	_	_
+12	cents	_	NNS	O	O	10	PMOD	_	_
+13	a	_	DT	O	O	14	NMOD	_	_
+14	share	_	NN	O	O	12	ADV	_	_
+15	.	_	.	O	O	4	P	_	_
+
+#id=5
+#text=The new rate will be payable Feb. 15 .
+1	The	_	DT	O	O	3	NMOD	_	_
+2	new	_	JJ	O	O	3	NMOD	_	_
+3	rate	_	NN	O	O	4	SBJ	_	_
+4	will	_	MD	O	O	0	ROOT	_	_
+5	be	_	VB	O	O	4	VC	_	_
+6	payable	_	JJ	O	O	5	PRD	_	_
+7	Feb.	_	NNP	O	O	5	TMP	_	_
+8	15	_	CD	O	O	7	NMOD	_	_
+9	.	_	.	O	O	4	P	_	_
+
+#id=6
+#text=A record date has n't been set .
+1	A	_	DT	O	O	3	NMOD	_	_
+2	record	_	NN	O	O	3	NMOD	_	_
+3	date	_	NN	O	O	4	SBJ	_	_
+4	has	_	VBZ	O	O	0	ROOT	_	_
+5	n't	_	RB	O	O	4	ADV	_	_
+6	been	_	VBN	O	O	4	VC	_	_
+7	set	_	VBN	O	O	6	VC	_	_
+8	.	_	.	O	O	4	P	_	_
+
+#id=7
+#text= Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
+1	Bell	_	NNP	B-ORG	O	8	SBJ	_	_
+2	,	_	,	O	O	1	P	_	_
+3	based	_	VBN	O	O	1	APPO	_	_
+4	in	_	IN	O	O	3	LOC	_	_
+5	Los	_	NNP	B-LOC	O	6	NAME	_	_
+6	Angeles	_	NNP	I-LOC	O	4	PMOD	_	_
+7	,	_	,	O	O	1	P	_	_
+8	makes	_	VBZ	O	O	0	ROOT	_	_
+9	and	_	CC	O	O	8	COORD	_	_
+10	distributes	_	VBZ	O	O	9	CONJ	_	_
+11	electronic	_	JJ	O	O	16	NMOD	_	_
+12	,	_	,	O	O	11	P	_	_
+13	computer	_	NN	O	O	11	COORD	_	_
+14	and	_	CC	O	O	13	COORD	_	_
+15	building	_	NN	O	O	14	CONJ	_	_
+16	products	_	NNS	O	O	8	OBJ	_	_
+17	.	_	.	O	O	8	P	_	_
+

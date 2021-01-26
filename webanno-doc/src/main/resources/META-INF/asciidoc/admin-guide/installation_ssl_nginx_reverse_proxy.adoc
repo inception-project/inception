@@ -1,0 +1,173 @@
+= Putting it all together
+
+By now you should have
+
+* {product-name} running on port 8080
+* NGINX running with default configurations on port 80
+* your issued SSL certificates
+
+NOTE: If you are running {product-name} on a different port than 8080, please make sure to adjust the configurations below accordingly!
+
+We will now configure NGINX to proxy pass all traffic received at `example.com/webanno` to our {product-name} instance.
+
+Create a new virtual host for your domain. Inside of `/etc/nginx-sites-available/` create a new file for your domain (e.g. `example.com`). Paste the following contents:
+----
+# Server block for insecure http connections on port 80. Redirect to https on port 443
+server {
+        listen          80;
+        listen          [::]:80;
+        server_name     example.com;
+        return          301 https://$server_name$request_uri;
+}
+
+# Server block for secure https connections
+server {
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        server_name webanno.lingterm.net;
+
+        ssl on;
+
+        # Replace certificate paths
+        ssl_certificate         /etc/letsencrypt/live/example.com/fullchain.pem;
+        ssl_certificate_key     /etc/letsencrypt/live/example.com/privkey.pem;
+        ssl_trusted_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+
+        # Modern SSL Config from
+        # https://mozilla.github.io/server-side-tls/ssl-config-generator/
+        ssl_protocols TLSv1.2;
+        ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
+        ssl_prefer_server_ciphers on;
+        ssl_session_timeout 1d;
+        ssl_session_tickets off;
+        add_header Strict-Transport-Security max-age=15768000;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+
+        ignore_invalid_headers off; #pass through headers from WebAnno which are considered invalid by NGINX server.
+
+        # Change body size if needed. This defines the maximum upload size for files.
+        client_max_body_size    10M;
+
+        # Uncommend this for a redirect from example.com to example.com/webanno
+        #location / {
+        #    return 301 https://$host/webanno;
+        #}
+
+        location ^~ /webanno/ {
+            proxy_pass http://127.0.0.1:8080/webanno/;
+            proxy_redirect default;
+            proxy_http_version 1.1;
+
+            proxy_set_header   Host             $host;
+            proxy_set_header   X-Real-IP        $remote_addr;
+            proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_max_temp_file_size 0;
+
+            proxy_connect_timeout      180;
+            proxy_send_timeout         180;
+            proxy_read_timeout         180;
+
+            proxy_temp_file_write_size 64k;
+
+            # Required for new HTTP-based CLI
+            proxy_request_buffering off;
+            proxy_buffering off; # Required for HTTP-based CLI to work over SSL
+            proxy_set_header Connection ""; # Clear for keepalive
+    }
+
+    # Deny access to Apache .htaccess files. They have no special meaning for NGINX and might leak sensitive information
+    location ~ /\.ht {
+            deny all;
+    }
+}
+----
+
+Create a symlink for the new configuration file to the folder for accessible websites:
+----
+$ ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/example.com
+----
+
+Test if the NGINX configuration file works without restarting (and possibly breaking) the webserver:
+----
+$ nginx -t
+Output:
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+----
+
+If the config works restart the webserver to enable the new site
+----
+$ service nginx restart
+----
+
+= Tell {product-name} that it is running behind a proxy
+
+If you are running {product-name} via the JAR file, edit the `settings.properties` file to add these
+settings:
+
+----
+server.tomcat.internal-proxies=127\.0\.[0-1]\.1
+server.tomcat.remote-ip-header=x-forwarded-for
+server.tomcat.accesslog.request-attributes-enabled=true
+server.tomcat.protocol-header=x-forwarded-proto
+server.tomcat.protocol-header-https-value=https
+----
+
+If you are running {product-name} as a WAR using a separate Tomcat instance, edit `server.xml` file at `/opt/webanno/conf/server.xml` and insert the following `<Valve>` property into the `<Host>` block:
+
+----
+<Server>
+  <Service>
+    <Engine>
+      <Host>
+        ...
+        <!-- Announce NGINX proxy header fields to WebAnno
+        <Valve className="org.apache.catalina.valves.RemoteIpValve"
+                internalProxies="127\.0\.[0-1]\.1"
+                remoteIpHeader="x-forwarded-for"
+                requestAttributesEnabled="true"
+                protocolHeader="x-forwarded-proto"
+                protocolHeaderHttpsValue="https"/>
+        <!-- -->
+
+        ...
+      </Host>
+    </Engine>
+  </Service>
+</Server>
+----
+
+Restart {product-name}
+----
+$ service webanno restart
+----
+
+{product-name} now knows how to interpret the proxy header fields from NGINX. With this step, everything is now set up to access {product-name} trough a secure https connection.
+
+= CSRF protection
+
+Depending on your situation, you may get an error message such as this when trying to use
+{product-name}.
+
+[example]
+====
+Whitelabel Error Page
+This application has no explicit mapping for /error, so you are seeing this as a fallback.
+
+Fri Nov 29 14:01:15 BRT 2019
+There was an unexpected error (type=Bad Request, status=400).
+Origin does not correspond to request
+====
+
+If this is the case, then CSRF protection is kicking in. What seems to work in this case is to turn
+off CSRF entirely by adding the following lines to your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>):
+
+----
+wicket.core.csrf.enabled=false
+wicket.core.csrf.no-origin-action=allow
+wicket.core.csrf.conflicting-origin-action=allow
+----
+
+NOTE: **Turning off a security feature is obviously not a great solution.** Better check out the documentation for the link:https://github.com/MarcGiffing/wicket-spring-boot/blob/master/README.adoc#core---prevention-of-csrf-attacks[Wicket Spring Boot CSRF settings] and if you figure out a better solution than the above, please get in touch with use via our link:https://github.com/webanno/webanno/issues[issue tracker].
