@@ -22,7 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-curation</artifactId>
+  <artifactId>inception-curation-legacy</artifactId>
   <name>WebAnno - Core - Curation</name>
   <packaging>jar</packaging>
   <dependencies>
