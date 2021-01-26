@@ -121,6 +121,7 @@
     <!-- Editor extensions -->
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <module>inception-review-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
@@ -361,6 +362,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation-api</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-review-editor</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1520,7 +1526,7 @@
             <filtering>true</filtering>
             <directory>src/main/resources</directory>
             <includes>
-              <include>**</include>
+              <include>META-INF/version.properties</include>
             </includes>
           </resource>
           <resource>

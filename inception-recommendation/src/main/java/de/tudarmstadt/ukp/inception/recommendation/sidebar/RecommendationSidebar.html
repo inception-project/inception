@@ -50,7 +50,11 @@
             </div>
             <div class="card-body">
               <div class="form-group form-row" wicket:enclosure="maxPredictions">
-                <label class="col-sm-8 col-form-label"><wicket:message key="maxSuggestions"/></label>
+                <label class="col-sm-8 col-form-label"><wicket:message key="maxSuggestions"/>
+                    <a target="_blank" wicket:message="href:max.suggestions.help.link">
+                        <i class="fas fa-question-circle"></i>
+                    </a>
+                </label>
                 <div class="col-sm-4">
                   <input wicket:id="maxPredictions" type="number" class="form-control"/>
                 </div>

@@ -33,6 +33,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -202,7 +203,10 @@ public class LappsGridRecommenderConformityTest
             con.setRequestMethod("GET");
             con.setConnectTimeout(2500);
             con.setReadTimeout(2500);
-            con.setRequestProperty("Content-Type", "application/sparql-query");
+            String userInfo = "tester:tester";
+            String basicAuth = "Basic "
+                    + new String(Base64.getEncoder().encode(userInfo.getBytes()));
+            con.setRequestProperty("Authorization", basicAuth);
             int status = con.getResponseCode();
 
             // should be open to all users (no password auth.),
