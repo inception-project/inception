@@ -297,6 +297,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-agreement</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-annotation</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
@@ -497,34 +502,45 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-api</artifactId>
+        <artifactId>inception-api</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-api-annotation</artifactId>
+        <artifactId>inception-api-annotation</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-api-formats</artifactId>
+        <artifactId>inception-api-formats</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-api-dao</artifactId>
+        <artifactId>inception-api-dao</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-agreement</artifactId>
+        <artifactId>inception-brat</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-brat</artifactId>
+        <artifactId>inception-diag</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-constraints</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-export</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-doc</artifactId>
@@ -548,11 +564,6 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-conll</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-diag</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -585,13 +596,6 @@
         <artifactId>webanno-curation</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
-      <!--
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-ui-correction</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-tcf</artifactId>
@@ -600,11 +604,6 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-tei</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-webapp</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -622,46 +621,9 @@
         <artifactId>webanno-ui-core</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
-      <!--
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-ui-menu</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-ui-automation</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-automation</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-automation-model</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-api-automation</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      -->
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-constraints</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-model-export</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-export</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1915,12 +1877,9 @@
     <module>webanno-model</module>
     <module>webanno-project</module>
     <module>webanno-model-export</module>
-    <module>webanno-diag</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
     <module>webanno-curation</module>
-    <module>webanno-constraints</module>
-    <module>webanno-export</module>
     <module>webanno-telemetry</module>
     <!-- IO -->
     <module>webanno-io-json</module>
@@ -1958,8 +1917,11 @@
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
     <module>inception-api-dao</module>
-    <module>inception-agreement</module>
+    <module>inception-export</module>
+    <module>inception-diag</module>
     <module>inception-testing</module>
+    <module>inception-agreement</module>
+    <module>inception-constraints</module>
     <module>inception-ui-core</module>
     <module>inception-ui-project</module>
     <module>inception-ui-curation</module>
