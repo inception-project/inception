@@ -1878,28 +1878,8 @@
     <module>inception-project</module>
     <module>inception-remote</module>
     <module>inception-security</module>
-    <module>webanno-curation</module>
     <module>inception-telemetry</module>
-    <!-- IO -->
-    <module>webanno-io-json</module>
-    <module>webanno-io-tcf</module>
-    <module>webanno-io-tei</module>
-    <module>webanno-io-text</module>
-    <module>webanno-io-tsv</module>
-    <module>webanno-io-conll</module>
-    <module>webanno-io-xmi</module>
-    <!-- Plug-in support -->
-    <!--
-    <module>webanno-plugin-api</module>
-    <module>webanno-plugin-manager</module>
-    <module>webanno-plugin-parent</module>
-    <module>inception-plugin-parent</module>
-    -->
-    <!-- UI -->
     <module>webanno-ui-core</module>
-    <!-- Documentation -->
-    <module>webanno-doc</module>
-    <!-- Core application modules -->
     <module>inception-log</module>
     <module>inception-support</module>
     <module>inception-scheduling</module>
@@ -1914,11 +1894,21 @@
     <module>inception-constraints</module>
     <module>inception-ui-core</module>
     <module>inception-ui-project</module>
-    <module>inception-ui-curation</module>
     <module>inception-ui-monitoring</module>
     <module>inception-ui-annotation</module>
     <module>inception-ui-tagsets</module>
-    <module>inception-app-webapp</module>
+    <!-- IO -->
+    <module>webanno-io-json</module>
+    <module>webanno-io-tcf</module>
+    <module>webanno-io-tei</module>
+    <module>webanno-io-text</module>
+    <module>webanno-io-tsv</module>
+    <module>webanno-io-conll</module>
+    <module>webanno-io-xmi</module>
+    <!-- Curation -->
+    <module>inception-curation</module>
+    <module>inception-curation-legacy</module>
+    <module>inception-ui-curation</module>
     <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
@@ -1950,16 +1940,22 @@
     <module>inception-imls-external</module>
     <module>inception-imls-lapps</module>
     <module>inception-imls-weblicht</module>
-    <!-- Examples -->
-    <!-- <module>inception-example-imls-data-majority</module> -->
-    <!-- <module>inception-imls-dl4j</module> -->
     <!-- Documentation -->
+    <module>webanno-doc</module>
     <module>inception-doc</module>
-    <!-- Curation -->
-    <module>inception-curation</module>
+    <!-- Workload -->
     <module>inception-workload</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
+    <!-- Plug-in support -->
+    <module>inception-plugin-api</module>
+    <module>inception-plugin-manager</module>
+    <module>inception-plugin-parent</module>
+    <!-- Application -->
+    <module>inception-app-webapp</module>
+    <!-- Examples -->
+    <!-- <module>inception-example-imls-data-majority</module> -->
+    <!-- <module>inception-imls-dl4j</module> -->
     <!-- Packaging -->
     <module>inception-docker</module>
   </modules>
