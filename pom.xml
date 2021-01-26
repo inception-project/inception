@@ -543,11 +543,6 @@
       
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-doc</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-json</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>

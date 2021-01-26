@@ -301,10 +301,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-telemetry</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-doc</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -815,7 +811,6 @@
               -->
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
