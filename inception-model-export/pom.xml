@@ -22,7 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-model-export</artifactId>
+  <artifactId>inception-model-export</artifactId>
   <name>WebAnno - Core - Export Model</name>
   <dependencies>
     <dependency>

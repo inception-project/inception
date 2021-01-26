@@ -102,7 +102,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-model-export</artifactId>
+      <artifactId>inception-model-export</artifactId>
     </dependency>
 
     <!-- UIMA dependencies -->
