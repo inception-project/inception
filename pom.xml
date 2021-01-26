@@ -563,7 +563,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-io-conll</artifactId>
+        <artifactId>inception-io-conll</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
