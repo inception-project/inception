@@ -377,6 +377,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-dashboard</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
@@ -596,13 +601,6 @@
         <artifactId>inception-io-tcf</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
-      <!--
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-io-tei</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
@@ -611,11 +609,6 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support-standalone</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-ui-core</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1888,7 +1881,7 @@
     <module>inception-testing</module>
     <module>inception-agreement</module>
     <module>inception-constraints</module>
-    <module>inception-ui-core</module>
+    <module>inception-ui-dashboard</module>
     <module>inception-ui-project</module>
     <module>inception-ui-monitoring</module>
     <module>inception-ui-annotation</module>
@@ -1896,7 +1889,6 @@
     <!-- IO -->
     <module>inception-io-json</module>
     <module>inception-io-tcf</module>
-    <!-- <module>inception-io-tei</module> -->
     <module>inception-io-text</module>
     <module>inception-io-webanno-tsv</module>
     <module>inception-io-conll</module>
