@@ -588,7 +588,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-project</artifactId>
+        <artifactId>inception-project</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1873,9 +1873,9 @@
     <!-- Core -->
     <module>webanno-support</module>
     <module>webanno-support-standalone</module>
-    <module>webanno-model</module>
-    <module>webanno-project</module>
-    <module>webanno-model-export</module>
+    <module>inception-model</module>
+    <module>inception-model-export</module>
+    <module>inception-project</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
     <module>webanno-curation</module>
