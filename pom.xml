@@ -548,7 +548,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-io-json</artifactId>
+        <artifactId>inception-io-json</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
