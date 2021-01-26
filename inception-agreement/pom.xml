@@ -160,7 +160,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-io-tsv</artifactId>
+      <artifactId>inception-io-webanno-tsv</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
