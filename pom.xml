@@ -573,7 +573,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-remote</artifactId>
+        <artifactId>inception-remote</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1876,7 +1876,7 @@
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
-    <module>webanno-remote</module>
+    <module>inception-remote</module>
     <module>webanno-security</module>
     <module>webanno-curation</module>
     <module>webanno-telemetry</module>

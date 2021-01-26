@@ -22,7 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-remote</artifactId>
+  <artifactId>inception-remote</artifactId>
   <name>WebAnno - Core - Remote API</name>
   <dependencies>
     <dependency>
