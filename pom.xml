@@ -568,7 +568,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-telemetry</artifactId>
+        <artifactId>inception-telemetry</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>

@@ -108,7 +108,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-telemetry</artifactId>
+      <artifactId>inception-telemetry</artifactId>
     </dependency>
 
     <!-- WICKET DEPENDENCIES -->
