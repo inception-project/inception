@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception;
 
+import static com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED;
+import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.util.HashMap;
@@ -27,7 +29,6 @@ import javax.swing.JWindow;
 import javax.validation.Validator;
 
 import org.apache.catalina.connector.Connector;
-import org.apache.uima.cas.impl.CASImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,6 +38,7 @@ import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -50,8 +52,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration;
-
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
@@ -60,8 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
@@ -72,6 +70,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  */
 // @formatter:off
 @SpringBootApplication
+@EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(
     basePackages = { 
@@ -85,14 +84,14 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
             // The INCEpTION dashboard uses a per-project view while WebAnno uses a global
             // activation strategies for menu items. Thus, we need to re-implement the menu
             // items for INCEpTION.
-            AnnotationPageMenuItem.class,
+            de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem.class,
+            de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem.class,
             MonitoringPageMenuItem.class,
             AgreementPageMenuItem.class,
 
             // INCEpTION uses its recommenders, not the WebAnno automation code
             AutomationService.class, 
             AutomationMiraTemplateExporter.class,
-            CurationPageMenuItem.class,
             AutomationTrainingDocumentExporter.class
     })})
 @EntityScan(basePackages = {
@@ -173,9 +172,7 @@ public class INCEpTION
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
         // add this property in the case of .war deployment
-        builder.properties(
-                WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED
-                        + "=false");
+        builder.properties(REGISTER_SERVER_ENDPOINT_ENABLED + "=false");
         init(builder);
         return builder;
     }
@@ -183,7 +180,7 @@ public class INCEpTION
     private static void init(SpringApplicationBuilder aBuilder)
     {
         // WebAnno relies on FS IDs being stable, so we need to enable this
-        System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
+        System.setProperty(ALWAYS_HOLD_ONTO_FSS, "true");
 
         aBuilder.banner(new InceptionBanner());
         aBuilder.initializers(new InceptionApplicationContextInitializer());
@@ -193,7 +190,7 @@ public class INCEpTION
 
         // Traditionally, the INCEpTION configuration file is called settings.properties and is
         // either located in inception.home or under the user's home directory. Make sure we pick
-        // it up from there in addition to reading the built-in application.properties file.
+        // it up from there in addition to reading the built-in application.yml file.
         aBuilder.properties("spring.config.additional-location="
                 + "optional:${inception.home:${user.home}/.inception}/settings.properties");
     }

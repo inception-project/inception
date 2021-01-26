@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -162,12 +162,10 @@ public class KnowledgeBaseExporter
      */
     private void exportKnowledgeBaseFiles(File aFile, KnowledgeBase kb) throws IOException
     {
-        File sourceKnowledgeBaseDir = new File(aFile + KB_FOLDER);
-        FileUtils.forceMkdir(sourceKnowledgeBaseDir);
-
         // create file with name "<knowledgebaseName>.<fileExtension>" in folder
         // KB_FOLDER
         File kbData = new File(aFile + getSourceFileName(kb));
+        FileUtils.forceMkdir(kbData.getParentFile());
         kbData.createNewFile();
         try (OutputStream os = new FileOutputStream(kbData)) {
             kbService.exportData(kb, knowledgeBaseFileExportFormat, os);
@@ -224,7 +222,6 @@ public class KnowledgeBaseExporter
                     ? vf.createIRI(exportedKB.getFullTextSearchIri())
                     : null);
 
-            kb.setReadOnly(exportedKB.isReadOnly());
             kb.setEnabled(exportedKB.isEnabled());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setBasePrefix(exportedKB.getBasePrefix());
@@ -266,6 +263,10 @@ public class KnowledgeBaseExporter
                 RepositoryImplConfig cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
                 kbService.registerKnowledgeBase(kb, cfg);
             }
+
+            // Set read-only flag only at the end to ensure that we do not run into a "read only"
+            // error during import
+            kb.setReadOnly(exportedKB.isReadOnly());
 
             // Early versions of INCEpTION did not set the ID.
             if (exportedKB.getId() == null) {
