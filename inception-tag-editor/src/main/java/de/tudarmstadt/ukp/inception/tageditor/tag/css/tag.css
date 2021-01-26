@@ -1,0 +1,109 @@
+/**
+ * Core styles for the library
+ */
+.tag-element text {
+  text-anchor: middle;
+}
+
+.row-drag {
+  stroke-width: 2;
+  stroke-dasharray: 2, 1;
+  stroke: rgba(100, 100, 100, 0.3);
+  transition: stroke 300ms ease;
+  cursor: row-resize;
+}
+
+.row-drag-compact {
+  cursor: default;
+}
+
+.row-drag:hover {
+  stroke-dasharray: none;
+  stroke: rgba(100, 100, 100, 0.8);
+}
+
+.word text {
+  font-size: 16px;
+  fill: black;
+}
+
+.word-cluster path,
+.word path {
+  stroke: #333;
+  fill: none;
+}
+
+.word .word-text {
+  cursor: pointer;
+}
+
+.word-cluster text,
+.word .word-tag {
+  font-size: 12px;
+  cursor: text;
+}
+
+.word-cluster text,
+.word .word-tag {
+  fill: #333;
+}
+
+.word .syntax-tag {
+  fill: #d0968f;
+}
+
+.toggle-syntax .syntax-tag, .toggle-syntax .syntax-link {
+  display: none;
+}
+
+.editing .word-tag,
+.editing-text,
+.editing text {
+  fill: #fff !important;
+}
+
+.editing-rect,
+.editing rect {
+  fill: #a94442;
+}
+
+/**
+ * Links and link lines (which are SVG Paths)
+ */
+.link {
+  fill: #6590b4;
+  stroke-width: 1.5px;
+}
+
+.link-main-label {
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.link-arg-label {
+  font-size: 11px;
+}
+
+.link-text-bg {
+  fill: #fff;
+}
+
+.link.syntax-link {
+  fill: #999;
+}
+
+.link:hover {
+  stroke-width: 2.5px;
+}
+
+.link path {
+  stroke: #6590b4;
+  fill: none;
+}
+
+.syntax-link path {
+  stroke: #999;
+  fill: none;
+}
+
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL3NyYy9jc3MvdGFnLnNjc3MiLCJ0YWcuY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOztHQUFBO0FBSUE7RUFDRSxvQkFBQTtDQ0FEOztBREdEO0VBQ0UsZ0JBQUE7RUFDQSx1QkFBQTtFQUNBLGlDQUFBO0VBQ0EsOEJBQUE7RUFDQSxtQkFBQTtDQ0FEOztBREdEO0VBQ0UsZ0JBQUE7Q0NBRDs7QURHRDtFQUNFLHVCQUFBO0VBQ0EsaUNBQUE7Q0NBRDs7QURHRDtFQUNFLGdCQUFBO0VBQ0EsWUFBQTtDQ0FEOztBREdEOztFQUVFLGFBQUE7RUFDQSxXQUFBO0NDQUQ7O0FER0Q7RUFDRSxnQkFBQTtDQ0FEOztBREdEOztFQUVFLGdCQUFBO0VBQ0EsYUFBQTtDQ0FEOztBREdEOztFQUVFLFdBQUE7Q0NBRDs7QURHRDtFQUNFLGNBQUE7Q0NBRDs7QURHRDtFQUNFLGNBQUE7Q0NBRDs7QURHRDs7O0VBR0Usc0JBQUE7Q0NBRDs7QURHRDs7RUFFRSxjQUFBO0NDQUQ7O0FER0Q7O0dBQUE7QUFHQTtFQUNFLGNBQUE7RUFDQSxvQkFBQTtDQ0FEOztBREdEO0VBQ0Usa0JBQUE7RUFDQSxnQkFBQTtDQ0FEOztBREdEO0VBQ0UsZ0JBQUE7Q0NBRDs7QURHRDtFQUNFLFdBQUE7Q0NBRDs7QURHRDtFQUNFLFdBQUE7Q0NBRDs7QURHRDtFQUNFLG9CQUFBO0NDQUQ7O0FER0Q7RUFDRSxnQkFBQTtFQUNBLFdBQUE7Q0NBRDs7QURHRDtFQUNFLGFBQUE7RUFDQSxXQUFBO0NDQUQiLCJmaWxlIjoidGFnLmNzcyJ9 */

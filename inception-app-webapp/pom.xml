@@ -167,6 +167,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-review-editor</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-tag-editor</artifactId>
+    </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
@@ -806,6 +810,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-tag-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-json</usedDependency>
