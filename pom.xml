@@ -1914,16 +1914,11 @@
     <module>webanno-support-standalone</module>
     <module>webanno-model</module>
     <module>webanno-project</module>
-    <module>webanno-api</module>
-    <module>webanno-api-annotation</module>
-    <module>webanno-api-formats</module>
-    <module>webanno-api-dao</module>
     <module>webanno-model-export</module>
     <module>webanno-diag</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
     <module>webanno-curation</module>
-    <module>webanno-agreement</module>
     <module>webanno-constraints</module>
     <module>webanno-export</module>
     <module>webanno-telemetry</module>
@@ -1949,15 +1944,9 @@
     <module>webanno-ui-automation</module>
     -->
     <!-- UI -->
-    <module>webanno-brat</module>
     <module>webanno-ui-core</module>
     <!-- <module>webanno-ui-menu</module> -->
-    <module>inception-ui-project</module>
-    <module>inception-ui-curation</module>
     <!-- <module>webanno-ui-correction</module> -->
-    <module>inception-ui-monitoring</module>
-    <module>inception-ui-annotation</module>
-    <module>inception-ui-tagsets</module>
     <!-- <module>webanno-webapp</module> -->
     <!-- Documentation -->
     <module>webanno-doc</module>
@@ -1965,8 +1954,18 @@
     <module>inception-log</module>
     <module>inception-support</module>
     <module>inception-scheduling</module>
+    <module>inception-api</module>
+    <module>inception-api-annotation</module>
+    <module>inception-api-formats</module>
+    <module>inception-api-dao</module>
+    <module>inception-agreement</module>
     <module>inception-testing</module>
     <module>inception-ui-core</module>
+    <module>inception-ui-project</module>
+    <module>inception-ui-curation</module>
+    <module>inception-ui-monitoring</module>
+    <module>inception-ui-annotation</module>
+    <module>inception-ui-tagsets</module>
     <module>inception-app-webapp</module>
     <!-- Internal search -->
     <module>inception-ui-search</module>
@@ -1983,6 +1982,7 @@
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
+    <module>inception-brat</module>
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-review-editor</module>
