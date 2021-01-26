@@ -205,8 +205,10 @@ public class SearchServiceImpl
         // Check if an index state has already been stored in the database
         // Currently, we assume that a project can have only a single index
         String sql = "FROM " + Index.class.getName() + " WHERE project = :project";
-        Index index = entityManager.createQuery(sql, Index.class).setParameter("project", aProject)
-                .getResultStream().findFirst().orElse(null);
+        Index index = entityManager.createQuery(sql, Index.class) //
+                .setParameter("project", aProject) //
+                .getResultStream() //
+                .findFirst().orElse(null);
 
         // If no index state has been saved in the database yet, create one and save it
         if (index == null) {
