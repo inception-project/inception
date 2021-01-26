@@ -45,7 +45,7 @@
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-model</artifactId>
+      <artifactId>inception-model</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>

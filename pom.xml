@@ -583,7 +583,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-model</artifactId>
+        <artifactId>inception-model</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
