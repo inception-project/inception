@@ -21,9 +21,9 @@
   <wicket:panel>
     <div wicket:id="linkMainContainer">
       <input wicket:id="shareProject" class="btn btn-primary" type="submit" wicket:message="value:share"/>
-	  <div wicket:id="invitelinkContainer">
+	  <div wicket:id="invitelinkContainer" class="flex-content flex-centered flex-h-container flex-gutter">
 		  <wicket:message key="invite"/>
-		  <input wicket:id="linkText" lass="target" type="text" readonly/>
+		  <input wicket:id="linkText" lass="target" type="text" class="flex-content"  readonly/>
 		  <button wicket:id="copy" class="btn btn-secondary"><i class="fas fa-paste" wicket:message="title:copy"></i></button>
 		  <button wicket:id="regen" class="btn btn-secondary"><i class="fas fa-sync" wicket:message="title:regen"></i></button>
 		  <button wicket:id="remove" class="btn btn-secondary"><i class="fas fa-trash" wicket:message="title:remove"></i></button>

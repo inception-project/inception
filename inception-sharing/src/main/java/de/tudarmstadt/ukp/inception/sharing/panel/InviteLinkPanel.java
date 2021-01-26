@@ -59,9 +59,6 @@ public class InviteLinkPanel
 
         linkMainContainer = new WebMarkupContainer("linkMainContainer");
         linkMainContainer.setOutputMarkupId(true);
-        // FIXME adding this line: only annotators can no longer click on annotation to access the
-        // annopage
-//        linkMainContainer.add(visibleWhen(() -> isManager));
         add(linkMainContainer);
 
         inviteLinkContainer = createInviteLinkContainer();
