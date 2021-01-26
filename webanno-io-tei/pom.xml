@@ -26,7 +26,7 @@
   <name>WebAnno - IO - TEI</name>
   <dependencies>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-api-formats</artifactId>
     </dependency>
     <dependency>

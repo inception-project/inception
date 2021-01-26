@@ -34,23 +34,23 @@
       <artifactId>inception-support</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-security</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-model-export</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     

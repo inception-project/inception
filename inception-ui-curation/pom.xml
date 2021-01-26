@@ -22,8 +22,8 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-ui-curation</artifactId>
-  <name>WebAnno - UI - Curation</name>
+  <artifactId>inception-ui-curation</artifactId>
+  <name>INCEpTION - UI - Curation</name>
   <packaging>jar</packaging>
   <properties>
     <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>
@@ -44,43 +44,43 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-annotation</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-annotation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-security</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-api-annotation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-brat</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-ui-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-constraints</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-curation</artifactId>
     </dependency>
 

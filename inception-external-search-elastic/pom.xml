@@ -31,11 +31,11 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-io-text</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
 

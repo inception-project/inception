@@ -22,8 +22,8 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-ui-monitoring</artifactId>
-  <name>WebAnno - UI - Monitoring</name>
+  <artifactId>inception-ui-monitoring</artifactId>
+  <name>INCEpTION - UI - Monitoring</name>
   <packaging>jar</packaging>
   <dependencies>
     <dependency>
@@ -36,35 +36,35 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-agreement</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-curation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-api-annotation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-ui-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-security</artifactId>
     </dependency>
 

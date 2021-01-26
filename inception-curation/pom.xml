@@ -26,16 +26,16 @@
   <name>INCEpTION - Curation</name>
   <dependencies>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-api-annotation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-annotation</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-annotation</artifactId>
     </dependency>
     
     <dependency>
@@ -56,11 +56,11 @@
     	<artifactId>uimaj-core</artifactId>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
     	<artifactId>webanno-api</artifactId>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
     	<artifactId>webanno-security</artifactId>
     </dependency>
     <dependency>
@@ -93,16 +93,16 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-curation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-curation</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-curation</artifactId>
     </dependency>
     <dependency>
     	<groupId>de.agilecoders.wicket</groupId>

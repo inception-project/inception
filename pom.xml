@@ -89,7 +89,7 @@
     <hibernate.version>5.4.15.Final</hibernate.version>
     <hibernate.validator.version>6.1.4.Final</hibernate.validator.version>
 
-    <webanno.version>4.0.0-SNAPSHOT</webanno.version>
+    <webanno.version>0.18.0-SNAPSHOT</webanno.version>
 
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
@@ -297,6 +297,36 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-annotation</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-monitoring</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-project</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-tagsets</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-curation</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-curation</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-search</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
@@ -466,213 +496,188 @@
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-api</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-api-annotation</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-api-formats</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-api-dao</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-agreement</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-brat</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-doc</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-json</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-text</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-tsv</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-conll</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-diag</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-telemetry</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-remote</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-security</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-model</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-project</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-monitoring</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-curation</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-curation</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <!--
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-ui-correction</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       -->
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-tcf</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-tei</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-webapp</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-support</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-support-standalone</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-ui-core</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
+      <!--
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-ui-menu</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-annotation</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-      </dependency>
-      <!--  
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-ui-automation</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-automation</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-automation-model</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-api-automation</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       -->
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-project</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-constraints</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-model-export</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-export</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-io-xmi</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-tagsets</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-plugin-api</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>webanno-plugin-manager</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Testing -->
@@ -1818,11 +1823,6 @@
       </dependency>
 
       <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-curation</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
         <groupId>org.webjars.bowergithub.xbsoftware</groupId>
         <artifactId>enjoyhint</artifactId>
         <version>3.1.0</version>
@@ -1909,15 +1909,9 @@
     <module>inception-build</module>
     <module>inception-boot-loader</module>
     <!--<module>webanno-build</module> -->
-    <!-- IO -->
-    <module>webanno-io-json</module>
-    <module>webanno-io-tcf</module>
-    <module>webanno-io-tei</module>
-    <module>webanno-io-text</module>
-    <module>webanno-io-tsv</module>
-    <module>webanno-io-conll</module>
-    <module>webanno-io-xmi</module>
     <!-- Core -->
+    <module>webanno-support</module>
+    <module>webanno-support-standalone</module>
     <module>webanno-model</module>
     <module>webanno-project</module>
     <module>webanno-api</module>
@@ -1925,8 +1919,6 @@
     <module>webanno-api-formats</module>
     <module>webanno-api-dao</module>
     <module>webanno-model-export</module>
-    <module>webanno-support</module>
-    <module>webanno-support-standalone</module>
     <module>webanno-diag</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
@@ -1935,6 +1927,14 @@
     <module>webanno-constraints</module>
     <module>webanno-export</module>
     <module>webanno-telemetry</module>
+    <!-- IO -->
+    <module>webanno-io-json</module>
+    <module>webanno-io-tcf</module>
+    <module>webanno-io-tei</module>
+    <module>webanno-io-text</module>
+    <module>webanno-io-tsv</module>
+    <module>webanno-io-conll</module>
+    <module>webanno-io-xmi</module>
     <!-- Plug-in support -->
     <!--
     <module>webanno-plugin-api</module>
@@ -1951,9 +1951,9 @@
     <!-- UI -->
     <module>webanno-brat</module>
     <module>webanno-ui-core</module>
-    <module>webanno-ui-menu</module>
+    <!-- <module>webanno-ui-menu</module> -->
     <module>inception-ui-project</module>
-    <module>webanno-ui-curation</module>
+    <module>inception-ui-curation</module>
     <!-- <module>webanno-ui-correction</module> -->
     <module>inception-ui-monitoring</module>
     <module>inception-ui-annotation</module>

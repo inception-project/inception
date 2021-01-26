@@ -26,7 +26,7 @@
   <name>WebAnno - Plugin manager</name>
   <dependencies>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>webanno-plugin-api</artifactId>
     </dependency>
 
