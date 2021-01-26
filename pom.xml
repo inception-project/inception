@@ -467,11 +467,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-support</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-testing</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
@@ -610,7 +605,7 @@
       -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>webanno-support</artifactId>
+        <artifactId>inception-support</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1873,7 +1868,7 @@
     <module>inception-build</module>
     <module>inception-boot-loader</module>
     <!-- Core -->
-    <module>webanno-support</module>
+    <module>inception-support</module>
     <module>inception-support-standalone</module>
     <module>inception-model</module>
     <module>inception-model-export</module>
@@ -1883,7 +1878,6 @@
     <module>inception-telemetry</module>
     <module>webanno-ui-core</module>
     <module>inception-log</module>
-    <module>inception-support</module>
     <module>inception-scheduling</module>
     <module>inception-api</module>
     <module>inception-api-annotation</module>

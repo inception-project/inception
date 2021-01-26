@@ -38,7 +38,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-support</artifactId>
+      <artifactId>inception-support</artifactId>
     </dependency>
 
     <dependency>

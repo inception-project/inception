@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.support.ui.LinkProvider;
+import de.tudarmstadt.ukp.inception.ui.core.LinkProvider;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @MountPath("/search.html")

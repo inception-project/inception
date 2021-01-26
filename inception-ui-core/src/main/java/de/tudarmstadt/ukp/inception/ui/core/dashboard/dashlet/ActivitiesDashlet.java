@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.ui.LinkProvider.createDocumentPageLink;
+import static de.tudarmstadt.ukp.inception.ui.core.LinkProvider.createDocumentPageLink;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
