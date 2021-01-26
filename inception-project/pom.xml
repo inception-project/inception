@@ -56,7 +56,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-security</artifactId>
+      <artifactId>inception-security</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->

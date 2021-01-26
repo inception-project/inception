@@ -22,7 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>0.18.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-security</artifactId>
+  <artifactId>inception-security</artifactId>
   <name>WebAnno - Core - Security</name>
   <packaging>jar</packaging>
   <dependencies>
