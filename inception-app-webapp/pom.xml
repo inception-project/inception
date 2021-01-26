@@ -285,7 +285,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>webanno-support-standalone</artifactId>
+      <artifactId>inception-support-standalone</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
