@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ public class ProjectExportCuratedDocumentsTask
 {
     private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION_FOLDER = "/curation/";
-    
+
     private @Autowired ProjectExportService exportService;
     private @Autowired DocumentService documentService;
     private @Autowired ImportExportService importExportService;
@@ -70,17 +70,17 @@ public class ProjectExportCuratedDocumentsTask
             exportTempDir.delete();
             exportTempDir.mkdirs();
 
-            boolean curationDocumentExist = documentService.existsCurationDocument(
-                    project);
+            boolean curationDocumentExist = documentService.existsCurationDocument(project);
 
             if (!curationDocumentExist) {
-                throw new ProjectExportException("No curation document created yet for this document");
+                throw new ProjectExportException(
+                        "No curation document created yet for this document");
             }
-            
+
             ProjectExportRequest request = aRequest;
             request.setProject(project);
             exportCuratedDocuments(request, exportTempDir, false, aMonitor);
-            
+
             exportFile = new File(exportTempDir.getAbsolutePath() + "_curated_documents.zip");
             ZipUtils.zipFolder(exportTempDir, exportFile);
         }
@@ -88,7 +88,8 @@ public class ProjectExportCuratedDocumentsTask
             if (exportFile != null) {
                 try {
                     FileUtils.forceDelete(exportTempDir);
-                } catch (IOException ex) {
+                }
+                catch (IOException ex) {
                     aMonitor.addMessage(LogMessage.error(this,
                             "Unable to export file after export failed: %s", ex.getMessage()));
                 }
@@ -99,7 +100,8 @@ public class ProjectExportCuratedDocumentsTask
             if (exportTempDir != null) {
                 try {
                     FileUtils.forceDelete(exportTempDir);
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     aMonitor.addMessage(LogMessage.error(this, "Unable to delete temp file: %s",
                             e.getMessage()));
                 }
@@ -108,7 +110,7 @@ public class ProjectExportCuratedDocumentsTask
 
         return exportFile;
     }
-    
+
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
      * 
@@ -120,7 +122,7 @@ public class ProjectExportCuratedDocumentsTask
         throws ProjectExportException, IOException
     {
         Project project = aModel.getProject();
-        
+
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                 .listSourceDocuments(project);
@@ -131,20 +133,19 @@ public class ProjectExportCuratedDocumentsTask
             format = new WebAnnoTsv3FormatSupport();
         }
         else {
-            format = importExportService.getWritableFormatById(aModel.getFormat())
-                    .orElseGet(() -> {
-//                        LOG.info(
-//                                "Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
-//                                aModel.getFormat());
-                        return new WebAnnoTsv3FormatSupport();
-                    });
+            format = importExportService.getWritableFormatById(aModel.getFormat()).orElseGet(() -> {
+                // LOG.info(
+                // "Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
+                // aModel.getFormat());
+                return new WebAnnoTsv3FormatSupport();
+            });
         }
 
         int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS
-                    + sourceDocument.getName());
+            File curationCasDir = new File(
+                    aCopyDir + CURATION_AS_SERIALISED_CAS + sourceDocument.getName());
             FileUtils.forceMkdir(curationCasDir);
 
             File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
@@ -152,11 +153,9 @@ public class ProjectExportCuratedDocumentsTask
 
             // If depending on aInProgress, include only the the curation documents that are
             // finished or also the ones that are in progress
-            if (
-                (aIncludeInProgress && 
-                    SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) ||
-                SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())
-            ) {
+            if ((aIncludeInProgress
+                    && SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
+                    || SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
                 File curationCasFile = documentService.getCasFile(sourceDocument,
                         WebAnnoConst.CURATION_USER);
                 if (curationCasFile.exists()) {
@@ -180,8 +179,8 @@ public class ProjectExportCuratedDocumentsTask
                 }
             }
 
-            aMonitor.setProgress(initProgress
-                    + (int) Math.ceil(((double) i) / documents.size() * 10.0));
+            aMonitor.setProgress(
+                    initProgress + (int) Math.ceil(((double) i) / documents.size() * 10.0));
             i++;
         }
     }

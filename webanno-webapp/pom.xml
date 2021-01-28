@@ -1,14 +1,14 @@
 <!--
-  Copyright 2012
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -218,7 +218,6 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.15</version>
     </dependency>
     <dependency>
       <groupId>org.hsqldb</groupId>
@@ -253,26 +252,12 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-tomcat</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.validation</groupId>
-      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
@@ -298,6 +283,17 @@
        -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <!-- 
+          - Downgrade version to avoid exception during Eclipse builds:
+          - 
+          - Execution assemble-documentation of goal 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single failed: 
+          - An API incompatibility was encountered while executing 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
+          - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
+          -  .setFilenameComparator(java.util.Comparator)'
+         -->
+        <version>3.1.1</version>
         <executions>
           <execution>
             <id>assemble-documentation</id>
@@ -378,11 +374,11 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <delete includeemptydirs="true" failonerror="false">
                   <fileset dir="src/main/resources/public/doc" includes="**/*" />
                 </delete>
-              </tasks>
+              </target>
             </configuration>
           </execution>
           <execution>
@@ -392,7 +388,7 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <mkdir dir="src/main/resources/public/doc" />
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
@@ -405,7 +401,7 @@
                     <include name="**/*.jpg" />
                   </fileset>
                 </sync>
-              </tasks>
+              </target>
             </configuration>
           </execution>
         </executions>
@@ -435,6 +431,9 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredUsedUndeclaredDependencies>
+              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
+            </ignoredUsedUndeclaredDependencies>
             <usedDependencies combine.children="append">
               <!-- WebAnno UI Modules - they auto-register via reflection -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
@@ -472,7 +471,6 @@
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
               <!-- Spring Boot stuff - used via reflection/classpath -->
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
-              <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>

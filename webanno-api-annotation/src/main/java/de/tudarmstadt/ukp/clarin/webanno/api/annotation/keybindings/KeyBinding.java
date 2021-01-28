@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,12 +39,12 @@ public class KeyBinding
     implements Serializable
 {
     private static final long serialVersionUID = 6394936950272849288L;
-    
+
     private static final Map<String, KeyType> KEY_MAP;
 
     private String keyCombo;
     private String value;
-    
+
     static {
         HashMap<String, KeyType> keyMap = new HashMap<>();
         for (KeyType type : KeyType.values()) {
@@ -57,7 +57,7 @@ public class KeyBinding
     {
         // Nothing to do here
     }
-    
+
     public KeyBinding(String aKeyCombo, String aValue)
     {
         keyCombo = aKeyCombo;
@@ -90,17 +90,17 @@ public class KeyBinding
         if (isBlank(keyCombo)) {
             return false;
         }
-        
+
         for (String key : keyCombo.split(" ")) {
             KeyType type = KEY_MAP.get(key.toUpperCase(Locale.US));
             if (type == null) {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     @JsonIgnore
     public KeyType[] asKeyTypes()
     {
@@ -111,10 +111,10 @@ public class KeyBinding
                 combo.add(type);
             }
         }
-        
+
         return combo.toArray(new KeyType[combo.size()]);
     }
-    
+
     @JsonIgnore
     public String asHtml()
     {

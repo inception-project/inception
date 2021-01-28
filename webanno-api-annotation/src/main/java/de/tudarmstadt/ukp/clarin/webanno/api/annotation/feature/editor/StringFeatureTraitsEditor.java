@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -85,7 +85,8 @@ public class StringFeatureTraitsEditor
                 // Tagsets only are allowed for single-row input fields, not for textareas
                 if (traits.getObject().isMultipleRows()) {
                     feature.getObject().setTagset(null);
-                } else {
+                }
+                else {
                     traits.getObject().setDynamicSize(false);
                 }
 
@@ -99,16 +100,16 @@ public class StringFeatureTraitsEditor
                 Integer.class);
         collapsedRows.setModel(PropertyModel.of(traits, "collapsedRows"));
         collapsedRows.setMinimum(1);
-        collapsedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()
-                && !traits.getObject().isDynamicSize()));
+        collapsedRows.add(visibleWhen(
+                () -> traits.getObject().isMultipleRows() && !traits.getObject().isDynamicSize()));
         form.add(collapsedRows);
 
         NumberTextField<Integer> expandedRows = new NumberTextField<>("expandedRows",
                 Integer.class);
         expandedRows.setModel(PropertyModel.of(traits, "expandedRows"));
         expandedRows.setMinimum(1);
-        expandedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows() 
-                && !traits.getObject().isDynamicSize()));
+        expandedRows.add(visibleWhen(
+                () -> traits.getObject().isMultipleRows() && !traits.getObject().isDynamicSize()));
         form.add(expandedRows);
 
         DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
@@ -135,12 +136,11 @@ public class StringFeatureTraitsEditor
         multipleRows.add(
                 new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         form.add(multipleRows);
-    
+
         CheckBox dynamicSize = new CheckBox("dynamicSize");
         dynamicSize.setModel(PropertyModel.of(traits, "dynamicSize"));
-        dynamicSize.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-            target -> target.add(form)
-        ));
+        dynamicSize.add(
+                new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         dynamicSize.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
         form.add(dynamicSize);
     }

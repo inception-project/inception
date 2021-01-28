@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -58,15 +58,12 @@ public abstract class BratSuggestionVisualizer
 {
     private static final long serialVersionUID = 6653508018500736430L;
 
-    private static final String PARAM_ACTION = "action";
-
     private AbstractDefaultAjaxBehavior controller;
-    
+
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
 
-    public BratSuggestionVisualizer(String id,
-            IModel<UserAnnotationSegment> aModel, int aPosition)
+    public BratSuggestionVisualizer(String id, IModel<UserAnnotationSegment> aModel, int aPosition)
     {
         super(id, aModel);
         String username;
@@ -84,7 +81,7 @@ public abstract class BratSuggestionVisualizer
                 username = getModelObject().getUsername();
             }
         }
-        
+
         add(new Label("username", username));
 
         controller = new AbstractDefaultAjaxBehavior()
@@ -145,7 +142,7 @@ public abstract class BratSuggestionVisualizer
                 JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
         // aResponse.render(JavaScriptHeaderItem.forReference(
-        //     BratAnnotationLogResourceReference.get()));
+        // BratAnnotationLogResourceReference.get()));
         // aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));
 
         // BRAT modules
@@ -157,9 +154,10 @@ public abstract class BratSuggestionVisualizer
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));
         // aResponse.render(
-        //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
+        // @formatter:off
         String script = 
                 "Util.embedByURL(" 
                 + "  '" + vis.getMarkupId() + "'," 
@@ -171,8 +169,9 @@ public abstract class BratSuggestionVisualizer
                 + "    var ajax = new Ajax(dispatcher);"
                 + "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');"
                 + "    Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;"
-//                + "    dispatcher.post('clearSVG', []);" 
+                // + " dispatcher.post('clearSVG', []);"
                 + "  });";
+        // @formatter:on
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
 
@@ -189,6 +188,5 @@ public abstract class BratSuggestionVisualizer
         return getModelObject().getCollectionData();
     }
 
-    protected abstract void onClientEvent(AjaxRequestTarget aTarget)
-        throws Exception;
+    protected abstract void onClientEvent(AjaxRequestTarget aTarget) throws Exception;
 }

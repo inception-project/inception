@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,19 +43,21 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class WebAnnoTsv2ReaderWriterTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
         String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
-        
+
+        // @formatter:off
         CollectionReader reader = createCollectionReader(
                 WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_PATH, "src/test/resources/tsv2/",
                 WebannoTsv2Reader.PARAM_PATTERNS, "example2.tsv");
-     
+        // @formatter:on
+
         List<String> multipleSpans = new ArrayList<>();
         multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
         multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
+        // @formatter:off
         AnalysisEngineDescription writer = createPrimitiveDescription(
                 WebannoTsv2Writer.class,
                 WebannoTsv2Writer.PARAM_TARGET_LOCATION, targetFolder,
@@ -63,19 +65,24 @@ public class WebAnnoTsv2ReaderWriterTest
                 WebannoTsv2Writer.PARAM_STRIP_EXTENSION, true, 
                 WebannoTsv2Writer.PARAM_OVERWRITE, true,
                 WebannoTsv2Writer.MULTIPLE_SPAN_ANNOTATIONS, multipleSpans);
-       
+        // @formatter:on
+
         runPipeline(reader, writer);
-        
+
+        // @formatter:off
         CollectionReader reader1 = createCollectionReader(
                 WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_PATH, "src/test/resources/tsv2/",
                 WebannoTsv2Reader.PARAM_PATTERNS, "example2.tsv");
+        // @formatter:on
         CAS cas1 = JCasFactory.createJCas().getCas();
         reader1.getNext(cas1);
 
+        // @formatter:off
         CollectionReader reader2 = createCollectionReader(WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_PATH, targetFolder,
                 WebannoTsv2Reader.PARAM_PATTERNS, "example2.tsv");
+        // @formatter:on
 
         CAS cas2 = JCasFactory.createJCas().getCas();
         reader2.getNext(cas2);

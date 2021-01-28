@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,7 +78,7 @@ public class ProjectPage
     extends ApplicationPageBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
-    
+
     public static final String NEW_PROJECT_ID = "NEW";
 
     private static final long serialVersionUID = -2102136855109258306L;
@@ -96,26 +96,26 @@ public class ProjectPage
 
     private IModel<Project> selectedProject;
     private ChallengeResponseDialog deleteProjectDialog;
-    
+
     private boolean preSelectedModelMode = false;
-    
+
     public ProjectPage()
     {
         super();
-        
+
         commonInit();
     }
-    
+
     public ProjectPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
-        
+
         commonInit();
-       
+
         preSelectedModelMode = true;
-        
+
         sidebar.setVisible(false);
-        
+
         // Fetch project parameter
         StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
         // Check if we are asked to create a new project
@@ -126,12 +126,16 @@ public class ProjectPage
         else {
             Optional<Project> project = getProjectFromParameters(projectParameter);
             if (project.isPresent()) {
+                User user = userRepository.getCurrentUser();
+
                 // Check access to project
-                if (!projectService.isAdmin(project.get(), userRepository.getCurrentUser())) {
-                    error("You have no permission to access project [" + project.get().getId() + "]");
+                if (!userRepository.isAdministrator(user)
+                        && !projectService.isManager(project.get(), user)) {
+                    error("You have no permission to access project [" + project.get().getId()
+                            + "]");
                     setResponsePage(getApplication().getHomePage());
                 }
-                
+
                 selectedProject.setObject(project.get());
             }
             else {
@@ -140,7 +144,7 @@ public class ProjectPage
             }
         }
     }
-    
+
     private void commonInit()
     {
         selectedProject = Model.of();
@@ -153,36 +157,37 @@ public class ProjectPage
         tabContainer.setOutputMarkupPlaceholderTag(true);
         tabContainer.add(visibleWhen(() -> selectedProject.getObject() != null));
         add(tabContainer);
-        
+
         tabContainer.add(new Label("projectName", PropertyModel.of(selectedProject, "name")));
-        
+
         tabContainer.add(new LambdaAjaxLink("cancel", this::actionCancel));
-        
+
         tabContainer.add(new LambdaAjaxLink("delete", this::actionDelete)
                 .onConfigure((_this) -> _this.setEnabled(selectedProject.getObject() != null
                         && selectedProject.getObject().getId() != null)));
-        
-        tabPanel = new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()) {
+
+        tabPanel = new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs())
+        {
             private static final long serialVersionUID = -7356420977522213071L;
 
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 setVisible(selectedProject.getObject() != null);
             }
         };
         tabPanel.setOutputMarkupPlaceholderTag(true);
         tabContainer.add(tabPanel);
-        
+
         projects = new ProjectSelectionPanel("projects", selectedProject);
         projects.setCreateAction(target -> {
             selectedProject.setObject(new Project());
             // Make sure that default values are loaded
             tabPanel.visitChildren(new ModelChangedVisitor(selectedProject));
         });
-        projects.setChangeAction(target -> { 
+        projects.setChangeAction(target -> {
             target.add(tabContainer);
             // Make sure that any invalid forms are cleared now that we load the new project.
             // If we do not do this, then e.g. input fields may just continue showing the values
@@ -194,8 +199,8 @@ public class ProjectPage
         IModel<String> projectNameModel = PropertyModel.of(selectedProject, "name");
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
                 new StringResourceModel("DeleteProjectDialog.title", this),
-                new StringResourceModel("DeleteProjectDialog.text", this)
-                        .setModel(selectedProject).setParameters(projectNameModel),
+                new StringResourceModel("DeleteProjectDialog.text", this).setModel(selectedProject)
+                        .setParameters(projectNameModel),
                 projectNameModel));
         deleteProjectDialog.setConfirmAction((target) -> {
             try {
@@ -219,7 +224,7 @@ public class ProjectPage
     private List<ITab> makeTabs()
     {
         List<ITab> tabs = new ArrayList<>();
-        
+
         tabs.add(new AbstractTab(Model.of("Details"))
         {
             private static final long serialVersionUID = 6703144434578403272L;
@@ -236,22 +241,23 @@ public class ProjectPage
                 return selectedProject.getObject() != null;
             }
         });
-        
+
         // Add the project settings panels from the registry
         for (ProjectSettingsPanelFactory psp : projectSettingsPanelRegistry.getPanels()) {
             String path = psp.getPath();
-            AbstractTab tab = new AbstractTab(Model.of(psp.getLabel())) {
+            AbstractTab tab = new AbstractTab(Model.of(psp.getLabel()))
+            {
                 private static final long serialVersionUID = -1503555976570640065L;
 
                 private ProjectSettingsPanelRegistry getRegistry()
                 {
-                    // @SpringBean doesn't work here and we cannot keep a reference on the 
+                    // @SpringBean doesn't work here and we cannot keep a reference on the
                     // projectSettingsPanelRegistry either because it is not serializable,
                     // so we have no other chance here than fetching it statically
                     return ApplicationContextProvider.getApplicationContext()
                             .getBean(ProjectSettingsPanelRegistry.class);
                 }
-                
+
                 @Override
                 public Panel getPanel(String aPanelId)
                 {
@@ -264,22 +270,20 @@ public class ProjectPage
                 {
                     return selectedProject.getObject() != null
                             && selectedProject.getObject().getId() != null
-                            && getRegistry().getPanel(path)
-                                    .applies(selectedProject.getObject());
+                            && getRegistry().getPanel(path).applies(selectedProject.getObject());
                 }
             };
             tabs.add(tab);
         }
         return tabs;
     }
-    
-    
+
     private Optional<Project> getProjectFromParameters(StringValue projectParam)
     {
         if (projectParam == null || projectParam.isEmpty()) {
             return Optional.empty();
         }
-        
+
         try {
             return Optional.of(projectService.getProject(projectParam.toLong()));
         }
@@ -287,7 +291,7 @@ public class ProjectPage
             return Optional.empty();
         }
     }
-    
+
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         if (preSelectedModelMode) {
@@ -295,7 +299,7 @@ public class ProjectPage
         }
         else {
             selectedProject.setObject(null);
-            
+
             // Reload whole page because master panel also needs to be reloaded.
             aTarget.add(getPage());
         }

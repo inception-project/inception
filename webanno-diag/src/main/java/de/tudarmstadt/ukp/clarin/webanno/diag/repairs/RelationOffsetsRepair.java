@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Ensures that the offsets of relations match the target of the relation. This mirrors the DKPro
- * Core convention that the offsets of a dependency relation must match the offsets of the 
+ * Core convention that the offsets of a dependency relation must match the offsets of the
  * dependent.
  */
 @Safe(true)
@@ -67,7 +67,7 @@ public class RelationOffsetsRepair
                 // can skip checking the layer because there will be no annotations anyway.
                 continue;
             }
-            
+
             for (AnnotationFS rel : select(aCas, type)) {
                 AnnotationFS target = getFeature(rel, WebAnnoConst.FEAT_REL_TARGET,
                         AnnotationFS.class);
@@ -77,7 +77,7 @@ public class RelationOffsetsRepair
                     setFeature(rel, CAS.FEATURE_BASE_NAME_END, target.getEnd());
                 }
             }
-            
+
             // Delete those relations that pointed to deleted spans
             if (!fixedRels.isEmpty()) {
                 aMessages.add(new LogMessage(this, LogLevel.INFO,

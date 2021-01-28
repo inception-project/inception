@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -123,7 +123,8 @@ public class ProjectMiraTemplatePanel
             }
         }
         featureModel.setObject(selectedFeature);
-        miraTrainLayerSelectionForm = new MiraTrainLayerSelectionForm("miraTrainLayerSelectionForm");
+        miraTrainLayerSelectionForm = new MiraTrainLayerSelectionForm(
+                "miraTrainLayerSelectionForm");
         add(miraTrainLayerSelectionForm);
 
         updateForm();
@@ -136,7 +137,7 @@ public class ProjectMiraTemplatePanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 if (isNull(template.getId())) {
                     this.setVisible(false);
                 }
@@ -207,20 +208,20 @@ public class ProjectMiraTemplatePanel
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            return "[ "
-                                    + aObject.getLayer().getUiName()
-                                    + "] "
+                            return "[ " + aObject.getLayer().getUiName() + "] "
                                     + (aObject.getTagset() != null ? aObject.getTagset().getName()
                                             : aObject.getUiName());
                         }
                     });
                     setNullValid(false);
-                    
-                    add(new FormComponentUpdatingBehavior() {
+
+                    add(new FormComponentUpdatingBehavior()
+                    {
                         private static final long serialVersionUID = 3955427526154717786L;
 
                         @Override
-                        protected void onUpdate() {
+                        protected void onUpdate()
+                        {
                             selectedFeature = getModelObject();
                             if (automationService.existsMiraTemplate(selectedFeature)) {
                                 template = automationService.getMiraTemplate(selectedFeature);
@@ -498,10 +499,10 @@ public class ProjectMiraTemplatePanel
                             Project project = ProjectMiraTemplatePanel.this.getModelObject();
                             List<AnnotationFeature> features = annotationService
                                     .listAnnotationFeature(project);
-                            features.remove(miraTemplateDetailForm.getModelObject()
-                                    .getTrainFeature());
-                            features.removeAll(miraTemplateDetailForm.getModelObject()
-                                    .getOtherFeatures());
+                            features.remove(
+                                    miraTemplateDetailForm.getModelObject().getTrainFeature());
+                            features.removeAll(
+                                    miraTemplateDetailForm.getModelObject().getOtherFeatures());
                             for (AnnotationFeature feature : annotationService
                                     .listAnnotationFeature(project)) {
                                 if (!feature.getLayer().isEnabled()
@@ -525,19 +526,19 @@ public class ProjectMiraTemplatePanel
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            return "[ "
-                                    + aObject.getLayer().getUiName()
-                                    + "] "
+                            return "[ " + aObject.getLayer().getUiName() + "] "
                                     + (aObject.getTagset() != null ? aObject.getTagset().getName()
                                             : aObject.getUiName());
                         }
                     });
-                    
-                    add(new FormComponentUpdatingBehavior() {
+
+                    add(new FormComponentUpdatingBehavior()
+                    {
                         private static final long serialVersionUID = -2174515180334311824L;
 
                         @Override
-                        protected void onUpdate() {
+                        protected void onUpdate()
+                        {
                             miraTemplateDetailForm.getModelObject().getOtherFeatures()
                                     .add(getModelObject());
                             automationService
@@ -562,8 +563,8 @@ public class ProjectMiraTemplatePanel
                         @Override
                         protected List<AnnotationFeature> load()
                         {
-                            return new ArrayList<>(miraTemplateDetailForm
-                                    .getModelObject().getOtherFeatures());
+                            return new ArrayList<>(
+                                    miraTemplateDetailForm.getModelObject().getOtherFeatures());
                         }
                     });
 
@@ -574,15 +575,13 @@ public class ProjectMiraTemplatePanel
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            return "[ "
-                                    + aObject.getLayer().getUiName()
-                                    + "] "
+                            return "[ " + aObject.getLayer().getUiName() + "] "
                                     + (aObject.getTagset() != null ? aObject.getTagset().getName()
                                             : aObject.getUiName());
                         }
                     });
                     setNullValid(false);
-                    
+
                     add(new FormComponentUpdatingBehavior()
                     {
                         private static final long serialVersionUID = 7001921645015996995L;
@@ -637,7 +636,7 @@ public class ProjectMiraTemplatePanel
                     AutomationStatus automationStatus = new AutomationStatus();
                     try {
                         Project project = ProjectMiraTemplatePanel.this.getModelObject();
-                        
+
                         // no training document is added / no curation is done yet!
                         boolean existsTrainDocument = false;
                         for (TrainingDocument document : automationService
@@ -654,12 +653,14 @@ public class ProjectMiraTemplatePanel
 
                         if (!existsTrainDocument) {
                             error("No training document exists to proceed.");
-                            aTarget.appendJavaScript("alert('No training document exists to proceed.')");
+                            aTarget.appendJavaScript(
+                                    "alert('No training document exists to proceed.')");
                             return;
                         }
                         if (!template.isCurrentLayer()) {
                             error("Please save automation layer details to proceed.");
-                            aTarget.appendJavaScript("alert('Please save automation layer details to proceed.')");
+                            aTarget.appendJavaScript(
+                                    "alert('Please save automation layer details to proceed.')");
                             return;
                         }
 
@@ -681,7 +682,8 @@ public class ProjectMiraTemplatePanel
                         }
                         if (!existUnprocessedDocument) {
                             error("No new training/annotation document added.");
-                            aTarget.appendJavaScript("alert('No new training/annotation document added.')");
+                            aTarget.appendJavaScript(
+                                    "alert('No new training/annotation document added.')");
                             return;
                         }
 
@@ -700,8 +702,9 @@ public class ProjectMiraTemplatePanel
                         trainDoc = trainDoc
                                 + automationService.listTrainingDocuments(project).size();
 
-                        automationStatus = automationService.existsAutomationStatus(template) ?
-                                automationService.getAutomationStatus(template) : automationStatus;
+                        automationStatus = automationService.existsAutomationStatus(template)
+                                ? automationService.getAutomationStatus(template)
+                                : automationStatus;
                         automationStatus.setStartime(new Timestamp(new Date().getTime()));
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
                         automationStatus.setTrainDocs(trainDoc);
@@ -716,13 +719,12 @@ public class ProjectMiraTemplatePanel
                         automationStatus.setStatus(Status.GENERATE_TRAIN_DOC);
                         template.setResult("---");
 
-                        AutomationUtil.addOtherFeatureTrainDocument(template, 
-                                annotationService, automationService, userRepository);
+                        AutomationUtil.addOtherFeatureTrainDocument(template, annotationService,
+                                automationService, userRepository);
                         AutomationUtil.otherFeatureClassifiers(template, documentService,
                                 automationService);
 
-                        AutomationUtil.addTabSepTrainDocument(template,
-                                automationService);
+                        AutomationUtil.addTabSepTrainDocument(template, automationService);
                         AutomationUtil.tabSepClassifiers(template, automationService);
 
                         AutomationUtil.generateTrainDocument(template, documentService,
@@ -733,9 +735,9 @@ public class ProjectMiraTemplatePanel
                                 userRepository);
 
                         automationStatus.setStatus(Status.GENERATE_CLASSIFIER);
-                        miraTemplateDetailForm.getModelObject().setResult(
-                                AutomationUtil.generateFinalClassifier(template, documentService,
-                                        curationDocumentService, annotationService,
+                        miraTemplateDetailForm.getModelObject()
+                                .setResult(AutomationUtil.generateFinalClassifier(template,
+                                        documentService, curationDocumentService, annotationService,
                                         automationService, userRepository));
                         AutomationUtil.addOtherFeatureToPredictDocument(template, documentService,
                                 annotationService, automationService, userRepository);

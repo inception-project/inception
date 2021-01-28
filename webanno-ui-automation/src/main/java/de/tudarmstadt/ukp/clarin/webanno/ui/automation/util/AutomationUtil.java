@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -96,8 +96,8 @@ public class AutomationUtil
     private static Logger LOG = LoggerFactory.getLogger(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
-    public static void repeatSpanAnnotation(AnnotatorState aState,
-            DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
+    public static void repeatSpanAnnotation(AnnotatorState aState, DocumentService aDocumentService,
+            CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, int aStart, int aEnd,
             AnnotationFeature aFeature, String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
@@ -157,7 +157,7 @@ public class AutomationUtil
 
             AnnotationFS dependentFs = null;
             AnnotationFS governorFs = null;
-    
+
             if (adapter.getAttachFeatureName() != null) {
                 dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature)
                         .getFeatureValue(arcSpanFeature);
@@ -173,8 +173,8 @@ public class AutomationUtil
             if (adapter.getLayer().isCrossSentence()) {
                 List<AnnotationFS> mSpanAnnos = new ArrayList<>(
                         getAllAnnoFss(cas, governorFs.getType()));
-                repeatRelation(aState, 0, cas.getDocumentText().length() - 1, aFeature, aValue,
-                        cas, adapter, dependentFs, governorFs, mSpanAnnos);
+                repeatRelation(aState, 0, cas.getDocumentText().length() - 1, aFeature, aValue, cas,
+                        adapter, dependentFs, governorFs, mSpanAnnos);
             }
             else {
                 for (AnnotationFS sent : selectSentences(cas)) {
@@ -216,7 +216,7 @@ public class AutomationUtil
                 }
             }
             // we don't use else, in case gov and dep are the same
-            if (gCoveredText.equals(fs.getCoveredText())  ) {
+            if (gCoveredText.equals(fs.getCoveredText())) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
                     AnnotationFS arc = adapter.add(aState.getDocument(),
                             aState.getUser().getUsername(), fs, d, cas);
@@ -266,7 +266,7 @@ public class AutomationUtil
         }
         return true;
     }
-    
+
     /**
      * Repeat annotation will repeat annotations of same pattern to all documents on the project
      * load CAS from document in case no initial CORRECTION_CAS is not created before
@@ -333,13 +333,13 @@ public class AutomationUtil
                     }
                 }
             }
-            aCorrectionDocumentService.writeCorrectionCas(cas,d);
+            aCorrectionDocumentService.writeCorrectionCas(cas, d);
         }
     }
 
     @Deprecated
-    private static void deleteSpanAnnotation(TypeAdapter aAdapter, AnnotatorState aState,
-            CAS aCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+    private static void deleteSpanAnnotation(TypeAdapter aAdapter, AnnotatorState aState, CAS aCas,
+            AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
         Type type = CasUtil.getType(aCas, aAdapter.getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
@@ -351,7 +351,7 @@ public class AutomationUtil
             }
         }
     }
-    
+
     public static void deleteRelationAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
@@ -439,7 +439,7 @@ public class AutomationUtil
             }
         }
     }
-    
+
     // generates training document that will be used to predict the training document
     // to add extra features, for example add POS tag as a feature for NE classifier
     public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
@@ -570,13 +570,13 @@ public class AutomationUtil
             return;
         }
 
-        for (TrainingDocument trainingDocument : aAutomationService.listTabSepDocuments(aTemplate
-                .getTrainFeature().getProject())) {
+        for (TrainingDocument trainingDocument : aAutomationService
+                .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
             if (trainingDocument.getFeature() != null) { // This is a target layer train document
                 continue;
             }
-            File trainFile = new File(miraDir, trainingDocument.getId()
-                    + trainingDocument.getProject().getId() + ".train");
+            File trainFile = new File(miraDir,
+                    trainingDocument.getId() + trainingDocument.getProject().getId() + ".train");
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
             File tabSepFile = new File(aAutomationService.getDocumentFolder(trainingDocument),
                     trainingDocument.getName());
@@ -609,7 +609,7 @@ public class AutomationUtil
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
         LOG.info("Starting to generate training document");
-        
+
         File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
         if (!miraDir.exists()) {
             FileUtils.forceMkdir(miraDir);
@@ -618,8 +618,8 @@ public class AutomationUtil
         boolean documentChanged = false;
         // A. training document for other train layers were changed
         for (AnnotationFeature otherrFeature : aTemplate.getOtherFeatures()) {
-            for (TrainingDocument document : aAutomationService.listTrainingDocuments(aTemplate
-                    .getTrainFeature().getProject())) {
+            for (TrainingDocument document : aAutomationService
+                    .listTrainingDocuments(aTemplate.getTrainFeature().getProject())) {
                 if (!document.isProcessed() && document.getFeature() != null
                         && document.getFeature().equals(otherrFeature)) {
                     documentChanged = true;
@@ -655,12 +655,12 @@ public class AutomationUtil
         }
         File trainFile;
         if (aBase) {
-            trainFile = new File(miraDir, feature.getLayer().getId() + "-" + feature.getId()
-                    + ".train.ft");
+            trainFile = new File(miraDir,
+                    feature.getLayer().getId() + "-" + feature.getId() + ".train.ft");
         }
         else {
-            trainFile = new File(miraDir, feature.getLayer().getId() + "-" + feature.getId()
-                    + ".train.base");
+            trainFile = new File(miraDir,
+                    feature.getLayer().getId() + "-" + feature.getId() + ".train.base");
         }
 
         AutomationStatus status = aAutomationService.getAutomationStatus(aTemplate);
@@ -672,18 +672,19 @@ public class AutomationUtil
                 .listTrainingDocuments(feature.getProject());
         int trainingDocsCount = 0;
         for (TrainingDocument trainingDocument : trainingDocuments) {
-            if ((trainingDocument.getFeature() != null 
-                    && trainingDocument.getFeature().equals(feature)) 
+            if ((trainingDocument.getFeature() != null
+                    && trainingDocument.getFeature().equals(feature))
                     && !trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
                 CAS cas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                 for (AnnotationFS sentence : selectSentences(cas)) {
                     if (aBase) { // base training document
-                        trainOut.append(getMiraLine(aAnnotationService, sentence, null, adapter)
-                            .toString()).append("\n");
+                        trainOut.append(
+                                getMiraLine(aAnnotationService, sentence, null, adapter).toString())
+                                .append("\n");
                     }
                     else { // training document with other features
                         trainOut.append(getMiraLine(aAnnotationService, sentence, feature, adapter)
-                            .toString()).append("\n");
+                                .toString()).append("\n");
                     }
                 }
                 trainingDocument.setProcessed(!aBase);
@@ -752,11 +753,11 @@ public class AutomationUtil
                     + goldStandardDocs.size());
         }
         trainOut.close();
-        
+
         LOG.info("Completed generating training document");
     }
 
-    //TODO: rename to predictDocument
+    // TODO: rename to predictDocument
     public static void generatePredictDocument(MiraTemplate aTemplate, DocumentService aRepository,
             CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, AutomationService aAutomationService,
@@ -821,37 +822,36 @@ public class AutomationUtil
 
             char[] words = word.toCharArray();
 
-            String prefix1 = "", prefix2 = "", prefix3 = "", prefix4 = "", suffix1 = "", suffix2 = "", suffix3 = "", suffix4 = "";
-            if (
-                    aLayerFeature == null || 
-                    AnchoringMode.SINGLE_TOKEN.equals(aLayerFeature.getLayer().getAnchoringMode())
-            ) {
+            String prefix1 = "", prefix2 = "", prefix3 = "", prefix4 = "", suffix1 = "",
+                    suffix2 = "", suffix3 = "", suffix4 = "";
+            if (aLayerFeature == null || AnchoringMode.SINGLE_TOKEN
+                    .equals(aLayerFeature.getLayer().getAnchoringMode())) {
                 prefix1 = Character.toString(words[0]) + " ";
                 prefix2 = (words.length > 1 ? prefix1.trim()
-                        + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
-                                .toString(words[1])) : "__nil__")
-                        + " ";
+                        + (Character.toString(words[1]).trim().equals("") ? "__nil__"
+                                : Character.toString(words[1]))
+                        : "__nil__") + " ";
                 prefix3 = (words.length > 2 ? prefix2.trim()
-                        + (Character.toString(words[2]).trim().equals("") ? "__nil__" : Character
-                                .toString(words[2])) : "__nil__")
-                        + " ";
+                        + (Character.toString(words[2]).trim().equals("") ? "__nil__"
+                                : Character.toString(words[2]))
+                        : "__nil__") + " ";
                 prefix4 = (words.length > 3 ? prefix3.trim()
-                        + (Character.toString(words[3]).trim().equals("") ? "__nil__" : Character
-                                .toString(words[3])) : "__nil__")
-                        + " ";
+                        + (Character.toString(words[3]).trim().equals("") ? "__nil__"
+                                : Character.toString(words[3]))
+                        : "__nil__") + " ";
                 suffix1 = Character.toString(words[words.length - 1]) + " ";
-                suffix2 = (words.length > 1 ? (Character.toString(words[words.length - 2]).trim()
-                        .equals("") ? "__nil__" : Character.toString(words[words.length - 2]))
-                        + suffix1.trim() : "__nil__")
-                        + " ";
-                suffix3 = (words.length > 2 ? (Character.toString(words[words.length - 3]).trim()
-                        .equals("") ? "__nil__" : Character.toString(words[words.length - 3]))
-                        + suffix2.trim() : "__nil__")
-                        + " ";
-                suffix4 = (words.length > 3 ? (Character.toString(words[words.length - 4]).trim()
-                        .equals("") ? "__nil__" : Character.toString(words[words.length - 4]))
-                        + suffix3.trim() : "__nil__")
-                        + " ";
+                suffix2 = (words.length > 1
+                        ? (Character.toString(words[words.length - 2]).trim().equals("") ? "__nil__"
+                                : Character.toString(words[words.length - 2])) + suffix1.trim()
+                        : "__nil__") + " ";
+                suffix3 = (words.length > 2
+                        ? (Character.toString(words[words.length - 3]).trim().equals("") ? "__nil__"
+                                : Character.toString(words[words.length - 3])) + suffix2.trim()
+                        : "__nil__") + " ";
+                suffix4 = (words.length > 3
+                        ? (Character.toString(words[words.length - 4]).trim().equals("") ? "__nil__"
+                                : Character.toString(words[words.length - 4])) + suffix3.trim()
+                        : "__nil__") + " ";
             }
             String nl = "\n";
 
@@ -866,8 +866,8 @@ public class AutomationUtil
 
             }
             sb.append(word).append(" ").append(prefix1).append(prefix2).append(prefix3)
-                .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
-                .append(tag).append(nl);
+                    .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
+                    .append(tag).append(nl);
         }
         return sb;
 
@@ -879,36 +879,36 @@ public class AutomationUtil
         StringBuffer sb = new StringBuffer();
         char[] words = aToken.toCharArray();
         String prefix1 = Character.toString(words[0]) + " ";
-        String prefix2 = (words.length > 1 ? prefix1.trim()
-                + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
-                        .toString(words[1])) : "__nil__")
-                + " ";
-        String prefix3 = (words.length > 2 ? prefix2.trim()
-                + (Character.toString(words[2]).trim().equals("") ? "__nil__" : Character
-                        .toString(words[2])) : "__nil__")
-                + " ";
-        String prefix4 = (words.length > 3 ? prefix3.trim()
-                + (Character.toString(words[3]).trim().equals("") ? "__nil__" : Character
-                        .toString(words[3])) : "__nil__")
-                + " ";
+        String prefix2 = (words.length > 1
+                ? prefix1.trim() + (Character.toString(words[1]).trim().equals("") ? "__nil__"
+                        : Character.toString(words[1]))
+                : "__nil__") + " ";
+        String prefix3 = (words.length > 2
+                ? prefix2.trim() + (Character.toString(words[2]).trim().equals("") ? "__nil__"
+                        : Character.toString(words[2]))
+                : "__nil__") + " ";
+        String prefix4 = (words.length > 3
+                ? prefix3.trim() + (Character.toString(words[3]).trim().equals("") ? "__nil__"
+                        : Character.toString(words[3]))
+                : "__nil__") + " ";
         String suffix1 = Character.toString(words[words.length - 1]) + " ";
-        String suffix2 = (words.length > 1 ? (Character.toString(words[words.length - 2]).trim()
-                .equals("") ? "__nil__" : Character.toString(words[words.length - 2]))
-                + suffix1.trim() : "__nil__")
-                + " ";
-        String suffix3 = (words.length > 2 ? (Character.toString(words[words.length - 3]).trim()
-                .equals("") ? "__nil__" : Character.toString(words[words.length - 3]))
-                + suffix2.trim() : "__nil__")
-                + " ";
-        String suffix4 = (words.length > 3 ? (Character.toString(words[words.length - 4]).trim()
-                .equals("") ? "__nil__" : Character.toString(words[words.length - 4]))
-                + suffix3.trim() : "__nil__")
-                + " ";
+        String suffix2 = (words.length > 1
+                ? (Character.toString(words[words.length - 2]).trim().equals("") ? "__nil__"
+                        : Character.toString(words[words.length - 2])) + suffix1.trim()
+                : "__nil__") + " ";
+        String suffix3 = (words.length > 2
+                ? (Character.toString(words[words.length - 3]).trim().equals("") ? "__nil__"
+                        : Character.toString(words[words.length - 3])) + suffix2.trim()
+                : "__nil__") + " ";
+        String suffix4 = (words.length > 3
+                ? (Character.toString(words[words.length - 4]).trim().equals("") ? "__nil__"
+                        : Character.toString(words[words.length - 4])) + suffix3.trim()
+                : "__nil__") + " ";
 
         String nl = "\n";
         sb.append(aToken).append(" ").append(prefix1).append(prefix2).append(prefix3)
-            .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
-            .append(aFeature).append(nl);
+                .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
+                .append(aFeature).append(nl);
         return sb;
 
     }
@@ -928,8 +928,8 @@ public class AutomationUtil
      * @throws ClassNotFoundException
      *             hum?
      */
-    public static void otherFeatureClassifiers(MiraTemplate aTemplate,
-            DocumentService aRepository, AutomationService aAutomationService)
+    public static void otherFeatureClassifiers(MiraTemplate aTemplate, DocumentService aRepository,
+            AutomationService aAutomationService)
         throws IOException, ClassNotFoundException
     {
         Mira mira = new Mira();
@@ -1016,21 +1016,22 @@ public class AutomationUtil
             return;
         }
 
-        for (TrainingDocument trainingDocument : aAutomationService.listTabSepDocuments(aTemplate
-                .getTrainFeature().getProject())) {
+        for (TrainingDocument trainingDocument : aAutomationService
+                .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
             if (trainingDocument.getFeature() != null) { // This is a target layer train document
                 continue;
             }
             File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
-            File trainFile = new File(miraDir, trainingDocument.getId()
-                    + trainingDocument.getProject().getId() + ".train");
+            File trainFile = new File(miraDir,
+                    trainingDocument.getId() + trainingDocument.getProject().getId() + ".train");
             templateName = createTemplate(null,
                     getMiraTemplateFile(aTemplate.getTrainFeature(), aAutomationService), 0);
 
             String initalModelName = "";
             String trainName = trainFile.getAbsolutePath();
-            String modelName = aAutomationService.getMiraModel(aTemplate.getTrainFeature(), true,
-                    trainingDocument).getAbsolutePath();
+            String modelName = aAutomationService
+                    .getMiraModel(aTemplate.getTrainFeature(), true, trainingDocument)
+                    .getAbsolutePath();
             boolean randomInit = false;
 
             mira.loadTemplates(templateName);
@@ -1070,7 +1071,7 @@ public class AutomationUtil
                         + aFeature.getLayer().getAnchoringMode() + "]");
             }
         }
-        
+
         sb.append("\n");
         sb.append("B\n");
         FileUtils.writeStringToFile(templateFile, sb.toString());
@@ -1098,13 +1099,13 @@ public class AutomationUtil
             while (aOther > 0) {
                 aOther--;
                 aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(temp)
-                    .append("]\n");
+                        .append("]\n");
                 i++;
                 aSb.append("U").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
-                    .append(temp).append("]\n");
+                        .append(temp).append("]\n");
                 i++;
                 aSb.append("U").append(String.format("%02d", i)).append("%x[-1,").append(temp)
-                    .append("] %x[0,").append(temp).append("]\n");
+                        .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1129,13 +1130,13 @@ public class AutomationUtil
             while (aOther > 0) {
                 aOther--;
                 aSb.append("B").append(String.format("%02d", i)).append("%x[0,").append(temp)
-                    .append("]\n");
+                        .append("]\n");
                 i++;
                 aSb.append("B").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
-                    .append(temp).append("]\n");
+                        .append(temp).append("]\n");
                 i++;
                 aSb.append("B").append(String.format("%02d", i)).append("%x[-1,").append(temp)
-                    .append("] %x[0,").append(temp).append("]\n");
+                        .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1183,35 +1184,35 @@ public class AutomationUtil
         aSb.append("U").append(String.format("%02d", i)).append("%x[1,0]").append("%x[2,0]\n");
         i++;
         aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
-            .append("%x[0,0]\n");
+                .append("%x[0,0]\n");
         i++;
         aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]")
-            .append("%x[1,0]\n");
+                .append("%x[1,0]\n");
         i++;
         aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]").append("%x[1,0]")
-            .append("%x[2,0]\n");
+                .append("%x[2,0]\n");
         i++;
         aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
-            .append("%x[0,0]").append("%x[1,0]\n");
+                .append("%x[0,0]").append("%x[1,0]\n");
         i++;
         aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]")
-            .append("%x[1,0]").append("%x[2,0]\n");
+                .append("%x[1,0]").append("%x[2,0]\n");
         i++;
         aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
-            .append("%x[0,0").append("%x[1,0]").append("%x[2,0]]\n");
+                .append("%x[0,0").append("%x[1,0]").append("%x[2,0]]\n");
         aSb.append("\n");
         int temp = 1;
         if (aOther > 0) { // consider other layer annotations as features
             while (aOther > 0) {
                 aOther--;
                 aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(temp)
-                    .append("]\n");
+                        .append("]\n");
                 i++;
                 aSb.append("U").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
-                    .append(temp).append("]\n");
+                        .append(temp).append("]\n");
                 i++;
                 aSb.append("U").append(String.format("%02d", i)).append("%x[-1,").append(temp)
-                    .append("] %x[0,").append(temp).append("]\n");
+                        .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1222,8 +1223,8 @@ public class AutomationUtil
     public static File getMiraTemplateFile(AnnotationFeature aFeature,
             AutomationService aAutomationService)
     {
-        return new File(aAutomationService.getMiraDir(aFeature).getAbsolutePath(), aFeature.getId()
-                + "-template");
+        return new File(aAutomationService.getMiraDir(aFeature).getAbsolutePath(),
+                aFeature.getId() + "-template");
     }
 
     /**
@@ -1263,16 +1264,16 @@ public class AutomationUtil
 
         File miraDir = aAutomationService.getMiraDir(layerFeature);
         Mira mira = new Mira();
-        File predFile = new File(miraDir, layerFeature.getLayer().getId() + "-"
-                + layerFeature.getId() + ".train.ft");
+        File predFile = new File(miraDir,
+                layerFeature.getLayer().getId() + "-" + layerFeature.getId() + ".train.ft");
         File predcitedFile = new File(predFile.getAbsolutePath() + "-pred");
 
         boolean trainingDocumentUpdated = false;
 
         // A. training document for other train layers were changed
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
-            for (TrainingDocument document : aAutomationService.listTrainingDocuments(aTemplate
-                    .getTrainFeature().getProject())) {
+            for (TrainingDocument document : aAutomationService
+                    .listTrainingDocuments(aTemplate.getTrainFeature().getProject())) {
                 if (!document.isProcessed() && document.getFeature() != null
                         && document.getFeature().equals(feature)) {
                     trainingDocumentUpdated = true;
@@ -1313,10 +1314,10 @@ public class AutomationUtil
         // if no other layer is used, use this as main train document,
         // otherwise, add all the
         // predictions and modify template
-        File baseTrainFile = new File(miraDir, layerFeature.getLayer().getId() + "-"
-                + layerFeature.getId() + ".train.base");
-        File trainFile = new File(miraDir, layerFeature.getLayer().getId() + "-"
-                + layerFeature.getId() + ".train");
+        File baseTrainFile = new File(miraDir,
+                layerFeature.getLayer().getId() + "-" + layerFeature.getId() + ".train.base");
+        File trainFile = new File(miraDir,
+                layerFeature.getLayer().getId() + "-" + layerFeature.getId() + ".train");
 
         // generate final classifier, using all features generated
 
@@ -1327,8 +1328,8 @@ public class AutomationUtil
                 aUserDao, beamSize, maxPosteriors, predictions, mira, predFile, predcitedFile,
                 null);
 
-        getFeaturesTabSep(aTemplate, aAutomationService, beamSize, maxPosteriors,
-                layerFeature, predictions, mira, predFile, predcitedFile);
+        getFeaturesTabSep(aTemplate, aAutomationService, beamSize, maxPosteriors, layerFeature,
+                predictions, mira, predFile, predcitedFile);
 
         generateTrainDocument(aTemplate, aRepository, aCurationDocumentService, aAnnotationService,
                 aAutomationService, aUserDao, false);
@@ -1346,7 +1347,7 @@ public class AutomationUtil
         }
 
         boolean randomInit = false;
-        
+
         switch (layerFeature.getLayer().getAnchoringMode()) {
         case SINGLE_TOKEN:
             // Nothing extra to do
@@ -1376,8 +1377,8 @@ public class AutomationUtil
                 .listTrainingDocuments(layerFeature.getProject())) {
             document.setProcessed(true);
         }
-        for (TrainingDocument document : aAutomationService.listTabSepDocuments(layerFeature
-                .getProject())) {
+        for (TrainingDocument document : aAutomationService
+                .listTabSepDocuments(layerFeature.getProject())) {
             document.setProcessed(true);
         }
         return trainResult;
@@ -1613,7 +1614,7 @@ public class AutomationUtil
                 throw new IllegalStateException("Unsupported anchoring mode: ["
                         + aFeature.getLayer().getAnchoringMode() + "]");
             }
-            
+
             for (List<String> prediction : aPredictions) {
                 predBuffer.append(prediction.get(i)).append(" ");
             }
@@ -1621,7 +1622,7 @@ public class AutomationUtil
             predBuffer.append("\n");
             i++;
         }
-        
+
         IOUtils.write(predBuffer.toString(), new FileOutputStream(aPredFile));
     }
 
@@ -1646,8 +1647,8 @@ public class AutomationUtil
     {
 
         String typeName = aFeature.getLayer().getName();
-        String attachTypeName = aFeature.getLayer().getAttachType() == null ? null : aFeature
-                .getLayer().getAttachType().getName();
+        String attachTypeName = aFeature.getLayer().getAttachType() == null ? null
+                : aFeature.getLayer().getAttachType().getName();
         Type type = CasUtil.getType(aCas, typeName);
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
 
@@ -1655,7 +1656,7 @@ public class AutomationUtil
         String prevNe = "O";
         int begin = 0;
         int end = 0;
-        
+
         // remove existing annotations of this type, after all it is an automation, no care
         clearAnnotations(aCas, aFeature);
 
@@ -1791,8 +1792,7 @@ public class AutomationUtil
             CAS cas = null;
             User user = aUserDao.getCurrentUser();
             try {
-                AnnotationDocument annoDocument = aRepository.getAnnotationDocument(document,
-                        user);
+                AnnotationDocument annoDocument = aRepository.getAnnotationDocument(document, user);
                 cas = aRepository.readAnnotationCas(annoDocument);
                 automate(cas, layerFeature, annotations);
                 // We need to clear the timestamp since we read from the annotation CAS and write
@@ -1807,13 +1807,12 @@ public class AutomationUtil
             }
         }
     }
-    
-    public static void clearAnnotations(CAS aCas, AnnotationFeature aFeature)
-        throws IOException
+
+    public static void clearAnnotations(CAS aCas, AnnotationFeature aFeature) throws IOException
     {
         // Check if annotation layer is attached to another layer
-        String attachTypeName = aFeature.getLayer().getAttachType() == null ? null : aFeature
-                .getLayer().getAttachType().getName();
+        String attachTypeName = aFeature.getLayer().getAttachType() == null ? null
+                : aFeature.getLayer().getAttachType().getName();
         Type attachType = null;
         Feature attachFeature = null;
         if (attachTypeName != null) {
@@ -1821,11 +1820,11 @@ public class AutomationUtil
             attachFeature = attachType
                     .getFeatureByBaseName(aFeature.getLayer().getAttachFeature().getName());
         }
-        
+
         List<AnnotationFS> annotationsToRemove = new ArrayList<>();
         Type type = CasUtil.getType(aCas, aFeature.getLayer().getName());
         annotationsToRemove.addAll(select(aCas, type));
-        
+
         for (AnnotationFS annotation : annotationsToRemove) {
             if (attachFeature != null) {
                 // Unattach the annotation to be removed
@@ -1839,7 +1838,7 @@ public class AutomationUtil
             aCas.removeFsFromIndexes(annotation);
         }
     }
-    
+
     public static Map<Integer, String> getMultipleAnnotation(
             AnnotationSchemaService aAnnotationService, AnnotationFS sentence,
             AnnotationFeature aFeature)
@@ -1867,12 +1866,12 @@ public class AutomationUtil
         }
         return multAnno;
     }
-    
+
     private static List<String> getAnnotation(TypeAdapter aAdapter, AnnotationFS aSentence,
             AnnotationFeature aFeature)
     {
         CAS cas = aSentence.getCAS();
-        
+
         Type type = getType(cas, aAdapter.getAnnotationTypeName());
         List<String> annotations = new ArrayList<>();
 

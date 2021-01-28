@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,30 +66,30 @@ public class WebAnnoCasUtil
 
     private static final boolean ENFORCE_CAS_THREAD_LOCK = System
             .getProperty(PROP_ENFORCE_CAS_THREAD_LOCK, "false").equals("true");
-    
+
     public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
     {
         CAS cas = CasCreationUtils.createCas(aTSD, null, null);
-        
+
         if (ENFORCE_CAS_THREAD_LOCK) {
             cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
                     new Class[] { CAS.class }, new ThreadLockingInvocationHandler(cas));
         }
-        
+
         return cas;
     }
-    
+
     public static CAS createCas() throws ResourceInitializationException
     {
         return createCas(null);
     }
-    
+
     public static CAS getRealCas(CAS aCas)
     {
         if (!ENFORCE_CAS_THREAD_LOCK) {
             return aCas;
         }
-        
+
         if (!Proxy.isProxyClass(aCas.getClass())) {
             return aCas;
         }
@@ -98,13 +98,13 @@ public class WebAnnoCasUtil
                 .getInvocationHandler(aCas);
         return (CAS) handler.getTarget();
     }
-    
+
     public static void transferCasOwnershipToCurrentThread(CAS aCas)
     {
         if (!ENFORCE_CAS_THREAD_LOCK) {
             return;
         }
-        
+
         if (!Proxy.isProxyClass(aCas.getClass())) {
             return;
         }
@@ -113,7 +113,7 @@ public class WebAnnoCasUtil
                 .getInvocationHandler(aCas);
         handler.transferOwnershipToCurrentThread();
     }
-    
+
     /**
      * Return true if these two annotations agree on every non slot features
      */
@@ -123,7 +123,7 @@ public class WebAnnoCasUtil
         if (aFs1.getBegin() != aFs2.getBegin() || aFs1.getEnd() != aFs2.getEnd()) {
             return false;
         }
-        
+
         // Check the features (basically limiting to the primitive features)
         for (Feature f : aFs1.getType().getFeatures()) {
             if (shouldIgnoreFeatureOnMerge(aFs1, f)) {
@@ -132,7 +132,7 @@ public class WebAnnoCasUtil
 
             Object value1 = getFeatureValue(aFs1, f);
             Object value2 = getFeatureValue(aFs2, f);
-            
+
             if (!Objects.equals(value1, value2)) {
                 return false;
             }
@@ -142,10 +142,9 @@ public class WebAnnoCasUtil
 
     public static boolean shouldIgnoreFeatureOnMerge(FeatureStructure aFS, Feature aFeature)
     {
-        return !WebAnnoCasUtil.isPrimitiveType(aFeature.getRange()) || 
-                isBasicFeature(aFeature) ||
-                aFeature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN) ||
-                aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
+        return !WebAnnoCasUtil.isPrimitiveType(aFeature.getRange()) || isBasicFeature(aFeature)
+                || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
     }
 
     /**
@@ -186,7 +185,7 @@ public class WebAnnoCasUtil
         // return aFS.getFeatureValue(aFeature);
         }
     }
-    
+
     /**
      * Annotation a and annotation b are the same if they have the same address.
      *
@@ -210,10 +209,10 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Check if the two given begin offsets are within the same sentence. If the second offset
-     * is at the end of the sentence, it is no longer considered to be part of the sentence.
-     * Mind that annotations in UIMA are half-open intervals <code>[begin,end)</code>. If there
-     * is no sentence covering the offsets, the method returns <code>false</code>.
+     * Check if the two given begin offsets are within the same sentence. If the second offset is at
+     * the end of the sentence, it is no longer considered to be part of the sentence. Mind that
+     * annotations in UIMA are half-open intervals <code>[begin,end)</code>. If there is no sentence
+     * covering the offsets, the method returns <code>false</code>.
      *
      * @param aCas
      *            the CAS.
@@ -226,17 +225,16 @@ public class WebAnnoCasUtil
     public static boolean isBeginInSameSentence(CAS aCas, int aBegin1, int aBegin2)
     {
         return selectCovering(aCas, getType(aCas, Sentence.class), aBegin1, aBegin1).stream()
-            .filter(s -> s.getBegin() <= aBegin1 && aBegin1 < s.getEnd())
-            .filter(s -> s.getBegin() <= aBegin2 && aBegin2 < s.getEnd())
-            .findFirst()
-            .isPresent();
+                .filter(s -> s.getBegin() <= aBegin1 && aBegin1 < s.getEnd())
+                .filter(s -> s.getBegin() <= aBegin2 && aBegin2 < s.getEnd()).findFirst()
+                .isPresent();
     }
-    
+
     /**
-     * Check if the begin/end offsets are within the same sentence. If the end offset
-     * is at the end of the sentence, it is considered to be part of the sentence.
-     * Mind that annotations in UIMA are half-open intervals <code>[begin,end)</code>. If there
-     * is no sentence covering the offsets, the method returns <code>false</code>.
+     * Check if the begin/end offsets are within the same sentence. If the end offset is at the end
+     * of the sentence, it is considered to be part of the sentence. Mind that annotations in UIMA
+     * are half-open intervals <code>[begin,end)</code>. If there is no sentence covering the
+     * offsets, the method returns <code>false</code>.
      *
      * @param aCas
      *            the CAS.
@@ -248,13 +246,11 @@ public class WebAnnoCasUtil
      */
     public static boolean isBeginEndInSameSentence(CAS aCas, int aBegin, int aEnd)
     {
-//        return !aCas.select(getType(aCas, Sentence.class)).covering(aBegin, aEnd).isEmpty();
-        return StreamSupport.stream(aCas.getAnnotationIndex(
-                    getType(aCas, Sentence.class)).spliterator(), false)
+        // return !aCas.select(getType(aCas, Sentence.class)).covering(aBegin, aEnd).isEmpty();
+        return StreamSupport
+                .stream(aCas.getAnnotationIndex(getType(aCas, Sentence.class)).spliterator(), false)
                 .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
-                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd())
-                .findFirst()
-                .isPresent();
+                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd()).findFirst().isPresent();
     }
 
     public static int getAddr(FeatureStructure aFS)
@@ -277,7 +273,7 @@ public class WebAnnoCasUtil
     {
         // Check that the type passed is actually an annotation type
         CasUtil.getAnnotationType(aCas, aType);
-        
+
         return aCas.getLowLevelCAS().ll_getFSForRef(aAddress);
     }
 
@@ -294,11 +290,9 @@ public class WebAnnoCasUtil
     public static AnnotationFS selectSentenceAt(CAS aCas, int aBegin)
     {
         return CasUtil.select(aCas, getType(aCas, Sentence.class)).stream()
-            .filter(s -> s.getBegin() == aBegin)
-            .findFirst()
-            .orElse(null);
+                .filter(s -> s.getBegin() == aBegin).findFirst().orElse(null);
     }
-    
+
     public static AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
     {
         return aCas.createAnnotation(getType(aCas, Token.class), aBegin, aEnd);
@@ -308,11 +302,11 @@ public class WebAnnoCasUtil
     {
         return aCas.createAnnotation(getType(aCas, Sentence.class), aBegin, aEnd);
     }
-    
+
     public static boolean exists(CAS aCas, Type aType)
     {
         return !aCas.select(aType).isEmpty();
-        //return aCas.getAnnotationIndex(aType).iterator().hasNext();
+        // return aCas.getAnnotationIndex(aType).iterator().hasNext();
     }
 
     /**
@@ -332,8 +326,7 @@ public class WebAnnoCasUtil
      *            end offset.
      * @return a return value.
      */
-    public static List<AnnotationFS> selectOverlapping(CAS aCas,
-            Type aType, int aBegin, int aEnd)
+    public static List<AnnotationFS> selectOverlapping(CAS aCas, Type aType, int aBegin, int aEnd)
     {
 
         List<AnnotationFS> annotations = new ArrayList<>();
@@ -394,7 +387,7 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Get the  sentence based on the annotation begin offset
+     * Get the sentence based on the annotation begin offset
      *
      * @param aCas
      *            the CAS.
@@ -417,7 +410,7 @@ public class WebAnnoCasUtil
     public static AnnotationFS getNextToken(CAS aCas, int aBegin, int aEnd)
     {
         Type tokenType = getType(aCas, Token.class);
-        
+
         AnnotationFS currentToken = selectAt(aCas, tokenType, aBegin, aEnd).stream().findFirst()
                 .orElse(null);
         // thid happens when tokens such as Dr. OR Ms. selected with double
@@ -447,13 +440,13 @@ public class WebAnnoCasUtil
     public static int getSentenceNumber(CAS aCas, int aBeginOffset)
     {
         int sentenceNumber = 0;
-        
+
         Type sentenceType = getType(aCas, Sentence.class);
         Collection<AnnotationFS> sentences = select(aCas, sentenceType);
         if (sentences.isEmpty()) {
             throw new IndexOutOfBoundsException("No sentences");
         }
-        
+
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
             if (sentence.getBegin() <= aBeginOffset && aBeginOffset <= sentence.getEnd()) {
                 sentenceNumber++;
@@ -509,11 +502,11 @@ public class WebAnnoCasUtil
         }
         return seletedTextSb.toString();
     }
-    
+
     public static boolean isNativeUimaType(String aType)
     {
         Validate.notNull(aType, "Type must not be null");
-        
+
         switch (aType) {
         case CAS.TYPE_NAME_ANNOTATION:
         case CAS.TYPE_NAME_ANNOTATION_BASE:
@@ -553,7 +546,7 @@ public class WebAnnoCasUtil
         case CAS.TYPE_NAME_TOP:
             return true;
         }
-        
+
         return false;
     }
 
@@ -565,7 +558,7 @@ public class WebAnnoCasUtil
             throw new IllegalArgumentException("Type [" + aFS.getType().getName()
                     + "] has no feature called [" + aFeatureName + "]");
         }
-        
+
         return isPrimitiveType(feature.getRange());
     }
 
@@ -631,7 +624,7 @@ public class WebAnnoCasUtil
             if (effectiveType.contains(":")) {
                 effectiveType = CAS.TYPE_NAME_STRING;
             }
-            
+
             // Sanity check
             if (!Objects.equals(effectiveType, feature.getRange().getName())) {
                 throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] feature ["
@@ -653,9 +646,9 @@ public class WebAnnoCasUtil
                 aFS.setIntValue(feature, aValue != null ? (int) aValue : 0);
                 break;
             default:
-                throw new IllegalArgumentException("Cannot set value of feature ["
-                        + aFeature.getName() + "] with type [" + feature.getRange().getName()
-                        + "] to [" + aValue + "]");
+                throw new IllegalArgumentException(
+                        "Cannot set value of feature [" + aFeature.getName() + "] with type ["
+                                + feature.getRange().getName() + "] to [" + aValue + "]");
             }
             break;
         }
@@ -682,10 +675,8 @@ public class WebAnnoCasUtil
             List<LinkWithRoleModel> aValue, Feature feature)
     {
         Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-        Feature roleFeat = linkType.getFeatureByBaseName(aFeature
-                .getLinkTypeRoleFeatureName());
-        Feature targetFeat = linkType.getFeatureByBaseName(aFeature
-                .getLinkTypeTargetFeatureName());
+        Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+        Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
         // Create all the links
         // FIXME: actually we could re-use existing link link feature structures
@@ -758,13 +749,13 @@ public class WebAnnoCasUtil
     {
         return aFS.getFeatureValue(aFS.getType().getFeatureByBaseName(aFeatureName));
     }
-    
+
     public static boolean isRequiredFeatureMissing(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return aFeature.isRequired() && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
                 && StringUtils.isBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
     }
-    
+
     public static FeatureStructure createDocumentMetadata(CAS aCas)
     {
         Type type = getType(aCas, DocumentMetaData.class);
@@ -775,7 +766,7 @@ public class WebAnnoCasUtil
         else {
             dmd = aCas.createAnnotation(type, 0, 0);
         }
-        
+
         // If there is already a DocumentAnnotation copy it's information and delete it
         FeatureStructure da = aCas.getDocumentAnnotation();
         if (da != null) {
@@ -794,7 +785,7 @@ public class WebAnnoCasUtil
         aCas.addFsToIndexes(dmd);
         return dmd;
     }
-    
+
     public static FeatureStructure getDocumentMetadata(CAS aCas)
     {
         Type type = getType(aCas, DocumentMetaData.class);
@@ -805,10 +796,10 @@ public class WebAnnoCasUtil
         catch (IllegalArgumentException e) {
             dmd = createDocumentMetadata(aCas);
         }
-        
+
         return dmd;
     }
-    
+
     public static void copyDocumentMetadata(CAS aSourceView, CAS aTargetView)
     {
         // First get the DMD then create. In case the get fails, we do not create.
@@ -829,7 +820,7 @@ public class WebAnnoCasUtil
         FSUtil.setFeature(docMetaData, CAS.FEATURE_BASE_NAME_LANGUAGE,
                 FSUtil.getFeature(dmd, CAS.FEATURE_BASE_NAME_LANGUAGE, String.class));
     }
-    
+
     public static void setDocumentId(CAS aCas, String aID)
     {
         FeatureStructure dmd = getDocumentMetadata(aCas);

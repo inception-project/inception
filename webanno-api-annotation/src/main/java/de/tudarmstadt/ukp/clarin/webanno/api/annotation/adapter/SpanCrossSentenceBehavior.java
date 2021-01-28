@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ public class SpanCrossSentenceBehavior
     {
         return super.accepts(aLayerType) || aLayerType instanceof ChainLayerSupport;
     }
-    
+
     @Override
     public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
@@ -72,7 +72,7 @@ public class SpanCrossSentenceBehavior
         if (aAdapter.getLayer().isCrossSentence()) {
             return aRequest;
         }
-        
+
         if (!isBeginEndInSameSentence(aRequest.getCas(), aRequest.getBegin(), aRequest.getEnd())) {
             throw new MultipleSentenceCoveredException("Annotation covers multiple sentences, "
                     + "limit your annotation to single sentence!");
@@ -80,7 +80,7 @@ public class SpanCrossSentenceBehavior
 
         return aRequest;
     }
-    
+
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> annoToSpanIdx, int aPageBegin, int aPageEnd)
@@ -88,9 +88,9 @@ public class SpanCrossSentenceBehavior
         if (aAdapter.getLayer().isCrossSentence() || annoToSpanIdx.isEmpty()) {
             return;
         }
-        
+
         CAS cas = annoToSpanIdx.entrySet().iterator().next().getKey().getCAS();
-        
+
         // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since
         // The indexes are navigable, we can also find the sentences starting/ending closes to a
         // particular offset, even if it is not the start/end offset of a sentence.
@@ -101,23 +101,23 @@ public class SpanCrossSentenceBehavior
             sentBeginIdx.put(sent.getBegin(), sent);
             sentEndIdx.put(sent.getEnd(), sent);
         }
-        
+
         for (AnnotationFS fs : annoToSpanIdx.keySet()) {
             Entry<Integer, AnnotationFS> s1 = sentBeginIdx.floorEntry(fs.getBegin());
             Entry<Integer, AnnotationFS> s2 = sentEndIdx.ceilingEntry(fs.getEnd());
-            
+
             if (s1 == null || s2 == null) {
                 // Unable to determine any sentences overlapping with the annotation
                 continue;
             }
-            
+
             if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
                 aResponse.add(new VComment(new VID(fs), ERROR,
                         "Crossing sentence boundaries is not permitted."));
             }
         }
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
@@ -125,9 +125,9 @@ public class SpanCrossSentenceBehavior
         if (aAdapter.getLayer().isCrossSentence()) {
             return emptyList();
         }
-        
+
         Type type = getType(aCas, aAdapter.getAnnotationTypeName());
-        
+
         // If there are no annotations on this layer, nothing to do
         Collection<AnnotationFS> annotations = select(aCas, type);
         if (annotations.isEmpty()) {
@@ -146,18 +146,18 @@ public class SpanCrossSentenceBehavior
             sentBeginIdx.put(sent.getBegin(), sent);
             sentEndIdx.put(sent.getEnd(), sent);
         }
-        
+
         for (AnnotationFS fs : annotations) {
             Entry<Integer, AnnotationFS> s1 = sentBeginIdx.floorEntry(fs.getBegin());
             Entry<Integer, AnnotationFS> s2 = sentEndIdx.ceilingEntry(fs.getEnd());
-            
+
             if (s1 == null || s2 == null) {
                 messages.add(Pair.of(LogMessage.error(this,
                         "Unable to determine any sentences overlapping with [%d-%d]", fs.getBegin(),
                         fs.getEnd()), fs));
                 continue;
             }
-            
+
             if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
                 messages.add(Pair.of(
                         LogMessage.error(this, "Crossing sentence boundaries is not permitted."),

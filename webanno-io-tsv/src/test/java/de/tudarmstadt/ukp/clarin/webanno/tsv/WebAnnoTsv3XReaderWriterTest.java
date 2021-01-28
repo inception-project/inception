@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,11 +41,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class WebAnnoTsv3XReaderWriterTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
         String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
-        
+
+        // @formatter:off
         CollectionReader reader = CollectionReaderFactory.createReader(
                 WebannoTsv3XReader.class,
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/",
@@ -68,6 +68,7 @@ public class WebAnnoTsv3XReaderWriterTest
                 WebannoTsv3XReader.class,
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, targetFolder,
                 WebannoTsv3XReader.PARAM_PATTERNS, "coref.tsv");
+        // @formatter:on
 
         CAS cas1 = JCasFactory.createJCas().getCas();
         reader1.getNext(cas1);
@@ -88,7 +89,7 @@ public class WebAnnoTsv3XReaderWriterTest
         assertEquals(JCasUtil.select(cas2.getJCas(), Dependency.class).size(),
                 JCasUtil.select(cas1.getJCas(), Dependency.class).size());
     }
-    
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

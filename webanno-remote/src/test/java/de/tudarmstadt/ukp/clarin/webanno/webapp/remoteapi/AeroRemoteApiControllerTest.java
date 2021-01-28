@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,7 @@ import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.ApplicationEventPublisher;
@@ -89,21 +90,19 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
-@RunWith(SpringRunner.class) 
-@EnableAutoConfiguration
-@SpringBootTest(
-        webEnvironment = WebEnvironment.MOCK, 
-        properties = { "repository.path=target/AeroRemoteApiControllerTest/repository" })
+@RunWith(SpringRunner.class)
+@EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK, properties = {
+        "repository.path=target/AeroRemoteApiControllerTest/repository" })
 @EnableWebSecurity
-@EntityScan({
-        "de.tudarmstadt.ukp.clarin.webanno.model",
+@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AeroRemoteApiControllerTest
 {
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
-    
+
     private MockMvc mvc;
 
     // If this is not static, for some reason the value is re-set to false before a
@@ -113,18 +112,21 @@ public class AeroRemoteApiControllerTest
     private static boolean initialized = false;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
+        // @formatter:off
         mvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .alwaysDo(print())
                 .apply(SecurityMockMvcConfigurers.springSecurity())
                 .addFilters(new OpenCasStorageSessionForRequestFilter())
                 .build();
-        
+        // @formatter:on
+
         if (!initialized) {
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
             initialized = true;
-            
+
             FileSystemUtils.deleteRecursively(new File("target/RemoteApiController2Test"));
         }
     }
@@ -132,6 +134,7 @@ public class AeroRemoteApiControllerTest
     @Test
     public void t001_testProjectCreate() throws Exception
     {
+        // @formatter:off
         mvc.perform(get(API_BASE + "/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
@@ -156,11 +159,13 @@ public class AeroRemoteApiControllerTest
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("project1"));
+        // @formatter:on
     }
-    
+
     @Test
     public void t002_testDocumentCreate() throws Exception
     {
+        // @formatter:off
         mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
@@ -187,11 +192,13 @@ public class AeroRemoteApiControllerTest
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
+        // @formatter:on
     }
 
     @Test
     public void t003_testAnnotationCreate() throws Exception
     {
+        // @formatter:off
         mvc.perform(get(API_BASE + "/projects/1/documents/1/annotations")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
@@ -220,11 +227,13 @@ public class AeroRemoteApiControllerTest
             .andExpect(jsonPath("$.body[0].user").value("admin"))
             .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
             .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
+        // @formatter:on
     }
 
     @Test
     public void t004_testCurationCreate() throws Exception
     {
+        // @formatter:off
         mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
@@ -255,11 +264,13 @@ public class AeroRemoteApiControllerTest
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
+        // @formatter:on
     }
 
     @Test
     public void t005_testCurationDelete() throws Exception
     {
+        // @formatter:off
         mvc.perform(delete(API_BASE + "/projects/1/documents/1/curation")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -276,66 +287,69 @@ public class AeroRemoteApiControllerTest
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
+        // @formatter:on
     }
-    
+
     @Configuration
-    public static class TestContext {
+    public static class TestContext
+    {
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
         private @Autowired EntityManager entityManager;
-        
+
         @Bean
         public AeroRemoteApiController remoteApiV2()
         {
             return new AeroRemoteApiController();
         }
-        
+
         @Bean
         public ProjectService projectService()
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), null);
         }
-        
+
         @Bean
         public UserDao userRepository()
         {
             return new UserDaoImpl();
         }
-        
+
         @Bean
         public DocumentService documentService()
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(),
-                    applicationEventPublisher, entityManager);
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
+                    importExportService(), projectService(), applicationEventPublisher,
+                    entityManager);
         }
-        
+
         @Bean
         public AnnotationSchemaService annotationService()
         {
             return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
                     entityManager);
         }
-        
+
         @Bean
         public FeatureSupportRegistry featureSupportRegistry()
         {
             return new FeatureSupportRegistryImpl(Collections.emptyList());
         }
-        
+
         @Bean
         public CasStorageService casStorageService()
         {
             return new CasStorageServiceImpl(null, null, repositoryProperties(),
                     backupProperties());
         }
-        
+
         @Bean
         public ImportExportService importExportService()
         {
             return new ImportExportServiceImpl(repositoryProperties(),
                     asList(new TextFormatSupport()), casStorageService(), annotationService());
         }
-        
+
         @Bean
         public CurationDocumentService curationDocumentService()
         {
@@ -347,14 +361,14 @@ public class AeroRemoteApiControllerTest
         {
             return new ProjectExportServiceImpl(null, null, projectService());
         }
-        
+
         @Bean
         public RepositoryProperties repositoryProperties()
         {
             return new RepositoryProperties();
         }
 
-        @Bean 
+        @Bean
         public BackupProperties backupProperties()
         {
             return new BackupProperties();
@@ -365,14 +379,14 @@ public class AeroRemoteApiControllerTest
         {
             return new ApplicationContextProvider();
         }
-        
+
         @Bean
         public LayerSupportRegistry layerSupportRegistry()
         {
-            return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(featureSupportRegistry(), null, null),
-                    new RelationLayerSupport(featureSupportRegistry(), null, null),
-                    new ChainLayerSupport(featureSupportRegistry(), null, null)));
+            return new LayerSupportRegistryImpl(
+                    asList(new SpanLayerSupport(featureSupportRegistry(), null, null),
+                            new RelationLayerSupport(featureSupportRegistry(), null, null),
+                            new ChainLayerSupport(featureSupportRegistry(), null, null)));
         }
     }
 }

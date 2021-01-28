@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,25 +44,24 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 public final class CasPersistenceUtils
 {
     private final static Logger LOG = LoggerFactory.getLogger(CasPersistenceUtils.class);
-    
+
     private CasPersistenceUtils()
     {
         // No instances
     }
-    
-    public static void writeSerializedCas(CAS aCas, File aFile)
-        throws IOException
+
+    public static void writeSerializedCas(CAS aCas, File aFile) throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
-        
+
         CASCompleteSerializer serializer = null;
-        
+
         CAS realCas = getRealCas(aCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realCas).getBaseCAS()) {
             try {
                 serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
-    
+
                 // BEGIN SAFEGUARD --------------
                 // Safeguard that we do NOT write a CAS which can afterwards not be read and thus
                 // would render the document broken within the project
@@ -77,18 +76,18 @@ public final class CasPersistenceUtils
                 }
                 throw new IOException(e);
             }
-    
+
             try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
                 os.writeObject(serializer);
             }
         }
     }
-        
+
     private static void preserveForDebugging(File aFile, CAS aCas,
             CASCompleteSerializer aSerializer)
     {
         long ts = System.currentTimeMillis();
-        
+
         try (FileOutputStream xmiout = new FileOutputStream(
                 new File(aFile.getPath() + ".borked-" + ts + ".xmi"))) {
             CasIOUtils.save(aCas, xmiout, SerialFormat.XMI);
@@ -104,9 +103,9 @@ public final class CasPersistenceUtils
         catch (Exception e2) {
             LOG.error("Debug type system serialization failed: {}", e2.getMessage(), e2);
         }
-        
-        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(
-                new File(aFile.getPath() + ".borked-" + ts + ".ser")))) {
+
+        try (ObjectOutputStream os = new ObjectOutputStream(
+                new FileOutputStream(new File(aFile.getPath() + ".borked-" + ts + ".ser")))) {
             os.writeObject(aSerializer);
         }
         catch (Exception e2) {
@@ -114,8 +113,7 @@ public final class CasPersistenceUtils
         }
     }
 
-    public static void readSerializedCas(CAS aCas, File aFile)
-        throws IOException
+    public static void readSerializedCas(CAS aCas, File aFile) throws IOException
     {
         CAS realCas = getRealCas(aCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
@@ -123,16 +121,15 @@ public final class CasPersistenceUtils
             try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
                 CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
                 deserializeCASComplete(serializer, (CASImpl) realCas);
-                
+
                 // Workaround for UIMA adding back deleted DocumentAnnotations
                 // https://issues.apache.org/jira/browse/UIMA-6199
                 // If there is a DocumentMetaData annotation, then we can drop any of the default
                 // UIMA DocumentAnnotation instances (excluding the DocumentMetaData of course)
                 if (!aCas.select(DocumentMetaData.class.getName()).isEmpty()) {
-                    aCas.select(CAS.TYPE_NAME_DOCUMENT_ANNOTATION)
-                        .filter(fs -> !DocumentMetaData.class.getName().equals(
-                                fs.getType().getName()))
-                        .forEach(aCas::removeFsFromIndexes);
+                    aCas.select(CAS.TYPE_NAME_DOCUMENT_ANNOTATION).filter(
+                            fs -> !DocumentMetaData.class.getName().equals(fs.getType().getName()))
+                            .forEach(aCas::removeFsFromIndexes);
                 }
             }
             catch (ClassNotFoundException e) {

@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,17 +56,17 @@ public class ColoringRulesConfigurationPanel
 
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService schemaService;
-    
+
     private final WebMarkupContainer coloringRulesContainer;
     private final IModel<List<ColoringRule>> coloringRules;
-    
+
     public ColoringRulesConfigurationPanel(String aId, IModel<AnnotationLayer> aModel,
             IModel<List<ColoringRule>> aColoringRules)
     {
         super(aId, aModel);
-        
+
         coloringRules = aColoringRules;
-        
+
         Form<ColoringRule> coloringRulesForm = new Form<>("coloringRulesForm",
                 CompoundPropertyModel.of(new ColoringRule()));
         add(coloringRulesForm);
@@ -78,14 +78,14 @@ public class ColoringRulesConfigurationPanel
         coloringRulesContainer.add(new TextField<String>("pattern"));
         // We cannot make the color field a required one here because then we'd get a message
         // about color not being set when saving the entire feature details form!
-        coloringRulesContainer.add(new ColorPickerTextField("color")
-                .add(new PatternValidator("#[0-9a-fA-F]{6}")));
+        coloringRulesContainer.add(
+                new ColorPickerTextField("color").add(new PatternValidator("#[0-9a-fA-F]{6}")));
         coloringRulesContainer
                 .add(new LambdaAjaxSubmitLink<>("addColoringRule", this::addColoringRule));
-                
+
         coloringRulesContainer.add(createKeyBindingsList("coloringRules", coloringRules));
     }
-    
+
     private ListView<ColoringRule> createKeyBindingsList(String aId,
             IModel<List<ColoringRule>> aKeyBindings)
     {
@@ -99,7 +99,7 @@ public class ColoringRulesConfigurationPanel
                 ColoringRule coloringRule = aItem.getModelObject();
 
                 Label value = new Label("pattern", coloringRule.getPattern());
-                
+
                 value.add(new StyleAttributeModifier()
                 {
                     private static final long serialVersionUID = 3627596292626670610L;
@@ -111,23 +111,23 @@ public class ColoringRulesConfigurationPanel
                         return aStyles;
                     }
                 });
-                
+
                 aItem.add(value);
                 aItem.add(new LambdaAjaxLink("removeColoringRule",
-                    _target -> removeColoringRule(_target, aItem.getModelObject())));
+                        _target -> removeColoringRule(_target, aItem.getModelObject())));
             }
         };
     }
-    
+
     public AnnotationLayer getModelObject()
     {
         return (AnnotationLayer) getDefaultModelObject();
     }
-    
+
     private void addColoringRule(AjaxRequestTarget aTarget, Form<ColoringRule> aForm)
     {
         ColoringRule coloringRule = aForm.getModelObject();
-        
+
         if (isBlank(coloringRule.getColor())) {
             error("Color is required");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -148,16 +148,16 @@ public class ColoringRulesConfigurationPanel
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
-        
+
         coloringRules.getObject().add(coloringRule);
-        
+
         aForm.setModelObject(new ColoringRule());
-        
+
         success("Coloring rule added. Do not forget to save the layer details!");
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(coloringRulesContainer);
     }
-    
+
     private void removeColoringRule(AjaxRequestTarget aTarget, ColoringRule aBinding)
     {
         coloringRules.getObject().remove(aBinding);

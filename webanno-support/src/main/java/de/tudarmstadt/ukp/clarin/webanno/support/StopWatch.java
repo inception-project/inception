@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,13 +24,14 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 /**
- * Stop watch class that can be used as a resource in try-catch blocks and logs the time used
- * when the block completes.
+ * Stop watch class that can be used as a resource in try-catch blocks and logs the time used when
+ * the block completes.
  */
-public class StopWatch implements AutoCloseable
+public class StopWatch
+    implements AutoCloseable
 {
     private static final Logger LOG = LoggerFactory.getLogger(StopWatch.class);
-    
+
     private Level level;
     private Logger log;
     private String message;
@@ -55,14 +56,14 @@ public class StopWatch implements AutoCloseable
         log = aLogger;
         level = aLevel;
         values = aValues;
-        
+
         start();
     }
 
     private String getMessage()
     {
         long duration = System.currentTimeMillis() - startTime;
-        
+
         return format("[%4dms] %s", duration, format(message, values));
     }
 
@@ -81,14 +82,14 @@ public class StopWatch implements AutoCloseable
         startTime = System.currentTimeMillis();
         running = true;
     }
-    
+
     public long stop()
     {
         long stop = getTime();
         running = false;
         return stop;
     }
-    
+
     @Override
     public void close()
     {

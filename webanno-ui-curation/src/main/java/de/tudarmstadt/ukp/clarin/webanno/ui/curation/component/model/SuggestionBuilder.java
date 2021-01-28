@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
@@ -100,8 +101,7 @@ public class SuggestionBuilder
     private int diffRangeBegin;
     private int diffRangeEnd;
 
-    public SuggestionBuilder(CasStorageService aCasStorageService,
-            DocumentService aDocumentService,
+    public SuggestionBuilder(CasStorageService aCasStorageService, DocumentService aDocumentService,
             CorrectionDocumentService aCorrectionDocumentService,
             CurationDocumentService aCurationDocumentService,
             AnnotationSchemaService aAnnotationService, UserDao aUserDao)
@@ -144,16 +144,15 @@ public class SuggestionBuilder
             casses = listCasesforCorrection(randomAnnotationDocument, sourceDocument,
                     aState.getMode());
             mergeCas = getMergeCas(aState, sourceDocument, casses, randomAnnotationDocument, false,
-                    false);
+                    false, false);
             String username = casses.keySet().iterator().next();
             updateSegment(aState, segmentBeginEnd, segmentNumber, segmentAdress,
                     casses.get(username), username, aState.getWindowBeginOffset(),
                     aState.getWindowEndOffset());
         }
         else {
-            casses = listCassesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
-                    aState.getMode());
-            mergeCas = getMergeCas(aState, sourceDocument, casses, randomAnnotationDocument,
+            casses = listCassesforCuration(finishedAnnotationDocuments, aState.getMode());
+            mergeCas = getMergeCas(aState, sourceDocument, casses, randomAnnotationDocument, false,
                     false, false);
             updateSegment(aState, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
                     CURATION_USER, getFirstSentence(mergeCas).getBegin(),
@@ -254,14 +253,14 @@ public class SuggestionBuilder
                 .get(SecurityContextHolder.getContext().getAuthentication().getName());
         randomAnnotationDocument = documentService.getAnnotationDocument(aDocument, user);
 
-        CAS cas = documentService.readAnnotationCas(randomAnnotationDocument,
-                SHARED_READ_ONLY_ACCESS);
+        CAS cas = documentService.readAnnotationCas(randomAnnotationDocument.getDocument(),
+                randomAnnotationDocument.getUser(), AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
         casses.put(user.getUsername(), cas);
         return casses;
     }
 
     public Map<String, CAS> listCassesforCuration(List<AnnotationDocument> annotationDocuments,
-            AnnotationDocument randomAnnotationDocument, Mode aMode)
+            Mode aMode)
         throws UIMAException, ClassNotFoundException, IOException
     {
         Map<String, CAS> casses = new HashMap<>();
@@ -272,12 +271,8 @@ public class SuggestionBuilder
                 continue;
             }
 
-            if (randomAnnotationDocument == null) {
-                randomAnnotationDocument = annotationDocument;
-            }
-
-            CAS cas = documentService.readAnnotationCas(annotationDocument,
-                    SHARED_READ_ONLY_ACCESS);
+            CAS cas = documentService.readAnnotationCas(annotationDocument.getDocument(),
+                    annotationDocument.getUser(), AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
             casses.put(username, cas);
         }
         return casses;
@@ -293,8 +288,8 @@ public class SuggestionBuilder
      *            the source document.
      * @param aCasses
      *            the CASes.
-     * @param randomAnnotationDocument
-     *            an annotation document.
+     * @param aTemplate
+     *            an annotation document which is used as a template for the new merge CAS.
      * @return the CAS.
      * @throws UIMAException
      *             hum?
@@ -306,45 +301,59 @@ public class SuggestionBuilder
      *             hum?
      */
     public CAS getMergeCas(AnnotatorState aState, SourceDocument aDocument,
-            Map<String, CAS> aCasses, AnnotationDocument randomAnnotationDocument, boolean aUpgrade,
-            boolean aMergeIncompleteAnnotations)
+            Map<String, CAS> aCasses, AnnotationDocument aTemplate, boolean aUpgrade,
+            boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        CAS mergeCas = null;
-        try {
-            if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
-                mergeCas = correctionDocumentService.readCorrectionCas(aDocument);
-                if (aUpgrade) {
-                    correctionDocumentService.upgradeCorrectionCas(mergeCas, aDocument);
-                    correctionDocumentService.writeCorrectionCas(mergeCas, aDocument);
-                    updateDocumentTimestampAfterWrite(aState, correctionDocumentService
-                            .getCorrectionCasTimestamp(aState.getDocument()));
-                }
-            }
-            else {
-                mergeCas = curationDocumentService.readCurationCas(aDocument);
-                if (aUpgrade) {
-                    curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
-                    curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
-                    updateDocumentTimestampAfterWrite(aState, curationDocumentService
-                            .getCurationCasTimestamp(aState.getDocument()));
-                }
-            }
+        if (aForceRecreateCas) {
+            return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
         }
-        // Create JCas, if it could not be loaded from the file system
-        catch (Exception e) {
-            if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
-                mergeCas = createCorrectionCas(aState, randomAnnotationDocument);
+
+        CAS mergeCas = null;
+        if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
+            if (!correctionDocumentService.existsCorrectionCas(aDocument)) {
+                return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+            }
+            mergeCas = correctionDocumentService.readCorrectionCas(aDocument);
+            if (aUpgrade) {
+                correctionDocumentService.upgradeCorrectionCas(mergeCas, aDocument);
+                correctionDocumentService.writeCorrectionCas(mergeCas, aDocument);
                 updateDocumentTimestampAfterWrite(aState,
                         correctionDocumentService.getCorrectionCasTimestamp(aState.getDocument()));
             }
-            else {
-                mergeCas = createCurationCas(aState, randomAnnotationDocument, aCasses,
-                        aState.getAnnotationLayers(), aMergeIncompleteAnnotations);
+        }
+        else {
+            if (!curationDocumentService.existsCurationCas(aDocument)) {
+                return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+            }
+            mergeCas = curationDocumentService.readCurationCas(aDocument);
+            if (aUpgrade) {
+                curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
+                curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
                 updateDocumentTimestampAfterWrite(aState,
                         curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
             }
         }
+        return mergeCas;
+    }
+
+    public CAS initializeMergeCas(AnnotatorState aState, Map<String, CAS> aCasses,
+            AnnotationDocument aTemplate, boolean aMergeIncompleteAnnotations)
+        throws ClassNotFoundException, UIMAException, IOException, AnnotationException
+    {
+        CAS mergeCas;
+        if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
+            mergeCas = createCorrectionCas(aState, aTemplate);
+            updateDocumentTimestampAfterWrite(aState,
+                    correctionDocumentService.getCorrectionCasTimestamp(aState.getDocument()));
+        }
+        else {
+            mergeCas = createCurationCas(aState, aTemplate, aCasses, aState.getAnnotationLayers(),
+                    aMergeIncompleteAnnotations);
+            updateDocumentTimestampAfterWrite(aState,
+                    curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
+        }
+
         return mergeCas;
     }
 
@@ -417,14 +426,14 @@ public class SuggestionBuilder
     {
         Validate.notNull(aState, "State must be specified");
         Validate.notNull(aRandomAnnotationDocument, "Annotation document must be specified");
-        
+
         // We need a modifiable copy of some annotation document which we can use to initialize
         // the curation CAS. This is an exceptional case where BYPASS is the correct choice
         CAS mergeCas = documentService.readAnnotationCas(aRandomAnnotationDocument,
                 UNMANAGED_ACCESS);
 
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
-        
+
         DiffResult diff;
         try (StopWatch watch = new StopWatch(log, "CasDiff")) {
             diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCasses, 0,
@@ -440,7 +449,7 @@ public class SuggestionBuilder
 
         curationDocumentService.writeCurationCas(mergeCas, aRandomAnnotationDocument.getDocument(),
                 false);
-        
+
         return mergeCas;
     }
 
@@ -449,7 +458,7 @@ public class SuggestionBuilder
         throws UIMAException, ClassNotFoundException, IOException
     {
         User user = userRepository.getCurrentUser();
-        
+
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
         AnnotationDocument annotationDocument = documentService
@@ -462,12 +471,12 @@ public class SuggestionBuilder
                 AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
 
         CAS mergeCas = documentService.readAnnotationCas(annotationDocument);
-        
+
         correctionDocumentService.writeCorrectionCas(mergeCas,
                 aRandomAnnotationDocument.getDocument());
-        updateDocumentTimestampAfterWrite(aState, correctionDocumentService
-                .getCorrectionCasTimestamp(aState.getDocument()));
-        
+        updateDocumentTimestampAfterWrite(aState,
+                correctionDocumentService.getCorrectionCasTimestamp(aState.getDocument()));
+
         return mergeCas;
     }
 }

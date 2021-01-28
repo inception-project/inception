@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ public interface FeatureSupportRegistry
      * types reserved for built-in features. These are not returned.
      */
     List<FeatureType> getAllTypes(AnnotationLayer aLayer);
-    
+
     /**
      * Get the types of all features the user should be able to create. There can also be internal
      * types reserved for built-in features. These are not returned.
@@ -41,13 +41,13 @@ public interface FeatureSupportRegistry
     List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer);
 
     FeatureType getFeatureType(AnnotationFeature aFeature);
-    
+
     /**
      * @deprecated Use {@link #findExtension} instead;
      */
     @Deprecated
     <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature);
-    
+
     /**
      * @deprecated Use {@link #getExtension} instead;
      */

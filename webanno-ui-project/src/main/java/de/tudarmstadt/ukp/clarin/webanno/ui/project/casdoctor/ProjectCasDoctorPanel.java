@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -87,7 +87,7 @@ public class ProjectCasDoctorPanel
         super(id, aProjectModel);
 
         setOutputMarkupId(true);
-        
+
         Form<FormModel> form = new Form<>("casDoctorForm", PropertyModel.of(this, "formModel"));
         add(form);
 
@@ -100,19 +100,19 @@ public class ProjectCasDoctorPanel
         repairs.setSuffix("</div>");
         repairs.setLabelPosition(LabelPosition.WRAP_AFTER);
         form.add(repairs);
-            
+
         form.add(new LambdaAjaxButton<FormModel>("check", this::actionCheck));
         form.add(new LambdaAjaxButton<FormModel>("repair", this::actionRepair));
         add(createMessageSetsView());
     }
-    
+
     @Override
     protected void onModelChanged()
     {
         super.onModelChanged();
         formModel = new FormModel();
     }
-    
+
     private ListView<LogMessageSet> createMessageSetsView()
     {
         return new ListView<LogMessageSet>("messageSets",
@@ -129,7 +129,7 @@ public class ProjectCasDoctorPanel
             }
         };
     }
-    
+
     private ListView<LogMessage> createMessagesView(IModel<LogMessageSet> aModel)
     {
         return new ListView<LogMessage>("messages", PropertyModel.of(aModel, "messages"))
@@ -163,7 +163,7 @@ public class ProjectCasDoctorPanel
             // Repair INITIAL CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                
+
                 try {
                     CAS initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
                     casDoctor.repair(project, initialCas, messageSet.messages);
@@ -173,13 +173,13 @@ public class ProjectCasDoctorPanel
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
                             "Error repairing initial CAS for [" + sd.getName() + "]: "
                                     + e.getMessage()));
-                    LOG.error("Error repairing initial CAS for [{}]",  sd.getName(), e);
+                    LOG.error("Error repairing initial CAS for [{}]", sd.getName(), e);
                 }
-                
+
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Repair CORRECTION_USER CAS if necessary
             if (PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                 LogMessageSet messageSet = new LogMessageSet(
@@ -195,8 +195,8 @@ public class ProjectCasDoctorPanel
                     // If there is no CAS for the correction user, then correction has not started
                     // yet. This is not a problem, so we can ignore it. (REC: I wonder if this
                     // assumption is correct in curation mode...)
-                    messageSet.messages.add(
-                            LogMessage.info(getClass(), "Correction seems to have not yet started."));
+                    messageSet.messages.add(LogMessage.info(getClass(),
+                            "Correction seems to have not yet started."));
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
@@ -209,7 +209,7 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Repair CURATION_USER CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(
@@ -223,8 +223,8 @@ public class ProjectCasDoctorPanel
                 }
                 catch (FileNotFoundException e) {
                     if (asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(sd.getState())) {
-                        messageSet.messages.add(
-                                LogMessage.error(getClass(), "Curation CAS missing."));
+                        messageSet.messages
+                                .add(LogMessage.error(getClass(), "Curation CAS missing."));
                     }
                     else {
                         // If there is no CAS for the curation user, then curation has not started
@@ -244,7 +244,7 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Repair regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
                 if (documentService.existsAnnotationCas(ad)) {
@@ -289,7 +289,7 @@ public class ProjectCasDoctorPanel
             // Check INITIAL CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                
+
                 try {
                     CAS initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
                     casDoctor.analyze(project, initialCas, messageSet.messages);
@@ -300,7 +300,7 @@ public class ProjectCasDoctorPanel
                                     + e.getMessage()));
                     LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
                 }
-                
+
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
@@ -318,8 +318,8 @@ public class ProjectCasDoctorPanel
                     // If there is no CAS for the correction user, then correction has not started
                     // yet. This is not a problem, so we can ignore it. (REC: I wonder if this
                     // assumption is correct in curation mode...)
-                    messageSet.messages.add(
-                            LogMessage.info(getClass(), "Correction seems to have not yet started."));
+                    messageSet.messages.add(LogMessage.info(getClass(),
+                            "Correction seems to have not yet started."));
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
@@ -332,7 +332,7 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Check CURATION_USER CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(
@@ -359,7 +359,7 @@ public class ProjectCasDoctorPanel
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
-            
+
             // Check regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
                 if (documentService.existsAnnotationCas(ad)) {
@@ -377,7 +377,7 @@ public class ProjectCasDoctorPanel
                         LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
                                 sd.getName(), e);
                     }
-                        
+
                     noticeIfThereAreNoMessages(messageSet);
                     formModel.messageSets.add(messageSet);
                 }
@@ -386,7 +386,7 @@ public class ProjectCasDoctorPanel
 
         aTarget.add(this);
     }
-    
+
     private CAS createOrReadInitialCasWithoutSaving(SourceDocument aDocument,
             LogMessageSet aMessageSet)
         throws IOException, UIMAException
@@ -412,15 +412,15 @@ public class ProjectCasDoctorPanel
             aSet.messages.add(new LogMessage(getClass(), LogLevel.INFO, "Nothing to report."));
         }
     }
-    
+
     private static class FormModel
         implements Serializable
     {
         private static final long serialVersionUID = 5421427363671176637L;
-        
+
         private List<LogMessageSet> messageSets = new ArrayList<>();
         private List<Class<? extends Repair>> repairs;
-        
+
         {
             // Fetch only the safe/non-destructive repairs
             List<Class<? extends Repair>> allRepairs = CasDoctor.scanRepairs();
@@ -435,7 +435,7 @@ public class ProjectCasDoctorPanel
         implements Serializable
     {
         private static final long serialVersionUID = 997324549494420840L;
-        
+
         private String name;
         private List<LogMessage> messages = new ArrayList<>();
 

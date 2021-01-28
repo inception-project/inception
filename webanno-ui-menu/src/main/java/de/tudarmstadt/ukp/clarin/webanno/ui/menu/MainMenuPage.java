@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,29 +55,27 @@ public class MainMenuPage
     private @SpringBean MenuItemRegistry menuItemService;
 
     private ListView<MenuItem> menu;
-    
+
     public MainMenuPage()
     {
         setStatelessHint(true);
         setVersioned(false);
-        
+
         // In case we restore a saved session, make sure the user actually still exists in the DB.
         // redirect to login page (if no usr is found, admin/admin will be created)
         User user = userRepository.getCurrentUser();
         if (user == null) {
             setResponsePage(LoginPage.class);
         }
-        
+
         // if not either a curator or annotator, display warning message
-        if (
-                !annotationEnabeled(projectService, user, PROJECT_TYPE_ANNOTATION)
+        if (!annotationEnabeled(projectService, user, PROJECT_TYPE_ANNOTATION)
                 && !annotationEnabeled(projectService, user, PROJECT_TYPE_AUTOMATION)
                 && !annotationEnabeled(projectService, user, PROJECT_TYPE_CORRECTION)
-                && !curationEnabeled(projectService, user)) 
-        {
+                && !curationEnabeled(projectService, user)) {
             warn("You are not member of any projects to annotate or curate.");
         }
-        
+
         menu = new ListView<MenuItem>("menu",
                 LoadableDetachableModel.of(menuItemService::getMenuItems))
         {

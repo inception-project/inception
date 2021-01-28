@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,21 +27,25 @@ public class RulesIndicator
     implements Serializable
 {
     private static final long serialVersionUID = -5606299056181945134L;
-    private int status = 0;
+
+    private static final int STATUS_UNKNOWN = 0;
+    private static final int STATUS_NO_TAGSET = 1;
+    private static final int STATUS_NO_RULE_MATCH = 2;
+    private static final int STATUS_RULE_MATCH = 3;
+
+    private int status = STATUS_UNKNOWN;
     private boolean affected;
 
     public String getStatusColor()
     {
-        if (status == 1) {
+        switch (status) {
+        case STATUS_NO_TAGSET:
             return "red";
-        }
-        else if (status == 2) {
+        case STATUS_NO_RULE_MATCH:
             return "orange";
-        }
-        else if (status == 3) {
+        case STATUS_RULE_MATCH:
             return "green";
-        }
-        else {
+        default:
             return "";
         }
     }
@@ -50,10 +54,10 @@ public class RulesIndicator
     {
         return affected;
     }
-    
+
     public void reset()
     {
-        status = 0;
+        status = STATUS_UNKNOWN;
         affected = false;
     }
 
@@ -64,18 +68,18 @@ public class RulesIndicator
     {
         affected = existence;
     }
-    
+
     /**
      * If a feature is affected by a constraint but there is no tagset defined on the feature. In
      * such a case the constraints cannot reorder tags and have no effect.
      */
     public void didntMatchAnyTag()
     {
-        if (affected && status != 2 && status != 3) {
-            status = 1;
+        if (affected && status != STATUS_NO_RULE_MATCH && status != STATUS_RULE_MATCH) {
+            status = STATUS_NO_TAGSET;
         }
     }
-    
+
     /**
      * if a feature is affected by a constraint but no rule covers the feature value, e.g.
      * <code>@Lemma.value = "go" -&gt; aFrame = "going"</code>. Here aFrame is affected by a
@@ -84,36 +88,44 @@ public class RulesIndicator
      */
     public void didntMatchAnyRule()
     {
-        if (affected && status != 3 && status != 1) {
-            status = 2;
+        if (affected && status != STATUS_RULE_MATCH && status != STATUS_NO_TAGSET) {
+            status = STATUS_NO_RULE_MATCH;
         }
-    }
-    
-    /** 
-     * For case that a constrained actually applied ok there should be a marker. 
-     */
-    public void rulesApplied()
-    {
-        status = 3;
     }
 
     /**
-     * https://github.com/webanno/webanno/issues/46
-     * 
-     * @return status symbols in fontawesome
+     * For case that a constrained actually applied ok there should be a marker.
      */
+    public void rulesApplied()
+    {
+        status = STATUS_RULE_MATCH;
+    }
+
     public String getStatusSymbol()
     {
-        if (status == 1) { // red
+        switch (status) {
+        case STATUS_NO_TAGSET:
             return "fa fa-exclamation-circle";
-        }
-        else if (status == 2) { // orange
+        case STATUS_NO_RULE_MATCH:
             return "fa fa-info-circle";
-        }
-        else if (status == 3) { // green
+        case STATUS_RULE_MATCH:
             return "fa fa-check-circle";
+        default:
+            return "";
         }
-        return "";
+    }
+
+    public String getStatusDescription()
+    {
+        switch (status) {
+        case STATUS_NO_TAGSET:
+            return "Feature must be configured to use a tagset for constraint rules to work!";
+        case STATUS_NO_RULE_MATCH:
+            return "None of the constraint rules affecting this feature match.";
+        case STATUS_RULE_MATCH:
+            return "At least one constraint rule affecting this feature matches";
+        default:
+            return "";
+        }
     }
 }
-

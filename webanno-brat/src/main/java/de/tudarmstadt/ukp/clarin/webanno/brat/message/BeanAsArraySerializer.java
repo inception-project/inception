@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,8 @@ public class BeanAsArraySerializer
     }
 
     public BeanAsArraySerializer(JavaType elemType, boolean staticTyping, TypeSerializer vts,
-            JsonSerializer<Object> valueSerializer) {
+            JsonSerializer<Object> valueSerializer)
+    {
         super(Collection.class, elemType, staticTyping, vts, valueSerializer);
     }
 
@@ -57,12 +58,12 @@ public class BeanAsArraySerializer
         super(Collection.class, elemType, staticTyping, vts, property, null);
     }
 
-    public BeanAsArraySerializer(BeanAsArraySerializer src,
-            BeanProperty property, TypeSerializer vts, JsonSerializer<?> valueSerializer,
-            Boolean unwrapSingle) {
+    public BeanAsArraySerializer(BeanAsArraySerializer src, BeanProperty property,
+            TypeSerializer vts, JsonSerializer<?> valueSerializer, Boolean unwrapSingle)
+    {
         super(src, property, vts, valueSerializer, unwrapSingle);
     }
-    
+
     @Override
     public ContainerSerializer<?> _withValueTypeSerializer(TypeSerializer vts)
     {
@@ -76,7 +77,7 @@ public class BeanAsArraySerializer
     {
         return new BeanAsArraySerializer(this, aProperty, aVts, aElementSerializer, aUnwrapSingle);
     }
-    
+
     @Override
     public boolean hasSingleElement(Object aValue)
     {
@@ -85,10 +86,10 @@ public class BeanAsArraySerializer
                 return ((Object[]) aValue).length == 1;
             }
         }
-        
+
         return false;
     }
-    
+
     @Override
     public void serializeContents(Object value, JsonGenerator jgen, SerializerProvider provider)
         throws IOException

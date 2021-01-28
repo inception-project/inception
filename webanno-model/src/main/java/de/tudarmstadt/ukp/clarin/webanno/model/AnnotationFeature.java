@@ -1,14 +1,14 @@
 /*
- * Copyright 2014
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
@@ -33,6 +34,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
@@ -46,8 +49,10 @@ import org.hibernate.annotations.Type;
  * feature of another span type which then serves as a label type for the first one
  */
 @Entity
-@Table(name = "annotation_feature", uniqueConstraints = { @UniqueConstraint(columnNames = {
-        "annotation_type", "name", "project" }) })
+@Table(name = "annotation_feature", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "annotation_type", "name", "project" }) })
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class AnnotationFeature
     implements Serializable
 {
@@ -61,18 +66,19 @@ public class AnnotationFeature
     private String type;
 
     @ManyToOne
-    @JoinColumn(name = "annotation_type", 
-        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "annotation_type", foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationLayer layer;
 
     @ManyToOne
     @JoinColumn(name = "project")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Project project;
 
     @ManyToOne
-    @JoinColumn(name = "tag_set", 
-        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "tag_set", foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     @NotFound(action = NotFoundAction.IGNORE)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private TagSet tagset;
 
     @Column(nullable = false)
@@ -88,15 +94,15 @@ public class AnnotationFeature
     private String name;
 
     private boolean visible = true;
-    
+
     @Column(name = "includeInHover")
     private boolean includeInHover = false;
-    
+
     private boolean remember;
-    
+
     @Column(name = "hideUnconstraintFeature")
     private boolean hideUnconstraintFeature;
-    
+
     private boolean required;
 
     @Column(name = "multi_value_mode")
@@ -109,17 +115,17 @@ public class AnnotationFeature
 
     @Column(name = "link_type_name")
     private String linkTypeName;
-    
+
     @Column(name = "link_type_role_feature_name")
     private String linkTypeRoleFeatureName;
-    
+
     @Column(name = "link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
-    
+
     @Lob
     @Column(length = 64000)
     private String traits;
-    
+
     public AnnotationFeature()
     {
         // Nothing to do
@@ -143,8 +149,7 @@ public class AnnotationFeature
         uiName = aName;
         type = aType;
     }
-    
-    
+
     public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
             String aType)
     {
@@ -188,10 +193,11 @@ public class AnnotationFeature
     }
 
     /**
-     * The type of feature (string, integer, float, boolean, or a span type used as a label).
-     * Must be a UIMA type name such as {@code uima.cas.String} or the name of a custom type.
+     * The type of feature (string, integer, float, boolean, or a span type used as a label). Must
+     * be a UIMA type name such as {@code uima.cas.String} or the name of a custom type.
      * 
-     * @param type the type of feature.
+     * @param type
+     *            the type of feature.
      */
     public void setType(String type)
     {
@@ -211,7 +217,8 @@ public class AnnotationFeature
     /**
      * The layer with which the feature is associated.
      * 
-     * @param layer the layer.
+     * @param layer
+     *            the layer.
      */
     public void setLayer(AnnotationLayer layer)
     {
@@ -224,7 +231,8 @@ public class AnnotationFeature
     }
 
     /**
-     * @param project the project.
+     * @param project
+     *            the project.
      */
     public void setProject(Project project)
     {
@@ -244,7 +252,8 @@ public class AnnotationFeature
     /**
      * The name of the feature as displayed in the UI.
      * 
-     * @param uiName the name displayed in the UI.
+     * @param uiName
+     *            the name displayed in the UI.
      */
     public void setUiName(String uiName)
     {
@@ -264,7 +273,8 @@ public class AnnotationFeature
     /**
      * A description of the feature.
      * 
-     * @param description the description.
+     * @param description
+     *            the description.
      */
     public void setDescription(String description)
     {
@@ -284,7 +294,8 @@ public class AnnotationFeature
     /**
      * Whether the type is available in the UI (outside of the project settings)
      * 
-     * @param enabled if the layer is enabled.
+     * @param enabled
+     *            if the layer is enabled.
      */
     public void setEnabled(boolean enabled)
     {
@@ -304,7 +315,8 @@ public class AnnotationFeature
     /**
      * The name of the feature in the UIMA type system.
      * 
-     * @param name the UIMA type name.
+     * @param name
+     *            the UIMA type name.
      */
     public void setName(String name)
     {
@@ -320,7 +332,8 @@ public class AnnotationFeature
     }
 
     /**
-     * @param visible if the feature value is rendered in the label.
+     * @param visible
+     *            if the feature value is rendered in the label.
      */
     public void setVisible(boolean visible)
     {
@@ -374,7 +387,7 @@ public class AnnotationFeature
     {
         multiValueMode = aMode;
     }
-    
+
     public LinkMode getLinkMode()
     {
         if (linkMode == null) {
@@ -472,7 +485,7 @@ public class AnnotationFeature
     {
         required = aRequired;
     }
-    
+
     /**
      * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
      * must be mapped to a plain UIMA type (usually to String).
@@ -484,7 +497,7 @@ public class AnnotationFeature
     {
         return getType().contains(":");
     }
-    
+
     public String getTraits()
     {
         return traits;
@@ -498,9 +511,7 @@ public class AnnotationFeature
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this)
-                .append("name", name)
-                .build();
+        return new ToStringBuilder(this).append("name", name).build();
     }
 
     @Override

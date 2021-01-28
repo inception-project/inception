@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.IOException;
@@ -50,6 +51,7 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -78,18 +80,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class LinkFeatureEditor
     extends FeatureEditor
@@ -123,7 +128,7 @@ public class LinkFeatureEditor
             final IModel<AnnotatorState> aStateModel, final IModel<FeatureState> aFeatureStateModel)
     {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
-        
+
         LinkFeatureTraits traits = getTraits();
 
         stateModel = aStateModel;
@@ -157,40 +162,63 @@ public class LinkFeatureEditor
                 };
             }
 
+            private String getRole(LinkWithRoleModel aModel)
+            {
+                AnnotatorState state = stateModel.getObject();
+
+                if (aModel.targetAddr <= -1) {
+                    return aModel.role;
+                }
+
+                CAS cas;
+                try {
+                    cas = actionHandler.getEditorCas();
+                }
+                catch (IOException e) {
+                    handleException(this, null, e);
+                    return "";
+                }
+
+                FeatureStructure fs = selectFsByAddr(cas, aModel.targetAddr);
+                AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
+
+                if (!traits.isEnableRoleLabels()) {
+                    return layer.getUiName();
+                }
+
+                TypeAdapter adapter = annotationService.getAdapter(layer);
+                Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(
+                        layer, () -> annotationService.listAnnotationFeature(layer));
+                List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+                Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        fs, features);
+
+                String roleLabel = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+                if (isEmpty(roleLabel)) {
+                    roleLabel = aModel.role + ": " + layer.getUiName();
+                }
+                else {
+                    roleLabel = aModel.role + ": " + layer.getUiName() + ": " + roleLabel;
+                }
+
+                return roleLabel;
+            }
+
             @Override
             protected void populateItem(final Item<LinkWithRoleModel> aItem)
             {
                 AnnotatorState state = stateModel.getObject();
 
                 aItem.setModel(new CompoundPropertyModel<>(aItem.getModelObject()));
-                Label role;
-                if (!traits.isEnableRoleLabels() && aItem.getModelObject().targetAddr > -1) {
-                    try {
-                        CAS cas = actionHandler.getEditorCas();
-                        FeatureStructure fs =
-                                selectFsByAddr(cas, aItem.getModelObject().targetAddr);
-                        AnnotationLayer layer =
-                                annotationService.findLayer(state.getProject(),  fs);
-                        TypeAdapter adapter =
-                                annotationService.getAdapter(layer);
-                        Renderer renderer = layerSupportRegistry.getLayerSupport(layer)
-                                .createRenderer(layer,
-                                    () -> annotationService.listAnnotationFeature(layer));
-                        List<AnnotationFeature> features =
-                                annotationService.listAnnotationFeature(layer);
-                        Map<String, String> renderedFeatures =
-                                renderer.renderLabelFeatureValues(adapter, fs, features);
-                        String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
-                        role = new Label("role", labelText);
-                    }
-                    catch (IOException e) {
-                        handleException(this, null, e);
-                        role = new Label("role");
-                    }
-                } else {
-                    role = new Label("role");
-                }
-                aItem.add(role);
+                aItem.add(new Label("role",
+                        LoadableDetachableModel.of(() -> getRole(aItem.getModelObject()))));
+
+                aItem.add(new LambdaAjaxLink("jumpToAnnotation",
+                        _target -> actionHandler.actionSelectAndJump(_target,
+                                new VID(aItem.getModelObject().targetAddr))) //
+                                        .setAlwaysEnabled(true) //
+                                        .add(visibleWhen(
+                                                () -> aItem.getModelObject().targetAddr != -1)));
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
@@ -229,7 +257,6 @@ public class LinkFeatureEditor
             }
         });
 
-        
         if (getModelObject().feature.getTagset() != null) {
             field = new StyledComboBox<Tag>("newRole", PropertyModel.of(this, "newRole"),
                     PropertyModel.of(getModel(), "tagset"))
@@ -269,18 +296,19 @@ public class LinkFeatureEditor
                 public void onConfigure(JQueryBehavior aBehavior)
                 {
                     super.onConfigure(aBehavior);
-                    
+
                     aBehavior.setOption("placeholder", Options.asString("Select role"));
-                    
+
                     // Trigger a re-loading of the tagset from the server as constraints may have
                     // changed the ordering
                     Optional<AjaxRequestTarget> target = RequestCycle.get()
                             .find(AjaxRequestTarget.class);
                     if (target.isPresent()) {
                         LOG.trace("onInitialize() requesting datasource re-reading");
-                        target.get().appendJavaScript(
-                                String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
-                                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
+                        target.get()
+                                .appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
+                                        "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
                     }
                 }
             };
@@ -294,11 +322,9 @@ public class LinkFeatureEditor
             FeatureState featureState = LinkFeatureEditor.this.getModelObject();
             AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
-            
-            if (state.isSlotArmed()
-                    && featureState.feature.equals(state.getArmedFeature().feature)
-                    && links.size() > state.getArmedSlot())
-            {
+
+            if (state.isSlotArmed() && featureState.feature.equals(state.getArmedFeature().feature)
+                    && links.size() > state.getArmedSlot()) {
                 field.setModelObject(links.get(state.getArmedSlot()).role);
             }
             else {
@@ -362,10 +388,10 @@ public class LinkFeatureEditor
 
         // Allows user to update slot
         LambdaAjaxLink setBtn = new LambdaAjaxLink("set", this::actionSet);
-        setBtn.add(visibleWhen(() -> traits.isEnableRoleLabels() 
-                && stateModel.getObject().isSlotArmed() 
-                && LinkFeatureEditor.this.getModelObject().feature
-                .equals(stateModel.getObject().getArmedFeature().feature)));
+        setBtn.add(visibleWhen(
+                () -> traits.isEnableRoleLabels() && stateModel.getObject().isSlotArmed()
+                        && LinkFeatureEditor.this.getModelObject().feature
+                                .equals(stateModel.getObject().getArmedFeature().feature)));
         content.add(setBtn);
 
         // Add a new empty slot with the specified role
@@ -407,21 +433,21 @@ public class LinkFeatureEditor
         for (LinkWithRoleModel l : links) {
             roles.add(l.role);
         }
-        
+
         for (long id : traits.getDefaultSlots()) {
             Optional<Tag> optionalTag = annotationService.getTag(id);
-            
+
             // If a tag is missing, ignore it. We do not have foreign-key constraints in
             // traits, so it is not an unusal situation that a user deletes a tag still
             // referenced in a trait.
             if (optionalTag.isPresent()) {
                 Tag tag = optionalTag.get();
-                
+
                 // Check if there is already a slot with the given name
                 if (roles.contains(tag.getName())) {
                     continue;
                 }
-                
+
                 // Add empty slot in UI with that name.
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = tag.getName();
@@ -432,8 +458,9 @@ public class LinkFeatureEditor
             }
         }
     }
-    
-    private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> aPossibleValues)
+
+    private void autoAddImportantTags(List<ReorderableTag> aTagset,
+            List<PossibleValue> aPossibleValues)
     {
         if (aTagset == null || aTagset.isEmpty() || aPossibleValues == null
                 || aPossibleValues.isEmpty()) {
@@ -442,7 +469,7 @@ public class LinkFeatureEditor
 
         // Construct a quick index for tags
         Set<String> tagset = new HashSet<>();
-        for (Tag t : aTagset) {
+        for (ReorderableTag t : aTagset) {
             tagset.add(t.getName());
         }
 
@@ -489,7 +516,7 @@ public class LinkFeatureEditor
     public void onConfigure()
     {
         super.onConfigure();
-        
+
         // Update entries for important tags.
         removeAutomaticallyAddedUnusedEntries();
         FeatureState featureState = getModelObject();
@@ -502,12 +529,13 @@ public class LinkFeatureEditor
     }
 
     private void actionAdd(AjaxRequestTarget aTarget)
-    {        
-        if (StringUtils.isBlank((String) field.getModelObject()) 
+    {
+        if (StringUtils.isBlank((String) field.getModelObject())
                 && getTraits().isEnableRoleLabels()) {
             error("Must set slot label before adding!");
             aTarget.addChildren(getPage(), IFeedback.class);
-        } else {
+        }
+        else {
             @SuppressWarnings("unchecked")
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                     .getModelObject().value;
@@ -530,19 +558,21 @@ public class LinkFeatureEditor
                 && getTraits().isEnableRoleLabels()) {
             error("Must set slot label before changing!");
             aTarget.addChildren(getPage(), IFeedback.class);
-        } else {
-            @SuppressWarnings("unchecked") List<LinkWithRoleModel> links =
-                    (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
+        }
+        else {
+            @SuppressWarnings("unchecked")
+            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                    .getModelObject().value;
             AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
             FeatureState fs = state.getArmedFeature();
-    
+
             // Update the slot
             LinkWithRoleModel m = links.get(state.getArmedSlot());
             m.role = (String) field.getModelObject();
             links.set(state.getArmedSlot(), m); // avoid reordering
-    
+
             aTarget.add(content);
-    
+
             // Send event - but only if we set the label on a slot which was already filled/saved.
             // Unset slots only exist in the link editor and if we commit the change here, we
             // trigger a reload of the feature editors from the CAS which makes the unfilled slots
@@ -566,7 +596,7 @@ public class LinkFeatureEditor
         state.clearArmedSlot();
 
         aTarget.add(content);
-        
+
         send(this, BUBBLE, new LinkFeatureDeletedEvent(this, aTarget, linkWithRoleModel));
     }
 
@@ -610,25 +640,25 @@ public class LinkFeatureEditor
             LOG.error("Error: " + e.getMessage(), e);
         }
     }
-    
+
     @OnEvent
     public void onAnnotationDeleted(AnnotationDeletedEvent aEvent)
     {
         // It could be that a slot filler was deleted - so just in case, we re-render ourself.
         aEvent.getRequestTarget().add(this);
     }
-    
+
     @OnEvent
     public void onRenderSlotsEvent(RenderSlotsEvent aEvent)
     {
         // Redraw because it could happen that another slot is armed, replacing this.
         aEvent.getRequestHandler().add(this);
     }
-    
-    private LinkFeatureTraits getTraits() {
+
+    private LinkFeatureTraits getTraits()
+    {
         AnnotationFeature feat = getModelObject().feature;
-        FeatureSupport<LinkFeatureTraits> fs =
-                featureSupportRegistry.getFeatureSupport(feat);
+        FeatureSupport<LinkFeatureTraits> fs = featureSupportRegistry.getFeatureSupport(feat);
         return fs.readTraits(feat);
     }
 }

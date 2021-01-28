@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,8 +44,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
+
 /**
  * A wicket panel for logout.
  */
@@ -60,7 +60,7 @@ public class LogoutPanel
     public LogoutPanel(String id)
     {
         super(id);
-        
+
         add(new StatelessLink<Void>("logout")
         {
             private static final long serialVersionUID = -4031945370627254798L;
@@ -73,30 +73,29 @@ public class LogoutPanel
                 setResponsePage(getApplication().getHomePage());
             }
         });
-        
-        String username = Optional.ofNullable(userRepository.getCurrentUser())
-                .map(User::getUsername).orElse("");
+
+        String username = Optional.ofNullable(userRepository.getCurrentUsername()).orElse("");
         BookmarkablePageLink<Void> profileLink = new BookmarkablePageLink<>("profile",
-                ManageUsersPage.class, new PageParameters().add(
-                        ManageUsersPage.PARAM_USER, username));
+                ManageUsersPage.class,
+                new PageParameters().add(ManageUsersPage.PARAM_USER, username));
         profileLink.add(enabledWhen(SecurityUtil::isProfileSelfServiceAllowed));
         profileLink.add(visibleWhen(() -> isNotBlank(username)));
         profileLink.add(new Label("username", username));
         add(profileLink);
-        
+
         WebMarkupContainer logoutTimer = new WebMarkupContainer("logoutTimer");
         logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0));
         add(logoutTimer);
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(AuthenticatedWebSession.get().isSignedIn());
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
@@ -104,11 +103,11 @@ public class LogoutPanel
 
         aResponse.render(new PriorityHeaderItem(JavaScriptHeaderItem.forReference(
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference())));
-        
+
         // We use calls from this library to show the logout timer
         aResponse.render(new PriorityHeaderItem(
                 JavaScriptHeaderItem.forReference(WicketAjaxJQueryResourceReference.get())));
-        
+
         int timeout = getAutoLogoutTime();
         if (timeout > 0) {
             aResponse.render(JavaScriptHeaderItem.forScript(
@@ -116,7 +115,7 @@ public class LogoutPanel
                     "webAnnoAutoLogout"));
         }
     }
-    
+
     /**
      * Checks if auto-logout is enabled. For Winstone, we get a max session length of 0, so here it
      * is disabled.
@@ -130,7 +129,7 @@ public class LogoutPanel
             if (session != null) {
                 duration = session.getMaxInactiveInterval();
             }
-        }        
+        }
         return duration;
     }
 }

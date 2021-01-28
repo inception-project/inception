@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,8 +37,8 @@ public class XmiFormatSupport
     implements FormatSupport
 {
     public static final String ID = "xmi";
-    public static final String NAME = "UIMA CAS XMI";
-    
+    public static final String NAME = "UIMA CAS XMI (XML 1.0)";
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class XmiFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -67,15 +67,14 @@ public class XmiFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(XmiReader.class,
-                XmiReader.PARAM_LENIENT, true);
+        return createReaderDescription(XmiReader.class, XmiReader.PARAM_LENIENT, true);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(XmiWriter.class, aTSD);
+        return createEngineDescription(XmiWriter.class, aTSD, XmiWriter.PARAM_VERSION, "1.0");
     }
 }

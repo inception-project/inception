@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,16 +53,16 @@ public class RelationAttachmentBehavior
         originFS = selectCovered(cas, attachType, originFS.getBegin(), originFS.getEnd()).get(0);
         return aRequest.changeRelation(originFS, targetFS);
     }
-        
+
     public static FeatureStructure[] resolve(RelationAdapter aAdapter, AnnotationFS aRelation)
     {
         Type type = aRelation.getType();
         Feature targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
-        
+
         FeatureStructure targetFs;
         FeatureStructure sourceFs;
-        
+
         if (aAdapter.getAttachFeatureName() != null) {
             Type spanType = getType(aRelation.getCAS(), aAdapter.getAttachTypeName());
             Feature arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
@@ -73,7 +73,7 @@ public class RelationAttachmentBehavior
             targetFs = aRelation.getFeatureValue(targetFeature);
             sourceFs = aRelation.getFeatureValue(sourceFeature);
         }
-        
+
         return new FeatureStructure[] { sourceFs, targetFs };
     }
 }

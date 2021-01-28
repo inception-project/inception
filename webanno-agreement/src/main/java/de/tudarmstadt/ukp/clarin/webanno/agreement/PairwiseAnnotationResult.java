@@ -1,13 +1,13 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,7 @@ public class PairwiseAnnotationResult<R extends Serializable>
 
     private final Set<String> raters = new TreeSet<>();
     private final Map<String, R> results = new HashMap<>();
-    
+
     private final AnnotationFeature feature;
     private final DefaultAgreementTraits traits;
 
@@ -43,7 +43,7 @@ public class PairwiseAnnotationResult<R extends Serializable>
         feature = aFeature;
         traits = aTraits;
     }
-    
+
     public AnnotationFeature getFeature()
     {
         return feature;
@@ -53,7 +53,7 @@ public class PairwiseAnnotationResult<R extends Serializable>
     {
         return traits;
     }
-    
+
     public Set<String> getRaters()
     {
         return raters;

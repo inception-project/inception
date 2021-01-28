@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -75,12 +75,12 @@ public class ExportDocumentDialogContent
         Preferences prefs = new Preferences();
         prefs.format = writeableFormats.get(0);
         prefs.documentType = SELECTEXPORT.ANNOTATED.toString();
-        
+
         preferences = Model.of(prefs);
-        
+
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
         add(form);
-        
+
         DropDownChoice<String> format = new BootstrapSelect<>("format", writeableFormats);
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         form.add(format);
@@ -98,47 +98,44 @@ public class ExportDocumentDialogContent
         form.add(export);
         form.add(new LambdaAjaxLink("cancel", (target) -> modalWindow.close(target)));
     }
-    
+
     private FileResourceStream export()
     {
         File downloadFile = null;
-        
+
         String username;
-        
-        if (state.getObject().getMode()
-                .equals(Mode.AUTOMATION)
-                && preferences.getObject().documentType
-                        .equals(SELECTEXPORT.AUTOMATED.toString())) {
+
+        if (state.getObject().getMode().equals(Mode.AUTOMATION)
+                && preferences.getObject().documentType.equals(SELECTEXPORT.AUTOMATED.toString())) {
             username = WebAnnoConst.CORRECTION_USER;
         }
         else {
             username = state.getObject().getUser().getUsername();
         }
-        
+
         try {
             downloadFile = importExportService.exportAnnotationDocument(
                     state.getObject().getDocument(), username,
-                    importExportService.getFormatByName(preferences.getObject().format)
-                            .get(),
+                    importExportService.getFormatByName(preferences.getObject().format).get(),
                     state.getObject().getDocument().getName(), state.getObject().getMode());
         }
         catch (Exception e) {
             LOG.error("Export failed", e);
             error("Export failed:" + ExceptionUtils.getRootCauseMessage(e));
             // This will cause the open dialog to pop up again, but at least
-            // the error feedback message will be visible. With the 
+            // the error feedback message will be visible. With the
             // RestartResponseException the feedback message only flashes.
             throw new NonResettingRestartException(getPage().getPageClass());
         }
-            
+
         return new FileResourceStream(downloadFile);
     }
-    
+
     private static class Preferences
         implements Serializable
     {
         private static final long serialVersionUID = -4905538356691404575L;
-        
+
         public String documentType;
         public String format;
 

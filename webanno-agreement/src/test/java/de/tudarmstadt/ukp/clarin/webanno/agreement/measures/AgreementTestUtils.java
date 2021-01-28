@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,8 +66,7 @@ public class AgreementTestUtils
     public static final String HOST_TYPE = "LinkHost";
     public static final String LINK_TYPE = "LinkType";
 
-    public static Map<String, List<CAS>> load(String... aPaths)
-        throws UIMAException, IOException
+    public static Map<String, List<CAS>> load(String... aPaths) throws UIMAException, IOException
     {
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
@@ -106,8 +105,7 @@ public class AgreementTestUtils
         return casByUser;
     }
 
-    public static CAS read(String aPath)
-        throws UIMAException, IOException
+    public static CAS read(String aPath) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
@@ -165,8 +163,7 @@ public class AgreementTestUtils
         return jcas;
     }
 
-    public static TypeSystemDescription createMultiLinkWithRoleTestTypeSytem()
-        throws Exception
+    public static TypeSystemDescription createMultiLinkWithRoleTestTypeSytem() throws Exception
     {
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
 
@@ -273,7 +270,7 @@ public class AgreementTestUtils
 
         return linkA1;
     }
-    
+
     public static JCas loadWebAnnoTsv3(String aPath) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(WebannoTsv3XReader.class,
@@ -292,8 +289,7 @@ public class AgreementTestUtils
         return jcas;
     }
 
-    public static CAS readConll2006(String aPath)
-        throws UIMAException, IOException
+    public static CAS readConll2006(String aPath) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
@@ -329,7 +325,7 @@ public class AgreementTestUtils
 
         return CasCreationUtils.mergeTypeSystems(typeSystems);
     }
-    
+
     @Deprecated
     public static CodingAgreementResult getCohenKappaAgreement(CasDiff aDiff, String aType,
             String aFeature, Map<String, List<CAS>> aCasMap)
@@ -345,19 +341,19 @@ public class AgreementTestUtils
         if (aCasMap.size() != 2) {
             throw new IllegalArgumentException("CAS map must contain exactly two CASes");
         }
-        
+
         CodingAgreementResult agreementResult = makeCodingStudy(aDiff, aType, aFeature,
                 aExcludeIncomplete, aCasMap);
         try {
             IAgreementMeasure agreement = aMeasure.make(agreementResult.getStudy());
-            
+
             if (agreementResult.getStudy().getItemCount() > 0) {
                 agreementResult.setAgreement(agreement.calculateAgreement());
             }
             else {
                 agreementResult.setAgreement(Double.NaN);
             }
-            
+
         }
         catch (InsufficientDataException e) {
             agreementResult.setAgreement(Double.NaN);

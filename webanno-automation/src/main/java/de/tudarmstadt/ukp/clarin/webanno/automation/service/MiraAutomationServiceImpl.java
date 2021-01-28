@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,14 +71,14 @@ public class MiraAutomationServiceImpl
     implements AutomationService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final File dir;
     private final AutomationCasStorageService automationCasStorageService;
     private final ImportExportService importExportService;
-    
+
     @PersistenceContext
     private EntityManager entityManager;
-    
+
     @Autowired
     public MiraAutomationServiceImpl(RepositoryProperties aRepositoryProperties,
             AutomationCasStorageService aAutomationCasStorageService,
@@ -88,7 +88,7 @@ public class MiraAutomationServiceImpl
         automationCasStorageService = aAutomationCasStorageService;
         importExportService = aImportExportService;
     }
-    
+
     @Override
     public List<String> listTemplates(Project aProject)
     {
@@ -111,8 +111,9 @@ public class MiraAutomationServiceImpl
     @Transactional
     public List<MiraTemplate> listMiraTemplates(Project aProject)
     {
-        List<MiraTemplate> allTenplates = entityManager.createQuery(
-                "FROM MiraTemplate ORDER BY trainFeature ASC ", MiraTemplate.class).getResultList();
+        List<MiraTemplate> allTenplates = entityManager
+                .createQuery("FROM MiraTemplate ORDER BY trainFeature ASC ", MiraTemplate.class)
+                .getResultList();
         List<MiraTemplate> templatesInThisProject = new ArrayList<>();
         for (MiraTemplate miraTemplate : allTenplates) {
             if (nonNull(miraTemplate.getTrainFeature()) && Objects.equals(
@@ -129,7 +130,7 @@ public class MiraAutomationServiceImpl
     {
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
                 + aProject.getId() + MIRA + MIRA_TEMPLATE + aFileName));
-        
+
         Logging.setMDC(aProject.getId(), aUsername);
         log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
                 aProject.getId());
@@ -143,8 +144,8 @@ public class MiraAutomationServiceImpl
         String templatePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
                 + MIRA + MIRA_TEMPLATE;
         FileUtils.forceMkdir(new File(templatePath));
-        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(templatePath
-                + aFileName)));
+        copyLarge(new FileInputStream(aContent),
+                new FileOutputStream(new File(templatePath + aFileName)));
 
         Logging.setMDC(aProject.getId(), aUsername);
         log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
@@ -164,7 +165,7 @@ public class MiraAutomationServiceImpl
         }
         entityManager.remove(aTemplate);
     }
-    
+
     @Override
     @Transactional
     public void createAutomationStatus(AutomationStatus aStatus)
@@ -178,8 +179,8 @@ public class MiraAutomationServiceImpl
         try {
             entityManager
                     .createQuery("FROM AutomationStatus WHERE template =:template",
-                            AutomationStatus.class).setParameter("template", aTemplate)
-                    .getSingleResult();
+                            AutomationStatus.class)
+                    .setParameter("template", aTemplate).getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
@@ -193,8 +194,8 @@ public class MiraAutomationServiceImpl
     {
         return entityManager
                 .createQuery("FROM AutomationStatus WHERE template =:template",
-                        AutomationStatus.class).setParameter("template", aTemplate)
-                .getSingleResult();
+                        AutomationStatus.class)
+                .setParameter("template", aTemplate).getSingleResult();
     }
 
     @Override
@@ -210,15 +211,15 @@ public class MiraAutomationServiceImpl
             TrainingDocument aDocument)
     {
         if (aDocument != null) {
-            return new File(getMiraDir(aFeature), aDocument.getId() + "- "
-                    + aDocument.getProject().getId() + "-model");
+            return new File(getMiraDir(aFeature),
+                    aDocument.getId() + "- " + aDocument.getProject().getId() + "-model");
         }
         else if (aOtherLayer) {
             return new File(getMiraDir(aFeature), aFeature.getId() + "-model");
         }
         else {
-            return new File(getMiraDir(aFeature), aFeature.getLayer().getId() + "-"
-                    + aFeature.getId() + "-model");
+            return new File(getMiraDir(aFeature),
+                    aFeature.getLayer().getId() + "-" + aFeature.getId() + "-model");
         }
     }
 
@@ -246,8 +247,8 @@ public class MiraAutomationServiceImpl
     {
         return entityManager
                 .createQuery("FROM MiraTemplate WHERE trainFeature =:trainFeature",
-                        MiraTemplate.class).setParameter("trainFeature", aFeature)
-                .getSingleResult();
+                        MiraTemplate.class)
+                .setParameter("trainFeature", aFeature).getSingleResult();
     }
 
     @Override
@@ -256,8 +257,8 @@ public class MiraAutomationServiceImpl
         try {
             entityManager
                     .createQuery("FROM MiraTemplate WHERE trainFeature =:trainFeature",
-                            MiraTemplate.class).setParameter("trainFeature", aFeature)
-                    .getSingleResult();
+                            MiraTemplate.class)
+                    .setParameter("trainFeature", aFeature).getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
@@ -281,7 +282,7 @@ public class MiraAutomationServiceImpl
         }
         return tabSepDocuments;
     }
-    
+
     @Override
     @Transactional
     public boolean existsTrainingDocument(Project aProject, String aFileName)
@@ -290,19 +291,19 @@ public class MiraAutomationServiceImpl
             entityManager
                     .createQuery(
                             "FROM TrainingDocument WHERE project = :project AND " + "name =:name ",
-                            TrainingDocument.class).setParameter("project", aProject)
-                    .setParameter("name", aFileName).getSingleResult();
+                            TrainingDocument.class)
+                    .setParameter("project", aProject).setParameter("name", aFileName)
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
             return false;
         }
     }
-    
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public File getDocumentFolder(TrainingDocument trainingDocument)
-        throws IOException
+    public File getDocumentFolder(TrainingDocument trainingDocument) throws IOException
     {
         File trainingDocFolder = new File(dir,
                 "/" + PROJECT_FOLDER + "/" + trainingDocument.getProject().getId() + TRAIN
@@ -320,15 +321,15 @@ public class MiraAutomationServiceImpl
                 .createQuery("FROM TrainingDocument where project =:project",
                         TrainingDocument.class)
                 .setParameter("project", aProject).getResultList();
-       /*
-        * List<TrainingDocument> webAnnoTraiingDocuments = new ArrayList<TrainingDocument>(); for
-        * (TrainingDocument trainingDocument : trainingDocuments) { if
-        * (trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
-        * webAnnoTraiingDocuments.add(trainingDocument); } }
-        */
+        /*
+         * List<TrainingDocument> webAnnoTraiingDocuments = new ArrayList<TrainingDocument>(); for
+         * (TrainingDocument trainingDocument : trainingDocuments) { if
+         * (trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
+         * webAnnoTraiingDocuments.add(trainingDocument); } }
+         */
         return trainingDocuments;
     }
-    
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public TrainingDocument getTrainingDocument(Project aProject, String aDocumentName)
@@ -339,12 +340,11 @@ public class MiraAutomationServiceImpl
                 .setParameter("name", aDocumentName).setParameter("project", aProject)
                 .getSingleResult();
     }
-    
+
     @Override
     @Transactional
-    public void removeTrainingDocument(TrainingDocument aDocument)
-        throws IOException
-    {       
+    public void removeTrainingDocument(TrainingDocument aDocument) throws IOException
+    {
         entityManager.remove(aDocument);
 
         String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
@@ -400,12 +400,10 @@ public class MiraAutomationServiceImpl
 
         return cas;
     }
-    
-    
+
     @Override
     @Transactional
-    public void createTrainingDocument(TrainingDocument aDocument)
-        throws IOException
+    public void createTrainingDocument(TrainingDocument aDocument) throws IOException
     {
         if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
@@ -414,23 +412,20 @@ public class MiraAutomationServiceImpl
             entityManager.merge(aDocument);
         }
     }
-    
+
     @Override
-    public boolean existsInitialCas(TrainingDocument aDocument)
-        throws IOException
+    public boolean existsInitialCas(TrainingDocument aDocument) throws IOException
     {
         return existsCas(aDocument);
     }
-    
+
     @Override
     @Transactional
-    public boolean existsCas(TrainingDocument aTrainingDocument)
-        throws IOException
+    public boolean existsCas(TrainingDocument aTrainingDocument) throws IOException
     {
-        return new File(automationCasStorageService.getAutomationFolder(aTrainingDocument), aTrainingDocument.getName() + ".ser")
-                .exists();
+        return new File(automationCasStorageService.getAutomationFolder(aTrainingDocument),
+                aTrainingDocument.getName() + ".ser").exists();
     }
-    
 
     @Override
     public CAS createInitialCas(TrainingDocument aDocument)
@@ -485,11 +480,10 @@ public class MiraAutomationServiceImpl
                         + TRAIN + aDocument.getId() + "/" + ANNOTATION_FOLDER);
         return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
     }
-    
+
     @Override
     @Transactional
-    public void uploadTrainingDocument(File aFile, TrainingDocument aDocument)
-        throws IOException
+    public void uploadTrainingDocument(File aFile, TrainingDocument aDocument) throws IOException
     {
         // Check if the file has a valid format / can be converted without error
         CAS cas = null;
@@ -528,8 +522,8 @@ public class MiraAutomationServiceImpl
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
             Project project = aDocument.getProject();
-            log.info("Imported training document [{}]({}) to project [{}]({})", 
-                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+            log.info("Imported training document [{}]({}) to project [{}]({})", aDocument.getName(),
+                    aDocument.getId(), project.getName(), project.getId());
         }
     }
 

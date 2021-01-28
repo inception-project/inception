@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,26 +17,38 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class PreRendererImpl implements PreRenderer
+public class PreRendererImpl
+    implements PreRenderer
 {
     private final AnnotationSchemaService annotationService;
     private final LayerSupportRegistry layerSupportRegistry;
+
+    private LoadingCache<Project, List<AnnotationFeature>> supportedFeaturesCache;
+    private LoadingCache<Project, List<AnnotationFeature>> allFeaturesCache;
 
     @Autowired
     public PreRendererImpl(LayerSupportRegistry aLayerSupportRegistry,
@@ -44,32 +56,53 @@ public class PreRendererImpl implements PreRenderer
     {
         layerSupportRegistry = aLayerSupportRegistry;
         annotationService = aAnnotationService;
+
+        supportedFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024).build(annotationService::listSupportedFeatures);
+        allFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024).build(annotationService::listAnnotationFeature);
     }
-    
+
     @Override
-    public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
+    public void render(VDocument aResponse, int windowBegin, int windowEnd, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
+        Validate.notNull(aCas, "CAS cannot be null");
+
         if (aLayers.isEmpty()) {
             return;
         }
-        
-        // The project for all layers must be the same, so we just fetch the project from the 
+
+        // The project for all layers must be the same, so we just fetch the project from the
         // first layer
         Project project = aLayers.get(0).getProject();
-        
+
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
-        List<AnnotationFeature> allFeatures = annotationService.listSupportedFeatures(project);
-        
+        List<AnnotationFeature> supportedFeatures = supportedFeaturesCache.get(project);
+        List<AnnotationFeature> allFeatures = allFeaturesCache.get(project);
+
         // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
-            List<AnnotationFeature> features = allFeatures.stream()
-                    .filter(feature -> feature.getLayer().equals(layer))
+            List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream() //
+                    .filter(feature -> feature.getLayer().equals(layer)) //
                     .collect(toList());
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
-                () -> annotationService.listAnnotationFeature(layer));
-            renderer.render(aCas, features, aResponse, windowBeginOffset, windowEndOffset);
+            List<AnnotationFeature> layerAllFeatures = allFeatures.stream() //
+                    .filter(feature -> feature.getLayer().equals(layer)) //
+                    .collect(toList());
+            // We need to pass in *all* the annotation features here because we also to that in
+            // other places where we create renderers - and the set of features must always be
+            // the same because otherwise the IDs of armed slots would be inconsistent
+            Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
+                    .createRenderer(layer, () -> layerAllFeatures);
+            renderer.render(aCas, layerSupportedFeatures, aResponse, windowBegin, windowEnd);
         }
+    }
+
+    @EventListener
+    public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
+    {
+        supportedFeaturesCache.asMap().keySet()
+                .removeIf(key -> Objects.equals(key.getId(), aEvent.getProject().getId()));
     }
 }

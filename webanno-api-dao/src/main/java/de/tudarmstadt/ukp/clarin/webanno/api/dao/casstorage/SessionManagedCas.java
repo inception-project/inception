@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,16 +35,16 @@ public class SessionManagedCas
     private final CasAccessMode mode;
     private final CAS cas;
     private final CasHolder casHolder;
-    
+
     private int readCount;
     private int writeCount;
 
     public SessionManagedCas(long aSourceDocumentId, String aUserId, CasAccessMode aMode, CAS aCas)
     {
         super();
-        
+
         Validate.notNull(aCas, "CAS cannot be null");
-        
+
         sourceDocumentId = aSourceDocumentId;
         userId = aUserId;
         mode = aMode;
@@ -56,36 +56,41 @@ public class SessionManagedCas
             CasHolder aCasHolder)
     {
         super();
-        
+
         Validate.notNull(aCasHolder, "CAS holder cannot be null");
-        
+
         sourceDocumentId = aSourceDocumentId;
         userId = aUserId;
         mode = aMode;
         cas = null;
         casHolder = aCasHolder;
     }
-    
+
+    public CasHolder getCasHolder()
+    {
+        return casHolder;
+    }
+
     public long getSourceDocumentId()
     {
         return sourceDocumentId;
     }
-    
+
     public String getUserId()
     {
         return userId;
     }
-    
+
     public CasAccessMode getMode()
     {
         return mode;
     }
-    
+
     public boolean isCasSet()
     {
         return casHolder != null ? casHolder.isCasSet() : cas != null;
     }
-    
+
     public void setCas(CAS aCas)
     {
         if (casHolder != null) {
@@ -96,7 +101,7 @@ public class SessionManagedCas
                     "Managed CAS must have been borrowed in order to be replaced");
         }
     }
-    
+
     public CAS getCas()
     {
         if (cas != null) {
@@ -106,7 +111,7 @@ public class SessionManagedCas
             return casHolder.getCas();
         }
     }
-    
+
     public void incrementReadCount()
     {
         readCount++;
@@ -116,17 +121,17 @@ public class SessionManagedCas
     {
         writeCount++;
     }
-    
+
     public int getReadCount()
     {
         return readCount;
     }
-    
+
     public int getWriteCount()
     {
         return writeCount;
     }
-    
+
     /**
      * @return whether making modifications to the managed CAS is permitted.
      */
@@ -142,9 +147,8 @@ public class SessionManagedCas
             return false;
         }
         SessionManagedCas castOther = (SessionManagedCas) other;
-        return Objects.equals(sourceDocumentId, castOther.sourceDocumentId) && 
-                Objects.equals(userId, castOther.userId) && 
-                Objects.equals(mode, castOther.mode);
+        return Objects.equals(sourceDocumentId, castOther.sourceDocumentId)
+                && Objects.equals(userId, castOther.userId) && Objects.equals(mode, castOther.mode);
     }
 
     @Override
@@ -157,21 +161,16 @@ public class SessionManagedCas
     public String toString()
     {
         ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE);
-        
+
         if (sourceDocumentId >= 0l) {
-            builder.append("doc", sourceDocumentId)
-                    .append("user", userId);
+            builder.append("doc", sourceDocumentId).append("user", userId);
         }
         else {
             builder.append("purpose", userId);
         }
-        
-        return builder
-                .append("cas", cas.hashCode())
-                .append("m", mode)
-                .append("r", readCount)
-                .append("w", writeCount)
-                .toString();
+
+        return builder.append("cas", cas.hashCode()).append("m", mode).append("r", readCount)
+                .append("w", writeCount).toString();
 
     }
 }

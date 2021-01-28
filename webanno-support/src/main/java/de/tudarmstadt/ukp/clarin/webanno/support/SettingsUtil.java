@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.clarin.webanno.support;
+
+import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,20 +35,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
-
 public class SettingsUtil
 {
     private static String propApplicationHome = "webanno.home";
     private static String applicationUserHomeSubdir = ".webanno";
-    
+
     public static final String PROP_BUILD_NUMBER = "buildNumber";
     public static final String PROP_TIMESTAMP = "timestamp";
     public static final String PROP_VERSION = "version";
-    
+
     private static final String PROP_USER_HOME = "user.home";
-    
+
     private static final String SETTINGS_FILE = "settings.properties";
-    
+
     public static final String CFG_LOCALE = "locale";
     public static final String CFG_STYLE_LOGO = "style.logo";
     public static final String CFG_LOGIN_MESSAGE = "login.message";
@@ -55,36 +56,36 @@ public class SettingsUtil
     public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
     public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
     public static final String CFG_USER_ALLOW_PROFILE_ACCESS = "user.profile.accessible";
-    
+
     public static final String CFG_LINK_PREFIX = "style.header.icon.";
     public static final String CFG_LINK_URL = ".linkUrl";
     public static final String CFG_LINK_IMAGE_URL = ".imageUrl";
-    
+
     private static Properties versionInfo;
     private static Properties settings;
-    
+
     public static void customizeApplication(String aPropertyName, String aSubdirName)
     {
         propApplicationHome = aPropertyName;
         applicationUserHomeSubdir = aSubdirName;
     }
-    
+
     public static String getApplicationUserHomeSubdir()
     {
         return applicationUserHomeSubdir;
     }
-    
+
     public static String getPropApplicationHome()
     {
         return propApplicationHome;
     }
-    
+
     public static Properties getVersionProperties()
     {
         if (versionInfo == null) {
             try {
-                versionInfo = PropertiesLoaderUtils.loadProperties(new ClassPathResource(
-                        "META-INF/version.properties"));
+                versionInfo = PropertiesLoaderUtils
+                        .loadProperties(new ClassPathResource("META-INF/version.properties"));
             }
             catch (IOException e) {
                 versionInfo = new Properties();
@@ -93,10 +94,10 @@ public class SettingsUtil
                 versionInfo.setProperty(PROP_BUILD_NUMBER, "unknown");
             }
         }
-        
+
         return versionInfo;
     }
-    
+
     public static String getVersionString()
     {
         Properties props = getVersionProperties();
@@ -104,12 +105,11 @@ public class SettingsUtil
             return "Version information not available";
         }
         else {
-            return props.getProperty(SettingsUtil.PROP_VERSION) + " ("
-                    + props.getProperty(SettingsUtil.PROP_TIMESTAMP) + ", build "
-                    + props.getProperty(SettingsUtil.PROP_BUILD_NUMBER) + ")";
+            return props.getProperty(PROP_VERSION) + " (" + props.getProperty(PROP_TIMESTAMP)
+                    + ", build " + substring(props.getProperty(PROP_BUILD_NUMBER), 0, 8) + ")";
         }
     }
-    
+
     public static File getApplicationHome()
     {
         String appHome = System.getProperty(propApplicationHome);
@@ -122,7 +122,7 @@ public class SettingsUtil
             return new File(userHome + "/" + applicationUserHomeSubdir);
         }
     }
-    
+
     /**
      * Locate the settings file and return its location.
      * 
@@ -149,14 +149,15 @@ public class SettingsUtil
             return null;
         }
     }
-    
+
     /**
      * 
-     * @deprecated To access setting properties, use Spring Boot 
-     * {@link org.springframework.boot.context.properties.ConfigurationProperties} classes 
-     * implementing a corresponding interface instead 
-     * (e.g. @see de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
+     * @deprecated To access setting properties, use Spring Boot
+     *             {@link org.springframework.boot.context.properties.ConfigurationProperties}
+     *             classes implementing a corresponding interface instead (e.g. @see
+     *             de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
      */
+    @Deprecated
     public static Properties getSettings()
     {
         if (settings == null) {
@@ -167,14 +168,14 @@ public class SettingsUtil
                     settings.load(in);
                 }
                 catch (IOException e) {
-                    LoggerFactory.getLogger(SettingsUtil.class).error(
-                            "Unable to load settings file [" + settings + "]", e);
+                    LoggerFactory.getLogger(SettingsUtil.class)
+                            .error("Unable to load settings file [" + settings + "]", e);
                 }
             }
         }
         return settings;
     }
-    
+
     public static List<ImageLinkDecl> getLinks()
     {
         Properties props = getSettings();
@@ -182,14 +183,14 @@ public class SettingsUtil
         for (String key : props.stringPropertyNames()) {
             if (key.startsWith(CFG_LINK_PREFIX)) {
                 String id = StringUtils.substringBetween(key, CFG_LINK_PREFIX, ".");
-                
+
                 // Create new declaration for current ID if there is none so far
                 ImageLinkDecl e = linkMap.get(id);
                 if (e == null) {
                     e = new ImageLinkDecl(id);
                     linkMap.put(id, e);
                 }
-            
+
                 // Record link URL
                 if (key.endsWith(CFG_LINK_URL)) {
                     e.setLinkUrl(props.getProperty(key));
@@ -200,11 +201,11 @@ public class SettingsUtil
                 }
             }
         }
-        
+
         // Sort by ID
         List<ImageLinkDecl> links = new ArrayList<>(linkMap.values());
         links.sort(Comparator.comparing(ImageLinkDecl::getId));
-        
+
         return links;
     }
 }

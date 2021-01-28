@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universit?t Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,7 +74,6 @@ import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -131,7 +130,7 @@ public class MonitoringPage
     extends ApplicationPageBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
-    
+
     private static final long serialVersionUID = -2102136855109258306L;
 
     /**
@@ -155,7 +154,7 @@ public class MonitoringPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationService;
-    
+
     private ProjectSelectionForm projectSelectionForm;
     private MonitoringDetailForm monitoringDetailForm;
     private SvgChart annotatorsProgressImage;
@@ -175,9 +174,9 @@ public class MonitoringPage
             MonitoringPage.class, "resultset_next.png");
     private static final ResourceReference ICON_NEW = new PackageResourceReference(
             MonitoringPage.class, "new.png");
-    
+
     private static final Map<Object, ResourceReference> ICONS;
-    
+
     static {
         Map<Object, ResourceReference> icons = new HashMap<>();
         icons.put(ANNOTATION_FINISHED, ICON_FINISHED);
@@ -185,38 +184,37 @@ public class MonitoringPage
         icons.put(CURATION_IN_PROGRESS, ICON_INPROGRESS);
         // We only show these icons in the curation column and if the annotation is still in
         // progress, then this counts as the curation not having stated yet (NEW)
-        icons.put(ANNOTATION_IN_PROGRESS, ICON_NEW);  
+        icons.put(ANNOTATION_IN_PROGRESS, ICON_NEW);
         icons.put(NEW, ICON_NEW);
-        
+
         icons.put(AnnotationDocumentState.FINISHED, ICON_FINISHED);
         icons.put(AnnotationDocumentState.IGNORE, ICON_IGNORE);
         icons.put(AnnotationDocumentState.IN_PROGRESS, ICON_INPROGRESS);
         icons.put(AnnotationDocumentState.NEW, ICON_NEW);
         ICONS = Collections.unmodifiableMap(icons);
     }
-    
-    
+
     public MonitoringPage()
     {
         super();
-        
+
         commonInit();
     }
 
     public MonitoringPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
-        
+
         commonInit();
-       
+
         projectSelectionForm.setVisibilityAllowed(false);
-        
+
         User user = userRepository.getCurrentUser();
-        
+
         // Get current project from parameters
         StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
         Optional<Project> project = getProjectFromParameters(projectParameter);
-        
+
         if (project.isPresent()) {
             // Check access to project
             if (project != null && !(projectService.isCurator(project.get(), user)
@@ -224,7 +222,7 @@ public class MonitoringPage
                 error("You have no permission to access project [" + project.get().getId() + "]");
                 setResponsePage(getApplication().getHomePage());
             }
-            
+
             projectSelectionForm.selectProject(project.get());
         }
         else {
@@ -232,41 +230,41 @@ public class MonitoringPage
             setResponsePage(getApplication().getHomePage());
         }
     }
-    
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void commonInit()
     {
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
-        
+
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
         monitoringDetailForm.setOutputMarkupId(true);
-        
+
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
         trainingResultForm.setVisibilityAllowed(automationService != null);
         add(trainingResultForm);
-        
+
         annotatorsProgressImage = new SvgChart("annotator",
                 LoadableDetachableModel.of(this::renderAnnotatorAbsoluteProgress));
         annotatorsProgressImage.setOutputMarkupId(true);
         annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);
         annotatorsProgressImage.setVisible(false);
-        
+
         annotatorsProgressPercentageImage = new SvgChart("annotatorPercentage",
                 LoadableDetachableModel.of(this::renderAnnotatorPercentageProgress));
         annotatorsProgressPercentageImage.setOutputMarkupId(true);
         annotatorsProgressPercentageImage.setOutputMarkupPlaceholderTag(true);
         annotatorsProgressPercentageImage.setVisible(false);
-        
+
         overallProjectProgressImage = new SvgChart("overallProjectProgressImage",
                 LoadableDetachableModel.of(this::renderProjectProgress));
         overallProjectProgressImage.setOutputMarkupId(true);
         overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
         overallProjectProgressImage.setVisible(true);
         add(overallProjectProgressImage);
-        
+
         add(projectSelectionForm);
-        
+
         if (!projectService.listProjects().isEmpty()) {
             Project project = projectService.listProjects().get(0);
             List<List<String>> userAnnotationDocumentLists = new ArrayList<>();
@@ -294,10 +292,10 @@ public class MonitoringPage
             annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
             monitoringDetailForm.setVisible(false);
             add(monitoringDetailForm.add(annotatorsProgressImage)
-                    .add(annotatorsProgressPercentageImage)
-                    .add(annotationDocumentStatusTable));
+                    .add(annotatorsProgressPercentageImage).add(annotationDocumentStatusTable));
             annotationDocumentStatusTable.setVisible(false);
-        } else {
+        }
+        else {
             annotationDocumentStatusTable = new EmptyPanel("rsTable");
             monitoringDetailForm.setVisible(false);
             add(monitoringDetailForm);
@@ -307,14 +305,14 @@ public class MonitoringPage
             info("There are no projects.");
         }
     }
-    
+
     private JFreeChart renderProjectProgress()
     {
         Map<String, Integer> data = getOverallProjectProgress();
         overallProjectProgressImage.getOptions().withViewBox(600, 30 + (data.size() * 18));
         return createProgressChart(data, 100, true);
     }
-    
+
     private JFreeChart renderAnnotatorAbsoluteProgress()
     {
         Map<String, Integer> data = projectSelectionForm.getModelObject().annotatorsProgress;
@@ -322,7 +320,7 @@ public class MonitoringPage
         return createProgressChart(data, projectSelectionForm.getModelObject().totalDocuments,
                 false);
     }
-    
+
     private JFreeChart renderAnnotatorPercentageProgress()
     {
         Map<String, Integer> data = projectSelectionForm
@@ -369,8 +367,9 @@ public class MonitoringPage
                     });
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
-                    
-                    add(new FormComponentUpdatingBehavior() {
+
+                    add(new FormComponentUpdatingBehavior()
+                    {
                         private static final long serialVersionUID = -8626216183950181168L;
 
                         @Override
@@ -390,8 +389,9 @@ public class MonitoringPage
                 }
             });
         }
-        
-        private void selectProject(Project aNewSelection) {
+
+        private void selectProject(Project aNewSelection)
+        {
 
             if (aNewSelection == null) {
                 return;
@@ -416,11 +416,10 @@ public class MonitoringPage
 
             // Annotator's Progress
             if (projectSelectionModel.project != null) {
-                projectSelectionModel.annotatorsProgressInPercent
-                        .putAll(getPercentageOfFinishedDocumentsPerUser(
-                                projectSelectionModel.project));
-                projectSelectionModel.annotatorsProgress.putAll(
-                        getFinishedDocumentsPerUser(projectSelectionModel.project));
+                projectSelectionModel.annotatorsProgressInPercent.putAll(
+                        getPercentageOfFinishedDocumentsPerUser(projectSelectionModel.project));
+                projectSelectionModel.annotatorsProgress
+                        .putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
             }
             overallProjectProgressImage.setVisible(false);
             annotatorsProgressImage.setVisible(true);
@@ -447,22 +446,19 @@ public class MonitoringPage
             projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first
                                                                  // column
             if (projectService.existsProjectTimeStamp(aNewSelection)) {
-                projectTimeStamp.add(LAST_ACCESS
-                        + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(
-                                projectService.getProjectTimeStamp(aNewSelection)));
+                projectTimeStamp.add(LAST_ACCESS + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+                        .format(projectService.getProjectTimeStamp(aNewSelection)));
             }
             else {
                 projectTimeStamp.add(LAST_ACCESS + "__");
             }
 
             for (User user : users) {
-                if (projectService.existsProjectTimeStamp(
-                        projectSelectionModel.project, user.getUsername())) {
-                    projectTimeStamp.add(LAST_ACCESS
-                            + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-                                    .format(projectService.getProjectTimeStamp(
-                                            projectSelectionModel.project,
-                                            user.getUsername())));
+                if (projectService.existsProjectTimeStamp(projectSelectionModel.project,
+                        user.getUsername())) {
+                    projectTimeStamp.add(LAST_ACCESS + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+                            .format(projectService.getProjectTimeStamp(
+                                    projectSelectionModel.project, user.getUsername())));
                 }
                 else {
                     projectTimeStamp.add(LAST_ACCESS + "__");
@@ -476,20 +472,20 @@ public class MonitoringPage
                 userAnnotationDocuments.add(DOCUMENT + document.getName());
 
                 // Curation Document status
-                userAnnotationDocuments.add(WebAnnoConst.CURATION_USER + "-"
-                        + DOCUMENT + document.getName());
+                userAnnotationDocuments
+                        .add(WebAnnoConst.CURATION_USER + "-" + DOCUMENT + document.getName());
 
                 for (User user : users) {
                     // annotation document status for this annotator
-                    userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
-                            + document.getName());
+                    userAnnotationDocuments
+                            .add(user.getUsername() + "-" + DOCUMENT + document.getName());
                 }
 
                 userAnnotationDocumentStatusList.add(userAnnotationDocuments);
             }
 
-            TableDataProvider provider = new TableDataProvider(
-                    documentListAsColumnHeader, userAnnotationDocumentStatusList);
+            TableDataProvider provider = new TableDataProvider(documentListAsColumnHeader,
+                    userAnnotationDocumentStatusList);
 
             List<IColumn<?, ?>> columns = new ArrayList<>();
 
@@ -498,8 +494,7 @@ public class MonitoringPage
                         projectSelectionModel.project));
             }
             annotationDocumentStatusTable.remove();
-            annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
-                    provider, 20);
+            annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns, provider, 20);
             annotationDocumentStatusTable.setOutputMarkupId(true);
             monitoringDetailForm.add(annotationDocumentStatusTable);
         }
@@ -526,12 +521,11 @@ public class MonitoringPage
                 .listFinishedAnnotationDocuments(aProject).stream()
                 .collect(groupingBy(AnnotationDocument::getUser));
 
-        // We explicitly use HashMap::new below since we *really* want a mutable map and 
+        // We explicitly use HashMap::new below since we *really* want a mutable map and
         // Collectors.toMap(...) doesn't make guarantees about the mutability of the map type it
         // internally creates.
-        Map<String, Integer> finishedDocumentsPerUser = docsPerUser.entrySet().stream()
-                .collect(toMap(Entry::getKey, e -> e.getValue().size(), throwingMerger(), 
-                        HashMap::new));
+        Map<String, Integer> finishedDocumentsPerUser = docsPerUser.entrySet().stream().collect(
+                toMap(Entry::getKey, e -> e.getValue().size(), throwingMerger(), HashMap::new));
 
         // Make sure we also have all annotators in the map who have not actually annotated
         // anything
@@ -541,13 +535,13 @@ public class MonitoringPage
 
         // Add the finished documents for the curation user
         List<SourceDocument> curatedDocuments = curationService.listCuratedDocuments(aProject);
-        
+
         // Little hack: to ensure that the curation user comes first on screen, add a space
         finishedDocumentsPerUser.put(CURATION_USER, curatedDocuments.size());
-        
+
         return finishedDocumentsPerUser;
     }
-    
+
     private Map<String, Integer> getPercentageOfFinishedDocumentsPerUser(Project aProject)
     {
         if (aProject == null) {
@@ -555,24 +549,24 @@ public class MonitoringPage
         }
 
         Map<String, Integer> finishedDocumentsPerUser = getFinishedDocumentsPerUser(aProject);
-        
+
         Map<String, Integer> percentageFinishedPerUser = new HashMap<>();
-        List<User> annotators = new ArrayList<>(projectService.listProjectUsersWithPermissions(
-                aProject, ANNOTATOR));
-        
+        List<User> annotators = new ArrayList<>(
+                projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR));
+
         // Little hack: to ensure that the curation user comes first on screen, add a space
         annotators.add(new User(CURATION_USER));
-        
+
         for (User annotator : annotators) {
             Map<SourceDocument, AnnotationDocument> docsForUser = documentService
                     .listAnnotatableDocuments(aProject, annotator);
-            
+
             int finished = finishedDocumentsPerUser.get(annotator.getUsername());
             int annotatableDocs = docsForUser.size();
             percentageFinishedPerUser.put(annotator.getUsername(),
                     (int) Math.round((double) (finished * 100) / annotatableDocs));
         }
-        
+
         return percentageFinishedPerUser;
     }
 
@@ -593,13 +587,10 @@ public class MonitoringPage
         return overallProjectProgress;
     }
 
-    private static SerializableComparator<String> USER_COMPARATOR = (u1, u2) -> 
-            new CompareToBuilder()
-                    .append(u1, CURATION_USER)
-                    .append(u2, CURATION_USER)
-                    .append(u1, u2)
-                    .toComparison();
-    
+    private static SerializableComparator<String> USER_COMPARATOR = (u1,
+            u2) -> new CompareToBuilder().append(u1, CURATION_USER).append(u2, CURATION_USER)
+                    .append(u1, u2).toComparison();
+
     static public class ProjectSelectionModel
         implements Serializable
     {
@@ -620,11 +611,11 @@ public class MonitoringPage
         public MonitoringDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<>(new EntityModel<>(new Project())));
-            
+
             add(new Label("name"));
         }
     }
-    
+
     private void updateTrainingResultForm(Project aProject)
     {
         trainingResultForm.remove();
@@ -782,8 +773,8 @@ public class MonitoringPage
                         @Override
                         protected List<MiraTemplate> load()
                         {
-                            return automationService.listMiraTemplates(projectSelectionForm
-                                    .getModelObject().project);
+                            return automationService.listMiraTemplates(
+                                    projectSelectionForm.getModelObject().project);
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<MiraTemplate>()
@@ -793,12 +784,10 @@ public class MonitoringPage
                         @Override
                         public Object getDisplayValue(MiraTemplate aObject)
                         {
-                            return "["
-                                    + aObject.getTrainFeature().getLayer().getUiName()
-                                    + "] "
-                                    + (aObject.getTrainFeature().getTagset() == null ? aObject
-                                            .getTrainFeature().getUiName() : aObject
-                                            .getTrainFeature().getTagset().getName());
+                            return "[" + aObject.getTrainFeature().getLayer().getUiName() + "] "
+                                    + (aObject.getTrainFeature().getTagset() == null
+                                            ? aObject.getTrainFeature().getUiName()
+                                            : aObject.getTrainFeature().getTagset().getName());
                         }
                     });
                     setNullValid(false);
@@ -838,7 +827,7 @@ public class MonitoringPage
         public String status;
 
     }
-    
+
     private JFreeChart createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
             boolean aIsPercentage)
     {
@@ -849,7 +838,7 @@ public class MonitoringPage
                 dataset.setValue(chartValues.get(chartValue), "Completion", chartValue);
             }
         }
-        
+
         // create chart
         JFreeChart chart = ChartFactory.createBarChart(null, null, null, dataset,
                 PlotOrientation.HORIZONTAL, false, false, false);
@@ -888,14 +877,14 @@ public class MonitoringPage
 
         return chart;
     }
-    
+
     /**
      * Build dynamic columns for the user's annotation documents status {@link DataGridView}
      */
     public class DocumentStatusColumnMetaData
         extends AbstractColumn<List<String>, Object>
     {
-//        private RepositoryService projectRepositoryService;
+        // private RepositoryService projectRepositoryService;
 
         private static final long serialVersionUID = 1L;
         private int columnNumber;
@@ -905,17 +894,7 @@ public class MonitoringPage
         public DocumentStatusColumnMetaData(final TableDataProvider prov, final int colNumber,
                 Project aProject)
         {
-            super(new AbstractReadOnlyModel<String>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public String getObject()
-                {
-                    return prov.getColNames().get(colNumber);
-
-                }
-            });
+            super(LoadableDetachableModel.of(() -> prov.getColNames().get(colNumber)));
             columnNumber = colNumber;
             project = aProject;
         }
@@ -924,8 +903,7 @@ public class MonitoringPage
         public void populateItem(final Item<ICellPopulator<List<String>>> aCellItem,
                 final String componentId, final IModel<List<String>> rowModel)
         {
-            String username = SecurityContextHolder.getContext().getAuthentication()
-                    .getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             final User user = userRepository.get(username);
 
             int rowNumber = aCellItem.getIndex();
@@ -959,7 +937,7 @@ public class MonitoringPage
                                     "alert('the state can only be changed explicitly by the curator')");
                             return;
                         }
-                        
+
                         SourceDocument doc = documentService.getSourceDocument(project,
                                 value.substring(value.indexOf(":") + 1));
                         if (doc.getState().equals(CURATION_FINISHED)) {
@@ -1016,8 +994,7 @@ public class MonitoringPage
                     {
                         SourceDocument document = documentService.getSourceDocument(project,
                                 value.substring(value.indexOf(":") + 1));
-                        User user = userRepository.get(value.substring(0,
-                                value.indexOf(":")));
+                        User user = userRepository.get(value.substring(0, value.indexOf(":")));
 
                         AnnotationDocumentState state;
                         if (documentService.existsAnnotationDocument(document, user)) {
@@ -1029,8 +1006,8 @@ public class MonitoringPage
                                 changeAnnotationDocumentState(document, user,
                                         ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
                             }
-                            else if (state.toString().equals(
-                                    AnnotationDocumentState.IN_PROGRESS.toString())) {
+                            else if (state.toString()
+                                    .equals(AnnotationDocumentState.IN_PROGRESS.toString())) {
                                 changeAnnotationDocumentState(document, user,
                                         ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
                             }
@@ -1053,7 +1030,7 @@ public class MonitoringPage
                             documentService.transitionAnnotationDocumentState(annotationDocument,
                                     NEW_TO_ANNOTATION_IN_PROGRESS);
                         }
-                        
+
                         aTarget.add(aCellItem);
                         updateStats(aTarget, projectSelectionForm.getModelObject());
                     }
@@ -1074,7 +1051,7 @@ public class MonitoringPage
 
             aTarget.add(monitoringDetailForm);
         }
-        
+
         /**
          * Helper method to get the cell value for the user-annotation document status as
          * <b>username:documentName</b>
@@ -1097,8 +1074,8 @@ public class MonitoringPage
             else {
 
                 String username = aValue.substring(0, aValue.indexOf(MonitoringPage.DOCUMENT) - 1);
-                String documentName = aValue.substring(aValue.indexOf(MonitoringPage.DOCUMENT)
-                        + MonitoringPage.DOCUMENT.length());
+                String documentName = aValue.substring(
+                        aValue.indexOf(MonitoringPage.DOCUMENT) + MonitoringPage.DOCUMENT.length());
                 return username + ":" + documentName;
             }
         }
@@ -1111,18 +1088,18 @@ public class MonitoringPage
         {
             AnnotationDocument annotationDocument = documentService
                     .getAnnotationDocument(aSourceDocument, aUser);
-            
+
             documentService.transitionAnnotationDocumentState(annotationDocument,
                     aAnnotationDocumentStateTransition);
         }
     }
-    
+
     private Optional<Project> getProjectFromParameters(StringValue projectParam)
     {
         if (projectParam == null || projectParam.isEmpty()) {
             return Optional.empty();
         }
-        
+
         try {
             return Optional.of(projectService.getProject(projectParam.toLong()));
         }
@@ -1130,7 +1107,7 @@ public class MonitoringPage
             return Optional.empty();
         }
     }
-    
+
     private static <T> BinaryOperator<T> throwingMerger()
     {
         return (u, v) -> {

@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,18 +73,18 @@ public class LayerSelectionPanel
     private final DropDownChoice<AnnotationLayer> layerSelector;
     private final WebMarkupContainer forwardAnnotationGroup;
     private final AnnotationDetailEditorPanel owner;
-    
+
     private final List<AnnotationLayer> selectableLayers = new ArrayList<>();
 
     public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel,
             AnnotationDetailEditorPanel aOwner)
     {
         super(aId, new CompoundPropertyModel<>(aModel));
-        
+
         setOutputMarkupId(true);
-        
+
         owner = aOwner;
-        
+
         add(relationHint = createRelationHint());
         add(layerSelector = createDefaultAnnotationLayerSelector());
         // Visible if there is more than one selectable layer and if either "remember layer" is off
@@ -94,7 +94,7 @@ public class LayerSelectionPanel
                 .map(layerChoices -> layerChoices.size() > 1).orElse(false).getObject()
                 && (!getModelObject().getPreferences().isRememberLayer()
                         || getEditorPage().isEditable())));
-        
+
         // Trying to re-render the forwardAnnotationCheckBox as part of an AJAX request when it is
         // not visible causes an error in the JS console saying that the component could not be
         // found. Placing it in this WebMarkupContainer and controlling the visibility via the
@@ -107,12 +107,12 @@ public class LayerSelectionPanel
         add(forwardAnnotationGroup);
 
     }
-    
+
     public AnnotationPageBase getEditorPage()
     {
         return (AnnotationPageBase) getPage();
     }
-    
+
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
@@ -148,7 +148,7 @@ public class LayerSelectionPanel
         }));
         return label;
     }
-    
+
     private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
         DropDownChoice<AnnotationLayer> selector = new BootstrapSelect<>("defaultAnnotationLayer");
@@ -159,21 +159,21 @@ public class LayerSelectionPanel
                 this::actionChangeDefaultLayer));
         return selector;
     }
-    
+
     private void actionChangeDefaultLayer(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
 
         aTarget.add(relationHint);
         aTarget.add(forwardAnnotationGroup);
-        
+
         // If forward annotation was enabled, disable it
         if (state.isForwardAnnotation()) {
             state.setForwardAnnotation(false);
         }
-        
+
         send(this, Broadcast.BUBBLE, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
-        
+
         // Save the currently selected layer as a user preference so it is remains active when a
         // user leaves the application and later comes back to continue annotating
         long prevDefaultLayer = state.getPreferences().getDefaultLayer();
@@ -186,8 +186,7 @@ public class LayerSelectionPanel
         if (prevDefaultLayer != state.getPreferences().getDefaultLayer()) {
             try {
                 userPreferencesService.savePreferences(state.getProject(),
-                        userDao.getCurrentUser().getUsername(), state.getMode(),
-                        state.getPreferences());
+                        userDao.getCurrentUsername(), state.getMode(), state.getPreferences());
             }
             catch (IOException e) {
                 handleException(this, aTarget, e);
@@ -209,12 +208,12 @@ public class LayerSelectionPanel
                 getModelObject().setForwardAnnotation(false);
             }
         }));
-        checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
-                owner.getFeatureEditorListPanel().focusForwardAnnotationComponent(_target, true)));
-        
+        checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> owner
+                .getFeatureEditorListPanel().focusForwardAnnotationComponent(_target, true)));
+
         return checkbox;
     }
-    
+
     /**
      * Part of <i>forward annotation</i> mode: determines whether the currently selected layer is
      * forwardable or not.
@@ -222,7 +221,7 @@ public class LayerSelectionPanel
     private boolean isForwardable()
     {
         AnnotatorState state = getModelObject();
-        
+
         // Fetch the current default layer (the one which determines the type of new annotations)
         AnnotationLayer layer = state.getDefaultAnnotationLayer();
 
@@ -247,12 +246,12 @@ public class LayerSelectionPanel
         }
 
         AnnotationFeature feature = features.get(0);
-        
+
         // Forward mode is only valid for string features
         if (!CAS.TYPE_NAME_STRING.equals(feature.getType())) {
             return false;
         }
-        
+
         // If there is a tagset, it must have tags
         if (feature.getTagset() != null) {
             return !annotationService.listTags(feature.getTagset()).isEmpty();
@@ -267,31 +266,31 @@ public class LayerSelectionPanel
      */
     private List<AnnotationFeature> getEnabledAndVisibleFeatures(AnnotationLayer aLayer)
     {
-        return annotationService.listAnnotationFeature(aLayer).stream()
-                .filter(f -> f.isEnabled())
-                .filter(f -> f.isVisible())
-                .collect(Collectors.toList());
+        return annotationService.listAnnotationFeature(aLayer).stream().filter(f -> f.isEnabled())
+                .filter(f -> f.isVisible()).collect(Collectors.toList());
     }
 
     public void refreshSelectableLayers()
     {
         AnnotatorState state = getModelObject();
         selectableLayers.clear();
-        
+
         for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            if (
-                    !layer.isEnabled() || 
-                    layer.isReadonly() ||
-                    layer.getName().equals(Token.class.getName())
-            ) {
+            if (!layer.isEnabled() || layer.isReadonly()
+                    || layer.getName().equals(Token.class.getName())) {
                 continue;
             }
-            
+
             if (layer.getType().equals(SPAN_TYPE) || layer.getType().equals(CHAIN_TYPE)) {
                 selectableLayers.add(layer);
             }
         }
-        
+
+        // if there is only one layer, we use it to create new annotations
+        if (selectableLayers.size() == 1) {
+            state.setDefaultAnnotationLayer(selectableLayers.get(0));
+        }
+
         if (state.getDefaultAnnotationLayer() != null) {
             state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
         }
@@ -299,7 +298,7 @@ public class LayerSelectionPanel
             state.setSelectedAnnotationLayer(selectableLayers.get(0));
         }
     }
-    
+
     public List<AnnotationLayer> getSelectableLayers()
     {
         return selectableLayers;

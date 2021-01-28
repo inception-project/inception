@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_DETAIL_FORM;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_SELECTION_FORM;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
-
-import java.io.FileNotFoundException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -46,6 +44,7 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -58,11 +57,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaButton;
@@ -76,7 +73,7 @@ public class FeatureDetailForm
     private static final String MID_TRAITS = "traits";
     private static final String FIRST = "first";
     private static final String NEXT = "next";
-    
+
     private static final long serialVersionUID = -1L;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -84,11 +81,11 @@ public class FeatureDetailForm
     private @SpringBean DocumentService documentService;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
-    
+
     private final DropDownChoice<FeatureType> featureType;
     private final CheckBox required;
     private final WebMarkupContainer traitsContainer;
-    private final ConfirmationDialog confirmationDialog;
+    private final ChallengeResponseDialog confirmationDialog;
     private final TextField<String> uiName;
 
     public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature)
@@ -96,10 +93,10 @@ public class FeatureDetailForm
         super(id, CompoundPropertyModel.of(aFeature));
 
         setOutputMarkupPlaceholderTag(true);
-        
+
         add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupId(true);
-        
+
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
         uiName = new TextField<>("uiName");
         uiName.setRequired(true);
@@ -110,8 +107,7 @@ public class FeatureDetailForm
         add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
-        add(new CheckBox("includeInHover")
-                .setOutputMarkupPlaceholderTag(true)
+        add(new CheckBox("includeInHover").setOutputMarkupPlaceholderTag(true)
                 .add(LambdaBehavior.visibleWhen(() -> {
                     String layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
                     // Currently not configurable for chains or relations
@@ -130,7 +126,8 @@ public class FeatureDetailForm
         }));
         add(required);
 
-        add(featureType = new BootstrapSelect<FeatureType>("type") {
+        add(featureType = new BootstrapSelect<FeatureType>("type")
+        {
             private static final long serialVersionUID = 9029205407108101183L;
 
             @Override
@@ -138,8 +135,7 @@ public class FeatureDetailForm
             {
                 // If the feature type has changed, we need to set up a new traits editor
                 Component newTraits;
-                if (FeatureDetailForm.this.getModelObject() != null
-                        && getModelObject() != null) {
+                if (FeatureDetailForm.this.getModelObject() != null && getModelObject() != null) {
                     FeatureSupport<?> fs = featureSupportRegistry
                             .getFeatureSupport(getModelObject().getFeatureSupportId());
                     newTraits = fs.createTraitsEditor(MID_TRAITS,
@@ -155,9 +151,9 @@ public class FeatureDetailForm
         featureType.setRequired(true);
         featureType.setNullValid(false);
         featureType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-        featureType.setModel(LambdaModelAdapter.of(
-            () -> featureSupportRegistry.getFeatureType(getModelObject()), 
-            (v) -> getModelObject().setType(v.getName())));
+        featureType.setModel(
+                LambdaModelAdapter.of(() -> featureSupportRegistry.getFeatureType(getModelObject()),
+                        (v) -> getModelObject().setType(v.getName())));
         featureType.add(LambdaBehavior.onConfigure(_this -> {
             if (isNull(getModelObject().getId())) {
                 featureType.setEnabled(true);
@@ -166,8 +162,8 @@ public class FeatureDetailForm
             }
             else {
                 featureType.setEnabled(false);
-                featureType.setChoices(() -> featureSupportRegistry.getAllTypes(
-                        getModelObject().getLayer()));
+                featureType.setChoices(
+                        () -> featureSupportRegistry.getAllTypes(getModelObject().getLayer()));
             }
         }));
         featureType.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -186,17 +182,18 @@ public class FeatureDetailForm
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
-        add(new LambdaAjaxButton<>("delete", this::actionDelete).add(
-                visibleWhen(() -> !isNull(getModelObject().getId()))));
+        add(new LambdaAjaxButton<>("delete", this::actionDelete)
+                .add(enabledWhen(() -> !isNull(getModelObject().getId())
+                        && !getModelObject().getLayer().isBuiltIn())));
         // Set default form processing to false to avoid saving data
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
-        
-        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+
+        confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
         confirmationDialog
                 .setTitleModel(new StringResourceModel("DeleteFeatureDialog.title", this));
         add(confirmationDialog);
     }
-    
+
     public Component getInitialFocusComponent()
     {
         return uiName;
@@ -218,60 +215,38 @@ public class FeatureDetailForm
 
         setVisible(getModelObject() != null);
     }
-    
+
     private void actionCancel()
     {
         // cancel selection of feature list
         setModelObject(null);
     }
-    
+
     private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
     {
         confirmationDialog
-                .setContentModel(new StringResourceModel("DeleteFeatureDialog.text", this)
-                .setParameters(escapeMarkup(getModelObject().getName())));
+                .setChallengeModel(new StringResourceModel("DeleteFeatureDialog.text", this)
+                        .setParameters(escapeMarkup(getModelObject().getName())));
+        confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
         confirmationDialog.show(aTarget);
-        
+
         confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeAnnotationFeature(getModelObject());
-            
+            annotationService.removeFeature(getModelObject());
+
             Project project = getModelObject().getProject();
 
             setModelObject(null);
 
-            // Perform a forced upgrade on all CASes in the project. This action affects all users
-            // currently logged in and working on the project. E.g. an annotator working on a
-            // document will be unable to make changes to the document anymore until the user
-            // re-opens the document because the force upgrade invalidates the VIDs used in the
-            // annotation editor. How exactly (if at all) the user gets information of this is
-            // currently undefined.
-            for (SourceDocument doc : documentService.listSourceDocuments(project)) {
-                for (AnnotationDocument ann : documentService.listAllAnnotationDocuments(doc)) {
-                    try {
-                        casStorageService.upgradeCas(doc, ann.getUser());
-                    }
-                    catch (FileNotFoundException e) {
-                        // If there is no CAS file, we do not have to upgrade it. Ignoring.
-                    }
-                }
-                
-                // Also upgrade the curation CAS if it exists
-                try {
-                    casStorageService.upgradeCas(doc, CURATION_USER);
-                }
-                catch (FileNotFoundException e) {
-                    // If there is no CAS file, we do not have to upgrade it. Ignoring.
-                }
-            }
+            documentService.upgradeAllAnnotationDocuments(project);
 
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()
                     .publishEvent(new LayerConfigurationChangedEvent(this, project));
-            
+
             _target.add(getPage());
         });
     }
-    
+
     private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
     {
         AnnotationFeature feature = getModelObject();
@@ -295,8 +270,7 @@ public class FeatureDetailForm
         }
         // Checking if feature name doesn't start with a number or underscore
         // And only uses alphanumeric characters
-        if (StringUtils.isNumeric(name.substring(0, 1))
-                || name.substring(0, 1).equals("_")
+        if (StringUtils.isNumeric(name.substring(0, 1)) || name.substring(0, 1).equals("_")
                 || !StringUtils.isAlphanumeric(name.replace("_", ""))) {
             error("Feature names must start with a letter and consist only of "
                     + "letters, digits, or underscores.");
@@ -306,8 +280,7 @@ public class FeatureDetailForm
             feature.setLayer(getModelObject().getLayer());
             feature.setProject(getModelObject().getLayer().getProject());
 
-            if (annotationService.existsFeature(feature.getName(),
-                    feature.getLayer())) {
+            if (annotationService.existsFeature(feature.getName(), feature.getLayer())) {
                 error("This feature is already added for this layer!");
                 return;
             }
@@ -331,15 +304,15 @@ public class FeatureDetailForm
 
         // Clear currently selected feature / feature details
         setModelObject(null);
-        
+
         success("Settings for feature [" + feature.getUiName() + "] saved.");
         aTarget.addChildren(getPage(), IFeedback.class);
-        
+
         aTarget.add(findParent(ProjectLayersPanel.class).get(MID_FEATURE_DETAIL_FORM));
         aTarget.add(findParent(ProjectLayersPanel.class).get(MID_FEATURE_SELECTION_FORM));
 
         // Trigger LayerConfigurationChangedEvent
-        applicationEventPublisherHolder.get().publishEvent(
-                new LayerConfigurationChangedEvent(this, feature.getProject()));
+        applicationEventPublisherHolder.get()
+                .publishEvent(new LayerConfigurationChangedEvent(this, feature.getProject()));
     }
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,10 +61,10 @@ public class Project
 
     // version of the project
     private int version = 1;
-    
+
     // Disable users from exporting annotation documents
     private boolean disableExport = false;
-    
+
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
     private ScriptDirection scriptDirection;
 
@@ -75,11 +75,11 @@ public class Project
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
-    
+
     @Column(nullable = true)
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ProjectStateType")
     private ProjectState state;
-    
+
     @Column(nullable = false)
     private boolean anonymousCuration;
 
@@ -87,7 +87,7 @@ public class Project
     {
         // Nothing to do
     }
-    
+
     public Project(String aName)
     {
         super();
@@ -114,7 +114,6 @@ public class Project
     {
         name = aName;
     }
-
 
     public String getDescription()
     {
@@ -175,7 +174,7 @@ public class Project
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();
@@ -208,7 +207,7 @@ public class Project
     {
         updated = aUpdated;
     }
-    
+
     public ProjectState getState()
     {
         return state;
@@ -218,7 +217,7 @@ public class Project
     {
         state = aState;
     }
-    
+
     public boolean isAnonymousCuration()
     {
         return anonymousCuration;

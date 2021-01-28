@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,16 +35,16 @@ public class DescriptionTooltipBehavior
 {
     private static final long serialVersionUID = 1L;
 
-    public enum Mode {
-        DEFAULT,
-        MARKDOWN
+    public enum Mode
+    {
+        DEFAULT, MARKDOWN
     }
-    
+
     @SuppressWarnings("unused")
     private final String title;
 
     private final String description;
-    
+
     private Mode mode = Mode.DEFAULT;
 
     public DescriptionTooltipBehavior(String aTitle, String aDescription)
@@ -63,7 +63,7 @@ public class DescriptionTooltipBehavior
     {
         mode = aMode;
     }
-    
+
     public Mode getMode()
     {
         return mode;
@@ -85,7 +85,8 @@ public class DescriptionTooltipBehavior
         return options;
     }
 
-    private static class DescriptionTooltipPanel extends Panel
+    private static class DescriptionTooltipPanel
+        extends Panel
     {
         private static final long serialVersionUID = 1L;
 
@@ -95,8 +96,8 @@ public class DescriptionTooltipBehavior
             add(new Label("title"));
             switch (aModel.getObject().mode) {
             case MARKDOWN: {
-                Label label = new Label("description", Model.of(Processor.process(
-                        aModel.getObject().description, true)));
+                Label label = new Label("description",
+                        Model.of(Processor.process(aModel.getObject().description, true)));
                 label.setEscapeModelStrings(false);
                 add(label);
                 break;

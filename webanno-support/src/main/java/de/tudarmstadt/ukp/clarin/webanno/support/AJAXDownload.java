@@ -32,7 +32,9 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
 /**
- * @see <a href="https://cwiki.apache.org/confluence/display/WICKET/AJAX+update+and+file+download+in+one+blow">AJAX update and file download in one blow</a>
+ * @see <a href=
+ *      "https://cwiki.apache.org/confluence/display/WICKET/AJAX+update+and+file+download+in+one+blow">AJAX
+ *      update and file download in one blow</a>
  * @author Sven Meier
  * @author Ernesto Reinaldo Barreiro (reiern70@gmail.com)
  * @author Jordi Deu-Pons (jordi@jordeu.net)
@@ -58,8 +60,10 @@ public class AJAXDownload
     /**
      * Call this method to initiate the download.
      * 
-     * @param aTarget the AJAX target.
-     * @param aFileName the filename.
+     * @param aTarget
+     *            the AJAX target.
+     * @param aFileName
+     *            the filename.
      */
     public void initiate(AjaxRequestTarget aTarget, String aFileName)
     {
@@ -78,8 +82,8 @@ public class AJAXDownload
     @Override
     public void onRequest()
     {
-        ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
-                getResourceStream(), getFileName());
+        ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(getResourceStream(),
+                getFileName());
         handler.setContentDisposition(ContentDisposition.ATTACHMENT);
         getComponent().getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
     }
@@ -105,7 +109,7 @@ public class AJAXDownload
         return new AbstractResourceStream()
         {
             private static final long serialVersionUID = 1L;
-            
+
             private InputStream inStream;
 
             @Override

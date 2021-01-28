@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,38 +45,40 @@ public class VDocument
         if (arcs.containsKey(aArc.getVid()) || spans.containsKey(aArc.getVid())) {
             throw new IllegalStateException("Annotation [" + aArc.getVid() + "] already exists.");
         }
-        
+
         arcs.put(aArc.getVid(), aArc);
         annotationLayers.put(aArc.getLayer().getId(), aArc.getLayer());
         arcsByLayer.put(aArc.getLayer().getId(), aArc);
     }
-    
+
     public void add(VSpan aSpan)
     {
         if (arcs.containsKey(aSpan.getVid()) || spans.containsKey(aSpan.getVid())) {
             throw new IllegalStateException("Annotation [" + aSpan.getVid() + "] already exists.");
         }
-        
+
         spans.put(aSpan.getVid(), aSpan);
         annotationLayers.put(aSpan.getLayer().getId(), aSpan.getLayer());
         spansByLayer.put(aSpan.getLayer().getId(), aSpan);
     }
-    
+
     public void add(VComment aComment)
     {
         comments.put(aComment.getVid(), aComment);
     }
-    
+
     public void add(VMarker aMarker)
     {
         markers.add(aMarker);
     }
-    
-    public VSpan getSpan(VID aVid) {
+
+    public VSpan getSpan(VID aVid)
+    {
         return spans.get(aVid);
     }
 
-    public VArc getArc(VID aVid) {
+    public VArc getArc(VID aVid)
+    {
         return arcs.get(aVid);
     }
 
@@ -84,7 +86,7 @@ public class VDocument
     {
         return Collections.unmodifiableCollection(spans.values());
     }
-    
+
     public List<VMarker> getMarkers()
     {
         return markers;
@@ -122,14 +124,14 @@ public class VDocument
     {
         return (Collection) comments.values();
     }
-    
+
     public VObject get(VID aVid)
     {
         VArc arc = arcs.get(aVid);
         if (arc != null) {
             return arc;
         }
-        
+
         return spans.get(aVid);
     }
 

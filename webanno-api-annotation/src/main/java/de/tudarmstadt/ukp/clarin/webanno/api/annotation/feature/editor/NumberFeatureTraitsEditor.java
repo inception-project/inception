@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,34 +48,34 @@ public class NumberFeatureTraitsEditor
     extends Panel
 {
     private static final long serialVersionUID = -2830709472810678708L;
-    
+
     private static final String MID_FORM = "form";
     private static final String CID_EDITOR_TYPE = "editorType";
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    
+
     private String featureSupportId;
     private IModel<AnnotationFeature> feature;
     private IModel<Traits> traits;
-    
+
     public NumberFeatureTraitsEditor(String aId,
             UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits> aFS,
             IModel<AnnotationFeature> aFeature)
     {
         super(aId, aFeature);
-    
+
         // We cannot retain a reference to the actual SlotFeatureSupport instance because that
         // is not serializable, but we can retain its ID and look it up again from the registry
         // when required.
         featureSupportId = aFS.getId();
         feature = aFeature;
         traits = Model.of(readTraits());
-    
+
         Form<Traits> form = new Form<Traits>(MID_FORM, CompoundPropertyModel.of(traits))
         {
             private static final long serialVersionUID = 4456748721289266655L;
-        
+
             @Override
             protected void onSubmit()
             {
@@ -84,13 +84,13 @@ public class NumberFeatureTraitsEditor
             }
         };
         form.setOutputMarkupPlaceholderTag(true);
-        form.add(visibleWhen(() -> traits.getObject().isLimited()
-                && feature.getObject().getTagset() == null));
+        form.add(visibleWhen(
+                () -> traits.getObject().isLimited() && feature.getObject().getTagset() == null));
         add(form);
-    
+
         Class clazz = Integer.class;
         Options options = new Options();
-        
+
         switch (feature.getObject().getType()) {
         case CAS.TYPE_NAME_INTEGER: {
             clazz = Integer.class;
@@ -102,54 +102,52 @@ public class NumberFeatureTraitsEditor
             break;
         }
         }
-    
-        DropDownChoice<NumberFeatureTraits.EDITOR_TYPE> editorType =
-                new BootstrapSelect<>(CID_EDITOR_TYPE);
+
+        DropDownChoice<NumberFeatureTraits.EDITOR_TYPE> editorType = new BootstrapSelect<>(
+                CID_EDITOR_TYPE);
         editorType.setModel(PropertyModel.of(traits, "editorType"));
         editorType.setChoices(Arrays.asList(NumberFeatureTraits.EDITOR_TYPE.values()));
         editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         editorType.add(visibleWhen(() -> isEditorTypeSelectionPossible()));
         form.add(editorType);
-    
+
         NumberTextField minimum = new NumberTextField<>("minimum", clazz, options);
         minimum.setModel(PropertyModel.of(traits, "minimum"));
         form.add(minimum);
-    
+
         NumberTextField maximum = new NumberTextField<>("maximum", clazz, options);
         maximum.setModel(PropertyModel.of(traits, "maximum"));
         form.add(maximum);
-    
-        minimum.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-            target -> {
-                BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
-                BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
-                if (min.compareTo(max) > 0) {
-                    traits.getObject().setMaximum(traits.getObject().getMinimum());
-                }
-                target.add(form);
-            }));
-    
-        maximum.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-            target -> {
-                BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
-                BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
-                if (min.compareTo(max) > 0) {
-                    traits.getObject().setMinimum(traits.getObject().getMaximum());
-                }
-                target.add(form);
-            }));
-    
+
+        minimum.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
+            BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
+            BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
+            if (min.compareTo(max) > 0) {
+                traits.getObject().setMaximum(traits.getObject().getMinimum());
+            }
+            target.add(form);
+        }));
+
+        maximum.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
+            BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
+            BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
+            if (min.compareTo(max) > 0) {
+                traits.getObject().setMinimum(traits.getObject().getMaximum());
+            }
+            target.add(form);
+        }));
+
         CheckBox multipleRows = new CheckBox("limited");
         multipleRows.setModel(PropertyModel.of(traits, "limited"));
-        multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-            target -> target.add(form)));
+        multipleRows.add(
+                new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         add(multipleRows);
     }
-    
+
     /**
-     * Checks if current settings for number feature allow for a selection of editor type.
-     * Radio button editor can be used if the difference between maximum and minimum is 
-     * smaller than 12 and the number feature is of type integer.
+     * Checks if current settings for number feature allow for a selection of editor type. Radio
+     * button editor can be used if the difference between maximum and minimum is smaller than 12
+     * and the number feature is of type integer.
      */
     private boolean isEditorTypeSelectionPossible()
     {
@@ -158,31 +156,30 @@ public class NumberFeatureTraitsEditor
         return max.subtract(min).compareTo(new BigDecimal(12)) < 0
                 && feature.getObject().getType().equals(CAS.TYPE_NAME_INTEGER);
     }
-    
+
     private UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits> getFeatureSupport()
     {
         return featureSupportRegistry.getFeatureSupport(featureSupportId);
     }
-    
+
     /**
      * Read traits and then transfer the values from the actual traits model
-     * {{@link NumberFeatureTraits}} to the the UI traits model
-     * ({@link NumberFeatureTraits}).
+     * {{@link NumberFeatureTraits}} to the the UI traits model ({@link NumberFeatureTraits}).
      */
     private Traits readTraits()
     {
         Traits result = new Traits();
-        
+
         NumberFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
-        
+
         result.setLimited(t.isLimited());
         result.setMinimum(t.getMinimum());
         result.setMaximum(t.getMaximum());
         result.setEditorType(t.getEditorType());
-        
+
         return result;
     }
-    
+
     /**
      * Transfer the values from the UI traits model ({@link NumberFeatureTraits})to the actual
      * traits model {{@link NumberFeatureTraits}} and then store them.
@@ -190,66 +187,65 @@ public class NumberFeatureTraitsEditor
     private void writeTraits()
     {
         NumberFeatureTraits t = new NumberFeatureTraits();
-        
+
         t.setLimited(traits.getObject().isLimited());
         t.setMinimum(traits.getObject().getMinimum());
         t.setMaximum(traits.getObject().getMaximum());
-        t.setEditorType(isEditorTypeSelectionPossible()
-                ? traits.getObject().getEditorType() 
+        t.setEditorType(isEditorTypeSelectionPossible() ? traits.getObject().getEditorType()
                 : NumberFeatureTraits.EDITOR_TYPE.SPINNER);
-        
+
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
-    
+
     /**
      * A UI model holding the traits while the user is editing them. They are read/written to the
-     * actual {@link NumberFeatureTraits} via {@link #readTraits()} and
-     * {@link #writeTraits()}.
+     * actual {@link NumberFeatureTraits} via {@link #readTraits()} and {@link #writeTraits()}.
      */
-    private static class Traits implements Serializable
+    private static class Traits
+        implements Serializable
     {
         private static final long serialVersionUID = -7279313974832947832L;
-    
+
         private boolean limited;
         private Number minimum;
         private Number maximum;
         private NumberFeatureTraits.EDITOR_TYPE editorType;
-    
+
         public boolean isLimited()
         {
             return limited;
         }
-    
+
         public void setLimited(boolean limited)
         {
             this.limited = limited;
         }
-    
+
         public Number getMinimum()
         {
             return minimum;
         }
-    
+
         public void setMinimum(Number minimum)
         {
             this.minimum = minimum;
         }
-    
+
         public Number getMaximum()
         {
             return maximum;
         }
-    
+
         public void setMaximum(Number maximum)
         {
             this.maximum = maximum;
         }
-    
+
         public NumberFeatureTraits.EDITOR_TYPE getEditorType()
         {
             return editorType;
         }
-    
+
         public void setEditorType(NumberFeatureTraits.EDITOR_TYPE editorType)
         {
             this.editorType = editorType;

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
@@ -83,7 +84,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -96,6 +96,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -130,7 +131,6 @@ public class CurationPage
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean AnnotationEditorProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
@@ -147,98 +147,95 @@ public class CurationPage
     private SuggestionViewPanel suggestionViewPanel;
 
     private WebMarkupContainer sentenceListContainer;
-    private WebMarkupContainer sentencesListView;
+    private WebMarkupContainer sentenceLinksListView;
 
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel editor;
 
-    private ListView<String> crossSentAnnoList;
-    
-    public SourceListView curationView;
+    private SourceListView curationView;
     private List<SourceListView> sourceListModel;
 
     private int fSn = 0;
     private int lSn = 0;
-    
+
     /**
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
      * username from which the span has been selected
      */
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
-            new HashMap<>();
-    
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
+
     public CurationPage()
     {
         super();
         LOG.debug("Setting up curation page without parameters");
         commonInit();
-        
+
         Map<String, StringValue> fragmentParameters = Session.get()
                 .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
         if (fragmentParameters != null) {
             // Clear the URL fragment parameters - we only use them once!
             Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-            
+
             StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
             StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
             StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-            
+
             handleParameters(null, project, document, focus, false);
         }
     }
-    
+
     public CurationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
         LOG.debug("Setting up curation page with parameters: {}", aPageParameters);
-        
+
         commonInit();
 
         StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
-        
+
         handleParameters(null, project, document, focus, true);
     }
-    
+
     private void commonInit()
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
-        
+
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
         add(centerArea);
-        
+
         actionBar = new ActionBar("actionBar");
         centerArea.add(actionBar);
-        
+
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
-                    (c, e) -> e.getRequestHandler().add(c))));
-        
+                        (c, e) -> e.getRequestHandler().add(c))));
+
         // Ensure that a user is set
-        getModelObject().setUser(userRepository.getCurrentUser());
+        getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
 
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
-        
-        WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");    
+
+        WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");
         sidebarCell.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         sidebarCell.add(new AttributeModifier("style",
-            () -> String.format("flex-basis: %d%%;",
-                    getModelObject() != null
-                            ? getModelObject().getPreferences().getSidebarSize()
-                            : 10)));
+                () -> String.format("flex-basis: %d%%;",
+                        getModelObject() != null
+                                ? getModelObject().getPreferences().getSidebarSize()
+                                : 10)));
         add(sidebarCell);
-        
+
         curationView = new SourceListView();
-        
+
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegments = new UserAnnotationSegment();
 
@@ -248,21 +245,22 @@ public class CurationPage
             userAnnotationSegments.setAnnotatorState(getModelObject());
             segments.add(userAnnotationSegments);
         }
-        
+
         // update source list model only first time.
         sourceListModel = sourceListModel == null ? curationContainer.getCurationViews()
                 : sourceListModel;
-    
+
         suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
                 new ListModel<>(segments))
         {
             private static final long serialVersionUID = 2583509126979792202L;
-    
+
             @Override
             public void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    // update begin/end of the curationsegment based on annotator state changes
+                    // update begin/end of the curationsegment based on annotator state
+                    // changes
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), IFeedback.class);
                     CurationPage.this.updatePanel(aTarget, curationContainer);
@@ -277,19 +275,18 @@ public class CurationPage
         };
         suggestionViewPanel.setOutputMarkupPlaceholderTag(true);
         suggestionViewPanel.add(visibleWhen(
-            () -> getModelObject() != null && getModelObject().getDocument() != null));
+                () -> getModelObject() != null && getModelObject().getDocument() != null));
         centerArea.add(suggestionViewPanel);
-    
-        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this,
-                getModel())
+
+        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
-    
+
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), IFeedback.class);
-    
+
                 try {
                     updatePanel(aTarget, curationContainer);
                 }
@@ -302,25 +299,25 @@ public class CurationPage
                     error("Error: " + e.getMessage());
                 }
             }
-    
+
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 annotationEditor.requestRender(aTarget);
             }
-    
+
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 setEnabled(getModelObject() != null && getModelObject().getDocument() != null
                         && !documentService
                                 .getSourceDocument(getModelObject().getDocument().getProject(),
                                         getModelObject().getDocument().getName())
                                 .getState().equals(SourceDocumentState.CURATION_FINISHED));
             }
-            
+
             @Override
             public CAS getEditorCas() throws IOException
             {
@@ -328,27 +325,27 @@ public class CurationPage
             }
         };
         sidebarCell.add(editor);
-    
+
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), editor,
-            this::getEditorCas);
+                this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
         annotationEditor.add(visibleWhen(
-            () -> getModelObject() != null && getModelObject().getDocument() != null));
+                () -> getModelObject() != null && getModelObject().getDocument() != null));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         centerArea.add(annotationEditor);
-            
+
         // add container for sentences panel
         sentenceListContainer = new WebMarkupContainer("sentenceListContainer");
         sentenceListContainer.setOutputMarkupPlaceholderTag(true);
         sentenceListContainer.add(visibleWhen(
-            () -> getModelObject() != null && getModelObject().getDocument() != null));
+                () -> getModelObject() != null && getModelObject().getDocument() != null));
         add(sentenceListContainer);
 
         // add container for list of sentences panel
-        sentencesListView = new WebMarkupContainer("sentencesListView");
-        sentencesListView.setOutputMarkupPlaceholderTag(true);
-        sentencesListView.add(new ListView<SourceListView>("sentencesList",
+        sentenceLinksListView = new WebMarkupContainer("sentenceLinkListView");
+        sentenceLinksListView.setOutputMarkupPlaceholderTag(true);
+        sentenceLinksListView.add(new ListView<SourceListView>("sentenceLinkList",
                 LoadableDetachableModel.of(() -> curationContainer.getCurationViews()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
@@ -359,11 +356,11 @@ public class CurationPage
                 item.add(new SentenceLink("sentenceNumber", item.getModel()));
             }
         });
-        
-        sentenceListContainer.add(sentencesListView);
-        
+
+        sentenceListContainer.add(sentenceLinksListView);
+
     }
-    
+
     /**
      * Re-render the document when the selection has changed.
      */
@@ -373,13 +370,11 @@ public class CurationPage
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
-    
     public List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
-        List<SourceDocument> sdocs = curationDocumentService
-                .listCuratableSourceDocuments(aProject);
-        
+        List<SourceDocument> sdocs = curationDocumentService.listCuratableSourceDocuments(aProject);
+
         for (SourceDocument sourceDocument : sdocs) {
             DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
             dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
@@ -388,14 +383,14 @@ public class CurationPage
         }
         return allSourceDocuments;
     }
-    
+
     public void onDocumentSelected(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         /*
-         * Changed for #152, getDocument was returning null even after opening a document
-         * Also, surrounded following code into if block to avoid error.
+         * Changed for #152, getDocument was returning null even after opening a document Also,
+         * surrounded following code into if block to avoid error.
          */
         if (state.getProject() == null) {
             setResponsePage(getApplication().getHomePage());
@@ -414,7 +409,7 @@ public class CurationPage
             }
         }
     }
-    
+
     @Override
     public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
@@ -452,7 +447,7 @@ public class CurationPage
     {
         setDefaultModel(aModel);
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public IModel<AnnotatorState> getModel()
@@ -465,13 +460,13 @@ public class CurationPage
     {
         setDefaultModelObject(aModel);
     }
-    
+
     @Override
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
+
     @Override
     public List<SourceDocument> getListOfDocs()
     {
@@ -497,8 +492,8 @@ public class CurationPage
     @Override
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
-        ensureIsEditable(); 
-        
+        ensureIsEditable();
+
         AnnotatorState state = getModelObject();
         curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
@@ -509,9 +504,8 @@ public class CurationPage
             state.setAnnotationDocumentTimestamp(diskTimestamp.get());
         }
     }
-    
-    public void upgradeCasAndSave(SourceDocument aDocument, String aUsername)
-        throws IOException
+
+    public void upgradeCasAndSave(SourceDocument aDocument, String aUsername) throws IOException
     {
         User user = userRepository.get(aUsername);
         if (documentService.existsAnnotationDocument(aDocument, user)) {
@@ -534,18 +528,18 @@ public class CurationPage
     {
         actionLoadDocument(aTarget, 0);
     }
-    
+
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
      */
     protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
-        
+        LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
+
         AnnotatorState state = getModelObject();
-        
-        state.setUser(userRepository.getCurrentUser());
+
+        state.setUser(new User(CURATION_USER, Role.ROLE_USER));
 
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
@@ -554,33 +548,33 @@ public class CurationPage
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
             }
-    
+
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
-            
+
             // Load user preferences
             loadPreferences();
-            
+
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
                 currentprojectId = state.getProject().getId();
             }
-            
-            CAS mergeCas = prepareMergeCas(false);
-    
+
+            CAS mergeCas = readOrCreateMergeCas(false, false);
+
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
-            
+
             // Initialize timestamp in state
-            updateDocumentTimestampAfterWrite(state, curationDocumentService
-                    .getCurationCasTimestamp(state.getDocument()));
-                        
+            updateDocumentTimestampAfterWrite(state,
+                    curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+
             // Initialize the visible content
             state.moveToUnit(mergeCas, aFocus + 1, TOP);
-        
+
             currentprojectId = state.getProject().getId();
-    
+
             SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
@@ -588,7 +582,7 @@ public class CurationPage
             curationContainer.setState(state);
             editor.reset(aTarget);
             init(aTarget, curationContainer);
-            
+
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
                 WicketUtil.refreshPage(aTarget, getPage());
@@ -597,24 +591,25 @@ public class CurationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-    
-        LOG.info("END LOAD_DOCUMENT_ACTION");
+
+        LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
-    
-    public CAS prepareMergeCas(boolean aMergeIncompleteAnnotations)
+
+    public CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         AnnotatorState state = getModelObject();
-        
+
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
-        
+
+        // FIXME: This is slow and should be done via a proper SQL query
         for (AnnotationDocument annotationDocument : documentService
                 .listAnnotationDocuments(state.getDocument())) {
             if (annotationDocument.getState().equals(FINISHED)) {
                 finishedAnnotationDocuments.add(annotationDocument);
             }
         }
-        
+
         if (finishedAnnotationDocuments.isEmpty()) {
             throw new IllegalStateException("This document has the state "
                     + state.getDocument().getState() + " but "
@@ -632,19 +627,13 @@ public class CurationPage
 
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
 
-        // upgrade CASes for each user, what if new type is added once the user finished
-        // annotation
-        for (AnnotationDocument ad : finishedAnnotationDocuments) {
-            upgradeCasAndSave(ad.getDocument(), ad.getUser());
-        }
-        
         SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
                 correctionDocumentService, curationDocumentService, annotationService,
                 userRepository);
         Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
-                randomAnnotationDocument, state.getMode());
-        CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses,
-                randomAnnotationDocument, true, aMergeIncompleteAnnotations);
+                state.getMode());
+        CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses, randomAnnotationDocument,
+                true, aMergeIncompleteAnnotations, aForceRecreateCas);
         return mergeCas;
     }
 
@@ -659,7 +648,7 @@ public class CurationPage
             handleException(aTarget, e);
         }
     }
-    
+
     private Project getProjectFromParameters(StringValue projectParam)
     {
         Project project = null;
@@ -679,7 +668,7 @@ public class CurationPage
         }
         return document;
     }
-    
+
     private void handleParameters(AjaxRequestTarget aTarget, StringValue aProjectParameter,
             StringValue aDocumentParameter, StringValue aFocusParameter, boolean aLockIfPreset)
     {
@@ -692,7 +681,7 @@ public class CurationPage
             error("Project [" + aProjectParameter + "] does not exist");
             return;
         }
-        
+
         // Get current document from parameters
         SourceDocument document = null;
         if (project != null) {
@@ -704,41 +693,38 @@ public class CurationPage
                         + project.getId() + "]");
             }
         }
-        
+
         // Get current focus unit from parameters
         int focus = 0;
         if (aFocusParameter != null) {
             focus = aFocusParameter.toInt(0);
-        }        
-        
+        }
+
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        if (
-                document != null &&
-                document.equals(getModelObject().getDocument()) && 
-                focus == getModelObject().getFocusUnitIndex()
-        ) {
+        if (document != null && document.equals(getModelObject().getDocument())
+                && focus == getModelObject().getFocusUnitIndex()) {
             return;
         }
-        
+
         // Check access to project
         if (project != null
-                && !projectService.isCurator(project, getModelObject().getUser())) {
+                && !projectService.isCurator(project, userRepository.getCurrentUser())) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
-        
+
         // Update project in state
         // Mind that this is relevant if the project was specified as a query parameter
-        // i.e. not only in the case that it was a URL fragment parameter. 
+        // i.e. not only in the case that it was a URL fragment parameter.
         if (project != null) {
             getModelObject().setProject(project);
             if (aLockIfPreset) {
                 getModelObject().setProjectLocked(true);
             }
         }
-        
+
         if (document != null) {
             // If we arrive here and the document is not null, then we have a change of document
             // or a change of focus (or both)
@@ -759,8 +745,9 @@ public class CurationPage
             }
         }
     }
-    
-    public class SentenceLink extends AjaxLink<SourceListView>
+
+    public class SentenceLink
+        extends AjaxLink<SourceListView>
     {
         private static final long serialVersionUID = 4558300090461815010L;
 
@@ -769,20 +756,20 @@ public class CurationPage
             super(aId, aModel);
             setBody(Model.of(aModel.getObject().getSentenceNumber().toString()));
         }
-        
+
         @Override
         protected void onComponentTag(ComponentTag aTag)
         {
             super.onComponentTag(aTag);
-            
+
             final SourceListView curationViewItem = getModelObject();
-            
+
             // Is in focus?
             if (curationViewItem.getSentenceNumber() == CurationPage.this.getModelObject()
                     .getFocusUnitIndex()) {
                 aTag.append("class", "current", " ");
             }
-            
+
             // Agree or disagree?
             String cC = curationViewItem.getSentenceState().getValue();
             if (cC != null) {
@@ -791,7 +778,7 @@ public class CurationPage
             else {
                 aTag.append("class", "agree", " ");
             }
-            
+
             // In range or not?
             if (curationViewItem.getSentenceNumber() >= fSn
                     && curationViewItem.getSentenceNumber() <= lSn) {
@@ -801,12 +788,12 @@ public class CurationPage
                 aTag.append("class", "out-range", " ");
             }
         }
-        
+
         @Override
         protected void onAfterRender()
         {
             super.onAfterRender();
-            
+
             // The sentence list is refreshed using AJAX. Unfortunately, the renderHead() method
             // of the AjaxEventBehavior created by AjaxLink does not seem to be called by Wicket
             // during an AJAX rendering, causing the sentence links to loose their functionality.
@@ -815,12 +802,13 @@ public class CurationPage
             if (isEnabledInHierarchy()) {
                 RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
                     for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
-                        _target.appendJavaScript(b.getCallbackScript());
+                        _target.appendJavaScript(
+                                WicketUtil.wrapInTryCatch(b.getCallbackScript().toString()));
                     }
                 });
             }
         }
-        
+
         @Override
         public void onClick(AjaxRequestTarget aTarget)
         {
@@ -830,15 +818,10 @@ public class CurationPage
             try {
                 AnnotatorState state = CurationPage.this.getModelObject();
                 CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-                updateCurationView(curationContainer, curationViewItem, aTarget,
-                        cas);
-                updatePanel(aTarget, curationContainer);
+                updateCurationView(curationContainer, curationViewItem, aTarget, cas);
                 state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
             }
-            catch (UIMAException e) {
-                error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-            catch (ClassNotFoundException | AnnotationException | IOException e) {
+            catch (IOException e) {
                 error("Error: " + e.getMessage());
             }
         }
@@ -849,12 +832,12 @@ public class CurationPage
         setDefaultModelObject(aModel);
     }
 
-    private void updateCurationView(final CurationContainer curationContainer,
+    private void updateCurationView(final CurationContainer aCurationContainer,
             final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = CurationPage.this.getModelObject();
         state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
-        curationContainer.setState(state);
+        aCurationContainer.setState(state);
         onChange(aTarget);
     }
 
@@ -869,27 +852,26 @@ public class CurationPage
     }
 
     @Override
-    public CAS getEditorCas()
-        throws IOException
+    public CAS getEditorCas() throws IOException
     {
         AnnotatorState state = CurationPage.this.getModelObject();
-        
+
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
 
         // If we have a timestamp, then use it to detect if there was a concurrent access
-        verifyAndUpdateDocumentTimestamp(state, curationDocumentService
-                .getCurationCasTimestamp(state.getDocument()));
+        verifyAndUpdateDocumentTimestamp(state,
+                curationDocumentService.getCurationCasTimestamp(state.getDocument()));
 
         return curationDocumentService.readCurationCas(state.getDocument());
     }
-    
+
     public void init(AjaxRequestTarget aTarget, CurationContainer aCC)
         throws UIMAException, ClassNotFoundException, IOException
     {
         commonUpdate();
-        
+
         suggestionViewPanel.init(aTarget, aCC, annotationSelectionByUsernameAndAddress,
                 curationView);
     }
@@ -898,18 +880,18 @@ public class CurationPage
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         commonUpdate();
-        
+
         // Render the main annotation editor (upper part)
         annotationEditor.requestRender(aTarget);
-        
+
         // Render the user annotation segments (lower part)
-        suggestionViewPanel.updatePanel(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+        suggestionViewPanel.requestUpdate(aTarget, aCC, annotationSelectionByUsernameAndAddress,
                 curationView);
-        
+
         // Render the sentence list sidebar
-        aTarget.add(sentencesListView);
+        aTarget.add(sentenceLinksListView);
     }
-    
+
     private void commonUpdate() throws IOException
     {
         AnnotatorState state = CurationPage.this.getModelObject();
@@ -928,13 +910,13 @@ public class CurationPage
     {
         private static final long serialVersionUID = -4528869530409522295L;
         private AbstractAjaxBehavior click;
-    
+
         public AjaxLabel(String id, String label, AbstractAjaxBehavior aClick)
         {
             super(id, label);
             click = aClick;
         }
-    
+
         @Override
         public void onComponentTag(ComponentTag tag)
         {

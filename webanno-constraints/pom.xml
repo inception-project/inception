@@ -1,14 +1,14 @@
 <!--
-  Copyright 2012
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -130,40 +130,25 @@
       <plugin>
         <groupId>com.helger.maven</groupId>
         <artifactId>ph-javacc-maven-plugin</artifactId>
-        <version>2.8.0</version>
+        <version>4.1.4</version>
         <executions>
           <execution>
             <id>default</id>
             <phase>generate-sources</phase>
             <goals>
-              <goal>jtb-javacc</goal>
+              <goal>jjtree-javacc</goal>
             </goals>
             <configuration>
-              <lookAhead>2</lookAhead>
+              <grammarEncoding>UTF-8</grammarEncoding>
+              <outputEncoding>UTF-8</outputEncoding>
+              <unicodeInput>true</unicodeInput>
               <isStatic>false</isStatic>
+              <visitor>true</visitor>
+              <multi>true</multi>
+              <nodeDefaultVoid>false</nodeDefaultVoid>
+              <trackTokens>true</trackTokens>
+              <lookAhead>2</lookAhead>
               <javadocFriendlyComments>true</javadocFriendlyComments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>fix-jtb-javadoc</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <replace dir="target/generated-sources/jtb">
-                  <include name="**/*.java" />
-                  <replacetoken>-&gt;</replacetoken>
-                  <replacevalue>-&amp;gt;</replacevalue>
-                </replace>
-              </target>
             </configuration>
           </execution>
         </executions>
@@ -180,7 +165,7 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.build.directory}/generated-sources/jtb/</source>
+                <source>${project.build.directory}/generated-sources/jjtree/</source>
                 <source>${project.build.directory}/generated-sources/javacc/</source>
               </sources>
             </configuration>
@@ -203,9 +188,9 @@
                   <pluginExecutionFilter>
                     <groupId>com.helger.maven</groupId>
                     <artifactId>ph-javacc-maven-plugin</artifactId>
-                    <versionRange>[2.8.0,)</versionRange>
+                    <versionRange>[3.0.2,)</versionRange>
                     <goals>
-                      <goal>jtb-javacc</goal>
+                      <goal>jjtree-javacc</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
@@ -213,19 +198,6 @@
                       <runOnConfiguration>true</runOnConfiguration>
                       <runOnIncremental>true</runOnIncremental>
                     </execute>
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <versionRange>[1.0.0,)</versionRange>
-                    <goals>
-                      <goal>run</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>

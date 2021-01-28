@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,12 +54,12 @@ public class SpanRenderer
     extends Renderer_ImplBase<SpanAdapter>
 {
     private final List<SpanLayerBehavior> behaviors;
-    
+
     public SpanRenderer(SpanAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
-        
+
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
@@ -69,13 +69,13 @@ public class SpanRenderer
             behaviors = temp;
         }
     }
-    
+
     @Override
-    public void render(CAS aCas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int aWindowBegin, int aWindowEnd)
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+            int aWindowBegin, int aWindowEnd)
     {
         SpanAdapter typeAdapter = getTypeAdapter();
-        
+
         // Iterate over the span annotations of the current type and render each of them
         Type type;
         try {
@@ -93,15 +93,15 @@ public class SpanRenderer
         for (AnnotationFS fs : annotations) {
             String uiTypeName = typeAdapter.getEncodedTypeName();
             Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
-            
+
             VRange range = new VRange(fs.getBegin() - aWindowBegin, fs.getEnd() - aWindowBegin);
             VSpan span = new VSpan(typeAdapter.getLayer(), fs, uiTypeName, range, features);
             span.addLazyDetails(getLazyDetails(fs, aFeatures));
-            
+
             annoToSpanIdx.put(fs, span);
-            
+
             aResponse.add(span);
-            
+
             // Render errors if required features are missing
             renderRequiredFeatureErrors(aFeatures, fs, aResponse);
 
@@ -111,7 +111,7 @@ public class SpanRenderer
                 if (!feat.isEnabled()) {
                     continue nextFeature;
                 }
-                
+
                 if (ARRAY.equals(feat.getMultiValueMode())
                         && WITH_ROLE.equals(feat.getLinkMode())) {
                     List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, fs);
@@ -125,7 +125,7 @@ public class SpanRenderer
                 fi++;
             }
         }
-        
+
         for (SpanLayerBehavior behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
         }

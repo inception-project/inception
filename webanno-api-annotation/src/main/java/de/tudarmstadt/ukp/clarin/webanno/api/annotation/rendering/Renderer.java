@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 public interface Renderer
 {
     static final String QUERY_LAYER_LEVEL_DETAILS = "#";
-    
+
     TypeAdapter getTypeAdapter();
 
     /**
@@ -68,7 +68,7 @@ public interface Renderer
      */
     void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
-    
+
     FeatureSupportRegistry getFeatureSupportRegistry();
 
     default Map<String, String> renderLabelFeatureValues(TypeAdapter aAdapter, FeatureStructure aFs,
@@ -82,16 +82,16 @@ public interface Renderer
                     || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
                 continue;
             }
-            
+
             String label = defaultString(
                     fsr.findExtension(feature).renderFeatureValue(feature, aFs));
-            
+
             features.put(feature.getName(), label);
         }
-        
+
         return features;
     }
-    
+
     default List<VLazyDetailQuery> getLazyDetails(AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
@@ -105,21 +105,21 @@ public interface Renderer
             if (!feature.isEnabled()) {
                 continue;
             }
-            
+
             if (feature.isIncludeInHover() && NONE.equals(feature.getMultiValueMode())) {
                 tiggerLayerLevelLazyDetails = true;
             }
-            
+
             details.addAll(fsr.findExtension(feature).getLazyDetails(feature, aFs));
         }
-        
+
         if (tiggerLayerLevelLazyDetails) {
             details.add(new VLazyDetailQuery(QUERY_LAYER_LEVEL_DETAILS, ""));
         }
-        
+
         return details;
     }
-    
+
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
             FeatureStructure aFS, VDocument aResponse)
     {
@@ -127,7 +127,7 @@ public interface Renderer
             if (!f.isEnabled()) {
                 continue;
             }
-            
+
             if (isRequiredFeatureMissing(f, aFS)) {
                 aResponse.add(new VComment(new VID(getAddr(aFS)), VCommentType.ERROR,
                         "Required feature [" + f.getName() + "] not set."));
@@ -138,9 +138,9 @@ public interface Renderer
     default List<VLazyDetailResult> renderLazyDetails(CAS aCas, VID aVid)
     {
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
-        
+
         List<VLazyDetailResult> details = new ArrayList<>();
-        
+
         AnnotationFS aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
         for (AnnotationFeature feature : getTypeAdapter().listFeatures()) {
@@ -148,14 +148,13 @@ public interface Renderer
                     || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
                 continue;
             }
-            
+
             String text = defaultString(
                     fsr.findExtension(feature).renderFeatureValue(feature, aFs));
 
             details.add(new VLazyDetailResult(feature.getName(), text));
         }
-        
-        
+
         return details;
     }
 }

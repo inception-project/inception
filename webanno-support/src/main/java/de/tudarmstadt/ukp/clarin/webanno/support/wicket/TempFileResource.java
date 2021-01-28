@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,16 +33,16 @@ public class TempFileResource
     extends AbstractResourceStream
 {
     private static final long serialVersionUID = -5472036265926982604L;
-    
+
     private File tempFile;
     private FileInputStream is;
     private DataSupplier supplier;
-    
+
     public TempFileResource(DataSupplier aSupplier)
     {
         supplier = aSupplier;
     }
-    
+
     private void deleteTempFile()
     {
         // Remove the temporary file
@@ -50,16 +50,15 @@ public class TempFileResource
             tempFile.delete();
         }
     }
-    
+
     @Override
-    public InputStream getInputStream()
-        throws ResourceStreamNotFoundException
+    public InputStream getInputStream() throws ResourceStreamNotFoundException
     {
         // Write the data to the temporary file
         try {
             tempFile = File.createTempFile("inception-temp", "");
             tempFile.deleteOnExit();
-            
+
             try (FileOutputStream os = new FileOutputStream(tempFile)) {
                 supplier.write(os);
             }
@@ -68,7 +67,7 @@ public class TempFileResource
             deleteTempFile();
             throw new ResourceStreamNotFoundException(e);
         }
-        
+
         // Return a stream for the file
         try {
             is = new FileInputStream(tempFile);
@@ -82,18 +81,16 @@ public class TempFileResource
     }
 
     @Override
-    public void close()
-        throws IOException
+    public void close() throws IOException
     {
         IOUtils.closeQuietly(is);
         deleteTempFile();
     }
-    
+
     @FunctionalInterface
     public interface DataSupplier
         extends Serializable
     {
-        void write(OutputStream aOS)
-            throws IOException;
+        void write(OutputStream aOS) throws IOException;
     }
 }

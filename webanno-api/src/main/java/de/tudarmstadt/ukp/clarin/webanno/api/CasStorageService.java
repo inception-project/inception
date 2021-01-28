@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public interface CasStorageService
 {
     String SERVICE_NAME = "casStorageService";
-    
+
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
@@ -48,10 +48,11 @@ public interface CasStorageService
      */
     void writeCas(SourceDocument aDocument, CAS aCas, String aUserName)
         throws IOException, CasSessionException;
-    
+
     /**
      * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. By default
-     * applies the CAS doctor.
+     * applies the CAS doctor. This uses {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS} and
+     * {@link CasUpgradeMode#NO_CAS_UPGRADE}.
      *
      * @param aDocument
      *            the document.
@@ -66,7 +67,10 @@ public interface CasStorageService
     CAS readCas(SourceDocument aDocument, String aUsername) throws IOException, CasSessionException;
 
     /**
-     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}.
+     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. If
+     * {@link CasAccessMode#SHARED_READ_ONLY_ACCESS} is used, then
+     * {@link CasUpgradeMode#AUTO_CAS_UPGRADE} is used, otherwise
+     * {@link CasUpgradeMode#NO_CAS_UPGRADE} is used.
      *
      * @param aDocument
      *            the document.
@@ -108,12 +112,12 @@ public interface CasStorageService
      * @throws CasSessionException
      *             if no CAS storage session in available for the current thread.
      */
-    CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
-            CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
+    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasUpgradeMode aUpgradeMode,
+            CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException, CasSessionException;
 
     /**
-     * Delete a CAS from the storage.
+     * Delete a CAS from the storage and also remove it from the active session.
      * 
      * @param aDocument
      *            the document to delete the CAS for.
@@ -128,16 +132,16 @@ public interface CasStorageService
      */
     boolean deleteCas(SourceDocument aDocument, String aUsername)
         throws IOException, CasSessionException;
-    
+
     File getAnnotationFolder(SourceDocument aDocument) throws IOException;
-    
+
     File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
 
     boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
 
     /**
-     * Runs {@code CasDoctor} in repair mode on the given CAS (if repairs are active), otherwise
-     * it runs only in analysis mode.
+     * Runs {@code CasDoctor} in repair mode on the given CAS (if repairs are active), otherwise it
+     * runs only in analysis mode.
      * <p>
      * <b>Note:</b> {@code CasDoctor} is an optional service. If no {@code CasDoctor} implementation
      * is available, this method returns without doing anything.
@@ -150,7 +154,7 @@ public interface CasStorageService
      *            the CAS object
      */
     void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
-        
+
     Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
 
     /**

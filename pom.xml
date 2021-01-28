@@ -1,14 +1,14 @@
 <!--
-  Copyright 2012
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>24</version>
+    <version>25</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -55,30 +55,28 @@
   </distributionManagement>
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
   
-    <mockito.version>3.3.3</mockito.version>
-    <assertj.version>3.15.0</assertj.version>
-    <spring.version>5.2.7.RELEASE</spring.version>
-    <spring.boot.version>2.3.1.RELEASE</spring.boot.version>
-    <spring.security.version>5.3.3.RELEASE</spring.security.version>
-    <wicket.version>8.8.0</wicket.version>
-    <wicketstuff.version>8.8.0</wicketstuff.version>
-    <wicket-jquery-ui.version>8.8.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>3.0.0-M15</wicket-bootstrap.version>
-    <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
-    <wicket-jquery-selectors.version>2.0.9</wicket-jquery-selectors.version>
-    <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
-    <wicket-webjars.version>2.0.18</wicket-webjars.version>    
-    <wicket-spring-boot.version>2.1.9</wicket-spring-boot.version>
-    <bootstrap.version>4.4.1-1</bootstrap.version>
-    <dkpro.version>2.1.0</dkpro.version>
+    <mockito.version>3.7.0</mockito.version>
+    <assertj.version>3.18.1</assertj.version>
+    <spring.version>5.3.3</spring.version>
+    <spring.boot.version>2.4.2</spring.boot.version>
+    <spring.security.version>5.4.2</spring.security.version>
+    <wicket.version>9.2.0</wicket.version>
+    <wicketstuff.version>9.2.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.2.0</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>5.0.3</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>3.0.2</wicket-jquery-selectors.version>
+    <wicket-webjars.version>3.0.2</wicket-webjars.version>
+    <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
+    <bootstrap.version>4.5.3</bootstrap.version>
+    <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.1.0</uimafit.version>
     <slf4j.version>1.7.30</slf4j.version>
-    <log4j.version>2.13.2</log4j.version>
+    <log4j.version>2.14.0</log4j.version>
     <jboss.logging.version>3.4.1.Final</jboss.logging.version>
     <hibernate.version>5.4.15.Final</hibernate.version>
     <hibernate.validator.version>6.1.4.Final</hibernate.validator.version>
@@ -86,9 +84,10 @@
     <batik.version>1.12</batik.version>
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.11.0</jackson.version>
-    <tomcat.version>9.0.35</tomcat.version>
+    <jackson.version>2.12.1</jackson.version>
+    <tomcat.version>9.0.41</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
+    <mysql-driver.version>8.0.20</mysql-driver.version>
   </properties>
   <repositories>
     <!--
@@ -185,7 +184,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.12</version>
+        <version>4.13.1</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -567,7 +566,7 @@
       <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
-        <version>1.9.3</version>
+        <version>1.9.4</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
@@ -582,7 +581,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
-        <version>1.7</version>
+        <version>1.8</version>
       </dependency>
       <dependency>
         <groupId>commons-fileupload</groupId>
@@ -637,14 +636,6 @@
         <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
         <version>2.1.3</version>
-        <!--  
-        <exclusions>
-          <exclusion>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-          </exclusion>
-        </exclusions>
-        -->
       </dependency>
       <dependency>
         <groupId>jaxen</groupId>
@@ -711,7 +702,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.9</version>
+        <version>3.11</version>
       </dependency>
 
       <dependency>
@@ -788,6 +779,12 @@
         <groupId>com.github.openjson</groupId>
         <artifactId>openjson</artifactId>
         <version>1.0.10</version>
+      </dependency>
+
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>${mysql-driver.version}</version>
       </dependency>
 
       <dependency>
@@ -977,7 +974,7 @@
       <dependency>
         <groupId>org.dkpro.statistics</groupId>
         <artifactId>dkpro-statistics-agreement</artifactId>
-        <version>2.2.0</version>
+        <version>2.2.1</version>
       </dependency>
       
       <dependency>

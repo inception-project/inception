@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
@@ -34,6 +35,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
@@ -66,7 +68,10 @@ public abstract class AnnotationPageBase
     private @SpringBean DocumentService documentService;
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
-    
+
+    private LoadableDetachableModel<Boolean> annotationFinished = LoadableDetachableModel
+            .of(this::loadAnnotationFinished);
+
     public AnnotationPageBase()
     {
         super();
@@ -99,25 +104,6 @@ public abstract class AnnotationPageBase
     }
 
     /**
-     * Show the previous document, if exist
-     */
-    @Deprecated
-    protected void actionShowPreviousDocument(AjaxRequestTarget aTarget)
-    {
-        getModelObject().moveToPreviousDocument(getListOfDocs());
-        actionLoadDocument(aTarget);
-    }
-
-    /**
-     * Show the next document if exist
-     */
-    protected void actionShowNextDocument(AjaxRequestTarget aTarget)
-    {
-        getModelObject().moveToNextDocument(getListOfDocs());
-        actionLoadDocument(aTarget);
-    }
-
-    /**
      * Show the specified document.
      * 
      * @return whether the document had to be switched or not.
@@ -133,7 +119,7 @@ public abstract class AnnotationPageBase
             return false;
         }
     }
-    
+
     /**
      * Show the next document if it exists, starting in a certain begin offset
      */
@@ -153,7 +139,7 @@ public abstract class AnnotationPageBase
             state.setFirstVisibleUnit(selectSentenceCovering(cas, aBegin));
             state.setFocusUnitIndex(getSentenceNumber(cas, aBegin));
         }
-        
+
         actionRefreshDocument(aTarget);
     }
 
@@ -169,9 +155,9 @@ public abstract class AnnotationPageBase
     public abstract List<SourceDocument> getListOfDocs();
 
     public abstract CAS getEditorCas() throws IOException;
-    
+
     public abstract void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
-    
+
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
@@ -188,18 +174,18 @@ public abstract class AnnotationPageBase
 
     /**
      * Checks if all required features on all annotations are set. If a required feature value is
-     * missing, then the method scrolls to that location and schedules a re-rendering. In such
-     * a case, an {@link IllegalStateException} is thrown.
+     * missing, then the method scrolls to that location and schedules a re-rendering. In such a
+     * case, an {@link IllegalStateException} is thrown.
      */
     protected void validateRequiredFeatures(AjaxRequestTarget aTarget, CAS aCas,
             TypeAdapter aAdapter)
     {
         AnnotatorState state = getModelObject();
-        
+
         CAS editorCas = aCas;
         AnnotationLayer layer = aAdapter.getLayer();
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-        
+
         // If no feature is required, then we can skip the whole procedure
         if (features.stream().allMatch((f) -> !f.isRequired())) {
             return;
@@ -232,7 +218,7 @@ public abstract class AnnotationPageBase
             }
         }
     }
-    
+
     public void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = getModelObject();
@@ -242,94 +228,116 @@ public abstract class AnnotationPageBase
                 // about fixing annotations on disabled layers.
                 continue;
             }
-            
+
             if (ValidationMode.NEVER.equals(layer.getValidationMode())) {
                 // If validation is disabled, then skip it
                 continue;
             }
-            
+
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            
+
             validateRequiredFeatures(aTarget, aCas, adapter);
-            
+
             List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aCas);
             if (!messages.isEmpty()) {
                 LogMessage message = messages.get(0).getLeft();
                 AnnotationFS fs = messages.get(0).getRight();
-                
+
                 // Find the sentence that contains the annotation with the missing
                 // required feature value and put this sentence into the focus
                 AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas, fs.getBegin());
                 state.setFirstVisibleUnit(s);
                 actionRefreshDocument(aTarget);
-                
+
                 // Inform the user
                 throw new IllegalStateException(
                         "Document cannot be marked as finished. Annotation with ID ["
-                                + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
-                                + layer.getUiName() + "] is invalid: " + message.getMessage());
+                                + WebAnnoCasUtil.getAddr(fs) + "] on layer [" + layer.getUiName()
+                                + "] is invalid: " + message.getMessage());
             }
         }
     }
-    
+
     /**
      * Load the user preferences. A side-effect of this method is that the active annotation layer
-     * is refreshed based on the visibility preferences and based on the project to which the 
+     * is refreshed based on the visibility preferences and based on the project to which the
      * document being edited belongs.
      */
     protected void loadPreferences() throws BeansException, IOException
     {
         AnnotatorState state = getModelObject();
-        PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
-                state, state.getUser().getUsername());
+        PreferencesUtil.loadPreferences(userPreferenceService, annotationService, state,
+                state.getUser().getUsername());
     }
-    
+
     public void ensureIsEditable() throws NotEditableException
     {
         AnnotatorState state = getModelObject();
-        
+
         if (state.getDocument() == null) {
             throw new NotEditableException("No document selected");
         }
 
-        if (state.getMode().equals(CURATION)) {
+        // If curating (check mode for curation page and user for curation sidebar),
+        // then it is editable unless the curation is finished
+        if (state.getMode().equals(CURATION)
+                || state.getUser().getUsername().equals(CURATION_USER)) {
             if (state.getDocument().getState().equals(CURATION_FINISHED)) {
                 throw new NotEditableException("Curation is already finished. You can put it back "
-                                + "into progress via the monitoring page.");
+                        + "into progress via the monitoring page.");
             }
-            
+
             return;
         }
 
-        if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername())) {
+            throw new NotEditableException(
+                    "Viewing another users annotations - document is read-only!");
+        }
+
+        if (isAnnotationFinished()) {
             throw new NotEditableException("This document is already closed for user ["
                     + state.getUser().getUsername() + "]. Please ask your "
                     + "project manager to re-open it via the monitoring page.");
         }
-
-        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
-            throw new NotEditableException(
-                    "Viewing another users annotations - document is read-only!");
-        }
     }
-    
+
     public boolean isEditable()
     {
         AnnotatorState state = getModelObject();
-        
+
         if (state.getDocument() == null) {
             return false;
         }
-        
-        // If curating, then it is editable unless the curation is finished
-        if (state.getMode().equals(CURATION)) {
-            return !state.getDocument().getState().equals(CURATION_FINISHED);
+        // If curating (check mode for curation page and user for curation sidebar),
+        // then it is editable unless the curation is finished
+        if (state.getMode().equals(CURATION)
+                || state.getUser().getUsername().equals(CURATION_USER)) {
+            return !CURATION_FINISHED.equals(state.getDocument().getState());
         }
-        
+
         // If annotating normally, then it is editable unless marked as finished and unless
         // viewing another users annotations
-        return !documentService.isAnnotationFinished(state.getDocument(), state.getUser())
-                && !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser());
+        return !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername())
+                && !isAnnotationFinished();
+    }
+
+    public boolean isAnnotationFinished()
+    {
+        return annotationFinished.getObject();
+    }
+
+    private boolean loadAnnotationFinished()
+    {
+        AnnotatorState state = getModelObject();
+        return documentService.isAnnotationFinished(state.getDocument(), state.getUser());
+    }
+
+    @Override
+    public void detachModels()
+    {
+        super.detachModels();
+        annotationFinished.detach();
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();

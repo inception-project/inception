@@ -1,14 +1,14 @@
 /*
- * Copyright 2016
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,8 +47,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(SPAN_TYPE.equals(layer.getType())
-                    && layer.getAttachFeature() != null)) {
+            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
                 continue;
             }
 
@@ -60,7 +59,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
-            // anno   -> e.g. Lemma
+            // anno -> e.g. Lemma
             // attach -> e.g. Token
             // Here we iterate over the attached layer, e.g. Lemma
             for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
@@ -68,7 +67,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
                 // e.g. Token
                 for (AnnotationFS attach : selectCovered(attachType, anno)) {
                     AnnotationFS existing = getFeature(attach, attachFeature, AnnotationFS.class);
-                    
+
                     if (existing == null) {
                         setFeature(attach, layer.getAttachFeature().getName(), anno);
                         count++;
@@ -83,7 +82,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
                 aMessages.add(LogMessage.info(this,
                         "Reattached [%d] unattached spans on layer [%s].", count, layer.getName()));
             }
-            
+
             if (nonNullCount > 0) {
                 aMessages.add(LogMessage.error(this,
                         "Could not attach [%d] annotations on layer [%s] because attach feature "

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,13 +81,12 @@ public class LoginPage
     private LoginForm form;
     private final WebMarkupContainer tooManyUsersLabel;
     private final Button signInBtn;
-    
-    
+
     public LoginPage()
     {
         setStatelessHint(true);
         setVersioned(false);
-        
+
         add(form = new LoginForm("loginForm"));
         signInBtn = new Button("signInBtn");
         signInBtn.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
@@ -96,7 +95,7 @@ public class LoginPage
         form.add(signInBtn);
         form.add(tooManyUsersLabel);
         form.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
-        
+
         redirectIfAlreadyLoggedIn();
 
         // Create admin user if there is no user yet
@@ -117,7 +116,7 @@ public class LoginPage
     }
 
     /**
-     * Check if settings property is set and there will be more users logged in (with current one) 
+     * Check if settings property is set and there will be more users logged in (with current one)
      * than max users allowed.
      */
     private boolean isTooManyUsers()
@@ -125,15 +124,15 @@ public class LoginPage
         long maxUsers = loginProperties.getMaxConcurrentSessions();
         return maxUsers > 0 && sessionRegistry.getAllPrincipals().size() >= maxUsers;
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         redirectIfAlreadyLoggedIn();
     }
-    
+
     private void redirectIfAlreadyLoggedIn()
     {
         // If we are already logged in, redirect to the welcome page. This tries to a void a
@@ -144,7 +143,7 @@ public class LoginPage
             log.debug("Already logged in, forwarding to home page");
             throw new RestartResponseException(getApplication().getHomePage());
         }
-        
+
         String redirectUrl = getRedirectUrl();
         if (redirectUrl == null) {
             log.debug("Authentication required");
@@ -171,14 +170,14 @@ public class LoginPage
             add(new HiddenField<>("urlfragment"));
             Properties settings = SettingsUtil.getSettings();
             String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
-            add(new Label("loginMessage", loginMessage)
-                    .setEscapeModelStrings(false)
+            add(new Label("loginMessage", loginMessage).setEscapeModelStrings(false)
                     .add(visibleWhen(() -> isNotBlank(loginMessage))));
         }
 
         @Override
         protected void onSubmit()
         {
+            String redirectUrl = getRedirectUrl();
             AuthenticatedWebSession session = AuthenticatedWebSession.get();
             if (session.signIn(username, password)) {
                 log.debug("Login successful");
@@ -189,27 +188,25 @@ public class LoginPage
                             .getRequest()).getContainerRequest().getSession(false);
                     sessionRegistry.registerNewSession(containerSession.getId(), username);
                 }
-                setDefaultResponsePageIfNecessary();
+                setDefaultResponsePageIfNecessary(redirectUrl);
             }
             else {
                 error("Login failed");
             }
         }
 
-        private void setDefaultResponsePageIfNecessary()
+        private void setDefaultResponsePageIfNecessary(String aRedirectUrl)
         {
             // This does not work because it was Spring Security that intercepted the access, not
             // Wicket continueToOriginalDestination();
 
-            String redirectUrl = getRedirectUrl();
-            
-            if (redirectUrl == null || redirectUrl.contains(".IBehaviorListener.")
-                    || redirectUrl.contains("-logoutPanel-")) {
+            if (aRedirectUrl == null || aRedirectUrl.contains(".IBehaviorListener.")
+                    || aRedirectUrl.contains("-logoutPanel-")) {
                 log.debug("Redirecting to welcome page");
                 setResponsePage(getApplication().getHomePage());
             }
             else {
-                log.debug("Redirecting to saved URL: [{}]", redirectUrl);
+                log.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
                 if (isNotBlank(form.urlfragment) && form.urlfragment.startsWith("!")) {
                     Url url = Url.parse("http://dummy?" + form.urlfragment.substring(1));
                     UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);
@@ -219,11 +216,11 @@ public class LoginPage
                     }
                     Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, params);
                 }
-                throw new NonResettingRestartException(redirectUrl);
+                throw new NonResettingRestartException(aRedirectUrl);
             }
         }
     }
-    
+
     private String getRedirectUrl()
     {
         String redirectUrl = null;

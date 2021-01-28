@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ public class CuratorWorkflowActionBarItemGroup
     extends Panel
 {
     private static final long serialVersionUID = 8596786586955459711L;
-    
+
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserDao userRepository;
@@ -68,7 +68,7 @@ public class CuratorWorkflowActionBarItemGroup
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
                 new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        
+
         add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
                 this::actionFinishDocument));
         finishDocumentLink.setOutputMarkupId(true);
@@ -79,8 +79,8 @@ public class CuratorWorkflowActionBarItemGroup
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         add(resetDocumentDialog = new MergeDialog("resetDocumentDialog",
                 new StringResourceModel("ResetDocumentDialog.title", this),
-                new StringResourceModel("ResetDocumentDialog.text", this)
-                        .setModel(page.getModel()).setParameters(documentNameModel),
+                new StringResourceModel("ResetDocumentDialog.text", this).setModel(page.getModel())
+                        .setParameters(documentNameModel),
                 documentNameModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 
@@ -88,11 +88,11 @@ public class CuratorWorkflowActionBarItemGroup
                 resetDocumentDialog::show));
         resetDocumentLink.add(enabledWhen(this::isEditable));
     }
-    
+
     public String getStateClass()
     {
         AnnotatorState state = page.getModelObject();
-        
+
         if (curationDocumentService.isCurationFinished(state.getDocument())) {
             return FontAwesome5IconType.lock_s.cssClassName();
         }
@@ -104,26 +104,24 @@ public class CuratorWorkflowActionBarItemGroup
     protected boolean isEditable()
     {
         AnnotatorState state = page.getModelObject();
-        return state.getProject() != null && state.getDocument() != null
-                && !documentService
-                        .getSourceDocument(state.getDocument().getProject(),
-                                state.getDocument().getName())
-                        .getState().equals(CURATION_FINISHED);
+        return state.getProject() != null && state.getDocument() != null && !documentService
+                .getSourceDocument(state.getDocument().getProject(), state.getDocument().getName())
+                .getState().equals(CURATION_FINISHED);
     }
-    
+
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((_target) -> {
             page.actionValidateDocument(_target, page.getEditorCas());
-            
+
             AnnotatorState state = page.getModelObject();
             SourceDocument sourceDocument = state.getDocument();
-            
+
             if (!curationDocumentService.isCurationFinished(sourceDocument)) {
                 documentService.transitionSourceDocumentState(sourceDocument,
                         CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
             }
-            
+
             _target.add(page);
         });
         finishDocumentDialog.show(aTarget);
@@ -132,15 +130,8 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
         throws Exception
     {
-        AnnotatorState state = page.getModelObject();
-        
-        // Remove the current curation CAS
-        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
-                state.getUser().getUsername());
-
-        // Initialize a new one ...
         ((CurationPage) page)
-                .prepareMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations());
+                .readOrCreateMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations(), true);
 
         // ... and load it
         page.actionLoadDocument(aTarget);

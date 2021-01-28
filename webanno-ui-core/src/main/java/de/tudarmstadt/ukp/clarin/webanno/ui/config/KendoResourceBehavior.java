@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,9 +29,8 @@ public class KendoResourceBehavior
     extends Behavior
 {
     private static final long serialVersionUID = 9065700322035556746L;
-    
-    private static final KendoResourceBehavior INSTANCE = 
-            new KendoResourceBehavior();
+
+    private static final KendoResourceBehavior INSTANCE = new KendoResourceBehavior();
 
     public static KendoResourceBehavior get()
     {
@@ -47,18 +46,15 @@ public class KendoResourceBehavior
         KendoUILibrarySettings kendoCfg = KendoUILibrarySettings.get();
 
         if (kendoCfg.getCommonStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem
-                    .forReference(kendoCfg.getCommonStyleSheetReference()));
+            aResponse.render(CssHeaderItem.forReference(kendoCfg.getCommonStyleSheetReference()));
         }
 
         if (kendoCfg.getThemeStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem
-                    .forReference(kendoCfg.getThemeStyleSheetReference()));
+            aResponse.render(CssHeaderItem.forReference(kendoCfg.getThemeStyleSheetReference()));
         }
 
         if (kendoCfg.getJavaScriptReference() != null) {
-            aResponse.render(JavaScriptHeaderItem
-                    .forReference(kendoCfg.getJavaScriptReference()));
+            aResponse.render(JavaScriptHeaderItem.forReference(kendoCfg.getJavaScriptReference()));
         }
     }
 }

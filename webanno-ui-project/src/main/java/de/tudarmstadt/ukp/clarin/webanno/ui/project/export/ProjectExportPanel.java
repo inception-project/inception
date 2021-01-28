@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.UnsupportedEncodingException;
@@ -30,7 +31,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -108,12 +108,12 @@ public class ProjectExportPanel
         private static final long serialVersionUID = 9151007311548196811L;
 
         private LambdaAjaxLink cancelLink;
-        
+
         public ProjectExportForm(String id, IModel<Project> aProject)
         {
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
-            
+
             DropDownChoice<String> format = new BootstrapSelect<>("format");
             format.setChoiceRenderer(new ChoiceRenderer<String>()
             {
@@ -125,15 +125,15 @@ public class ProjectExportPanel
                     if (ProjectExportRequest.FORMAT_AUTO.equals(aObject)) {
                         return ProjectExportRequest.FORMAT_AUTO;
                     }
-                    
+
                     return importExportService.getFormatById(aObject).get().getName();
                 }
             });
             format.setChoices(LoadableDetachableModel.of(() -> {
-                List<String> formats = importExportService.getWritableFormats().stream()
-                        .sorted(Comparator.comparing(FormatSupport::getName))
-                        .map(FormatSupport::getId)
-                        .collect(Collectors.toCollection(ArrayList::new));
+                List<String> formats = importExportService.getWritableFormats().stream() //
+                        .sorted(Comparator.comparing(FormatSupport::getName)) //
+                        .map(FormatSupport::getId) //
+                        .collect(toCollection(ArrayList::new));
                 formats.add(0, ProjectExportRequest.FORMAT_AUTO);
                 return formats;
             }));
@@ -141,12 +141,14 @@ public class ProjectExportPanel
             // not trigger a form submit.
             format.add(new FormComponentUpdatingBehavior());
             add(format);
-            
-            final AJAXDownload exportProject = new AJAXDownload() {
+
+            final AJAXDownload exportProject = new AJAXDownload()
+            {
                 private static final long serialVersionUID = 2005074740832698081L;
 
                 @Override
-                protected String getFileName() {
+                protected String getFileName()
+                {
                     ProjectExportRequest request = exportService.getExportRequest(exportTask);
                     String name;
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
@@ -156,13 +158,13 @@ public class ProjectExportPanel
                     catch (UnsupportedEncodingException e) {
                         name = super.getFileName();
                     }
-                    
+
                     name = FilenameUtils.removeExtension(name);
                     if (isNotBlank(request.getFilenameTag())) {
                         name += request.getFilenameTag();
                     }
                     name += "_" + fmt.format(new Date()) + ".zip";
-                    
+
                     return name;
                 }
             };
@@ -174,8 +176,7 @@ public class ProjectExportPanel
                 @Override
                 protected Progression getProgression()
                 {
-                    ProjectExportTaskMonitor monitor = exportService
-                            .getTaskMonitor(exportTask);
+                    ProjectExportTaskMonitor monitor = exportService.getTaskMonitor(exportTask);
                     if (monitor != null) {
                         Optional<LogMessage> msg = Optional
                                 .ofNullable(monitor.getMessages().peek());
@@ -196,9 +197,8 @@ public class ProjectExportPanel
                     target.addChildren(getPage(), IFeedback.class);
                     target.add(ProjectExportForm.this);
 
-                    ProjectExportTaskMonitor monitor = exportService
-                            .getTaskMonitor(exportTask);
-                    
+                    ProjectExportTaskMonitor monitor = exportService.getTaskMonitor(exportTask);
+
                     while (!monitor.getMessages().isEmpty()) {
                         LogMessage msg = monitor.getMessages().poll();
                         switch (msg.getLevel()) {
@@ -211,12 +211,12 @@ public class ProjectExportPanel
                         case ERROR:
                             error(msg.getMessage());
                             break;
-                        default: 
+                        default:
                             error(msg.getMessage());
                             break;
                         }
                     }
-                    
+
                     switch (monitor.getState()) {
                     case COMPLETED:
                         exportProject.initiate(target, monitor.getExportedFile().getAbsolutePath());
@@ -240,11 +240,13 @@ public class ProjectExportPanel
             fileGenerationProgress.add(exportProject);
             add(fileGenerationProgress);
 
-            add(exportProjectLink = new AjaxLink<Void>("exportProject") {
+            add(exportProjectLink = new AjaxLink<Void>("exportProject")
+            {
                 private static final long serialVersionUID = -5758406309688341664L;
 
                 @Override
-                public void onClick(final AjaxRequestTarget target) {
+                public void onClick(final AjaxRequestTarget target)
+                {
                     target.add(ProjectExportPanel.this.getPage());
                     Authentication authentication = SecurityContextHolder.getContext()
                             .getAuthentication();
@@ -258,12 +260,14 @@ public class ProjectExportPanel
                 }
             });
             exportProjectLink.add(enabledWhen(() -> !exportInProgress));
-            
-            add(exportCurateLink = new AjaxLink<Void>("exportCurated") {
+
+            add(exportCurateLink = new AjaxLink<Void>("exportCurated")
+            {
                 private static final long serialVersionUID = -5758406309688341664L;
 
                 @Override
-                public void onClick(final AjaxRequestTarget target) {
+                public void onClick(final AjaxRequestTarget target)
+                {
                     target.add(ProjectExportPanel.this.getPage());
                     Authentication authentication = SecurityContextHolder.getContext()
                             .getAuthentication();

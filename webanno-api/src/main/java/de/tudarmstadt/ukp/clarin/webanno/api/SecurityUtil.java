@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,10 +41,10 @@ public class SecurityUtil
         List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
                 .getEnvironment().getActiveProfiles());
         Properties settings = SettingsUtil.getSettings();
-        return !activeProfiles.contains("auto-mode-preauth") && "true"
-                        .equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
+        return !activeProfiles.contains("auto-mode-preauth")
+                && "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
     }
-    
+
     /**
      * @deprecated Use {@link UserDao#getRoles(User)}
      */
@@ -53,7 +53,7 @@ public class SecurityUtil
     {
         return aUserRepository.getRoles(aUser);
     }
-    
+
     /**
      * @deprecated Use {@link UserDao#isAdministrator(User)}
      */
@@ -110,7 +110,7 @@ public class SecurityUtil
     {
         return aProjectRepository.isAnnotator(aProject, aUser);
     }
-    
+
     /**
      * @deprecated Use {@link ProjectService#isAdmin(Project, User)}
      */
@@ -119,7 +119,7 @@ public class SecurityUtil
     {
         return aProjectRepository.isAdmin(aProject, aUser);
     }
-    
+
     /**
      * @deprecated Use {@link ProjectService#managesAnyProject(User)}
      */
@@ -136,31 +136,29 @@ public class SecurityUtil
                 return true;
             }
         }
-        
+
         return false;
     }
 
     public static boolean annotationEnabeled(ProjectService aRepository, User aUser, String aMode)
     {
         for (Project project : aRepository.listProjects()) {
-            if (aRepository.isAnnotator(project, aUser)
-                    && aMode.equals(project.getMode())) {
+            if (aRepository.isAnnotator(project, aUser) && aMode.equals(project.getMode())) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     public static boolean monitoringEnabeled(ProjectService repository, User user)
     {
         for (Project project : repository.listProjects()) {
-            if (repository.isCurator(project, user)
-                    || repository.isManager(project, user)) {
+            if (repository.isCurator(project, user) || repository.isManager(project, user)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 

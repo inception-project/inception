@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,24 +22,25 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 /**
  * Variables for the different states of a {@link AnnotationDocument} workflow.
  */
-public enum AnnotationDocumentState implements PersistentEnum
+public enum AnnotationDocumentState
+    implements PersistentEnum
 {
     /**
      * For every source document, there will be a NEW annotation document, untill the user start
      * annotating it.
      */
     NEW("NEW", "black"),
-    
+
     /**
      * annotation document has been created for this document for this annotator
      */
     IN_PROGRESS("INPROGRESS", "blue"),
-    
+
     /**
      * annotator has marked annotation document as complete
      */
     FINISHED("FINISHED", "red"),
-    
+
     /**
      * Ignore this annotation document from further processing such as curation
      */
@@ -58,18 +59,18 @@ public enum AnnotationDocumentState implements PersistentEnum
     {
         return getId();
     }
-    
+
     @Override
     public String getId()
     {
         return id;
     }
-    
+
     public String getColor()
     {
         return color;
     }
-    
+
     @Override
     public String toString()
     {

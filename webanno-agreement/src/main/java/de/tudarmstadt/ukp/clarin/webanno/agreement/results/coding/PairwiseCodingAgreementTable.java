@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementReportExportF
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;
@@ -45,8 +46,8 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
-import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -85,17 +86,17 @@ public class PairwiseCodingAgreementTable
     extends Panel
 {
     private static final long serialVersionUID = 571396822546125376L;
-    
+
     private final static Logger LOG = LoggerFactory.getLogger(PairwiseCodingAgreementTable.class);
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-    
+
     private final RefreshingView<String> rows;
     private final AjaxDownloadLink exportAllButton;
     private final DropDownChoice<AgreementReportExportFormat> formatField;
-    
+
     private final SerializableSupplier<Map<String, List<CAS>>> casMapSupplier;
 
     public PairwiseCodingAgreementTable(String aId,
@@ -105,50 +106,41 @@ public class PairwiseCodingAgreementTable
         super(aId, aModel);
 
         casMapSupplier = aCasMapSupplier;
-        
+
         setOutputMarkupId(true);
-        
-        PopoverConfig config = new PopoverConfig()
-                .withPlacement(Placement.left)
-                .withHtml(true);
+
+        PopoverConfig config = new PopoverConfig().withPlacement(Placement.left).withHtml(true);
         WebMarkupContainer legend = new WebMarkupContainer("legend");
-        legend.add(new PopoverBehavior(new ResourceModel("legend"), 
+        legend.add(new PopoverBehavior(new ResourceModel("legend"),
                 new StringResourceModel("legend.content", legend), config));
         add(legend);
-        
+
         // This model makes sure we add a "null" dummy rater which accounts for the header columns
         // of the table.
-        final IModel<List<String>> ratersAdapter = new AbstractReadOnlyModel<List<String>>()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public List<String> getObject()
-            {
-                List<String> raters = new ArrayList<>();
-                if (getModelObject() != null) {
-                    raters.add(null);
-                    raters.addAll(getModelObject().getRaters());
-                }
-                return raters;
+        final IModel<List<String>> ratersAdapter = LoadableDetachableModel.of(() -> {
+            List<String> raters = new ArrayList<>();
+            if (getModelObject() != null) {
+                raters.add(null);
+                raters.addAll(getModelObject().getRaters());
             }
-        };
+            return raters;
+        });
 
         add(formatField = new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
                 Model.of(CSV), asList(AgreementReportExportFormat.values()),
                 new EnumChoiceRenderer<>(this)));
         formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
-        exportAllButton = new AjaxDownloadLink("exportAll", () -> 
-                "agreement" + formatField.getModelObject().getExtension(),
+        exportAllButton = new AjaxDownloadLink("exportAll",
+                () -> "agreement" + formatField.getModelObject().getExtension(),
                 this::exportAllAgreements);
         exportAllButton.add(enabledWhen(() -> formatField.getModelObject() != null));
         add(exportAllButton);
-        
+
         rows = new DefaultRefreshingView<String>("rows", ratersAdapter)
         {
             private static final long serialVersionUID = 1L;
-            
+
             @Override
             protected void populateItem(final Item<String> aRowItem)
             {
@@ -156,13 +148,13 @@ public class PairwiseCodingAgreementTable
                 aRowItem.add(new DefaultRefreshingView<String>("cells", ratersAdapter)
                 {
                     private static final long serialVersionUID = 1L;
-                    
+
                     @Override
                     protected void populateItem(Item<String> aCellItem)
                     {
                         aCellItem.setRenderBodyOnly(true);
-                        
-                        Fragment cell; 
+
+                        Fragment cell;
                         // Header cell
                         if (aRowItem.getIndex() == 0) {
                             cell = new Fragment("cell", "th-centered",
@@ -176,7 +168,7 @@ public class PairwiseCodingAgreementTable
                         else {
                             cell = new Fragment("cell", "td", PairwiseCodingAgreementTable.this);
                         }
-                        
+
                         // Top-left cell
                         if (aRowItem.getIndex() == 0 && aCellItem.getIndex() == 0) {
                             cell.add(new Label("label", Model.of("")));
@@ -203,48 +195,47 @@ public class PairwiseCodingAgreementTable
                         else {
                             cell.add(new Label("label", Model.of("-")));
                         }
-                        
+
                         aCellItem.add(cell);
                     }
                 });
                 // Odd/even coloring is reversed here to account for the header row at index 0
-                aRowItem.add(new AttributeAppender("class", (aRowItem.getIndex() % 2 == 0) ? "odd"
-                        : "even"));
+                aRowItem.add(new AttributeAppender("class",
+                        (aRowItem.getIndex() % 2 == 0) ? "odd" : "even"));
             }
         };
+        this.add(visibleWhen(
+                () -> (getModelObject() != null && !getModelObject().getRaters().isEmpty())));
         add(rows);
     }
-    
+
     private Label makeLowerDiagonalCellLabel(String aRater1, String aRater2)
     {
-        CodingAgreementResult result = getModelObject().getStudy(aRater1,
-                aRater2);
-        
+        CodingAgreementResult result = getModelObject().getStudy(aRater1, aRater2);
+
         String label = String.format("%d/%d", result.getCompleteSetCount(),
                 result.getRelevantSetCount());
 
         String tooltipTitle = "Details about annotations excluded from agreement calculation";
-        
+
         StringBuilder tooltipContent = new StringBuilder();
         if (result.isExcludeIncomplete()) {
             tooltipContent.append(String.format("- Incomplete (missing): %d%n",
                     result.getIncompleteSetsByPosition().size()));
-            tooltipContent.append(String.format(
-                    "- Incomplete (not labeled): %d%n", result
-                            .getIncompleteSetsByLabel().size()));
+            tooltipContent.append(String.format("- Incomplete (not labeled): %d%n",
+                    result.getIncompleteSetsByLabel().size()));
         }
-        tooltipContent.append(String.format("- Plurality: %d", result
-                .getPluralitySets().size()));
-        
-        Label l = new Label("label", Model.of(label)); 
-        DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
-            tooltipTitle, tooltipContent.toString());
+        tooltipContent.append(String.format("- Plurality: %d", result.getPluralitySets().size()));
+
+        Label l = new Label("label", Model.of(label));
+        DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(tooltipTitle,
+                tooltipContent.toString());
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: help", ";"));
         return l;
     }
-    
+
     private Label makeUpperDiagonalCellLabel(String aRater1, String aRater2)
     {
         CodingAgreementResult result = getModelObject().getStudy(aRater1, aRater2);
@@ -253,7 +244,7 @@ public class PairwiseCodingAgreementTable
         boolean noDataRater1 = isAllNull(result, result.getCasGroupIds().get(1));
         int incPos = result.getIncompleteSetsByPosition().size();
         int incLabel = result.getIncompleteSetsByLabel().size();
-        
+
         String label;
         if (result.getStudy().getItemCount() == 0) {
             label = "no positions";
@@ -280,33 +271,28 @@ public class PairwiseCodingAgreementTable
             label = String.format("%.2f", result.getAgreement());
         }
 
-        String tooltipTitle = result.getCasGroupIds().get(0) +
-            '/' +
-            result.getCasGroupIds().get(1);
+        String tooltipTitle = result.getCasGroupIds().get(0) + '/' + result.getCasGroupIds().get(1);
 
-        String tooltipContent = "Positions annotated:\n" +
-            String.format("- %s: %d/%d%n",
-                result.getCasGroupIds().get(0),
-                getNonNullCount(result, result.getCasGroupIds().get(0)),
-                result.getStudy().getItemCount()) +
-            String.format("- %s: %d/%d%n",
-                result.getCasGroupIds().get(1),
-                getNonNullCount(result, result.getCasGroupIds().get(1)),
-                result.getStudy().getItemCount()) +
-            String.format("Distinct labels used: %d%n",
-                result.getStudy().getCategoryCount());
+        String tooltipContent = "Positions annotated:\n"
+                + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(0),
+                        getNonNullCount(result, result.getCasGroupIds().get(0)),
+                        result.getStudy().getItemCount())
+                + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(1),
+                        getNonNullCount(result, result.getCasGroupIds().get(1)),
+                        result.getStudy().getItemCount())
+                + String.format("Distinct labels used: %d%n", result.getStudy().getCategoryCount());
 
-        Label l = new Label("label", Model.of(label)); 
+        Label l = new Label("label", Model.of(label));
         l.add(makeDownloadBehavior(aRater1, aRater2));
-        DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
-            tooltipTitle, tooltipContent);
+        DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(tooltipTitle,
+                tooltipContent);
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: pointer", ";"));
-        
+
         return l;
     }
-    
+
     public boolean isAllNull(AgreementResult<ICodingAnnotationStudy> aResult, String aCasGroupId)
     {
         for (ICodingAnnotationItem item : aResult.getStudy().getItems()) {
@@ -316,7 +302,7 @@ public class PairwiseCodingAgreementTable
         }
         return true;
     }
-    
+
     public int getNonNullCount(AgreementResult<ICodingAnnotationStudy> aResult, String aCasGroupId)
     {
         int i = 0;
@@ -328,7 +314,6 @@ public class PairwiseCodingAgreementTable
         return i;
     }
 
-
     private Behavior makeDownloadBehavior(final String aKey1, final String aKey2)
     {
         return new AjaxEventBehavior("click")
@@ -338,13 +323,15 @@ public class PairwiseCodingAgreementTable
             @Override
             protected void onEvent(AjaxRequestTarget aTarget)
             {
-                AJAXDownload download = new AJAXDownload() {
+                AJAXDownload download = new AJAXDownload()
+                {
                     private static final long serialVersionUID = 1L;
-                    
+
                     @Override
                     protected IResourceStream getResourceStream()
                     {
-                        return new AbstractResourceStream() {
+                        return new AbstractResourceStream()
+                        {
                             private static final long serialVersionUID = 1L;
 
                             @Override
@@ -354,7 +341,7 @@ public class PairwiseCodingAgreementTable
                                 try {
                                     CodingAgreementResult result = PairwiseCodingAgreementTable.this
                                             .getModelObject().getStudy(aKey1, aKey2);
-                                    
+
                                     switch (formatField.getModelObject()) {
                                     case CSV:
                                         return AgreementUtils.generateCsvReport(result);
@@ -373,8 +360,7 @@ public class PairwiseCodingAgreementTable
                             }
 
                             @Override
-                            public void close()
-                                throws IOException
+                            public void close() throws IOException
                             {
                                 // Nothing to do
                             }
@@ -385,7 +371,7 @@ public class PairwiseCodingAgreementTable
                 download.initiate(aTarget,
                         "agreement" + formatField.getModelObject().getExtension());
             }
-        };      
+        };
     }
 
     private InputStream generateDebugReport(CodingAgreementResult aResult)
@@ -394,7 +380,8 @@ public class PairwiseCodingAgreementTable
         AgreementUtils.dumpAgreementStudy(new PrintStream(buf), aResult);
         return new ByteArrayInputStream(buf.toByteArray());
     }
-    
+
+    @SuppressWarnings("unchecked")
     public PairwiseAnnotationResult<CodingAgreementResult> getModelObject()
     {
         return (PairwiseAnnotationResult<CodingAgreementResult>) getDefaultModelObject();
@@ -404,7 +391,7 @@ public class PairwiseCodingAgreementTable
     {
         setDefaultModelObject(aAgreements2);
     }
-    
+
     private IResourceStream exportAllAgreements()
     {
         return new AbstractResourceStream()
@@ -412,12 +399,11 @@ public class PairwiseCodingAgreementTable
             private static final long serialVersionUID = 1L;
 
             @Override
-            public InputStream getInputStream()
-                throws ResourceStreamNotFoundException
+            public InputStream getInputStream() throws ResourceStreamNotFoundException
             {
                 AnnotationFeature feature = getModelObject().getFeature();
                 DefaultAgreementTraits traits = getModelObject().getTraits();
-                
+
                 Map<String, List<CAS>> casMap = casMapSupplier.get();
 
                 List<DiffAdapter> adapters = CasDiff.getDiffAdapters(annotationService,
@@ -425,14 +411,14 @@ public class PairwiseCodingAgreementTable
 
                 CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
 
-//                AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
-//                        feature.getLayer().getName(), feature.getName(),
-//                        pref.excludeIncomplete, casMap);
+                // AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
+                // feature.getLayer().getName(), feature.getName(),
+                // pref.excludeIncomplete, casMap);
                 // TODO: for the moment, we always include incomplete annotations during this
                 // export.
                 CodingAgreementResult agreementResult = makeCodingStudy(diff,
                         feature.getLayer().getName(), feature.getName(), false, casMap);
-                
+
                 try {
                     return AgreementUtils.generateCsvReport(agreementResult);
                 }
@@ -444,8 +430,7 @@ public class PairwiseCodingAgreementTable
             }
 
             @Override
-            public void close()
-                throws IOException
+            public void close() throws IOException
             {
                 // Nothing to do
             }

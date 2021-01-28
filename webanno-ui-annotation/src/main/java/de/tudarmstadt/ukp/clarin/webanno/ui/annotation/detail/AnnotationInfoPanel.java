@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,69 +23,71 @@ import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.IOException;
 
-import org.apache.wicket.Component;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
-public class AnnotationInfoPanel extends Panel
+public class AnnotationInfoPanel
+    extends Panel
 {
     private static final long serialVersionUID = -2911353962253404751L;
 
     private final WebMarkupContainer noAnnotationWarning;
     private final WebMarkupContainer annotationInfo;
 
-    public AnnotationInfoPanel(String aId, IModel<AnnotatorState> aModel)
+    private final AnnotationDetailEditorPanel actionHandler;
+
+    public AnnotationInfoPanel(String aId, IModel<AnnotatorState> aModel,
+            AnnotationDetailEditorPanel aOwner)
     {
         super(aId, aModel);
 
+        actionHandler = aOwner;
+
         setOutputMarkupPlaceholderTag(true);
-        
+
         // If there are no features, we want this panel to fill its entire parent so the no-data
         // info is shown prominently
-        add(new CssClassNameAppender(LoadableDetachableModel.of(() ->  {
+        add(new CssClassNameAppender(LoadableDetachableModel.of(() -> {
             return !isAnnotationSelected() ? "flex-content flex-v-container" : "";
         })));
-        
+
         noAnnotationWarning = new WebMarkupContainer("noAnnotationWarning");
         noAnnotationWarning.setOutputMarkupPlaceholderTag(true);
         noAnnotationWarning.add(visibleWhen(() -> !isAnnotationSelected()));
         add(noAnnotationWarning);
-        
+
         annotationInfo = new WebMarkupContainer("annotationInfo");
         annotationInfo.setOutputMarkupPlaceholderTag(true);
         annotationInfo.add(visibleWhen(this::isAnnotationSelected));
         annotationInfo.add(createSelectedAnnotationTypeLabel());
-        annotationInfo.add(createSelectedTextLabel());
-        annotationInfo.add(createJumpToAnnotationLink());
+        annotationInfo.add(new AnnotationTextPanel("annotationText", actionHandler, aModel));
         annotationInfo.add(createSelectedAnnotationLayerLabel());
         add(annotationInfo);
     }
-    
-    private boolean isAnnotationSelected() {
+
+    private boolean isAnnotationSelected()
+    {
         return getModelObject().getSelection().getAnnotation().isSet();
     }
-    
+
     public AnnotationPageBase getEditorPage()
     {
         return (AnnotationPageBase) getPage();
     }
-    
+
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
+
     private Label createSelectedAnnotationLayerLabel()
     {
         Label label = new Label("selectedAnnotationLayer",
@@ -113,27 +115,5 @@ public class AnnotationInfoPanel extends Panel
         label.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
                 && DEVELOPMENT.equals(getApplication().getConfigurationType())));
         return label;
-    }
-
-
-    
-    private Component createSelectedTextLabel()
-    {
-        return new Label("selectedText", PropertyModel.of(getModelObject(), "selection.text"))
-                .setOutputMarkupId(true);
-    }
-    
-    private Component createJumpToAnnotationLink()
-    {
-        return new LambdaAjaxLink("jumpToAnnotation", this::actionJumpToAnnotation)
-                .setOutputMarkupId(true);
-    }
-    
-    private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException
-    {
-        AnnotatorState state = getModelObject();
-        
-        getEditorPage().actionShowSelectedDocument(aTarget, state.getDocument(),
-                state.getSelection().getBegin(), state.getSelection().getEnd());
     }
 }

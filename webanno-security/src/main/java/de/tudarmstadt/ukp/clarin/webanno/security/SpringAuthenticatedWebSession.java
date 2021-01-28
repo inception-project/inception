@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 /**
- *  An {@link AuthenticatedWebSession} based on {@link Authentication}
+ * An {@link AuthenticatedWebSession} based on {@link Authentication}
  */
 public class SpringAuthenticatedWebSession
     extends AuthenticatedWebSession
@@ -58,15 +58,13 @@ public class SpringAuthenticatedWebSession
         super(request);
         injectDependencies();
         ensureDependenciesNotNull();
-        
+
         // If the a proper (non-anonymous) authentication has already been performed (e.g. via
         // external pre-authentication) then also mark the Wicket session as signed-in.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (
-                authentication != null && 
-                authentication.isAuthenticated() && 
-                authentication instanceof PreAuthenticatedAuthenticationToken
-                //!(authentication instanceof AnonymousAuthenticationToken && !isSignedIn())
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication instanceof PreAuthenticatedAuthenticationToken
+        // !(authentication instanceof AnonymousAuthenticationToken && !isSignedIn())
         ) {
             signIn(true);
         }
@@ -89,28 +87,27 @@ public class SpringAuthenticatedWebSession
     {
         // If already signed in (in Spring Security), then sign out there first
         // signOut();
-        
+
         try {
             // Kill current session and create a new one as part of the authentication
             ((ServletWebRequest) RequestCycle.get().getRequest()).getContainerRequest().getSession()
                     .invalidate();
-            
+
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
             MDC.put(Logging.KEY_USERNAME, username);
-            
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.debug("Stored authentication for user [{}] in security context",
                     authentication.getName());
-            
+
             HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                     .getContainerRequest().getSession();
-            session.setAttribute(
-                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
             log.debug("Stored security context in session");
-            
+
             return true;
         }
         catch (AuthenticationException e) {
@@ -130,13 +127,19 @@ public class SpringAuthenticatedWebSession
     @Override
     public Roles getRoles()
     {
+        if (!isSignedIn()) {
+            return new Roles();
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Roles roles = new Roles();
-        if (isSignedIn()) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
             for (GrantedAuthority authority : authentication.getAuthorities()) {
                 roles.add(authority.getAuthority());
             }
         }
+
         return roles;
     }
 }

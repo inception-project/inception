@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,30 +34,28 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 public class KrippendorffAlphaNominalAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
 {
-    private AggreementMeasureSupport<
-        KrippendorffAlphaAgreementTraits, 
-            PairwiseAnnotationResult<CodingAgreementResult>, 
-            ICodingAnnotationStudy> sut;
+    private AgreementMeasureSupport<KrippendorffAlphaAgreementTraits, //
+            PairwiseAnnotationResult<CodingAgreementResult>, ICodingAnnotationStudy> sut;
     private KrippendorffAlphaAgreementTraits traits;
-    
+
     @Override
     @Before
     public void setup()
     {
         super.setup();
-        
+
         sut = new KrippendorffAlphaAgreementMeasureSupport(annotationService);
         traits = sut.createTraits();
     }
-    
+
     @Test
     public void multiLinkWithRoleLabelDifference() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = 
-                multiLinkWithRoleLabelDifferenceTest(sut);
-        
+        PairwiseAnnotationResult<CodingAgreementResult> agreement = multiLinkWithRoleLabelDifferenceTest(
+                sut);
+
         CodingAgreementResult result = agreement.getStudy("user1", "user2");
-        
+
         DiffResult diff = result.getDiff();
 
         diff.print(System.out);
@@ -65,19 +63,19 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
         assertEquals(3, diff.size());
         assertEquals(0, diff.getDifferingConfigurationSets().size());
         assertEquals(2, diff.getIncompleteConfigurationSets().size());
-    
+
         assertEquals(NaN, result.getAgreement(), 0.00001d);
     }
-    
+
     @Test
     public void twoEmptyCasTest() throws Exception
     {
         PairwiseAnnotationResult<CodingAgreementResult> agreement = twoEmptyCasTest(sut);
-        
+
         CodingAgreementResult result = agreement.getStudy("user1", "user2");
-        
+
         DiffResult diff = result.getDiff();
-        
+
         assertEquals(0, diff.size());
         assertEquals(0, diff.getDifferingConfigurationSets().size());
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
@@ -85,12 +83,12 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
         assertEquals(NaN, result.getAgreement(), 0.000001d);
         assertEquals(0, result.getIncompleteSetsByPosition().size());
     }
-    
+
     @Test
     public void singleNoDifferencesWithAdditionalCasTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = 
-                singleNoDifferencesWithAdditionalCasTest(sut);
+        PairwiseAnnotationResult<CodingAgreementResult> agreement = singleNoDifferencesWithAdditionalCasTest(
+                sut);
 
         CodingAgreementResult result1 = agreement.getStudy("user1", "user2");
         assertEquals(0, result1.getTotalSetCount());
@@ -107,7 +105,7 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
     public void testTwoWithoutLabel_noExcludeIncomplete() throws Exception
     {
         traits.setExcludeIncomplete(false);
-        
+
         PairwiseAnnotationResult<CodingAgreementResult> agreement = twoWithoutLabelTest(sut,
                 traits);
 

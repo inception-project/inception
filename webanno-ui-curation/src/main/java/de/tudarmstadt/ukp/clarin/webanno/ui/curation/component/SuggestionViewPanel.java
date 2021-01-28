@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -200,7 +199,6 @@ public class SuggestionViewPanel
         IRequestParameters request = getRequest().getPostParameters();
         StringValue action = request.getParameterValue(PARAM_ACTION);
 
-
         if (!action.isEmpty()) {
             String type = removePrefix(request.getParameterValue(PARAM_TYPE).toString());
             AnnotationLayer layer = schemaService.getLayer(TypeUtil.getLayerId(type));
@@ -216,16 +214,16 @@ public class SuggestionViewPanel
                 return;
             }
 
-            if (ACTION_CONTEXT_MENU.equals(action.toString()) ) {
+            if (ACTION_CONTEXT_MENU.equals(action.toString())) {
                 // No bulk actions supports for slots at the moment.
                 if (sourceVid.isSlotSet()) {
                     return;
                 }
-                
+
                 List<IMenuItem> items = contextMenu.getItemList();
                 items.clear();
                 items.add(new LambdaMenuItem(String.format("Merge all %s", layer.getUiName()),
-                    _target -> actionAcceptAll(_target, aSegment, layer)));
+                        _target -> actionAcceptAll(_target, aSegment, layer)));
 
                 contextMenu.onOpen(aTarget);
                 return;
@@ -263,7 +261,7 @@ public class SuggestionViewPanel
                 sourceState.getPagingStrategy().moveToOffset(sourceState, targetCas,
                         sourceAnnotation.getBegin(), CENTERED);
             }
-            
+
             onChange(aTarget);
         }
     }
@@ -282,10 +280,10 @@ public class SuggestionViewPanel
         int updated = 0;
         int created = 0;
         Set<String> otherErrors = new LinkedHashSet<>();
-        
+
         CasMerge casMerge = new CasMerge(schemaService);
         casMerge.setSilenceEvents(true);
-        
+
         nextAnnotation: for (AnnotationFS ann : select(sourceCas,
                 adapter.getAnnotationType(sourceCas))) {
             try {
@@ -323,13 +321,13 @@ public class SuggestionViewPanel
                 otherErrors.add(e.getMessage());
             }
         }
-        
+
         writeEditorCas(sourceState, targetCas);
-        
+
         int success = created + updated;
         if (success > 0) {
-            success(String.format("Annotations were changed: %d (%d created, %d updated)",
-                    success, created, updated));
+            success(String.format("Annotations were changed: %d (%d created, %d updated)", success,
+                    created, updated));
         }
         else {
             info("No annotations were changed");
@@ -342,25 +340,25 @@ public class SuggestionViewPanel
         if (mergeConflict > 0) {
             info("Annotations skipped due to conflicts: " + mergeConflict);
         }
-        
+
         if (!otherErrors.isEmpty()) {
             otherErrors.forEach(this::error);
         }
-        
+
         applicationEventPublisher.get()
                 .publishEvent(new BulkAnnotationEvent(this, sourceState.getDocument(),
                         sourceState.getUser().getUsername(), adapter.getLayer()));
-        
+
         aTarget.addChildren(getPage(), IFeedback.class);
-        
+
         onChange(aTarget);
     }
-    
+
     protected void onChange(AjaxRequestTarget aTarget)
     {
         // Overriden in curationPanel
     }
-    
+
     private CasMergeOperationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
             VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
             AnnotationLayer aLayer)
@@ -408,8 +406,7 @@ public class SuggestionViewPanel
                         : curationDocumentService.readCurationCas(sourceDocument);
     }
 
-    private void writeEditorCas(AnnotatorState state, CAS aCas)
-        throws IOException
+    private void writeEditorCas(AnnotatorState state, CAS aCas) throws IOException
     {
         if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
                 || state.getMode().equals(Mode.CORRECTION)) {
@@ -509,12 +506,12 @@ public class SuggestionViewPanel
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
-        
+
         Map<String, Map<VID, AnnotationState>> annoStates1 = new HashMap<>();
-        
+
         Project project = state.getProject();
         Mode mode1 = state.getMode();
-        
+
         DiffResult diff;
         if (mode1.equals(CURATION)) {
             diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
@@ -525,24 +522,24 @@ public class SuggestionViewPanel
             diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, aCurationSegment.getBegin(),
                     aCurationSegment.getEnd()).toResult();
         }
-        
+
         Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
-        
+
         Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();
         for (ConfigurationSet cfgSet : d) {
             if (i.contains(cfgSet)) {
                 i.remove(cfgSet);
             }
         }
-        
+
         addSuggestionColor(project, mode1, casses, annoStates1, d, false, false);
         addSuggestionColor(project, mode1, casses, annoStates1, i, true, false);
-        
+
         List<ConfigurationSet> all = new ArrayList<>();
         all.addAll(diff.getConfigurationSets());
         all.removeAll(d);
         all.removeAll(i);
-        
+
         addSuggestionColor(project, mode1, casses, annoStates1, all, false, true);
 
         // get differing feature structures
@@ -571,8 +568,7 @@ public class SuggestionViewPanel
                 UserAnnotationSegment seg = new UserAnnotationSegment();
                 seg.setUsername(username);
                 seg.setAnnotatorState(state);
-                seg.setCollectionData(
-                        getCollectionInformation(schemaService, aCurationContainer));
+                seg.setCollectionData(getCollectionInformation(schemaService, aCurationContainer));
                 seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
                 seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
                 segments.add(seg);
@@ -603,18 +599,18 @@ public class SuggestionViewPanel
      * @throws AnnotationException
      *             hum?
      */
-    public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
+    private void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SourceListView aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
+        LOG.trace("call update");
         AnnotatorState state = aCurationContainer.getState();
-        
+
         if (state.getDocument() == null) {
             return;
         }
 
-        
         SourceDocument sourceDocument = state.getDocument();
         Map<String, CAS> casses = new HashMap<>();
 
@@ -625,12 +621,12 @@ public class SuggestionViewPanel
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
-        
+
         Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
-        
+
         Project project = state.getProject();
         Mode mode = state.getMode();
-        
+
         DiffResult diff;
         if (mode.equals(CURATION)) {
             diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
@@ -641,24 +637,24 @@ public class SuggestionViewPanel
             diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, aCurationSegment.getBegin(),
                     aCurationSegment.getEnd()).toResult();
         }
-        
+
         Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
-        
+
         Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();
         for (ConfigurationSet cfgSet : d) {
             if (i.contains(cfgSet)) {
                 i.remove(cfgSet);
             }
         }
-        
+
         addSuggestionColor(project, mode, casses, annoStates, d, false, false);
         addSuggestionColor(project, mode, casses, annoStates, i, true, false);
-        
+
         List<ConfigurationSet> all = new ArrayList<>();
         all.addAll(diff.getConfigurationSets());
         all.removeAll(d);
         all.removeAll(i);
-        
+
         addSuggestionColor(project, mode, casses, annoStates, all, false, true);
 
         // get differing feature structures
@@ -668,14 +664,18 @@ public class SuggestionViewPanel
 
             CAS cas = casses.get(seg.getUsername());
 
+            if (cas == null) {
+                // This may happen if a user has not yet finished document
+                return;
+            }
+
             // Set up coloring strategy
             ColoringStrategy curationColoringStrategy = makeColoringStrategy(
                     annoStates.get(seg.getUsername()));
 
             // Create curation view for the current user
             try {
-                seg.setCollectionData(
-                        getCollectionInformation(schemaService, aCurationContainer));
+                seg.setCollectionData(getCollectionInformation(schemaService, aCurationContainer));
                 seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
                 seg.setAnnotatorState(state);
                 seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
@@ -685,7 +685,11 @@ public class SuggestionViewPanel
                 LOG.error("Unable to render", e);
             }
 
-            requestRender(aTarget, vis);
+            if (isBlank(vis.getDocumentData())) {
+                return;
+            }
+
+            vis.render(aTarget);
         });
     }
 
@@ -716,7 +720,7 @@ public class SuggestionViewPanel
             boolean use = false;
             for (String u : cs.getCasGroupIds()) {
                 Map<VID, AnnotationState> colors = aSuggestionColors.computeIfAbsent(u,
-                    k -> new HashMap<>());
+                        k -> new HashMap<>());
 
                 for (Configuration c : cs.getConfigurations(u)) {
 
@@ -836,21 +840,20 @@ public class SuggestionViewPanel
         }
         return annotatorCas;
     }
-    
-    /**
-     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be called
-     * multiple times, even for the same annotation editor, but only resulting in a single rendering
-     * call.
-     */
-    private final void requestRender(AjaxRequestTarget aTarget, BratVisualizer aVis)
-    {
-        aTarget.registerRespondListener(new AjaxComponentRespondListener(aVis, _target -> {
-            // Is a document loaded?
-            if (isBlank(aVis.getDocumentData())) {
-                return;
-            }
 
-            aVis.render(_target);
+    /**
+     * Schedules a update call for this panel via at the end of the given AJAX cycle. This method
+     * can be called multiple times, even for the same annotation editor, but only resulting in a
+     * single update and rendering call.
+     */
+    public final void requestUpdate(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
+            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
+            SourceListView aCurationSegment)
+    {
+        LOG.trace("request update");
+        aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
+            updatePanel(_target, aCurationContainer, aAnnotationSelectionByUsernameAndAddress,
+                    aCurationSegment);
         }));
     }
 }

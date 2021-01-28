@@ -1,14 +1,14 @@
 /*
- * Copyright 2016
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
@@ -55,8 +57,7 @@ public class JsonImportUtil
         }
     }
 
-    private static TagSet replaceTagSet(Project project,
-            ExportedTagSet importedTagSet,
+    private static TagSet replaceTagSet(Project project, ExportedTagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -79,49 +80,49 @@ public class JsonImportUtil
             newTag.setTagSet(tagsetInUse);
             aAnnotationService.createTag(newTag);
         }
-        
+
         return tagsetInUse;
     }
-    
+
     public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
-    
+
         ExportedTagSet importedTagSet = JSONUtil.getObjectMapper().readValue(text,
                 ExportedTagSet.class);
         return createTagSet(project, importedTagSet, aAnnotationService);
     }
-    
-    public static TagSet createTagSet(Project project,
-            ExportedTagSet importedTagSet,
+
+    public static TagSet createTagSet(Project project, ExportedTagSet aExTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
-        String importedTagSetName = importedTagSet.getName();
-        if (aAnnotationService.existsTagSet(importedTagSetName, project)) {
-            // aAnnotationService.removeTagSet(aAnnotationService.getTagSet(
-            // importedTagSet.getName(), project));
-            // Rename Imported TagSet instead of deleting the old one.
-            importedTagSetName = copyTagSetName(aAnnotationService, importedTagSetName, project);
+        String exTagSetName = aExTagSet.getName();
+        if (aAnnotationService.existsTagSet(exTagSetName, project)) {
+            exTagSetName = copyTagSetName(aAnnotationService, exTagSetName, project);
         }
 
         TagSet newTagSet = new TagSet();
-        newTagSet.setDescription(importedTagSet.getDescription());
-        newTagSet.setName(importedTagSetName);
-        newTagSet.setLanguage(importedTagSet.getLanguage());
+        newTagSet.setDescription(aExTagSet.getDescription());
+        newTagSet.setName(exTagSetName);
+        newTagSet.setLanguage(aExTagSet.getLanguage());
         newTagSet.setProject(project);
-        newTagSet.setCreateTag(importedTagSet.isCreateTag());
+        newTagSet.setCreateTag(aExTagSet.isCreateTag());
         aAnnotationService.createTagSet(newTagSet);
-        for (ExportedTag tag : importedTagSet.getTags()) {
-            Tag newTag = new Tag();
-            newTag.setDescription(tag.getDescription());
-            newTag.setName(tag.getName());
-            newTag.setTagSet(newTagSet);
-            aAnnotationService.createTag(newTag);
+
+        List<Tag> tags = new ArrayList<>();
+        for (ExportedTag exTag : aExTagSet.getTags()) {
+            Tag tag = new Tag();
+            tag.setDescription(exTag.getDescription());
+            tag.setTagSet(newTagSet);
+            tag.setName(exTag.getName());
+            tags.add(tag);
         }
-        
+
+        aAnnotationService.createTags(tags.stream().toArray(Tag[]::new));
+
         return newTagSet;
     }
 
@@ -141,7 +142,7 @@ public class JsonImportUtil
             else {
                 return betterTagSetName;
             }
-    
+
         }
     }
 }

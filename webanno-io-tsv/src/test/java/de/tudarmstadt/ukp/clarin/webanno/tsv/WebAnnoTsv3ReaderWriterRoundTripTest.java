@@ -1,14 +1,14 @@
 /*
- * Copyright 2016
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.xmi.XmiWriter;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +53,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
+/**
+ * @deprecated These test were used during the development of the new {@link WebannoTsv3XReader} and
+ *             {@link WebannoTsv3XWriter} code to check that the two are reasonably compatible. Now
+ *             that the new code is done, these old tests are not really needed anymore.
+ */
+@Deprecated
+@Ignore("Ignoring because these produce WebAnno TSV 3.2 headers and we are now at TSV 3.3")
 @RunWith(value = Parameterized.class)
 public class WebAnnoTsv3ReaderWriterRoundTripTest
 {
@@ -93,7 +101,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         failingTests.add("testUnsetSlotFeature");
         failingTests.add("testZeroWidthAnnotationBeforeFirstTokenIsMovedToBeginOfFirstToken");
         failingTests.add("testZeroWidthAnnotationBetweenTokenIsMovedToEndOfPreviousToken");
-        
+
         return failingTests.contains(aMethodName);
     }
 
@@ -110,23 +118,26 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
             local = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(
                     "src/test/resources/desc/type/webannoTestTypes.xml");
         }
-       
+
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-        
+
         String targetFolder = "target/test-output/WebAnnoTsv3ReaderWriterRoundTripTest/"
                 + referenceFolder.getName();
-        
+
+        // @formatter:off
         CollectionReaderDescription reader = createReaderDescription(WebannoTsv3Reader.class,
                 merged,
                 WebannoTsv3Reader.PARAM_SOURCE_LOCATION, referenceFolder,
                 WebannoTsv3Reader.PARAM_PATTERNS, "reference.tsv");
-        
+
         AnalysisEngineDescription checker = createEngineDescription(
-                DKProCoreConventionsChecker.class);        
-        
+                DKProCoreConventionsChecker.class);
+        // @formatter:on
+
         // WebannoTsv3Writer doesn't seem to like it if both "SimpleLinkHost" and
         // "ComplexLinkHost" are declared, so I comment out "ComplexLinkHost" which has
         // less tests.
+        // @formatter:off
         AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3Writer.class,
                 merged,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
@@ -136,7 +147,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                         "webanno.custom.Simple"),
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList(
                         "webanno.custom.SimpleLinkHost:links"
-//                        "webanno.custom.ComplexLinkHost:links"
+                // "webanno.custom.ComplexLinkHost:links"
                         ),
                 WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(
                         NamedEntity.class.getName(), 
@@ -147,11 +158,11 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                         "webanno.custom.Span", 
                         "webanno.custom.SimpleSpan", 
                         "webanno.custom.SimpleLinkHost"
-//                        "webanno.custom.ComplexLinkHost"
+                // "webanno.custom.ComplexLinkHost"
                         ),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList(
                         "webanno.custom.LinkType"
-//                        "webanno.custom.ComplexLinkType"
+                // "webanno.custom.ComplexLinkType"
                         ),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList(
                         "webanno.custom.SimpleSpan"),
@@ -167,7 +178,8 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                 XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
                 XmiWriter.PARAM_STRIP_EXTENSION, true,
                 XmiWriter.PARAM_OVERWRITE, true);
-        
+        // @formatter:on
+
         try {
             SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
         }
@@ -175,13 +187,13 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
             assumeFalse("This test is known to fail.", isKnownToFail(referenceFolder.getName()));
             throw e;
         }
-        
+
         String reference = FileUtils.readFileToString(new File(referenceFolder, "reference.tsv"),
                 "UTF-8");
-        
+
         String actual = FileUtils.readFileToString(new File(targetFolder, "reference.tsv"),
                 "UTF-8");
-        
+
         //
         // The XMI files here are not compared semantically but using their serialization which
         // is subject to minor variations depending e.g. on the order in which annotation are
@@ -199,7 +211,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         assertEquals(reference, actual);
         // assertEquals(referenceXmi, actualXmi);
     }
-    
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

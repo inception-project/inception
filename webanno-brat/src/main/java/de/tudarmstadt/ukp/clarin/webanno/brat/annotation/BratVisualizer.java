@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 /**
  * Base class for displaying a BRAT visualization. Override methods {@code #getCollectionData()} and
@@ -151,17 +152,18 @@ public abstract class BratVisualizer
     {
         return "{}";
     }
-    
+
     private String bratRenderCommand(String aJson)
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + aJson
-                + "]);";
+        String str = WicketUtil.wrapInTryCatch("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + aJson + "]);");
+        return str;
     }
 
     public void render(AjaxRequestTarget aTarget)
     {
         LOG.debug("[{}][{}] render", getMarkupId(), vis.getMarkupId());
-        
+
         // Controls whether rendering should happen within the AJAX request or after the AJAX
         // request. Doing it within the request has the benefit of the browser only having to
         // recalculate the layout once at the end of the AJAX request (at least theoretically)
@@ -171,17 +173,17 @@ public abstract class BratVisualizer
         final boolean deferredRendering = false;
 
         StringBuilder js = new StringBuilder();
-        
+
         if (deferredRendering) {
             js.append("setTimeout(function() {");
         }
-        
+
         js.append(bratRenderCommand(getDocumentData()));
-        
+
         if (deferredRendering) {
             js.append("}, 0);");
         }
-        
+
         aTarget.appendJavaScript(js);
     }
 }

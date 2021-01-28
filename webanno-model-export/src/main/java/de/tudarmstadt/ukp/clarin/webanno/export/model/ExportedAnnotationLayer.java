@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -70,7 +70,7 @@ public class ExportedAnnotationLayer
 
     @JsonProperty("show_hover")
     private boolean showTextInHover = true;
-    
+
     @JsonProperty("anchoring_mode")
     private AnchoringMode anchoringMode;
 
@@ -79,7 +79,7 @@ public class ExportedAnnotationLayer
 
     @JsonProperty("validation_mode")
     private ValidationMode validationMode;
-    
+
     @Deprecated
     @JsonProperty("lock_to_token_offset")
     private boolean lockToTokenOffset = true;
@@ -179,7 +179,7 @@ public class ExportedAnnotationLayer
     {
         this.attachType = attachType;
     }
-    
+
     public ValidationMode getValidationMode()
     {
         return validationMode;
@@ -194,12 +194,12 @@ public class ExportedAnnotationLayer
     {
         anchoringMode = aAnchoringMode;
     }
-    
+
     public AnchoringMode getAnchoringMode()
     {
         return anchoringMode;
     }
-    
+
     public OverlapMode getOverlapMode()
     {
         return overlapMode;
@@ -211,9 +211,9 @@ public class ExportedAnnotationLayer
     }
 
     /**
-     * @deprecated Superseded by {@link ExportedAnnotationLayer#getAnchoringMode()} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#getAnchoringMode()} but kept around
+     *             for the time being to enable backwards compatibility of exported projects with
+     *             older versions of WebAnno.
      */
     @Deprecated
     public boolean isLockToTokenOffset()
@@ -223,8 +223,8 @@ public class ExportedAnnotationLayer
 
     /**
      * @deprecated Superseded by {@link ExportedAnnotationLayer#setAnchoringMode(AnchoringMode)} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
+     *             kept around for the time being to enable backwards compatibility of exported
+     *             projects with older versions of WebAnno.
      */
     @Deprecated
     public void setLockToTokenOffset(boolean lockToTokenOffset)
@@ -233,9 +233,9 @@ public class ExportedAnnotationLayer
     }
 
     /**
-     * @deprecated Superseded by {@link ExportedAnnotationLayer#getOverlapMode} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#getOverlapMode} but kept around for
+     *             the time being to enable backwards compatibility of exported projects with older
+     *             versions of WebAnno.
      */
     @Deprecated
     public boolean isAllowStacking()
@@ -244,9 +244,9 @@ public class ExportedAnnotationLayer
     }
 
     /**
-     * @deprecated Superseded by {@link ExportedAnnotationLayer#setOverlapMode} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#setOverlapMode} but kept around for
+     *             the time being to enable backwards compatibility of exported projects with older
+     *             versions of WebAnno.
      */
     @Deprecated
     public void setAllowStacking(boolean allowStacking)
@@ -275,9 +275,9 @@ public class ExportedAnnotationLayer
     }
 
     /**
-     * @deprecated Superseded by {@link ExportedAnnotationLayer#getAnchoringMode()} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#getAnchoringMode()} but kept around
+     *             for the time being to enable backwards compatibility of exported projects with
+     *             older versions of WebAnno.
      */
     @Deprecated
     public boolean isMultipleTokens()
@@ -287,8 +287,8 @@ public class ExportedAnnotationLayer
 
     /**
      * @deprecated Superseded by {@link ExportedAnnotationLayer#setAnchoringMode(AnchoringMode)} but
-     * kept around for the time being to enable backwards compatibility of exported projects with 
-     * older versions of WebAnno.
+     *             kept around for the time being to enable backwards compatibility of exported
+     *             projects with older versions of WebAnno.
      */
     @Deprecated
     public void setMultipleTokens(boolean multipleTokens)

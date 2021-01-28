@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     {
         init();
     }
-    
+
     public void init()
     {
         List<E> extensions = new ArrayList<>();
@@ -57,16 +57,16 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
         if (extensionsListProxy != null) {
             extensions.addAll(extensionsListProxy);
             AnnotationAwareOrderComparator.sort(extensions);
-        
+
             for (E fs : extensions) {
                 log.info("Found {} extension: {}", getClass().getSimpleName(),
                         getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensionsList = Collections.unmodifiableList(extensions);
     }
-    
+
     @Override
     public List<E> getExtensions()
     {
@@ -76,18 +76,14 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     @Override
     public List<E> getExtensions(C aContext)
     {
-        return getExtensions().stream()
-                .filter(e -> e.accepts(aContext))
-                .collect(toList());
+        return getExtensions().stream().filter(e -> e.accepts(aContext)).collect(toList());
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public <X extends E> X getExtension(String aId)
     {
-        return (X) getExtensions().stream()
-                .filter(fs -> fs.getId().equals(aId))
-                .findFirst()
+        return (X) getExtensions().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
                 .orElse(null);
     }
 }

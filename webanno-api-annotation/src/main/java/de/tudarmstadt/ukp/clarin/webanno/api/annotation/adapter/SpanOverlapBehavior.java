@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,7 +62,7 @@ public class SpanOverlapBehavior
     {
         return super.accepts(aLayerType) || aLayerType instanceof ChainLayerSupport;
     }
-    
+
     @Override
     public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
@@ -72,7 +72,7 @@ public class SpanOverlapBehavior
         final int aBegin = aRequest.getBegin();
         final int aEnd = aRequest.getEnd();
         Type type = getType(aCas, aAdapter.getAnnotationTypeName());
-        
+
         switch (aAdapter.getLayer().getOverlapMode()) {
         case ANY_OVERLAP:
             // Nothing to check
@@ -95,8 +95,7 @@ public class SpanOverlapBehavior
             break;
         case STACKING_ONLY:
             boolean hasOverlapping = selectOverlapping(aCas, type, aBegin, aEnd).stream()
-                .filter(fs -> !stacking(aRequest, fs))
-                .findAny().isPresent();
+                    .filter(fs -> !stacking(aRequest, fs)).findAny().isPresent();
             if (hasOverlapping) {
                 throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + aAdapter.getLayer().getUiName()
@@ -104,7 +103,6 @@ public class SpanOverlapBehavior
             }
             break;
         }
-
 
         return aRequest;
     }
@@ -116,14 +114,13 @@ public class SpanOverlapBehavior
         if (aAnnoToSpanIdx.isEmpty()) {
             return;
         }
-        
-        // The following code requires annotations with the same offsets to be adjacent during 
+
+        // The following code requires annotations with the same offsets to be adjacent during
         // iteration, so we sort the entries here
         AnnotationComparator cmp = new AnnotationComparator();
-        final List<AnnotationFS> sortedSpans = aAnnoToSpanIdx.keySet().stream()
-                .sorted(cmp)
+        final List<AnnotationFS> sortedSpans = aAnnoToSpanIdx.keySet().stream().sorted(cmp)
                 .collect(Collectors.toList());
-        
+
         switch (aAdapter.getLayer().getOverlapMode()) {
         case ANY_OVERLAP:
             // Nothing to check
@@ -131,21 +128,20 @@ public class SpanOverlapBehavior
         case NO_OVERLAP: {
             Set<AnnotationFS> overlapping = new HashSet<>();
             Set<AnnotationFS> stacking = new HashSet<>();
-            
+
             overlappingOrStackingSpans(sortedSpans, stacking, overlapping);
-            
+
             overlapping.forEach(fs -> aResponse
                     .add(new VComment(new VID(fs), ERROR, "Overlap is not permitted.")));
-            
+
             stacking.forEach(fs -> aResponse
                     .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
         case STACKING_ONLY:
             // Here, we must find all overlapping relations because they are not permitted
-            overlappingNonStackingSpans(sortedSpans)
-                    .forEach(fs -> aResponse
-                            .add(new VComment(new VID(fs), ERROR, "Only stacking is permitted.")));
+            overlappingNonStackingSpans(sortedSpans).forEach(fs -> aResponse
+                    .add(new VComment(new VID(fs), ERROR, "Only stacking is permitted.")));
             break;
         case OVERLAP_ONLY:
             stackingSpans(sortedSpans).forEach(fs -> aResponse
@@ -159,7 +155,7 @@ public class SpanOverlapBehavior
     {
         Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
-        
+
         switch (aAdapter.getLayer().getOverlapMode()) {
         case ANY_OVERLAP:
             // Nothing to check
@@ -167,9 +163,9 @@ public class SpanOverlapBehavior
         case NO_OVERLAP: {
             Set<AnnotationFS> overlapping = new HashSet<>();
             Set<AnnotationFS> stacking = new HashSet<>();
-            
+
             overlappingOrStackingSpans(select(aCas, type), stacking, overlapping);
-            
+
             overlapping.forEach(fs -> Pair.of(LogMessage.error(this,
                     "Overlapping annotation at [%d-%d]", fs.getBegin(), fs.getEnd()), fs));
 
@@ -177,11 +173,11 @@ public class SpanOverlapBehavior
                     "Stacked annotation at [%d-%d]", fs.getBegin(), fs.getEnd()), fs)));
             break;
         }
-        case STACKING_ONLY: 
+        case STACKING_ONLY:
             // Here, we must find all overlapping relations because they are not permitted
             overlappingNonStackingSpans(select(aCas, type))
-                    .forEach(fs -> Pair.of(LogMessage.error(this, "Overlapping annotation at [%d-%d]",
-                            fs.getBegin(), fs.getEnd()), fs));
+                    .forEach(fs -> Pair.of(LogMessage.error(this,
+                            "Overlapping annotation at [%d-%d]", fs.getBegin(), fs.getEnd()), fs));
             break;
         case OVERLAP_ONLY:
             stackingSpans(select(aCas, type))
@@ -201,7 +197,7 @@ public class SpanOverlapBehavior
                 if (span1.equals(span2)) {
                     continue;
                 }
-                
+
                 if (stacking(span1, span2)) {
                     aStacking.add(span1);
                     aStacking.add(span2);
@@ -213,7 +209,7 @@ public class SpanOverlapBehavior
             }
         }
     }
-    
+
     private Set<AnnotationFS> overlappingNonStackingSpans(Collection<AnnotationFS> aSpans)
     {
         Set<AnnotationFS> overlapping = new HashSet<>();
@@ -222,7 +218,7 @@ public class SpanOverlapBehavior
                 if (fs1.equals(fs2)) {
                     continue;
                 }
-                
+
                 if (overlapping(fs1, fs2) && !stacking(fs1, fs2)) {
                     overlapping.add(fs1);
                     overlapping.add(fs2);
@@ -240,26 +236,23 @@ public class SpanOverlapBehavior
         Set<AnnotationFS> stacking = new HashSet<>();
         AnnotationFS prevFS = null;
         for (AnnotationFS fs : aSpans) {
-            if (
-                    prevFS != null && 
-                    prevFS.getBegin() == fs.getBegin() && 
-                    prevFS.getEnd() == fs.getEnd())
-            {
+            if (prevFS != null && prevFS.getBegin() == fs.getBegin()
+                    && prevFS.getEnd() == fs.getEnd()) {
                 stacking.add(prevFS);
                 stacking.add(fs);
             }
-            
+
             prevFS = fs;
         }
         return stacking;
     }
-    
+
     public boolean overlapping(AnnotationFS aFS1, AnnotationFS aFS2)
     {
-        return (aFS1.getBegin() <= aFS2.getBegin() && aFS2.getBegin() < aFS1.getEnd()) ||
-                (aFS1.getBegin() < aFS2.getEnd() && aFS2.getEnd() <= aFS1.getEnd());
+        return (aFS1.getBegin() <= aFS2.getBegin() && aFS2.getBegin() < aFS1.getEnd())
+                || (aFS1.getBegin() < aFS2.getEnd() && aFS2.getEnd() <= aFS1.getEnd());
     }
-    
+
     public boolean stacking(CreateSpanAnnotationRequest aRequest, AnnotationFS aSpan)
     {
         return stacking(aRequest.getBegin(), aRequest.getEnd(), aSpan.getBegin(), aSpan.getEnd());

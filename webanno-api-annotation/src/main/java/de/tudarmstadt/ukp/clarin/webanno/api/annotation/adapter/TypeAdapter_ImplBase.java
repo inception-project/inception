@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,11 +47,11 @@ public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
     private final LayerSupportRegistry layerSupportRegistry;
-    
+
     private final FeatureSupportRegistry featureSupportRegistry;
-    
+
     private final AnnotationLayer layer;
-    
+
     private final Supplier<Collection<AnnotationFeature>> featureSupplier;
 
     private Map<String, AnnotationFeature> features;
@@ -90,13 +90,13 @@ public abstract class TypeAdapter_ImplBase
         layer = aLayer;
         featureSupplier = aFeatures;
     }
-    
+
     @Override
     public AnnotationLayer getLayer()
     {
         return layer;
     }
-    
+
     @Override
     public Collection<AnnotationFeature> listFeatures()
     {
@@ -108,33 +108,33 @@ public abstract class TypeAdapter_ImplBase
                 features.put(f.getName(), f);
             }
         }
-        
+
         return features.values();
     }
-    
+
     @Override
-    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
-            int aAddress, AnnotationFeature aFeature, Object aValue)
+    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
+            AnnotationFeature aFeature, Object aValue)
     {
         FeatureStructure fs = selectFsByAddr(aCas, aAddress);
 
         Object oldValue = getValue(fs, aFeature);
-        
-        featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aCas, aFeature,
-                aAddress, aValue);
+
+        featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aCas, aFeature, aAddress,
+                aValue);
 
         Object newValue = getValue(fs, aFeature);
-        
+
         if (!Objects.equals(oldValue, newValue)) {
             publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(), fs,
                     aFeature, newValue, oldValue));
         }
     }
-    
+
     private Object getValue(FeatureStructure fs, AnnotationFeature aFeature)
     {
         Object value;
-        
+
         Feature f = fs.getType().getFeatureByBaseName(aFeature.getName());
         if (f.getRange().isPrimitive()) {
             value = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
@@ -145,7 +145,7 @@ public abstract class TypeAdapter_ImplBase
         else {
             value = FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
         }
-        
+
         return value;
     }
 
@@ -155,20 +155,20 @@ public abstract class TypeAdapter_ImplBase
         return (T) featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature,
                 aFs);
     }
-    
+
     public void publishEvent(ApplicationEvent aEvent)
     {
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(aEvent);
         }
     }
-    
+
     @Override
     public void initialize(AnnotationSchemaService aSchemaService)
     {
         // Nothing to do
     }
-    
+
     @Override
     public String getAttachFeatureName()
     {
@@ -185,7 +185,7 @@ public abstract class TypeAdapter_ImplBase
     {
         return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
     }
-    
+
     @Override
     public void silenceEvents()
     {
@@ -203,14 +203,14 @@ public abstract class TypeAdapter_ImplBase
         if (layerTraitsCache == null) {
             layerTraitsCache = new HashMap<>();
         }
-        
-        Object trait = layerTraitsCache.computeIfAbsent(getLayer(), feature ->
-               layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
-        
+
+        Object trait = layerTraitsCache.computeIfAbsent(getLayer(),
+                feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
+
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
-        
+
         return Optional.empty();
     }
 }

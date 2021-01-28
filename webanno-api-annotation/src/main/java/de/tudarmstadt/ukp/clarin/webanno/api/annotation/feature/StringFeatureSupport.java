@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,11 +56,11 @@ public class StringFeatureSupport
     extends UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private List<FeatureType> primitiveTypes;
 
     private final PrimitiveUimaFeatureSupportProperties properties;
-    
+
     private final AnnotationSchemaService schemaService;
 
     /*
@@ -85,7 +85,7 @@ public class StringFeatureSupport
         primitiveTypes = asList(
                 new FeatureType(CAS.TYPE_NAME_STRING, "Primitive: String", getId()));
     }
-    
+
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
@@ -102,13 +102,9 @@ public class StringFeatureSupport
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        if (
-                aValue != null &&
-                schemaService != null && 
-                aFeature.getTagset() != null && 
-                CAS.TYPE_NAME_STRING.equals(aFeature.getType()) && 
-                !schemaService.existsTag((String) aValue, aFeature.getTagset())
-        ) {
+        if (aValue != null && schemaService != null && aFeature.getTagset() != null
+                && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
+                && !schemaService.existsTag((String) aValue, aFeature.getTagset())) {
             if (!aFeature.getTagset().isCreateTag()) {
                 throw new IllegalArgumentException("[" + aValue
                         + "] is not in the tag list. Please choose from the existing tags");
@@ -120,22 +116,22 @@ public class StringFeatureSupport
                 schemaService.createTag(selectedTag);
             }
         }
-        
+
         super.setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
-    
+
     @Override
-    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         AnnotationFeature feature = aFeatureModel.getObject();
-        
+
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
-        
+
         return new StringFeatureTraitsEditor(aId, this, aFeatureModel);
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -153,7 +149,8 @@ public class StringFeatureSupport
                 // If multiple rows are set use a textarea
                 if (traits.isDynamicSize()) {
                     return new DynamicTextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
-                } else {
+                }
+                else {
                     return new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
                 }
             }
@@ -172,7 +169,7 @@ public class StringFeatureSupport
         return new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
                 properties.getAutoCompleteMaxResults(), aHandler);
     }
-    
+
     @Override
     public StringFeatureTraits readTraits(AnnotationFeature aFeature)
     {
@@ -183,14 +180,14 @@ public class StringFeatureSupport
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-    
+
         if (traits == null) {
             traits = new StringFeatureTraits();
         }
-    
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationFeature aFeature, StringFeatureTraits aTraits)
     {
@@ -201,7 +198,7 @@ public class StringFeatureSupport
             log.error("Unable to write traits", e);
         }
     }
-    
+
     @Override
     public boolean suppressAutoFocus(AnnotationFeature aFeature)
     {

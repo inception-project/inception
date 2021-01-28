@@ -1,14 +1,14 @@
 <!--
-  Copyright 2012
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,15 @@
   <artifactId>webanno-support</artifactId>
   <name>WebAnno - Core - Support</name>
   <dependencies>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -125,15 +134,6 @@
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.bit3</groupId>
-      <artifactId>jsass</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket.webjars</groupId>
-      <artifactId>wicket-webjars</artifactId>
-    </dependency>
-
 
     <!-- Hibernate dependencies -->
     <dependency>
@@ -166,6 +166,19 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    
+    <!-- Testing -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
   </dependencies>
   <profiles>
     <profile>

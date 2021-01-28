@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,16 +28,19 @@ public class Unit
     implements Serializable
 {
     private static final long serialVersionUID = -8969756502471237659L;
-    
+
     private final int index;
     private final int begin;
     private final int end;
-    private final String id;    
-    
+    private final String id;
+
     /**
-     * @param aIndex index (1-based)
-     * @param aBegin begin character offset
-     * @param aEnd end character offset
+     * @param aIndex
+     *            index (1-based)
+     * @param aBegin
+     *            begin character offset
+     * @param aEnd
+     *            end character offset
      */
     public Unit(int aIndex, int aBegin, int aEnd)
     {
@@ -46,10 +49,14 @@ public class Unit
 
     /**
      * 
-     * @param aId unit ID (if any) or {@code null}
-     * @param aIndex index (1-based)
-     * @param aBegin begin character offset
-     * @param aEnd end character offset
+     * @param aId
+     *            unit ID (if any) or {@code null}
+     * @param aIndex
+     *            index (1-based)
+     * @param aBegin
+     *            begin character offset
+     * @param aEnd
+     *            end character offset
      */
     public Unit(@Nullable String aId, int aIndex, int aBegin, int aEnd)
     {
@@ -58,7 +65,7 @@ public class Unit
         begin = aBegin;
         end = aEnd;
     }
-    
+
     public int getIndex()
     {
         return index;

@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,24 +49,25 @@ public class UserPermissionsPanel
     private static final long serialVersionUID = -5278078988218713188L;
 
     private @SpringBean ProjectService projectRepository;
-    
+
     private IModel<Project> project;
     private IModel<User> user;
 
     public UserPermissionsPanel(String aId, IModel<Project> aProject, IModel<User> aUser)
     {
         super(aId);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         project = aProject;
         user = aUser;
-        
+
         Form<Void> form = new Form<>("form");
         add(form);
 
-        CheckBoxMultipleChoice<PermissionLevel> levels = new CheckBoxMultipleChoice<>("permissions");
+        CheckBoxMultipleChoice<PermissionLevel> levels = new CheckBoxMultipleChoice<>(
+                "permissions");
         levels.setPrefix("<div class=\"checkbox\">");
         levels.setSuffix("</div>");
         levels.setLabelPosition(LabelPosition.WRAP_AFTER);
@@ -81,34 +82,35 @@ public class UserPermissionsPanel
         levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
         levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
         form.add(levels);
-        
+
         form.add(new Label("username", PropertyModel.of(aUser, "username")));
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(user.getObject() != null);
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<Void> aForm) {
+    private void actionSave(AjaxRequestTarget aTarget, Form<Void> aForm)
+    {
         // The model adapter already commits the changes for us as part of the normal form
         // processing cycle. So nothing special to do here.
-        
+
         success("Permissions saved");
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
-    
-    private void actionCancel(AjaxRequestTarget aTarget) {
+
+    private void actionCancel(AjaxRequestTarget aTarget)
+    {
         user.setObject(null);
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }

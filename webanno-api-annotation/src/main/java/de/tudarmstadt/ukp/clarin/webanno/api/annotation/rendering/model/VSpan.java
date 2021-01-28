@@ -1,13 +1,13 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,13 +36,13 @@ public class VSpan
     extends VObject
 {
     private final List<VRange> ranges;
-    
+
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             Map<String, String> aFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures, null);
     }
-    
+
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             int aEquivalenceClass, Map<String, String> aFeatures)
     {
@@ -55,7 +55,7 @@ public class VSpan
     {
         this(aLayer, aVid, aType, asList(aOffsets), aFeatures, null);
     }
-    
+
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
             Map<String, String> aFeatures, String color)
     {
@@ -81,7 +81,7 @@ public class VSpan
         setColorHint(aColor);
         ranges = aOffsets != null ? aOffsets : new ArrayList<>();
     }
-    
+
     public List<VRange> getOffsets()
     {
         return ranges;

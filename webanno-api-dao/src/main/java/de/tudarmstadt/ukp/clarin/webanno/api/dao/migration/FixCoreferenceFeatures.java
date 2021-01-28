@@ -1,13 +1,13 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,9 +39,9 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 /**
- * WebAnno versions until 3.0.0 set the feature types of Coreference features "referenceType"
- * and "referenceRelation" wrongly to "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference" - 
- * it should be "uima.cas.String"
+ * WebAnno versions until 3.0.0 set the feature types of Coreference features "referenceType" and
+ * "referenceRelation" wrongly to "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference" - it
+ * should be "uima.cas.String"
  */
 @Component
 @Lazy(false)
@@ -96,27 +96,29 @@ public class FixCoreferenceFeatures
     private void doMigration()
     {
         long start = System.currentTimeMillis();
-        
+
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("migrationRoot");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-        
+
         TransactionStatus status = null;
         try {
             status = txManager.getTransaction(def);
+            // @formatter:off
             Query q = entityManager.createQuery(
                     "UPDATE AnnotationFeature \n" +
                     "SET type = :fixedType \n" +
                     "WHERE type = :oldType \n" +
                     "AND name in (:featureNames)");
-            
-            // This condition cannot be applied: 
-            //   "AND layer.type = :layerType"
-            //   q.setParameter("layerType", CHAIN_TYPE);
+            // @formatter:on
+
+            // This condition cannot be applied:
+            // "AND layer.type = :layerType"
+            // q.setParameter("layerType", CHAIN_TYPE);
             // http://stackoverflow.com/questions/16506759/hql-is-generating-incomplete-cross-join-on-executeupdate
             // However, the risk that the migration upgrades the wrong featuers is still very low
             // even without this additional condition
-            
+
             q.setParameter("featureNames",
                     Arrays.asList(COREFERENCE_RELATION_FEATURE, COREFERENCE_TYPE_FEATURE));
             q.setParameter("oldType", "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
@@ -133,7 +135,7 @@ public class FixCoreferenceFeatures
                 txManager.rollback(status);
             }
         }
-        
+
         log.info("Migration [" + getClass().getSimpleName() + "] took {}ms",
                 System.currentTimeMillis() - start);
     }

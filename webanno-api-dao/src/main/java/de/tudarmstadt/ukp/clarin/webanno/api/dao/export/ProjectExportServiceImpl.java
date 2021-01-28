@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,22 +92,21 @@ public class ProjectExportServiceImpl
     private final ExecutorService taskExecutorService;
     private final ScheduledExecutorService cleaningScheduler;
     private final ApplicationContext applicationContext;
-    
+
     private final List<ProjectExporter> exportersProxy;
     private List<ProjectExporter> exporters;
 
     @Autowired
-    public ProjectExportServiceImpl(
-            ApplicationContext aApplicationContext,
+    public ProjectExportServiceImpl(ApplicationContext aApplicationContext,
             @Lazy @Autowired(required = false) List<ProjectExporter> aExporters,
             @Autowired ProjectService aProjectService)
     {
         applicationContext = aApplicationContext;
         exportersProxy = aExporters;
         projectService = aProjectService;
-        
+
         taskExecutorService = Executors.newFixedThreadPool(4);
-        
+
         cleaningScheduler = Executors.newScheduledThreadPool(1);
         cleaningScheduler.scheduleAtFixedRate(this::cleanUp, 15, 15, TimeUnit.MINUTES);
     }
@@ -124,7 +123,7 @@ public class ProjectExportServiceImpl
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<ProjectExporter> exps = new ArrayList<>();
@@ -132,7 +131,7 @@ public class ProjectExportServiceImpl
         if (exportersProxy != null) {
             exps.addAll(exportersProxy);
             AnnotationAwareOrderComparator.sort(exps);
-        
+
             Set<Class<? extends ProjectExporter>> exporterClasses = new HashSet<>();
             for (ProjectExporter init : exps) {
                 if (exporterClasses.add(init.getClass())) {
@@ -142,14 +141,14 @@ public class ProjectExportServiceImpl
                 else {
                     throw new IllegalStateException("There cannot be more than once instance "
                             + "of each project exporter class! Duplicate instance of class: "
-                                    + init.getClass());
+                            + init.getClass());
                 }
             }
         }
-        
+
         exporters = Collections.unmodifiableList(exps);
     }
-    
+
     @Override
     @Transactional
     public File exportProject(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
@@ -162,17 +161,17 @@ public class ProjectExportServiceImpl
             exportTempDir = File.createTempFile("webanno-project", "export");
             exportTempDir.delete();
             exportTempDir.mkdirs();
-            
+
             // Target file
             File projectZipFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-    
+
             ExportedProject exProjekt = exportProject(aRequest, aMonitor, exportTempDir);
-                    
+
             // all metadata and project settings data from the database as JSON file
             File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
             JSONUtil.generatePrettyJson(exProjekt, projectSettings);
             FileUtils.copyFileToDirectory(projectSettings, exportTempDir);
-    
+
             try {
                 ZipUtils.zipFolder(exportTempDir, projectZipFile);
             }
@@ -181,16 +180,17 @@ public class ProjectExportServiceImpl
                 System.gc();
                 FileUtils.forceDelete(exportTempDir);
             }
-                        
+
             success = true;
-    
+
             return projectZipFile;
         }
         finally {
             if (!success && exportTempDir != null) {
                 try {
                     FileUtils.forceDelete(exportTempDir);
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     aMonitor.addMessage(LogMessage.error(this,
                             "Unable to delete temporary export directory [%s]", exportTempDir));
                     log.error("Unable to delete temporary export directory [{}]", exportTempDir);
@@ -198,7 +198,7 @@ public class ProjectExportServiceImpl
             }
         }
     }
-    
+
     private ExportedProject exportProject(ProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, File aStage)
         throws ProjectExportException, IOException
@@ -206,19 +206,19 @@ public class ProjectExportServiceImpl
         Deque<ProjectExporter> deque = new LinkedList<>(exporters);
         Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
         Set<ProjectExporter> initsDeferred = SetUtils.newIdentityHashSet();
-        
+
         ExportedProject exProject = new ExportedProject();
         exProject.setName(aRequest.getProject().getName());
-        
+
         try {
             while (!deque.isEmpty()) {
                 ProjectExporter initializer = deque.pop();
-                
+
                 if (initsDeferred.contains(initializer)) {
                     throw new IllegalStateException("Circular initializer dependencies in "
                             + initsDeferred + " via " + initializer);
                 }
-                
+
                 if (initsSeen.containsAll(initializer.getExportDependencies())) {
                     log.debug("Applying project exporter: {}", initializer);
                     initializer.exportData(aRequest, aMonitor, exProject, aStage);
@@ -242,26 +242,26 @@ public class ProjectExportServiceImpl
         catch (Exception e) {
             throw new ProjectExportException("Project export failed", e);
         }
-        
+
         return exProject;
     }
-    
+
     @Override
     @Transactional
     public Project importProject(ProjectImportRequest aRequest, ZipFile aZip)
         throws ProjectExportException
     {
         long start = currentTimeMillis();
-        
+
         Deque<ProjectExporter> deque = new LinkedList<>(exporters);
         Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
         Set<ProjectExporter> initsDeferred = SetUtils.newIdentityHashSet();
-        
+
         Project project = new Project();
-        
+
         try {
             ExportedProject exProject = loadExportedProject(aZip);
-            
+
             // If the name of the project is already taken, generate a new name
             String projectName = exProject.getName();
             if (projectService.existsProject(projectName)) {
@@ -276,16 +276,16 @@ public class ProjectExportServiceImpl
 
             // Initial saving of the project
             projectService.createProject(project);
-            
+
             // Apply the importers
             while (!deque.isEmpty()) {
                 ProjectExporter importer = deque.pop();
-                
+
                 if (initsDeferred.contains(importer)) {
                     throw new IllegalStateException("Circular initializer dependencies in "
                             + initsDeferred + " via " + importer);
                 }
-                
+
                 if (initsSeen.containsAll(importer.getImportDependencies())) {
                     log.debug("Applying project importer: {}", importer);
                     importer.importData(aRequest, project, exProject, aZip);
@@ -304,13 +304,13 @@ public class ProjectExportServiceImpl
         catch (Exception e) {
             throw new ProjectExportException("Project import failed", e);
         }
-        
+
         log.info("Imported project [{}]({}) ({})", project.getName(), project.getId(),
                 formatDurationWords(currentTimeMillis() - start, true, true));
-        
+
         return project;
     }
-    
+
     /**
      * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
      * conflicts
@@ -329,7 +329,7 @@ public class ProjectExportServiceImpl
             }
         }
     }
-    
+
     public static ExportedProject loadExportedProject(ZipFile aZip) throws IOException
     {
         // Locate the project model in the ZIP file
@@ -351,10 +351,10 @@ public class ProjectExportServiceImpl
         }
         ExportedProject exProject = JSONUtil.getObjectMapper().readValue(text,
                 ExportedProject.class);
-    
+
         return exProject;
     }
-    
+
     @Override
     public ProjectExportTaskHandle startProjectExportTask(ProjectExportRequest aRequest,
             String aUsername)
@@ -382,16 +382,17 @@ public class ProjectExportServiceImpl
     private ProjectExportTaskHandle startTask(ProjectExportTask_ImplBase aTask)
     {
         ProjectExportTaskHandle handle = aTask.getHandle();
-        
+
         // This autowires the task fields manually.
         AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
         factory.autowireBean(aTask);
         factory.initializeBean(aTask, "transientTask");
 
         tasks.put(handle, new TaskInfo(taskExecutorService.submit(aTask), aTask));
-        
+
         return handle;
     }
+
     @Override
     public ProjectExportRequest getExportRequest(ProjectExportTaskHandle aHandle)
     {
@@ -400,7 +401,7 @@ public class ProjectExportServiceImpl
         if (task == null) {
             return null;
         }
-        
+
         return task.task.getRequest();
     }
 
@@ -412,7 +413,7 @@ public class ProjectExportServiceImpl
         if (task == null) {
             return null;
         }
-        
+
         return task.task.getMonitor();
     }
 
@@ -424,22 +425,22 @@ public class ProjectExportServiceImpl
         if (task == null) {
             return false;
         }
-        
+
         task.future.cancel(true);
-        
+
         return true;
     }
-    
+
     private void cleanUp()
     {
         for (Entry<ProjectExportTaskHandle, TaskInfo> e : tasks.entrySet()) {
             ProjectExportTaskMonitor monitor = e.getValue().task.getMonitor();
-            
+
             // Do not clean up running tasks or tasks that have not started yet
             if (asList(NOT_STARTED, RUNNING).contains(monitor.getState())) {
                 continue;
             }
-            
+
             // Remove task info from the tasks map one hour after completion/failure/etc.
             long age = System.currentTimeMillis() - monitor.getEndTime();
             if (age > Duration.ofHours(1).toMillis()) {
@@ -458,7 +459,7 @@ public class ProjectExportServiceImpl
             }
         }
     }
-    
+
     private static class TaskInfo
     {
         private final Future<?> future;

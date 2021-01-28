@@ -1,13 +1,13 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -40,6 +41,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,12 +53,14 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
  * User entity corresponding to the Spring standard schema. Conformance to this schema is the reason
  * why a plural is used for the table name.
  *
- * @see <a
- *      href="http://static.springsource.org/spring-security/site/docs/3.0.x/reference/appendix-schema.html">Spring
+ * @see <a href=
+ *      "http://static.springsource.org/spring-security/site/docs/3.0.x/reference/appendix-schema.html">Spring
  *      standard schema</a>
  */
 @Entity
 @Table(name = "users")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class User
     implements Serializable
 {
@@ -69,7 +74,7 @@ public class User
     private String password;
 
     private boolean enabled;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date lastLogin;
@@ -82,6 +87,7 @@ public class User
             @JoinColumn(name = "username", referencedColumnName = "username") })
     @Column(nullable = true, name = "authority")
     @Enumerated(EnumType.STRING)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Role> roles = new HashSet<>();
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -96,7 +102,7 @@ public class User
     {
         // No-args constructor required for ORM.
     }
-    
+
     /**
      * This constructor is mainly intended for testing.
      */
@@ -108,7 +114,7 @@ public class User
             roles = new HashSet<>(asList(aRoles));
         }
     }
-    
+
     private String encodePassword(String aPassword)
     {
         if (passwordEncoder == null) {
@@ -166,7 +172,6 @@ public class User
         return password;
     }
 
-
     public void setPassword(String aPassword)
     {
         password = encodePassword(aPassword);
@@ -211,11 +216,11 @@ public class User
     {
         lastLogin = aLastLogin;
     }
-    
+
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();

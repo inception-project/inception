@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,23 +48,23 @@ public class SentenceOrientedPagingStrategy
             if (i > aLastIndex) {
                 break;
             }
-            
+
             if (i >= aFirstIndex) {
                 units.add(toUnit(i, sentence));
             }
-            
+
             i++;
         }
         return units;
     }
-    
+
     @Override
     public int unitCount(CAS aCas)
     {
         // This is way faster than the default implementation which first materializes all units
-        return aCas.getAnnotationIndex(CasUtil.getType(aCas, Sentence.class)).size(); 
+        return aCas.getAnnotationIndex(CasUtil.getType(aCas, Sentence.class)).size();
     }
-    
+
     private Unit toUnit(int aIndex, AnnotationFS aSentence)
     {
         // If there is a sentence ID, then make it accessible to the user via a sentence-level
@@ -72,7 +72,7 @@ public class SentenceOrientedPagingStrategy
         String sentId = FSUtil.getFeature(aSentence, "id", String.class);
         return new Unit(sentId, aIndex, aSentence.getBegin(), aSentence.getEnd());
     }
-    
+
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -86,7 +86,7 @@ public class SentenceOrientedPagingStrategy
         label.setOutputMarkupPlaceholderTag(true);
         return label;
     }
-    
+
     @Override
     public DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage)
     {

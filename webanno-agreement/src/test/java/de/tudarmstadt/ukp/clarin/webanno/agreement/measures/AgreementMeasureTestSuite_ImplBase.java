@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,20 +67,20 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class AgreementMeasureTestSuite_ImplBase
 {
     protected @Mock AnnotationSchemaService annotationService;
-    
+
     protected Project project;
     protected List<AnnotationLayer> layers;
     protected List<AnnotationFeature> features;
-    
+
     @Before
     public void setup()
     {
         initMocks(this);
-        
+
         project = new Project();
         layers = new ArrayList<>();
         features = new ArrayList<>();
-        
+
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
                         new NumberFeatureSupport(), new SlotFeatureSupport(annotationService)));
@@ -88,29 +88,28 @@ public class AgreementMeasureTestSuite_ImplBase
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
-            
+
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
                 new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
-                
+
         when(annotationService.listSupportedLayers(any())).thenReturn(layers);
         when(annotationService.listAnnotationLayer(any())).thenReturn(layers);
         when(annotationService.listSupportedFeatures(any(AnnotationLayer.class)))
-            .thenReturn(features);
+                .thenReturn(features);
         when(annotationService.listAnnotationFeature(any(AnnotationLayer.class)))
-            .thenReturn(features);
+                .thenReturn(features);
         when(annotationService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer l = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(l).createAdapter(l, 
-                () -> annotationService.listAnnotationFeature(l));
+            return layerRegistry.getLayerSupport(l).createAdapter(l,
+                    () -> annotationService.listAnnotationFeature(l));
         });
     }
-    
-    public <R extends Serializable, T extends DefaultAgreementTraits> R 
-            multiLinkWithRoleLabelDifferenceTest(
-                    AggreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport)
+
+    public <R extends Serializable, T extends DefaultAgreementTraits> R multiLinkWithRoleLabelDifferenceTest(
+            AgreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport)
         throws Exception
     {
         AnnotationLayer layer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SPAN_TYPE, project, false,
@@ -126,10 +125,10 @@ public class AgreementMeasureTestSuite_ImplBase
         feature.setLinkTypeRoleFeatureName("role");
         feature.setLinkTypeTargetFeatureName("target");
         features.add(feature);
-        
+
         T traits = aSupport.createTraits();
         traits.setLinkCompareBehavior(LINK_TARGET_AS_LABEL);
-        
+
         JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
@@ -140,13 +139,13 @@ public class AgreementMeasureTestSuite_ImplBase
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        AggreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
-        
+        AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
+
         return measure.getAgreement(casByUser);
     }
-    
+
     public <R extends Serializable, T extends DefaultAgreementTraits> R twoEmptyCasTest(
-            AggreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport)
+            AgreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport)
         throws Exception
     {
         AnnotationLayer layer = new AnnotationLayer(Lemma.class.getName(),
@@ -158,11 +157,11 @@ public class AgreementMeasureTestSuite_ImplBase
                 Token.class.getName());
         feature.setId(1l);
         features.add(feature);
-        
+
         T traits = aSupport.createTraits();
-        
+
         String text = "";
-        
+
         CAS user1Cas = JCasFactory.createJCas().getCas();
         user1Cas.setDocumentText(text);
 
@@ -172,19 +171,18 @@ public class AgreementMeasureTestSuite_ImplBase
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1Cas));
         casByUser.put("user2", asList(user2Cas));
-        
-        AggreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
-        
+
+        AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
+
         return measure.getAgreement(casByUser);
     }
-    
-    public <R extends Serializable, T extends DefaultAgreementTraits> R 
-            singleNoDifferencesWithAdditionalCasTest(
-                    AggreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport)
+
+    public <R extends Serializable, T extends DefaultAgreementTraits> R singleNoDifferencesWithAdditionalCasTest(
+            AgreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport)
         throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(),
-                POS.class.getSimpleName(), SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
+                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -192,37 +190,37 @@ public class AgreementMeasureTestSuite_ImplBase
                 CAS.TYPE_NAME_STRING);
         feature.setId(1l);
         features.add(feature);
-        
+
         T traits = aSupport.createTraits();
-        
+
         JCas user1 = JCasFactory.createJCas();
         user1.setDocumentText("test");
 
         JCas user2 = JCasFactory.createJCas();
         user2.setDocumentText("test");
-        
+
         JCas user3 = JCasFactory.createJCas();
         user3.setDocumentText("test");
         POS pos3 = new POS(user3, 0, 4);
         pos3.setPosValue("test");
         pos3.addToIndexes();
-        
+
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1.getCas()));
         casByUser.put("user2", asList(user2.getCas()));
         casByUser.put("user3", asList(user3.getCas()));
-        
-        AggreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
-        
+
+        AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
+
         return measure.getAgreement(casByUser);
     }
 
     public <R extends Serializable, T extends DefaultAgreementTraits> R twoWithoutLabelTest(
-            AggreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport, T aTraits)
+            AgreementMeasureSupport<T, R, ICodingAnnotationStudy> aSupport, T aTraits)
         throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(),
-                POS.class.getSimpleName(), SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
+                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -230,7 +228,7 @@ public class AgreementMeasureTestSuite_ImplBase
                 CAS.TYPE_NAME_STRING);
         feature.setId(1l);
         features.add(feature);
-        
+
         JCas user1 = JCasFactory.createJCas();
         user1.setDocumentText("test");
         new POS(user1, 0, 1).addToIndexes();
@@ -246,13 +244,13 @@ public class AgreementMeasureTestSuite_ImplBase
         POS p2 = new POS(user2, 3, 4);
         p2.setPosValue("B");
         p2.addToIndexes();
-        
+
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1.getCas()));
         casByUser.put("user2", asList(user2.getCas()));
-        
-        AggreementMeasure<R> measure = aSupport.createMeasure(feature, aTraits);
-        
+
+        AgreementMeasure<R> measure = aSupport.createMeasure(feature, aTraits);
+
         return measure.getAgreement(casByUser);
     }
 }

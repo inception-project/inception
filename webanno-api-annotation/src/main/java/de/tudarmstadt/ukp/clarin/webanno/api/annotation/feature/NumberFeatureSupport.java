@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,15 +53,15 @@ public class NumberFeatureSupport
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private List<FeatureType> primitiveTypes;
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
         primitiveTypes = asList(
-                new FeatureType(CAS.TYPE_NAME_INTEGER, "Primitive: Integer", getId()), 
+                new FeatureType(CAS.TYPE_NAME_INTEGER, "Primitive: Integer", getId()),
                 new FeatureType(CAS.TYPE_NAME_FLOAT, "Primitive: Float", getId()));
     }
-    
+
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
@@ -77,24 +77,24 @@ public class NumberFeatureSupport
     }
 
     @Override
-    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         AnnotationFeature feature = aFeatureModel.getObject();
-        
+
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
-        
+
         return new NumberFeatureTraitsEditor(aId, this, aFeatureModel);
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
         AnnotationFeature feature = aFeatureStateModel.getObject().feature;
-        
+
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
@@ -121,7 +121,7 @@ public class NumberFeatureSupport
             throw unsupportedFeatureTypeException(feature);
         }
     }
-    
+
     @Override
     public void configureFeature(AnnotationFeature aFeature)
     {
@@ -140,14 +140,14 @@ public class NumberFeatureSupport
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-        
+
         if (traits == null) {
             traits = new NumberFeatureTraits();
         }
-        
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationFeature aFeature, NumberFeatureTraits aTraits)
     {

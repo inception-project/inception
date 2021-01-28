@@ -1,12 +1,12 @@
 ////
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -34,6 +34,17 @@ the source and target spans. If this is the case, there are two ways of creating
   simultaneously visible (i.e. on the same "page" of the document). So you may have to increase the
   number of visible rows in the settings dialog to make them visible.
 
+.Navigating along relations
+When a relation annotation is selected, the annotation detail panel includes two fields **From** and
+**To** which indicate the origin and target annotations of the relation. These fields include a small
+cross-hair icon which can be used to jump to the respective annotations.
+
+When a span annotation is selected, and incoming or outgoing relations are also shown in the
+annotation detail panel. Here, the cross-hair icon can be used to jump to the other endpoint of the
+relation (i.e. to the other span annotation). There is also an icon indicating whether the relation
+is incoming to the selected span annotation or whether it is outgoing from the current span.
+Clicking on this icon will select the relation annotation itself.
+
 Depending on the layer behavior configuration, relation annotations can stack, can cross each other,
 and can cross sentence boundaries.
 
@@ -48,7 +59,7 @@ NOTE: Currently, there can be at most one relation layer per span layer. Relatio
 NOTE: Not all arcs displayed in the annotation view are belonging to chain or relation layers. Some
       are induced by <<sect_annotation_link_features>>.
 
-When moving the mouse over an annotation with outgoing relations, the info popup includes the
+When moving the mouse over an annotation with outgoing relations, the info pop-up includes the
 *yield* of the relations. This is the text transitively covered by the outgoing relations. This
 is useful e.g. in order to see all text governed the head of a particular dependency relation.
 The text may be abbreviated.

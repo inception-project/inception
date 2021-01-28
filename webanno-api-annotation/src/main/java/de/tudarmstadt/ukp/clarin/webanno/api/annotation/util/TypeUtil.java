@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,8 +36,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
 /**
- * Utility Class for {@link TypeAdapter} with static methods such as geting
- * {@link TypeAdapter} based on its {@link CAS} {@link Type}
+ * Utility Class for {@link TypeAdapter} with static methods such as geting {@link TypeAdapter}
+ * based on its {@link CAS} {@link Type}
  */
 public final class TypeUtil
 {
@@ -78,7 +78,7 @@ public final class TypeUtil
         StringBuilder labelText = new StringBuilder();
         for (Entry<String, String> feature : aFeatures.entrySet()) {
             String label = StringUtils.defaultString(feature.getValue());
-            
+
             if (labelText.length() > 0 && label.length() > 0) {
                 labelText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
@@ -96,31 +96,32 @@ public final class TypeUtil
             return "";
         }
     }
-    
+
     /**
      * Construct the hover text used in the user interface.
      *
-     * @param aAdapter the adapter.
-     * @param aHoverFeatures the features.
+     * @param aAdapter
+     *            the adapter.
+     * @param aHoverFeatures
+     *            the features.
      * @return the hover text.
      */
     public static String getUiHoverText(TypeAdapter aAdapter, Map<String, String> aHoverFeatures)
     {
         StringBuilder bratHoverText = new StringBuilder();
         if (aHoverFeatures.containsKey("__spantext__")) {
-            bratHoverText
-                .append("\"")
-                .append(StringUtils.defaultString(aHoverFeatures.get("__spantext__")))
-                .append("\" ");
+            bratHoverText.append("\"")
+                    .append(StringUtils.defaultString(aHoverFeatures.get("__spantext__")))
+                    .append("\" ");
         }
-        
+
         boolean featuresToShowAvailable = false;
         for (Entry<String, String> feature : aHoverFeatures.entrySet()) {
             if ("__spantext__".equals(feature.getKey())) {
                 continue;
             }
             String text = StringUtils.defaultString(feature.getValue());
-            
+
             if (bratHoverText.length() > 0 && featuresToShowAvailable && text.length() > 0) {
                 bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
@@ -133,18 +134,21 @@ public final class TypeUtil
             return bratHoverText.toString();
         }
         else {
-            // If there are no hover features at all, then use the spantext, which 
+            // If there are no hover features at all, then use the spantext, which
             // is the default if no hover text is provided
             return null;
         }
     }
-    
+
     /**
      * Construct the label text used in the brat user interface.
      *
-     * @param aAdapter the adapter.
-     * @param aFs the annotation.
-     * @param aFeatures the features.
+     * @param aAdapter
+     *            the adapter.
+     * @param aFs
+     *            the annotation.
+     * @param aFeatures
+     *            the features.
      * @return the label.
      */
     public static String getUiLabelText(TypeAdapter aAdapter, FeatureStructure aFs,
@@ -160,7 +164,7 @@ public final class TypeUtil
 
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String label = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
-            
+
             if (bratLabelText.length() > 0 && label.length() > 0) {
                 bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
@@ -176,7 +180,7 @@ public final class TypeUtil
             return "(" + aAdapter.getLayer().getUiName() + ")";
         }
     }
-    
+
     /**
      * @param aUiTypeName
      *            the brat type name.
@@ -187,7 +191,6 @@ public final class TypeUtil
     {
         return parseLong(aUiTypeName);
     }
-
 
     /**
      * @see TypeAdapter#getEncodedTypeName()

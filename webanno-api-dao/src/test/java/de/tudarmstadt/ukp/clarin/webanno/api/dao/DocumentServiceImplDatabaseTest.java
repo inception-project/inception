@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -47,19 +48,18 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 
-@RunWith(SpringRunner.class) 
+@RunWith(SpringRunner.class)
 @EnableAutoConfiguration
-@DataJpaTest
-@EntityScan({
-    "de.tudarmstadt.ukp.clarin.webanno.model",
-    "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Transactional(propagation = Propagation.NEVER)
 public class DocumentServiceImplDatabaseTest
 {
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userRepository;
     private @Autowired DocumentService documentService;
-    
+
     @Test
     public void testThatAnnotationDocumentsForNonExistingUserAreNotReturned() throws Exception
     {
@@ -67,65 +67,67 @@ public class DocumentServiceImplDatabaseTest
         userRepository.create(user1);
         User user2 = new User("user2");
         userRepository.create(user2);
-        
+
         Project project = new Project("project");
         projectService.createProject(project);
         projectService.createProjectPermission(
                 new ProjectPermission(project, user1.getUsername(), ANNOTATOR));
-        
+
         SourceDocument doc = new SourceDocument("doc", project, "text");
         documentService.createSourceDocument(doc);
-        
+
         AnnotationDocument ann = new AnnotationDocument("ann", project, user1.getUsername(), doc);
         documentService.createAnnotationDocument(ann);
 
         // As long as the user exists, the annotation document must be found
-        assertThat(documentService.listAnnotationDocuments(doc))
-            .containsExactly(ann);
-        
+        assertThat(documentService.listAnnotationDocuments(doc)).containsExactly(ann);
+
         userRepository.delete(user1);
-        
+
         // When the user is deleted, the document must no longer be found
         assertThat(documentService.listAnnotationDocuments(doc)).isEmpty();
     }
-    
+
     @Configuration
-    public static class TestContext {
-        @Autowired ApplicationEventPublisher applicationEventPublisher;
-        
+    public static class TestContext
+    {
+        @Autowired
+        ApplicationEventPublisher applicationEventPublisher;
+
         @Bean
         public ProjectService projectService()
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), null);
         }
-        
+
         @Bean
         public UserDao userRepository()
         {
             return new UserDaoImpl();
         }
-        
+
         @Bean
         public DocumentService documentService()
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), null, null, applicationEventPublisher);
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(), null, null,
+                    applicationEventPublisher);
         }
-        
+
         @Bean
         public CasStorageService casStorageService()
         {
             return new CasStorageServiceImpl(null, null, repositoryProperties(),
                     backupProperties());
         }
-        
+
         @Bean
         public RepositoryProperties repositoryProperties()
         {
             return new RepositoryProperties();
         }
 
-        @Bean 
+        @Bean
         public BackupProperties backupProperties()
         {
             return new BackupProperties();

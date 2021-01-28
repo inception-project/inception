@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,7 +69,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * Chain types starts with the prefix <b> #T_CH=</b>. <br>
  * Slot features start with prefix <b> ROLE_</b>. <br>
  * All features of a type follows the the name separated by <b>|</b> character. <br>
+ *
+ * @deprecated Superseded by {@link WebannoTsv3XReader}
  */
+@Deprecated
 public class WebannoTsv3Reader
     extends JCasResourceCollectionReader_ImplBase
 {
@@ -95,8 +98,7 @@ public class WebannoTsv3Reader
     private Map<Feature, Type> slotLinkTypes = new HashMap<>();
     private StringBuilder coveredText = new StringBuilder();
     // for each type, for each unit, annotations per position
-    private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = 
-            new LinkedHashMap<>();
+    private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new LinkedHashMap<>();
 
     // For multiple span annotations and stacked annotations
     private Map<Type, Map<Integer, String>> annotationsPerTyep = new LinkedHashMap<>();
@@ -107,18 +109,15 @@ public class WebannoTsv3Reader
     private Map<AnnotationUnit, Token> units2Tokens = new HashMap<>();
 
     private Map<Integer, Type> layerMaps = new LinkedHashMap<>();
-    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annosPerRef = 
-            new HashMap<>();
+    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annosPerRef = new HashMap<>();
     private Map<Type, Feature> depFeatures = new HashMap<>();
     private Map<Type, Type> depTypess = new HashMap<>();
 
     // record the annotation at ref position when it is multiple token
     // annotation
-    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = 
-            new HashMap<>();
+    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = new HashMap<>();
 
-    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding)
-        throws IOException
+    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
 
     {
         DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
@@ -134,8 +133,7 @@ public class WebannoTsv3Reader
      * based on the position of the annotation in the line, update only the end position of the
      * annotation
      */
-    private void setAnnotations(JCas aJCas, InputStream aIs, String aEncoding)
-        throws IOException
+    private void setAnnotations(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
     {
 
         // getting header information
@@ -613,8 +611,9 @@ public class WebannoTsv3Reader
 
         return unescapeJava(aAnno);
     }
-    
-    private String unEscapeSpecial(String aText) {
+
+    private String unEscapeSpecial(String aText)
+    {
         List<String> pat = new ArrayList<>();
         List<String> esc = new ArrayList<>();
         for (int i = 0; i < 32; i++) {
@@ -643,8 +642,8 @@ public class WebannoTsv3Reader
         // backslash
         pat.add("\\");
         esc.add("\\\\");
-        return StringUtils.replaceEach(aText, 
-                esc.toArray(new String[esc.size()]), pat.toArray(new String[pat.size()]));
+        return StringUtils.replaceEach(aText, esc.toArray(new String[esc.size()]),
+                pat.toArray(new String[pat.size()]));
     }
 
     /**
@@ -797,8 +796,7 @@ public class WebannoTsv3Reader
      * @throws IOException
      *             If the type or the feature do not exist in the CAs
      */
-    private void setLayerAndFeature(JCas aJcas, String header)
-        throws IOException
+    private void setLayerAndFeature(JCas aJcas, String header) throws IOException
     {
         try {
             StringTokenizer headerTk = new StringTokenizer(header, "#");
@@ -895,8 +893,7 @@ public class WebannoTsv3Reader
     private String encoding;
 
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
+    public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);

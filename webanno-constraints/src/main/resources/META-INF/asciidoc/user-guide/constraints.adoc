@@ -1,11 +1,11 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -136,6 +136,30 @@ comments may span across multiple lines.
 */
 ----
 
+=== Example
+
+The following simple example of a constraints file re-orders POS tags depending on Lemma values.
+If the Lemma was annotated as *can*, the POS tags *VERB* and *NOUN* are highlighted. If the Lemma value is
+*the*, the POS tag *DET* is suggested first.
+
+[source,text]
+----
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as Pos;
+
+Pos {
+  @Lemma.value = "can" ->
+    coarseValue = "VERB" |
+    coarseValue = "NOUN";
+
+  @Lemma.value = "the" ->
+    coarseValue = "DET";
+}
+----
+
+In the UI, the tags that were matched by the constraints are bold and come first in the list of tags:
+
+image::constraints.png[align="center"]
 
 === Conditional features
 

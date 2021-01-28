@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,13 +51,13 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     public SidebarTabbedPanel(String aId, List<T> aTabs)
     {
         super(aId, aTabs);
-        
+
         setOutputMarkupPlaceholderTag(true);
         setOutputMarkupId(true);
         setVisible(!aTabs.isEmpty());
-        
+
         LambdaAjaxLink showHideLink = new LambdaAjaxLink("showHideLink", this::showHideAction);
-        
+
         showHideLink.add(icon = new Image("showHideIcon", ICON_EXPANDED));
         ((WebMarkupContainer) get("tabs-container")).add(showHideLink);
     }
@@ -77,17 +77,17 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         icon.setImageResourceReference(expanded ? ICON_EXPANDED : ICON_COLLAPSED);
     }
-    
+
     @Override
     protected void onBeforeRender()
     {
         super.onBeforeRender();
         get("panel").setVisible(expanded);
     }
-    
+
     @Override
     protected void onAjaxUpdate(Optional<AjaxRequestTarget> aTarget)
     {
@@ -106,8 +106,9 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         image.add(new AttributeModifier("title", aTitleModel));
         return image;
     }
-    
-    private static class StaticImage extends Image
+
+    private static class StaticImage
+        extends Image
     {
         public StaticImage(String aId, final ResourceReference aResourceReference)
         {
@@ -115,7 +116,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         }
 
         private static final long serialVersionUID = 1207122722078977614L;
-        
+
         @Override
         protected boolean shouldAddAntiCacheParameter()
         {

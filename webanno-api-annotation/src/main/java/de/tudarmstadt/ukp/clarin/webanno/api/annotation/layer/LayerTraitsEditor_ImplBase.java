@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,15 +27,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-public abstract class LayerTraitsEditor_ImplBase<
-        T extends Serializable, 
-        S extends LayerSupport<?, T>>
+public abstract class LayerTraitsEditor_ImplBase<T extends Serializable, S extends LayerSupport<?, T>>
     extends Panel
 {
     private static final long serialVersionUID = 1721881254495474188L;
 
     private static final String MID_FORM = "form";
-    
+
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
 
     private CompoundPropertyModel<AnnotationLayer> layerModel;
@@ -49,11 +47,11 @@ public abstract class LayerTraitsEditor_ImplBase<
         super(aId, aLayerModel);
 
         layerSupportId = aLayerSupport.getId();
-        
+
         traitsModel = CompoundPropertyModel
                 .of(getLayerSupport().readTraits(aLayerModel.getObject()));
         layerModel = CompoundPropertyModel.of(aLayerModel);
-        
+
         form = new Form<T>(MID_FORM, getTraitsModel())
         {
             private static final long serialVersionUID = -3109239605783291123L;
@@ -62,26 +60,26 @@ public abstract class LayerTraitsEditor_ImplBase<
             protected void onSubmit()
             {
                 super.onSubmit();
-                
+
                 LayerTraitsEditor_ImplBase.this.onSubmit();
 
                 getLayerSupport().writeTraits(aLayerModel.getObject(), getTraitsModelObject());
             }
         };
-        
+
         initializeForm(form);
-        
+
         form.setOutputMarkupPlaceholderTag(true);
         add(form);
     }
-    
+
     protected void onSubmit()
     {
         // Do not to anything be default
     }
-    
+
     protected abstract void initializeForm(Form<T> aForm);
-    
+
     public CompoundPropertyModel<AnnotationLayer> getLayerModel()
     {
         return layerModel;
@@ -96,7 +94,7 @@ public abstract class LayerTraitsEditor_ImplBase<
     {
         return traitsModel;
     }
-    
+
     public T getTraitsModelObject()
     {
         return traitsModel.getObject();

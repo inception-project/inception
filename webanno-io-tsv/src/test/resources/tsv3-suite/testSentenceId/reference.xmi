@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><xmi:XMI xmlns:pos="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos.ecore" xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:cas="http:///uima/cas.ecore" xmlns:tweet="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos/tweet.ecore" xmlns:morph="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/morph.ecore" xmlns:dependency="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/dependency.ecore" xmlns:type6="http:///de/tudarmstadt/ukp/dkpro/core/api/semantics/type.ecore" xmlns:type="http:///de/tudarmstadt/ukp/dkpro/core/api/anomaly/type.ecore" xmlns:type7="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type.ecore" xmlns:type3="http:///de/tudarmstadt/ukp/dkpro/core/api/metadata/type.ecore" xmlns:type4="http:///de/tudarmstadt/ukp/dkpro/core/api/ner/type.ecore" xmlns:type5="http:///de/tudarmstadt/ukp/dkpro/core/api/segmentation/type.ecore" xmlns:type2="http:///de/tudarmstadt/ukp/dkpro/core/api/coref/type.ecore" xmlns:constituent="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/constituent.ecore" xmlns:chunk="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/chunk.ecore" xmlns:custom="http:///webanno/custom.ecore" xmi:version="2.0">
+    <cas:NULL xmi:id="0"/>
+    <type3:DocumentMetaData xmi:id="1" sofa="12" begin="0" end="34" documentId="doc" isLastSegment="false"/>
+    <type5:Token xmi:id="19" sofa="12" begin="0" end="2" order="0"/>
+    <type5:Token xmi:id="32" sofa="12" begin="3" end="8" order="0"/>
+    <type5:Token xmi:id="45" sofa="12" begin="9" end="12" order="0"/>
+    <type5:Token xmi:id="58" sofa="12" begin="13" end="14" order="0"/>
+    <type5:Token xmi:id="76" sofa="12" begin="15" end="18" order="0"/>
+    <type5:Token xmi:id="89" sofa="12" begin="19" end="24" order="0"/>
+    <type5:Token xmi:id="102" sofa="12" begin="25" end="28" order="0"/>
+    <type5:Token xmi:id="115" sofa="12" begin="29" end="32" order="0"/>
+    <type5:Token xmi:id="128" sofa="12" begin="33" end="34" order="0"/>
+    <type5:Sentence xmi:id="71" sofa="12" begin="0" end="14" id="sent-1"/>
+    <type5:Sentence xmi:id="141" sofa="12" begin="15" end="34" id="sent-2"/>
+    <cas:Sofa xmi:id="12" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString="He loves her .&#10;She loves him not ."/>
+    <cas:View sofa="12" members="1 19 32 45 58 76 89 102 115 128 71 141"/>
+</xmi:XMI>

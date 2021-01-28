@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,8 +51,7 @@ public class WebannoTsv3XWriter
     /**
      * Use this filename extension.
      */
-    public static final String PARAM_FILENAME_EXTENSION = 
-            ComponentParameters.PARAM_FILENAME_EXTENSION;
+    public static final String PARAM_FILENAME_EXTENSION = ComponentParameters.PARAM_FILENAME_EXTENSION;
     @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".tsv")
     private String filenameSuffix;
 
@@ -60,11 +59,11 @@ public class WebannoTsv3XWriter
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         TsvSchema schema = Tsv3XCasSchemaAnalyzer.analyze(aJCas.getTypeSystem());
-        
+
         TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, aJCas);
-        
-        try (PrintWriter docOS = new PrintWriter(new OutputStreamWriter(buffer(
-                getOutputStream(aJCas, filenameSuffix)), encoding))) {
+
+        try (PrintWriter docOS = new PrintWriter(
+                new OutputStreamWriter(buffer(getOutputStream(aJCas, filenameSuffix)), encoding))) {
             new Tsv3XSerializer().write(docOS, doc);
         }
         catch (IOException e) {

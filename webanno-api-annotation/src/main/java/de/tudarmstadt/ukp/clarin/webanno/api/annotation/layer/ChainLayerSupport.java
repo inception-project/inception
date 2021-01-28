@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,7 @@ public class ChainLayerSupport
     implements InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
@@ -78,25 +78,25 @@ public class ChainLayerSupport
     {
         layerSupportId = aBeanName;
     }
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
         types = asList(new LayerType(WebAnnoConst.CHAIN_TYPE, "Chain", layerSupportId));
     }
-    
+
     @Override
     public List<LayerType> getSupportedLayerTypes()
     {
         return types;
     }
-    
+
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
         return WebAnnoConst.CHAIN_TYPE.equals(aLayer.getType());
     }
-    
+
     @Override
     public ChainAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
@@ -107,8 +107,7 @@ public class ChainLayerSupport
 
         return adapter;
     }
-    
-    
+
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
@@ -116,23 +115,23 @@ public class ChainLayerSupport
         TypeDescription tdChains = aTsd.addType(aLayer.getName() + "Chain", aLayer.getDescription(),
                 CAS.TYPE_NAME_ANNOTATION_BASE);
         tdChains.addFeature("first", "", aLayer.getName() + "Link");
-        
+
         // Custom features on chain layers are currently not supported
         // generateFeatures(aTsd, tdChains, type);
-        
+
         TypeDescription tdLink = aTsd.addType(aLayer.getName() + "Link", "",
                 CAS.TYPE_NAME_ANNOTATION);
         tdLink.addFeature("next", "", aLayer.getName() + "Link");
         tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
         tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
     }
-    
+
     @Override
     public List<String> getGeneratedTypeNames(AnnotationLayer aLayer)
     {
         return asList(aLayer.getName() + "Chain", aLayer.getName() + "Link");
     }
-    
+
     @Override
     public Renderer createRenderer(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
@@ -141,16 +140,16 @@ public class ChainLayerSupport
                 featureSupportRegistry,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
     }
-    
+
     @Override
-    public Panel createTraitsEditor(String aId,  IModel<AnnotationLayer> aLayerModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
         AnnotationLayer layer = aLayerModel.getObject();
-        
+
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);
         }
-        
+
         return new ChainLayerTraitsEditor(aId, this, aLayerModel);
     }
 

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,8 +53,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
  * <ul>
  * <li>Dropdown box is always available</li>
  * <li>Description tooltips already work.</li>
- * <li>Re-focussing after safe does not work out of the box, but is covered by 
- *     wicket-jquery-focus-patch.js</li>
+ * <li>Re-focussing after safe does not work out of the box, but is covered by
+ * wicket-jquery-focus-patch.js</li>
  * </ul>
  * 
  * <b>CONs</b>
@@ -78,13 +78,13 @@ public class KendoComboboxTextFeatureEditor
             IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
-        
+
         AnnotationFeature feat = getModelObject().feature;
         StringFeatureTraits traits = readFeatureTraits(feat);
-        
+
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
-                // editor is used in a "normal" context and not e.g. in the keybindings 
+                // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
     }
@@ -93,22 +93,23 @@ public class KendoComboboxTextFeatureEditor
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
     @OnEvent
-    public void onTagEvent(TagEvent aEvent) {
+    public void onTagEvent(TagEvent aEvent)
+    {
         if (getModelObject() == null) {
             return;
         }
-        
+
         // Check if the tagset that was updated is used by the current editor, otherwise return
         if (!Objects.equals(aEvent.getTag().getTagSet().getId(),
                 getModelObject().getFeature().getTagset().getId())) {
             return;
         }
-        
+
         // If the tag was created in the tagset used by this editor, then we re-render the editor
         // to ensure it picks up the new tag
         AjaxRequestTarget target = aEvent.getRequestTarget();
@@ -130,7 +131,7 @@ public class KendoComboboxTextFeatureEditor
             {
                 return KendoChoiceDescriptionScriptReference.templateReorderable();
             }
-            
+
             @Override
             public void onConfigure(JQueryBehavior aBehavior)
             {
@@ -138,16 +139,17 @@ public class KendoComboboxTextFeatureEditor
                 aBehavior.setOption("animation", false);
                 aBehavior.setOption("delay", 0);
             }
-            
+
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 // Trigger a re-loading of the tagset from the server as constraints may have
                 // changed the ordering
                 RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
                     LOG.trace("onInitialize() requesting datasource re-reading");
+                    // @formatter:off
                     target.appendJavaScript(String.join("\n",
                             "try {",
                             "  var $w = " + widget(this, ComboBoxBehavior.METHOD) + ";",
@@ -158,6 +160,7 @@ public class KendoComboboxTextFeatureEditor
                             "catch(error) {",
                             "  console.error(error);",
                             "}"));
+                    // @formatter:on
                 });
             }
         };

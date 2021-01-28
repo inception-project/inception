@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,61 +80,57 @@ public class CasMergeTest
 {
     /**
      * If one annotator has provided an annotation at a given position and the other annotator did
-     * not (i.e. the annotations are incomplete), then this should be detected as a disagreement. 
+     * not (i.e. the annotations are incomplete), then this should be detected as a disagreement.
      */
     @Test
-    public void thatIncompleteAnnotationIsNotMerged()
-        throws Exception
+    public void thatIncompleteAnnotationIsNotMerged() throws Exception
     {
         JCas user1 = JCasFactory.createText("word");
         token(user1, 0, 4, "X");
-        
+
         JCas user2 = JCasFactory.createText("word");
         token(user2, 0, 4, null);
-        
+
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1.getCas()));
         casByUser.put("user2", asList(user2.getCas()));
-        
-        JCas curatorCas = createText(casByUser.values().stream()
-                .flatMap(Collection::stream).findFirst().get().getDocumentText());
-        
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
-                .toResult();
+
+        JCas curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
+                .findFirst().get().getDocumentText());
+
+        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
-                .extracting(set -> set.getPosition())
-                .usingFieldByFieldElementComparator()
+                .extracting(set -> set.getPosition()).usingFieldByFieldElementComparator()
                 .containsExactly(new SpanPosition(null, null, 0, POS.class.getName(), 0, 4, "word",
                         null, null, -1, -1, null, null));
-        
+
         assertThat(select(curatorCas, POS.class)).isEmpty();
     }
-    
+
     /**
      * If one annotator has provided an annotation at a given position and the other annotator did
-     * not (i.e. the annotations are incomplete), then this should be detected as a disagreement. 
+     * not (i.e. the annotations are incomplete), then this should be detected as a disagreement.
      */
     @Test
-    public void thatIncompleteAnnotationIsMerged()
-        throws Exception
+    public void thatIncompleteAnnotationIsMerged() throws Exception
     {
         JCas user1 = JCasFactory.createText("word");
         token(user1, 0, 4, "X");
-        
+
         JCas user2 = JCasFactory.createText("word");
         token(user2, 0, 4, null);
-        
+
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1.getCas()));
         casByUser.put("user2", asList(user2.getCas()));
-        
-        JCas curatorCas = createText(casByUser.values().stream()
-                .flatMap(Collection::stream).findFirst().get().getDocumentText());
-        
+
+        JCas curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
+                .findFirst().get().getDocumentText());
+
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         sut.setMergeIncompleteAnnotations(true);
@@ -142,11 +138,10 @@ public class CasMergeTest
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
-                .extracting(set -> set.getPosition())
-                .usingFieldByFieldElementComparator()
+                .extracting(set -> set.getPosition()).usingFieldByFieldElementComparator()
                 .containsExactly(new SpanPosition(null, null, 0, POS.class.getName(), 0, 4, "word",
                         null, null, -1, -1, null, null));
-        
+
         assertThat(select(curatorCas, POS.class)).hasSize(1);
     }
 
@@ -163,10 +158,9 @@ public class CasMergeTest
         token.addToIndexes();
         return token;
     }
-    
+
     @Test
-    public void multiLinkWithRoleNoDifferenceTest()
-        throws Exception
+    public void multiLinkWithRoleNoDifferenceTest() throws Exception
     {
         JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
@@ -201,8 +195,7 @@ public class CasMergeTest
     }
 
     @Test
-    public void multiLinkWithRoleLabelDifferenceTest()
-        throws Exception
+    public void multiLinkWithRoleLabelDifferenceTest() throws Exception
     {
         JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
@@ -226,18 +219,16 @@ public class CasMergeTest
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport slotSupport = featureSupportRegistry.getFeatureSupport(slotFeature);
-        
-        assertThat(select(curatorCas.getCas(), hostType))
-                .hasSize(1);
+
+        assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
 
         assertThat(select(curatorCas.getCas(), hostType).stream()
                 .map(host -> (List) slotSupport.getFeatureValue(slotFeature, host)))
-                .allMatch(Collection::isEmpty);
+                        .allMatch(Collection::isEmpty);
     }
 
     @Test
-    public void multiLinkWithRoleTargetDifferenceTest()
-        throws Exception
+    public void multiLinkWithRoleTargetDifferenceTest() throws Exception
     {
         JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
@@ -261,18 +252,16 @@ public class CasMergeTest
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport slotSupport = featureSupportRegistry.getFeatureSupport(slotFeature);
-        
-        assertThat(select(curatorCas.getCas(), hostType))
-                .hasSize(1);
+
+        assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
 
         assertThat(select(curatorCas.getCas(), hostType).stream()
                 .map(host -> (List) slotSupport.getFeatureValue(slotFeature, host)))
-                .allMatch(Collection::isEmpty);
+                        .allMatch(Collection::isEmpty);
     }
 
     @Test
-    public void multiLinkMultiHostTest()
-        throws Exception
+    public void multiLinkMultiHostTest() throws Exception
     {
         // Creating two span stacked annotations. This should cause the data not to be merged.
         JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
@@ -292,31 +281,27 @@ public class CasMergeTest
 
         SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
-        
+
         DiffResult result = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         // result.print(System.out);
 
         sut.reMergeCas(result, document, null, curatorCas, getSingleCasByUser(casByUser));
 
-        assertThat(select(curatorCas, getType(curatorCas, HOST_TYPE)))
-                .isEmpty();
+        assertThat(select(curatorCas, getType(curatorCas, HOST_TYPE))).isEmpty();
     }
 
     @Test
-    public void multiLinkMultiSpanRoleDiffTest()
-        throws Exception
+    public void multiLinkMultiSpanRoleDiffTest() throws Exception
     {
         JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = jcasA.getTypeSystem().getType(HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                makeLinkFS(jcasA, "slot1", 0, 0));
+        makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A", makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
-        makeLinkHostMultiSPanFeatureFS(jcasB, 0, 0, feature, "A",
-                makeLinkFS(jcasB, "slot2", 0, 0));
+        makeLinkHostMultiSPanFeatureFS(jcasB, 0, 0, feature, "A", makeLinkFS(jcasB, "slot2", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
@@ -334,8 +319,7 @@ public class CasMergeTest
 
         Type hostType = curatorCas.getTypeSystem().getType(HOST_TYPE);
 
-        assertThat(select(curatorCas.getCas(), hostType))
-                .hasSize(1);
+        assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
     }
 
     private Map<String, CAS> getSingleCasByUser(Map<String, List<CAS>> aCasByUserSingle)
@@ -349,12 +333,11 @@ public class CasMergeTest
     }
 
     @Test
-    public void simpleCopyToEmptyTest()
-        throws Exception
+    public void simpleCopyToEmptyTest() throws Exception
     {
         AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
-        
+
         CAS jcas = createJCas().getCas();
         AnnotationFS clickedFs = createNEAnno(jcas, "NN", 0, 0);
 
@@ -380,7 +363,7 @@ public class CasMergeTest
     private AnnotationFS createPOSAnno(CAS aCas, String aValue, int aBegin, int aEnd)
     {
         Type type = aCas.getTypeSystem().getType(POS.class.getTypeName());
-        
+
         AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
         Feature posValue = type.getFeatureByBaseName("PosValue");
         clickedFs.setStringValue(posValue, aValue);
@@ -397,8 +380,7 @@ public class CasMergeTest
     }
 
     @Test
-    public void simpleCopyToSameExistingAnnoTest()
-        throws Exception
+    public void simpleCopyToSameExistingAnnoTest() throws Exception
     {
         CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
@@ -410,15 +392,13 @@ public class CasMergeTest
         existingFs.setStringValue(posValue, "NN");
         mergeCas.addFsToIndexes(existingFs);
 
-        Assertions.assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.mergeSpanAnnotation(null, null, posLayer, mergeCas, 
-                        clickedFs, false))
+        Assertions.assertThatExceptionOfType(AnnotationException.class).isThrownBy(
+                () -> sut.mergeSpanAnnotation(null, null, posLayer, mergeCas, clickedFs, false))
                 .withMessageContaining("annotation already exists");
     }
 
     @Test
-    public void simpleCopyToDiffExistingAnnoWithNoStackingTest()
-        throws Exception
+    public void simpleCopyToDiffExistingAnnoWithNoStackingTest() throws Exception
     {
         CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
@@ -436,8 +416,7 @@ public class CasMergeTest
     }
 
     @Test
-    public void simpleCopyToDiffExistingAnnoWithStackingTest()
-        throws Exception
+    public void simpleCopyToDiffExistingAnnoWithStackingTest() throws Exception
     {
         neLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
 
@@ -458,17 +437,16 @@ public class CasMergeTest
     }
 
     @Test
-    public void copySpanWithSlotNoStackingTest()
-        throws Exception
+    public void copySpanWithSlotNoStackingTest() throws Exception
     {
         slotLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
-        
+
         JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = jcasA.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS clickedFs = CurationTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                CurationTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        AnnotationFS clickedFs = CurationTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0,
+                feature, "A", CurationTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
                 .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
@@ -482,21 +460,20 @@ public class CasMergeTest
     }
 
     @Test
-    public void copySpanWithSlotWithStackingTest()
-        throws Exception
+    public void copySpanWithSlotWithStackingTest() throws Exception
     {
         AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
-        
+
         slotLayer.setAnchoringMode(TOKENS);
         slotLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
-        
+
         JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = jcasA.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS clickedFs = CurationTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                CurationTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        AnnotationFS clickedFs = CurationTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0,
+                feature, "A", CurationTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
                 .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
@@ -510,8 +487,7 @@ public class CasMergeTest
     }
 
     @Test
-    public void copyLinkToEmptyTest()
-        throws Exception
+    public void copyLinkToEmptyTest() throws Exception
     {
         JCas mergeCas = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = mergeCas.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
@@ -526,8 +502,7 @@ public class CasMergeTest
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
         JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
-        makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                makeLinkFS(jcasA, "slot1", 0, 0));
+        makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A", makeLinkFS(jcasA, "slot1", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(mergeCas.getCas()));
@@ -540,8 +515,7 @@ public class CasMergeTest
     }
 
     @Test
-    public void copyLinkToExistingButDiffLinkTest()
-        throws Exception
+    public void copyLinkToExistingButDiffLinkTest() throws Exception
     {
 
         JCas mergeCas = JCasFactory
@@ -549,8 +523,8 @@ public class CasMergeTest
         Type type = mergeCas.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS mergeFs = makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature,
-                "A", makeLinkFS(mergeCas, "slot1", 0, 0));
+        AnnotationFS mergeFs = makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature, "A",
+                makeLinkFS(mergeCas, "slot1", 0, 0));
 
         FeatureStructure copyFS = makeLinkFS(mergeCas, "slot2", 0, 0);
 
@@ -559,8 +533,7 @@ public class CasMergeTest
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
         JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
-        makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                makeLinkFS(jcasA, "slot1", 0, 0));
+        makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A", makeLinkFS(jcasA, "slot1", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(mergeCas.getCas()));
@@ -573,8 +546,7 @@ public class CasMergeTest
     }
 
     @Test
-    public void simpleCopyRelationToEmptyAnnoTest()
-        throws Exception
+    public void simpleCopyRelationToEmptyAnnoTest() throws Exception
     {
         CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
@@ -617,13 +589,12 @@ public class CasMergeTest
         mergeCAs.addFsToIndexes(targetToken);
 
         sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, clickedFs, false);
-        
+
         assertEquals(1, selectCovered(mergeCAs, type, 0, 1).size());
     }
 
     @Test
-    public void simpleCopyRelationToStackedTargetsTest()
-        throws Exception
+    public void simpleCopyRelationToStackedTargetsTest() throws Exception
     {
         CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
@@ -679,15 +650,13 @@ public class CasMergeTest
         mergeCAs.addFsToIndexes(originToken2);
         mergeCAs.addFsToIndexes(targetToken2);
 
-        assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, 
-                        clickedFs, false))
+        assertThatExceptionOfType(AnnotationException.class).isThrownBy(
+                () -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, clickedFs, false))
                 .withMessageContaining("Stacked sources exist");
     }
 
     @Test
-    public void thatMergingRelationIsRejectedIfAlreadyExists()
-        throws Exception
+    public void thatMergingRelationIsRejectedIfAlreadyExists() throws Exception
     {
         CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
@@ -734,35 +703,34 @@ public class CasMergeTest
         existing.setFeatureValue(targetFeature, targetToken);
         mergeCAs.addFsToIndexes(existing);
 
-        assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, 
-                        clickedFs, false))
+        assertThatExceptionOfType(AnnotationException.class).isThrownBy(
+                () -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, clickedFs, false))
                 .withMessageContaining("annotation already exists");
     }
-    
-//    private void writeTestSuiteData(Map<String, List<CAS>> casByUser, JCas curatorCas)
-//        throws Exception
-//    {
-//        runPipeline(casByUser.get("user1").get(0),
-//                createEngineDescription(WebannoTsv3XWriter.class,
-//                        WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
-//                        WebannoTsv3XWriter.PARAM_OVERWRITE, true,
-//                        WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
-//                        "target/bux/" + testContext.getMethodName() + "/user1.tsv"));
-//        runPipeline(casByUser.get("user2").get(0),
-//                createEngineDescription(WebannoTsv3XWriter.class,
-//                        WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
-//                        WebannoTsv3XWriter.PARAM_OVERWRITE, true,
-//                        WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
-//                        "target/bux/" + testContext.getMethodName() + "/user2.tsv"));
-//        runPipeline(curatorCas,
-//                createEngineDescription(WebannoTsv3XWriter.class,
-//                        WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
-//                        WebannoTsv3XWriter.PARAM_OVERWRITE, true,
-//                        WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
-//                        "target/bux/" + testContext.getMethodName() + "/curator.tsv"));    
-//    }
-    
+
+    // private void writeTestSuiteData(Map<String, List<CAS>> casByUser, JCas curatorCas)
+    // throws Exception
+    // {
+    // runPipeline(casByUser.get("user1").get(0),
+    // createEngineDescription(WebannoTsv3XWriter.class,
+    // WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
+    // WebannoTsv3XWriter.PARAM_OVERWRITE, true,
+    // WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
+    // "target/bux/" + testContext.getMethodName() + "/user1.tsv"));
+    // runPipeline(casByUser.get("user2").get(0),
+    // createEngineDescription(WebannoTsv3XWriter.class,
+    // WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
+    // WebannoTsv3XWriter.PARAM_OVERWRITE, true,
+    // WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
+    // "target/bux/" + testContext.getMethodName() + "/user2.tsv"));
+    // runPipeline(curatorCas,
+    // createEngineDescription(WebannoTsv3XWriter.class,
+    // WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
+    // WebannoTsv3XWriter.PARAM_OVERWRITE, true,
+    // WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
+    // "target/bux/" + testContext.getMethodName() + "/curator.tsv"));
+    // }
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

@@ -1,13 +1,13 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,11 +63,11 @@ public class SpanRendererTest
         else {
             jcas.reset();
         }
-        
+
         project = new Project();
         project.setId(1l);
         project.setMode(PROJECT_TYPE_ANNOTATION);
-        
+
         neLayer = new AnnotationLayer(NamedEntity.class.getName(), "NE", SPAN_TYPE, project, true,
                 TOKENS, ANY_OVERLAP);
         neLayer.setId(1l);
@@ -75,31 +75,30 @@ public class SpanRendererTest
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
         layerSupportRegistry = new LayerSupportRegistryImpl(asList());
     }
-    
+
     @Test
     public void thatSpanCrossSentenceBehaviorOnRenderGeneratesErrors()
     {
         neLayer.setCrossSentence(false);
-        
+
         jcas.setDocumentText(StringUtils.repeat("a", 20));
-        
+
         new Sentence(jcas, 0, 10).addToIndexes();
         new Sentence(jcas, 10, 20).addToIndexes();
         NamedEntity ne = new NamedEntity(jcas, 5, 15);
         ne.addToIndexes();
-        
+
         SpanAdapter adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
                 neLayer, () -> asList(), asList(new SpanCrossSentenceBehavior()));
-        
+
         SpanRenderer sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanCrossSentenceBehavior()));
-        
+
         VDocument vdoc = new VDocument();
         sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-        
-        assertThat(vdoc.comments())
-                .usingFieldByFieldElementComparator()
-                .containsExactlyInAnyOrder(new VComment(ne, VCommentType.ERROR, 
+
+        assertThat(vdoc.comments()).usingFieldByFieldElementComparator()
+                .containsExactlyInAnyOrder(new VComment(ne, VCommentType.ERROR,
                         "Crossing sentence boundaries is not permitted."));
     }
 
@@ -107,57 +106,51 @@ public class SpanRendererTest
     public void thatSpanOverlapBehaviorOnRenderGeneratesErrors()
     {
         jcas.setDocumentText(StringUtils.repeat("a", 10));
-        
+
         new Sentence(jcas, 0, 10).addToIndexes();
         NamedEntity ne1 = new NamedEntity(jcas, 3, 8);
         ne1.addToIndexes();
         NamedEntity ne2 = new NamedEntity(jcas, 3, 8);
         ne2.addToIndexes();
-        
+
         SpanAdapter adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
                 neLayer, () -> asList(), asList(new SpanOverlapBehavior()));
-        
+
         SpanRenderer sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanOverlapBehavior()));
-        
+
         {
             neLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments())
-                    .usingFieldByFieldElementComparator()
+            assertThat(vdoc.comments()).usingFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
                             new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
                             new VComment(ne2, VCommentType.ERROR, "Stacking is not permitted."));
         }
-        
+
         {
             neLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments())
-                    .usingFieldByFieldElementComparator()
+            assertThat(vdoc.comments()).usingFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
                             new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
                             new VComment(ne2, VCommentType.ERROR, "Stacking is not permitted."));
         }
-        
+
         {
             neLayer.setOverlapMode(OverlapMode.STACKING_ONLY);
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments())
-                    .usingFieldByFieldElementComparator()
-                    .isEmpty();
+            assertThat(vdoc.comments()).usingFieldByFieldElementComparator().isEmpty();
         }
 
         {
             neLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments())
-                    .usingFieldByFieldElementComparator()
-                    .isEmpty();
+            assertThat(vdoc.comments()).usingFieldByFieldElementComparator().isEmpty();
         }
     }
 }

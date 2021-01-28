@@ -1,14 +1,14 @@
 /*
- * Copyright 2014
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -128,8 +128,7 @@ public class TeiReader
     /**
      * Location of the mapping file for part-of-speech tags to UIMA types.
      */
-    public static final String PARAM_POS_MAPPING_LOCATION = 
-            ComponentParameters.PARAM_POS_MAPPING_LOCATION;
+    public static final String PARAM_POS_MAPPING_LOCATION = ComponentParameters.PARAM_POS_MAPPING_LOCATION;
     @ConfigurationParameter(name = PARAM_POS_MAPPING_LOCATION, mandatory = false)
     protected String mappingPosLocation;
 
@@ -184,8 +183,7 @@ public class TeiReader
     private int currentTeiElementNumber;
 
     @Override
-    public void initialize(UimaContext aContext)
-        throws ResourceInitializationException
+    public void initialize(UimaContext aContext) throws ResourceInitializationException
     {
         super.initialize(aContext);
 
@@ -206,8 +204,7 @@ public class TeiReader
         }
     }
 
-    private void nextTeiElement()
-        throws CollectionException, IOException
+    private void nextTeiElement() throws CollectionException, IOException
     {
         if (teiElementIterator == null) {
             currentTeiElement = null;
@@ -260,15 +257,13 @@ public class TeiReader
     }
 
     @Override
-    public boolean hasNext()
-        throws IOException, CollectionException
+    public boolean hasNext() throws IOException, CollectionException
     {
         return teiElementIterator != null || currentTeiElement != null;
     }
 
     @Override
-    public void getNext(CAS aCAS)
-        throws IOException, CollectionException
+    public void getNext(CAS aCAS) throws IOException, CollectionException
     {
         initCas(aCAS, currentResource);
 
@@ -362,8 +357,7 @@ public class TeiReader
         private final StringBuilder buffer = new StringBuilder();
 
         @Override
-        public void endDocument()
-            throws SAXException
+        public void endDocument() throws SAXException
         {
             getJCas().setDocumentText(buffer.toString());
             // Set up language
@@ -433,8 +427,7 @@ public class TeiReader
         }
 
         @Override
-        public void endElement(String aUri, String aLocalName, String aName)
-            throws SAXException
+        public void endElement(String aUri, String aLocalName, String aName) throws SAXException
         {
             if (TAG_SUNIT.equals(aName)) {
                 if (writeSentences) {
@@ -521,8 +514,7 @@ public class TeiReader
         }
 
         @Override
-        public void characters(char[] aCh, int aStart, int aLength)
-            throws SAXException
+        public void characters(char[] aCh, int aStart, int aLength) throws SAXException
         {
             StringBuilder sb = new StringBuilder();
             sb.append(aCh, aStart, aLength);

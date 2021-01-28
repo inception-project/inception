@@ -1,13 +1,13 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(120)
-public class CorrectionPageMenuItem implements MenuItem
+public class CorrectionPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -41,19 +42,19 @@ public class CorrectionPageMenuItem implements MenuItem
     {
         return "/correction";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/check_box.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Correction";
     }
-    
+
     /**
      * Only project admins and annotators can see this page
      */
@@ -63,7 +64,7 @@ public class CorrectionPageMenuItem implements MenuItem
         return annotationEnabeled(projectService, userRepo.getCurrentUser(),
                 WebAnnoConst.PROJECT_TYPE_CORRECTION);
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

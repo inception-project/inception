@@ -1,14 +1,14 @@
 /*
- * Copyright 2015
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ public class Selection
     implements Serializable
 {
     private static final Logger LOG = LoggerFactory.getLogger(Selection.class);
-    
+
     private static final long serialVersionUID = 2257223261821341371L;
 
     // the span id of the dependent in arc annotation
@@ -58,25 +58,30 @@ public class Selection
 
     // selected span text
     private String text;
-    
+
+    private String originText;
+    private String targetText;
+
     public Selection()
     {
         // Nothing to do
     }
-    
+
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         selectedAnnotationId = aVid;
         text = "[" + aOriginFs.getCoveredText() + "] - [" + aTargetFs.getCoveredText() + "]";
+        originText = aOriginFs.getCoveredText();
+        targetText = aTargetFs.getCoveredText();
         beginOffset = Math.min(aOriginFs.getBegin(), aTargetFs.getBegin());
         endOffset = Math.max(aOriginFs.getEnd(), aTargetFs.getEnd());
-        
+
         // Properties used when an arc is selected
         originSpanId = getAddr(aOriginFs);
         targetSpanId = getAddr(aTargetFs);
-        
+
         LOG.debug("Arc: {}", this);
-        
+
         fireSelectionChanged();
     }
 
@@ -84,20 +89,22 @@ public class Selection
     {
         selectSpan(new VID(aFS), aFS.getCAS(), aFS.getBegin(), aFS.getEnd());
     }
-    
+
     public void selectSpan(VID aVid, CAS aCAS, int aBegin, int aEnd)
     {
         selectedAnnotationId = aVid;
         text = aCAS.getDocumentText().substring(aBegin, aEnd);
         beginOffset = aBegin;
         endOffset = aEnd;
-        
+
         // Properties used when an arc is selected
         originSpanId = -1;
         targetSpanId = -1;
-        
+        originText = null;
+        targetText = null;
+
         LOG.debug("Span: {}", this);
-        
+
         fireSelectionChanged();
     }
 
@@ -105,20 +112,20 @@ public class Selection
     {
         selectSpan(VID.NONE_ID, aCas, aBegin, aEnd);
     }
-    
+
     public void clear()
     {
         selectedAnnotationId = VID.NONE_ID;
         beginOffset = -1;
         endOffset = -1;
         text = "";
-        
+
         // Properties used when an arc is selected
         originSpanId = -1;
         targetSpanId = -1;
-        
+
         LOG.debug("Clear: {}", this);
-        
+
         fireSelectionChanged();
     }
 
@@ -126,7 +133,7 @@ public class Selection
     {
         return isSpan() || isArc();
     }
-    
+
     public boolean isSpan()
     {
         return originSpanId == -1 && targetSpanId == -1 && beginOffset != -1 && endOffset != -1;
@@ -142,7 +149,7 @@ public class Selection
         if (!isArc()) {
             throw new IllegalStateException("Selected annotation is not an arc");
         }
-        
+
         return originSpanId;
     }
 
@@ -151,7 +158,7 @@ public class Selection
         if (!isArc()) {
             throw new IllegalStateException("Selected annotation is not an arc");
         }
-        
+
         return targetSpanId;
     }
 
@@ -170,6 +177,21 @@ public class Selection
         return text;
     }
 
+    public String getOriginText()
+    {
+        return originText;
+    }
+
+    public String getTargetText()
+    {
+        return targetText;
+    }
+
+    /**
+     * @deprecated Should no longer be used. Instead, text is set implicitly through
+     *             {@link #selectSpan} and {@code #selectArc}.
+     */
+    @Deprecated
     public void setText(String aText)
     {
         text = aText;
@@ -180,6 +202,8 @@ public class Selection
      * have to point at an existing annotation. It can also point just at a span of text or at the
      * endpoints of a relation. In this case, the enpoints or begin/end offsets are set, but not the
      * annotation ID.
+     * 
+     * @return the VID;
      */
     public VID getAnnotation()
     {
@@ -196,10 +220,14 @@ public class Selection
         int tempSpanId = originSpanId;
         originSpanId = targetSpanId;
         targetSpanId = tempSpanId;
-        
+
+        String tempText = originText;
+        originText = targetText;
+        targetText = tempText;
+
         fireSelectionChanged();
     }
-    
+
     private void fireSelectionChanged()
     {
         Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
@@ -209,7 +237,6 @@ public class Selection
                     RequestCycle.get().find(AjaxRequestTarget.class).orElse(null)));
         }
     }
-
 
     @Override
     public String toString()
@@ -249,10 +276,10 @@ public class Selection
         sel.beginOffset = beginOffset;
         sel.endOffset = endOffset;
         sel.selectedAnnotationId = selectedAnnotationId;
-        sel.text = text;        
+        sel.text = text;
         return sel;
     }
-    
+
     public void set(Selection aSelection)
     {
         originSpanId = aSelection.originSpanId;
@@ -260,6 +287,6 @@ public class Selection
         beginOffset = aSelection.beginOffset;
         endOffset = aSelection.endOffset;
         selectedAnnotationId = aSelection.selectedAnnotationId;
-        text = aSelection.text;        
+        text = aSelection.text;
     }
 }

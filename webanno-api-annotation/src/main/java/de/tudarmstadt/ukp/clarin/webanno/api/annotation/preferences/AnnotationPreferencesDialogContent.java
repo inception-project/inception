@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,7 +77,7 @@ public class AnnotationPreferencesDialogContent
 
     private static final Logger LOG = LoggerFactory
             .getLogger(AnnotationPreferencesDialogContent.class);
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
@@ -92,10 +92,10 @@ public class AnnotationPreferencesDialogContent
             IModel<AnnotatorState> aModel)
     {
         super(aId);
-        
+
         stateModel = aModel;
         modalWindow = aModalWindow;
-        
+
         form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
         NumberTextField<Integer> windowSizeField = new NumberTextField<>("windowSize");
@@ -116,8 +116,7 @@ public class AnnotationPreferencesDialogContent
         form.add(fontZoomField);
 
         List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                .stream()
-                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
+                .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
                 .collect(Collectors.toList());
         DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
@@ -130,12 +129,18 @@ public class AnnotationPreferencesDialogContent
         form.add(createLayerContainer());
 
         // Add a check box to enable/disable automatic page navigations while annotating
-        form.add(new CheckBox("scrollPage"));
+        CheckBox scrollCheckBox = new CheckBox("scrollPage");
+        scrollCheckBox.setOutputMarkupId(true);
+        form.add(scrollCheckBox);
 
         // Add a check box to enable/disable arc collapsing
-        form.add(new CheckBox("collapseArcs"));
+        CheckBox collapseCheckBox = new CheckBox("collapseArcs");
+        collapseCheckBox.setOutputMarkupId(true);
+        form.add(collapseCheckBox);
 
-        form.add(new CheckBox("rememberLayer"));
+        CheckBox rememberCheckbox = new CheckBox("rememberLayer");
+        rememberCheckbox.setOutputMarkupId(true);
+        form.add(rememberCheckbox);
 
         // Add global read-only coloring strategy combo box
         DropDownChoice<ReadonlyColoringBehaviour> readOnlyColor = new BootstrapSelect<>(
@@ -146,14 +151,12 @@ public class AnnotationPreferencesDialogContent
 
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
-        
+
         add(form);
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
-        String username = userDao.getCurrentUser().getUsername();
-        
         try {
             AnnotatorState state = stateModel.getObject();
             Preferences model = form.getModelObject();
@@ -169,11 +172,13 @@ public class AnnotationPreferencesDialogContent
             prefs.setEditor(model.editor.getKey());
             prefs.setCollapseArcs(model.collapseArcs);
 
+            state.setAllAnnotationLayers(annotationService.listAnnotationLayer(state.getProject()));
             state.setAnnotationLayers(model.annotationLayers.stream()
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                     .collect(Collectors.toList()));
-            
-            PreferencesUtil.savePreference(userPreferencesService, state, username);
+
+            PreferencesUtil.savePreference(userPreferencesService, state,
+                    userDao.getCurrentUsername());
         }
         catch (IOException e) {
             error("Preference file not found");
@@ -223,7 +228,7 @@ public class AnnotationPreferencesDialogContent
 
         return model;
     }
-    
+
     private ListView<AnnotationLayer> createLayerContainer()
     {
         return new ListView<AnnotationLayer>("annotationLayers")
@@ -237,7 +242,7 @@ public class AnnotationPreferencesDialogContent
                 AnnotationLayer layer = aItem.getModelObject();
                 Set<Long> hiddenLayerIds = stateModel.getObject().getPreferences()
                         .getHiddenAnnotationLayerIds();
-                
+
                 // add visibility checkbox
                 CheckBox layerVisible = new CheckBox("annotationLayerActive",
                         Model.of(!hiddenLayerIds.contains(layer.getId())));
@@ -258,8 +263,9 @@ public class AnnotationPreferencesDialogContent
                 layerColor.setModel(Model.of(prefs.colorPerLayer.get(layer.getId())));
                 layerColor.setChoiceRenderer(new ChoiceRenderer<>("descriptiveName"));
                 layerColor.setChoices(asList(ColoringStrategyType.values()));
-                layerColor.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target ->
-                        prefs.colorPerLayer.put(layer.getId(), layerColor.getModelObject())));
+                layerColor.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                        _target -> prefs.colorPerLayer.put(layer.getId(),
+                                layerColor.getModelObject())));
                 aItem.add(layerColor);
 
                 // add label
@@ -276,7 +282,7 @@ public class AnnotationPreferencesDialogContent
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
-        
+
         private Pair<String, String> editor;
         private int windowSize;
         private int sidebarSize;

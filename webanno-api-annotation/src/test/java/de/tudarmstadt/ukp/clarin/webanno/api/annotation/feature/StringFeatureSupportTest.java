@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,61 +41,59 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 public class StringFeatureSupportTest
 {
     private @Mock AnnotationSchemaService schemaService;
-    
+
     private StringFeatureSupport sut;
-    
+
     private JCas jcas;
     private AnnotationFS spanFS;
     private AnnotationFeature valueFeature;
     private TagSet valueTagset;
-    
+
     @Before
     public void setUp() throws Exception
     {
         initMocks(this);
-        
-        sut = new StringFeatureSupport(new PrimitiveUimaFeatureSupportProperties(),
-                schemaService);
-        
+
+        sut = new StringFeatureSupport(new PrimitiveUimaFeatureSupportProperties(), schemaService);
+
         valueFeature = new AnnotationFeature("value", CAS.TYPE_NAME_STRING);
-        
+
         valueTagset = new TagSet();
-        
+
         jcas = createJCasFromPath("src/test/resources/desc/type/webannoTestTypes.xml");
         jcas.setDocumentText("label");
-        
+
         Type spanType = jcas.getCas().getTypeSystem().getType("webanno.custom.Span");
         spanFS = jcas.getCas().createAnnotation(spanType, 0, jcas.getDocumentText().length());
     }
-    
+
     @Test
     public void thatUsingOutOfTagsetValueInClosedTagsetProducesException() throws Exception
     {
         final String tag = "TAG-NOT-IN-LIST";
-        
+
         valueFeature.setTagset(valueTagset);
         valueTagset.setCreateTag(false);
-        
+
         when(schemaService.existsTag(tag, valueTagset)).thenReturn(false);
-        
-        assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), valueFeature, getAddr(spanFS), 
-                    tag))
-            .withMessageContaining("is not in the tag list");
+
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+                () -> sut.setFeatureValue(jcas.getCas(), valueFeature, getAddr(spanFS), tag))
+                .withMessageContaining("is not in the tag list");
     }
-    
+
     @Test
     public void thatUsingOutOfTagsetValueInOpenTagsetAddsNewValue() throws Exception
     {
         final String tag = "TAG-NOT-IN-LIST";
-        
+
         valueFeature.setTagset(valueTagset);
         valueTagset.setCreateTag(true);
-        
+
         when(schemaService.existsTag(tag, valueTagset)).thenReturn(false);
-        
+
         sut.setFeatureValue(jcas.getCas(), valueFeature, getAddr(spanFS), tag);
-        
+
         verify(schemaService).createTag(new Tag(valueTagset, tag));
     }
 }

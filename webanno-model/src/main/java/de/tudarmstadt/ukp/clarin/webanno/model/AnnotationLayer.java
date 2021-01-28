@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,11 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import static java.util.Arrays.asList;
+import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
 
 import java.io.Serializable;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
-import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -34,11 +35,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
 /**
- * A persistence object for an annotation layer. Currently, the builtin layers are:
- * {@literal
+ * A persistence object for an annotation layer. Currently, the builtin layers are: {@literal
  *  'pos' as  'span',
  *  'dependency' as 'relation',
  *   'named entity' as 'span',
@@ -49,6 +51,8 @@ import org.hibernate.annotations.Type;
 @Entity
 @Table(name = "annotation_type", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "name", "project" }) })
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class AnnotationLayer
     implements Serializable
 {
@@ -73,9 +77,9 @@ public class AnnotationLayer
 
     @Column(name = "builtIn")
     private boolean builtIn = false;
-    
+
     private boolean readonly = false;
-    
+
     @Lob
     @Column(nullable = true, length = 64000)
     private String onClickJavascriptAction;
@@ -84,23 +88,26 @@ public class AnnotationLayer
     private String name;
 
     @ManyToOne
-   // @ForeignKey(ConstraintMode.NO_CONSTRAINT)
-    @JoinColumn(name = "annotation_type", 
-        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    // @ForeignKey(ConstraintMode.NO_CONSTRAINT)
+    @JoinColumn(name = "annotation_type", //
+            foreignKey = @ForeignKey(name = "none", value = NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationLayer attachType;
 
     @ManyToOne
-    @JoinColumn(name = "annotation_feature",
-        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "annotation_feature", //
+            foreignKey = @ForeignKey(name = "none", value = NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationFeature attachFeature;
 
     @ManyToOne
     @JoinColumn(name = "project")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Project project;
 
     @Column(name = "crossSentence")
     private boolean crossSentence;
-    
+
     @Column(name = "showTextInHover")
     private boolean showTextInHover = true;
 
@@ -119,33 +126,15 @@ public class AnnotationLayer
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ValidationModeType")
     private ValidationMode validationMode = ValidationMode.ALWAYS;
 
-    // This column is no longer used and should be removed with the next major version.
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "multipleTokens")
-    private boolean multipleTokens;
-    
-    // This column is no longer used and should be removed with the next major version
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "lockToTokenOffset")
-    private boolean lockToTokenOffset = true;
-    
-    // This column is no longer used and should be removed with the next major version
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "allowSTacking")
-    private boolean allowStacking;
-    
     @Lob
     @Column(length = 64000)
     private String traits;
-    
+
     public AnnotationLayer()
     {
         // Required
     }
-    
+
     public AnnotationLayer(String aName, String aUiName, String aType, Project aProject,
             boolean aBuiltIn, AnchoringMode aAnchoringMode, OverlapMode aOverlapMode)
     {
@@ -157,7 +146,7 @@ public class AnnotationLayer
         setAnchoringMode(aAnchoringMode);
         setOverlapMode(aOverlapMode);
     }
-    
+
     /**
      * A short unique numeric identifier for the type (primary key in the DB). This identifier is
      * only transiently used when communicating with the UI. It is not persisted long term other
@@ -175,7 +164,8 @@ public class AnnotationLayer
      * only transiently used when communicating with the UI. It is not persisted long term other
      * than in the type registry (e.g. in the database).
      * 
-     * @param typeId the id.
+     * @param typeId
+     *            the id.
      */
     public void setId(Long typeId)
     {
@@ -195,7 +185,8 @@ public class AnnotationLayer
     /**
      * The type of the annotation, either span, relation or chain
      * 
-     * @param aType the type.
+     * @param aType
+     *            the type.
      */
     public void setType(String aType)
     {
@@ -225,7 +216,8 @@ public class AnnotationLayer
     /**
      * The name displayed to the user in the UI.
      * 
-     * @param uiName the displayed name.
+     * @param uiName
+     *            the displayed name.
      */
     public void setUiName(String uiName)
     {
@@ -245,7 +237,8 @@ public class AnnotationLayer
     /**
      * Whether the type is available in the UI (outside of the project settings).
      * 
-     * @param enabled if the type is enabled.
+     * @param enabled
+     *            if the type is enabled.
      */
     public void setEnabled(boolean enabled)
     {
@@ -267,7 +260,8 @@ public class AnnotationLayer
      * Whether annotations of this type can be deleted. E.g. WebAnno currently does not support
      * deleting Lemma annotations. This is always “false” for user-created types.
      * 
-     * @param builtIn if the type is built-in.
+     * @param builtIn
+     *            if the type is built-in.
      */
     public void setBuiltIn(boolean builtIn)
     {
@@ -289,7 +283,8 @@ public class AnnotationLayer
      * The name of the UIMA annotation type handled by the adapter. This name must be unique for
      * each type in a project
      * 
-     * @param annotationTypeName the type name.
+     * @param annotationTypeName
+     *            the type name.
      */
     public void setName(String annotationTypeName)
     {
@@ -319,7 +314,8 @@ public class AnnotationLayer
      * always be attached to a Token annotation. A Dependency annotation must always be attached to
      * two Tokens (the governor and the dependent). This is handled differently for spans and arcs
      * 
-     * @param attachType the attach type name.
+     * @param attachType
+     *            the attach type name.
      */
 
     public void setAttachType(AnnotationLayer attachType)
@@ -342,7 +338,8 @@ public class AnnotationLayer
      * used if the attachType does not provide sufficient information about where to attach an
      * annotation
      * 
-     * @param attachFeature the attach feature.
+     * @param attachFeature
+     *            the attach feature.
      */
     public void setAttachFeature(AnnotationFeature attachFeature)
     {
@@ -362,7 +359,8 @@ public class AnnotationLayer
     /**
      * the project id where this type belongs to
      * 
-     * @param project the project.
+     * @param project
+     *            the project.
      */
     public void setProject(Project project)
     {
@@ -424,7 +422,7 @@ public class AnnotationLayer
     {
         return anchoringMode;
     }
-    
+
     public void setAnchoringMode(AnchoringMode aAnchoringMode)
     {
         anchoringMode = aAnchoringMode;
@@ -461,12 +459,6 @@ public class AnnotationLayer
         return asList(OverlapMode.ANY_OVERLAP, OverlapMode.STACKING_ONLY).contains(overlapMode);
     }
 
-    @Deprecated
-    public void setAllowStacking(boolean allowStacking)
-    {
-        this.allowStacking = allowStacking;
-    }
-    
     public OverlapMode getOverlapMode()
     {
         return overlapMode;
@@ -503,12 +495,13 @@ public class AnnotationLayer
     }
 
     /**
-     * Controls whether the chain behaves like a linked list or like a set. When operating as a
-     * set, chains are automatically threaded and no arrows and labels are displayed on arcs.
-     * When operating as a linked list, chains are not threaded and arrows and labels are displayed
-     * on arcs.
+     * Controls whether the chain behaves like a linked list or like a set. When operating as a set,
+     * chains are automatically threaded and no arrows and labels are displayed on arcs. When
+     * operating as a linked list, chains are not threaded and arrows and labels are displayed on
+     * arcs.
      *
-     * @param aLinkedListBehavior whether to behave like a set.
+     * @param aLinkedListBehavior
+     *            whether to behave like a set.
      */
     public void setLinkedListBehavior(boolean aLinkedListBehavior)
     {

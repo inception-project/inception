@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,56 +42,59 @@ public class TagEditorPanel
     extends LambdaPanel
 {
     private static final long serialVersionUID = -3356173821217898824L;
-    
+
     private @SpringBean AnnotationSchemaService annotationSchemaService;
-    
+
     private IModel<TagSet> selectedTagSet;
     private IModel<Tag> selectedTag;
-    
+
     public TagEditorPanel(String aId, IModel<TagSet> aTagSet, IModel<Tag> aTag)
     {
         super(aId, aTag);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         selectedTagSet = aTagSet;
         selectedTag = aTag;
-        
+
         Form<Tag> form = new Form<>("form", CompoundPropertyModel.of(aTag));
         add(form);
-        
-        form.add(new TextField<String>("name")
-                .add(new TagExistsValidator())
+
+        form.add(new TextField<String>("name") //
+                .add(new TagExistsValidator()) //
                 .setRequired(true));
         form.add(new TextArea<String>("description"));
-        
+
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
     }
-    
-    private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm) {
+
+    private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm)
+    {
         selectedTag.getObject().setTagSet(selectedTagSet.getObject());
         annotationSchemaService.createTag(selectedTag.getObject());
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
-    private void actionDelete(AjaxRequestTarget aTarget) {
+
+    private void actionDelete(AjaxRequestTarget aTarget)
+    {
         annotationSchemaService.removeTag(selectedTag.getObject());
         actionCancel(aTarget);
     }
-    
-    private void actionCancel(AjaxRequestTarget aTarget) {
+
+    private void actionCancel(AjaxRequestTarget aTarget)
+    {
         selectedTag.setObject(null);
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
+
     private class TagExistsValidator
         implements IValidator<String>
     {

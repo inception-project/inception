@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -95,20 +95,21 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
             local = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(
                     "src/test/resources/desc/type/webannoTestTypes.xml");
         }
-       
+
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-        
+
         String targetFolder = "target/test-output/WebAnnoTsv3XReaderWriterRoundTripTest/"
                 + referenceFolder.getName();
-        
+
+        // @formatter:off
         CollectionReaderDescription reader = createReaderDescription(WebannoTsv3XReader.class,
                 merged,
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, referenceFolder,
                 WebannoTsv3XReader.PARAM_PATTERNS, "reference.tsv");
-        
+
         AnalysisEngineDescription checker = createEngineDescription(
                 DKProCoreConventionsChecker.class);
-        
+
         AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3XWriter.class,
                 merged,
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
@@ -120,9 +121,10 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
                 XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
                 XmiWriter.PARAM_STRIP_EXTENSION, true,
                 XmiWriter.PARAM_OVERWRITE, true);
+        // @formatter:on
 
         SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
-        
+
         String referenceTsv = FileUtils.readFileToString(new File(referenceFolder, "reference.tsv"),
                 "UTF-8");
 
@@ -146,7 +148,7 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
         assertEquals(referenceTsv, actualTsv);
         // assertEquals(referenceXmi, actualXmi);
     }
-    
+
     public static class DKProCoreConventionsChecker
         extends JCasAnnotator_ImplBase
     {
@@ -157,17 +159,17 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
                 Token t = selectSingleAt(aJCas, Token.class, lemma.getBegin(), lemma.getEnd());
                 assert t.getLemma() == lemma;
             }
-            
+
             for (Stem stem : select(aJCas, Stem.class)) {
                 Token t = selectSingleAt(aJCas, Token.class, stem.getBegin(), stem.getEnd());
                 assert t.getStem() == stem;
             }
-            
+
             for (MorphologicalFeatures morph : select(aJCas, MorphologicalFeatures.class)) {
                 Token t = selectSingleAt(aJCas, Token.class, morph.getBegin(), morph.getEnd());
                 assert t.getMorph() == morph;
             }
-            
+
             for (POS pos : select(aJCas, POS.class)) {
                 Token t = selectSingleAt(aJCas, Token.class, pos.getBegin(), pos.getEnd());
                 assert t.getPos() == pos;
@@ -179,7 +181,7 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
             }
         }
     }
-    
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

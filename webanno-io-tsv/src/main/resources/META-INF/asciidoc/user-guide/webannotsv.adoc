@@ -1,11 +1,11 @@
-// Copyright 2016
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_webannotsv]]
-= WebAnno TSV 3.2 File format
+= WebAnno TSV 3.3 File format
 
 [cols="2,1,1,1,3"]
 |====
@@ -28,7 +28,7 @@
 | 
 |====
 
-In this section, we will discuss the WebAnno TSV (Tab Separated Value) file format version 3.2. 
+In this section, we will discuss the WebAnno TSV (Tab Separated Value) file format version 3.3. 
 The format is similar to the CoNNL file formats with specialized additions to the header and column
 representations. The file format inhabits a header and a body section. The *header* section
 present information about the different types of annotation layers and features used in the file.
@@ -68,7 +68,7 @@ NOTE: Since the character offsets are based on UTF-16 and the TSV file itself is
 
 == File Header
 
-the WebAnno TSV 3.2 file header consists of two main parts: 
+WebAnno TSV 3.3 file header consists of two main parts: 
 
 * the format indicator
 * the column declarations
@@ -79,7 +79,7 @@ may start.
 .Example: format in file header
 [source,text,tabsize=0]
 ----
-#FORMAT=WebAnno TSV 3.2
+#FORMAT=WebAnno TSV 3.3
 ----
 
 Layers are marked by the `#` character followed by `T_SP=` for *span types* (including *slot features*), `T_CH=` for *chain layers*, and `T_RL=` for *relation layers*. Every layer is written in new line, followed by the features in the layer.
@@ -167,6 +167,16 @@ as escaped characters (`\r`).
 #Text=Bell , based in Los Angeles , makes and distributes
 #Text=electronic , computer and building products .
 ----
+
+Optionally, an alphanumeric sentence identifier can be added in the sentence header section.
+
+.Example: Sentence identifier 
+[source,text]
+----
+#Sentence.id=s1
+#Text=Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
+----
+
 
 === Token and Sub-token Annotations
 
@@ -353,7 +363,7 @@ but the annotation on token `1-1` is not.
 .Example: Disambiguation IDs in relations
 [source,text,tabsize=0]
 ----
-#FORMAT=WebAnno TSV 3.2
+#FORMAT=WebAnno TSV 3.3
 #T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value
 #T_RL=webanno.custom.Relation|value|BT_de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity
 
@@ -365,3 +375,10 @@ but the annotation on token `1-1` is not.
 1-4	10-14	test	_	_	_
 1-5	15-16	.	*[1]|*[2]	*	1-1[0_1]
 ----
+ 
+== Changes
+
+* 3.3
+  * Adds support for the optional `#Sentence.id` stanza in the sentence header
+* 3.2
+  * First time the format is fully documented

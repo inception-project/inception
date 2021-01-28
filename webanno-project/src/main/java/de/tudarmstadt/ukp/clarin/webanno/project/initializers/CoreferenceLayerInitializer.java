@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,11 +25,10 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -42,7 +41,9 @@ public class CoreferenceLayerInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
-    
+
+    private final String COREFERENCE_LAYER_NAME = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
+
     @Autowired
     public CoreferenceLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
@@ -50,28 +51,40 @@ public class CoreferenceLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Co-reference annotation";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        // Because locks to token boundaries
-        return asList(TokenLayerInitializer.class);
+        return asList(
+                // Because locks to token boundaries
+                TokenLayerInitializer.class,
+                // Tagsets
+                CoreferenceTypeTagSetInitializer.class, CoreferenceRelationTagSetInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(COREFERENCE_LAYER_NAME, aProject);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet corefTypeTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-coref-type-bart.json").getInputStream(),
-                annotationSchemaService);
-        TagSet corefRelTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-coref-rel-tuebadz.json").getInputStream(),
-                annotationSchemaService);
-        
-        AnnotationLayer base = new AnnotationLayer(
-                "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
+        TagSet corefTypeTagSet = annotationSchemaService
+                .getTagSet(CoreferenceTypeTagSetInitializer.TAG_SET_NAME, aProject);
+        TagSet corefRelTagSet = annotationSchemaService
+                .getTagSet(CoreferenceRelationTagSetInitializer.TAG_SET_NAME, aProject);
+
+        AnnotationLayer base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference",
                 CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         base.setCrossSentence(true);
-        annotationSchemaService.createLayer(base);
-        
+        annotationSchemaService.createOrUpdateLayer(base);
+
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
                 "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", corefTypeTagSet));
         annotationSchemaService.createFeature(

@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ public interface ConstraintsService
     String SERVICE_NAME = "constraintsService";
 
     String CONSTRAINTS = "constraints";
+
     /**
      * Creates Constraint Set
      */
@@ -51,11 +52,9 @@ public interface ConstraintsService
      */
     void removeConstraintSet(ConstraintSet aSet);
 
-    String readConstrainSet(ConstraintSet aSet)
-        throws IOException;
+    String readConstrainSet(ConstraintSet aSet) throws IOException;
 
-    void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
-        throws IOException;
+    void writeConstraintSet(ConstraintSet aSet, InputStream aContent) throws IOException;
 
     /**
      * Returns Constraint as a file
@@ -64,8 +63,7 @@ public interface ConstraintsService
      *            The Constraint Set
      * @return File pointing to Constraint
      */
-    File exportConstraintAsFile(ConstraintSet aSet)
-        throws IOException;
+    File exportConstraintAsFile(ConstraintSet aSet) throws IOException;
 
     /**
      * Checks if there's a constraint set already with the name
@@ -76,6 +74,5 @@ public interface ConstraintsService
      */
     boolean existConstraintSet(String constraintSetName, Project aProject);
 
-    ParsedConstraints loadConstraints(Project aProject)
-        throws IOException, ParseException;
+    ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException;
 }

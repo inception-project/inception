@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkboxx.CheckBoxX;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class ToggleBox
     extends CheckBoxX
@@ -35,20 +36,20 @@ public class ToggleBox
     public ToggleBox(String aId)
     {
         super(aId);
-        
+
         getConfig().withIconNull("<i class=\"fa fa-question\"></i> Click to choose...");
         getConfig().withIconChecked("<i class=\"fa fa-check\"></i> Enabled");
         getConfig().withIconUnchecked("<i class=\"fa fa-ban\"></i> Disabled");
         getConfig().withEnclosedLabel(false);
-        
+
         add(new ChoiceRequiredValidator());
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         getConfig().withThreeState(ToggleBox.this.getModelObject() == null);
     }
 
@@ -56,12 +57,11 @@ public class ToggleBox
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(CssHeaderItem.forCSS(
-                ".checkboxx-toggle-button .cbx-md { width: 10em; }", 
+        aResponse.render(CssHeaderItem.forCSS(".checkboxx-toggle-button .cbx-md { width: 10em; }",
                 "ToggleBox"));
         aResponse.render(OnDomReadyHeaderItem.forScript(coloringScript()));
     }
-    
+
     @Override
     protected void onChange(Boolean aValue, AjaxRequestTarget aTarget)
     {
@@ -69,20 +69,19 @@ public class ToggleBox
             getConfig().withThreeState(false);
             aTarget.add(this);
         }
-        
+
         aTarget.appendJavaScript(coloringScript());
     }
 
     private String coloringScript()
     {
-        return String.join("\n",
+        return WicketUtil.wrapInTryCatch(String.join("\n",
                 "$('.checkboxx-toggle-button .fa-question').each((idx, item) => "
-                + "$(item).closest('.cbx-container').css('background-color', '#fff3cd'))",
+                        + "$(item).closest('.cbx-container').css('background-color', '#fff3cd'))",
                 "$('.checkboxx-toggle-button .fa-check').each((idx, item) => "
-                + "$(item).closest('.cbx-container').css('background-color', '#d4edda'))",
+                        + "$(item).closest('.cbx-container').css('background-color', '#d4edda'))",
                 "$('.checkboxx-toggle-button .fa-ban').each((idx, item) => "
-                + "$(item).closest('.cbx-container').css('background-color', '#f8d7da'))"
-                );
+                        + "$(item).closest('.cbx-container').css('background-color', '#f8d7da'))"));
     }
 
     private class ChoiceRequiredValidator
