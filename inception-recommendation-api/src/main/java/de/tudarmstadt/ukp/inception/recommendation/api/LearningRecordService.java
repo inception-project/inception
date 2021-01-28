@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 public interface LearningRecordService
 {
-    String SERVICE_NAME = "LearningRecordService";
-
     List<LearningRecord> listRecords(String user, AnnotationLayer layer);
 
     /**
@@ -54,19 +52,18 @@ public interface LearningRecordService
 
     void deleteById(long id);
 
-    void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
+    void logRecord(SourceDocument aDocument, String aUsername, AnnotationSuggestion aPrediction,
+            AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation);
 
     /**
-     * Updates the learning log with an entry for the given suggestion. Any entries which are 
-     * duplicates of the new action are removed as part of this action. Note that the actual
-     * action the user performed is not taken into account to determine duplicateness.
+     * Updates the learning log with an entry for the given suggestion. Any entries which are
+     * duplicates of the new action are removed as part of this action. Note that the actual action
+     * the user performed is not taken into account to determine duplicateness.
      */
-    void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation);
+    void logRecord(SourceDocument aDocument, String aUsername, AnnotationSuggestion aSuggestion,
+            String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
      * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,41 +32,35 @@ public class SpanCreatedEventAdapter
     implements EventLoggingAdapter<SpanCreatedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof SpanCreatedEvent;
     }
-    
+
     @Override
     public long getDocument(SpanCreatedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(SpanCreatedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(SpanCreatedEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
-    public String getDetails(SpanCreatedEvent aEvent)
+    public String getDetails(SpanCreatedEvent aEvent) throws IOException
     {
-        try {
-            AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+        return JSONUtil.toJsonString(details);
     }
 }

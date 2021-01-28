@@ -10,3 +10,6 @@ target
 cache
 idea/
 .factorypath
+*.jfr
+*.eml
+*/*.eml

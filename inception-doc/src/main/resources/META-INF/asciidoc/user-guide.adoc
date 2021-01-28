@@ -1,11 +1,11 @@
-// Copyright 2018
-// Ubiquitous Knowledge Processing (UKP) Lab
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -17,23 +17,16 @@
 = {product-name} User Guide
 The {product-name} Team
 
-This guide summarizes the functionality of {product-name} from the user's perspective.
-
-NOTE: It is assumed that you plan to test the {product-name} standalone version or an already existing server installation of {product-name}. For information on how to set up {product-name} for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
-
-All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
-
-= Introduction
+= Getting Started
 
 include::{include-dir}getting-started.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}workflow.adoc[leveloffset=+1]
-
-
-
+[[sect_core_funct]]
 = Core functionalities
+
+include::{include-dir}workflow.adoc[leveloffset=+1]
 
 include::{include-dir}login.adoc[leveloffset=+1]
 
@@ -87,11 +80,13 @@ include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_recommendation.adoc[leveloffset=+2]
 
+include::{include-dir}curation-sidebar.adoc[leveloffset=+2]
+
 include::{include-dir}annotation_activeLearning.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_concept-linking.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+2]
+// include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_images.adoc[leveloffset=+2]
 
@@ -158,7 +153,6 @@ include::{include-dir}users.adoc[leveloffset=+1]
 
 <<<
 
-
 include::{include-dir}external-search.adoc[leveloffset=+1]
 
 include::{include-dir}external-search-page.adoc[leveloffset=+2]
@@ -168,6 +162,8 @@ include::{include-dir}external-search-sidebar.adoc[leveloffset=+2]
 include::{include-dir}external-search-repos.adoc[leveloffset=+2]
 
 include::{include-dir}external-search-repos-elasticsearch.adoc[leveloffset=+3]
+
+include::{include-dir}external-search-repos-solr.adoc[leveloffset=+3]
 
 include::{include-dir}external-search-repos-pubannotation.adoc[leveloffset=+3]
 
@@ -189,15 +185,61 @@ include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}workload.adoc[leveloffset=+1]
+
+<<<
+
 = Appendices
 
 [appendix]
-include::{include-dir}webannotsv.adoc[leveloffset=+1]
+include::{include-dir}formats.adoc[leveloffset=+1]
+
+include::{include-dir}formats-conll2000.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2002.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2003.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2006.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2009.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2012.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conllcorenlp.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conllu.adoc[leveloffset=+2]
+
+include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
+
+include::{include-dir}formats-inlinexml.adoc[leveloffset=+2]
+
+include::{include-dir}formats-lif.adoc[leveloffset=+2]
+
+include::{include-dir}formats-nif.adoc[leveloffset=+2]
+
+include::{include-dir}formats-perseus.adoc[leveloffset=+2]
+
+include::{include-dir}formats-tcf.adoc[leveloffset=+2]
+
+include::{include-dir}formats-tei.adoc[leveloffset=+2]
+
+include::{include-dir}formats-text.adoc[leveloffset=+2]
+
+include::{include-dir}formats-uimabinarycas.adoc[leveloffset=+2]
+
+include::{include-dir}formats-uimaxmi.adoc[leveloffset=+2]
+
+include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]
+
+include::{include-dir}formats-webannotsv2.adoc[leveloffset=+2]
+
+include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
 
 <<<
 
 [appendix]
-include::{include-dir}formats.adoc[leveloffset=+1]
+include::{include-dir}webannotsv.adoc[leveloffset=+1]
 
 <<<
 

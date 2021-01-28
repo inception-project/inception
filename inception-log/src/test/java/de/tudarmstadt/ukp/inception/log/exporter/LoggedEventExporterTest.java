@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ import org.mockito.stubbing.Answer;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -56,10 +57,10 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 public class LoggedEventExporterTest
 {
     public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
-    
+
     private @Mock DocumentService documentService;
     private @Mock EventRepository eventRepository;
-    
+
     private Project project;
     private File workFolder;
 
@@ -74,18 +75,16 @@ public class LoggedEventExporterTest
         project.setId(1l);
         project.setName("Test Project");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        
+
         workFolder = tempFolder.newFolder();
-        
+
         when(documentService.listSourceDocuments(any())).thenReturn(documents());
         doAnswer((Answer<SourceDocument>) invocation -> {
             String name = invocation.getArgument(1);
-            return documents().stream()
-                    .filter(d -> name.equals(d.getName()))
-                    .findFirst().orElse(null);
-        }).
-        when(documentService).getSourceDocument(any(), any());
-        
+            return documents().stream().filter(d -> name.equals(d.getName())).findFirst()
+                    .orElse(null);
+        }).when(documentService).getSourceDocument(any(), any());
+
         sut = new LoggedEventExporter(eventRepository, documentService);
     }
 
@@ -97,12 +96,12 @@ public class LoggedEventExporterTest
             events().forEach(consumer);
             return null;
         }).when(eventRepository).forEachLoggedEvent(any(), any());
-        
+
         ZipFile zipFile = mock(ZipFile.class);
         when(zipFile.getEntry(any())).thenReturn(new ZipEntry("event.log"));
         when(zipFile.getInputStream(any()))
                 .thenAnswer(_invocation -> new FileInputStream(new File(workFolder, "event.log")));
-        
+
         // Export the project and import it again
         ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents(zipFile);
 
@@ -110,10 +109,8 @@ public class LoggedEventExporterTest
         List<LoggedEvent> expectedEvents = events().stream()
                 // The document with the ID 2 does supposedly not exist, so it is skipped
                 // during export
-                .filter(e -> e.getDocument() != 2l)
-                .collect(toList());
-        assertThat(captor.getAllValues())
-                .usingElementComparatorIgnoringFields("id")
+                .filter(e -> e.getDocument() != 2l).collect(toList());
+        assertThat(captor.getAllValues()).usingElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(expectedEvents);
     }
 
@@ -121,24 +118,25 @@ public class LoggedEventExporterTest
     public void thatImportingArchiveWithoutEventsWorks() throws Exception
     {
         ZipFile zipFile = mock(ZipFile.class);
-        
+
         // Export the project and import it again
         ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents(zipFile);
 
         // Check that import was successful but not events have been imported
-        assertThat(captor.getAllValues()).isEmpty();;
+        assertThat(captor.getAllValues()).isEmpty();
+        ;
     }
-    
+
     private List<SourceDocument> documents()
     {
         SourceDocument doc1 = new SourceDocument();
         doc1.setId(1l);
         doc1.setName("doc1");
         doc1.setProject(project);
-        
+
         return asList(doc1);
     }
-    
+
     private List<LoggedEvent> events()
     {
         LoggedEvent event1 = new LoggedEvent(1l);
@@ -186,10 +184,11 @@ public class LoggedEventExporterTest
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(project);
         ExportedProject exportedProject = new ExportedProject();
 
-        sut.exportData(exportRequest, exportedProject, workFolder);
+        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
 
         // Import the project again
         ArgumentCaptor<LoggedEvent> captor = ArgumentCaptor.forClass(LoggedEvent.class);

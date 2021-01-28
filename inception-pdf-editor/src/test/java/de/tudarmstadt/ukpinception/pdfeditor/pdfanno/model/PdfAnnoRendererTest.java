@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -93,7 +94,7 @@ public class PdfAnnoRendererTest
         project = new Project();
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-            SINGLE_TOKEN, NO_OVERLAP);
+                SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -107,7 +108,7 @@ public class PdfAnnoRendererTest
         tokenPosFeature.setVisible(true);
 
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-            SINGLE_TOKEN, NO_OVERLAP);
+                SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
@@ -131,20 +132,21 @@ public class PdfAnnoRendererTest
         layerBehaviorRegistry.init();
 
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-            new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry),
-            new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry),
-            new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
 
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
+        when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
         when(schemaService.listAnnotationFeature(any(Project.class)))
-            .thenReturn(asList(posFeature));
+                .thenReturn(asList(posFeature));
+        when(schemaService.listSupportedFeatures(any(Project.class)))
+                .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                    () -> schemaService.listAnnotationFeature(layer));
         });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
@@ -157,15 +159,16 @@ public class PdfAnnoRendererTest
     public void testRender() throws Exception
     {
         String file = "src/test/resources/tcf04-karin-wl.xml";
-        String pdftxt = new Scanner(
-            new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
+        String pdftxt = new Scanner(new File("src/test/resources/rendererTestPdfExtract.txt"))
+                .useDelimiter("\\Z").next();
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
-            TcfReader.PARAM_SOURCE_LOCATION, file);
+                TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setProject(project);
@@ -175,12 +178,13 @@ public class PdfAnnoRendererTest
                 schemaService.listAnnotationLayer(project));
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
-        PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
-            cas.getDocumentText(), schemaService, pdfExtractFile, 0);
+        PdfAnnoRenderer renderer = new PdfAnnoRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        PdfAnnoModel annoFile = renderer.render(state, vdoc, cas.getDocumentText(), pdfExtractFile,
+                0);
 
-        assertThat(annoFile.getAnnoFileContent())
-            .isEqualToNormalizingNewlines(contentOf(
-                    new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
+        assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
+                contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
     /**
@@ -190,13 +194,13 @@ public class PdfAnnoRendererTest
     public void testConvertToDocumentOffset() throws Exception
     {
         String file = "src/test/resources/tcf04-karin-wl.xml";
-        String pdftxt = new Scanner(
-            new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
+        String pdftxt = new Scanner(new File("src/test/resources/rendererTestPdfExtract.txt"))
+                .useDelimiter("\\Z").next();
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
-            TcfReader.PARAM_SOURCE_LOCATION, file);
+                TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
@@ -223,8 +227,8 @@ public class PdfAnnoRendererTest
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
         // convert to offests for document in INCEpTION
-        List<Offset> docOffsets =
-            PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
+        List<Offset> docOffsets = PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel,
+                pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();
         expectedOffsets.add(new Offset(0, 0));
         expectedOffsets.add(new Offset(0, 1));

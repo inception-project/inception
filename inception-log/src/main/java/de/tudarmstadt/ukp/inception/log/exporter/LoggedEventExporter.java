@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.log.exporter;
 
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -43,12 +45,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -58,7 +59,8 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 @Component
-public class LoggedEventExporter implements ProjectExporter
+public class LoggedEventExporter
+    implements ProjectExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(LoggedEventExporter.class);
 
@@ -79,31 +81,31 @@ public class LoggedEventExporter implements ProjectExporter
     {
         return asList(SourceDocumentExporter.class);
     }
-    
+
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aFile)
         throws Exception
     {
         Project project = aRequest.getProject();
-        
+
         AtomicInteger eventCount = new AtomicInteger(0);
         Set<Long> missingDocuments = new HashSet<>();
         AtomicInteger droppedEvents = new AtomicInteger(0);
-        
+
         // Set up a map of document IDs to document names because we export by name and not
         // by ID.
         Map<Long, String> documentNameIndex = new HashMap<>();
-        documentService.listSourceDocuments(project).forEach(doc -> 
-            documentNameIndex.put(doc.getId(), doc.getName())
-        );
-        
+        documentService.listSourceDocuments(project)
+                .forEach(doc -> documentNameIndex.put(doc.getId(), doc.getName()));
+
         File eventLog = new File(aFile, EVENT_LOG);
         eventLog.createNewFile();
         try (JsonGenerator jGenerator = new ObjectMapper().getFactory()
                 .createGenerator(new FileOutputStream(eventLog), JsonEncoding.UTF8)) {
 
             jGenerator.setPrettyPrinter(new MinimalPrettyPrinter("\n"));
-            
+
             // Stream data
             eventRepository.forEachLoggedEvent(project, event -> {
                 String documentName = null;
@@ -131,7 +133,7 @@ public class LoggedEventExporter implements ProjectExporter
                 exportedEvent.setAnnotator(event.getAnnotator());
                 exportedEvent.setUser(event.getUser());
                 exportedEvent.setDetails(event.getDetails());
-                
+
                 // Write DTO
                 try {
                     jGenerator.writeObject(exportedEvent);
@@ -139,11 +141,11 @@ public class LoggedEventExporter implements ProjectExporter
                 catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                
+
                 eventCount.incrementAndGet();
             });
         }
-        
+
         LOG.info("Exported [{}] logged events for project [{}]", eventCount.get(),
                 project.getName());
         if (!missingDocuments.isEmpty()) {
@@ -151,27 +153,25 @@ public class LoggedEventExporter implements ProjectExporter
                     droppedEvents.get(), missingDocuments.size());
         }
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
-        ExportedProject aExProject, ZipFile aZip)
+            ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
         int eventCount = 0;
-        
+
         ZipEntry entry = aZip.getEntry(EVENT_LOG);
-        
+
         if (entry == null) {
             LOG.info("No event log available for import in project [{}]", aProject.getName());
             return;
         }
 
-        LoadingCache<String, SourceDocument> documentCache = Caffeine.newBuilder()
-                .maximumSize(10_000)
-                .build(documentName -> documentService
-                        .getSourceDocument(aProject, documentName));
+        // Query once for all the documents to avoid hitting the DB in the loop below
+        Map<String, SourceDocument> docs = documentService.listSourceDocuments(aProject).stream()
+                .collect(Collectors.toMap(SourceDocument::getName, identity()));
 
-        
         try (JsonParser jParser = new ObjectMapper().getFactory()
                 .createParser(aZip.getInputStream(entry))) {
 
@@ -181,14 +181,14 @@ public class LoggedEventExporter implements ProjectExporter
             Iterator<ExportedLoggedEvent> i = jParser.readValuesAs(ExportedLoggedEvent.class);
             while (i.hasNext()) {
                 // Flush events
-                if (batch.size() >= 25_000) {
+                if (batch.size() >= 50_000) {
                     eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
                     batch.clear();
                     LOG.trace("... {} events imported ...", eventCount);
                 }
-                
+
                 ExportedLoggedEvent exportedEvent = i.next();
-                
+
                 LoggedEvent event = new LoggedEvent();
                 event.setProject(aProject.getId());
                 event.setUser(exportedEvent.getUser());
@@ -199,12 +199,12 @@ public class LoggedEventExporter implements ProjectExporter
 
                 // If an event is not associated with a document, then the default ID -1 is used
                 if (exportedEvent.getDocumentName() != null) {
-                    event.setDocument(documentCache.get(exportedEvent.getDocumentName()).getId());
+                    event.setDocument(docs.get(exportedEvent.getDocumentName()).getId());
                 }
                 else {
                     event.setDocument(-1);
                 }
-                
+
                 batch.add(event);
 
                 eventCount++;
@@ -214,7 +214,7 @@ public class LoggedEventExporter implements ProjectExporter
             eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
 
         }
-        
+
         LOG.info("Imported [{}] logged events for project [{}]", eventCount, aProject.getName());
     }
 }

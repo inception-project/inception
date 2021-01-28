@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,13 +59,12 @@ public interface ConceptLinkingService
      * Get all linking instances within the scope of a given knowledge base. If null is passed for
      * aRepositoryId, all enabled knowledge bases in the project are considered. If the given
      * aRepositoryId can not be found the method will return an empty list. This method calls
-     * {@link #disambiguate} to determine the instances
-     * for a single knowledge base
+     * {@link #disambiguate} to determine the instances for a single knowledge base
      *
      * @param aRepositoryId
-     *            the RepositoryId of the knowledge base that defines the scope. If this
-     *            parameter is {@code null}, then all enabled knowledge bases are searched.
-     *            If the specified knowledge base is disabled, an empty list is returned.
+     *            the RepositoryId of the knowledge base that defines the scope. If this parameter
+     *            is {@code null}, then all enabled knowledge bases are searched. If the specified
+     *            knowledge base is disabled, an empty list is returned.
      * @param aTypedString
      *            What the user has typed so far in the text field. Might be null.
      * @param aMention
@@ -79,23 +78,24 @@ public interface ConceptLinkingService
      * @return all linking instances within the scope
      */
     List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aTypedString,
-            String aMention, int aMentionBeginOffset, CAS aCas, Project aProject);
+            ConceptFeatureValueType aValueType, String aTypedString, String aMention,
+            int aMentionBeginOffset, CAS aCas, Project aProject);
 
     /**
      * Finds entities in a knowledge base according to a typed string using full text search.
      *
-     * @param aKB          The knowledge base that is searched in
-     * @param aTypedString What the user has typed so far in the text field. Might be null.
+     * @param aKB
+     *            The knowledge base that is searched in
+     * @param aTypedString
+     *            What the user has typed so far in the text field. Might be null.
      * @return a list of entities
      */
     List<KBHandle> searchItems(KnowledgeBase aKB, String aTypedString);
 
     /**
-     * This method does the actual ranking of the candidate entities.
-     * First the candidates from full-text matching are sorted by frequency cutoff after a
-     * threshold because they are more numerous.
-     * Then the candidates from exact matching are added and sorted by multiple keys.
+     * This method does the actual ranking of the candidate entities. First the candidates from
+     * full-text matching are sorted by frequency cutoff after a threshold because they are more
+     * numerous. Then the candidates from exact matching are added and sorted by multiple keys.
      */
     List<KBHandle> rankCandidates(String aTypedString, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin);

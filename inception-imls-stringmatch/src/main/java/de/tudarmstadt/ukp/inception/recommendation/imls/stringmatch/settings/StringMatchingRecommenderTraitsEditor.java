@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,11 +57,11 @@ public class StringMatchingRecommenderTraitsEditor
 {
     private static final Logger LOG = LoggerFactory
             .getLogger(StringMatchingRecommenderTraitsEditor.class);
-    
+
     private static final long serialVersionUID = 1677442652521110324L;
 
     private @SpringBean GazeteerService gazeteerService;
-    
+
     private GazeteerList gazeteers;
     private BootstrapFileInput uploadField;
 
@@ -73,7 +73,7 @@ public class StringMatchingRecommenderTraitsEditor
         gazeteers.add(visibleWhen(() -> aRecommender.getObject() != null
                 && aRecommender.getObject().getId() != null));
         add(gazeteers);
-        
+
         FileInputConfig config = new FileInputConfig();
         config.initialCaption("Import gazeteers ...");
         config.allowedFileExtensions(asList("txt"));
@@ -82,7 +82,8 @@ public class StringMatchingRecommenderTraitsEditor
         config.removeIcon("<i class=\"fa fa-remove\"></i>");
         config.uploadIcon("<i class=\"fa fa-upload\"></i>");
         config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
-        uploadField = new BootstrapFileInput("upload", new ListModel<>(), config) {
+        uploadField = new BootstrapFileInput("upload", new ListModel<>(), config)
+        {
             private static final long serialVersionUID = -7072183979425490246L;
 
             @Override
@@ -100,20 +101,20 @@ public class StringMatchingRecommenderTraitsEditor
         throws IOException
     {
         gazeteerService.deleteGazeteers(aGazeteer);
-        
+
         aTarget.add(gazeteers);
     }
-    
+
     private void actionUploadGazeteer(AjaxRequestTarget aTarget)
     {
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(gazeteers);
-        
+
         for (FileUpload importedGazeteer : uploadField.getModelObject()) {
             Gazeteer gazeteer = new Gazeteer();
             gazeteer.setName(importedGazeteer.getClientFileName());
             gazeteer.setRecommender(getModelObject());
-            
+
             // Make sure the gazetter name is unique
             int n = 2;
             while (gazeteerService.existsGazeteer(gazeteer.getRecommender(), gazeteer.getName())) {
@@ -122,7 +123,7 @@ public class StringMatchingRecommenderTraitsEditor
                 gazeteer.setName(baseName + ' ' + n + '.' + extension);
                 n++;
             }
-            
+
             try (InputStream is = importedGazeteer.getInputStream()) {
                 gazeteerService.createOrUpdateGazeteer(gazeteer);
                 gazeteerService.importGazeteerFile(gazeteer, is);
@@ -134,7 +135,7 @@ public class StringMatchingRecommenderTraitsEditor
             }
         }
     }
-    
+
     @Override
     public Recommender getModelObject()
     {
@@ -152,31 +153,33 @@ public class StringMatchingRecommenderTraitsEditor
             return emptyList();
         }
     }
-    
-    public class GazeteerList extends WebMarkupContainer
+
+    public class GazeteerList
+        extends WebMarkupContainer
     {
         private static final long serialVersionUID = -2049981253344229438L;
-        
+
         private ListView<Gazeteer> gazeteerList;
-        
+
         public GazeteerList(String aId, IModel<? extends List<Gazeteer>> aChoices)
         {
             super(aId, aChoices);
-            
+
             setOutputMarkupPlaceholderTag(true);
-            
-            gazeteerList = new ListView<Gazeteer>("gazeteer", aChoices) {
+
+            gazeteerList = new ListView<Gazeteer>("gazeteer", aChoices)
+            {
                 private static final long serialVersionUID = 2827701590781214260L;
 
                 @Override
                 protected void populateItem(ListItem<Gazeteer> aItem)
                 {
                     Gazeteer gazeteer = aItem.getModelObject();
-                    
+
                     aItem.add(new Label("name", aItem.getModelObject().getName()));
 
                     aItem.add(new LambdaAjaxLink("delete",
-                        _target -> actionDeleteGazeteer(_target, gazeteer)));
+                            _target -> actionDeleteGazeteer(_target, gazeteer)));
 
                     aItem.add(new DownloadLink("download",
                             LoadableDetachableModel.of(() -> getGazeteerFile(gazeteer)),
@@ -185,7 +188,7 @@ public class StringMatchingRecommenderTraitsEditor
             };
             add(gazeteerList);
         }
-        
+
         private File getGazeteerFile(Gazeteer aGazeteer)
         {
             try {

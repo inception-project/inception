@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,23 +29,28 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.LayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.PropertyFeatureSupport;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#factLayerInitializer}.
+ * </p>
+ */
 public class FactLayerInitializer
     implements LayerInitializer
 {
@@ -54,6 +63,12 @@ public class FactLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Fact annotation";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         // Because locks to token boundaries
@@ -61,37 +76,42 @@ public class FactLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject)
-        throws IOException
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(FactLinkingConstants.FACT_LAYER, aProject);
+    }
+
+    @Override
+    public void configure(Project aProject) throws IOException
     {
         AnnotationLayer factLayer = new AnnotationLayer(FactLinkingConstants.FACT_LAYER, "Fact",
-            SPAN_TYPE, aProject, false, TOKENS, OverlapMode.NO_OVERLAP);
-        factLayer.setAllowStacking(true);
+                SPAN_TYPE, aProject, false, TOKENS, OverlapMode.NO_OVERLAP);
         factLayer.setCrossSentence(false);
 
         annotationSchemaService.createFeature(
-            new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",
-                PropertyFeatureSupport.PREFIX, "Predicate of a fact", null));
+                new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",
+                        PropertyFeatureSupport.PREFIX, "Predicate of a fact", null));
 
         AnnotationFeature subjectFeature = createLinkedFeature("subject", "2) Subject",
-            "The subject of a fact.", FactLinkingConstants.SUBJECT_LINK, factLayer, aProject);
+                "The subject of a fact.", FactLinkingConstants.SUBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(subjectFeature);
-        annotationSchemaService.createLayer(factLayer);
+        annotationSchemaService.createOrUpdateLayer(factLayer);
 
         AnnotationFeature objectFeature = createLinkedFeature("object", "3) Object",
-            "The object of a fact.", FactLinkingConstants.OBJECT_LINK, factLayer, aProject);
+                "The object of a fact.", FactLinkingConstants.OBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(objectFeature);
-        annotationSchemaService.createLayer(factLayer);
+        annotationSchemaService.createOrUpdateLayer(factLayer);
 
         AnnotationFeature qualifierFeature = createLinkedFeature("qualifiers", "4) Qualifiers",
-            "The qualifier of a fact.", FactLinkingConstants.QUALIFIER_LINK, factLayer, aProject);
+                "The qualifier of a fact.", FactLinkingConstants.QUALIFIER_LINK, factLayer,
+                aProject);
         annotationSchemaService.createFeature(qualifierFeature);
-        annotationSchemaService.createLayer(factLayer);
+        annotationSchemaService.createOrUpdateLayer(factLayer);
     }
 
     private AnnotationFeature createLinkedFeature(String featureName, String featureUiName,
-        String description, String linkedTypeName, AnnotationLayer aAnnotationLayer,
-        Project aProject)
+            String description, String linkedTypeName, AnnotationLayer aAnnotationLayer,
+            Project aProject)
     {
         AnnotationFeature linkedFeature = new AnnotationFeature();
         linkedFeature.setName(featureName);

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,15 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +43,17 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -70,12 +76,21 @@ public class StringMatchingRecommenderTest
     private RecommenderContext context;
     private Recommender recommender;
     private StringMatchingRecommenderTraits traits;
+    private CasStorageSession casStorageSession;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
+        casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new StringMatchingRecommenderTraits();
+    }
+
+    @After
+    public void tearDown()
+    {
+        casStorageSession.close();
     }
 
     @Test
@@ -86,9 +101,8 @@ public class StringMatchingRecommenderTest
 
         sut.train(context, casList);
 
-        assertThat(context.get(StringMatchingRecommender.KEY_MODEL))
-            .as("Model has been set")
-            .isNotNull();
+        assertThat(context.get(StringMatchingRecommender.KEY_MODEL)).as("Model has been set")
+                .isNotNull();
     }
 
     @Test
@@ -96,28 +110,26 @@ public class StringMatchingRecommenderTest
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
-        
+
         CAS cas = casList.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
-        
+
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
-        
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+
         assertThat(predictions).as("Score is positive")
-            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
+                .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0);
 
         assertThat(predictions).as("Some score is not perfect")
-            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
-        
-        assertThat(predictions)
-            .as("There is no score explanation")
-            .allMatch(prediction -> getScoreExplanation(prediction) == null);
+                .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0);
+
+        assertThat(predictions).as("There is no score explanation")
+                .allMatch(prediction -> getScoreExplanation(prediction) == null);
     }
 
     @Test
@@ -141,14 +153,15 @@ public class StringMatchingRecommenderTest
     public void thatPredictionForCharacterLevelLayerWorks() throws Exception
     {
         recommender.getLayer().setAnchoringMode(CHARACTERS);
-        
+
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        
+
         JCas jcas = JCasFactory.createJCas();
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
         CAS cas = jcas.getCas();
-        
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
+
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         List<GazeteerEntry> gazeteer = new ArrayList<>();
@@ -161,22 +174,23 @@ public class StringMatchingRecommenderTest
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).extracting(NamedEntity::getCoveredText)
-                .contains("John Smith", "Peter John");
+        assertThat(predictions).extracting(NamedEntity::getCoveredText).contains("John Smith",
+                "Peter John");
     }
 
     @Test
     public void thatPredictionForCrossSentenceLayerWorks() throws Exception
     {
         recommender.getLayer().setCrossSentence(true);
-        
+
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        
+
         JCas jcas = JCasFactory.createJCas();
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
         CAS cas = jcas.getCas();
-        
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
+
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         List<GazeteerEntry> gazeteer = new ArrayList<>();
@@ -188,20 +202,26 @@ public class StringMatchingRecommenderTest
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).extracting(NamedEntity::getCoveredText)
-                .contains("Smith .\nPeter");
+        assertThat(predictions).extracting(NamedEntity::getCoveredText).contains("Smith .\nPeter");
     }
 
     private CAS getTestCasNoLabelLabels() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
-        Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
-        Feature valFeature = neType.getFeatureByBaseName("value");
-        JCasUtil.select(cas.getJCas(), NamedEntity.class)
-                .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
+            Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
+            Feature valFeature = neType.getFeatureByBaseName("value");
+            select(cas.getJCas(), NamedEntity.class)
+                    .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
 
-        return cas;
+            return cas;
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     @Test
@@ -226,18 +246,14 @@ public class StringMatchingRecommenderTest
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS")
-             .isNotEmpty();
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
 
-        assertThat(predictions)
-            .as("Score is positive")
-            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
+        assertThat(predictions).as("Score is positive")
+                .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0);
 
-        assertThat(predictions)
-            .as("Some score is not perfect")
-            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
+        assertThat(predictions).as("Some score is not perfect")
+                .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0);
     }
-
 
     @Test
     public void thatEvaluationWorks() throws Exception
@@ -257,7 +273,7 @@ public class StringMatchingRecommenderTest
         System.out.printf("Accuracy: %f%n", accuracy);
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
-        
+
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
         assertThat(recall).isStrictlyBetween(0.0, 1.0);
@@ -271,10 +287,10 @@ public class StringMatchingRecommenderTest
         String[] vals = new String[] { "PER", "PER", "PER", "PER", "LOC", "ORG" };
         int[][] indices = new int[][] { { 0, 9 }, { 12, 16 }, { 22, 25 }, { 35, 39 }, { 56, 64 },
                 { 67, 75 } };
-        int[][] sentIndices = new int[][] { { 0, 26 }, {27, 40}, {41, 65}, {66, 76} };
+        int[][] sentIndices = new int[][] { { 0, 26 }, { 27, 40 }, { 41, 65 }, { 66, 76 } };
         int[][] tokenIndices = new int[][] { { 0, 3 }, { 5, 9 }, { 10, 10 }, { 12, 16 }, { 18, 20 },
                 { 22, 25 }, { 26, 26 }, { 28, 33 }, { 35, 39 }, { 40, 40 }, { 42, 44 }, { 46, 47 },
-                { 49, 54 }, { 56, 64 }, { 65, 65 }, {67, 75}, {76, 76} };
+                { 49, 54 }, { 56, 64 }, { 65, 65 }, { 67, 75 }, { 76, 76 } };
 
         List<CAS> testCas = getTestNECas(text, vals, indices, sentIndices, tokenIndices);
 
@@ -294,7 +310,7 @@ public class StringMatchingRecommenderTest
         assertThat(result.computeRecallScore()).as("correct recall").isEqualTo(1.0 / 3);
         assertThat(result.computeF1Score()).as("correct f1").isEqualTo((2.0 / 9) / (2.0 / 3));
     }
-    
+
     private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aNEIndices,
             int[][] aSentIndices, int[][] aTokenIndices)
         throws Exception
@@ -322,7 +338,7 @@ public class StringMatchingRecommenderTest
 
         return casses;
     }
-    
+
     @Test
     public void thatEvaluationSkippingWorks() throws Exception
     {
@@ -332,7 +348,7 @@ public class StringMatchingRecommenderTest
         double score = sut.evaluate(asList(), splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
-        
+
         assertThat(score).isEqualTo(0.0);
     }
 
@@ -346,45 +362,63 @@ public class StringMatchingRecommenderTest
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
-            
+
             double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
-            
+
             i++;
         }
     }
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDataFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDataFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, files, 
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
-            Conll2002Reader.PARAM_HAS_HEADER, true, 
-            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+        CollectionReader reader = createReader( //
+                Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, files, //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(),
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
+        int n = 1;
         while (reader.hasNext()) {
             JCas cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
+            casStorageSession.add("testDataCas" + n, EXCLUSIVE_WRITE_ACCESS, cas.getCas());
         }
+
         return casList;
     }
 
@@ -408,7 +442,7 @@ public class StringMatchingRecommenderTest
     {
         return RecommenderTestHelper.getScore(fs, "value");
     }
-    
+
     private static String getScoreExplanation(AnnotationFS fs)
     {
         return RecommenderTestHelper.getScoreExplanation(fs, "value");

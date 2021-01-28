@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,78 +35,80 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-public class DocumentRepositoryExporterTest {
+public class DocumentRepositoryExporterTest
+{
     private @Mock ExternalSearchService externalSearchService;
     private Project project;
-    
+
     private DocumentRepositoryExporter sut;
-    
+
     @Before
     public void setUp()
     {
         initMocks(this);
-        
+
         project = new Project();
         project.setName("Test Project");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        
-        when(externalSearchService.listDocumentRepositories(project)).
-                thenReturn(documentRepositories());
-        
+
+        when(externalSearchService.listDocumentRepositories(project))
+                .thenReturn(documentRepositories());
+
         sut = new DocumentRepositoryExporter(externalSearchService);
     }
-    
+
     @Test
     public void thatExportingWorks()
     {
-        
+
         // Export the project and import it again
         ArgumentCaptor<DocumentRepository> captor = runExportImportAndFetchDocumentRepositories();
-        
+
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues())
-                .usingElementComparatorIgnoringFields("id")
+        assertThat(captor.getAllValues()).usingElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(documentRepositories());
     }
-    
+
     private ArgumentCaptor<DocumentRepository> runExportImportAndFetchDocumentRepositories()
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(project);
         ExportedProject exportedProject = new ExportedProject();
         File file = mock(File.class);
-        
-        sut.exportData(exportRequest, exportedProject, file);
-        
+
+        sut.exportData(exportRequest, monitor, exportedProject, file);
+
         // Import the project again
-        ArgumentCaptor<DocumentRepository> captor =
-                ArgumentCaptor.forClass(DocumentRepository.class);
+        ArgumentCaptor<DocumentRepository> captor = ArgumentCaptor
+                .forClass(DocumentRepository.class);
         doNothing().when(externalSearchService).createOrUpdateDocumentRepository(captor.capture());
-        
+
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
-        
+
         return captor;
     }
-    
+
     private List<DocumentRepository> documentRepositories()
     {
         DocumentRepository dr1 = buildDocumentRepository(1L);
         DocumentRepository dr2 = buildDocumentRepository(2L);
         DocumentRepository dr3 = buildDocumentRepository(3L);
         DocumentRepository dr4 = buildDocumentRepository(4L);
-        
+
         return Arrays.asList(dr1, dr2, dr3, dr4);
     }
-    
+
     private DocumentRepository buildDocumentRepository(Long id)
     {
         DocumentRepository dr = new DocumentRepository();

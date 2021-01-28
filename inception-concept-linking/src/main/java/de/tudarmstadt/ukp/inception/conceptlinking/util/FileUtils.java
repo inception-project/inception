@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,7 +55,8 @@ public class FileUtils
                 lines.add(l);
             }
             br.close();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             log.warn("File [{}] is missing - {}", r.getName(), reason);
         }
         return lines;
@@ -64,7 +65,7 @@ public class FileUtils
     public static Set<String> loadStopwordFile(File r)
     {
         String reason = "Using entity linking support without stopwords will have a negative "
-            + "impact on the suggestion ranking.";
+                + "impact on the suggestion ranking.";
         List<String> lines = readLines(r, reason);
         return new HashSet<>(lines);
     }
@@ -72,10 +73,10 @@ public class FileUtils
     public static Map<String, Property> loadPropertyLabels(File r)
     {
         String reason = "Using entity linking support without propertyId:propertyLabel dictionary "
-            + "file may have a negative impact on the suggestion ranking.";
+                + "file may have a negative impact on the suggestion ranking.";
         Map<String, Property> property2LabelMap = new HashMap<>();
         List<String> lines = readLines(r, reason);
-        for (String line: lines) {
+        for (String line : lines) {
             if (!line.startsWith("#")) {
                 String[] col = line.split("\t");
                 Property label = new Property(col[1], col[3], col[4], col[5]);
@@ -88,7 +89,7 @@ public class FileUtils
     public static Map<String, Integer> loadEntityFrequencyMap(File r)
     {
         String reason = "Using entity linking support without entity frequency file will "
-            + "have a negative impact on the suggestion ranking.";
+                + "have a negative impact on the suggestion ranking.";
         Map<String, Integer> entityFreqMap = new HashMap<>();
         List<String> lines = readLines(r, reason);
         for (String line : lines) {
@@ -99,14 +100,14 @@ public class FileUtils
         }
         return entityFreqMap;
     }
-    
+
     public static Set<String> loadPropertyBlacklist(File r)
     {
         String reason = "Using entity linking support without property blacklist file may have a negative "
-            + "impact on the suggestion ranking.";
+                + "impact on the suggestion ranking.";
         Set<String> propertyBlacklist = new HashSet<>();
         List<String> lines = readLines(r, reason);
-        for (String line: lines) {
+        for (String line : lines) {
             if (!line.startsWith("#")) {
                 String[] col = line.split("\t");
                 propertyBlacklist.add(col[0]);

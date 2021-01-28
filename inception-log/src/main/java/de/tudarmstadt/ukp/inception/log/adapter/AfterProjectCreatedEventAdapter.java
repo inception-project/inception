@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import java.io.IOException;
+
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class AfterProjectCreatedEventAdapter
@@ -30,10 +33,23 @@ public class AfterProjectCreatedEventAdapter
     {
         return aEvent instanceof AfterProjectCreatedEvent;
     }
-    
+
     @Override
     public long getProject(AfterProjectCreatedEvent aEvent)
     {
         return aEvent.getProject().getId();
+    }
+
+    @Override
+    public String getDetails(AfterProjectCreatedEvent aEvent) throws IOException
+    {
+        Details details = new Details();
+        details.projectName = aEvent.getProject().getName();
+        return JSONUtil.toJsonString(details);
+    }
+
+    public static class Details
+    {
+        public String projectName;
     }
 }

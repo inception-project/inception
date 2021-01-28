@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -86,7 +86,7 @@ public class QualifierFeatureEditor
     extends FeatureEditor
 {
     private static final long serialVersionUID = 7469241620229001983L;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -124,7 +124,7 @@ public class QualifierFeatureEditor
         add(content);
 
         content.add(new RefreshingView<LinkWithRoleModel>("slots",
-            PropertyModel.of(getModel(), "value"))
+                PropertyModel.of(getModel(), "value"))
         {
             private static final long serialVersionUID = 5475284956525780698L;
 
@@ -132,7 +132,8 @@ public class QualifierFeatureEditor
             protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
             {
                 return new ModelIteratorAdapter<LinkWithRoleModel>(
-                    (List<LinkWithRoleModel>) QualifierFeatureEditor.this.getModelObject().value)
+                        (List<LinkWithRoleModel>) QualifierFeatureEditor.this
+                                .getModelObject().value)
                 {
                     @Override
                     protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
@@ -153,7 +154,7 @@ public class QualifierFeatureEditor
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
-                    && state.isArmedSlot(getModelObject(), aItem.getIndex())) {
+                        && state.isArmedSlot(getModelObject(), aItem.getIndex())) {
                     label = new Label("label", "<Select to fill>");
                 }
                 else {
@@ -203,10 +204,11 @@ public class QualifierFeatureEditor
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
-                setVisible(!(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
-                    .feature.equals(state.getArmedFeature())));
+                setVisible(!(state.isSlotArmed()
+                        && QualifierFeatureEditor.this.getModelObject().feature
+                                .equals(state.getArmedFeature())));
                 // setEnabled(!(model.isSlotArmed()
                 // && aModel.feature.equals(model.getArmedFeature())));
             }
@@ -228,10 +230,11 @@ public class QualifierFeatureEditor
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
-                setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
-                    .feature.equals(state.getArmedFeature()));
+                setVisible(
+                        state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject().feature
+                                .equals(state.getArmedFeature()));
                 // setEnabled(model.isSlotArmed()
                 // && aModel.feature.equals(model.getArmedFeature()));
             }
@@ -252,10 +255,11 @@ public class QualifierFeatureEditor
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
-                setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
-                    .feature.equals(state.getArmedFeature()));
+                setVisible(
+                        state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject().feature
+                                .equals(state.getArmedFeature()));
             }
 
             @Override
@@ -275,16 +279,15 @@ public class QualifierFeatureEditor
     }
 
     private AutoCompleteTextField<KBHandle> createMentionKBLinkTextField(
-        Item<LinkWithRoleModel> aItem)
+            Item<LinkWithRoleModel> aItem)
     {
         AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
-        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> 
-            this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature)
-        );
+        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem),
+                (v) -> this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature));
 
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
-            qualifierModel, new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
+                qualifierModel, new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
         {
 
             private static final long serialVersionUID = 5683897252648514996L;
@@ -293,14 +296,14 @@ public class QualifierFeatureEditor
             protected List<KBHandle> getChoices(String input)
             {
                 return listInstances(actionHandler, input, linkedAnnotationFeature,
-                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
+                        aItem.getModelObject().label, aItem.getModelObject().targetAddr);
             }
 
             @Override
             public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
-                
+
                 behavior.setOption("autoWidth", true);
             }
 
@@ -317,16 +320,18 @@ public class QualifierFeatureEditor
         return field;
     }
 
-    private AnnotationFeature getLinkedAnnotationFeature() {
+    private AnnotationFeature getLinkedAnnotationFeature()
+    {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
-            .findLayer(this.stateModel.getObject().getProject(), linkedType);
+                .findLayer(this.stateModel.getObject().getProject(), linkedType);
         AnnotationFeature linkedAnnotationFeature = annotationService
-            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         return linkedAnnotationFeature;
     }
 
-    private KBHandle getSelectedKBItem(Item<LinkWithRoleModel> aItem) {
+    private KBHandle getSelectedKBItem(Item<LinkWithRoleModel> aItem)
+    {
         KBHandle selectedKBHandleItem = null;
         if (aItem.getModelObject().targetAddr != -1) {
             try {
@@ -334,8 +339,9 @@ public class QualifierFeatureEditor
                 CAS cas = actionHandler.getEditorCas();
                 int targetAddr = aItem.getModelObject().targetAddr;
                 selectedKBHandleItem = factService.getKBHandleFromCasByAddr(cas, targetAddr,
-                    project, traits);
-            } catch (Exception e) {
+                        project, traits);
+            }
+            catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
             }
@@ -344,7 +350,7 @@ public class QualifierFeatureEditor
     }
 
     private void setSelectedKBItem(KBHandle value, Item<LinkWithRoleModel> aItem,
-        AnnotationFeature linkedAnnotationFeature)
+            AnnotationFeature linkedAnnotationFeature)
     {
         if (aItem.getModelObject().targetAddr != -1) {
             try {
@@ -352,7 +358,7 @@ public class QualifierFeatureEditor
                 FeatureStructure selectedFS = selectFsByAddr(cas,
                         aItem.getModelObject().targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
-                    value != null ? value.getIdentifier() : value);
+                        value != null ? value.getIdentifier() : value);
                 LOG.info("change the value");
                 qualifierModel.detach();
 
@@ -371,9 +377,8 @@ public class QualifierFeatureEditor
         }
     }
 
-    private List<KBHandle> listInstances(AnnotationActionHandler aHandler,
-        String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabel, int
-        roleAddr)
+    private List<KBHandle> listInstances(AnnotationActionHandler aHandler, String aTypedString,
+            AnnotationFeature linkedAnnotationFeature, String roleLabel, int roleAddr)
     {
         if (linkedAnnotationFeature == null) {
             linkedAnnotationFeature = getLinkedAnnotationFeature();
@@ -397,7 +402,7 @@ public class QualifierFeatureEditor
             LOG.error("An error occurred while retrieving entity candidates.", e);
             error("An error occurred while retrieving entity candidates: " + e.getMessage());
             RequestCycle.get().find(IPartialPageRequestHandler.class)
-                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         return handles;
 
@@ -406,7 +411,7 @@ public class QualifierFeatureEditor
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
     {
         FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(aAnnotationFeature);
+                .getFeatureSupport(aAnnotationFeature);
         ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
         return traits;
     }
@@ -419,13 +424,14 @@ public class QualifierFeatureEditor
     private AutoCompleteTextField<KBProperty> createSelectPropertyAutoCompleteTextField()
     {
         AutoCompleteTextField<KBProperty> field = new AutoCompleteTextField<KBProperty>("newRole",
-            new PropertyModel<KBProperty>(this, "selectedRole"),
-            new TextRenderer<KBProperty>("uiLabel"), KBProperty.class)
+                new PropertyModel<KBProperty>(this, "selectedRole"),
+                new TextRenderer<KBProperty>("uiLabel"), KBProperty.class)
         {
 
             private static final long serialVersionUID = 1458626823154651501L;
 
-            @Override protected List<KBProperty> getChoices(String input)
+            @Override
+            protected List<KBProperty> getChoices(String input)
             {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
                 String repoId = traits.getRepositoryId();
@@ -443,7 +449,8 @@ public class QualifierFeatureEditor
                 behavior.setOption("autoWidth", true);
             }
 
-            @Override protected IJQueryTemplate newTemplate()
+            @Override
+            protected IJQueryTemplate newTemplate()
             {
                 return KendoChoiceDescriptionScriptReference.template();
             }
@@ -466,7 +473,7 @@ public class QualifierFeatureEditor
         }
         else {
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
-                .getModelObject().value;
+                    .getModelObject().value;
             AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
             LinkWithRoleModel m = new LinkWithRoleModel();
@@ -483,7 +490,7 @@ public class QualifierFeatureEditor
     private void actionSet(AjaxRequestTarget aTarget)
     {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
-            .getModelObject().value;
+                .getModelObject().value;
         AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
         // Update the slot
@@ -510,7 +517,7 @@ public class QualifierFeatureEditor
     private void actionDel(AjaxRequestTarget aTarget)
     {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
-            .getModelObject().value;
+                .getModelObject().value;
         AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
         links.remove(state.getArmedSlot());
@@ -550,7 +557,7 @@ public class QualifierFeatureEditor
     }
 
     public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
-                                       Exception aException)
+            Exception aException)
     {
         try {
             throw aException;

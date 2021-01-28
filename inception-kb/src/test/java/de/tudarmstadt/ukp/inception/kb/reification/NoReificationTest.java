@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,37 +47,37 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class NoReificationTest
 {
-    private static final String TURTLE_PREFIX = String.join("\n",
-            "@base <http://example.org/> .",
-            "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
-            "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
-            "@prefix so: <http://schema.org/> .",
+    private static final String TURTLE_PREFIX = String.join("\n", //
+            "@base <http://example.org/> .", //
+            "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .", //
+            "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .", //
+            "@prefix so: <http://schema.org/> .", //
             "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .");
-    
-    private static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n",
-            "<#green-goblin>",
-            "    rdfs:label 'Green Goblin' ;",
-            "    rdfs:label 'Green Goblin'@en ;",
-            "    rdfs:label 'Grüner Goblin'@de ;",
-            "    rdfs:label 'Goblin vert'@fr ;",
-            "    rdfs:comment 'Little green monster' ;",
-            "    rdfs:comment 'Little green monster'@en ;",
-            "    rdfs:comment 'Kleines grünes Monster'@de .",
-            "",
-            "<#lucky-green>",
-            "    rdfs:label 'Lucky Green' ;",
-            "    rdfs:label 'Lucky Green'@en ;",
-            "    rdfs:comment 'Lucky Irish charm' ;",
-            "    rdfs:comment 'Lucky Irish charm'@en .",
-            "",
-            "<#red-goblin>",
-            "    rdfs:label 'Red Goblin' ;",
+
+    private static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n", //
+            "<#green-goblin>", //
+            "    rdfs:label 'Green Goblin' ;", //
+            "    rdfs:label 'Green Goblin'@en ;", //
+            "    rdfs:label 'Grüner Goblin'@de ;", //
+            "    rdfs:label 'Goblin vert'@fr ;", //
+            "    rdfs:comment 'Little green monster' ;", //
+            "    rdfs:comment 'Little green monster'@en ;", //
+            "    rdfs:comment 'Kleines grünes Monster'@de .", //
+            "", //
+            "<#lucky-green>", //
+            "    rdfs:label 'Lucky Green' ;", //
+            "    rdfs:label 'Lucky Green'@en ;", //
+            "    rdfs:comment 'Lucky Irish charm' ;", //
+            "    rdfs:comment 'Lucky Irish charm'@en .", //
+            "", //
+            "<#red-goblin>", //
+            "    rdfs:label 'Red Goblin' ;", //
             "    rdfs:comment 'Little red monster' .");
-    
+
     private KnowledgeBase kb;
     private Repository rdf4jLocalRepo;
     private ReificationStrategy sut;
-    
+
     @Before
     public void setUp()
     {
@@ -86,9 +86,9 @@ public class NoReificationTest
         kb.setType(RepositoryType.LOCAL);
         kb.setFullTextSearchIri(null);
         kb.setMaxResults(1000);
-        
+
         initRdfsMapping();
-        
+
         // Local in-memory store - this should be used for most tests because we can
         // a) rely on its availability
         // b) import custom test data
@@ -97,37 +97,36 @@ public class NoReificationTest
         lucenesail.setBaseSail(new MemoryStore());
         rdf4jLocalRepo = new SailRepository(lucenesail);
         rdf4jLocalRepo.init();
-        
+
         sut = new NoReification();
     }
-    
+
     @Test
     public void thatItemCanBeObtainedAsStatements() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
-   
+
         List<KBStatement> result = listStatements(rdf4jLocalRepo,
                 new KBHandle("http://example.org/#green-goblin"));
-        
-        assertThat(result)
-                .extracting(stmt -> stmt.getInstance().getIdentifier())
+
+        assertThat(result) //
+                .extracting(stmt -> stmt.getInstance().getIdentifier()) //
                 .allMatch(id -> id.equals("http://example.org/#green-goblin"));
         assertThat(result).hasSize(7);
     }
-    
-    public List<KBStatement> listStatements(Repository aRepo, KBHandle aItem)
-        throws Exception
+
+    public List<KBStatement> listStatements(Repository aRepo, KBHandle aItem) throws Exception
     {
         try (RepositoryConnection conn = aRepo.getConnection()) {
             long startTime = System.currentTimeMillis();
-  
+
             List<KBStatement> results = sut.listStatements(conn, kb, aItem, true);
-  
+
             System.out.printf("Results : %d in %dms%n", results.size(),
                     System.currentTimeMillis() - startTime);
             results.forEach(r -> System.out.printf("          %s%n", r));
-  
+
             return results;
         }
     }
@@ -135,13 +134,13 @@ public class NoReificationTest
     private void importDataFromString(RDFFormat aFormat, String... aRdfData) throws IOException
     {
         String data = String.join("\n", aRdfData);
-        
+
         // Load files into the repository
         try (InputStream is = IOUtils.toInputStream(data, UTF_8)) {
             importData(aFormat, is);
         }
     }
-    
+
     private void importData(RDFFormat aFormat, InputStream aIS) throws IOException
     {
         try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
@@ -152,11 +151,11 @@ public class NoReificationTest
             conn.add(aIS, prefix, aFormat);
         }
     }
-    
+
     private void initRdfsMapping()
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        
+
         kb.setClassIri(RDFS.CLASS);
         kb.setSubclassIri(RDFS.SUBCLASSOF);
         kb.setTypeIri(RDF.TYPE);
@@ -165,7 +164,7 @@ public class NoReificationTest
         kb.setDescriptionIri(RDFS.COMMENT);
         // We are intentionally not using RDFS.LABEL here to ensure we can test the label
         // and property label separately
-        kb.setPropertyLabelIri(SKOS.PREF_LABEL);        
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
         // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
         // and property description separately
         kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));

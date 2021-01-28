@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,9 +30,15 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
-@Component
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SearchServiceAutoConfiguration#physicalIndexRegistry}.
+ * </p>
+ */
 public class PhysicalIndexRegistryImpl
     implements PhysicalIndexRegistry, BeanPostProcessor
 {
@@ -47,13 +53,13 @@ public class PhysicalIndexRegistryImpl
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<PhysicalIndexFactory> exts = new ArrayList<>();
@@ -61,16 +67,16 @@ public class PhysicalIndexRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (PhysicalIndexFactory fs : exts) {
                 log.info("Found index extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
-    
+
     @Override
     public List<PhysicalIndexFactory> getIndexFactories()
     {

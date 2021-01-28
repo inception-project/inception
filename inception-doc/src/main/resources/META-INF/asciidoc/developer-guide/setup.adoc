@@ -2,10 +2,14 @@
 // Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 // Technische Universität Darmstadt
 // 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -22,7 +26,7 @@ This section covers setting up a development environment.
 == Source code management
 
 We use git as our source code management system and collaborate via the {product-name}
-repository on Github.
+repository on https://github.com/inception-project/inception[Github].
 
 === Development workflow
 
@@ -100,7 +104,7 @@ Here is a brief summary of the formatting rules:
 This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
 procedure should be similar for other operation systems.  
 
-First, you need to follow some steps of the user [InstallationGuide installation guide]. 
+First, you need to follow some steps of the <<admin-guide.adoc#sect_installation,Administrator Installation Guide>>. 
 It is recommended to configure a MySQL-server.
 
 We recommend you start from a *Eclipse IDE for Java Developers* package.
@@ -129,14 +133,14 @@ C:/Program Files/Java/jdk1.8.0_144/jre/bin/server/jvm.dll
   New Software*, select "--All available sites--" and choose *Collaboration -> m2e - Maven Integration
   for Eclipse*
 
-* *Apache UIMA tools:* Update site: `http://www.apache.org/dist/uima/eclipse-update-site/`
+* *Apache UIMA tools:* go to *Help->Install New Software*, select "Add..." and add the update site: `http://www.apache.org/dist/uima/eclipse-update-site/` as a location. Install the *Apache UIMA Eclipse tooling and runtime support*.
 
 * *Eclipse Web Development Tooling:* go to *Help->Install New Software*, select "--All available
   sites--" and select the following plug-ins for installation from the section *Web, XML, Java EE
   and OSGi Enterprise Development*:
 ** Eclipse Java Web Developer Tools
 ** Eclipse Web Developer Tools
-** Eclipse XML Editors and Tools
+** Eclipse XML Editors and Tools: already comes pre-installed in newer eclipse versions
 ** JST Server Adapters
 ** JST Server Adapters Extensions
 ** JST Server UI
@@ -163,12 +167,12 @@ you have cloned {product-name}. Eclipse should automatically detect all modules.
 
 === Eclipse Tomcat Integration
 
-Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5). Then, you need to
+Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 9.0). Then, you need to
 add the Tomcat server to your runtime configuration. Go to preferences and go to
 *Servers -> Runtime environments*:
 
 When prompted for an installation path, specify the folder where you extracted (or installed) Apache
-Tomcat v8.5 into. 
+Tomcat v9.0 into. 
 
 Change the runtime configuration for the project. On the left side of the dialog, you should now be
 able to select Apache Tomcat. Change its VM arguments and include the definition 
@@ -203,8 +207,8 @@ Second, install the Checkstyle plugin for Eclipse as well as the Maven Checkstyl
 These plugins make Eclipse automatically pick up the checkstyle configuration from the Maven project
 and highlight formatting problems directly in the source code editor.
 
-* Install *Checkstyle Eclipse plugin* from here: `http://eclipse-cs.sourceforge.net`
-* Install the *Checkstyle configuration plugin for M2Eclipse* from here: `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
+* Install *Checkstyle Eclipse plugin*: `https://checkstyle.org/eclipse-cs/#!/install` e.g. via the update site: `https://checkstyle.org/eclipse-cs/update`.
+* Install the *Checkstyle configuration plugin for M2Eclipse*: via the update site `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
 * Select all {product-name} projects, right click and do a *Maven -> Update project*
 
 NOTE: Should the steps mentioned above not have been sufficient, close all the {product-name} projects
@@ -225,6 +229,13 @@ way is to go to `File -> Open` and the select the `pom.xml` in the {product-name
 IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
 INCEpTION can now be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
 
+If you get errors that certain classes are not found, then open a terminal, go to the INCEpTION
+repository root and run
+
+    mvn clean install -DskipTests=true -Dcheckstyle.skip=true
+
+Alternatively, you can run the `clean` and `install` Maven goals from IntelliJ manually.
+
 === Checkstyle and Formatting
 
 We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
@@ -238,11 +249,15 @@ check the box next to the newly created configuration and apply it as well.
 
 In order to achieve the same formatting and import order as Eclipse, install the
 https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter/versions[Eclipse Code Formatter].
-Download the https://dkpro.github.io/files/DKProCoreStyle_20170725.xml[DKPro Eclipse Code Style file].
+Download the https://dkpro.github.io/files/DKProStyle_latest.xml[DKPro Eclipse Code Style file].
 In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new profile using this
 file.
 
 Also make sure to enable auto import optimization in `File | Settings | Editor | General | Auto Import`.
+
+To format your source code on save, we also recommend to install the
+https://plugins.jetbrains.com/plugin/7642-save-actions[Save Actions] plugin and configure it
+accordingly.
 
 === IntelliJ IDEA Tomcat Integration
 
@@ -269,8 +284,8 @@ will be in `target/doc-out`.
 
 === Developing INCEpTION and webanno together
 
-INCEpTION builds on Webanno. Therefore, it can be desirable to work on Webanno and INCEpTION at the same time
-so that changes in Webanno are directly visible in your INCEpTION development. For this, check out Webanno from
+INCEpTION builds on WebAnno. Therefore, it can be desirable to work on WebAnno and INCEpTION at the same time
+so that changes in WebAnno are directly visible in your INCEpTION development. For this, check out WebAnno from
 Github. Then, import it as a Maven project: first, open the Maven sidebar on the right. Then, click on the `+`
-and select the Webanno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
+and select the WebAnno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
 make sure to check `Always update snapshots`.

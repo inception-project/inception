@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,18 +22,21 @@
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
-@Component("pdfEditor")
-@ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", 
-        matchIfMissing = true)
+/**
+ * Support for HTML-oriented editor component.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link PdfAnnotationEditorSupportAutoConfiguration#pdfAnnotationEditorFactory()}.
+ * </p>
+ */
 public class PdfAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
@@ -45,7 +52,7 @@ public class PdfAnnotationEditorFactory
     {
         return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
-    
+
     @Override
     public void initState(AnnotatorState aModelObject)
     {

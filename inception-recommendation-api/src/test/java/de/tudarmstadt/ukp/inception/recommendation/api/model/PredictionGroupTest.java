@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,8 +58,8 @@ public class PredictionGroupTest
         sut.add(rec2Sug2);
         assertThat(sut).hasSize(4);
         assertThat(sut).contains(rec2Sug2);
-    }    
-    
+    }
+
     @Test
     public void thatSortingWorks()
     {
@@ -69,20 +73,20 @@ public class PredictionGroupTest
                 0, 1, "d", "D", "#D", 0.3, "E3");
 
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
-        
+
         assertThat(sut)
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
-        
+
         assertThat(sut.stream())
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
-        
+
         assertThat(sut.iterator()).toIterable()
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
     }
-    
+
     @Test
     public void thatTopDeltasAreCorrect()
     {
@@ -96,7 +100,7 @@ public class PredictionGroupTest
                 0, 1, "d", "D", "#D", 0.3, "E3");
 
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
-                
+
         // Check that the deltas are ok
         Map<Long, Delta> topDeltas = sut.getTopDeltas();
         assertThat(topDeltas).hasSize(2);

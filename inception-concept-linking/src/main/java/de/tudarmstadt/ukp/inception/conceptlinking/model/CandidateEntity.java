@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,12 +41,12 @@ public class CandidateEntity
      * The query entered by the user.
      */
     public static final Key<String> KEY_QUERY = new Key<>("query");
-    
+
     /**
      * The mention in the text which is to be linked.
      */
     public static final Key<String> KEY_MENTION = new Key<>("mention");
-    
+
     /**
      * The context of the mention.
      */
@@ -94,9 +94,8 @@ public class CandidateEntity
     public static final Key<Integer> KEY_NUM_RELATIONS = new Key<>("numRelatedRelations", 0);
 
     /**
-     * number of related entities whose entity label occurs in <i>content tokens</i>
-     * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
-     * adjectives
+     * number of related entities whose entity label occurs in <i>content tokens</i> <i>Content
+     * tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or adjectives
      */
     public static final Key<Integer> KEY_SIGNATURE_OVERLAP_SCORE = new Key<>(
             "signatureOverlapScore", 0);
@@ -114,11 +113,11 @@ public class CandidateEntity
     private final KBHandle handle;
     private final ConcurrentHashMap<String, Object> features = new ConcurrentHashMap<>();
     private Locale locale;
-    
+
     public CandidateEntity(KBHandle aHandle)
     {
         handle = aHandle;
-        
+
         if (aHandle.getKB() == null || aHandle.getKB().getDefaultLanguage() == null) {
             locale = Locale.ENGLISH;
         }
@@ -131,12 +130,12 @@ public class CandidateEntity
             }
         }
     }
-    
+
     public KBHandle getHandle()
     {
         return handle;
     }
-    
+
     public Locale getLocale()
     {
         return locale;
@@ -184,7 +183,7 @@ public class CandidateEntity
         put(aKey, aValue);
         return this;
     }
-    
+
     @SuppressWarnings("unchecked")
     public <T> T put(Key<T> aKey, T aValue)
     {
@@ -195,7 +194,7 @@ public class CandidateEntity
             return (T) features.remove(aKey.name);
         }
     }
-    
+
     public Map<String, Object> getFeatures()
     {
         return unmodifiableMap(features);
@@ -210,13 +209,13 @@ public class CandidateEntity
         {
             this(aName, null);
         }
-        
+
         public Key(String aName, T aDefaultValue)
         {
             name = aName;
             defaultValue = aDefaultValue;
         }
-        
+
         public T getDefaultValue()
         {
             return defaultValue;

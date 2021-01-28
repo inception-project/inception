@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,9 +35,9 @@ import java.util.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -42,22 +46,27 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.config.WeblichtRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtChain;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WeblichtRecommenderAutoConfiguration#chainExporter}.
+ * </p>
+ */
 public class ChainExporter
     implements ProjectExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(ChainExporter.class);
 
     private static final String KEY = "weblicht-chains";
-    
+
     private static final String CHAINS_FOLDER = "weblicht-chains";
-    
 
     private final RecommendationService recommendationService;
     private final WeblichtChainService chainService;
-    
+
     @Autowired
     public ChainExporter(RecommendationService aRecommendationService,
             WeblichtChainService aChainService)
@@ -67,16 +76,18 @@ public class ChainExporter
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies() {
+    public List<Class<? extends ProjectExporter>> getImportDependencies()
+    {
         return asList(RecommenderExporter.class);
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception
     {
         Project project = aRequest.getProject();
-        
+
         List<ExportedWeblichtChain> exportedChains = new ArrayList<>();
         for (Recommender recommender : recommendationService.listRecommenders(project)) {
             Optional<WeblichtChain> optChain = chainService.getChain(recommender);
@@ -87,19 +98,18 @@ public class ChainExporter
                 exportedChain.setName(chain.getName());
                 exportedChain.setRecommender(recommender.getName());
                 exportedChains.add(exportedChain);
-                
+
                 File targetFolder = new File(aStage, CHAINS_FOLDER);
                 targetFolder.mkdirs();
-                
+
                 Files.copy(chainService.getChainFile(chain).toPath(),
                         new File(targetFolder, chain.getId() + ".xml").toPath());
             }
         }
-        
+
         aExProject.setProperty(KEY, exportedChains);
-        
-        LOG.info("Exported [{}] chains for project [{}]", exportedChains.size(),
-                project.getName());
+
+        LOG.info("Exported [{}] chains for project [{}]", exportedChains.size(), project.getName());
     }
 
     @Override
@@ -109,23 +119,22 @@ public class ChainExporter
     {
         ExportedWeblichtChain[] exportedChains = aExProject.getArrayProperty(KEY,
                 ExportedWeblichtChain.class);
-        
+
         for (ExportedWeblichtChain exportedChain : exportedChains) {
             Recommender recommender = recommendationService
                     .getRecommender(aProject, exportedChain.getRecommender()).get();
-            
+
             WeblichtChain chain = new WeblichtChain();
             chain.setName(exportedChain.getName());
             chain.setRecommender(recommender);
             chainService.createOrUpdateChain(chain);
-            
-            ZipEntry entry = aZip
-                    .getEntry(CHAINS_FOLDER + "/" + exportedChain.getId() + ".xml");
+
+            ZipEntry entry = aZip.getEntry(CHAINS_FOLDER + "/" + exportedChain.getId() + ".xml");
             try (InputStream is = aZip.getInputStream(entry)) {
                 chainService.importChainFile(chain, is);
             }
         }
-        
+
         LOG.info("Imported [{}] chains for project [{}]", exportedChains.length,
                 aProject.getName());
     }
