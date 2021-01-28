@@ -28,7 +28,9 @@ import java.util.Optional;
 import javax.swing.JWindow;
 import javax.validation.Validator;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
+import org.apache.catalina.webresources.StandardRoot;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,6 +39,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -69,7 +72,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 // @formatter:off
-@SpringBootApplication
+@SpringBootApplication // (exclude = {ErrorMvcAutoConfiguration.class})
 @EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(
@@ -119,11 +122,40 @@ public class INCEpTION
     @Value("${server.ajp.address:127.0.0.1}")
     private String ajpAddress;
 
+    // @Bean
+    // public ErrorPageRegistrar errorPageRegistrar()
+    // {
+    // return new ErrorPageRegistrar()
+    // {
+    // @Override
+    // public void registerErrorPages(final ErrorPageRegistry registry)
+    // {
+    // registry.addErrorPages(new ErrorPage("/whoops"));
+    // }
+    // };
+    // }
+
     @Bean
     @Primary
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
+    }
+
+    @Bean
+    public ErrorController errorController()
+    {
+        // Disable default error controller so that Wicket can take over
+        return new ErrorController()
+        {
+            @Deprecated
+            @Override
+            public String getErrorPath()
+            {
+                return null;
+            }
+
+        };
     }
 
     @Bean
@@ -154,13 +186,24 @@ public class INCEpTION
     @Bean
     public TomcatServletWebServerFactory servletContainer()
     {
-        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory()
+        {
+            @Override
+            protected void postProcessContext(Context context)
+            {
+                final int maxCacheSize = 40 * 1024;
+                StandardRoot standardRoot = new StandardRoot(context);
+                standardRoot.setCacheMaxSize(maxCacheSize);
+                context.setResources(standardRoot);
+            }
+        };
+
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
-            ajpConnector.setAttribute("secretRequired", ajpSecretRequired);
-            ajpConnector.setAttribute("secret", ajpSecret);
-            ajpConnector.setAttribute("address", ajpAddress);
+            ajpConnector.setProperty("secretRequired", ajpSecretRequired);
+            ajpConnector.setProperty("secret", ajpSecret);
+            ajpConnector.setProperty("address", ajpAddress);
             factory.addAdditionalTomcatConnectors(ajpConnector);
         }
         return factory;
