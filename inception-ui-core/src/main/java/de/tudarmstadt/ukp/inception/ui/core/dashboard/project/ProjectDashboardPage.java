@@ -36,6 +36,9 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -43,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
@@ -62,11 +66,12 @@ public class ProjectDashboardPage
 {
     // Page parameters
     public static final String PAGE_PARAM_PROJECT_ID = "p";
-
+    
     private static final long serialVersionUID = -2487663821276301436L;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectDashboardPage.class);
 
     private @SpringBean ProjectService projectService;
-    private @SpringBean InviteService inviteService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
 
@@ -82,8 +87,9 @@ public class ProjectDashboardPage
         
         // Compare invite param to invite id in db, if correct add user to project
         StringValue inviteId = aPageParameters.get(PAGE_PARAM_INVITE_ID);
-        if (inviteService.isValidInviteLink(projectId, inviteId.toOptionalString())) {
-            project = projectService.getProject(projectId);
+        InviteService inviteService = initInviteService();
+        if (inviteService != null && (project = projectService.getProject(projectId)) != null &&
+                inviteService.isValidInviteLink(project, inviteId.toOptionalString())) {
             projectService.setProjectPermissionLevels(currentUser, project,
                     Arrays.asList(PermissionLevel.ANNOTATOR));
         }
@@ -102,6 +108,23 @@ public class ProjectDashboardPage
         Session.get().setMetaData(CURRENT_PROJECT, project);
 
         commonInit();
+    }
+
+    /**
+     * InviteService might be not enabled, check before injecting the bean
+     */
+    private InviteService initInviteService()
+    {
+        InviteService inviteService;
+        try {
+            inviteService = ApplicationContextProvider.getApplicationContext()
+                    .getBean(InviteService.class);
+        }
+        catch (NoSuchBeanDefinitionException e) {
+            LOG.debug("InviteService bean is not configured.");
+            return null;
+        }
+        return inviteService;
     }
 
     public ProjectDashboardPage()

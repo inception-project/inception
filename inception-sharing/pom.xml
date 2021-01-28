@@ -30,17 +30,36 @@
   		<artifactId>webanno-model</artifactId>
   	</dependency>
   	<dependency>
+  		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+  		<artifactId>webanno-support</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+  		<artifactId>webanno-ui-core</artifactId>
+  	</dependency>
+  	<dependency>
   		<groupId>javax.persistence</groupId>
   		<artifactId>javax.persistence-api</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>javax.servlet</groupId>
+  		<artifactId>javax.servlet-api</artifactId>
   	</dependency>
   	<dependency>
   		<groupId>org.springframework</groupId>
   		<artifactId>spring-tx</artifactId>
   	</dependency>
   	<dependency>
-  		<groupId>org.wicketstuff</groupId>
-  		<artifactId>wicketstuff-clipboardjs</artifactId>
-  		<version>9.2.0</version>
+  		<groupId>org.springframework</groupId>
+  		<artifactId>spring-context</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.springframework</groupId>
+  		<artifactId>spring-core</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.springframework.boot</groupId>
+  		<artifactId>spring-boot-autoconfigure</artifactId>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.wicket</groupId>
@@ -48,31 +67,24 @@
   	</dependency>
   	<dependency>
   		<groupId>org.apache.wicket</groupId>
-  		<artifactId>wicket-spring</artifactId>
+  		<artifactId>wicket-core</artifactId>
   	</dependency>
   	<dependency>
-  		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-  		<artifactId>webanno-api</artifactId>
+  		<groupId>org.apache.wicket</groupId>
+  		<artifactId>wicket-spring</artifactId>
   	</dependency>
   	<dependency>
   		<groupId>org.danekja</groupId>
   		<artifactId>jdk-serializable-functional</artifactId>
   	</dependency>
   	<dependency>
-  		<groupId>org.springframework</groupId>
-  		<artifactId>spring-context</artifactId>
-  	</dependency>
-  	<dependency>
   		<groupId>org.apache.commons</groupId>
   		<artifactId>commons-lang3</artifactId>
   	</dependency>
   	<dependency>
-  		<groupId>org.apache.wicket</groupId>
-  		<artifactId>wicket-core</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-  		<artifactId>webanno-support</artifactId>
+  		<groupId>org.wicketstuff</groupId>
+  		<artifactId>wicketstuff-clipboardjs</artifactId>
+  		<version>${wicketstuff-clipboardjs.version}</version>
   	</dependency>
   </dependencies>
 </project>

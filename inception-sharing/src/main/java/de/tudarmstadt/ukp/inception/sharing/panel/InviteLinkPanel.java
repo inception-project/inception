@@ -17,69 +17,45 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.panel;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
-import org.apache.wicket.Page;
+import javax.servlet.ServletContext;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 
 public class InviteLinkPanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 947691448582391801L;
     
     public static final String PAGE_PARAM_INVITE_ID = "i";
 
     private @SpringBean InviteService inviteService;
+    private @SpringBean ServletContext servletContext;
 
     private final WebMarkupContainer inviteLinkContainer;
-    private final WebMarkupContainer linkMainContainer;
     private TextField<String> linkField;
-    private IModel<Class<? extends Page>> baseUrlClass;
 
-    public InviteLinkPanel(String aId, IModel<Project> aProjectModel, IModel<Class<? extends Page>> aBaseUrlClass)
+    public InviteLinkPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
-        baseUrlClass = aBaseUrlClass;
-
-        linkMainContainer = new WebMarkupContainer("linkMainContainer");
-        linkMainContainer.setOutputMarkupId(true);
-        add(linkMainContainer);
 
         inviteLinkContainer = createInviteLinkContainer();
-        inviteLinkContainer.add(visibleWhen(() -> linkField.getModelObject() != null));
         inviteLinkContainer.setOutputMarkupId(true);
-        linkMainContainer.add(inviteLinkContainer);
-
-        AjaxLink<Void> shareBtn = new AjaxLink<>("shareProject")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                shareProject();
-                aTarget.add(linkMainContainer);
-            }
-
-        };
-        shareBtn.add(visibleWhen(() -> !inviteLinkContainer.isVisible()));
-        linkMainContainer.add(shareBtn);
+        add(inviteLinkContainer);
     }
 
     private WebMarkupContainer createInviteLinkContainer()
@@ -95,60 +71,36 @@ public class InviteLinkPanel
         clipboardBehavior.setTarget(linkField);
         copyBtn.add(clipboardBehavior);
         linkContainer.add(copyBtn);
-        AjaxLink<Void> regenBtn = new AjaxLink<>("regen")
-        {
-
-            private static final long serialVersionUID = 8558630925669881073L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                shareProject();
-                aTarget.add(linkContainer);
-            }
-
-        };
-        linkContainer.add(regenBtn);;
-        AjaxLink<Void> removeBtn = new AjaxLink<>("remove")
-        {
-            private static final long serialVersionUID = 4847153359605500314L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                removeInviteLink();
-                aTarget.add(linkMainContainer);
-            }
-
-        };
+        LambdaAjaxLink regenBtn = new LambdaAjaxLink("regen", this::actionShareProject);
+        linkContainer.add(regenBtn);
+        LambdaAjaxLink removeBtn = new LambdaAjaxLink("remove", this::actionRemoveInviteLink);
         linkContainer.add(removeBtn);
         return linkContainer;
     }
 
-    private void shareProject()
+    private void actionShareProject(AjaxRequestTarget aTarget)
     {
-        inviteService.generateInviteID(((Project) getDefaultModel().getObject()));
+        inviteService.generateInviteID(getModelObject());
+        aTarget.add(inviteLinkContainer);
     }
 
-    private void removeInviteLink()
+    private void actionRemoveInviteLink(AjaxRequestTarget aTarget)
     {
-        inviteService.removeInviteID(((Project) getDefaultModel().getObject()));
+        inviteService.removeInviteID(getModelObject());
+        aTarget.add(inviteLinkContainer);
     }
 
     private String getInviteLink()
     {
-        Long projectId = ((Project) getDefaultModel().getObject()).getId();
-        String inviteId = inviteService.getValidInviteID(projectId);
+        String inviteId = inviteService.getValidInviteID(getModelObject());
 
         if (inviteId == null) {
             return null;
         }
 
-        PageParameters pageParams = new PageParameters();
-        pageParams.add(PAGE_PARAM_INVITE_ID, inviteId);
-        pageParams.add(PAGE_PARAM_PROJECT_ID, projectId);
-        String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(
-                Url.parse(RequestCycle.get().urlFor(baseUrlClass.getObject(), pageParams)));
+        Url inviteUrl = Url.parse(String.format("%s/project/%s/%s", servletContext.getContextPath(),
+                getModelObject().getId(), inviteId));
+        String fullUrl =  RequestCycle.get().getUrlRenderer().renderFullUrl(inviteUrl);
         return fullUrl;
     }
 

@@ -24,7 +24,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -33,8 +32,6 @@ import com.github.rjeschke.txtmark.Processor;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.sharing.panel.InviteLinkPanel;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 public class CurrentProjectDashlet
     extends Dashlet_ImplBase
@@ -66,11 +63,6 @@ public class CurrentProjectDashlet
         boolean isManager = projectService.isManager(getModelObject(), userRepository.getCurrentUser());
         name.setEnabled(isManager);
         add(name);
-
-        InviteLinkPanel invitePanel = new InviteLinkPanel("inviteLinkPanel", aCurrentProject,
-                Model.of(ProjectDashboardPage.class));
-        invitePanel.setVisible(isManager);
-        add(invitePanel);
 
         add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription))
                 .setEscapeModelStrings(false));

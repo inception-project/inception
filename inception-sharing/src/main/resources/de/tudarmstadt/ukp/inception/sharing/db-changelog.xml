@@ -20,15 +20,17 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-  <changeSet author="INCEpTION Team" id="20210114-5">
+  <changeSet author="INCEpTION Team" id="20210128-10">
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="project_invite" />
       </not>
     </preConditions>
     <createTable tableName="project_invite">
-      <column name="projectId" type="BIGINT">
-        <constraints primaryKey="true"/>
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="project" type="BIGINT">
       </column>
       <column name="inviteId" type="VARCHAR(255)">
         <constraints nullable="false"/>

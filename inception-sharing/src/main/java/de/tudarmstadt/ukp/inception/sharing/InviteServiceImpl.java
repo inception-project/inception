@@ -27,24 +27,24 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
+@ConditionalOnProperty(prefix = "sharing", name = "enabled", havingValue = "true")
 public class InviteServiceImpl
     implements InviteService
 {
     private @PersistenceContext EntityManager entityManager;
 
     private final SecureRandom random;
-    private final Base64.Encoder urlEncoder;
 
     public InviteServiceImpl()
     {
         random = new SecureRandom();
-        urlEncoder = Base64.getUrlEncoder().withoutPadding();
     }
 
     public InviteServiceImpl(EntityManager aEntitymanager)
@@ -65,9 +65,10 @@ public class InviteServiceImpl
         // generate id
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
-        String inviteID = urlEncoder.encodeToString(bytes);
+        String inviteID = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 
-        entityManager.merge(new ProjectInvite(aProject.getId(), inviteID, expirationDate));
+        removeInviteID(aProject);
+        entityManager.persist(new ProjectInvite(aProject, inviteID, expirationDate));
 
         return inviteID;
     }
@@ -89,9 +90,10 @@ public class InviteServiceImpl
     {
         Validate.notNull(aProject, "Project must be given");
 
-        String query = "FROM ProjectInvite " + "WHERE projectId = :project";
+        String query = "FROM ProjectInvite " //
+                + "WHERE project = :givenProject";
         List<ProjectInvite> inviteIDs = entityManager.createQuery(query, ProjectInvite.class)
-                .setParameter("project", aProject.getId()).getResultList();
+                .setParameter("givenProject", aProject).getResultList();
 
         if (inviteIDs.isEmpty()) {
             return null;
@@ -100,14 +102,17 @@ public class InviteServiceImpl
     }
 
     @Override
-    public String getValidInviteID(Long aProjectId)
+    public String getValidInviteID(Project aProject)
     {
-        Validate.notNull(aProjectId, "Project ID must be given");
+        Validate.notNull(aProject, "Project must be given");
 
-        String query = "SELECT p.inviteId FROM ProjectInvite p " + "WHERE p.projectId = :project "
+        String query = "SELECT p.inviteId FROM ProjectInvite p " //
+                + "WHERE p.project = :givenProject " //
                 + "AND p.expirationDate > :now";
         List<String> inviteIDs = entityManager.createQuery(query, String.class)
-                .setParameter("project", aProjectId).setParameter("now", new Date().getTime())
+                .setParameter("givenProject", aProject) //
+                .setParameter("now", new Date().getTime()) //
+                .setMaxResults(1) //
                 .getResultList();
 
         if (inviteIDs.isEmpty()) {
@@ -117,12 +122,12 @@ public class InviteServiceImpl
     }
 
     @Override
-    public boolean isValidInviteLink(Long aProjectId, String aInviteId)
+    public boolean isValidInviteLink(Project aProject, String aInviteId)
     {
         if (aInviteId == null) {
             return false;
         }
-        String expectedId = getValidInviteID(aProjectId);
+        String expectedId = getValidInviteID(aProject);
         return expectedId != null && aInviteId.equals(expectedId);
     }
 

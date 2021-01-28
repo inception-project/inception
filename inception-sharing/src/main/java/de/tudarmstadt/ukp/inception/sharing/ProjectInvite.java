@@ -17,27 +17,43 @@
  */
 package de.tudarmstadt.ukp.inception.sharing;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Entity
 @Table(name = "project_invite")
-public class ProjectInvite
-{
-    @Id
-    @Column(nullable = false)
-    private Long projectId;
+public class ProjectInvite implements Serializable
+{        
+    private static final long serialVersionUID = -2795919324253421263L;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @OneToOne
+    @JoinColumn(name = "project")
+    private Project project;
+
+    @Column(nullable = false)
     private String inviteId;
 
+    @Column(nullable = false)
     private long expirationDate;
 
-    public ProjectInvite(Long aProjectId, String aInviteId, long aExpirationDate)
+    public ProjectInvite(Project aProject, String aInviteId, long aExpirationDate)
     {
         super();
-        projectId = aProjectId;
+        project = aProject;
         inviteId = aInviteId;
         expirationDate = aExpirationDate;
     }
@@ -47,14 +63,9 @@ public class ProjectInvite
         // constructor for JPA
     }
 
-    public Long getProjectId()
+    public Project getProject()
     {
-        return projectId;
-    }
-
-    public void setProjectId(Long aProjectId)
-    {
-        projectId = aProjectId;
+        return project;
     }
 
     public String getInviteId()
@@ -75,6 +86,56 @@ public class ProjectInvite
     public void setExpirationDate(long aExpirationDate)
     {
         expirationDate = aExpirationDate;
+    }
+
+    public void setProject(Project aProject)
+    {
+        project = aProject;
+    }
+    
+    public Long getId()
+    {
+        return id;
+    }
+
+    public void setId(Long aId)
+    {
+        id = aId;
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((inviteId == null) ? 0 : inviteId.hashCode());
+        result = prime * result + ((project == null) ? 0 : project.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ProjectInvite other = (ProjectInvite) obj;
+        if (inviteId == null) {
+            if (other.inviteId != null)
+                return false;
+        }
+        else if (!inviteId.equals(other.inviteId))
+            return false;
+        if (project == null) {
+            if (other.project != null)
+                return false;
+        }
+        else if (!project.equals(other.project))
+            return false;
+        return true;
     }
 
 }

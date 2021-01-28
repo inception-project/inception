@@ -40,15 +40,15 @@ public interface InviteService
     /**
      * Get invite id for given project if it exists and has expired yet
      * 
-     * @param aProjectId
-     *            identifies the project
+     * @param aProject
+     *            the given project
      */
-    String getValidInviteID(Long aProjectId);
+    String getValidInviteID(Project aProject);
     
     /**
      * Check if given invite ID is valid for the given project
-     * @param aProjectId id for the reelvant project
+     * @param aProject the relevant project
      * @param aInviteId invite Id to check
      */
-    boolean isValidInviteLink(Long aProjectId, String aInviteId);
+    boolean isValidInviteLink(Project aProject, String aInviteId);
 }
