@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +56,7 @@ public class Recommender
     implements Serializable
 {
     private static final long serialVersionUID = 7748907568404136301L;
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -66,29 +70,29 @@ public class Recommender
     @ManyToOne
     @JoinColumn(name = "layer", nullable = false)
     private AnnotationLayer layer;
-    
+
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     @JoinColumn(name = "feature", nullable = false)
     private AnnotationFeature feature;
-    
+
     private String name;
-    
+
     private String tool;
-    
+
     private double threshold;
-    
+
     private boolean alwaysSelected;
 
     private boolean skipEvaluation;
 
     private boolean enabled = true;
-    
+
     private int maxRecommendations;
 
     /**
-     * Only documents that have an annotation state not contained in this list are
-     * used for training.
+     * Only documents that have an annotation state not contained in this list are used for
+     * training.
      */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "recommender_ignored_document_states")
@@ -99,12 +103,12 @@ public class Recommender
     @Lob
     @Column(length = 64000)
     private String traits;
-    
+
     public Recommender()
     {
         // Nothing to do
     }
-    
+
     public Recommender(String aName, AnnotationLayer aLayer)
     {
         name = aName;
@@ -121,7 +125,7 @@ public class Recommender
     {
         id = aId;
     }
-    
+
     public String getName()
     {
         return name;
@@ -151,7 +155,7 @@ public class Recommender
     {
         layer = aLayer;
     }
-    
+
     public AnnotationFeature getFeature()
     {
         return feature;
@@ -211,7 +215,7 @@ public class Recommender
     {
         enabled = aEnabled;
     }
-    
+
     public int getMaxRecommendations()
     {
         return maxRecommendations;
@@ -252,8 +256,7 @@ public class Recommender
             return false;
         }
         Recommender that = (Recommender) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(name, that.name);
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name);
     }
 
     @Override

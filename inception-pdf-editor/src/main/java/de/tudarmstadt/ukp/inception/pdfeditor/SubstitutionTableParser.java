@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,8 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * Parse substitutionTable.xml and create a map
  */
-public class SubstitutionTableParser extends DefaultHandler
+public class SubstitutionTableParser
+    extends DefaultHandler
 {
 
     private Map<String, String> substitutionTable = new HashMap<>();
@@ -38,7 +39,8 @@ public class SubstitutionTableParser extends DefaultHandler
     {
         if (qName.equals("substitutionTable")) {
             inTable = true;
-        } else if (inTable && qName.equals("substitution")) {
+        }
+        else if (inTable && qName.equals("substitution")) {
             String orig = attributes.getValue("orig");
             String subst = attributes.getValue("subst");
             substitutionTable.put(orig, subst);
@@ -53,7 +55,8 @@ public class SubstitutionTableParser extends DefaultHandler
         }
     }
 
-    public Map<String, String> getSubstitutionTable() {
+    public Map<String, String> getSubstitutionTable()
+    {
         return substitutionTable;
     }
 }

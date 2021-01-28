@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,8 +24,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.Lapp
 import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.POS_LAYER;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -33,12 +31,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.config.LappsGridRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 
-@Component
-@ConditionalOnProperty(prefix = "recommenders.lappsgrid", name = "enabled",
-        matchIfMissing = true)
+/**
+ * Provides support for calling out to LAPPS Grid for recommendations.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link LappsGridRecommenderAutoConfiguration#lappsGridRecommenderFactory()}.
+ * </p>
+ */
 public class LappsGridRecommenderFactory
     extends RecommendationEngineFactoryImplBase<LappsGridRecommenderTraits>
 {
@@ -79,8 +82,8 @@ public class LappsGridRecommenderFactory
         boolean isNer = NER_LAYER.equals(layer) && NER_FEATURE.equals(feature);
         boolean isPos = POS_LAYER.equals(layer) && POS_FEATURE.equals(feature);
 
-        return (isNer && anchoring == AnchoringMode.TOKENS) ||
-               (isPos && anchoring == AnchoringMode.SINGLE_TOKEN);
+        return (isNer && anchoring == AnchoringMode.TOKENS)
+                || (isPos && anchoring == AnchoringMode.SINGLE_TOKEN);
     }
 
     @Override

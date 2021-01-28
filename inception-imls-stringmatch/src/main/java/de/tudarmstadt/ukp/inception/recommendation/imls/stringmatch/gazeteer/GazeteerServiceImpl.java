@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -39,52 +42,49 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link StringMatchingRecommenderAutoConfiguration#gazeteerService}.
+ * </p>
+ */
 public class GazeteerServiceImpl
     implements GazeteerService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    @PersistenceContext
-    private EntityManager entityManager;
-    
-    private final RepositoryProperties repositoryProperties;
-    
-    @Autowired
-    public GazeteerServiceImpl(RepositoryProperties aRepositoryProperties)
-    {
-        repositoryProperties = aRepositoryProperties;
-    }    
 
+    private final EntityManager entityManager;
+
+    private final RepositoryProperties repositoryProperties;
+
+    @Autowired
     public GazeteerServiceImpl(RepositoryProperties aRepositoryProperties,
             EntityManager aEntityManager)
     {
-        this(aRepositoryProperties);
+        repositoryProperties = aRepositoryProperties;
         entityManager = aEntityManager;
     }
-    
+
     @Override
     @Transactional
     public List<Gazeteer> listGazeteers(Recommender aRecommender)
     {
-        String query = String.join("\n", 
-                "FROM Gazeteer",
-                "WHERE recommender = :recommender ",
+        String query = String.join("\n", //
+                "FROM Gazeteer", //
+                "WHERE recommender = :recommender ", //
                 "ORDER BY name ASC");
-        
-        return entityManager
-                .createQuery(query, Gazeteer.class)
-                .setParameter("recommender", aRecommender)
-                .getResultList();
+
+        return entityManager.createQuery(query, Gazeteer.class)
+                .setParameter("recommender", aRecommender).getResultList();
     }
 
     @Override
@@ -93,7 +93,7 @@ public class GazeteerServiceImpl
     {
         if (aGazeteer.getId() == null) {
             entityManager.persist(aGazeteer);
-            
+
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
                 log.info("Created gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
@@ -105,7 +105,7 @@ public class GazeteerServiceImpl
         }
         else {
             entityManager.merge(aGazeteer);
-            
+
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
                 log.info("Updated gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
@@ -122,11 +122,11 @@ public class GazeteerServiceImpl
     public void importGazeteerFile(Gazeteer aGazeteer, InputStream aStream) throws IOException
     {
         File gazFile = getGazeteerFile(aGazeteer);
-        
+
         if (!gazFile.getParentFile().exists()) {
             gazFile.getParentFile().mkdirs();
         }
-        
+
         try (OutputStream os = new FileOutputStream(gazFile)) {
             IOUtils.copyLarge(aStream, os);
         }
@@ -135,12 +135,9 @@ public class GazeteerServiceImpl
     @Override
     public File getGazeteerFile(Gazeteer aGazeteer) throws IOException
     {
-        return repositoryProperties.getPath().toPath()
-                .resolve("project")
+        return repositoryProperties.getPath().toPath().resolve("project")
                 .resolve(String.valueOf(aGazeteer.getRecommender().getProject().getId()))
-                .resolve("gazeteer")
-                .resolve(aGazeteer.getId() + ".txt")
-                .toFile();
+                .resolve("gazeteer").resolve(aGazeteer.getId() + ".txt").toFile();
     }
 
     @Override
@@ -149,12 +146,12 @@ public class GazeteerServiceImpl
     {
         entityManager.remove(
                 entityManager.contains(aGazeteer) ? aGazeteer : entityManager.merge(aGazeteer));
-        
+
         File gaz = getGazeteerFile(aGazeteer);
         if (gaz.exists()) {
             gaz.delete();
         }
-        
+
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
             log.info("Removed gazeteer [{}] from recommender [{}]({}) in project [{}]({})",
@@ -164,22 +161,21 @@ public class GazeteerServiceImpl
                     aGazeteer.getRecommender().getProject().getId());
         }
     }
-    
+
     @Override
-    public List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz)
-        throws IOException
+    public List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz) throws IOException
     {
         File file = getGazeteerFile(aGaz);
-        
+
         List<GazeteerEntry> data = new ArrayList<>();
-        
+
         try (InputStream is = new FileInputStream(file)) {
             parseGazeteer(aGaz, is, data);
         }
-        
+
         return data;
     }
-    
+
     public void parseGazeteer(Gazeteer aGaz, InputStream aStream, List<GazeteerEntry> aTarget)
         throws IOException
     {
@@ -188,12 +184,12 @@ public class GazeteerServiceImpl
         while (i.hasNext()) {
             lineNumber++;
             String line = i.nextLine().trim();
-            
+
             if (line.isEmpty() || line.startsWith("#")) {
                 // Ignore comment lines and empty lines
                 continue;
             }
-            
+
             String[] fields = line.split("\t");
             if (fields.length == 2) {
                 String text = trimToNull(fields[0]);
@@ -208,23 +204,21 @@ public class GazeteerServiceImpl
             }
         }
     }
-    
+
     @Override
     @Transactional
     public boolean existsGazeteer(Recommender aRecommender, String aName)
     {
         Validate.notNull(aRecommender, "Recommender must be specified");
         Validate.notNull(aName, "Gazeteer name must be specified");
-        
-        String query = 
-                "SELECT COUNT(*) " +
-                "FROM Gazeteer " + 
+
+        String query = "SELECT COUNT(*) " + //
+                "FROM Gazeteer " + //
                 "WHERE recommender = :recommender AND name = :name";
-        
+
         long count = entityManager.createQuery(query, Long.class)
-            .setParameter("recommender", aRecommender)
-            .setParameter("name", aName)
-            .getSingleResult();
+                .setParameter("recommender", aRecommender).setParameter("name", aName)
+                .getSingleResult();
 
         return count > 0;
     }

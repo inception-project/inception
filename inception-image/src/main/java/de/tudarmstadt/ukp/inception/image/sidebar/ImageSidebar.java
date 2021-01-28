@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,7 +78,7 @@ public class ImageSidebar
     private static final long serialVersionUID = -6367010242201414871L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ImageSidebar.class);
-    
+
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
@@ -104,28 +104,29 @@ public class ImageSidebar
             {
                 item.add(new ExternalLink("open", item.getModelObject().getUrl()));
                 LambdaAjaxLink jumpToLink = new LambdaAjaxLink("jumpTo",
-                    _target -> actionJumpTo(_target, item.getModelObject()));
+                        _target -> actionJumpTo(_target, item.getModelObject()));
                 item.add(jumpToLink);
                 jumpToLink.add(new ExternalImage("image", item.getModelObject().getUrl()));
             }
         };
         images.setModel(LoadableDetachableModel.of(this::listImageUrls));
-        
+
         mainContainer.add(images);
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         aResponse.render(JavaScriptHeaderItem.forReference(
                 new WebjarsJavaScriptResourceReference("color-thief/current/js/color-thief.js")));
         aResponse.render(OnDomReadyHeaderItem.forScript(colorScript()));
     }
-    
+
     private String colorScript()
     {
+        // @formatter:off
         return String.join("\n",
                 "function getColorCache() {",
                 "  var cacheHolder = window;",
@@ -165,7 +166,7 @@ public class ImageSidebar
                 "  img.src = '';",
                 "  img.src = x;",
                 "  var warning = `",
-                "    <div style='position: absolute; top: 5px; left: 5px;' class='showOnHover'>", 
+                "    <div style='position: absolute; top: 5px; left: 5px;' class='showOnHover'>",
                 "      <span class='btn btn-xs btn-default'>",
                 "        <i class='fa fa-exclamation-triangle' style='color: orange;' aria-hidden='true'",
                 "          title='Remote server may not permit cross-domain resource access which prevents automatic setting of image border color.'>",
@@ -181,7 +182,7 @@ public class ImageSidebar
                 // Make sure image data is actually available before trying to fetch it to calculate
                 // the background color
                 "  if (img.complete) {",
-                //   Check if the image has been properly loaded and if not try without CORS
+                // Check if the image has been properly loaded and if not try without CORS
                 "    if (typeof img.naturalWidth != 'undefined' && img.naturalWidth == 0) {",
                 "      fallbackToNonCors(img);",
                 "    }",
@@ -191,19 +192,20 @@ public class ImageSidebar
                 "  }",
                 "  else {",
                 "    img.addEventListener('load', () => updateImageBackground(img));",
-                //   If the image cannot be loaded it may be due to CORS - so try without
+                // If the image cannot be loaded it may be due to CORS - so try without
                 "    img.addEventListener('error', () => fallbackToNonCors(img));",
                 "  }",
                 "});",
                 "console.debug('Calculating image border color took ' + ",
                 "  (new Date().getTime() - startTime) + 'ms');");
+        // @formatter:on
     }
-    
+
     private List<ImageHandle> listImageUrls()
     {
         AnnotatorState state = getModelObject();
         Project project = state.getProject();
-        
+
         // Get the CAS
         CAS cas;
         try {
@@ -218,7 +220,7 @@ public class ImageSidebar
         // Collect all image features
         List<AnnotationFeature> imageFeatures = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
-            for (AnnotationFeature feat : annotationService.listAnnotationFeature(layer)) {
+            for (AnnotationFeature feat : annotationService.listSupportedFeatures(layer)) {
                 if (feat.getType().startsWith(ImageFeatureSupport.PREFIX)) {
                     imageFeatures.add(feat);
                 }
@@ -230,45 +232,45 @@ public class ImageSidebar
         TypeSystem ts = cas.getTypeSystem();
         for (AnnotationFeature feat : imageFeatures) {
             Type t = getType(cas, feat.getLayer().getName());
-            
+
             // We only consider images that are annotated at the text level
             if (!ts.subsumes(cas.getAnnotationType(), t)) {
                 continue;
             }
-            
+
             Feature f = t.getFeatureByBaseName(feat.getName());
-            
-            List<AnnotationFS> annotations = selectCovered(cas, t,
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
-            
+
+            List<AnnotationFS> annotations = selectCovered(cas, t, state.getWindowBeginOffset(),
+                    state.getWindowEndOffset());
+
             for (AnnotationFS anno : annotations) {
                 String url = anno.getFeatureValueAsString(f);
-                
+
                 if (isNotBlank(url)) {
                     images.add(new ImageHandle(url, state.getDocument(), new VID(anno),
                             anno.getBegin(), anno.getEnd()));
                 }
             }
         }
-        
+
         return images;
     }
-    
+
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         aEvent.getRequestHandler().add(mainContainer);
         aEvent.getRequestHandler().appendJavaScript(colorScript());
     }
-    
+
     public void actionJumpTo(AjaxRequestTarget aTarget, ImageHandle aHandle)
     {
         try {
             AnnotatorState state = getModelObject();
-            
+
             // Get the CAS
             CAS cas = getCasProvider().get();
-            
+
             AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
 
             AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
@@ -287,7 +289,7 @@ public class ImageSidebar
             else {
                 return;
             }
-            
+
             actionShowSelectedDocument(aTarget, aHandle.getDocument(), aHandle.getBegin(),
                     aHandle.getEnd());
             aTarget.add((Component) getActionHandler());
@@ -297,18 +299,18 @@ public class ImageSidebar
             LOG.error("Unable to select annotation", e);
         }
     }
-    
+
     private static class ImageHandle
         implements Serializable
     {
         private static final long serialVersionUID = 9032602311793328638L;
-        
+
         private final String url;
         private final SourceDocument document;
         private final VID vid;
         private final int begin;
         private final int end;
-        
+
         public ImageHandle(String aUrl, SourceDocument aDocument, VID aVid, int aBegin, int aEnd)
         {
             super();
@@ -328,7 +330,7 @@ public class ImageSidebar
         {
             return document;
         }
-        
+
         public VID getVid()
         {
             return vid;

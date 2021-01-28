@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,10 +47,10 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers);
-    
+
     /**
      * Find entries where the label matches exactly one of the given values. The match is
-     * case-sensitive and it takes the default language of the KB into consideration.
+     * case-sensitive if requested and it takes the default language of the KB into consideration.
      * 
      * @param aValues
      *            label values.
@@ -77,6 +77,18 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions withLabelContainingAnyOf(String... aValues);
+
+    /**
+     * Find entries where the label matching one of the given values. The match may be fuzzy if this
+     * is supported by the FTS. If there is no support for fuzzy matching in the FTS, then this
+     * falls back to simply calling {@link #withLabelContainingAnyOf} Depending on the
+     * circumstances, the match may be case sensitive or not.
+     * 
+     * @param aValues
+     *            label values.
+     * @return the builder (fluent API)
+     */
+    SPARQLQueryPrimaryConditions withLabelMatchingAnyOf(String... aValues);
 
     /**
      * Match all the roots of the class hierarchy.
@@ -135,11 +147,11 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions parentsOf(String aClassIri);
-    
+
     /**
      * Limits results to properties with the given domain or without any domain. Considers the
-     * inheritance hierarchy, so if A has a property x and B is a subclass of A, then B also has
-     * the property x.
+     * inheritance hierarchy, so if A has a property x and B is a subclass of A, then B also has the
+     * property x.
      * <p>
      * <b>NOTE:</b> this method implicitly disables FTS for the query and must be called before
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so

@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,7 +72,7 @@ public class LappsRecommenderIntegrationTest
         String url = server.url("/").toString();
         traits.setUrl(url);
 
-        sut = new LappsGridRecommender(buildRecommender(), null);
+        sut = new LappsGridRecommender(buildRecommender(), traits);
     }
 
     @After
@@ -92,10 +92,8 @@ public class LappsRecommenderIntegrationTest
 
         Collection<POS> predictions = JCasUtil.select(cas.getJCas(), POS.class);
 
-        assertThat(predictions).as("There should be some predictions")
-                .isNotEmpty();
+        assertThat(predictions).as("There should be some predictions").isNotEmpty();
     }
-
 
     private static Recommender buildRecommender()
     {
@@ -115,9 +113,11 @@ public class LappsRecommenderIntegrationTest
 
     private Dispatcher buildDispatcher()
     {
-        return new Dispatcher() {
+        return new Dispatcher()
+        {
             @Override
-            public MockResponse dispatch(RecordedRequest request) {
+            public MockResponse dispatch(RecordedRequest request)
+            {
                 try {
                     String url = request.getPath();
                     String body = request.getBody().readUtf8();
@@ -125,17 +125,20 @@ public class LappsRecommenderIntegrationTest
                     if (request.getPath().equals("/pos/predict")) {
                         String response = "";
                         return new MockResponse().setResponseCode(200).setBody(response);
-                    } else {
+                    }
+                    else {
                         throw new RuntimeException("Invalid URL called: " + url);
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
         };
     }
 
-    private CAS loadData() throws IOException, UIMAException {
+    private CAS loadData() throws IOException, UIMAException
+    {
         ClassLoader cl = getClass().getClassLoader();
         File file = new File(cl.getResource("conllu-en-orig.conll").getFile());
 
@@ -144,8 +147,8 @@ public class LappsRecommenderIntegrationTest
 
     private static CAS loadData(File aFile) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(ConllUReader.class,
-                ConllUReader.PARAM_PATTERNS, aFile);
+        CollectionReader reader = createReader(ConllUReader.class, ConllUReader.PARAM_PATTERNS,
+                aFile);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {

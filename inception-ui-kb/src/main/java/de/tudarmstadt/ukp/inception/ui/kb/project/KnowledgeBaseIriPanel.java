@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,14 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
+
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.CUSTOMSCHEMA;
+import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.WIKIDATASCHEMA;
+import static de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators.IRI_VALIDATOR;
+import static java.util.Arrays.asList;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,13 +44,11 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
-import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
 public class KnowledgeBaseIriPanel
     extends Panel
@@ -62,7 +68,9 @@ public class KnowledgeBaseIriPanel
 
         kbModel = aModel;
 
-        add(selectReificationStrategy("reification", "kb.reification"));
+        DropDownChoice<Reification> reificationChoice = selectReificationStrategy("reification",
+                "kb.reification");
+        add(reificationChoice);
 
         // The Kendo comboboxes do not redraw properly when added directly to an
         // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
@@ -70,7 +78,7 @@ public class KnowledgeBaseIriPanel
         WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
         comboBoxWrapper.setOutputMarkupId(true);
         add(comboBoxWrapper);
-        
+
         // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
         ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
                 IriConstants.CLASS_IRIS);
@@ -79,21 +87,21 @@ public class KnowledgeBaseIriPanel
         ComboBox<String> typeField = buildComboBox("typeIri", kbModel.bind("kb.typeIri"),
                 IriConstants.TYPE_IRIS);
         ComboBox<String> subPropertyField = buildComboBox("subPropertyIri",
-            kbModel.bind("kb.subPropertyIri"), IriConstants.SUBPROPERTY_IRIS);
+                kbModel.bind("kb.subPropertyIri"), IriConstants.SUBPROPERTY_IRIS);
         ComboBox<String> descriptionField = buildComboBox("descriptionIri",
                 kbModel.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
-        ComboBox<String> labelField = buildComboBox("labelIri",
-                kbModel.bind("kb.labelIri"), IriConstants.LABEL_IRIS);
+        ComboBox<String> labelField = buildComboBox("labelIri", kbModel.bind("kb.labelIri"),
+                IriConstants.LABEL_IRIS);
         ComboBox<String> propertyTypeField = buildComboBox("propertyTypeIri",
                 kbModel.bind("kb.propertyTypeIri"), IriConstants.PROPERTY_TYPE_IRIS);
         ComboBox<String> propertyLabelField = buildComboBox("propertyLabelIri",
                 kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
         ComboBox<String> propertyDescriptionField = buildComboBox("propertyDescriptionIri",
                 kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
-        comboBoxWrapper
-            .add(classField, subclassField, typeField, subPropertyField, descriptionField,
-                labelField, propertyTypeField, propertyLabelField, propertyDescriptionField);
-        
+        comboBoxWrapper.add(classField, subclassField, typeField, subPropertyField,
+                descriptionField, labelField, propertyTypeField, propertyLabelField,
+                propertyDescriptionField);
+
         // RadioGroup to select the IriSchemaType
         DropDownChoice<SchemaProfile> iriSchemaChoice = new BootstrapSelect<SchemaProfile>(
                 "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
@@ -107,7 +115,7 @@ public class KnowledgeBaseIriPanel
                 super.onInitialize();
                 // Initialize according to current model values
                 SchemaProfile modelProfile = SchemaProfile
-                    .checkSchemaProfile(kbModel.getObject().getKb());
+                        .checkSchemaProfile(kbModel.getObject().getKb());
 
                 setModelObject(modelProfile);
             }
@@ -128,9 +136,9 @@ public class KnowledgeBaseIriPanel
                 propertyTypeField.setModelObject(profile.getPropertyTypeIri().stringValue());
                 propertyLabelField.setModelObject(profile.getPropertyLabelIri().stringValue());
                 propertyDescriptionField
-                    .setModelObject(profile.getPropertyDescriptionIri().stringValue());
+                        .setModelObject(profile.getPropertyDescriptionIri().stringValue());
             }
-            _target.add(comboBoxWrapper, iriSchemaChoice);
+            _target.add(comboBoxWrapper, iriSchemaChoice, reificationChoice);
         }));
         comboBoxWrapper.add(iriSchemaChoice);
     }
@@ -141,21 +149,19 @@ public class KnowledgeBaseIriPanel
         if (model.getObject() == null) {
             model.setObject(iris.get(0));
         }
- 
+
         List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
 
-        IModel<String> adapter = new LambdaModelAdapter<String>(
-            () -> { return model.getObject() != null ? model.getObject().stringValue() : null; },
-            str -> { 
-                model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : 
-                    null); });
+        IModel<String> adapter = new LambdaModelAdapter<String>(() -> {
+            return model.getObject() != null ? model.getObject().stringValue() : null;
+        }, str -> model
+                .setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null));
 
         ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
-        comboBox.add(LambdaBehavior.enabledWhen(() -> 
-                SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
+        comboBox.add(enabledWhen(() -> CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
-        comboBox.add(Validators.IRI_VALIDATOR);
+        comboBox.add(IRI_VALIDATOR);
         // Do nothing just update the model values
         comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         return comboBox;
@@ -163,12 +169,19 @@ public class KnowledgeBaseIriPanel
 
     private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
     {
-        final List<Reification> reificationList = Arrays.asList(Reification.values());
-
         DropDownChoice<Reification> reificationDropDownChoice = new BootstrapSelect<>(id,
-            kbModel.bind(property), reificationList);
+                kbModel.bind(property), asList(Reification.values()));
         reificationDropDownChoice.setRequired(true);
+        reificationDropDownChoice.setOutputMarkupPlaceholderTag(true);
+
+        // The current reification implementation only really does something useful when the
+        // Wikidata schema is used on the actual Wikidata knowledge base (or a mirror).
+        // Thus, we enable the option to activate reification only in this case.
+        reificationDropDownChoice
+                .add(visibleWhen(() -> WIKIDATASCHEMA.equals(selectedSchemaProfile.getObject())
+                        && kbModel.getObject().getKb().isReadOnly()
+                        && REMOTE.equals(kbModel.getObject().getKb().getType())));
+
         return reificationDropDownChoice;
     }
 }
-

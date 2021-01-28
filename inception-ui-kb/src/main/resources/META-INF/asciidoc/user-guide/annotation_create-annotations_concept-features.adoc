@@ -2,3 +2,14 @@
 
 Concept features are shown as an auto-complete field. Typing into the field triggers a query against
 the knowledge base and displays candidates in a dropdown list.
+
+.Filtering by description
+The query entered into the field only matches against the label of the knowledge base items, not
+against their description. However, you can filter the candidates by their description. E.g. if you
+wish to find all knowledge base items with `Obama` in the label and `president` in the description,
+then you can write `Obama :: president`. A case-insensitive matching is being used.
+
+.Substring matching
+Depending on the knowledge base and full-text mode being used, there may be fuzzy matching. To
+filter the candidate list down to those candidates which contain a particular substring, put
+double quotes around the query, e.g. `"County Carlow"`. A case-insensitive matching is being used.

@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,16 +36,15 @@ import org.asciidoctor.SafeMode;
 
 public class GenerateDocumentation
 {
-    private static Path asciiDocPath = Paths.get("src", "main", "resources", "META-INF", "asciidoc");
-
+    private static Path asciiDocPath = Paths.get("src", "main", "resources", "META-INF",
+            "asciidoc");
 
     private static List<Path> getAsciiDocs(Path dir) throws IOException
     {
-        return Files.list(dir)
-                .filter(Files::isDirectory)
-                .filter(p -> Files.exists(p.resolve("pom.xml")))
-                .map(p -> p.resolve(asciiDocPath))
-                .filter(Files::isDirectory)
+        return Files.list(dir).filter(Files::isDirectory) //
+                .filter(p -> Files.exists(p.resolve("pom.xml"))) //
+                .map(p -> p.resolve(asciiDocPath)) //
+                .filter(Files::isDirectory) //
                 .collect(Collectors.toList());
     }
 
@@ -53,30 +52,26 @@ public class GenerateDocumentation
     {
         Attributes attributes = AttributesBuilder.attributes()
                 .attribute("source-dir", getInceptionDir() + "/")
-                .attribute("include-dir", outputDir.resolve("asciidoc").resolve(type)
-                        .toString() + "/")
-                .attribute("imagesdir", outputDir.resolve("asciidoc").resolve(type)
-                        .resolve("images").toString() + "/")
-                .attribute("doctype", "book")
-                .attribute("toclevels", "8")
-                .attribute("sectanchors", "true")
-                .attribute("docinfo1", "true")
-                .attribute("project-version", "DEVELOPER BUILD")
-                .attribute("revnumber", "DEVELOPER BUILD")
-                .attribute("product-name", "INCEpTION")
-                .attribute("product-website-url", "https://inception-project.github.io")
-                .attribute("icons", "font")
-                .attribute("toc", "left")
-                .attribute("sourceHighlighter", "coderay")
-                .get();
-        OptionsBuilder options = OptionsBuilder.options()
-                .toDir(outputDir.toFile())
-                .safe(SafeMode.UNSAFE)
-                .attributes(attributes);
+                .attribute("include-dir",
+                        outputDir.resolve("asciidoc").resolve(type).toString() + "/")
+                .attribute("imagesdir",
+                        outputDir.resolve("asciidoc").resolve(type).resolve("images").toString()
+                                + "/")
+                .attribute("doctype", "book") //
+                .attribute("toclevels", "8") //
+                .attribute("sectanchors", "true") //
+                .attribute("docinfo1", "true") //
+                .attribute("project-version", "DEVELOPER BUILD") //
+                .attribute("revnumber", "DEVELOPER BUILD").attribute("product-name", "INCEpTION") //
+                .attribute("product-website-url", "https://inception-project.github.io") //
+                .attribute("icons", "font") //
+                .attribute("toc", "left").get();
+        OptionsBuilder options = OptionsBuilder.options().toDir(outputDir.toFile())
+                .safe(SafeMode.UNSAFE).attributes(attributes);
         Asciidoctor asciidoctor = Asciidoctor.Factory.create();
         asciidoctor.requireLibrary("asciidoctor-diagram");
         File f = new File(outputDir.resolve("asciidoc").resolve(type).toString() + ".adoc");
-        asciidoctor.convertFile(f , options);
+        asciidoctor.convertFile(f, options);
     }
 
     public static void main(String... args) throws Exception
@@ -98,12 +93,12 @@ public class GenerateDocumentation
 
         for (Path module : modules) {
             System.out.printf("Including module: %s\n", module);
-            
+
             for (File f : FileUtils.listFiles(module.toFile(), TrueFileFilter.INSTANCE,
                     TrueFileFilter.INSTANCE)) {
                 Path p = f.toPath();
-                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount()
-                        , p.toAbsolutePath().getNameCount());
+                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount(),
+                        p.toAbsolutePath().getNameCount());
                 FileUtils.copyFile(f, outputDir.resolve("asciidoc").resolve(targetPath).toFile());
             }
         }
@@ -111,7 +106,7 @@ public class GenerateDocumentation
         buildDoc("user-guide", outputDir);
         buildDoc("developer-guide", outputDir);
         buildDoc("admin-guide", outputDir);
-        
+
         System.out.printf("Documentation written to: %s\n", outputDir);
     }
 

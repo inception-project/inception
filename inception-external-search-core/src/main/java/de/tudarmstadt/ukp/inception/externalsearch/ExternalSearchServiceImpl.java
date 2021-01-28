@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,21 +80,20 @@ public class ExternalSearchServiceImpl
         throws IOException
     {
         log.debug("Running query: {}", aQuery);
-        
+
         ExternalSearchProviderFactory<?> factory = externalSearchProviderRegistry
                 .getExternalSearchProviderFactory(aRepository.getType());
-        
+
         ExternalSearchProvider<Object> provider = factory.getNewExternalSearchProvider();
 
         Object traits = factory.readTraits(aRepository);
 
         boolean sentenceHighlights = false;
-        if (aQuery.endsWith(" sentenceHighlights:true"))
-        {
+        if (aQuery.endsWith(" sentenceHighlights:true")) {
             aQuery = aQuery.replace(" sentenceHighlights:true", "");
             sentenceHighlights = true;
         }
-        
+
         List<ExternalSearchResult> results = provider.executeQuery(aRepository, traits, aQuery);
 
         // change highlights of results to contain most relevant sentences
@@ -104,9 +103,9 @@ public class ExternalSearchServiceImpl
                         results, this, aQuery).extractSentences();
                 List<Set<ExtractedUnit>> sentenceClusters = new ExternalSearchSentenceClusterer()
                         .getSentenceClusters(extractedSentences);
-    
+
                 results.clear();
-                
+
                 for (Set<ExtractedUnit> cluster : sentenceClusters) {
                     // Sort the cluster according to score
                     List<ExtractedUnit> sortedCluster = new ArrayList<>(cluster);
@@ -117,24 +116,24 @@ public class ExternalSearchServiceImpl
                     ExternalSearchResult representative = new ExternalSearchResult(aRepository,
                             best.getCollectionId(), best.getDocumentId());
                     results.add(representative);
-                    
+
                     // Add other cluster items as highlights to the representative
                     representative.setHighlights(sortedCluster.stream()
                             .map(unit -> new ExternalSearchHighlight(String.format("%s [%s]",
                                     unit.getText(), unit.getResult().getDocumentId())))
                             .collect(Collectors.toList()));
-                    
+
                     representative.setScore(sortedCluster.stream()
-                            .mapToDouble(ExtractedUnit::getScore)
-                            .average().getAsDouble());
+                            .mapToDouble(ExtractedUnit::getScore).average().getAsDouble());
                 }
-                
+
                 results.sort(comparing(ExternalSearchResult::getScore).reversed());
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Error occurred while extracting relevant sentences: " + e.getMessage());
             }
         }
-        
+
         return results;
     }
 
@@ -158,7 +157,7 @@ public class ExternalSearchServiceImpl
         }
         else {
             entityManager.merge(aDocumentRepository);
-        }        
+        }
     }
 
     @Override
@@ -173,7 +172,7 @@ public class ExternalSearchServiceImpl
 
         entityManager.remove(settings);
     }
-    
+
     @Override
     @Transactional
     public DocumentRepository getRepository(long aId)
@@ -195,7 +194,7 @@ public class ExternalSearchServiceImpl
 
         return provider.getDocumentResult(aRepository, traits, aCollectionId, aDocumentId);
     }
-    
+
     @Override
     public String getDocumentText(DocumentRepository aRepository, String aCollectionId,
             String aDocumentId)

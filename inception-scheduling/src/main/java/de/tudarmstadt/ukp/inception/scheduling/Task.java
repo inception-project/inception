@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +33,7 @@ public abstract class Task
     implements Runnable
 {
     private final static AtomicInteger nextId = new AtomicInteger(1);
-    
+
     private final User user;
     private final Project project;
     private final String trigger;
@@ -40,7 +44,7 @@ public abstract class Task
         notNull(aUser);
         notNull(aProject);
         notNull(aTrigger);
-        
+
         user = aUser;
         project = aProject;
         trigger = aTrigger;
@@ -66,14 +70,15 @@ public abstract class Task
     {
         return getClass().getSimpleName();
     }
-    
+
     public int getId()
     {
         return id;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder(getName());
         sb.append('{');
         sb.append("user=").append(user.getUsername());
@@ -84,7 +89,8 @@ public abstract class Task
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -96,7 +102,8 @@ public abstract class Task
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(user, project);
     }
 }
