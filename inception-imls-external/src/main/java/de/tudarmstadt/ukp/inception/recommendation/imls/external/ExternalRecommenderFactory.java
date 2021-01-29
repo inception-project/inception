@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 
 import org.apache.wicket.model.IModel;
@@ -62,7 +63,7 @@ public class ExternalRecommenderFactory
             return false;
         }
 
-        return SPAN_TYPE.equals(aLayer.getType());
+        return SPAN_TYPE.equals(aLayer.getType()) || RELATION_TYPE.equals(aLayer.getType());
     }
 
     @Override
