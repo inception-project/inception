@@ -373,7 +373,7 @@ var VisualizerUI = (function($, window, undefined) {
                     }
                     // process normalizations
                     var normsToQuery = [];
-                    $.each(normalizations, function(normNo, norm) {
+                    $.each(normalizations != null ? normalizations : [], function(normNo, norm) {
                         var dbName = norm[0],
                             dbKey = norm[1];
 // WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism

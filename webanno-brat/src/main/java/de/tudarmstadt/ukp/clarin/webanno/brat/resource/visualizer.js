@@ -809,17 +809,30 @@ var Visualizer = (function($, window, undefined) {
 
         // normalizations
         $.each(sourceData.normalizations, function(normNo, norm) {
+// WEBANNO EXTENSION BEGIN - #1718 - Load popup information on demand
+/*
           var id = norm[0];
           var normType = norm[1];
           var target = norm[2];
           var refdb = norm[3];
           var refid = norm[4];
           var reftext = norm[5];
+*/
+          var target = norm[0];
+          var refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
+          var refid = norm.length > 2 ? norm[2] : "";
+          var reftext = norm.length > 3 ? norm[3] : null;
+// WEBANNO EXTENSION END - #1718 - Load popup information on demand
 
           // grab entity / event the normalization applies to
           var span = data.spans[target];
           if (!span) {
+// WEBANNO EXTENSION BEGIN - #1718 - Load popup information on demand
+/*
             dispatcher.post('messages', [[['Annotation ' + target + ', referenced from normalization ' + id + ', does not exist.', 'error']]]);
+*/
+            dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]]);
+// WEBANNO EXTENSION END - #1718 - Load popup information on demand
             return;
           }
 

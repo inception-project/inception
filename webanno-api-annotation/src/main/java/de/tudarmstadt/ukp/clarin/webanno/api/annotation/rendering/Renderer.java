@@ -114,7 +114,7 @@ public interface Renderer
         }
 
         if (tiggerLayerLevelLazyDetails) {
-            details.add(new VLazyDetailQuery(QUERY_LAYER_LEVEL_DETAILS, ""));
+            details.add(VLazyDetailQuery.LAYER_LEVEL_QUERY);
         }
 
         return details;

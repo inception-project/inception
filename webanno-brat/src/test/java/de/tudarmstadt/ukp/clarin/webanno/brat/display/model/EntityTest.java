@@ -41,7 +41,7 @@ public class EntityTest
                 String.join("\n",
                         "[ \"1.2\", \"type\", [ [ 1, 2 ] ], {",
                         "  \"l\" : \"label\",",
-                        "  \"c\" : \"color\",",
+                        "  \"c\" : \"color\"",
                         "} ]"),
                 json);
         // @formatter:on
