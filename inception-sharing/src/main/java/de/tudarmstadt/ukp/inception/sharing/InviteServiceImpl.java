@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-@ConditionalOnProperty(prefix = "sharing", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "sharing.invites", name = "enabled", havingValue = "true")
 public class InviteServiceImpl
     implements InviteService
 {

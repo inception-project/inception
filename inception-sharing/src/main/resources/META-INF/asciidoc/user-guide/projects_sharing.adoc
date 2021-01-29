@@ -23,4 +23,4 @@ image::sharing_settings.png[align="center"]
 
 The user can now follow the invite link by entering it into a browser. She might be prompted to log into {product-name} and is then automatically added to the project with annotator rights and directed to the project dashboard page. She can now start annotating.
 
-NOTE: This feature is not enabled by default. However, you can enable it by adding `sharing.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+NOTE: This feature is not enabled by default. However, you can enable it by adding `sharing.invites.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).

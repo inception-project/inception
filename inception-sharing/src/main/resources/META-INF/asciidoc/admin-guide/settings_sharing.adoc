@@ -27,7 +27,7 @@ You can enable invite links for your {product-name} instance. This will allow pr
 | Default
 | Example
 
-| sharing.enabled
+| sharing.invites.enabled
 | enable/disable invite links
 | false
 | true
