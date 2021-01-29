@@ -92,6 +92,7 @@ public class ProjectDashboardPage
                 inviteService.isValidInviteLink(project, inviteId.toOptionalString())) {
             projectService.setProjectPermissionLevels(currentUser, project,
                     Arrays.asList(PermissionLevel.ANNOTATOR));
+            success("You were added to this project!");
         }
         else {
             // Check if user can access the project
