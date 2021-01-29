@@ -623,11 +623,11 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-              <imagesDir>./user-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./user-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -640,11 +640,11 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-              <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./developer-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -1066,11 +1066,11 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-                    <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./user-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -1083,11 +1083,11 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-                    <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./developer-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
