@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,12 +73,12 @@ public class MtasUimaParserTest
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private FeatureIndexingSupportRegistryImpl featureIndexingSupportRegistry;
     private JCas jcas;
-    
+
     @Before
     public void setup() throws Exception
     {
         initMocks(this);
-        
+
         project = new Project();
         project.setId(1l);
         project.setName("test project");
@@ -86,15 +86,14 @@ public class MtasUimaParserTest
 
         layerSupportRegistry = new LayerSupportRegistryImpl(emptyList());
 
-        featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
-                        new NumberFeatureSupport()));
+        featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport(),
+                new BooleanFeatureSupport(), new NumberFeatureSupport()));
         featureSupportRegistry.init();
-        
+
         featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(
                 asList(new PrimitiveUimaIndexingSupport(featureSupportRegistry)));
         featureIndexingSupportRegistry.init();
-        
+
         // Resetting the JCas is faster than re-creating it
         if (jcas == null) {
             jcas = JCasFactory.createJCas();
@@ -103,7 +102,7 @@ public class MtasUimaParserTest
             jcas.reset();
         }
     }
-    
+
     @Test
     public void testSentencesAndTokens() throws Exception
     {
@@ -112,29 +111,25 @@ public class MtasUimaParserTest
 
         // Only tokens and sentences here, no extra layers
         when(annotationSchemaService.listAnnotationLayer(project)).thenReturn(asList());
-        
+
         MtasUimaParser sut = new MtasUimaParser(asList(), annotationSchemaService,
                 featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
-        
+
         MtasUtils.print(tc);
-        
+
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
-        
-        assertThat(tokens)
-                .filteredOn(t -> "Token".equals(t.getPrefix()))
-                .extracting(MtasToken::getPostfix)
-                .containsExactly(
-                        "This", "is", "a", "test", ".", "This", "is", "sentence", "two", ".");
 
-        assertThat(tokens)
-                .filteredOn(t -> "s".equals(t.getPrefix()))
+        assertThat(tokens).filteredOn(t -> "Token".equals(t.getPrefix()))
+                .extracting(MtasToken::getPostfix).containsExactly("This", "is", "a", "test", ".",
+                        "This", "is", "sentence", "two", ".");
+
+        assertThat(tokens).filteredOn(t -> "s".equals(t.getPrefix()))
                 .extracting(MtasToken::getPostfix)
-                .containsExactly(
-                        "This is a test .", "This is sentence two .");
+                .containsExactly("This is a test .", "This is sentence two .");
     }
-    
+
     @Test
     public void testNamedEnity() throws Exception
     {
@@ -152,9 +147,9 @@ public class MtasUimaParserTest
         ne.addToIndexes();
         builder.add(" ");
         builder.add(".", Token.class);
-        
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
+
+        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
@@ -163,23 +158,20 @@ public class MtasUimaParserTest
                         new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)),
                 annotationSchemaService, featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
-        
+
         MtasUtils.print(tc);
-        
+
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPrefix)
-            .containsExactly("Named_Entity", "Named_Entity.value");
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPrefix)
+                .containsExactly("Named_Entity", "Named_Entity.value");
 
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPostfix)
-            .containsExactly("", "PER");
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPostfix).containsExactly("", "PER");
     }
-    
+
     @Test
     public void testZeroWidthSpanNotIndexed() throws Exception
     {
@@ -189,32 +181,27 @@ public class MtasUimaParserTest
         NamedEntity zeroWidthNe = new NamedEntity(jcas, 4, 4);
         zeroWidthNe.setValue("OTH");
         zeroWidthNe.addToIndexes();
-        
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
+
+        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
-        MtasUimaParser sut = new MtasUimaParser(asList(
-                new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                new AnnotationFeature(2l, layer, "identifier",
-                        CAS.TYPE_NAME_STRING)),
-                annotationSchemaService,
-                featureIndexingSupportRegistry);
+        MtasUimaParser sut = new MtasUimaParser(
+                asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
+                        new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)),
+                annotationSchemaService, featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
-        
+
         MtasUtils.print(tc);
-        
+
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPrefix)
-            .isEmpty();
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPrefix).isEmpty();
     }
 
-    
     @Test
     public void testDependencyRelation() throws Exception
     {
@@ -222,7 +209,7 @@ public class MtasUimaParserTest
         jcas.setDocumentText("a b");
         Token t1 = new Token(jcas, 0, 1);
         t1.addToIndexes();
-        
+
         POS p1 = new POS(jcas, t1.getBegin(), t1.getEnd());
         p1.setPosValue("A");
         t1.setPos(p1);
@@ -235,68 +222,61 @@ public class MtasUimaParserTest
         p2.setPosValue("B");
         t2.setPos(p2);
         p2.addToIndexes();
-        
+
         Dependency d1 = new Dependency(jcas, t2.getBegin(), t2.getEnd());
         d1.setDependent(t2);
         d1.setGovernor(t1);
         d1.addToIndexes();
-        
+
         // Set up annotation schema with POS and Dependency
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
-                SPAN_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
         AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
                 POS.class.getName());
-        
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS",
-                SPAN_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
+
+        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         AnnotationFeature posLayerValue = new AnnotationFeature(1l, posLayer, "PosValue",
                 CAS.TYPE_NAME_STRING);
-        
-        AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(),
-                "Dependency", RELATION_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
+
+        AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
+                RELATION_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
         depLayer.setId(3l);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenLayerPos);
-        AnnotationFeature dependencyLayerGovernor = new AnnotationFeature(2l, depLayer,
-                "Governor", Token.class.getName());
+        AnnotationFeature dependencyLayerGovernor = new AnnotationFeature(2l, depLayer, "Governor",
+                Token.class.getName());
         AnnotationFeature dependencyLayerDependent = new AnnotationFeature(3l, depLayer,
                 "Dependent", Token.class.getName());
-            
+
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(tokenLayer, posLayer, depLayer));
 
-        when(annotationSchemaService.getAdapter(posLayer)).thenReturn(new SpanAdapter(
-            layerSupportRegistry, featureSupportRegistry, null, posLayer, 
-            () -> asList(posLayerValue), null));
+        when(annotationSchemaService.getAdapter(posLayer))
+                .thenReturn(new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                        posLayer, () -> asList(posLayerValue), null));
 
-        when(annotationSchemaService.getAdapter(depLayer))
-                .thenReturn(new RelationAdapter(
-                    layerSupportRegistry, featureSupportRegistry, null, depLayer,
-                    FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                    () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
-                    emptyList()));
+        when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new RelationAdapter(
+                layerSupportRegistry, featureSupportRegistry, null, depLayer, FEAT_REL_TARGET,
+                FEAT_REL_SOURCE, () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
+                emptyList()));
 
         MtasUimaParser sut = new MtasUimaParser(
                 asList(tokenLayerPos, posLayerValue, dependencyLayerGovernor,
                         dependencyLayerDependent),
                 annotationSchemaService, featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
-        
+
         MtasUtils.print(tc);
-        
+
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Dependency"))
-            .extracting(t -> t.getPrefix() + "=" + t.getPostfix())
-            .containsExactly(
-                    "Dependency=b", 
-                    "Dependency-source=a", 
-                    "Dependency-source.PosValue=A",
-                    "Dependency-target=b", 
-                    "Dependency-target.PosValue=B");
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Dependency"))
+                .extracting(t -> t.getPrefix() + "=" + t.getPostfix()).containsExactly(
+                        "Dependency=b", "Dependency-source=a", "Dependency-source.PosValue=A",
+                        "Dependency-target=b", "Dependency-target.PosValue=B");
     }
 }

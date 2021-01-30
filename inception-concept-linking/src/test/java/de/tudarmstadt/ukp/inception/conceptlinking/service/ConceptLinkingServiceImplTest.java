@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -56,7 +57,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @Transactional
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class ConceptLinkingServiceImplTest
 {
     static {
@@ -72,7 +73,7 @@ public class ConceptLinkingServiceImplTest
 
     @Autowired
     private TestEntityManager testEntityManager;
-    
+
     private KnowledgeBaseService kbService;
     private ConceptLinkingServiceImpl sut;
 
@@ -104,8 +105,7 @@ public class ConceptLinkingServiceImplTest
         List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "soc", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-            .as("Check whether \"Socke\" has been retrieved.")
-            .contains("Socke");
+                .as("Check whether \"Socke\" has been retrieved.").contains("Socke");
     }
 
     @Test
@@ -120,11 +120,11 @@ public class ConceptLinkingServiceImplTest
         List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "man", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-            .as("Check whether \"manatee\" has been retrieved.")
-            .contains("manatee");
+                .as("Check whether \"manatee\" has been retrieved.").contains("manatee");
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws Exception
+    {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
@@ -133,13 +133,11 @@ public class ConceptLinkingServiceImplTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration 
-    @EntityScan(
-            basePackages = {
-                "de.tudarmstadt.ukp.inception.kb.model",
-                "de.tudarmstadt.ukp.clarin.webanno.model"
-    })
-    public static class SpringConfig {
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
         // No content
     }
 }

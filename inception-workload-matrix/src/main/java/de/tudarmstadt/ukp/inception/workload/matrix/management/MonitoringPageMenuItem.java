@@ -1,13 +1,13 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +38,8 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Component
 @Order(300)
-public class MonitoringPageMenuItem implements MenuItem
+public class MonitoringPageMenuItem
+    implements MenuItem
 {
     private final UserDao userRepo;
     private final ProjectService projectService;
@@ -46,11 +47,9 @@ public class MonitoringPageMenuItem implements MenuItem
     private final WorkloadManagementService workloadManagementService;
 
     @Autowired
-    public MonitoringPageMenuItem(
-        UserDao aUserRepo,
-        ProjectService aProjectService,
-        WorkloadManagementService aWorkloadManagementService,
-        WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+    public MonitoringPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            WorkloadManagementService aWorkloadManagementService,
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         userRepo = aUserRepo;
         projectService = aProjectService;
@@ -63,19 +62,19 @@ public class MonitoringPageMenuItem implements MenuItem
     {
         return "/monitoring";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/attribution.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Monitoring";
     }
-    
+
     /**
      * Only admins and project managers can see this page
      */
@@ -86,7 +85,7 @@ public class MonitoringPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-        
+
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
@@ -94,14 +93,12 @@ public class MonitoringPageMenuItem implements MenuItem
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
 
-        return (projectService.isCurator(project, user)
-            || projectService.isManager(project, user))
-            && PROJECT_TYPE_ANNOTATION.equals(project.getMode())
-            && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(project).
-            getType());
+        return (projectService.isCurator(project, user) || projectService.isManager(project, user))
+                && PROJECT_TYPE_ANNOTATION.equals(project.getMode())
+                && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
+                        .loadOrCreateWorkloadManagerConfiguration(project).getType());
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

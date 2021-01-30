@@ -5,12 +5,16 @@
  * The file was adapted to use Offset instead of Interval and to use SLF4J
  * instead of Commons Logging.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -257,11 +261,9 @@ public class OverlapIteratorTest
         List<Offset> r1 = overlappingRef(a, b);
         List<Offset> r2 = overlapping(a, b, debug, false);
 
-        r1 = r1.stream()
-                .sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
+        r1 = r1.stream().sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
                 .distinct().collect(toList());
-        r2 = r2.stream()
-                .sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
+        r2 = r2.stream().sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
                 .distinct().collect(toList());
 
         if (!r1.equals(r2)) {

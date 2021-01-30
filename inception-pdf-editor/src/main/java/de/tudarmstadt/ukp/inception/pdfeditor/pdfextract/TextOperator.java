@@ -36,7 +36,7 @@ public class TextOperator
     float gh;
 
     public TextOperator(String unicode, float fx, float fy, float fw, float fh, float gx, float gy,
-        float gw, float gh)
+            float gw, float gh)
     {
         this.unicode = unicode;
         this.fx = fx;

@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,37 +41,36 @@ public interface CurationService
      * List users that were selected to be shown for curation by the given user
      */
     public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId);
-    
+
     /**
      * Retrieves CAS associated with curation doc for the given user
      */
     public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
         throws IOException;
-    
+
     /**
      * Write to CAS associated with curation doc for the given user and update timestamp
      */
     public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId);
-    
+
     /**
      * Store the users that were selected to be shown for curation by the given user
      */
-    public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId, 
+    public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId,
             Collection<User> aUsers);
-    
+
     /**
      * Store which name the curated document should be associated with
      */
-    public void updateCurationName(String aCurrentUser, long aProjectId, 
-            String aCurationName);
-    
+    public void updateCurationName(String aCurrentUser, long aProjectId, String aCurationName);
+
     /**
      * Remove stored curation information on given user
      */
     public void removeCurrentUserInformation(String aCurrentUser, long aProjectId);
 
     /**
-     * Remove information on users that were selected to be shown for curation by the given user 
+     * Remove information on users that were selected to be shown for curation by the given user
      */
     public void clearUsersSelectedForCuration(String aUsername, Long aId);
 
@@ -84,8 +87,7 @@ public interface CurationService
     /**
      * Returns the merge strategy that the user previously selected or the manual one as default
      */
-    public MergeStrategy retrieveMergeStrategy(String aUsername,
-            long aProjectId);
+    public MergeStrategy retrieveMergeStrategy(String aUsername, long aProjectId);
 
     /**
      * Store the selected merge-strategy for the given user and project
@@ -98,7 +100,7 @@ public interface CurationService
     public User retrieveCurationUser(String aUser, long aProjectId);
 
     /**
-     * List users that were selected to be shown for curation by the given user and have finished 
+     * List users that were selected to be shown for curation by the given user and have finished
      * the given document.
      */
     public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
@@ -108,4 +110,14 @@ public interface CurationService
      * List users that have finished the given document
      */
     public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument);
+
+    /**
+     * Check if user in given annotator state is curating and has finished it
+     * 
+     * @param state
+     *            the annotator state
+     * @param currentUsername
+     *            the currently logged in user
+     */
+    public boolean isCurationFinished(AnnotatorState state, String currentUsername);
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -168,8 +168,7 @@ public class RecommendationSpanRenderer
             // frontend (e.g. brat) which may choose to re-order them (e.g. for layout reasons).
             List<LabelMapKey> sortedAndfiltered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                    .limit(pref.getMaxPredictions())
-                    .map(Entry::getKey)
+                    .limit(pref.getMaxPredictions()).map(Entry::getKey)
                     .collect(Collectors.toList());
 
             // Render annotations for each label
@@ -178,8 +177,7 @@ public class RecommendationSpanRenderer
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
                         .filter(p -> label.equalsAnnotationSuggestion(p))
-                        .max(comparingInt(AnnotationSuggestion::getId))
-                        .orElse(null);
+                        .max(comparingInt(AnnotationSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
                     continue;
@@ -192,7 +190,7 @@ public class RecommendationSpanRenderer
                 // recommendations for that label via the lazy details
                 AnnotationSuggestion ao = labelMap.get(label).values().stream().findFirst().get();
                 AnnotationFeature feature = features.get(ao.getFeature());
-                
+
                 // Retrieve the UI display label for the given feature value
                 FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
                 String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());

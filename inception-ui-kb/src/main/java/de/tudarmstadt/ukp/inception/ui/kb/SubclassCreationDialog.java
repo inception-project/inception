@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,15 +55,15 @@ public class SubclassCreationDialog
     extends ModalWindow
 {
     private static final long serialVersionUID = -1304315052590065776L;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePanel.class);
 
     private @SpringBean KnowledgeBaseService kbService;
-    
+
     private IModel<KBConcept> newSubclassConceptModel;
     private IModel<KnowledgeBase> kbModel;
     private IModel<? extends KBObject> parentConceptHandleModel;
-    
+
     public SubclassCreationDialog(String id, IModel<KnowledgeBase> aKbModel,
             IModel<? extends KBObject> aParentConceptHandleModel)
     {
@@ -72,9 +72,8 @@ public class SubclassCreationDialog
         kbModel = aKbModel;
         parentConceptHandleModel = aParentConceptHandleModel;
         newSubclassConceptModel = Model.of(new KBConcept());
-        newSubclassConceptModel.getObject()
-            .setLanguage(kbModel.getObject().getDefaultLanguage());
-        
+        newSubclassConceptModel.getObject().setLanguage(kbModel.getObject().getDefaultLanguage());
+
         setOutputMarkupPlaceholderTag(true);
 
         setInitialWidth(300);
@@ -105,18 +104,19 @@ public class SubclassCreationDialog
             // check whether the subclass name already exists for this superclass
             List<KBHandle> existingSubclasses = kbService.listChildConcepts(kb,
                     parentConceptHandleModel.getObject().getIdentifier(), true);
-            
+
             for (KBHandle subclass : existingSubclasses) {
                 if (newSubclassConceptModel.getObject().getName().equals(subclass.getName())) {
 
-                    error(new StringResourceModel("createSubclassErrorMsg", this).setParameters(
-                            subclass.getName(),
-                            parentConceptHandleModel.getObject().getUiLabel()).getString());
+                    error(new StringResourceModel("createSubclassErrorMsg", this)
+                            .setParameters(subclass.getName(),
+                                    parentConceptHandleModel.getObject().getUiLabel())
+                            .getString());
                     aTarget.addChildren(getPage(), IFeedback.class);
                     return;
                 }
             }
-            
+
             // create the new concept
             KBConcept newConcept = newSubclassConceptModel.getObject();
             kbService.createConcept(kb, newConcept);
@@ -127,7 +127,7 @@ public class SubclassCreationDialog
             ValueFactory vf = SimpleValueFactory.getInstance();
             KBStatement subclassOfStmt = new KBStatement(null, newConcept.toKBHandle(), property,
                     vf.createIRI(parentConceptId));
-            //set reification to NONE just for "upserting" the statement, then restore old value
+            // set reification to NONE just for "upserting" the statement, then restore old value
             Reification kbReification = kb.getReification();
             try {
                 kb.setReification(Reification.NONE);

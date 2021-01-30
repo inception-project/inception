@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,7 +71,7 @@ public class ImageFeatureSupport
     {
         // Nothing to do
     }
-    
+
     @Override
     public String getId()
     {
@@ -83,7 +83,7 @@ public class ImageFeatureSupport
     {
         featureSupportId = aBeanName;
     }
-    
+
     @Override
     public Optional<FeatureType> getFeatureType(AnnotationFeature aFeature)
     {
@@ -113,13 +113,13 @@ public class ImageFeatureSupport
             return false;
         }
     }
-    
+
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new ImageFeatureTraitsEditor(aId, this, aFeatureModel);
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
@@ -150,20 +150,19 @@ public class ImageFeatureSupport
     {
         ImageFeatureTraits traits = null;
         try {
-            traits = JSONUtil.fromJsonString(ImageFeatureTraits.class,
-                    aFeature.getTraits());
+            traits = JSONUtil.fromJsonString(ImageFeatureTraits.class, aFeature.getTraits());
         }
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-        
+
         if (traits == null) {
             traits = new ImageFeatureTraits();
         }
-                
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationFeature aFeature, ImageFeatureTraits aTraits)
     {
@@ -174,7 +173,7 @@ public class ImageFeatureSupport
             log.error("Unable to write traits", e);
         }
     }
-    
+
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
@@ -193,19 +192,19 @@ public class ImageFeatureSupport
     {
         return (Serializable) aValue;
     }
-    
+
     @Override
     public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
     {
         String label = renderFeatureValue(aFeature, aFs);
-                
+
         if (StringUtils.isEmpty(label)) {
             return Collections.emptyList();
         }
-        
+
         return asList(new VLazyDetailQuery(aFeature.getName(), label));
     }
-    
+
     @Override
     public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
     {

@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,13 +60,12 @@ public class GazeteerExporter
     private static final Logger LOG = LoggerFactory.getLogger(GazeteerExporter.class);
 
     private static final String KEY = "gazeteers";
-    
+
     private static final String GAZETEERS_FOLDER = "gazeteers";
-    
 
     private final RecommendationService recommendationService;
     private final GazeteerService gazeteerService;
-    
+
     @Autowired
     public GazeteerExporter(RecommendationService aRecommendationService,
             GazeteerService aGazeteerService)
@@ -72,7 +75,8 @@ public class GazeteerExporter
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies() {
+    public List<Class<? extends ProjectExporter>> getImportDependencies()
+    {
         return asList(RecommenderExporter.class);
     }
 
@@ -82,7 +86,7 @@ public class GazeteerExporter
         throws Exception
     {
         Project project = aRequest.getProject();
-        
+
         List<ExportedGazeteer> exportedGazeteers = new ArrayList<>();
         for (Recommender recommender : recommendationService.listRecommenders(project)) {
             for (Gazeteer gazeteer : gazeteerService.listGazeteers(recommender)) {
@@ -91,17 +95,17 @@ public class GazeteerExporter
                 exportedGazeteer.setName(gazeteer.getName());
                 exportedGazeteer.setRecommender(recommender.getName());
                 exportedGazeteers.add(exportedGazeteer);
-                
+
                 File targetFolder = new File(aStage, GAZETEERS_FOLDER);
                 targetFolder.mkdirs();
-                
+
                 Files.copy(gazeteerService.getGazeteerFile(gazeteer).toPath(),
                         new File(targetFolder, gazeteer.getId() + ".txt").toPath());
             }
         }
-        
+
         aExProject.setProperty(KEY, exportedGazeteers);
-        
+
         LOG.info("Exported [{}] gazeteers for project [{}]", exportedGazeteers.size(),
                 project.getName());
     }
@@ -112,23 +116,23 @@ public class GazeteerExporter
         throws Exception
     {
         ExportedGazeteer[] gazeteers = aExProject.getArrayProperty(KEY, ExportedGazeteer.class);
-        
+
         for (ExportedGazeteer exportedGazeteer : gazeteers) {
             Recommender recommender = recommendationService
                     .getRecommender(aProject, exportedGazeteer.getRecommender()).get();
-            
+
             Gazeteer gazeteer = new Gazeteer();
             gazeteer.setName(exportedGazeteer.getName());
             gazeteer.setRecommender(recommender);
             gazeteerService.createOrUpdateGazeteer(gazeteer);
-            
+
             ZipEntry entry = aZip
                     .getEntry(GAZETEERS_FOLDER + "/" + exportedGazeteer.getId() + ".txt");
             try (InputStream is = aZip.getInputStream(entry)) {
                 gazeteerService.importGazeteerFile(gazeteer, is);
             }
         }
-        
+
         LOG.info("Imported [{}] gazeteeres for project [{}]", gazeteers.length, aProject.getName());
     }
 }

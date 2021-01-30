@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -69,13 +70,13 @@ import nl.ru.test.category.SlowTests;
 @Category(SlowTests.class)
 @RunWith(Parameterized.class)
 @Transactional
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceRemoteTest
 {
     private final String PROJECT_NAME = "Test project";
 
     private static Map<String, KnowledgeBaseProfile> PROFILES;
-    
+
     private final TestConfiguration sutConfig;
 
     private KnowledgeBaseServiceImpl sut;
@@ -151,11 +152,10 @@ public class KnowledgeBaseServiceRemoteTest
     public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
     {
         sutConfig = aConfig;
-        
-        Assume.assumeTrue(
-                "Remote repository at [" + aConfig.getDataUrl() + "] is not reachable",
-                aConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE || 
-                        isReachable(aConfig.getDataUrl()));
+
+        Assume.assumeTrue("Remote repository at [" + aConfig.getDataUrl() + "] is not reachable",
+                aConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
+                        || isReachable(aConfig.getDataUrl()));
     }
 
     @Parameterized.Parameters(name = "KB = {0}")
@@ -188,36 +188,35 @@ public class KnowledgeBaseServiceRemoteTest
                     rootConcepts, parentChildConcepts));
         }
 
-
-//        {
-//            ValueFactory vf = SimpleValueFactory.getInstance();
-//            KnowledgeBase kb_hucit = new KnowledgeBase();
-//            kb_hucit.setName("Hucit");
-//            kb_hucit.setType(profile.getType());
-//            kb_hucit.setReification(Reification.NONE);
-//            kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
-//            kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
-//            kb_hucit.setSubclassIri(
-//                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
-//            kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
-//            kb_hucit.setDescriptionIri(
-//                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
-//            kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-//            kb_hucit.setPropertyTypeIri(
-//                    vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
-//            kb_hucit.setPropertyLabelIri(RDFS.LABEL);
-//            kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
-//            kb_hucit.setDefaultLanguage("en");
-//            kb_hucit.setMaxResults(maxResults);
-//            rootConcepts = new HashSet<String>();
-//            rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
-//            parentChildConcepts = new HashMap<String, String>();
-//            parentChildConcepts.put("http://www.w3.org/2000/01/rdf-schema#Class",
-//                    "http://www.w3.org/2002/07/owl#Class");
-//            kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit,
-//                    // person -> Achilles :: urn:cts:cwkb:1137
-//                    "http://purl.org/hucit/kb/authors/1137", rootConcepts, parentChildConcepts));
-//        }
+        // {
+        // ValueFactory vf = SimpleValueFactory.getInstance();
+        // KnowledgeBase kb_hucit = new KnowledgeBase();
+        // kb_hucit.setName("Hucit");
+        // kb_hucit.setType(profile.getType());
+        // kb_hucit.setReification(Reification.NONE);
+        // kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
+        // kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
+        // kb_hucit.setSubclassIri(
+        // vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
+        // kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+        // kb_hucit.setDescriptionIri(
+        // vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
+        // kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
+        // kb_hucit.setPropertyTypeIri(
+        // vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+        // kb_hucit.setPropertyLabelIri(RDFS.LABEL);
+        // kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
+        // kb_hucit.setDefaultLanguage("en");
+        // kb_hucit.setMaxResults(maxResults);
+        // rootConcepts = new HashSet<String>();
+        // rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
+        // parentChildConcepts = new HashMap<String, String>();
+        // parentChildConcepts.put("http://www.w3.org/2000/01/rdf-schema#Class",
+        // "http://www.w3.org/2002/07/owl#Class");
+        // kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit,
+        // // person -> Achilles :: urn:cts:cwkb:1137
+        // "http://purl.org/hucit/kb/authors/1137", rootConcepts, parentChildConcepts));
+        // }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("wikidata");
@@ -253,26 +252,28 @@ public class KnowledgeBaseServiceRemoteTest
         // "http://www.wikidata.org/entity/Q19576436", rootConcepts));
         // }
 
-        {
-            KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
-            KnowledgeBase kb_dbpedia = new KnowledgeBase();
-            kb_dbpedia.setName(profile.getName());
-            kb_dbpedia.setType(profile.getType());
-            kb_dbpedia.setReification(profile.getReification());
-            kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_dbpedia.applyMapping(profile.getMapping());
-            kb_dbpedia.applyRootConcepts(profile);
-            kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_dbpedia.setMaxResults(maxResults);
-            kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
-            rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
-            parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
-                    "http://dbpedia.org/ontology/Biomolecule");
-            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
-                    "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
-        }
+        // See: #1931 - DBPedia tests time out and fail
+        // https://github.com/inception-project/inception/issues/1931
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
+        // KnowledgeBase kb_dbpedia = new KnowledgeBase();
+        // kb_dbpedia.setName(profile.getName());
+        // kb_dbpedia.setType(profile.getType());
+        // kb_dbpedia.setReification(profile.getReification());
+        // kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        // kb_dbpedia.applyMapping(profile.getMapping());
+        // kb_dbpedia.applyRootConcepts(profile);
+        // kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
+        // kb_dbpedia.setMaxResults(maxResults);
+        // kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
+        // rootConcepts = new HashSet<String>();
+        // rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+        // parentChildConcepts = new HashMap<String, String>();
+        // parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+        // "http://dbpedia.org/ontology/Biomolecule");
+        // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
+        // "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
+        // }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("yago");
@@ -291,8 +292,8 @@ public class KnowledgeBaseServiceRemoteTest
             parentChildConcepts.put("http://schema.org/Thing",
                     "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
-                    "http://yago-knowledge.org/resource/Elvis_Presley",
-                    rootConcepts, parentChildConcepts));
+                    "http://yago-knowledge.org/resource/Elvis_Presley", rootConcepts,
+                    parentChildConcepts));
         }
 
         {
@@ -309,10 +310,10 @@ public class KnowledgeBaseServiceRemoteTest
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://zbw.eu/stw/thsys/a");
             parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://zbw.eu/stw/thsys/a",
-                    "http://zbw.eu/stw/thsys/70582");
-            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(),
-                    kb_zbw_stw_economics, "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
+            parentChildConcepts.put("http://zbw.eu/stw/thsys/a", "http://zbw.eu/stw/thsys/70582");
+            kbList.add(
+                    new TestConfiguration(profile.getAccess().getAccessUrl(), kb_zbw_stw_economics,
+                            "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
         }
 
         // Commenting this out for the moment becuase we expect that every ontology contains
@@ -351,11 +352,11 @@ public class KnowledgeBaseServiceRemoteTest
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
         for (String expectedRoot : sutConfig.getRootIdentifier()) {
-            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier)).as("Check that root concept is retreived")
-            .contains(expectedRoot);
+            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier))
+                    .as("Check that root concept is retreived").contains(expectedRoot);
         }
     }
-    
+
     @Test
     public void thatPropertyListCanBeRetrieved()
     {
@@ -389,7 +390,7 @@ public class KnowledgeBaseServiceRemoteTest
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
-    
+
     // Helper
 
     private void importKnowledgeBase(String resourceName) throws Exception
@@ -418,10 +419,10 @@ public class KnowledgeBaseServiceRemoteTest
         private final KnowledgeBase kb;
         private final String testIdentifier;
         private final Set<String> rootIdentifier;
-        private final Map<String,String> parentChildIdentifier;
+        private final Map<String, String> parentChildIdentifier;
 
         public TestConfiguration(String aUrl, KnowledgeBase aKb, String atestIdentifier,
-                Set<String> aRootIdentifier, Map<String,String> aParentChildIdentifier)
+                Set<String> aRootIdentifier, Map<String, String> aParentChildIdentifier)
         {
             super();
             url = aUrl;
@@ -451,7 +452,7 @@ public class KnowledgeBaseServiceRemoteTest
             return rootIdentifier;
         }
 
-        public Map<String,String> getParentChildIdentifier()
+        public Map<String, String> getParentChildIdentifier()
         {
             return parentChildIdentifier;
         }
@@ -464,13 +465,11 @@ public class KnowledgeBaseServiceRemoteTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration 
-    @EntityScan(
-            basePackages = {
-                "de.tudarmstadt.ukp.inception.kb.model",
-                "de.tudarmstadt.ukp.clarin.webanno.model"
-    })
-    public static class SpringConfig {
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
         // No content
     }
 }

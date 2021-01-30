@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,14 +63,14 @@ public class PdfAnnoRenderer
     }
 
     public PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
-                                      PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
+            PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();
 
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : schemaService.listAnnotationLayer(aState.getProject())) {
+        for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
             ColoringStrategy coloringStrategy = coloringService.getStrategy(layer,
                     aState.getPreferences(), colorQueues);
 
@@ -90,25 +90,26 @@ public class PdfAnnoRenderer
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 String labelText = getUiLabelText(typeAdapter, vspan);
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
-                
+
                 spans.add(new RenderSpan(vspan,
-                    new Span(vspan.getVid().toString(), labelText, color), aPageBeginOffset));
+                        new Span(vspan.getVid().toString(), labelText, color), aPageBeginOffset));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String labelText = getUiLabelText(typeAdapter, varc);
                 String color = coloringStrategy.getColor(varc, labelText, coloringRules);
 
-                pdfAnnoModel.addRelation(new Relation(varc.getVid().toString(),
-                    varc.getSource().toString(), varc.getTarget().toString(), labelText, color));
+                pdfAnnoModel.addRelation(
+                        new Relation(varc.getVid().toString(), varc.getSource().toString(),
+                                varc.getTarget().toString(), labelText, color));
             }
         }
         pdfAnnoModel.addSpans(convertToPdfAnnoSpans(spans, aDocumentText, aPdfExtractFile));
         return pdfAnnoModel;
     }
 
-    private static List<Span> convertToPdfAnnoSpans(
-        List<RenderSpan> aSpans, String aDocumentText, PdfExtractFile aPdfExtractFile)
+    private static List<Span> convertToPdfAnnoSpans(List<RenderSpan> aSpans, String aDocumentText,
+            PdfExtractFile aPdfExtractFile)
     {
         List<RenderSpan> spans = new ArrayList<>(aSpans);
         List<RenderSpan> ambiguous = new ArrayList<>();
@@ -119,8 +120,8 @@ public class PdfAnnoRenderer
             // add context before and after each span
             addContextToSpans(spans, windowSize, aDocumentText);
             // find occurences by using Aho-Corasick algorithm
-            Map<String, List<Emit>> occurrenceMap =
-                findOccurrences(spans, aPdfExtractFile.getSanitizedContent());
+            Map<String, List<Emit>> occurrenceMap = findOccurrences(spans,
+                    aPdfExtractFile.getSanitizedContent());
 
             for (RenderSpan renderSpan : spans) {
                 // get occurrence list for span text with context window
@@ -133,7 +134,8 @@ public class PdfAnnoRenderer
                     span.setPage(-1);
                     span.setText(renderSpan.getText());
                     processed.add(span);
-                } else if (occurrences.size() == 1) {
+                }
+                else if (occurrences.size() == 1) {
                     // if one occurrence was found produce a proper Span for PdfAnno
                     Span span = renderSpan.getSpan();
                     Emit emit = occurrences.get(0);
@@ -143,17 +145,18 @@ public class PdfAnnoRenderer
                     // get according PDFExtract file lines for begin and end of annotation
                     Offset beginOffset = aPdfExtractFile.getExtractIndex(begin);
                     Offset endOffset = aPdfExtractFile.getExtractIndex(end);
-                    PdfExtractLine firstLine =
-                        aPdfExtractFile.getStringPdfExtractLine(beginOffset.getBegin());
-                    PdfExtractLine lastLine =
-                        aPdfExtractFile.getStringPdfExtractLine(endOffset.getEnd());
+                    PdfExtractLine firstLine = aPdfExtractFile
+                            .getStringPdfExtractLine(beginOffset.getBegin());
+                    PdfExtractLine lastLine = aPdfExtractFile
+                            .getStringPdfExtractLine(endOffset.getEnd());
                     span.setStartPos(firstLine.getPosition());
                     span.setEndPos(lastLine.getPosition());
                     // TODO annotation across page boundaries not handled currently
                     span.setPage(firstLine.getPage());
                     span.setText(renderSpan.getText());
                     processed.add(span);
-                } else {
+                }
+                else {
                     // if multiple occurrences found span is ambiguous. add more context and retry
                     ambiguous.add(renderSpan);
                 }
@@ -162,7 +165,8 @@ public class PdfAnnoRenderer
             spans = ambiguous;
             ambiguous = new ArrayList<>();
             windowSize += WINDOW_SIZE_INCREMENT;
-        } while (!spans.isEmpty());
+        }
+        while (!spans.isEmpty());
 
         return processed;
     }
@@ -191,8 +195,8 @@ public class PdfAnnoRenderer
     }
 
     /**
-     * for a given span list find occurrences of their span text with context.
-     * this is achieved by using Aho-Corasick algorithm for good performance.
+     * for a given span list find occurrences of their span text with context. this is achieved by
+     * using Aho-Corasick algorithm for good performance.
      */
     private static Map<String, List<Emit>> findOccurrences(List<RenderSpan> aSpans, String aText)
     {
@@ -212,8 +216,8 @@ public class PdfAnnoRenderer
         return occurrenceMap;
     }
 
-    public static List<Offset> convertToDocumentOffsets(
-        List<Offset> aOffsets, DocumentModel aDocumentModel, PdfExtractFile aPdfExtractFile)
+    public static List<Offset> convertToDocumentOffsets(List<Offset> aOffsets,
+            DocumentModel aDocumentModel, PdfExtractFile aPdfExtractFile)
     {
         List<RenderSpan> iterList = new ArrayList<>();
         for (Offset offset : aOffsets) {
@@ -229,23 +233,25 @@ public class PdfAnnoRenderer
             // add context before and after each span
             addContextToSpans(iterList, windowSize, aPdfExtractFile.getSanitizedContent());
             // find occurences by using Aho-Corasick algorithm
-            Map<String, List<Emit>> occurrenceMap =
-                findOccurrences(iterList, aDocumentModel.getWhitespacelessText());
+            Map<String, List<Emit>> occurrenceMap = findOccurrences(iterList,
+                    aDocumentModel.getWhitespacelessText());
 
             for (RenderSpan renderSpan : iterList) {
                 List<Emit> occurences = occurrenceMap.get(renderSpan.getTextWithWindow());
                 if (occurences == null || occurences.size() == 0) {
                     // if occurrence list is null or empty, no match was found
                     processed.add(new Offset(-1, -1));
-                } else if (occurences.size() == 1) {
+                }
+                else if (occurences.size() == 1) {
                     // if one occurrence was found produce Offset
                     Emit emit = occurences.get(0);
                     int begin = aDocumentModel.getDocumentIndex(
-                        emit.getStart() + renderSpan.getWindowBeforeText().length());
+                            emit.getStart() + renderSpan.getWindowBeforeText().length());
                     int end = aDocumentModel.getDocumentIndex(
-                        emit.getEnd() - renderSpan.getWindowAfterText().length() + 1);
+                            emit.getEnd() - renderSpan.getWindowAfterText().length() + 1);
                     processed.add(new Offset(begin, end));
-                } else {
+                }
+                else {
                     // if multiple occurrences found span is ambiguous. add more context and retry
                     ambiguous.add(renderSpan);
                 }
@@ -254,15 +260,16 @@ public class PdfAnnoRenderer
             iterList = ambiguous;
             ambiguous = new ArrayList<>();
             windowSize += WINDOW_SIZE_INCREMENT;
-        } while (!iterList.isEmpty());
+        }
+        while (!iterList.isEmpty());
 
         return processed;
     }
 
-    public static Offset convertToDocumentOffset(
-        Offset aOffset, DocumentModel aDocumentModel, PdfExtractFile aPdfExtractFile)
+    public static Offset convertToDocumentOffset(Offset aOffset, DocumentModel aDocumentModel,
+            PdfExtractFile aPdfExtractFile)
     {
-        return convertToDocumentOffsets(
-            Arrays.asList(aOffset), aDocumentModel, aPdfExtractFile).get(0);
+        return convertToDocumentOffsets(Arrays.asList(aOffset), aDocumentModel, aPdfExtractFile)
+                .get(0);
     }
 }

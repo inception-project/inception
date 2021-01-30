@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -107,11 +107,10 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
  * Build queries against the KB.
  * 
  * <p>
- * <b>Handling of subclasses: </b>
- * Queries for subclasses return only resources which declare being a class via the class property
- * defined in the KB specification. This means that if the KB is configured to use rdfs:Class but a
- * subclass defines itself using owl:Class, then this subclass is *not* returned. We do presently
- * *not* support mixed schemes in a single KB.
+ * <b>Handling of subclasses: </b> Queries for subclasses return only resources which declare being
+ * a class via the class property defined in the KB specification. This means that if the KB is
+ * configured to use rdfs:Class but a subclass defines itself using owl:Class, then this subclass is
+ * *not* returned. We do presently *not* support mixed schemes in a single KB.
  * </p>
  */
 public class SPARQLQueryBuilder
@@ -120,7 +119,7 @@ public class SPARQLQueryBuilder
     private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryBuilder.class);
 
     public static final int DEFAULT_LIMIT = 0;
-    
+
     public static final String VAR_SUBJECT_NAME = "subj";
     public static final String VAR_PREDICATE_NAME = "pred";
     public static final String VAR_OBJECT_NAME = "obj";
@@ -131,7 +130,7 @@ public class SPARQLQueryBuilder
     public static final String VAR_DESCRIPTION_CANDIDATE_NAME = "dc";
     public static final String VAR_RANGE_NAME = "range";
     public static final String VAR_DOMAIN_NAME = "domain";
-    
+
     public static final Variable VAR_SUBJECT = var(VAR_SUBJECT_NAME);
     public static final Variable VAR_PREDICATE = var(VAR_PREDICATE_NAME);
     public static final Variable VAR_OBJECT = var(VAR_OBJECT_NAME);
@@ -157,57 +156,57 @@ public class SPARQLQueryBuilder
     public static final Iri OWL_INTERSECTIONOF = iri(OWL.INTERSECTIONOF.stringValue());
     public static final Iri RDF_REST = iri(RDF.REST.stringValue());
     public static final Iri RDF_FIRST = iri(RDF.FIRST.stringValue());
-    
+
     private static final RdfValue EMPTY_STRING = () -> "\"\"";
-    
+
     private final Set<Prefix> prefixes = new LinkedHashSet<>();
     private final Set<Projectable> projections = new LinkedHashSet<>();
     private final List<GraphPattern> primaryPatterns = new ArrayList<>();
     private final List<GraphPattern> primaryRestrictions = new ArrayList<>();
     private final List<GraphPattern> secondaryPatterns = new ArrayList<>();
-    
+
     private boolean labelImplicitlyRetrieved = false;
-    
-    enum Priority {
+
+    enum Priority
+    {
         PRIMARY, PRIMARY_RESTRICTIONS, SECONDARY
     }
-    
+
     /**
      * This flag is set internally to indicate whether the query should be skipped and an empty
-     * result should always be returned. This can be the case, e.g. if the post-processing of
-     * the query string against which to match a label causes the query to become empty.
+     * result should always be returned. This can be the case, e.g. if the post-processing of the
+     * query string against which to match a label causes the query to become empty.
      */
     private boolean returnEmptyResult = false;
-    
+
     private final KnowledgeBase kb;
     private final Mode mode;
-    
+
     /**
-     * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may
-     * or may not work.
+     * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may or
+     * may not work.
      */
     private boolean caseInsensitive = true;
-    
+
     private int limitOverride = DEFAULT_LIMIT;
-    
+
     private boolean includeInferred = true;
-    
+
     private boolean forceDisableFTS = false;
-    
+
     /**
-     * This flag controls whether we attempt to drop duplicate labels and descriptions on the
-     * side of the SPARQL server (true) or whether we try retrieving all labels and descriptions
-     * which have either no language or match the KB language and then drop duplicates on our
-     * side. Both approaches have benefits and draw-backs. In general, we try server-side
-     * reduction to reduce the data being transferred across the wire. However, in some cases we
-     * implicitly turn off server side reduction because (SSR) we have not been able to figure out
-     * working SSR queries.
+     * This flag controls whether we attempt to drop duplicate labels and descriptions on the side
+     * of the SPARQL server (true) or whether we try retrieving all labels and descriptions which
+     * have either no language or match the KB language and then drop duplicates on our side. Both
+     * approaches have benefits and draw-backs. In general, we try server-side reduction to reduce
+     * the data being transferred across the wire. However, in some cases we implicitly turn off
+     * server side reduction because (SSR) we have not been able to figure out working SSR queries.
      * 
      * Benefits of SSR:
      * <ul>
      * <li>Less data to transfer across the wire</li>
-     * <li>LIMIT works accurately (if we drop client side, we may end up with less than LIMIT 
-     *     results)</li>
+     * <li>LIMIT works accurately (if we drop client side, we may end up with less than LIMIT
+     * results)</li>
      * </ul>
      * 
      * Drawbacks of SSR:
@@ -220,11 +219,13 @@ public class SPARQLQueryBuilder
     // This is presently disabled because we cannot guarantee that the MIN operation
     // prefers the label with the language as opposed to "any label".
     private boolean serverSideReduce = false;
-    
-    private static enum Mode {
+
+    private static enum Mode
+    {
         ITEM, CLASS, INSTANCE, PROPERTY;
-        
-        protected Iri getLabelProperty(KnowledgeBase aKb) {
+
+        protected Iri getLabelProperty(KnowledgeBase aKb)
+        {
             switch (this) {
             case ITEM:
                 return iri(aKb.getLabelIri());
@@ -239,7 +240,8 @@ public class SPARQLQueryBuilder
             }
         }
 
-        protected Iri getDescriptionProperty(KnowledgeBase aKb) {
+        protected Iri getDescriptionProperty(KnowledgeBase aKb)
+        {
             switch (this) {
             case ITEM:
                 return iri(aKb.getDescriptionIri());
@@ -253,7 +255,7 @@ public class SPARQLQueryBuilder
                 throw new IllegalStateException("Unsupported mode: " + this);
             }
         }
-        
+
         /**
          * @see SPARQLQueryPrimaryConditions#descendantsOf(String)
          */
@@ -262,7 +264,7 @@ public class SPARQLQueryBuilder
             Iri typeOfProperty = iri(aKB.getTypeIri());
             Iri subClassProperty = iri(aKB.getSubclassIri());
             Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
-                        
+
             switch (this) {
             case ITEM: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
@@ -274,7 +276,7 @@ public class SPARQLQueryBuilder
                             Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
                             aContext));
                 }
-                
+
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case CLASS: {
@@ -295,7 +297,7 @@ public class SPARQLQueryBuilder
                 return VAR_SUBJECT.has(Path.of(oneOrMore(subPropertyProperty)), aContext);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
-            }            
+            }
         }
 
         /**
@@ -306,14 +308,13 @@ public class SPARQLQueryBuilder
             Iri typeOfProperty = iri(aKB.getTypeIri());
             Iri subClassProperty = iri(aKB.getSubclassIri());
             Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
-                        
+
             switch (this) {
             case ITEM:
             case CLASS:
             case INSTANCE: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(
-                        aContext.has(Path.of(oneOrMore(subClassProperty)), VAR_SUBJECT));
+                classPatterns.add(aContext.has(Path.of(oneOrMore(subClassProperty)), VAR_SUBJECT));
                 classPatterns.add(aContext
                         .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), VAR_SUBJECT));
                 if (OWL.CLASS.equals(aKB.getClassIri())) {
@@ -321,16 +322,16 @@ public class SPARQLQueryBuilder
                             Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
                             VAR_SUBJECT));
                 }
-                
+
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
                 return aContext.has(Path.of(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
-            }            
+            }
         }
-        
+
         /**
          * @see SPARQLQueryPrimaryConditions#childrenOf(String)
          */
@@ -339,19 +340,19 @@ public class SPARQLQueryBuilder
             Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
             Iri subClassProperty = iri(aKB.getSubclassIri());
             Iri typeOfProperty = iri(aKB.getTypeIri());
-                        
+
             switch (this) {
             case ITEM: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(
-                        VAR_SUBJECT.has(() -> subClassProperty.getQueryString(), aContext));
+                classPatterns
+                        .add(VAR_SUBJECT.has(() -> subClassProperty.getQueryString(), aContext));
                 classPatterns.add(VAR_SUBJECT.has(typeOfProperty, aContext));
                 if (OWL.CLASS.equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(
                             Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
                             aContext));
                 }
-                
+
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case INSTANCE: {
@@ -367,16 +368,16 @@ public class SPARQLQueryBuilder
                             Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
                             aContext));
                 }
-                
+
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
                 return VAR_SUBJECT.has(subPropertyProperty, aContext);
             default:
                 throw new IllegalStateException("Can only request children of classes");
-            }            
+            }
         }
-        
+
         /**
          * @see SPARQLQueryPrimaryConditions#parentsOf(String)
          */
@@ -385,7 +386,7 @@ public class SPARQLQueryBuilder
             Iri subClassProperty = iri(aKB.getSubclassIri());
             Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
             Iri typeOfProperty = iri(aKB.getTypeIri());
-             
+
             switch (this) {
             case CLASS: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
@@ -396,14 +397,15 @@ public class SPARQLQueryBuilder
                             Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
                             VAR_SUBJECT));
                 }
-                
+
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
                 return aContext.has(Path.of(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
             default:
-                throw new IllegalStateException("Can only request classes or properties as parents");
-            }            
+                throw new IllegalStateException(
+                        "Can only request classes or properties as parents");
+            }
         }
 
         /**
@@ -415,7 +417,7 @@ public class SPARQLQueryBuilder
             Iri subClassProperty = iri(aKb.getSubclassIri());
             Iri typeOfProperty = iri(aKb.getTypeIri());
             Variable otherSubclass = var("otherSubclass");
-            
+
             switch (this) {
             case CLASS: {
                 List<GraphPattern> rootPatterns = new ArrayList<>();
@@ -428,11 +430,11 @@ public class SPARQLQueryBuilder
                 else {
                     List<GraphPattern> classPatterns = new ArrayList<>();
                     classPatterns.add(VAR_SUBJECT.has(subClassProperty, otherSubclass)
-                                            .filter(notEquals(VAR_SUBJECT, otherSubclass)));
+                            .filter(notEquals(VAR_SUBJECT, otherSubclass)));
                     if (OWL.CLASS.equals(aKb.getClassIri())) {
                         classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF, bNode()));
                     }
-                    
+
                     rootPatterns.add(union(
                             // ... it is explicitly defined as being a class
                             VAR_SUBJECT.has(typeOfProperty, classIri),
@@ -440,20 +442,19 @@ public class SPARQLQueryBuilder
                             // This can be a very slow condition - so we have to skip it
                             // bNode().has(typeOfProperty, VAR_SUBJECT),
                             // ... it has any subclass
-                            bNode().has(subClassProperty, VAR_SUBJECT) )
-                        .filterNotExists(
-                            union(classPatterns.stream().toArray(GraphPattern[]::new))));
+                            bNode().has(subClassProperty, VAR_SUBJECT)).filterNotExists(
+                                    union(classPatterns.stream().toArray(GraphPattern[]::new))));
                 }
-                
+
                 return GraphPatterns
                         .and(rootPatterns.toArray(new GraphPattern[rootPatterns.size()]));
             }
             default:
                 throw new IllegalStateException("Can only query for root classes");
-            }            
+            }
         }
     }
-    
+
     /**
      * Retrieve any item from the KB. There is no check if the item looks like a class, instance or
      * property. The IRI and property mapping used in the patters is obtained from the given KB
@@ -465,9 +466,9 @@ public class SPARQLQueryBuilder
     }
 
     /**
-     * Retrieve only things that look like classes. Identifiers for classes participate as ID
-     * in {@code ID IS-A CLASS-IRI}, {@code X SUBCLASS-OF ID}, {@code ID SUBCLASS-OF X}. The
-     * IRI and property mapping used in the patters is obtained from the given KB configuration.
+     * Retrieve only things that look like classes. Identifiers for classes participate as ID in
+     * {@code ID IS-A CLASS-IRI}, {@code X SUBCLASS-OF ID}, {@code ID SUBCLASS-OF X}. The IRI and
+     * property mapping used in the patters is obtained from the given KB configuration.
      */
     public static SPARQLQueryPrimaryConditions forClasses(KnowledgeBase aKB)
     {
@@ -502,14 +503,14 @@ public class SPARQLQueryBuilder
     {
         kb = aKB;
         mode = aMode;
-        
-        // The Wikidata search service we are using does not return properties, so we have to do 
+
+        // The Wikidata search service we are using does not return properties, so we have to do
         // this the old-fashioned way...
         if (Mode.PROPERTY.equals(mode) && FTS_WIKIDATA.equals(aKB.getFullTextSearchIri())) {
             forceDisableFTS = true;
         }
     }
-    
+
     private void addPattern(Priority aPriority, GraphPattern aPattern)
     {
         switch (aPriority) {
@@ -526,7 +527,7 @@ public class SPARQLQueryBuilder
             throw new IllegalArgumentException("Unknown priority: [" + aPriority + "]");
         }
     }
-    
+
     private Projectable getLabelProjection()
     {
         if (serverSideReduce) {
@@ -551,18 +552,18 @@ public class SPARQLQueryBuilder
     public SPARQLQueryOptionalElements includeInferred()
     {
         includeInferred(true);
-        
+
         return this;
     }
-    
+
     @Override
     public SPARQLQueryOptionalElements excludeInferred()
     {
         includeInferred(false);
-        
+
         return this;
     }
-    
+
     @Override
     public SPARQLQueryOptionalElements includeInferred(boolean aEnabled)
     {
@@ -570,7 +571,7 @@ public class SPARQLQueryBuilder
 
         return this;
     }
-    
+
     @Override
     public SPARQLQueryOptionalElements limit(int aLimit)
     {
@@ -598,16 +599,16 @@ public class SPARQLQueryBuilder
         caseInsensitive = true;
         return this;
     }
-    
+
     /**
-     * Generates a pattern which binds all sub-properties of the label property to the given 
-     * variable. 
+     * Generates a pattern which binds all sub-properties of the label property to the given
+     * variable.
      */
     private GraphPattern bindLabelProperties(Variable aVariable)
     {
         Iri pLabel = mode.getLabelProperty(kb);
-        Iri pSubProperty = iri(kb.getSubPropertyIri()); 
-        
+        Iri pSubProperty = iri(kb.getSubPropertyIri());
+
         return optional(aVariable.has(Path.of(zeroOrMore(pSubProperty)), pLabel));
     }
 
@@ -615,67 +616,65 @@ public class SPARQLQueryBuilder
     public SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers)
     {
         forceDisableFTS = true;
-        
+
         addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT,
                 Arrays.stream(aIdentifiers).map(Rdf::iri).toArray(RdfValue[]::new)));
-        
+
         return this;
     }
-    
+
     @Override
     public SPARQLQueryPrimaryConditions matchingDomain(String aIdentifier)
     {
         forceDisableFTS = true;
-        
+
         // The original code considered owl:unionOf in the domain defintion... we do not do this
         // at the moment, but to see how it was before and potentially restore that behavior, we
         // keep a copy of the old query here.
-//        return String.join("\n"
-//                , SPARQL_PREFIX
-//                , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) WHERE {"
-//                , "{  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain }"
-//                , " UNION "
-//                , "{ ?s a ?prop "
-//                , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty} "
-//                , "    FILTER NOT EXISTS {  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?x } }"
-//                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-//                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-//                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
-//                , "}"
-//                , "LIMIT " + aKB.getMaxResults());
+        // return String.join("\n"
+        // , SPARQL_PREFIX
+        // , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) WHERE {"
+        // , "{ ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?aDomain }"
+        // , " UNION "
+        // , "{ ?s a ?prop "
+        // , " VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty
+        // owl:AnnotationProperty} "
+        // , " FILTER NOT EXISTS { ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?x } }"
+        // , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
+        // , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
+        // , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
+        // , "}"
+        // , "LIMIT " + aKB.getMaxResults());
 
         Iri subClassProperty = iri(kb.getSubclassIri());
         Iri subPropertyProperty = iri(kb.getSubPropertyIri());
         LabeledBlankNode superClass = Rdf.bNode("superClass");
 
-        addPattern(PRIMARY, union(
-                GraphPatterns.and(
-                    // Find all super-classes of the domain type
-                    iri(aIdentifier).has(Path.of(zeroOrMore(subClassProperty)), superClass),
-                    // Either there is a domain which matches the given one
-                    VAR_SUBJECT.has(iri(RDFS.DOMAIN), superClass)),
+        addPattern(PRIMARY, union(GraphPatterns.and(
+                // Find all super-classes of the domain type
+                iri(aIdentifier).has(Path.of(zeroOrMore(subClassProperty)), superClass),
+                // Either there is a domain which matches the given one
+                VAR_SUBJECT.has(iri(RDFS.DOMAIN), superClass)),
                 // ... the property does not define or inherit domain
                 isPropertyPattern().and(filterNotExists(VAR_SUBJECT.has(
                         Path.of(zeroOrMore(subPropertyProperty), iri(RDFS.DOMAIN)), bNode())))));
-        
+
         return this;
     }
-    
+
     @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues)
-                .map(SPARQLQueryBuilder::sanitizeQueryString)
-                .filter(StringUtils::isNotBlank)
-                .toArray(String[]::new);
-        
+        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
+                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+
         if (values.length == 0) {
             returnEmptyResult = true;
             return this;
         }
-        
+
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
-        
+
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(values));
         }
@@ -697,73 +696,71 @@ public class SPARQLQueryBuilder
             throw new IllegalStateException(
                     "Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
         }
-        
+
         // Retain only the first description - do this here since we change the server-side reduce
         // flag above when using Lucene FTS
         projections.add(getLabelProjection());
         labelImplicitlyRetrieved = true;
-        
+
         return this;
     }
-    
+
     private GraphPattern withLabelMatchingExactlyAnyOf_No_FTS(String[] aValues)
     {
         List<RdfValue> values = new ArrayList<>();
-        String language =  kb.getDefaultLanguage();
-        
+        String language = kb.getDefaultLanguage();
+
         for (String value : aValues) {
             if (StringUtils.isBlank(value)) {
                 continue;
             }
-            
+
             if (language != null) {
                 values.add(literalOfLanguage(value, language));
             }
-            
+
             values.add(literalOf(value));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 new ValuesPattern(VAR_LABEL_CANDIDATE, values),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
     }
-    
+
     private GraphPattern withLabelMatchingExactlyAnyOf_RDF4J_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
-            
+
             valuePatterns.add(VAR_SUBJECT
                     .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(sanitizedValue))
-                            .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
+                            bNode(LUCENE_QUERY, literalOf(sanitizedValue)).andHas(LUCENE_PROPERTY,
+                                    VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
     private GraphPattern withLabelMatchingExactlyAnyOf_Fuseki_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_FUSEKI_SEARCH);
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
             // Fuseki) can have trouble matching if they get upper-case query when they
             // internally lower-case#
             if (caseInsensitive) {
@@ -774,37 +771,34 @@ public class SPARQLQueryBuilder
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
-            
+
             valuePatterns.add(VAR_SUBJECT
                     .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(sanitizedValue)))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
-    
+
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
-                        
-            valuePatterns.add(VAR_SUBJECT
-                    .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO, 
+
+            valuePatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO,
                             literalOf("\"" + sanitizedValue + "\"")))
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -813,40 +807,37 @@ public class SPARQLQueryBuilder
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
         String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
 
             valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
-                            .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                                    .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb))));
+                    .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                            .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb))));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
     @Override
     public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues)
-                .map(SPARQLQueryBuilder::sanitizeQueryString)
-                .filter(StringUtils::isNotBlank)
-                .toArray(String[]::new);
-        
+        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
+                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+
         if (values.length == 0) {
             returnEmptyResult = true;
             return this;
         }
-        
+
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
-        
+
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_RDF4J_FTS(values));
         }
@@ -866,15 +857,15 @@ public class SPARQLQueryBuilder
             throw new IllegalStateException(
                     "Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
         }
-        
+
         // Retain only the first description - do this here since we change the server-side reduce
         // flag above when using Lucene FTS
         projections.add(getLabelProjection());
         labelImplicitlyRetrieved = true;
-        
+
         return this;
     }
-    
+
     private GraphPattern withLabelMatchingAnyOf_No_FTS(String[] aValues)
     {
         // Falling back to "contains" semantics if there is no FTS
@@ -886,21 +877,20 @@ public class SPARQLQueryBuilder
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
         String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
 
             valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
-                            .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)));
+                    .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -909,26 +899,24 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
-                        
-            valuePatterns.add(VAR_SUBJECT
-                    .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO, 
-                            literalOf("\"" + sanitizedValue + "\""))));
+
+            valuePatterns.add(
+                    VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE).and(VAR_LABEL_CANDIDATE
+                            .has(FTS_VIRTUOSO, literalOf("\"" + sanitizedValue + "\""))));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
     private GraphPattern withLabelMatchingAnyOf_Fuseki_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_FUSEKI_SEARCH);
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
@@ -937,8 +925,8 @@ public class SPARQLQueryBuilder
             if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
                 continue;
             }
-            
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
             // Fuseki) can have trouble matching if they get upper-case query when they
             // internally lower-case#
             if (caseInsensitive) {
@@ -950,54 +938,50 @@ public class SPARQLQueryBuilder
                     .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyQuery)))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
     private GraphPattern withLabelMatchingAnyOf_RDF4J_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
-            if (StringUtils.isBlank(sanitizedValue)) {
+
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+
+            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
                 continue;
             }
-            
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
-            
+
             valuePatterns.add(VAR_SUBJECT
                     .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(fuzzyQuery))
-                            .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
+                            bNode(LUCENE_QUERY, literalOf(fuzzyQuery)).andHas(LUCENE_PROPERTY,
+                                    VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues)
-                .map(SPARQLQueryBuilder::sanitizeQueryString)
-                .filter(StringUtils::isNotBlank)
-                .toArray(String[]::new);
-        
+        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
+                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+
         if (values.length == 0) {
             returnEmptyResult = true;
             return this;
         }
-        
+
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
-        
+
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(values));
         }
@@ -1020,12 +1004,12 @@ public class SPARQLQueryBuilder
             throw new IllegalStateException(
                     "Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
         }
-        
+
         // Retain only the first description - do this here since we change the server-side reduce
         // flag above when using Lucene FTS
         projections.add(getLabelProjection());
         labelImplicitlyRetrieved = true;
-        
+
         return this;
     }
 
@@ -1036,21 +1020,19 @@ public class SPARQLQueryBuilder
             if (StringUtils.isBlank(value)) {
                 continue;
             }
-            
-            valuePatterns.add(VAR_SUBJECT
-                    .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+
+            valuePatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
-    
+
     private GraphPattern withLabelContainingAnyOf_RDF4J_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
@@ -1062,32 +1044,31 @@ public class SPARQLQueryBuilder
             valuePatterns.add(VAR_SUBJECT
                     .has(FTS_LUCENE,
                             bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*"))
-                            .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
+                                    .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
     private GraphPattern withLabelContainingAnyOf_Fuseki_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_FUSEKI_SEARCH);
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
 
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
             // Fuseki) can have trouble matching if they get upper-case query when they
             // internally lower-case#
             if (caseInsensitive) {
                 String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
@@ -1098,10 +1079,7 @@ public class SPARQLQueryBuilder
                     .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
 
-        
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -1110,20 +1088,18 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
-                        
-            valuePatterns.add(VAR_SUBJECT
-                    .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO, 
+
+            valuePatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO,
                             literalOf("\"" + sanitizedValue + "\"")))
                     .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -1132,11 +1108,11 @@ public class SPARQLQueryBuilder
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
         String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-        
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
@@ -1145,9 +1121,8 @@ public class SPARQLQueryBuilder
                     .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                             .filter(containsPattern(VAR_LABEL_CANDIDATE, value))));
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -1155,14 +1130,14 @@ public class SPARQLQueryBuilder
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
         String value = sanitizeQueryString(aPrefixQuery);
-        
+
         if (value == null || value.length() == 0) {
             returnEmptyResult = true;
             return this;
         }
-        
+
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
-        
+
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(value));
         }
@@ -1185,12 +1160,12 @@ public class SPARQLQueryBuilder
             throw new IllegalStateException(
                     "Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
         }
-        
+
         // Retain only the first description - do this here since we change the server-side reduce
         // flag above when using Lucene FTS
         projections.add(getLabelProjection());
         labelImplicitlyRetrieved = true;
-        
+
         return this;
     }
 
@@ -1199,9 +1174,8 @@ public class SPARQLQueryBuilder
         if (aPrefixQuery.isEmpty()) {
             returnEmptyResult = true;
         }
-        
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
@@ -1211,15 +1185,14 @@ public class SPARQLQueryBuilder
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
         String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-        
+
         if (aPrefix.isEmpty()) {
             returnEmptyResult = true;
         }
-        
+
         String sanitizedValue = sanitizeQueryStringForFTS(aPrefix);
 
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
                         .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                                 .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefix))));
@@ -1229,10 +1202,10 @@ public class SPARQLQueryBuilder
     {
         StringBuilder ftsQueryString = new StringBuilder();
         ftsQueryString.append("\"");
-        
+
         // Strip single quotes and asterisks because they have special semantics
         String sanitizedQuery = sanitizeQueryStringForFTS(aPrefixQuery);
-        
+
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
         // wildcard
@@ -1242,8 +1215,8 @@ public class SPARQLQueryBuilder
                 if (i > 0) {
                     ftsQueryString.append(" ");
                 }
-                
-                // Virtuoso requires that a token has at least 4 characters before it can be 
+
+                // Virtuoso requires that a token has at least 4 characters before it can be
                 // used with a wildcard. If the last token has less than 4 characters, we simply
                 // drop it to avoid the user hitting a point where the auto-suggesions suddenly
                 // are empty. If the token 4 or more, we add the wildcard.
@@ -1261,19 +1234,18 @@ public class SPARQLQueryBuilder
         else {
             ftsQueryString.append(sanitizedQuery);
         }
-        
+
         ftsQueryString.append("\"");
-        
+
         // If the query string was reduced to nothing, then the query should always return an empty
         // result.
         if (ftsQueryString.length() == 2) {
             returnEmptyResult = true;
         }
-        
+
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                         .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO,
                                 literalOf(ftsQueryString.toString())))
@@ -1285,12 +1257,12 @@ public class SPARQLQueryBuilder
         // REC: Haven't been able to get this to work with server-side reduction, so implicitly
         // turning it off here.
         serverSideReduce = false;
-        
+
         prefixes.add(PREFIX_LUCENE_SEARCH);
-        
+
         // Strip single quotes and asterisks because they have special semantics
         String sanitizedValue = sanitizeQueryStringForFTS(aPrefixQuery);
-        
+
         if (StringUtils.isBlank(sanitizedValue)) {
             returnEmptyResult = true;
         }
@@ -1306,32 +1278,32 @@ public class SPARQLQueryBuilder
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
-                VAR_SUBJECT.has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString))
-                        .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
-                        .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY), VAR_SUBJECT
+                .has(FTS_LUCENE,
+                        bNode(LUCENE_QUERY, literalOf(queryString)).andHas(LUCENE_PROPERTY,
+                                VAR_LABEL_PROPERTY))
+                .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
-    
+
     private GraphPattern withLabelStartingWith_Fuseki_FTS(String aPrefixQuery)
     {
         // REC: Haven't been able to get this to work with server-side reduction, so implicitly
         // turning it off here.
         serverSideReduce = false;
-        
+
         prefixes.add(PREFIX_FUSEKI_SEARCH);
 
         String queryString = aPrefixQuery.trim();
 
-        // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+        // We assume that the FTS is case insensitive and found that some FTSes (i.e.
         // Fuseki) can have trouble matching if they get upper-case query when they
         // internally lower-case#
         if (caseInsensitive) {
             String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
             queryString = queryString.toLowerCase(Locale.forLanguageTag(language));
         }
-        
+
         if (queryString.isEmpty()) {
             returnEmptyResult = true;
         }
@@ -1345,10 +1317,9 @@ public class SPARQLQueryBuilder
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
-                VAR_SUBJECT.has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, 
-                                literalOf(queryString)))
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
+                VAR_SUBJECT
+                        .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(queryString)))
                         .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
@@ -1366,52 +1337,49 @@ public class SPARQLQueryBuilder
     private String asRegexp(String aValue)
     {
         String value = aValue;
-        // Escape metacharacters 
+        // Escape metacharacters
         // value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]", "\\\\\\\\$0");
         value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]+", ".+");
         // Replace consecutive whitespace or control chars with a whitespace matcher
         value = value.replaceAll("[\\p{Space}\\p{Cntrl}]+", "\\\\\\\\s+");
         return value;
     }
-    
+
     private Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
     {
         String language = aKB.getDefaultLanguage();
-        
+
         List<Expression<?>> expressions = new ArrayList<>();
-        
+
         Operand variable = aVariable;
-        
+
         String regexFlags = "";
         if (caseInsensitive) {
             regexFlags += "i";
         }
-        
+
         // Match using REGEX to be resilient against extra whitespace
         // Match exactly
         String value = "^" + asRegexp(aValue) + "$";
-        
+
         // Match with default language
         if (language != null) {
-            expressions.add(and(
-                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
-            
+
             // Match without language
-            expressions.add(and(
-                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
-                            .parenthesize());
+            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)).parenthesize());
         }
         else {
             // Match ignoring language
             expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
         }
-        
+
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
-    
+
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
         String language = kb.getDefaultLanguage();
@@ -1419,12 +1387,12 @@ public class SPARQLQueryBuilder
         List<Expression<?>> expressions = new ArrayList<>();
 
         Operand variable = aVariable;
-        
+
         String regexFlags = "";
         if (caseInsensitive) {
             regexFlags += "i";
         }
-        
+
         String value;
         switch (aFunction) {
         // Match using REGEX to be resilient against extra whitespace
@@ -1440,26 +1408,21 @@ public class SPARQLQueryBuilder
             throw new IllegalArgumentException(
                     "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
         }
-        
+
         if (language != null) {
             // Match with default language
-            expressions.add(and(
-                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
-            
+
             // Match without language
-            expressions.add(and(
-                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
-                            .parenthesize());
+            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)).parenthesize());
         }
         else {
             // Match ignoring language
-            expressions.add(
-                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+            expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
         }
-
 
         // Match with any language (the reduce code doesn't handle this properly atm)
         // expressions.add(function(aFunction, variable, literalOf(value)));
@@ -1471,9 +1434,9 @@ public class SPARQLQueryBuilder
     public SPARQLQueryPrimaryConditions roots()
     {
         forceDisableFTS = true;
-        
+
         addPattern(PRIMARY, mode.rootsPattern(kb));
-        
+
         return this;
     }
 
@@ -1481,23 +1444,23 @@ public class SPARQLQueryBuilder
     public SPARQLQueryPrimaryConditions ancestorsOf(String aItemIri)
     {
         forceDisableFTS = true;
-        
+
         Iri contextIri = iri(aItemIri);
-        
+
         addPattern(PRIMARY, mode.ancestorsPattern(kb, contextIri));
-        
+
         return this;
     }
-    
+
     @Override
     public SPARQLQueryPrimaryConditions descendantsOf(String aClassIri)
     {
         forceDisableFTS = true;
-        
+
         Iri contextIri = iri(aClassIri);
-        
+
         addPattern(PRIMARY, mode.descendentsPattern(kb, contextIri));
-        
+
         return this;
     }
 
@@ -1505,11 +1468,11 @@ public class SPARQLQueryBuilder
     public SPARQLQueryPrimaryConditions childrenOf(String aClassIri)
     {
         forceDisableFTS = true;
-        
+
         Iri contextIri = iri(aClassIri);
-        
+
         addPattern(PRIMARY, mode.childrenPattern(kb, contextIri));
-        
+
         return this;
     }
 
@@ -1517,11 +1480,11 @@ public class SPARQLQueryBuilder
     public SPARQLQueryPrimaryConditions parentsOf(String aClassIri)
     {
         forceDisableFTS = true;
-        
+
         Iri contextIri = iri(aClassIri);
-        
+
         addPattern(PRIMARY, mode.parentsPattern(kb, contextIri));
-        
+
         return this;
     }
 
@@ -1532,7 +1495,7 @@ public class SPARQLQueryBuilder
         Iri typeOfProperty = iri(kb.getTypeIri());
 
         List<GraphPattern> classPatterns = new ArrayList<>();
-        
+
         // An item is a class if ...
         // ... it is explicitly defined as being a class
         classPatterns.add(VAR_SUBJECT.has(typeOfProperty, classIri));
@@ -1545,24 +1508,22 @@ public class SPARQLQueryBuilder
         // classPatterns.add(bNode().has(typeOfProperty, VAR_SUBJECT));
         // ... it participates in an owl:intersectionOf
         if (OWL.CLASS.equals(kb.getClassIri())) {
-            classPatterns.add(VAR_SUBJECT.has(
-                    Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                    bNode()));
+            classPatterns.add(VAR_SUBJECT
+                    .has(Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), bNode()));
         }
-        
+
         addPattern(PRIMARY_RESTRICTIONS,
                 filterExists(union(classPatterns.stream().toArray(GraphPattern[]::new))));
     }
-    
+
     private void limitToInstances()
     {
         Iri classIri = iri(kb.getClassIri());
         Iri subClassProperty = iri(kb.getSubclassIri());
         Iri typeOfProperty = iri(kb.getTypeIri());
-        
+
         // An item is a class if ...
-        addPattern(PRIMARY_RESTRICTIONS, 
-                filterExists(VAR_SUBJECT.has(typeOfProperty, bNode()))
+        addPattern(PRIMARY_RESTRICTIONS, filterExists(VAR_SUBJECT.has(typeOfProperty, bNode()))
                 // ... it is explicitly defined as being a class
                 .filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri))
                 // ... it has any subclass
@@ -1570,19 +1531,19 @@ public class SPARQLQueryBuilder
                 // ... it has any superclass
                 .filterNotExists(VAR_SUBJECT.has(subClassProperty, bNode())));
     }
-        
+
     private void limitToProperties()
     {
         addPattern(PRIMARY_RESTRICTIONS, filterExists(isPropertyPattern()));
     }
-    
+
     private GraphPattern isPropertyPattern()
     {
         Iri propertyIri = iri(kb.getPropertyTypeIri());
         Iri subPropertyProperty = iri(kb.getSubPropertyIri());
         Iri typeOfProperty = iri(kb.getTypeIri());
-        Iri pSubClass = iri(kb.getSubclassIri()); 
-        
+        Iri pSubClass = iri(kb.getSubclassIri());
+
         List<GraphPattern> propertyPatterns = new ArrayList<>();
 
         // An item is a property if ...
@@ -1593,15 +1554,14 @@ public class SPARQLQueryBuilder
         propertyPatterns.add(bNode().has(subPropertyProperty, VAR_SUBJECT));
         // ... it has any superproperties
         propertyPatterns.add(VAR_SUBJECT.has(subPropertyProperty, bNode()));
-        
+
         // This may be a bit too general... e.g. it takes forever to complete on YAGO
         //// ... or it essentially appears in the predicate position :)
-        //propertyPatterns.add(bNode().has(VAR_SUBJECT, bNode()));
-        
+        // propertyPatterns.add(bNode().has(VAR_SUBJECT, bNode()));
+
         return union(propertyPatterns.stream().toArray(GraphPattern[]::new));
     }
 
-        
     @Override
     public SPARQLQueryOptionalElements retrieveLabel()
     {
@@ -1609,25 +1569,25 @@ public class SPARQLQueryBuilder
         if (labelImplicitlyRetrieved) {
             return this;
         }
-        
+
         // Retain only the first description
         projections.add(getLabelProjection());
-        
+
         String language = kb.getDefaultLanguage();
-        
+
         List<GraphPattern> labelPatterns = new ArrayList<>();
 
         // Match with any language (the reduce code doesn't handle this properly atm)
         // labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
-        
+
         // Find all labels corresponding to the KB language
         if (language != null) {
             // Find all labels without any language
             labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE).filter(
                     function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), EMPTY_STRING)));
-            
+
             labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), 
+                    .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE),
                             literalOf(language))));
         }
         else {
@@ -1636,13 +1596,13 @@ public class SPARQLQueryBuilder
         }
 
         addPattern(SECONDARY, bindLabelProperties(VAR_LABEL_PROPERTY));
-        
-        // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would 
+
+        // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
         // normally match to be removed from the results set. Using a UNION seems to address this
-        //labelPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
+        // labelPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
         addPattern(SECONDARY,
                 optional(union(labelPatterns.toArray(new GraphPattern[labelPatterns.size()]))));
-        
+
         return this;
     }
 
@@ -1651,7 +1611,7 @@ public class SPARQLQueryBuilder
     {
         // Retain only the first description
         projections.add(getDescriptionProjection());
-        
+
         String language = kb.getDefaultLanguage();
         Iri descProperty = mode.getDescriptionProperty(kb);
 
@@ -1659,10 +1619,10 @@ public class SPARQLQueryBuilder
 
         if (language != null) {
             // Find all descriptions corresponding to the KB language
-            descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
-                    .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), 
-                            literalOf(language))));
-            
+            descriptionPatterns.add(
+                    VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE).filter(function(LANGMATCHES,
+                            function(LANG, VAR_DESC_CANDIDATE), literalOf(language))));
+
             // Find all descriptions without any language
             descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE).filter(
                     function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), EMPTY_STRING)));
@@ -1674,34 +1634,33 @@ public class SPARQLQueryBuilder
 
         // Match with any language (the reduce code doesn't handle this properly atm)
         // descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
-        
 
-        // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would 
+        // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
         // normally match to be removed from the results set. Using a UNION seems to address this
-        //descriptionPatterns.forEach(pattern -> addPattern(SECONDARY, optional(pattern)));
+        // descriptionPatterns.forEach(pattern -> addPattern(SECONDARY, optional(pattern)));
         addPattern(SECONDARY, optional(
                 union(descriptionPatterns.toArray(new GraphPattern[descriptionPatterns.size()]))));
-        
+
         return this;
     }
-    
+
     @Override
     public SPARQLQueryOptionalElements retrieveDomainAndRange()
     {
         projections.add(VAR_RANGE);
         projections.add(VAR_DOMAIN);
-        
+
         addPattern(SECONDARY, optional(VAR_SUBJECT.has(RDFS.RANGE, VAR_RANGE)));
         addPattern(SECONDARY, optional(VAR_SUBJECT.has(RDFS.DOMAIN, VAR_DOMAIN)));
-        
+
         return this;
     }
-    
+
     private int getLimit()
     {
         return limitOverride > 0 ? limitOverride : kb.getMaxResults();
     }
-    
+
     @Override
     public SelectQuery selectQuery()
     {
@@ -1711,7 +1670,7 @@ public class SPARQLQueryBuilder
         SelectQuery query = Queries.SELECT().distinct();
         prefixes.forEach(query::prefix);
         projections.forEach(query::select);
-        
+
         // First add the primary patterns and high-level restrictions (e.g. limits to classes or
         // instances) - this is important because Virtuoso has trouble when combining UNIONS,
         // property paths FILTERS and OPTIONALS (which we do a lot). It seems to help when we put
@@ -1720,33 +1679,32 @@ public class SPARQLQueryBuilder
         query.where(() -> SparqlBuilderUtils.getBracedString(
                 GraphPatterns.and(concat(primaryPatterns.stream(), primaryRestrictions.stream())
                         .toArray(GraphPattern[]::new)).getQueryString()));
-        
-        // Then add the optional or lower-prio elements 
+
+        // Then add the optional or lower-prio elements
         secondaryPatterns.stream().forEach(query::where);
-        
+
         if (serverSideReduce) {
             query.groupBy(VAR_SUBJECT);
         }
-        
+
         if (kb.getDefaultDatasetIri() != null) {
-            query.from(SparqlBuilder.dataset(
-                    SparqlBuilder.from(iri(kb.getDefaultDatasetIri()))));
+            query.from(SparqlBuilder.dataset(SparqlBuilder.from(iri(kb.getDefaultDatasetIri()))));
         }
-        
+
         int actualLimit = getLimit();
-        
+
         if (!serverSideReduce) {
             // If we do not do a server-side reduce, then we may get two results for every item
             // from the server (one with and one without the language), so we need to double the
             // query limit and cut down results locally later.
             actualLimit = actualLimit * 2;
         }
-        
+
         query.limit(actualLimit);
-        
+
         return query;
     }
-    
+
     @Override
     public List<KBHandle> asHandles(RepositoryConnection aConnection, boolean aAll)
     {
@@ -1754,14 +1712,14 @@ public class SPARQLQueryBuilder
         String queryId = toHexString(hashCode());
 
         String queryString = selectQuery().getQueryString();
-        //queryString = QueryParserUtil.parseQuery(QueryLanguage.SPARQL, queryString, null)
-        //        .toString();
+        // queryString = QueryParserUtil.parseQuery(QueryLanguage.SPARQL, queryString, null)
+        // .toString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
         List<KBHandle> results;
         if (returnEmptyResult) {
             results = emptyList();
-            
+
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
         }
@@ -1770,14 +1728,14 @@ public class SPARQLQueryBuilder
             tupleQuery.setIncludeInferred(includeInferred);
             results = evaluateListQuery(tupleQuery, aAll);
             results.sort(Comparator.comparing(KBObject::getUiLabel, String.CASE_INSENSITIVE_ORDER));
-            
+
             LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
                     currentTimeMillis() - startTime);
         }
 
         return results;
     }
-    
+
     /**
      * Execute the query and return {@code true} if the result set is not empty. This internally
      * limits the number of results requested via SPARQL to 1 and should complete faster than
@@ -1796,29 +1754,29 @@ public class SPARQLQueryBuilder
         String queryId = toHexString(hashCode());
 
         limit(1);
-        
+
         SelectQuery query = selectQuery();
-        
+
         String queryString = query.getQueryString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
         if (returnEmptyResult) {
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
-            
+
             return false;
         }
         else {
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             boolean result = !evaluateListQuery(tupleQuery, aAll).isEmpty();
-            
+
             LOG.debug("[{}] Query returned {} in {}ms", queryId, result,
                     currentTimeMillis() - startTime);
-            
+
             return result;
         }
     }
-    
+
     @Override
     public Optional<KBHandle> asHandle(RepositoryConnection aConnection, boolean aAll)
     {
@@ -1826,14 +1784,14 @@ public class SPARQLQueryBuilder
         String queryId = toHexString(hashCode());
 
         limit(1);
-        
+
         String queryString = selectQuery().getQueryString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
         Optional<KBHandle> result;
         if (returnEmptyResult) {
             result = Optional.empty();
-            
+
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
         }
@@ -1841,14 +1799,14 @@ public class SPARQLQueryBuilder
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             tupleQuery.setIncludeInferred(includeInferred);
             result = evaluateListQuery(tupleQuery, aAll).stream().findFirst();
-            
+
             LOG.debug("[{}] Query returned a result in {}ms", queryId,
                     currentTimeMillis() - startTime);
         }
 
         return result;
     }
-    
+
     /**
      * Method process the Tuple Query Results
      * 
@@ -1868,25 +1826,25 @@ public class SPARQLQueryBuilder
                 if (bindings.size() == 0) {
                     continue;
                 }
-                
+
                 // LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
-    
+
                 String id = bindings.getBinding(VAR_SUBJECT_NAME).getValue().stringValue();
                 if (!id.contains(":") || (!aAll && hasImplicitNamespace(kb, id))) {
                     continue;
                 }
-                
+
                 KBHandle handle = new KBHandle(id);
                 handle.setKB(kb);
-                
+
                 extractLabel(handle, bindings);
                 extractDescription(handle, bindings);
                 extractRange(handle, bindings);
                 extractDomain(handle, bindings);
-    
+
                 handles.add(handle);
             }
-            
+
             if (serverSideReduce) {
                 return handles;
             }
@@ -1895,7 +1853,7 @@ public class SPARQLQueryBuilder
             }
         }
     }
-    
+
     /**
      * Make sure that each result is only represented once, preferably in the default language.
      */
@@ -1904,7 +1862,7 @@ public class SPARQLQueryBuilder
         Map<String, KBHandle> cMap = new LinkedHashMap<>();
         for (KBHandle handle : aHandles) {
             KBHandle current = cMap.get(handle.getIdentifier());
-            
+
             // Not recorded yet -> add it
             if (current == null) {
                 cMap.put(handle.getIdentifier(), handle);
@@ -1920,13 +1878,13 @@ public class SPARQLQueryBuilder
                 cMap.put(handle.getIdentifier(), handle);
             }
         }
-        
+
         LOG.trace("Input: {}", aHandles);
         LOG.trace("Output: {}", cMap.values());
 
         return cMap.values().stream().limit(getLimit()).collect(Collectors.toList());
     }
-    
+
     private void extractLabel(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
         // If server-side reduce is used, the label is in VAR_LABEL_NAME
@@ -1956,7 +1914,7 @@ public class SPARQLQueryBuilder
             }
         }
     }
-    
+
     private void extractDescription(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
         Binding description = aSourceBindings.getBinding(VAR_DESCRIPTION_NAME);
@@ -1968,7 +1926,7 @@ public class SPARQLQueryBuilder
             aTargetHandle.setDescription(descCandidate.getValue().stringValue());
         }
     }
-    
+
     private void extractDomain(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
         Binding domain = aSourceBindings.getBinding(VAR_DOMAIN_NAME);
@@ -1984,9 +1942,9 @@ public class SPARQLQueryBuilder
             aTargetHandle.setRange(range.getValue().stringValue());
         }
     }
-    
+
     /**
-     * Removes leading and trailing space and single quote characters which could cause the query 
+     * Removes leading and trailing space and single quote characters which could cause the query
      * string to escape its quotes in the SPARQL query.
      */
     public static String sanitizeQueryString(String aQuery)
@@ -1994,9 +1952,9 @@ public class SPARQLQueryBuilder
         if (aQuery == null || aQuery.length() == 0) {
             return aQuery;
         }
-        
+
         boolean trailingSpace = isWhitespace(aQuery.charAt(aQuery.length() - 1));
-        
+
         int end = aQuery.length();
         while (end > 0 && (isWhitespace(aQuery.charAt(end - 1)) || aQuery.charAt(end - 1) == '\''
                 || aQuery.charAt(end - 1) == '"')) {
@@ -2012,7 +1970,7 @@ public class SPARQLQueryBuilder
         if (begin >= end) {
             return "";
         }
-        
+
         if (begin > 0 || end < aQuery.length()) {
             if (trailingSpace) {
                 return aQuery.substring(begin, end) + ' ';
@@ -2021,10 +1979,10 @@ public class SPARQLQueryBuilder
                 return aQuery.substring(begin, end);
             }
         }
-        
+
         return aQuery;
     }
-    
+
     public static String sanitizeQueryStringForFTS(String aQuery)
     {
         return aQuery
@@ -2032,10 +1990,9 @@ public class SPARQLQueryBuilder
                 .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[~+*(){}\\[\\]]]+", " ")
                 // character classes to remove from the query string
                 // \u00AD : SOFT HYPHEN
-                .replaceAll("[\\u00AD]", "")
-                .trim();
+                .replaceAll("[\\u00AD]", "").trim();
     }
-    
+
     public static String convertToFuzzyMatchingQuery(String aQuery)
     {
         StringJoiner joiner = new StringJoiner(" ");
@@ -2045,7 +2002,7 @@ public class SPARQLQueryBuilder
             }
             // REC: excluding terms of 3 or less characters helps reducing the problem that a
             // mention of "Counties of Catherlagh" matches "Anne of Austria", but actually
-            // this should be handled by stopwords and not be excluding any short words... 
+            // this should be handled by stopwords and not be excluding any short words...
             // I think
             else if (term.length() >= 3) {
                 joiner.add(term);
@@ -2061,7 +2018,7 @@ public class SPARQLQueryBuilder
         if (!(other instanceof SPARQLQueryBuilder)) {
             return false;
         }
-        
+
         SPARQLQueryBuilder castOther = (SPARQLQueryBuilder) other;
         String query = selectQuery().getQueryString();
         String otherQuery = castOther.selectQuery().getQueryString();

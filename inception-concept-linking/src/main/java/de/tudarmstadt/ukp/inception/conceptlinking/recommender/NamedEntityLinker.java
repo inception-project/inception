@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,12 +59,12 @@ public class NamedEntityLinker
     private FeatureSupportRegistry fsRegistry;
     private ConceptFeatureTraits featureTraits;
 
-    public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL
-        = new Key<>("model");
+    public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL = new Key<>(
+            "model");
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
-        KnowledgeBaseService aKbService, ConceptLinkingService aClService,
-        FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
+            KnowledgeBaseService aKbService, ConceptLinkingService aClService,
+            FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
     {
         super(aRecommender);
 
@@ -110,11 +110,12 @@ public class NamedEntityLinker
 
         if (conceptFeatureTraits.getRepositoryId() != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),
-                conceptFeatureTraits.getRepositoryId());
+                    conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
                 handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aCas));
             }
-        } else {
+        }
+        else {
             for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
                 if (kb.isSupportConceptLinking()) {
                     handles.addAll(readCandidates(kb, aCoveredText, aBegin, aCas));
@@ -128,7 +129,7 @@ public class NamedEntityLinker
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         for (KBHandle prediction : handles.stream().limit(recommender.getMaxRecommendations())
-            .collect(Collectors.toList())) {
+                .collect(Collectors.toList())) {
             AnnotationFS annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
             annotation.setStringValue(predictedFeature, prediction.getIdentifier());
             annotation.setBooleanValue(isPredictionFeature, true);
@@ -137,10 +138,10 @@ public class NamedEntityLinker
     }
 
     private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,
-                                          CAS aCas)
+            CAS aCas)
     {
         return kbService.read(kb, (conn) -> clService.disambiguate(kb, featureTraits.getScope(),
-            featureTraits.getAllowedValueType(), null, aCoveredText, aBegin, aCas));
+                featureTraits.getAllowedValueType(), null, aCoveredText, aBegin, aCas));
     }
 
     @Override
