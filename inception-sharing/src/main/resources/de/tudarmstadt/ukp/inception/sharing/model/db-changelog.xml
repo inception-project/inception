@@ -39,6 +39,12 @@
         <constraints nullable="false" />
       </column>
     </createTable>
+    <addForeignKeyConstraint constraintName="FK_project_invite_project"
+      baseTableName="project_invite" baseColumnNames="project" 
+      referencedTableName="project" referencedColumnNames="id" 
+      deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="CASCADE"/>
+    <addUniqueConstraint constraintName="UK_project_invite_project" 
+      tableName="project_invite" columnNames="project" />
   </changeSet>
-
 </databaseChangeLog>

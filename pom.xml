@@ -91,7 +91,6 @@
     <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
     <asciidoctor.version>2.3.0</asciidoctor.version>
     <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
-    <wicketstuff-clipboardjs.version>9.2.0</wicketstuff-clipboardjs.version>
   </properties>
   <modules>
     <!-- Build infrastructure modules -->
@@ -535,6 +534,11 @@
       <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicket-datetime</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-clipboardjs</artifactId>
         <version>${wicketstuff.version}</version>
       </dependency>
 

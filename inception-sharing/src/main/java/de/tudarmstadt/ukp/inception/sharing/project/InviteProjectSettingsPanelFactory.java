@@ -19,18 +19,18 @@ package de.tudarmstadt.ukp.inception.sharing.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.sharing.InviteService;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
 
-@Component
-@Order(6000)
-@ConditionalOnBean(InviteService.class)
-public class InviteLinkPanelFactory
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link InviteServiceAutoConfiguration#inviteProjectSettingsPanelFactory()}.
+ * </p>
+ */
+public class InviteProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
 
@@ -49,7 +49,6 @@ public class InviteLinkPanelFactory
     @Override
     public Panel createSettingsPanel(String aID, IModel<Project> aProjectModel)
     {
-        return new InviteLinkPanel(aID, aProjectModel);
+        return new InviteProjectSettingsPanel(aID, aProjectModel);
     }
-
 }

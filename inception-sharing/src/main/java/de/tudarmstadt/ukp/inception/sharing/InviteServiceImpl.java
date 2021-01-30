@@ -27,15 +27,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
-@Component
-@ConditionalOnProperty(prefix = "sharing.invites", name = "enabled", havingValue = "true")
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link InviteServiceAutoConfiguration#inviteService()}.
+ * </p>
+ */
 public class InviteServiceImpl
     implements InviteService
 {
@@ -69,6 +72,7 @@ public class InviteServiceImpl
         String inviteID = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 
         removeInviteID(aProject);
+        entityManager.flush();
         entityManager.persist(new ProjectInvite(aProject, inviteID, expirationDate));
 
         return inviteID;
@@ -94,11 +98,13 @@ public class InviteServiceImpl
         String query = "FROM ProjectInvite " //
                 + "WHERE project = :givenProject";
         List<ProjectInvite> inviteIDs = entityManager.createQuery(query, ProjectInvite.class)
-                .setParameter("givenProject", aProject).getResultList();
+                .setParameter("givenProject", aProject) //
+                .getResultList();
 
         if (inviteIDs.isEmpty()) {
             return null;
         }
+
         return inviteIDs.get(0);
     }
 
@@ -112,12 +118,13 @@ public class InviteServiceImpl
                 + "AND p.expirationDate > :now";
         List<String> inviteIDs = entityManager.createQuery(query, String.class)
                 .setParameter("givenProject", aProject) //
-                .setParameter("now", new Date().getTime()) //
+                .setParameter("now", new Date()) //
                 .setMaxResults(1) //
                 .getResultList();
 
         if (inviteIDs.isEmpty()) {
             return null;
+
         }
         return inviteIDs.get(0);
     }
@@ -128,8 +135,8 @@ public class InviteServiceImpl
         if (aInviteId == null) {
             return false;
         }
+
         String expectedId = getValidInviteID(aProject);
         return expectedId != null && aInviteId.equals(expectedId);
     }
-
 }

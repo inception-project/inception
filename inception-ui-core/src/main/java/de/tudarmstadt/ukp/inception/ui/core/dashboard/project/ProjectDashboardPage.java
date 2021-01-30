@@ -23,10 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
-import static de.tudarmstadt.ukp.inception.sharing.project.InviteLinkPanel.PAGE_PARAM_INVITE_ID;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,23 +33,18 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashlet;
@@ -60,15 +53,15 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOvervi
 /**
  * Project dashboard page
  */
-@MountPath(value = "/project/${" + PAGE_PARAM_PROJECT_ID + "}/#{" + PAGE_PARAM_INVITE_ID + "}")
+@MountPath(value = "/project/${" + PAGE_PARAM_PROJECT_ID + "}")
 public class ProjectDashboardPage
     extends ApplicationPageBase
 {
     // Page parameters
     public static final String PAGE_PARAM_PROJECT_ID = "p";
-    
+
     private static final long serialVersionUID = -2487663821276301436L;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(ProjectDashboardPage.class);
 
     private @SpringBean ProjectService projectService;
@@ -83,22 +76,10 @@ public class ProjectDashboardPage
 
         User currentUser = userRepository.getCurrentUser();
         Long projectId = aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong();
-        Project project = null;
-        
-        // Compare invite param to invite id in db, if correct add user to project
-        StringValue inviteId = aPageParameters.get(PAGE_PARAM_INVITE_ID);
-        InviteService inviteService = initInviteService();
-        if (inviteService != null && (project = projectService.getProject(projectId)) != null &&
-                inviteService.isValidInviteLink(project, inviteId.toOptionalString())) {
-            projectService.setProjectPermissionLevels(currentUser, project,
-                    Arrays.asList(PermissionLevel.ANNOTATOR));
-            success("You were added to this project!");
-        }
-        else {
-            // Check if user can access the project
-            project = projectService.listAccessibleProjects(currentUser).stream() //
-                    .filter(p -> p.getId().equals(projectId)).findFirst().orElse(null);
-        }
+
+        // Check if user can access the project
+        Project project = projectService.listAccessibleProjects(currentUser).stream() //
+                .filter(p -> p.getId().equals(projectId)).findFirst().orElse(null);
 
         // If the user has no access, send the user back to the overview page
         if (project == null) {
@@ -109,23 +90,6 @@ public class ProjectDashboardPage
         Session.get().setMetaData(CURRENT_PROJECT, project);
 
         commonInit();
-    }
-
-    /**
-     * InviteService might be not enabled, check before injecting the bean
-     */
-    private InviteService initInviteService()
-    {
-        InviteService inviteService;
-        try {
-            inviteService = ApplicationContextProvider.getApplicationContext()
-                    .getBean(InviteService.class);
-        }
-        catch (NoSuchBeanDefinitionException e) {
-            LOG.debug("InviteService bean is not configured.");
-            return null;
-        }
-        return inviteService;
     }
 
     public ProjectDashboardPage()

@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 
-public class InviteLinkPanel
+public class InviteProjectSettingsPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 947691448582391801L;
@@ -48,7 +48,7 @@ public class InviteLinkPanel
     private final WebMarkupContainer inviteLinkContainer;
     private TextField<String> linkField;
 
-    public InviteLinkPanel(String aId, IModel<Project> aProjectModel)
+    public InviteProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
 
@@ -97,8 +97,8 @@ public class InviteLinkPanel
             return null;
         }
 
-        Url inviteUrl = Url.parse(String.format("%s/project/%s/%s", servletContext.getContextPath(),
-                getModelObject().getId(), inviteId));
+        Url inviteUrl = Url.parse(String.format("%s/join-project/%s/%s",
+                servletContext.getContextPath(), getModelObject().getId(), inviteId));
         String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(inviteUrl);
         return fullUrl;
     }
