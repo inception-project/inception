@@ -23,7 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
-import static de.tudarmstadt.ukp.inception.sharing.panel.InviteLinkPanel.PAGE_PARAM_INVITE_ID;
+import static de.tudarmstadt.ukp.inception.sharing.project.InviteLinkPanel.PAGE_PARAM_INVITE_ID;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 
 import java.util.Arrays;

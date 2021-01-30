@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.sharing;
+package de.tudarmstadt.ukp.inception.sharing.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,19 +28,22 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Entity
 @Table(name = "project_invite")
-public class ProjectInvite implements Serializable
-{        
+public class ProjectInvite
+    implements Serializable
+{
     private static final long serialVersionUID = -2795919324253421263L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @OneToOne
     @JoinColumn(name = "project")
     private Project project;
@@ -47,10 +51,11 @@ public class ProjectInvite implements Serializable
     @Column(nullable = false)
     private String inviteId;
 
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
-    private long expirationDate;
+    private Date expirationDate;
 
-    public ProjectInvite(Project aProject, String aInviteId, long aExpirationDate)
+    public ProjectInvite(Project aProject, String aInviteId, Date aExpirationDate)
     {
         super();
         project = aProject;
@@ -78,12 +83,12 @@ public class ProjectInvite implements Serializable
         inviteId = aInviteId;
     }
 
-    public long getExpirationDate()
+    public Date getExpirationDate()
     {
         return expirationDate;
     }
 
-    public void setExpirationDate(long aExpirationDate)
+    public void setExpirationDate(Date aExpirationDate)
     {
         expirationDate = aExpirationDate;
     }
@@ -92,7 +97,7 @@ public class ProjectInvite implements Serializable
     {
         project = aProject;
     }
-    
+
     public Long getId()
     {
         return id;
@@ -102,7 +107,7 @@ public class ProjectInvite implements Serializable
     {
         id = aId;
     }
-    
+
     @Override
     public int hashCode()
     {
@@ -116,25 +121,32 @@ public class ProjectInvite implements Serializable
     @Override
     public boolean equals(Object obj)
     {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         ProjectInvite other = (ProjectInvite) obj;
         if (inviteId == null) {
-            if (other.inviteId != null)
+            if (other.inviteId != null) {
                 return false;
+            }
         }
-        else if (!inviteId.equals(other.inviteId))
+        else if (!inviteId.equals(other.inviteId)) {
             return false;
+        }
         if (project == null) {
-            if (other.project != null)
+            if (other.project != null) {
                 return false;
+            }
         }
-        else if (!project.equals(other.project))
+        else if (!project.equals(other.project)) {
             return false;
+        }
         return true;
     }
 

@@ -20,7 +20,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-  <changeSet author="INCEpTION Team" id="20210128-10">
+  <changeSet author="INCEpTION Team" id="20210128-1">
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="project_invite" />
@@ -35,7 +35,7 @@
       <column name="inviteId" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>
-      <column name="expirationDate" type="BIGINT">
+      <column name="expirationDate" type="datetime(6)">
         <constraints nullable="false" />
       </column>
     </createTable>

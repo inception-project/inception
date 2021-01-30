@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
 @Component
 @ConditionalOnProperty(prefix = "sharing.invites", name = "enabled", havingValue = "true")
@@ -61,7 +62,7 @@ public class InviteServiceImpl
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.YEAR, 1);
-        long expirationDate = calendar.getTime().getTime();
+        Date expirationDate = calendar.getTime();
         // generate id
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);

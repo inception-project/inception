@@ -44,11 +44,14 @@ public interface InviteService
      *            the given project
      */
     String getValidInviteID(Project aProject);
-    
+
     /**
      * Check if given invite ID is valid for the given project
-     * @param aProject the relevant project
-     * @param aInviteId invite Id to check
+     * 
+     * @param aProject
+     *            the relevant project
+     * @param aInviteId
+     *            invite Id to check
      */
     boolean isValidInviteLink(Project aProject, String aInviteId);
 }

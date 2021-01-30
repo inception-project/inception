@@ -35,6 +35,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
@@ -42,9 +43,9 @@ public class InviteServiceImplTest
 {
     private InviteService sut;
     private @Autowired TestEntityManager testEntityManager;
-    
+
     private Project testProject;
-    
+
     @Before
     public void setUp() throws Exception
     {
@@ -58,7 +59,7 @@ public class InviteServiceImplTest
     {
         testEntityManager.clear();
     }
-    
+
     @SpringBootConfiguration
     @EnableAutoConfiguration
     @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.sharing",
@@ -67,59 +68,65 @@ public class InviteServiceImplTest
     {
         // No content
     }
-    
+
     @Test
-    public void createInviteId_ShouldReturnId() {
+    public void createInviteId_ShouldReturnId()
+    {
         String urlBase64Chars = "[0-9A-Za-z\\-_]+";
-        
+
         String inviteId = sut.generateInviteID(testProject);
         assertThat(inviteId).matches(urlBase64Chars).hasSize(22);
         String inviteId2 = sut.generateInviteID(testProject);
         assertThat(inviteId2).matches(urlBase64Chars).hasSize(22).isNotEqualTo(inviteId);
     }
-    
+
     @Test
-    public void isValidInviteId_ShouldReturnTrue() {
+    public void isValidInviteId_ShouldReturnTrue()
+    {
         sut.generateInviteID(testProject);
         String retrievedId = sut.getValidInviteID(testProject);
-        
+
         assertThat(sut.isValidInviteLink(testProject, retrievedId)).isTrue();
     }
-    
+
     @Test
-    public void isValidInviteIdOfInvalidId_ShouldReturnFalse() {
+    public void isValidInviteIdOfInvalidId_ShouldReturnFalse()
+    {
         assertThat(sut.isValidInviteLink(testProject, "notValid")).isFalse();
     }
-    
+
     @Test
-    public void getValidInviteId_ShouldReturnCreatedId() {
+    public void getValidInviteId_ShouldReturnCreatedId()
+    {
         String inviteId = sut.generateInviteID(testProject);
         String retrievedId = sut.getValidInviteID(testProject);
-        
+
         assertThat(retrievedId).isEqualTo(inviteId);
     }
-    
+
     @Test
-    public void getInvalidInviteId_ShouldReturnNull() {
+    public void getInvalidInviteId_ShouldReturnNull()
+    {
         // get expired date
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.YEAR, -1);
-        long expirationDate = calendar.getTime().getTime();
+        Date expirationDate = calendar.getTime();
         testEntityManager.persist(new ProjectInvite(testProject, "testId", expirationDate));
-        
+
         String retrievedId = sut.getValidInviteID(testProject);
-        
+
         assertThat(retrievedId).isNull();
     }
-    
+
     @Test
-    public void getDeletedInviteId_ShouldReturnNull() {
+    public void getDeletedInviteId_ShouldReturnNull()
+    {
         sut.generateInviteID(testProject);
         sut.removeInviteID(testProject);
-        
+
         String retrievedId = sut.getValidInviteID(testProject);
-        
+
         assertThat(retrievedId).isNull();
     }
 }

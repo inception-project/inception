@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.sharing.panel;
-
+package de.tudarmstadt.ukp.inception.sharing.project;
 
 import javax.servlet.ServletContext;
 
@@ -40,7 +39,7 @@ public class InviteLinkPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 947691448582391801L;
-    
+
     public static final String PAGE_PARAM_INVITE_ID = "i";
 
     private @SpringBean InviteService inviteService;
@@ -100,7 +99,7 @@ public class InviteLinkPanel
 
         Url inviteUrl = Url.parse(String.format("%s/project/%s/%s", servletContext.getContextPath(),
                 getModelObject().getId(), inviteId));
-        String fullUrl =  RequestCycle.get().getUrlRenderer().renderFullUrl(inviteUrl);
+        String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(inviteUrl);
         return fullUrl;
     }
 
