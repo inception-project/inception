@@ -46,10 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
-import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -74,7 +74,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     // SpringBeans
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-    private @SpringBean WorkloadManagerExtension<DynamicWorkloadExtension> dynamicWorkloadExtension;
+    private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
     private @SpringBean EntityManager entityManager;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
@@ -152,20 +152,19 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             WorkloadManager currentWorkload = workloadManagementService
                     .loadOrCreateWorkloadManagerConfiguration(project);
 
+            // If there are no traits set yet, use the DefaultWorkflowExtension
+            // otherwise select the current one
+            DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(currentWorkload);
+            WorkflowExtension currentWorkflowExtension = workflowExtensionPoint
+                    .getExtension(traits.getWorkflowType());
+            if (currentWorkflowExtension == null) {
+                currentWorkflowExtension = new DefaultWorkflowExtension();
+            }
+
             // Get all documents for which the state is NEW, or which have not been created yet.
             List<SourceDocument> sourceDocuments = workloadManagementService
                     .getAnnotationDocumentListForUser(project, user);
 
-            // If there are no traits set yet, use the DefaultWorkflowExtension
-            // otherwise select the current one
-            WorkflowExtension currentWorkflowExtension = new DefaultWorkflowExtension();
-            for (WorkflowExtension extension : workflowExtensionPoint.getExtensions()) {
-                if (extension.getId().equals(
-                        dynamicWorkloadExtension.readTraits(currentWorkload))) {
-                    currentWorkflowExtension = extension;
-                    break;
-                }
-            }
             // Rearrange list of documents according to current workflow
             sourceDocuments = currentWorkflowExtension.rankDocuments(sourceDocuments);
 
@@ -173,7 +172,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             // homepage
             if (!currentWorkflowExtension.loadNextDocument(sourceDocuments, project,
                     currentWorkload, getAnnotationPage(), _target, workloadManagementService,
-                dynamicWorkloadExtension.readTraits(currentWorkload), documentService)) {
+                    traits, documentService)) {
                 redirectUserToHomePage();
             }
         });
@@ -183,8 +182,8 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private void redirectUserToHomePage()
     {
         // Nothing left, so returning to homepage and showing hint
-        getAnnotationPage().getSession().info(
-                "There are no more documents to annotate available for you. Please contact your project supervisor.");
+        getAnnotationPage().getSession()
+                .info("There are no more documents to annotate available for you.");
         getAnnotationPage().setResponsePage(getAnnotationPage().getApplication().getHomePage());
     }
 }

@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -56,16 +56,15 @@ public interface WorkflowExtension
      */
     default boolean loadNextDocument(List<SourceDocument> aSourceDocuments, Project aProject,
             WorkloadManager aCurrentWorkload, AnnotationPageBase aPage, AjaxRequestTarget aTarget,
-            WorkloadManagementService workloadManagementService,
-            DynamicWorkloadExtension dynamicWorkloadExtension, DocumentService documentService)
+            WorkloadManagementService aWorkloadManagementService, DynamicWorkloadTraits aTraits,
+            DocumentService documentService)
     {
         // Go through all documents of the list
         for (SourceDocument doc : aSourceDocuments) {
             // Check if there are less annotators working on the selected document than
             // the default number of annotation set by the project manager
-            if ((workloadManagementService.getNumberOfUsersWorkingOnADocument(doc,
-                    aProject)) < (dynamicWorkloadExtension.readTraits(aCurrentWorkload)
-                            .getDefaultNumberOfAnnotations())) {
+            if ((aWorkloadManagementService.getNumberOfUsersWorkingOnADocument(doc,
+                    aProject)) < (aTraits.getDefaultNumberOfAnnotations())) {
                 // This was the case, so load the document and return
                 aPage.getModelObject().setDocument(doc,
                         documentService.listSourceDocuments(aProject));
