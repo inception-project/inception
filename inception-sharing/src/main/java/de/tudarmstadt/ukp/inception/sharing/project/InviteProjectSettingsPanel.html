@@ -1,0 +1,33 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+  <wicket:panel>
+    <div class="flex-content flex-gutter" style="padding: 4px; margin: 4px">
+      <div class="card-body">
+        <label><wicket:message key="instruction"/></label>
+      </div>
+	  <div wicket:id="invitelinkContainer" class="flex-content flex-centered flex-h-container flex-gutter card-body">
+		  <wicket:message key="invite"/>
+		  <input wicket:id="linkText" class="target flex-content" type="text" readonly/>
+		  <button wicket:id="regen" class="btn btn-primary"><i class="fas fa-sync" wicket:message="title:regen"></i></button>
+		  <button wicket:id="copy" class="btn btn-secondary"><i class="fas fa-paste" wicket:message="title:copy"></i></button>
+		  <button wicket:id="remove" class="btn btn-danger"><i class="fas fa-trash" wicket:message="title:remove"></i></button>
+	  </div>
+	</div>
+  </wicket:panel>
+</html>
