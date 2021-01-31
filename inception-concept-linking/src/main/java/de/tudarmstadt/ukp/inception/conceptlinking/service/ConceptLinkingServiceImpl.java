@@ -17,11 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokensCovered;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -29,19 +24,16 @@ import static java.util.Collections.unmodifiableList;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +50,9 @@ import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertie
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
-import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
-import de.tudarmstadt.ukp.inception.conceptlinking.ranking.BaselineRankingStrategy;
+import de.tudarmstadt.ukp.inception.conceptlinking.ranking.BaselineRanker;
+import de.tudarmstadt.ukp.inception.conceptlinking.ranking.Ranker;
+import de.tudarmstadt.ukp.inception.conceptlinking.ranking.letor.ExternalLetorRanker;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -89,6 +82,8 @@ public class ConceptLinkingServiceImpl
     private final List<EntityRankingFeatureGenerator> featureGeneratorsProxy;
     private List<EntityRankingFeatureGenerator> featureGenerators;
 
+    private Ranker ranker;
+
     @Autowired
     public ConceptLinkingServiceImpl(KnowledgeBaseService aKbService,
             EntityLinkingPropertiesImpl aProperties, RepositoryProperties aRepoProperties,
@@ -108,6 +103,10 @@ public class ConceptLinkingServiceImpl
     {
         File stopwordsFile = new File(repoProperties.getPath(), "resources/stopwords-en.txt");
         stopwords = FileUtils.loadStopwordFile(stopwordsFile);
+
+        ranker = new BaselineRanker(featureGeneratorsProxy, stopwords,
+                properties.getCandidateDisplayLimit(), properties.getMentionContextSize());
+        ranker = new ExternalLetorRanker();
     }
 
     @EventListener
@@ -162,7 +161,7 @@ public class ConceptLinkingServiceImpl
         final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
 
         long startTime = currentTimeMillis();
-        Set<KBHandle> result = new HashSet<>();
+        Set<KBHandle> result = new LinkedHashSet<>();
 
         if (aQuery != null) {
             ParsedIRI iri = null;
@@ -272,30 +271,30 @@ public class ConceptLinkingServiceImpl
 
         if (longLabels.length > 0) {
             // Collect containing matches
-            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
+            SPARQLQueryPrimaryConditions matchingBuilder = newQueryBuilder(aValueType, aKB);
 
             if (aConceptScope != null) {
                 // Scope-limiting must always happen before label matching!
-                containingBuilder.descendantsOf(aConceptScope);
+                matchingBuilder.descendantsOf(aConceptScope);
             }
 
-            containingBuilder.withLabelMatchingAnyOf(longLabels);
+            matchingBuilder.withLabelMatchingAnyOf(longLabels);
 
-            containingBuilder.retrieveLabel().retrieveDescription();
+            matchingBuilder.retrieveLabel().retrieveDescription();
 
-            List<KBHandle> containingMatches;
+            List<KBHandle> matchingMatches;
             if (aKB.isReadOnly()) {
-                containingMatches = kbService.listHandlesCaching(aKB, containingBuilder, true);
+                matchingMatches = kbService.listHandlesCaching(aKB, matchingBuilder, true);
             }
             else {
-                containingMatches = kbService.read(aKB,
-                        conn -> containingBuilder.asHandles(conn, true));
+                matchingMatches = kbService.read(aKB,
+                        conn -> matchingBuilder.asHandles(conn, true));
             }
 
-            log.debug("Found [{}] candidates using matching {}", containingMatches.size(),
+            log.info("Found [{}] candidates using matching {}", matchingMatches.size(),
                     asList(longLabels));
 
-            result.addAll(containingMatches);
+            result.addAll(matchingMatches);
         }
 
         log.debug("Generated [{}] candidates in {}ms", result.size(),
@@ -314,62 +313,13 @@ public class ConceptLinkingServiceImpl
         return rankCandidates(aQuery, aMention, candidates, aCas, aMentionBeginOffset);
     }
 
-    private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
-            CAS aCas, int aBegin)
-    {
-        candidate.put(KEY_MENTION, aMention);
-        candidate.put(KEY_QUERY, aQuery);
-
-        if (aCas != null) {
-            AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
-            if (sentence != null) {
-                List<String> mentionContext = new ArrayList<>();
-                Collection<AnnotationFS> tokens = selectTokensCovered(sentence);
-                // Collect left context
-                tokens.stream().filter(t -> t.getEnd() <= aBegin)
-                        .sorted(Comparator.comparingInt(AnnotationFS::getBegin).reversed())
-                        .limit(properties.getMentionContextSize())
-                        .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                        .filter(s -> !stopwords.contains(s)).forEach(mentionContext::add);
-                // Collect right context
-                tokens.stream().filter(t -> t.getBegin() >= (aBegin + aMention.length()))
-                        .limit(properties.getMentionContextSize())
-                        .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                        .filter(s -> !stopwords.contains(s)).forEach(mentionContext::add);
-                candidate.put(KEY_MENTION_CONTEXT, mentionContext);
-            }
-            else {
-                log.warn("Mention sentence could not be determined. Skipping.");
-            }
-        }
-        return candidate;
-    }
-
     @Override
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin)
     {
         long startTime = currentTimeMillis();
 
-        // Set the feature values
-        List<CandidateEntity> candidates = aCandidates.stream().map(CandidateEntity::new)
-                .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
-                .map(candidate -> {
-                    for (EntityRankingFeatureGenerator generator : featureGenerators) {
-                        generator.apply(candidate);
-                    }
-                    return candidate;
-                }).collect(Collectors.toCollection(ArrayList::new));
-
-        // Do the main ranking
-        // Sort candidates by multiple keys.
-        candidates.sort(BaselineRankingStrategy.getInstance());
-
-        List<KBHandle> results = candidates.stream().map(candidate -> {
-            KBHandle handle = candidate.getHandle();
-            handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
-            return handle;
-        }).collect(Collectors.toList());
+        List<KBHandle> results = ranker.rank(aQuery, aMention, aCandidates, aCas, aBegin);
 
         int rank = 1;
         for (KBHandle handle : results) {

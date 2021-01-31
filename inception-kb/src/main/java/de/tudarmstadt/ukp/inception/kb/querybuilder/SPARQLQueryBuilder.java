@@ -665,8 +665,10 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
-                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+        String[] values = Arrays.stream(aValues) //
+                .map(SPARQLQueryBuilder::sanitizeQueryString) //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
 
         if (values.length == 0) {
             returnEmptyResult = true;
@@ -828,8 +830,10 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
-                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+        String[] values = Arrays.stream(aValues) //
+                .map(SPARQLQueryBuilder::sanitizeQueryString) //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
 
         if (values.length == 0) {
             returnEmptyResult = true;
@@ -920,9 +924,8 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -934,8 +937,24 @@ public class SPARQLQueryBuilder
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
 
+            StringJoiner joiner = new StringJoiner(" ");
+            for (String term : sanitizedValue.split(" ")) {
+                if (term.length() > 4) {
+                    joiner.add(term + "~");
+                }
+                // REC: excluding terms of 3 or less characters helps reducing the problem that a
+                // mention of "Counties of Catherlagh" matches "Anne of Austria", but actually
+                // this should be handled by stopwords and not be excluding any short words...
+                // I think
+                else if (term.length() >= 3) {
+                    joiner.add(term);
+                }
+            }
+
+            String fuzzyValue = joiner.toString();
+
             valuePatterns.add(VAR_SUBJECT
-                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyQuery)))
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyValue)))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         }
 
@@ -972,8 +991,10 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
-                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+        String[] values = Arrays.stream(aValues) //
+                .map(SPARQLQueryBuilder::sanitizeQueryString) //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
 
         if (values.length == 0) {
             returnEmptyResult = true;

@@ -141,10 +141,14 @@ public class ExternalRecommender
             // If the response indicates that the request was not successful,
             // then it does not make sense to go on and try to decode the XMI
             else if (!response.isSuccessful()) {
+
                 int code = response.code();
                 String responseBody = getResponseBody(response);
                 String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
                 throw new RecommendationException(msg);
+            }
+            else {
+                aContext.put(KEY_TRAINING_COMPLETE, true);
             }
 
             aContext.put(KEY_TRAINING_COMPLETE, true);
@@ -241,7 +245,7 @@ public class ExternalRecommender
         CASMetadata casMetadata = getCasMetadata(aCas);
         AnnotationLayer layer = recommender.getLayer();
         return new Metadata(layer.getName(), recommender.getFeature().getName(),
-                casMetadata.getProjectId(), layer.getAnchoringMode().getId(),
+                casMetadata.getProjectName(), layer.getAnchoringMode().getId(),
                 layer.isCrossSentence());
     }
 
@@ -273,7 +277,10 @@ public class ExternalRecommender
             return client.newCall(aRequest).execute();
         }
         catch (IOException e) {
-            throw new RecommendationException("Error while sending request!", e);
+            String msg = String.format(
+                    "Error while sending external recommender request for [%s] to [%s] !",
+                    recommender.getName(), traits.getRemoteUrl());
+            throw new RecommendationException(msg + e.getMessage());
         }
     }
 

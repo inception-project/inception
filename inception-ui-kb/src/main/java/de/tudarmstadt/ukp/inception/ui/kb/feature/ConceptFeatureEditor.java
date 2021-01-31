@@ -27,6 +27,8 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +36,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
@@ -59,10 +65,12 @@ import org.apache.wicket.util.string.StringValue;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
@@ -71,13 +79,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEdi
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
+import de.tudarmstadt.ukp.inception.ui.kb.log.EntityLinkingSearchQueryEvent;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
@@ -95,9 +108,12 @@ public class ConceptFeatureEditor
     private IriInfoBadge iriBadge;
     private ExternalLink openIriLink;
 
+    private String cachedQuery;
+
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean ConceptLinkingService clService;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean EntityLinkingProperties entityLinkingProperties;
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
@@ -119,8 +135,7 @@ public class ConceptFeatureEditor
 
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
 
-        add(focusComponent = new AutoCompleteField(MID_VALUE,
-                _query -> getCandidates(aStateModel, aHandler, _query)));
+        add(focusComponent = buildAutoCompleteField(aStateModel, aHandler));
 
         AnnotationFeature feat = getModelObject().feature;
         ConceptFeatureTraits traits = readFeatureTraits(feat);
@@ -197,6 +212,7 @@ public class ConceptFeatureEditor
         }
 
         final String finalInput = input;
+        cachedQuery = finalInput;
 
         List<KBHandle> choices;
         try {
@@ -215,13 +231,24 @@ public class ConceptFeatureEditor
             CAS cas = aHandler != null ? aHandler.getEditorCas() : null;
             String mention = aStateModel != null ? aStateModel.getObject().getSelection().getText()
                     : null;
-            int mentionBegin = aStateModel != null
-                    ? aStateModel.getObject().getSelection().getBegin()
+            int mentionBegin = aStateModel != null //
+                    ? aStateModel.getObject().getSelection().getBegin() //
+                    : -1;
+            int mentionEnd = aStateModel != null //
+                    ? aStateModel.getObject().getSelection().getEnd() //
                     : -1;
 
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
                     traits.getScope(), traits.getAllowedValueType(), finalInput, mention,
                     mentionBegin, cas, feat.getProject());
+
+            Project project = aStateModel.getObject().getProject();
+            String username = aStateModel.getObject().getUser().getUsername();
+
+            ApplicationEvent event = new EntityLinkingSearchQueryEvent(this, project, username,
+                    finalInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd,
+                    choices.size());
+            applicationEventPublisher.get().publishEvent(event);
         }
         catch (Exception e) {
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
@@ -284,6 +311,89 @@ public class ConceptFeatureEditor
     public FormComponent getFocusComponent()
     {
         return focusComponent;
+    }
+
+    private AutoCompleteField buildAutoCompleteField(IModel<AnnotatorState> aStateModel,
+            AnnotationActionHandler aHandler)
+    {
+
+        AutoCompleteField result = new AutoCompleteField(MID_VALUE,
+                _query -> getCandidates(aStateModel, aHandler, _query))
+        {
+            private List<KBHandle> cachedChoices;
+
+            @Override
+            protected void onModelChanged()
+            {
+                super.onModelChanged();
+
+                if (aStateModel == null || aHandler == null || cachedChoices == null) {
+                    LOG.warn("Something was null");
+                    return;
+                }
+
+                CAS cas;
+                try {
+                    cas = aHandler.getEditorCas();
+                }
+                catch (IOException e) {
+                    LOG.error("Could not read CAS", e);
+                    return;
+                }
+
+                Type kbHandleType = CasUtil.getType(cas, "inception.internal.KbHandle");
+                Feature iriFeature = kbHandleType.getFeatureByBaseName("iri");
+                Feature labelFeature = kbHandleType.getFeatureByBaseName("label");
+                Feature descriptionFeature = kbHandleType.getFeatureByBaseName("description");
+                Feature rankFeature = kbHandleType.getFeatureByBaseName("rank");
+                Feature queryFeature = kbHandleType.getFeatureByBaseName("query");
+
+                Selection selection = aStateModel.getObject().getSelection();
+                int begin = selection.getBegin();
+                int end = selection.getEnd();
+
+                // Delete old preferences
+                // for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin,
+                // end)) {
+                // cas.removeFsFromIndexes(oldPreference);
+                // }
+
+                // Create new preferences
+                System.out.println("Begin: " + begin + " - End: " + end);
+                System.out.println("User selected: " + getModel().getObject());
+                System.out.println("Candidates:" + cachedChoices.size());
+
+                for (int i = 0; i < cachedChoices.size(); i++) {
+                    KBHandle candidate = cachedChoices.get(i);
+                    AnnotationFS preference = cas.createAnnotation(kbHandleType, begin, end);
+                    preference.setStringValue(iriFeature, candidate.getIdentifier());
+                    preference.setStringValue(labelFeature, candidate.getName());
+                    preference.setStringValue(descriptionFeature, candidate.getDescription());
+                    preference.setIntValue(rankFeature, i);
+                    preference.setStringValue(queryFeature, cachedQuery);
+
+                    cas.addFsToIndexes(preference);
+                }
+
+                try {
+                    AnnotationPageBase page = findParent(AnnotationPageBase.class);
+                    page.writeEditorCas(cas);
+                }
+                catch (IOException | AnnotationException e) {
+                    LOG.error("Could not save preferences in CAS: ", e);
+                }
+            }
+
+            @Override
+            protected List<KBHandle> getChoices(String aInput)
+            {
+                List<KBHandle> result = super.getChoices(aInput);
+                cachedChoices = new ArrayList<>(result);
+                return result;
+            }
+        };
+
+        return result;
     }
 
     /**

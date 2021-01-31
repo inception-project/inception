@@ -17,23 +17,41 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.ranking;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokensCovered;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_FREQUENCY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_ID_RANK;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_NUM_RELATIONS;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP_SCORE;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
-public class BaselineRankingStrategy
+public class BaselineRanker
+    implements Ranker
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private static final Comparator<CandidateEntity> INSTANCE = (e1, e2) -> new CompareToBuilder()
             // Did the user enter an URI and does the candidate exactly match it?
             // Note that the comparator sorts ascending by value, so a match is represented using
@@ -91,5 +109,88 @@ public class BaselineRankingStrategy
     public static Comparator<CandidateEntity> getInstance()
     {
         return INSTANCE;
+    }
+
+    private final List<EntityRankingFeatureGenerator> featureGenerators;
+    private final Set<String> stopwords;
+    private final int candidatesLimit;
+    private final int contextSize;
+
+    public BaselineRanker(List<EntityRankingFeatureGenerator> aFeatureGenerators,
+                          Set<String> aStopwords, int aCandidatesLimit, int aContextSize) {
+        featureGenerators = aFeatureGenerators;
+        stopwords = aStopwords;
+        candidatesLimit = aCandidatesLimit;
+        contextSize = aContextSize;
+    }
+
+    @Override
+    public List<KBHandle> rank(String aQuery, String aMention, Set<KBHandle> aCandidates,
+                               CAS aCas, int aBeginOffset) {
+        // Set the feature values
+        List<CandidateEntity> candidates = aCandidates.parallelStream()
+                .map(CandidateEntity::new)
+                .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBeginOffset))
+                .map(candidate -> {
+                    for (EntityRankingFeatureGenerator generator : featureGenerators) {
+                        generator.apply(candidate);
+                    }
+                    return candidate;
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        for (KBHandle c : aCandidates) {
+            System.out.println(c);
+        }
+
+        // Do the main ranking
+        // Sort candidates by multiple keys.
+        candidates.sort(BaselineRanker.getInstance());
+
+        List<KBHandle> results = candidates.stream()
+                .map(candidate -> {
+                    KBHandle handle = candidate.getHandle();
+                    handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
+                    return handle;
+                })
+                .limit(candidatesLimit)
+                .collect(Collectors.toList());
+
+        return results;
+    }
+
+    private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
+                                          CAS aCas, int aBegin)
+    {
+        candidate.put(KEY_MENTION, aMention);
+        candidate.put(KEY_QUERY, aQuery);
+
+        if (aCas != null) {
+            AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
+            if (sentence != null) {
+                List<String> mentionContext = new ArrayList<>();
+                Collection<AnnotationFS> tokens = selectTokensCovered(sentence);
+                // Collect left context
+                tokens.stream()
+                        .filter(t -> t.getEnd() <= aBegin)
+                        .sorted(Comparator.comparingInt(AnnotationFS::getBegin).reversed())
+                        .limit(contextSize)
+                        .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
+                        .filter(s -> !stopwords.contains(s))
+                        .forEach(mentionContext::add);
+                // Collect right context
+                tokens.stream()
+                        .filter(t -> t.getBegin() >= (aBegin + aMention.length()))
+                        .limit(contextSize)
+                        .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
+                        .filter(s -> !stopwords.contains(s))
+                        .forEach(mentionContext::add);
+                candidate.put(KEY_MENTION_CONTEXT, mentionContext);
+            }
+            else {
+                log.warn("Mention sentence could not be determined. Skipping.");
+            }
+        }
+        return candidate;
     }
 }

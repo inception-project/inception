@@ -52,6 +52,8 @@ public class KnowledgeBaseItemAutoCompleteField
 
         Validate.notNull(aChoiceProvider);
         choiceProvider = aChoiceProvider;
+
+
     }
 
     public KnowledgeBaseItemAutoCompleteField(String aId,

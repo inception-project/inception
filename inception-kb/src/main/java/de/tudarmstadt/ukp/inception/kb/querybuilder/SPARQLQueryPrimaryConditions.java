@@ -160,5 +160,4 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions matchingDomain(String aIdentifier);
-
 }

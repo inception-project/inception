@@ -30,7 +30,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
-public class BaselineRankingStrategyTest
+public class BaselineRankerTest
 {
     @Test
     public void thatiriExactlyMatchingQueryIsRankedFirst()
@@ -49,9 +49,7 @@ public class BaselineRankingStrategyTest
         List<CandidateEntity> candidates = new ArrayList<>();
         candidates.add(cand1);
         candidates.add(cand2);
-
-        candidates.sort(BaselineRankingStrategy.getInstance());
-
+        candidates.sort(BaselineRanker.getInstance());
         assertThat(candidates)
                 .as("Candidate where IRI exactly matches query comes before exact label match")
                 .containsExactly(cand2, cand1);
