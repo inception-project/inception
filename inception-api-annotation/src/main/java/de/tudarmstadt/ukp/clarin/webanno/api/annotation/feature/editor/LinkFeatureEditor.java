@@ -304,7 +304,6 @@ public class LinkFeatureEditor
                     Optional<AjaxRequestTarget> target = RequestCycle.get()
                             .find(AjaxRequestTarget.class);
                     if (target.isPresent()) {
-                        LOG.trace("onInitialize() requesting datasource re-reading");
                         target.get()
                                 .appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
                                         "var $w = %s; if ($w) { $w.dataSource.read(); }",
