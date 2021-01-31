@@ -547,14 +547,13 @@ public abstract class AnnotationDetailEditorPanel
     @Override
     public void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException
     {
-        if (aTarget != null) {
-            aTarget.add(buttonContainer);
-        }
-
         // Edit existing annotation
         loadFeatureEditorModels(aTarget);
+
         if (aTarget != null) {
-            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
+            refresh(aTarget);
+            // aTarget.add(buttonContainer);
+            // aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
         }
 
         // Ensure we re-render and update the highlight
@@ -689,11 +688,13 @@ public abstract class AnnotationDetailEditorPanel
         internalCompleteAnnotation(aTarget, aCas);
 
         if (aTarget != null) {
-            // After the annotation has been created, we need to re-render the button container e.g.
-            // to make the buttons show up if previously no annotation was selected
-            aTarget.add(buttonContainer);
-            // Also update the features and selected annotation info
-            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
+            refresh(aTarget);
+            // // After the annotation has been created, we need to re-render the button container
+            // e.g.
+            // // to make the buttons show up if previously no annotation was selected
+            // aTarget.add(buttonContainer);
+            // // Also update the features and selected annotation info
+            // aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
         }
 
         state.clearArmedSlot();
@@ -1385,6 +1386,19 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     /**
+     * Re-render the sidebar if the selection has changed.
+     */
+    @OnEvent
+    public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
+    {
+        if (aEvent.getRequestHandler() != null) {
+            refresh(aEvent.getRequestHandler());
+            // aEvent.getRequestHandler().add(selectedAnnotationInfoPanel, featureEditorListPanel,
+            // relationListPanel);
+        }
+    }
+
+    /**
      * @deprecated Use event listeners for {@link SelectionChangedEvent}, {@link AnnotationEvent},
      *             {@link FeatureValueUpdatedEvent} and/or {@link AnnotatorViewportChangedEvent}
      *             instead.
@@ -1550,10 +1564,6 @@ public abstract class AnnotationDetailEditorPanel
         // Clear selection and feature states
         state.getFeatureStates().clear();
         state.getSelection().clear();
-        if (aTarget != null) {
-            aTarget.add(selectedAnnotationInfoPanel, buttonContainer, featureEditorListPanel,
-                    relationListPanel);
-        }
 
         // Refresh the selectable layers dropdown
         layerSelectionPanel.refreshSelectableLayers();
