@@ -2,11 +2,6 @@
 # INCEpTION Properties
 # ===================================================================
 
-database:
-  initial-pool-size=4
-  min-pool-size=4
-  max-pool-size=10
-
 backup:
   keep:
     time: 0
@@ -62,28 +57,28 @@ spring:
       javax:
         persistence:
           sharedCache: 
-            #required - enable selective caching mode - only entities with @Cacheable annotation will use L2 cache.
-            mode: ENABLE_SELECTIVE     
-            # mode: NONE     
+            # L2 CACHE: enable selective caching mode - only entities with @Cacheable annotation
+            # mode: ENABLE_SELECTIVE
+            # mode: NONE
       hibernate:
         dialect: ${database.dialect:${INCEPTION_DB_DIALECT:}}
-        #optional - enable SQL statements formatting.
-        format_sql: true 
-        #optional - generate statistics to check if L2/query cache is actually being used.
-        generate_statistics: true
-        jmx:
-          enabled: true
-        javax.cache:
-          provider: org.ehcache.jsr107.EhcacheCachingProvider
-          uri: classpath:ehcache.xml
-        cache:
-          #required - turn on L2 cache.
-          use_second_level_cache: true
-          #optional - turn on query cache.
-          use_query_cache: true 
-          region:
-            #required - classpath to cache region factory.
-            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+        # Enable SQL statements formatting.
+        # format_sql: true 
+        # L2 CACHE: generate statistics to check if L2/query cache is actually being used.
+        # generate_statistics: true
+        # jmx:
+        #   enabled: true
+        # javax.cache:
+        #   provider: org.ehcache.jsr107.EhcacheCachingProvider
+        #  uri: classpath:ehcache.xml
+        # cache:
+          # L2 CACHE: turn on L2 cache for individual entities
+          # use_second_level_cache: true
+          # L2 CACHE: turn on L2 cache for collections entities
+          # use_query_cache: true 
+          # region:
+            # L2 CACHE: classpath to cache region factory.
+            # factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
     hibernate:
       ddl-auto: validate
       naming:
@@ -92,15 +87,24 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
-  spring:
-    cache:
-      jcache:
-        config: classpath:/ehcache.xml
+#  spring:
+#    cache:
+#      jcache:
+#        config: classpath:/ehcache.xml
 
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
 
+server:
+  error:
+    whitelabel:
+      enabled: false
+    path: /whoops
+
 wicket:
+  web:
+    servlet:
+      dispatcher-types: request, error, async, forward
   external:
     # Enables WebSocket support - dependency required 
     websocket: true 

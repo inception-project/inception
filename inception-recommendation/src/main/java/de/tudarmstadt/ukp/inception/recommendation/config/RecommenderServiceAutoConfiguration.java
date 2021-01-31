@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebar
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 /**
- * Provides all back-end Spring beans for the external search functionality.
+ * Provides all back-end Spring beans for the recommendation functionality.
  */
 @Configuration
 @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)

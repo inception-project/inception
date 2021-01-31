@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
 import java.io.File;
+import java.time.Duration;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -33,11 +30,10 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
+import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -60,8 +56,6 @@ public class PdfAnnoPanel
 
     private AbstractAjaxBehavior apiProvider;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
             PdfAnnotationEditor aPdfAnnotationEditor)
     {
@@ -78,9 +72,23 @@ public class PdfAnnoPanel
 
                 File pdfFile = documentService.getSourceDocumentFile(doc);
 
-                getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                        new ResourceStreamRequestHandler(new FileResourceStream(pdfFile),
-                                doc.getName()));
+                FileResourceStream resource = new FileResourceStream(pdfFile)
+                {
+                    private static final long serialVersionUID = 5985138568430773008L;
+
+                    @Override
+                    public String getContentType()
+                    {
+                        return "application/pdf";
+                    }
+                };
+
+                ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(resource);
+                handler.setFileName(doc.getName());
+                handler.setCacheDuration(Duration.ofSeconds(1));
+                handler.setContentDisposition(ContentDisposition.INLINE);
+
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
             }
         });
 
@@ -93,8 +101,16 @@ public class PdfAnnoPanel
             {
                 aPdfAnnotationEditor.initialize(aTarget);
                 String pdftext = aPdfAnnotationEditor.getPdfExtractFile().getPdftxt();
-                getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                        new ResourceStreamRequestHandler(new StringResourceStream(pdftext)));
+                SourceDocument doc = aModel.getObject().getDocument();
+
+                StringResourceStream resource = new StringResourceStream(pdftext, "text/plain");
+
+                ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(resource);
+                handler.setFileName(doc.getName() + ".txt");
+                handler.setCacheDuration(Duration.ofSeconds(1));
+                handler.setContentDisposition(ContentDisposition.INLINE);
+
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
             }
         });
 
