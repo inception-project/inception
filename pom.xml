@@ -146,6 +146,7 @@
     <module>inception-workload-dynamic</module>
     <!-- Packaging -->
     <module>inception-docker</module>
+    <module>inception-sharing</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
@@ -533,6 +534,11 @@
       <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicket-datetime</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-clipboardjs</artifactId>
         <version>${wicketstuff.version}</version>
       </dependency>
 
@@ -1330,6 +1336,11 @@
         <version>${wicket.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+      	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      	<artifactId>inception-sharing</artifactId>
+      	<version>0.18.0-SNAPSHOT</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

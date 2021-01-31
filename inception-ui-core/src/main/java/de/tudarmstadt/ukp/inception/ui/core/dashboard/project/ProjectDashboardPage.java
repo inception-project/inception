@@ -33,6 +33,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -60,6 +62,8 @@ public class ProjectDashboardPage
 
     private static final long serialVersionUID = -2487663821276301436L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectDashboardPage.class);
+
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
@@ -71,12 +75,11 @@ public class ProjectDashboardPage
         super(aPageParameters);
 
         User currentUser = userRepository.getCurrentUser();
+        Long projectId = aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong();
 
-        // Check if use can access the project
+        // Check if user can access the project
         Project project = projectService.listAccessibleProjects(currentUser).stream() //
-                .filter(p -> p.getId()
-                        .equals(aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong()))
-                .findFirst().orElse(null);
+                .filter(p -> p.getId().equals(projectId)).findFirst().orElse(null);
 
         // If the user has no access, send the user back to the overview page
         if (project == null) {

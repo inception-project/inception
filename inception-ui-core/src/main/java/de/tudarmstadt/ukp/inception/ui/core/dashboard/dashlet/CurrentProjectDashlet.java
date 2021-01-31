@@ -60,8 +60,8 @@ public class CurrentProjectDashlet
                 onCancel(aTarget);
             }
         };
-        name.setEnabled(
-                projectService.isManager(getModelObject(), userRepository.getCurrentUser()));
+        boolean isManager = projectService.isManager(getModelObject(), userRepository.getCurrentUser());
+        name.setEnabled(isManager);
         add(name);
 
         add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription))
