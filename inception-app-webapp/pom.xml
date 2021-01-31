@@ -15,14 +15,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.18.0-SNAPSHOT</version>
+    <version>0.18.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -551,6 +549,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-workload-dynamic</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-sharing</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -611,11 +613,11 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-              <imagesDir>./user-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./user-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -628,11 +630,11 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-              <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./developer-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -696,17 +698,10 @@
 
                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
                   <include name="**/*.html" />
-                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
-                  <replacefilter
-                    token="https://code.jquery.com/jquery-migrate-3.1.0.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
-                  <replacefilter
-                    token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
-                  <replacefilter
-                    token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
                 </replace>
 
               </target>
@@ -791,6 +786,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-tagsets</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
@@ -961,8 +957,7 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory
-                    implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
                   <!--
                     We want the original file to be the WAR and the repackaged all-inclusive runnable
                     thing with the embedded Tomcat to be the JAR.
@@ -992,8 +987,7 @@
                 </goals>
                 <configuration>
                   <target>
-                    <move file="target/${project.artifactId}-${project.version}-standalone.war"
-                      tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
                   </target>
                 </configuration>
               </execution>
@@ -1052,11 +1046,11 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-                    <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./user-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -1069,11 +1063,11 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-                    <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./developer-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>

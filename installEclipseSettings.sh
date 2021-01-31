@@ -42,6 +42,7 @@ installPrefs inception-recommendation-api
 installPrefs inception-review-editor
 installPrefs inception-search-core
 installPrefs inception-search-mtas
+installPrefs inception-sharing
 installPrefs inception-support
 installPrefs inception-testing
 installPrefs inception-ui-core

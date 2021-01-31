@@ -20,10 +20,10 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.18.0-SNAPSHOT</version>
+    <version>0.18.1-SNAPSHOT</version>
   </parent>
   <artifactId>inception-plugin-manager</artifactId>
-  <name>WebAnno - Plugin manager</name>
+  <name>INCEpTION - Plugin manager</name>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
