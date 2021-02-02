@@ -1,0 +1,126 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Running via separate Tomcat (WAR)
+
+You can also  deploy the {product-name} WAR archive into a separately installed Tomcat instance. 
+
+== Installing Tomcat
+
+* Install package to install user-instances of Tomcat. 
++
+[source,bash]
+----
+$ apt-get install tomcat8-user authbind
+----
+* Create new instance
++
+[source,bash]
+----
+$ cd /opt
+$ tomcat8-instance-create -p 18080 -c 18005 webanno
+$ chown -R www-data /opt/webanno
+----
+
+NOTE: If {product-name} is the only application you install on your server, then you can also have {product-name} running on port 80 or port 443. In that case, substitute all instances of port `18080` in these
+guidelines with the respective port. Mind that running via SSL on port 443 requires additional steps that we have not yet documented. Ports lower than 1024 are privileged and the {product-name} init script will automatically use a tool called *authbind* to allow {product-name} to operate on these ports as the unprivileged www-data user.
+
+* Configure the startup script. Edit `/etc/init.d/webanno` and add the following contents or just download the file from link:admin-guide/scripts/webanno[here] and place it in `/etc/init.d`.
++
+[source,bash]
+----
+include::scripts/webanno[]
+----
+* Make the script executable and register it to run during system start:
++
+[source,bash]
+----
+$ chmod +x /etc/init.d/webanno
+$ update-rc.d webanno defaults
+----
+
+NOTE: If you deploy {product-name} on a Linux machine that is short on entropy, you can significantly 
+      decrease startup time by adding `-Djava.security.egd=file:/dev/urandom` to the `JAVA_OPTS`
+      variable in the init script.
+
+Now we have a dedicated Apache Tomcat instance for {product-name} installed at `/opt/webanno/` that automatically starts when the system boots and that can be managed through the usual `service` commands.
+
+== Deploying the WAR file
+
+* Place the {product-name} WAR into the Tomcat `webapps` folder:
++
+[source,bash,subs="+attributes"]
+----
+$ cp webanno-webapp-{revnumber}.war /opt/webanno/webapps/webanno.war
+----
++
+NOTE: Mind that the copy command above renames the WAR file to `webanno.war`! This is important so that {product-name} is accessible at the URL noted later in the present guidelines.
+* Start {product-name}
++
+[source,bash]
+----
+$ service webanno start
+----
+* Open it with your browser at `http://localhost:18080/webanno`. If you chose to run {product-name} behind the Apache web-server use `http://localhost/webanno`.
+The first time, it will create a username `admin` with password `admin`. Log in with this username and proceed.
+
+== Running the WAR behind Apache HTTPD
+
+These are *optional* instructions if you want to run WebAnno behind an Apache web-server instead
+of accessing it directly. This assumes that you already have the following packages installed:
+
+* Apache Web Server
+* mod_proxy
+* mod_proxy_ajp
+
+* Edit `/opt/webanno/conf/server.xml` and enable AJP Connector on localhost (comment in, add address, and change port
++
+[source,xml]
+----
+<Connector port="18009" protocol="AJP/1.3" redirectPort="8443" address="127.0.0.1"/>
+----
+* Disable HTTP Connector (just comment it out)
++
+[source,xml]
+----
+<!--Connector port="8080" protocol="HTTP/1.1".
+           connectionTimeout="20000".
+           URIEncoding="UTF-8"
+           redirectPort="8443" /-->
+----
+* Edit `/etc/apache2/conf.d/webanno.local.conf`
++
+[source,xml]
+----
+ProxyPreserveHost On
+
+<Proxy ajp://localhost/webanno >
+  Order Deny,Allow
+  Deny from none
+  Allow from all
+</Proxy>
+
+<Location /webanno >
+  ProxyPass ajp://localhost:18009/webanno timeout=1200
+  ProxyPassReverse http://localhost/webanno
+</Location>
+----
+* Restart Apache web server
++
+[source,bash]
+----
+$ service apache2 restart
+----

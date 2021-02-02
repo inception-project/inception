@@ -1,0 +1,2429 @@
+{
+  "description": null,
+  "parent": null,
+  "disambiguator_config": [
+      ],
+  "header": [
+    [
+      "Document",
+      "string"
+    ],
+    [
+      "Modified",
+      "time"
+    ],
+    [
+      "Entities",
+      "int"
+    ],
+    [
+      "Relations",
+      "int"
+    ],
+    [
+      "Events",
+      "int"
+    ]
+  ],
+  "entity_attribute_types": [
+    
+  ],
+  "event_types": [
+    {
+      "borderColor": "darken",
+      "name": "Gene expression",
+      "arcs": [
+        {
+          "arrowHead": "triangle,5",
+          "color": "black",
+          "labels": [
+            "Theme",
+            "Th"
+          ],
+          "hotkey": "T",
+          "type": "Theme",
+          "targets": [
+            "Protein"
+          ]
+        }
+      ],
+      "labels": [
+        "Gene expression",
+        "Expression",
+        "Expr"
+      ],
+      "children": [
+        
+      ],
+      "unused": false,
+      "bgColor": "lightgreen",
+      "attributes": [
+        "Negation",
+        "Speculation"
+      ],
+      "type": "Gene_expression",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "name": "Binding",
+      "arcs": [
+        {
+          "arrowHead": "triangle,5",
+          "color": "black",
+          "labels": [
+            "Theme",
+            "Th"
+          ],
+          "hotkey": "T",
+          "type": "Theme",
+          "targets": [
+            "Protein"
+          ]
+        },
+        {
+          "color": "#0000aa",
+          "arrowHead": "triangle,5",
+          "labels": [
+            "Site",
+            "Si"
+          ],
+          "type": "Site",
+          "targets": [
+            "Entity"
+          ]
+        }
+      ],
+      "labels": [
+        "Binding",
+        "Bind"
+      ],
+      "children": [
+        
+      ],
+      "unused": false,
+      "bgColor": "lightgreen",
+      "attributes": [
+        "Negation",
+        "Speculation"
+      ],
+      "type": "Binding",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "name": "Phosphorylation",
+      "arcs": [
+        {
+          "arrowHead": "triangle,5",
+          "color": "black",
+          "labels": [
+            "Theme",
+            "Th"
+          ],
+          "hotkey": "T",
+          "type": "Theme",
+          "targets": [
+            "Protein"
+          ]
+        },
+        {
+          "color": "#0000aa",
+          "arrowHead": "triangle,5",
+          "labels": [
+            "Site",
+            "Si"
+          ],
+          "type": "Site",
+          "targets": [
+            "Entity"
+          ]
+        }
+      ],
+      "labels": [
+        "Phosphorylation",
+        "Phos"
+      ],
+      "children": [
+        
+      ],
+      "unused": false,
+      "bgColor": "lightgreen",
+      "attributes": [
+        "Negation",
+        "Speculation"
+      ],
+      "type": "Phosphorylation",
+      "fgColor": "black"
+    }
+  ],
+  "action": "getCollectionInformation",
+  "items": [
+    [
+      "c",
+      null,
+      "editable"
+    ],
+    [
+      "c",
+      null,
+      "not-editable"
+    ],
+    [
+      "d",
+      null,
+      "german_grimm01",
+      1346252794.0,
+      10,
+      0,
+      15
+    ],
+    [
+      "d",
+      null,
+      "brca1",
+      1347043732.0,
+      0,
+      0,
+      0
+    ],
+    [
+      "d",
+      null,
+      "19",
+      1343377707.0,
+      0,
+      0,
+      0
+    ],
+    [
+      "d",
+      null,
+      "Test",
+      1345971170.0,
+      3,
+      0,
+      1
+    ],
+    [
+      "d",
+      null,
+      "P1",
+      1347101086.0,
+      2,
+      0,
+      1
+    ],
+    [
+      "d",
+      null,
+      "testArOnleyID",
+      1340366842.0,
+      5,
+      0,
+      2
+    ],
+    [
+      "d",
+      null,
+      "01sourcetext",
+      1343160589.0,
+      9,
+      0,
+      5
+    ],
+    [
+      "d",
+      null,
+      "gsel521-1",
+      1346241957.0,
+      4,
+      1,
+      0
+    ],
+    [
+      "d",
+      null,
+      "1234567801",
+      1347633278.0,
+      3,
+      0,
+      0
+    ],
+    [
+      "d",
+      null,
+      "01source text",
+      1347631965.0,
+      3,
+      0,
+      2
+    ],
+    [
+      "d",
+      null,
+      "grimm_02",
+      1344944387.0,
+      9,
+      0,
+      6
+    ],
+    [
+      "d",
+      null,
+      "Gsel521_test2",
+      1346295946.0,
+      9,
+      1,
+      1
+    ],
+    [
+      "d",
+      null,
+      "01 source text",
+      1347568112.0,
+      6,
+      0,
+      7
+    ],
+    [
+      "d",
+      null,
+      "texto fonte",
+      1346782638.0,
+      1,
+      0,
+      1
+    ],
+    [
+      "d",
+      null,
+      "german_grimm02",
+      1340461934.0,
+      4,
+      0,
+      1
+    ],
+    [
+      "d",
+      null,
+      "testx",
+      1344540887.0,
+      0,
+      0,
+      1
+    ]
+  ],
+  "messages": [
+    
+  ],
+  "event_attribute_types": [
+    {
+      "unused": false,
+      "values": {
+        "Negation": {
+          "box": "crossed"
+        }
+      },
+      "labels": null,
+      "type": "Negation",
+      "name": "Negation"
+    },
+    {
+      "unused": false,
+      "values": {
+        "Speculation": {
+          "dashArray": "3,3"
+        }
+      },
+      "labels": null,
+      "type": "Speculation",
+      "name": "Speculation"
+    }
+  ],
+  "annotation_logging": false,
+  "relation_types": [
+    {
+      "args": [
+        {
+          "role": "Arg1",
+          "targets": [
+            "Protein"
+          ]
+        },
+        {
+          "role": "Arg2",
+          "targets": [
+            "Protein"
+          ]
+        }
+      ],
+      "arrowHead": "none",
+      "name": "Equiv",
+      "color": "black",
+      "labels": [
+        "Equiv",
+        "Eq"
+      ],
+      "children": [
+        
+      ],
+      "unused": false,
+      "dashArray": "3,3",
+      "attributes": [
+        
+      ],
+      "type": "Equiv",
+      "properties": {
+        "symmetric": true,
+        "transitive": true
+      }
+    }
+  ],
+  "ner_taggers": [
+    
+  ],
+  "search_config": [
+    [
+      "UniProt",
+      "http://www.uniprot.org/uniprot/?sort=score&query=%s"
+    ],
+    [
+      "EntrezGene",
+      "http://www.ncbi.nlm.nih.gov/gene?term=%s"
+    ],
+    [
+      "Wikipedia",
+      "http://en.wikipedia.org/wiki/Special:Search?search=%s"
+    ],
+    [
+      "Google",
+      "http://www.google.com/search?q=%s"
+    ],
+    [
+      "GeneOntology",
+      "http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=%s&action=new-search&search_constraint=term"
+    ],
+    [
+      "ALC",
+      "http://eow.alc.co.jp/%s"
+    ]
+  ],
+  "entity_types": [
+    {
+      "borderColor": "darken",
+      "name": "Protein",
+      "arcs": [
+        {
+          "arrowHead": "none",
+          "color": "black",
+          "labels": [
+            "Equiv",
+            "Eq"
+          ],
+          "dashArray": "3,3",
+          "type": "Equiv",
+          "targets": [
+            "Protein"
+          ]
+        }
+      ],
+      "labels": [
+        "Protein",
+        "Pro",
+        "Pr",
+        "P"
+      ],
+      "children": [
+        
+      ],
+      "unused": false,
+      "bgColor": "#7fa2ff",
+      "hotkey": "P",
+      "attributes": [
+        
+      ],
+      "type": "Protein",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "name": "Entity",
+      "labels": [
+        "Entity",
+        "Ent",
+        "En",
+        "E"
+      ],
+      "children": [
+        
+      ],
+      "unused": false,
+      "bgColor": "#b4c8ff",
+      "hotkey": "E",
+      "attributes": [
+        
+      ],
+      "type": "Entity",
+      "fgColor": "black"
+    }
+  ],
+  "unconfigured_types": [
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Contextgene",
+      "color": "#303030",
+      "labels": [
+        "Contextgene",
+        "CGn"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Contextgene",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Participant",
+      "color": "black",
+      "labels": [
+        "Participant",
+        "Pa"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Participant",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Neddylation",
+      "color": "black",
+      "labels": [
+        "Neddylation",
+        "Nedd"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Neddylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Point Mutation",
+      "color": "black",
+      "labels": [
+        "Point Mutation"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Point_Mutation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Glycosylation",
+      "color": "black",
+      "labels": [
+        "Glycosylation",
+        "Glyc"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Glycosylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Pathological formation",
+      "color": "black",
+      "labels": [
+        "Pathological formation",
+        "Pathological form",
+        "Path form",
+        "Path f",
+        "PF"
+      ],
+      "unused": true,
+      "bgColor": "#aaaaaa",
+      "type": "Pathological_formation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Transcription",
+      "color": "black",
+      "labels": [
+        "Transcription",
+        "Trns"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Transcription",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organism subdivision",
+      "color": "black",
+      "labels": [
+        "Organism subdivision",
+        "Org subdiv",
+        "OSubdiv",
+        "OSD"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Organism_subdivision",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Dephosphorylation",
+      "color": "black",
+      "labels": [
+        "Dephosphorylation",
+        "-Phos"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Dephosphorylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deprenylation",
+      "color": "black",
+      "labels": [
+        "Deprenylation",
+        "-Prenyl"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deprenylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein family or group",
+      "color": "black",
+      "labels": [
+        "Protein family or group",
+        "PFM"
+      ],
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Protein_family_or_group",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Chemical",
+      "color": "black",
+      "labels": [
+        "Chemical",
+        "Chem"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Chemical",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Instrument",
+      "color": "black",
+      "labels": [
+        "Instrument",
+        "Instr",
+        "In"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Instrument",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Regulation",
+      "color": "black",
+      "labels": [
+        "Regulation",
+        "Reg"
+      ],
+      "unused": true,
+      "bgColor": "#ffff00",
+      "type": "Regulation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Acylation",
+      "color": "black",
+      "labels": [
+        "Acylation",
+        "Acyl"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Acylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Palmitoylation",
+      "color": "black",
+      "labels": [
+        "Palmitoylation",
+        "Palm"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Palmitoylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein domain or region",
+      "color": "black",
+      "labels": [
+        "Protein domain or region",
+        "PDR"
+      ],
+      "unused": true,
+      "bgColor": "#b4c8ff",
+      "type": "Protein_domain_or_region",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organism substance",
+      "color": "black",
+      "labels": [
+        "Organism substance",
+        "Ogn subst",
+        "OSubst",
+        "OSub",
+        "OS"
+      ],
+      "unused": true,
+      "bgColor": "#ffeee0",
+      "type": "Organism_substance",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Catalysis",
+      "color": "black",
+      "labels": [
+        "Catalysis",
+        "Catal"
+      ],
+      "unused": true,
+      "bgColor": "#e0ff00",
+      "type": "Catalysis",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Theme",
+      "color": "black",
+      "labels": [
+        "Theme",
+        "Th"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Theme",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Subunit-Complex",
+      "color": "black",
+      "labels": [
+        "Subunit-Complex",
+        "Complex",
+        "Cmplx"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Subunit-Complex",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Null Mutation",
+      "color": "black",
+      "labels": [
+        "Null Mutation"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Null_Mutation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Alkylation",
+      "color": "black",
+      "labels": [
+        "Alkylation",
+        "Alkyl"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Alkylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Gene or gene product",
+      "color": "black",
+      "labels": [
+        "Gene or gene product",
+        "GGP"
+      ],
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Gene_or_gene_product",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Delipidation",
+      "color": "black",
+      "labels": [
+        "Delipidation",
+        "-Lipid"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Delipidation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Localization",
+      "color": "black",
+      "labels": [
+        "Localization",
+        "Locl"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Localization",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Cause",
+      "color": "#007700",
+      "labels": [
+        "Cause",
+        "Ca"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Cause",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Prenylation",
+      "color": "black",
+      "labels": [
+        "Prenylation",
+        "Prenyl"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Prenylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Experimental Technique",
+      "color": "black",
+      "labels": [
+        "Experimental Technique",
+        "Exp Tech"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Experimental_Technique",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Multi-tissue structure",
+      "color": "black",
+      "labels": [
+        "Multi-tissue structure",
+        "Multi-t struct",
+        "MT struct",
+        "MT"
+      ],
+      "unused": true,
+      "bgColor": "#e595ff",
+      "type": "Multi_tissue_structure",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Biological process",
+      "color": "black",
+      "labels": [
+        "Biological process",
+        "Biol proc"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Biological_process",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Positive regulation",
+      "color": "black",
+      "labels": [
+        "Positive regulation",
+        "+Regulation",
+        "+Reg"
+      ],
+      "unused": true,
+      "bgColor": "#e0ff00",
+      "type": "Positive_regulation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Laboratory Technique",
+      "color": "black",
+      "labels": [
+        "Laboratory Technique",
+        "Lab Tech"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Laboratory_Technique",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Depalmitoylation",
+      "color": "black",
+      "labels": [
+        "Depalmitoylation",
+        "-Palm"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Depalmitoylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Cellular physiological process",
+      "color": "black",
+      "labels": [
+        "Cellular physiological process",
+        "Cell phys proc"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Cellular_physiological_process",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Hydroxylation",
+      "color": "black",
+      "labels": [
+        "Hydroxylation",
+        "Hydr"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Hydroxylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Planned process",
+      "color": "black",
+      "labels": [
+        "Planned process",
+        "Planned"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Planned_process",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein molecule",
+      "color": "black",
+      "labels": [
+        "Protein molecule",
+        "Prot.mol"
+      ],
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Protein_molecule",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "DNA domain or region",
+      "color": "black",
+      "labels": [
+        "DNA domain or region",
+        "DDR"
+      ],
+      "unused": true,
+      "bgColor": "#b4c8ff",
+      "type": "DNA_domain_or_region",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Amino acid monomer",
+      "color": "black",
+      "labels": [
+        "Amino acid monomer",
+        "AA"
+      ],
+      "unused": true,
+      "bgColor": "#b4c8ff",
+      "type": "Amino_acid_monomer",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Ubiquitination",
+      "color": "black",
+      "labels": [
+        "Ubiquitination",
+        "Ubiq"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Ubiquitination",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Desumoylation",
+      "color": "black",
+      "labels": [
+        "Desumoylation",
+        "-Sumo"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Desumoylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Drug or compound",
+      "color": "black",
+      "labels": [
+        "Drug or compound",
+        "Drug/comp",
+        "D/C"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Drug_or_compound",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein catabolism",
+      "color": "black",
+      "labels": [
+        "Protein catabolism",
+        "Catabolism",
+        "Catab"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Protein_catabolism",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Lipidation",
+      "color": "black",
+      "labels": [
+        "Lipidation",
+        "Lipid"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Lipidation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organ",
+      "color": "black",
+      "labels": [
+        "Organ",
+        "Ogn"
+      ],
+      "unused": true,
+      "bgColor": "#e999ff",
+      "type": "Organ",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Methylation",
+      "color": "black",
+      "labels": [
+        "Methylation",
+        "Meth"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Methylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Acetylation",
+      "color": "black",
+      "labels": [
+        "Acetylation",
+        "Acet"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Acetylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Regulon-operon",
+      "color": "black",
+      "labels": [
+        "Regulon-operon",
+        "Reg/op"
+      ],
+      "unused": true,
+      "bgColor": "#9999ff",
+      "type": "Regulon-operon",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Site",
+      "color": "#0000aa",
+      "labels": [
+        "Site",
+        "Si"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Site",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Multicellular_organism_natural",
+      "color": "black",
+      "labels": [
+        "Multicellular_organism_natural",
+        "M-C Organism",
+        "MCOrg"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Multicellular_organism_natural",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deglycosylation",
+      "color": "black",
+      "labels": [
+        "Deglycosylation",
+        "-Glyc"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deglycosylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deneddylation",
+      "color": "black",
+      "labels": [
+        "Deneddylation",
+        "-Nedd"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deneddylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Two-component-system",
+      "color": "black",
+      "labels": [
+        "Two-component-system",
+        "2-comp-sys",
+        "2CS"
+      ],
+      "unused": true,
+      "bgColor": "#9999ff",
+      "type": "Two-component-system",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "BV development",
+      "color": "black",
+      "labels": [
+        "BV development",
+        "BV devel"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Blood_vessel_development",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Cell_type",
+      "color": "black",
+      "labels": [
+        "Cell_type",
+        "Cell_t",
+        "Cell"
+      ],
+      "unused": true,
+      "bgColor": "#cf9fff",
+      "type": "Cell_type",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deacylation",
+      "color": "black",
+      "labels": [
+        "Deacylation",
+        "-Acyl"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deacylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organism",
+      "color": "black",
+      "labels": [
+        "Organism",
+        "Org"
+      ],
+      "unused": true,
+      "bgColor": "#ffccaa",
+      "type": "Organism",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Demethylation",
+      "color": "black",
+      "labels": [
+        "Demethylation",
+        "-Meth"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Demethylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "DNA demethylation",
+      "color": "black",
+      "labels": [
+        "DNA demethylation",
+        "DNA -meth"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "DNA_demethylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Gene Expression",
+      "color": "black",
+      "labels": [
+        "Gene Expression",
+        "Expression"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Gene_Expression",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Gene Activation",
+      "color": "black",
+      "labels": [
+        "Gene Activation",
+        "Activation"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Gene_Activation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Other_pharmaceutical_agent",
+      "color": "black",
+      "labels": [
+        "Other_pharmaceutical_agent",
+        "Other_pharm"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Other_pharmaceutical_agent",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deubiquitination",
+      "color": "black",
+      "labels": [
+        "Deubiquitination",
+        "-Ubiq"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deubiquitination",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Core Angiogenesis Term",
+      "color": "black",
+      "labels": [
+        "Core Angiogenesis Term",
+        "Core Angiogenesis",
+        "Core Angio"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Core_Angiogenesis_Term",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Gene Repression",
+      "color": "black",
+      "labels": [
+        "Gene Repression",
+        "Repression"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Gene_Repression",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "DNA methylation",
+      "color": "black",
+      "labels": [
+        "DNA methylation",
+        "DNA meth"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "DNA_methylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein-Component",
+      "color": "#000077",
+      "labels": [
+        "Protein-Component",
+        "Component",
+        "Comp"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Protein-Component",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Carbohydrate",
+      "color": "black",
+      "labels": [
+        "Carbohydrate",
+        "Carb"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Carbohydrate",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Subcellular structure",
+      "color": "black",
+      "labels": [
+        "Subcellular structure",
+        "Subcell struct",
+        "SubCell",
+        "SCell",
+        "SC"
+      ],
+      "unused": true,
+      "bgColor": "#bbc3ff",
+      "type": "Subcellular_structure",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deacetylation",
+      "color": "black",
+      "labels": [
+        "Deacetylation",
+        "-Acet"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deacetylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Sidechain",
+      "color": "#303030",
+      "labels": [
+        "Sidechain",
+        "SCh"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Sidechain",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Dehydroxylation",
+      "color": "black",
+      "labels": [
+        "Dehydroxylation",
+        "-Hydr"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Dehydroxylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Sumoylation",
+      "color": "black",
+      "labels": [
+        "Sumoylation",
+        "Sumo"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Sumoylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Negative regulation",
+      "color": "black",
+      "labels": [
+        "Negative regulation",
+        "-Regulation",
+        "-Reg"
+      ],
+      "unused": true,
+      "bgColor": "#ffe000",
+      "type": "Negative_regulation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Dealkylation",
+      "color": "black",
+      "labels": [
+        "Dealkylation",
+        "-Alkyl"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Dealkylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Contextgene",
+      "color": "#303030",
+      "labels": [
+        "Contextgene",
+        "CGn"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Contextgene",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Two-component-system",
+      "color": "black",
+      "labels": [
+        "Two-component-system",
+        "2-comp-sys",
+        "2CS"
+      ],
+      "unused": true,
+      "bgColor": "#9999ff",
+      "type": "Two-component-system",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Pathological formation",
+      "color": "black",
+      "labels": [
+        "Pathological formation",
+        "Pathological form",
+        "Path form",
+        "Path f",
+        "PF"
+      ],
+      "unused": true,
+      "bgColor": "#aaaaaa",
+      "type": "Pathological_formation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Cell_type",
+      "color": "black",
+      "labels": [
+        "Cell_type",
+        "Cell_t",
+        "Cell"
+      ],
+      "unused": true,
+      "bgColor": "#cf9fff",
+      "type": "Cell_type",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein family or group",
+      "color": "black",
+      "labels": [
+        "Protein family or group",
+        "PFM"
+      ],
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Protein_family_or_group",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Chemical",
+      "color": "black",
+      "labels": [
+        "Chemical",
+        "Chem"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Chemical",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Regulation",
+      "color": "black",
+      "labels": [
+        "Regulation",
+        "Reg"
+      ],
+      "unused": true,
+      "bgColor": "#ffff00",
+      "type": "Regulation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein domain or region",
+      "color": "black",
+      "labels": [
+        "Protein domain or region",
+        "PDR"
+      ],
+      "unused": true,
+      "bgColor": "#b4c8ff",
+      "type": "Protein_domain_or_region",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organism substance",
+      "color": "black",
+      "labels": [
+        "Organism substance",
+        "Ogn subst",
+        "OSubst",
+        "OSub",
+        "OS"
+      ],
+      "unused": true,
+      "bgColor": "#ffeee0",
+      "type": "Organism_substance",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Catalysis",
+      "color": "black",
+      "labels": [
+        "Catalysis",
+        "Catal"
+      ],
+      "unused": true,
+      "bgColor": "#e0ff00",
+      "type": "Catalysis",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Cause",
+      "color": "#007700",
+      "labels": [
+        "Cause",
+        "Ca"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Cause",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "AtLoc",
+      "color": "#0000cc",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "AtLoc",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Speculation",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "dashArray": "3,3",
+      "type": "Speculation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Gene or gene product",
+      "color": "black",
+      "labels": [
+        "Gene or gene product",
+        "GGP"
+      ],
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Gene_or_gene_product",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Delipidation",
+      "color": "black",
+      "labels": [
+        "Delipidation",
+        "-Lipid"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Delipidation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "CSite",
+      "color": "#0000aa",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "CSite",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Lipid",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#9fc2ff",
+      "type": "Lipid",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Multi-tissue structure",
+      "color": "black",
+      "labels": [
+        "Multi-tissue structure",
+        "Multi-t struct",
+        "MT struct",
+        "MT"
+      ],
+      "unused": true,
+      "bgColor": "#e595ff",
+      "type": "Multi_tissue_structure",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Sub-Process",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#ee7a7a",
+      "type": "Sub-Process",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Positive regulation",
+      "color": "black",
+      "labels": [
+        "Positive regulation",
+        "+Regulation",
+        "+Reg"
+      ],
+      "unused": true,
+      "bgColor": "#e0ff00",
+      "type": "Positive_regulation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Virus",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#cf9fff",
+      "type": "Virus",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Subcellular structure",
+      "color": "black",
+      "labels": [
+        "Subcellular structure",
+        "Subcell struct",
+        "SubCell",
+        "SCell",
+        "SC"
+      ],
+      "unused": true,
+      "bgColor": "#bbc3ff",
+      "type": "Subcellular_structure",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Depalmitoylation",
+      "color": "black",
+      "labels": [
+        "Depalmitoylation",
+        "-Palm"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Depalmitoylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organic_compound_other",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#9fc2ff",
+      "type": "Organic_compound_other",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "DNA_molecule",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "DNA_molecule",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein molecule",
+      "color": "black",
+      "labels": [
+        "Protein molecule",
+        "Prot.mol"
+      ],
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Protein_molecule",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Dealkylation",
+      "color": "black",
+      "labels": [
+        "Dealkylation",
+        "-Alkyl"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Dealkylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Amino acid monomer",
+      "color": "black",
+      "labels": [
+        "Amino acid monomer",
+        "AA"
+      ],
+      "unused": true,
+      "bgColor": "#b4c8ff",
+      "type": "Amino_acid_monomer",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Desumoylation",
+      "color": "black",
+      "labels": [
+        "Desumoylation",
+        "-Sumo"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Desumoylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Drug or compound",
+      "color": "black",
+      "labels": [
+        "Drug or compound",
+        "Drug/comp",
+        "D/C"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Drug_or_compound",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein_complex",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Protein_complex",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "DNA_family_or_group",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "DNA_family_or_group",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organ",
+      "color": "black",
+      "labels": [
+        "Organ",
+        "Ogn"
+      ],
+      "unused": true,
+      "bgColor": "#e999ff",
+      "type": "Organ",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Regulon-operon",
+      "color": "black",
+      "labels": [
+        "Regulon-operon",
+        "Reg/op"
+      ],
+      "unused": true,
+      "bgColor": "#9999ff",
+      "type": "Regulon-operon",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Site",
+      "color": "#0000aa",
+      "labels": [
+        "Site",
+        "Si"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Site",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deprenylation",
+      "color": "black",
+      "labels": [
+        "Deprenylation",
+        "-Prenyl"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deprenylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Polynucleotide",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#b4c8ff",
+      "type": "Polynucleotide",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deglycosylation",
+      "color": "black",
+      "labels": [
+        "Deglycosylation",
+        "-Glyc"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deglycosylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Negation",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Negation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Exp",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#cccccc",
+      "type": "Exp",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Dephosphorylation",
+      "color": "black",
+      "labels": [
+        "Dephosphorylation",
+        "-Phos"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Dephosphorylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deacylation",
+      "color": "black",
+      "labels": [
+        "Deacylation",
+        "-Acyl"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deacylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Gene",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "Gene",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Organism",
+      "color": "black",
+      "labels": [
+        "Organism",
+        "Org"
+      ],
+      "unused": true,
+      "bgColor": "#ffccaa",
+      "type": "Organism",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Demethylation",
+      "color": "black",
+      "labels": [
+        "Demethylation",
+        "-Meth"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Demethylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "DNA demethylation",
+      "color": "black",
+      "labels": [
+        "DNA demethylation",
+        "DNA -meth"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "DNA_demethylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "ATTRIBUTE_DEFAULT",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "ATTRIBUTE_DEFAULT",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "DNA domain or region",
+      "color": "black",
+      "labels": [
+        "DNA domain or region",
+        "DDR"
+      ],
+      "unused": true,
+      "bgColor": "#b4c8ff",
+      "type": "DNA_domain_or_region",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Other_pharmaceutical_agent",
+      "color": "black",
+      "labels": [
+        "Other_pharmaceutical_agent",
+        "Other_pharm"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Other_pharmaceutical_agent",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deubiquitination",
+      "color": "black",
+      "labels": [
+        "Deubiquitination",
+        "-Ubiq"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deubiquitination",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "ARC_DEFAULT",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "ARC_DEFAULT",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "RNA_molecule",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#7fa2ff",
+      "type": "RNA_molecule",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deneddylation",
+      "color": "black",
+      "labels": [
+        "Deneddylation",
+        "-Nedd"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deneddylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Protein-Component",
+      "color": "#000077",
+      "labels": [
+        "Protein-Component",
+        "Component",
+        "Comp"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Protein-Component",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Carbohydrate",
+      "color": "black",
+      "labels": [
+        "Carbohydrate",
+        "Carb"
+      ],
+      "unused": true,
+      "bgColor": "#8fcfff",
+      "type": "Carbohydrate",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Process",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#9fe67f",
+      "type": "Process",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Tissue",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#cf9fff",
+      "type": "Tissue",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Deacetylation",
+      "color": "black",
+      "labels": [
+        "Deacetylation",
+        "-Acet"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Deacetylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "ToLoc",
+      "color": "#0000cc",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "ToLoc",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Sidechain",
+      "color": "#303030",
+      "labels": [
+        "Sidechain",
+        "SCh"
+      ],
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "Sidechain",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Dehydroxylation",
+      "color": "black",
+      "labels": [
+        "Dehydroxylation",
+        "-Hydr"
+      ],
+      "unused": true,
+      "bgColor": "#18c59a",
+      "type": "Dehydroxylation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Cell_natural",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#cf9fff",
+      "type": "Cell_natural",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Negative regulation",
+      "color": "black",
+      "labels": [
+        "Negative regulation",
+        "-Regulation",
+        "-Reg"
+      ],
+      "unused": true,
+      "bgColor": "#ffe000",
+      "type": "Negative_regulation",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Cell_cultured",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#cf9fff",
+      "type": "Cell_cultured",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "Experimental_method",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "#ffff00",
+      "type": "Experimental_method",
+      "fgColor": "black"
+    },
+    {
+      "borderColor": "darken",
+      "arrowHead": "triangle,5",
+      "name": "SPAN_DEFAULT",
+      "color": "black",
+      "labels": null,
+      "unused": true,
+      "bgColor": "lightgreen",
+      "type": "SPAN_DEFAULT",
+      "fgColor": "black"
+    }
+  ]
+}

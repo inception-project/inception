@@ -1,0 +1,16 @@
+= File Formats
+
+This section explains how to support different type of file formats for importing and exporting
+annotated texts. The file format supports are mainly based on DKPro-Core-compatible reader and 
+writer UIMA components. They are then simply made known to the application via a `FormatSupport`
+implementation.
+
+The extension mechanism consists of the following classes and interfaces:
+
+* The `FormatSupport` interface which provides the API necessary to make file formats known to the
+  application. It providse means to fetch the format ID and the human-readable format name shown
+  in the UI. It also allows to create reader and/or writer components. Various implementations of
+  this interface are included with the application, e.g. the `WebAnnoTsv3FormatSupport`.
+* The `ImportExportService` interface and its implementation `ImportExportServiceImpl` which provide
+  access to the registered format supports and also offers methods to import and export annotated
+  text in any of the formats.

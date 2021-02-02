@@ -1,0 +1,108 @@
+ # de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity | value # de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS | PosValue # de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency | DependencyType | AttachTo=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS
+#id=1
+#text=Ms. Haag plays Elianti .
+1-1	Ms.	B-PER	NNP	SUBJ	1-3	
+1-2	Haag	I-PER	NNP	SBJ	1-3	
+1-3	plays	O	VBD	ROOT	1-3	
+1-4	Elianti	B-OTH	NNP	OBJ	1-3	
+1-5	.	O	.	ROOT	1-5	
+
+#id=2
+#text=Rolls-Royce Motor Cars Inc. said it expects its U.S. sales to remain steady at about 1,200 cars in 1990 .
+2-1	Rolls-Royce	B-ORGpart|B-ORG	NNP	NAME	2-3	
+2-2	Motor	I-ORGpart	NNP	NAME	2-3	
+2-3	Cars	O	NNPS	SBJ	2-5	
+2-4	Inc.	O	NNP	POSTHON	2-3	
+2-5	said	O	VBD	ROOT	2-5	
+2-6	it	O	PRP	SBJ	2-7	
+2-7	expects	O	VBZ	OPRD	2-11	
+2-8	its	O	PRP$	NMOD	2-10	
+2-9	U.S.	B-LOC	NNP	NMOD	2-10	
+2-10	sales	O	NNS	OBJ	2-7	
+2-11	to	O	TO	ROOT	2-11	
+2-12	remain	O	VB	IM	2-11	
+2-13	steady	O	JJ	PRD	2-12	
+2-14	at	O	IN	LOC	2-13	
+2-15	about	O	IN	DEP	2-16	
+2-16	1,200	O	CD	NMOD	2-17	
+2-17	cars	O	NNS	TMP	2-18	
+2-18	in	O	IN	ROOT	2-18	
+2-19	1990	O	CD	PMOD	2-18	
+2-20	.	O	.	P	2-5	
+
+#id=3
+#text=The luxury auto maker last year sold 1,214 cars in the U.S.
+3-1	The	O	DT	NMOD	3-4	
+3-2	luxury	O	NN	NMOD	3-3	
+3-3	auto	O	NN	NMOD	3-4	
+3-4	maker	O	NN	SBJ	3-7	
+3-5	last	O	JJ	NMOD	3-6	
+3-6	year	O	NN	TMP	3-4	
+3-7	sold	O	VBD	ROOT	3-7	
+3-8	1,214	O	CD	NMOD	3-9	
+3-9	cars	O	NNS	OBJ	3-7	
+3-10	in	O	IN	LOC	3-9	
+3-11	the	O	DT	NMOD	3-12	
+3-12	U.S.	B-LOC	NNP	PMOD	3-10	
+
+#id=4
+#text=BELL INDUSTRIES Inc. increased its quarterly to 10 cents from seven cents a share .
+4-1	BELL	B-ORGpart|B-ORG|B-PER	NNP	NAME	4-2	
+4-2	INDUSTRIES	I-ORGpart|I-ORG	NNP	SBJ	4-4	
+4-3	Inc.	I-ORGpart	NNP	POSTHON	4-2	
+4-4	increased	O	VBD	ROOT	4-4	
+4-5	its	O	PRP$	NMOD	4-6	
+4-6	quarterly	O	NN	OBJ	4-4	
+4-7	to	O	TO	DIR	4-4	
+4-8	10	O	CD	NMOD	4-9	
+4-9	cents	O	NNS	PMOD	4-7	
+4-10	from	O	IN	DIR	4-9	
+4-11	seven	O	CD	NMOD	4-12	
+4-12	cents	O	NNS	PMOD	4-10	
+4-13	a	O	DT	NMOD	4-14	
+4-14	share	O	NN	ADV	4-12	
+4-15	.	O	.	P	4-4	
+
+#id=5
+#text=The new rate will be payable Feb. 15 .
+5-1	The	O	DT	NMOD	5-3	
+5-2	new	O	JJ	NMOD	5-3	
+5-3	rate	O	NN	SBJ	5-4	
+5-4	will	O	MD	ROOT	5-4	
+5-5	be	O	VB	VC	5-4	
+5-6	payable	O	JJ	PRD	5-5	
+5-7	Feb.	O	NNP	TMP	5-5	
+5-8	15	O	CD	NMOD	5-7	
+5-9	.	O	.	P	5-4	
+
+#id=6
+#text=A record date has n't been set .
+6-1	A	O	DT	NMOD	6-3	
+6-2	record	O	NN	NMOD	6-3	
+6-3	date	O	NN	SBJ	6-4	
+6-4	has	O	VBZ	ROOT	6-4	
+6-5	n't	O	RB	ADV	6-4	
+6-6	been	O	VBN	VC	6-4	
+6-7	set	O	VBN	VC	6-6	
+6-8	.	O	.	P	6-4	
+
+#id=7
+#text= Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
+7-1	Bell	B-ORG	NNP	SBJ	7-8	
+7-2	,	O	,	P	7-1	
+7-3	based	O	VBN	APPO	7-1	
+7-4	in	O	IN	LOC	7-3	
+7-5	Los	B-LOC	NNP	NAME	7-6	
+7-6	Angeles	I-LOC	NNP	PMOD	7-4	
+7-7	,	O	,	P	7-1	
+7-8	makes	O	VBZ	ROOT	7-8	
+7-9	and	O	CC	COORD	7-8	
+7-10	distributes	O	VBZ	CONJ	7-9	
+7-11	electronic	O	JJ	NMOD	7-16	
+7-12	,	O	,	P	7-11	
+7-13	computer	O	NN	COORD	7-11	
+7-14	and	O	CC	COORD	7-13	
+7-15	building	O	NN	CONJ	7-14	
+7-16	products	O	NNS	OBJ	7-8	
+7-17	.	O	.	P	7-8	
+

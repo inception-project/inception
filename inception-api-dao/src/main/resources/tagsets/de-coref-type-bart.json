@@ -1,0 +1,14 @@
+{
+  "name" : "Coreference mentions",
+  "typeUiName" : null,
+  "description" : "coreference type annotation",
+  "language" : "de",
+  "type" : null,
+  "type_name" : null,
+  "type_description" : null,
+  "tags" : [ {
+    "tag_name" : "nam",
+    "tag_description" : "nam"
+  } ],
+  "create_tag" : false
+}

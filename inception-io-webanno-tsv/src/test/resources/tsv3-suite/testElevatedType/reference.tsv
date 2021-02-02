@@ -1,0 +1,6 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS|PosValue|coarseValue
+
+
+#Text=John
+1-1	0-4	John	NN	NOUN	

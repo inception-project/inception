@@ -1,0 +1,14 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.Multivalspan|f1|f2
+#T_RL=webanno.custom.Multivalrel|rel1|rel2|BT_webanno.custom.Multivalspan
+
+
+#Text=A tale of 3 kinds of annotations .
+1-1	0-1	A	_	_	_	_	_	
+1-2	2-6	tale	A	B	_	_	_	
+1-3	7-9	of	_	_	_	_	_	
+1-4	10-11	3	_	_	_	_	_	
+1-5	12-17	kinds	C[1]|C[2]	D[1]|D[2]	X	Y	1-2[0_1]	
+1-6	18-20	of	_	_	_	_	_	
+1-7	21-32	annotations	E	F	W	Z	1-5[1_0]	
+1-8	33-34	.	_	_	_	_	_	

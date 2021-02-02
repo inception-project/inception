@@ -1,0 +1,10 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.Span|value
+
+
+#Text=This is a test .
+1-1	0-4	This	NE 0	
+1-2	5-7	is	NE 1	
+1-3	8-9	a	NE 2	
+1-4	10-14	test	NE 3	
+1-5	15-16	.	NE 4	
