@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
@@ -61,6 +62,7 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -115,6 +117,8 @@ public class KnowledgeBaseServiceRemoteTest
     @Before
     public void setUp() throws Exception
     {
+        PerThreadSslCheckingHttpClientUtils.suspendSslVerification();
+
         Assume.assumeTrue("Remote repository at [" + sutConfig.getDataUrl() + "] is not reachable",
                 sutConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
                         || TestFixtures.isReachable(sutConfig.getDataUrl()));
@@ -150,6 +154,8 @@ public class KnowledgeBaseServiceRemoteTest
     {
         testEntityManager.clear();
         sut.destroy();
+
+        PerThreadSslCheckingHttpClientUtils.restoreSslVerification();
     }
 
     public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception

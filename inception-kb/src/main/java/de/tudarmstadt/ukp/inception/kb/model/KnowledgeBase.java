@@ -197,6 +197,12 @@ public class KnowledgeBase
     @Column(nullable = false)
     private int maxResults;
 
+    /**
+     * Whether to prevent the validation of the SSL certificate of a remote knowledge base
+     */
+    @Column(nullable = false)
+    private boolean skipSslValidation = false;
+
     public String getRepositoryId()
     {
         return repositoryId;
@@ -454,6 +460,16 @@ public class KnowledgeBase
     public void setDefaultDatasetIri(IRI aDefaultDatasetIri)
     {
         defaultDatasetIri = aDefaultDatasetIri;
+    }
+
+    public void setSkipSslValidation(boolean aSkipSslValidation)
+    {
+        skipSslValidation = aSkipSslValidation;
+    }
+
+    public boolean isSkipSslValidation()
+    {
+        return skipSslValidation;
     }
 
     @Override

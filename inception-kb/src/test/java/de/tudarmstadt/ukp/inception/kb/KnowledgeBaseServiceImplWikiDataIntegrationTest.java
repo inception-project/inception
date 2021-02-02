@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -117,6 +119,8 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
     @Before
     public void setUp() throws Exception
     {
+        suspendSslVerification();
+
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
         assumeEndpointIsAvailable(wikidataAccessUrl);
@@ -135,11 +139,13 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
     @After
     public void tearDown() throws Exception
     {
+        restoreSslVerification();
+
         testEntityManager.clear();
 
         if (sut != null) {
-        sut.destroy();
-    }
+            sut.destroy();
+        }
     }
 
     @Test

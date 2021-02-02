@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.util;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.INCEPTION_NAMESPACE;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
 
@@ -150,6 +151,7 @@ public class TestFixtures
                     isReachable(profile.getAccess().getAccessUrl()));
 
             SPARQLRepository repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
+            repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
             repo.init();
             return repo;
         }
@@ -253,6 +255,7 @@ public class TestFixtures
         }
 
         SPARQLRepository r = new SPARQLRepository(aUrl);
+        r.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
         r.init();
         try (RepositoryConnection conn = r.getConnection()) {
             TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");

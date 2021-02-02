@@ -35,6 +35,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -124,6 +125,7 @@ public class AccessSpecificSettingsPanel
     private @SpringBean KnowledgeBaseProperties kbproperties;
 
     private TextField<String> urlField;
+    private CheckBox skipSslValidation;
     private TextField<String> defaultDatasetField;
 
     public AccessSpecificSettingsPanel(String id,
@@ -161,6 +163,10 @@ public class AccessSpecificSettingsPanel
         urlField = new RequiredTextField<>("url");
         urlField.add(Validators.URL_VALIDATOR);
         wmc.add(urlField);
+
+        skipSslValidation = new CheckBox("skipSslValidation", kbModel.bind("kb.skipSslValidation"));
+        skipSslValidation.setOutputMarkupPlaceholderTag(true);
+        wmc.add(skipSslValidation);
 
         // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
         // directly fills in the URL field (convenient for both developers AND users :))

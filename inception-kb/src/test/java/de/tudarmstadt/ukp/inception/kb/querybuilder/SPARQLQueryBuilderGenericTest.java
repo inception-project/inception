@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildKnowledgeBase;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildRepository;
@@ -35,6 +37,7 @@ import java.util.Set;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,12 +88,19 @@ public class SPARQLQueryBuilderGenericTest
     @Before
     public void setup() throws Exception
     {
+        suspendSslVerification();
+
         // Force POST request instead of GET request
         // System.setProperty(SPARQLProtocolSession.MAXIMUM_URL_LENGTH_PARAM, "100");
 
         kb = buildKnowledgeBase(profile);
         repo = buildRepository(profile);
-        }
+    }
+
+    @After
+    public void tearDown()
+    {
+        restoreSslVerification();
     }
 
     @Test
