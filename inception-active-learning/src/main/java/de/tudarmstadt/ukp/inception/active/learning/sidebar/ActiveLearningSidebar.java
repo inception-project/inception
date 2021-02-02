@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
@@ -281,8 +282,12 @@ public class ActiveLearningSidebar
 
     private List<AnnotationLayer> listLayersWithRecommenders()
     {
-        return recommendationService
-                .listLayersWithEnabledRecommenders(getModelObject().getProject());
+        // We right now only support active learning with span recommenders.
+        return recommendationService.listLayersWithEnabledRecommenders(getModelObject() //
+                .getProject()) //
+                .stream() //
+                .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                .collect(toList());
     }
 
     private void actionStartSession(AjaxRequestTarget target, Form<?> form)
