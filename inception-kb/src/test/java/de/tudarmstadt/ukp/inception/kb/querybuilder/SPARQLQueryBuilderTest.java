@@ -1644,7 +1644,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatLineBreaksAreSanitized() throws Exception
     {
-        assertThat(sanitizeQueryStringForFTS("Green\n\rGoblin")).isEqualTo("Green Goblin");
+        assertThat(sanitizeQueryString_FTS("Green\n\rGoblin")).isEqualTo("Green Goblin");
     }
 
     private void importDataFromFile(Repository aRepository, String aFilename) throws IOException
