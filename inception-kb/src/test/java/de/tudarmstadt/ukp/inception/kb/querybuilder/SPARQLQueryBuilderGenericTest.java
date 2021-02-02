@@ -19,18 +19,12 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
-import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
+import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildKnowledgeBase;
+import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildRepository;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,27 +32,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.compress.compressors.CompressorException;
-import org.apache.commons.compress.compressors.CompressorStreamFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.eclipse.rdf4j.repository.sail.SailRepository;
-import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.sail.lucene.LuceneSail;
-import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -69,7 +50,7 @@ import nl.ru.test.category.SlowTests;
 @RunWith(Parameterized.class)
 public class SPARQLQueryBuilderGenericTest
 {
-    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago", "zbw-gnd");
+    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "zbw-gnd");
 
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
@@ -107,53 +88,8 @@ public class SPARQLQueryBuilderGenericTest
         // Force POST request instead of GET request
         // System.setProperty(SPARQLProtocolSession.MAXIMUM_URL_LENGTH_PARAM, "100");
 
-        ValueFactory vf = SimpleValueFactory.getInstance();
-
-        kb = new KnowledgeBase();
-        kb.setDefaultLanguage(profile.getDefaultLanguage());
-        kb.setType(profile.getType());
-
-        kb.setClassIri(profile.getMapping().getClassIri());
-        kb.setSubclassIri(profile.getMapping().getSubclassIri());
-        kb.setTypeIri(profile.getMapping().getTypeIri());
-        kb.setLabelIri(profile.getMapping().getLabelIri());
-        kb.setDescriptionIri(profile.getMapping().getDescriptionIri());
-
-        kb.setSubPropertyIri(profile.getMapping().getSubPropertyIri());
-        kb.setPropertyTypeIri(profile.getMapping().getPropertyTypeIri());
-        kb.setPropertyLabelIri(profile.getMapping().getPropertyLabelIri());
-        kb.setPropertyDescriptionIri(profile.getMapping().getPropertyDescriptionIri());
-
-        kb.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-
-        kb.setDefaultDatasetIri(profile.getDefaultDataset());
-
-        kb.setRootConcepts(profile.getRootConcepts().stream().map(vf::createIRI).collect(toList()));
-
-        kb.setMaxResults(1000);
-
-        switch (kb.getType()) {
-        case LOCAL: {
-            LuceneSail lucenesail = new LuceneSail();
-            lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
-            lucenesail.setBaseSail(new MemoryStore());
-            repo = new SailRepository(lucenesail);
-            repo.init();
-            importData(repo, profile.getAccess().getAccessUrl());
-            break;
-        }
-        case REMOTE: {
-            Assume.assumeTrue(
-                    "Remote repository at [" + profile.getAccess().getAccessUrl()
-                            + "] is not reachable",
-                    isReachable(profile.getAccess().getAccessUrl()));
-
-            repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
-            repo.init();
-            break;
-        }
-        default:
-            throw new IllegalStateException("Unknown repo type: " + kb.getType());
+        kb = buildKnowledgeBase(profile);
+        repo = buildRepository(profile);
         }
     }
 
@@ -232,52 +168,6 @@ public class SPARQLQueryBuilderGenericTest
         }
         finally {
             kb.setFullTextSearchIri(originalFtsIri);
-        }
-    }
-
-    @SuppressWarnings("resource")
-    private void importData(Repository aRepo, String aUrl) throws IOException
-    {
-        try (InputStream aIS = openAsStream(aUrl)) {
-            InputStream is = new BufferedInputStream(aIS);
-            try {
-                // Stream is expected to be closed by caller of importData
-                is = new CompressorStreamFactory().createCompressorInputStream(is);
-            }
-            catch (CompressorException e) {
-                // Probably not compressed then or unknown format - just try as is.
-            }
-
-            // Detect the file format
-            RDFFormat format = Rio.getParserFormatForFileName(aUrl).orElse(RDFFormat.RDFXML);
-
-            try (RepositoryConnection conn = aRepo.getConnection()) {
-                // If the RDF file contains relative URLs, then they probably start with a hash.
-                // To avoid having two hashes here, we drop the hash from the base prefix configured
-                // by the user.
-                String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
-                conn.add(is, prefix, format);
-            }
-        }
-    }
-
-    private InputStream openAsStream(String aUrl) throws MalformedURLException, IOException
-    {
-        if (aUrl.startsWith("classpath")) {
-            return new PathMatchingResourcePatternResolver().getResource(aUrl).getInputStream();
-        }
-        else {
-            if ("https://www.bbc.co.uk/ontologies/wo/1.1.ttl".equals(aUrl)) {
-                return new File("src/test/resources/upstream-data/1.1.ttl").toURI().toURL()
-                        .openStream();
-            }
-            else if ("http://purl.org/olia/penn.owl".equals(aUrl)) {
-                return new File("src/test/resources/upstream-data/penn.owl").toURI().toURL()
-                        .openStream();
-            }
-            else {
-                return new URL(aUrl).openStream();
-            }
         }
     }
 }
