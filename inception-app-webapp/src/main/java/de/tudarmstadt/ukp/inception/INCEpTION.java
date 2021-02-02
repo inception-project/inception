@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,9 @@ import java.util.Optional;
 import javax.swing.JWindow;
 import javax.validation.Validator;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
+import org.apache.catalina.webresources.StandardRoot;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,7 +39,9 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -51,16 +55,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
 import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
 import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
@@ -70,7 +69,8 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 // @formatter:off
-@SpringBootApplication
+@SpringBootApplication // (exclude = {ErrorMvcAutoConfiguration.class})
+@EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(
     basePackages = { 
@@ -84,15 +84,15 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
             // The INCEpTION dashboard uses a per-project view while WebAnno uses a global
             // activation strategies for menu items. Thus, we need to re-implement the menu
             // items for INCEpTION.
-            AnnotationPageMenuItem.class,
+            de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem.class,
+            de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem.class,
             MonitoringPageMenuItem.class,
             AgreementPageMenuItem.class,
 
             // INCEpTION uses its recommenders, not the WebAnno automation code
-            AutomationService.class, 
-            AutomationMiraTemplateExporter.class,
-            CurationPageMenuItem.class,
-            AutomationTrainingDocumentExporter.class
+            // AutomationService.class, 
+            // AutomationMiraTemplateExporter.class,
+            // AutomationTrainingDocumentExporter.class
     })})
 @EntityScan(basePackages = {
     // Include WebAnno entity packages separately so we can skip the automation entities!
@@ -119,11 +119,40 @@ public class INCEpTION
     @Value("${server.ajp.address:127.0.0.1}")
     private String ajpAddress;
 
+    // @Bean
+    // public ErrorPageRegistrar errorPageRegistrar()
+    // {
+    // return new ErrorPageRegistrar()
+    // {
+    // @Override
+    // public void registerErrorPages(final ErrorPageRegistry registry)
+    // {
+    // registry.addErrorPages(new ErrorPage("/whoops"));
+    // }
+    // };
+    // }
+
     @Bean
     @Primary
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
+    }
+
+    @Bean
+    public ErrorController errorController()
+    {
+        // Disable default error controller so that Wicket can take over
+        return new ErrorController()
+        {
+            @Deprecated
+            @Override
+            public String getErrorPath()
+            {
+                return null;
+            }
+
+        };
     }
 
     @Bean
@@ -154,13 +183,24 @@ public class INCEpTION
     @Bean
     public TomcatServletWebServerFactory servletContainer()
     {
-        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory()
+        {
+            @Override
+            protected void postProcessContext(Context context)
+            {
+                final int maxCacheSize = 40 * 1024;
+                StandardRoot standardRoot = new StandardRoot(context);
+                standardRoot.setCacheMaxSize(maxCacheSize);
+                context.setResources(standardRoot);
+            }
+        };
+
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
-            ajpConnector.setAttribute("secretRequired", ajpSecretRequired);
-            ajpConnector.setAttribute("secret", ajpSecret);
-            ajpConnector.setAttribute("address", ajpAddress);
+            ajpConnector.setProperty("secretRequired", ajpSecretRequired);
+            ajpConnector.setProperty("secret", ajpSecret);
+            ajpConnector.setProperty("address", ajpAddress);
             factory.addAdditionalTomcatConnectors(ajpConnector);
         }
         return factory;
@@ -190,7 +230,7 @@ public class INCEpTION
 
         // Traditionally, the INCEpTION configuration file is called settings.properties and is
         // either located in inception.home or under the user's home directory. Make sure we pick
-        // it up from there in addition to reading the built-in application.properties file.
+        // it up from there in addition to reading the built-in application.yml file.
         aBuilder.properties("spring.config.additional-location="
                 + "optional:${inception.home:${user.home}/.inception}/settings.properties");
     }

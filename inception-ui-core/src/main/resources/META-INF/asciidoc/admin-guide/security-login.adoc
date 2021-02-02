@@ -1,0 +1,24 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Limiting the amount of active users
+
+It is possible to limit the number of users that can be active i.e. logged into the {product-name}
+instance at a time. This can be done by setting the `login.max-concurrent-sessions` 
+in the `settings.properties` file to the number of users you want to allow. 
+
+If this property is set and the maximum number of users is already reached, users who 
+want to log in will not be able to and receive a message to try again at a later time.

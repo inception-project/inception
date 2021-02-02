@@ -1,0 +1,115 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_curation]]
+= Curation
+
+NOTE: This functionality is only available to *curators*.
+
+When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>. The navigation within the document is also equivalent to <<sect_annotation>>.
+
+.Explanation of the project colors in the curation open document dialog
+[cols="2*"]
+|===
+| No curatable documents
+| Red
+
+| Curatable documents
+| Green
+|===
+
+.Explanation of the document colors in the curation open document dialog
+[cols="2*"]
+|===
+| New
+| Black
+
+| Annotation in progress
+| Black
+
+| Curation in progress
+| Blue
+
+| Curation finished
+| Red
+|===
+
+In the left frame of the window, named *Sentences*, an overview of the chosen document is displayed. Sentences are represented by their number inside the document. Sentences containing a disagreement between annotators are colored in red. Click on a sentence in order to select it and to to edit it in the central part of the page. 
+
+image::curation_1.png[align="center"]
+
+The center part of the annotation page is divided into the *Annotation* pane which is a full-scale
+annotation editor and contains the final data from the curation step. Below it are multiple read-only
+panes containing the annotations from individual annotators. Clicking on an annotation in any of the
+annotator's panes transfers the respective annotation to the *Annotation* pane.
+
+When a document is opened for the first time in the curation page, the application analyzes agreements
+and disagreemens between annotators. All annotations on which all annotators agree are automatically
+copied to the *Annotation* pane. Any annotations on which the annotators disagree are skipped.
+
+The annotator's panes are color-coded according to their relation with the contents of the *Annotation*
+pane and according to the agreement status. If the annotations were the same, they are marked *grey* in the lower panels. If the annotators do not agree, the respective annotations are show in dark blue in the lower panels. By default, they are not taken into the merged file (cf. <<merging-strategies>>). 
+
+**Left-click** on an annotation in one of the lower panels to merge it. This action copies the annotation to the upper panel. The merged annotation will turn green in the lower panel from which it was selected. If other annotators had a conflicting opinion, these will turn red in the lower panels of the respective annotators. 
+
+**Right-click** on an annotation in the lower panels to bring up a menu with additional options.
+
+* **Merge all XXX**: merge all annotations of the given type from the selected annotator. Note that
+  this overrides any annotations of the type which may previously have been merged or manually 
+  created in the upper panel.
+
+NOTE: The upper *Annotation* pane is not color-coded. It uses whatever coloring strategy is
+      configured in the *Settings* dialog.
+
+.Explanation of the annotation colors in the annotator's panes (lower panes)
+[cols="1,3"]
+|===
+| Grey
+| all annotators agree
+
+| Blue 
+| disagreement requiring curation; annotators disagree and there is no corresponding annotation in the upper *Annotation* pane yet
+
+| Green 
+| accepted; matches the corresponding annotation in the upper *Annotation* pane
+
+| Red 
+| rejected; different to the corresponding annotation in the upper *Annotation* pane
+|===
+
+[#merging-strategies]
+== Merging strategies
+By default, the merging strategy only considers annotations if all annotators made the same 
+annotation at the same location (i.e. complete and agreeing annotations) - i.e. it considers any 
+annotations not provided by all annotators as a disagreement between the annotators.
+
+However, there are situations where it is desirable to merge annotations from all annotators, even
+if some did not provide it. For example, if your project has two annotators, one working on POS
+tagging and another working on lemmatization, then as a curator, you might simply want to merge the
+annotators from the two. This can be done by using the **Re-merge** action and activating the
+checkbox **Merge incomplete annotations**. This will re-merge the current document (i.e. discard
+the entire state of curation and merge from scratch).
+
+== Anonymized curation
+By default, the curator can see the annotators names on the curation page. However, in some cases,
+it may not be desirable for the curator to see the names. In this case, enable the option
+*Anonymous curation* in the project detail settings. Users with the curator role will then only
+see an anonymous label like *Anonymized annotator 1* instead of the annotator names. Users who are
+project managers can still see the annotator names.
+
+NOTE: The order of the annotators is not randomized - only the names are removed from the UI. Only 
+      annotators who have marked their documents as *finished* are shown. Thus, which annotator recieves 
+      which number may changed depending on documents being marked as finished or put back into progress.

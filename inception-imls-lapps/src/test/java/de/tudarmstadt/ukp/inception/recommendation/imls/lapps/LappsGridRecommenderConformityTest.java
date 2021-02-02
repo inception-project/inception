@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,6 +33,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -202,7 +203,10 @@ public class LappsGridRecommenderConformityTest
             con.setRequestMethod("GET");
             con.setConnectTimeout(2500);
             con.setReadTimeout(2500);
-            con.setRequestProperty("Content-Type", "application/sparql-query");
+            String userInfo = "tester:tester";
+            String basicAuth = "Basic "
+                    + new String(Base64.getEncoder().encode(userInfo.getBytes()));
+            con.setRequestProperty("Authorization", basicAuth);
             int status = con.getResponseCode();
 
             // should be open to all users (no password auth.),

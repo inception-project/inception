@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><xmi:XMI xmlns:pos="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos.ecore" xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:cas="http:///uima/cas.ecore" xmlns:tweet="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos/tweet.ecore" xmlns:morph="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/morph.ecore" xmlns:dependency="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/dependency.ecore" xmlns:type6="http:///de/tudarmstadt/ukp/dkpro/core/api/semantics/type.ecore" xmlns:type="http:///de/tudarmstadt/ukp/dkpro/core/api/anomaly/type.ecore" xmlns:type7="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type.ecore" xmlns:type3="http:///de/tudarmstadt/ukp/dkpro/core/api/metadata/type.ecore" xmlns:type4="http:///de/tudarmstadt/ukp/dkpro/core/api/ner/type.ecore" xmlns:type5="http:///de/tudarmstadt/ukp/dkpro/core/api/segmentation/type.ecore" xmlns:type2="http:///de/tudarmstadt/ukp/dkpro/core/api/coref/type.ecore" xmlns:constituent="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/constituent.ecore" xmlns:chunk="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/chunk.ecore" xmlns:custom="http:///webanno/custom.ecore" xmi:version="2.0">
+    <cas:NULL xmi:id="0"/>
+    <type3:DocumentMetaData xmi:id="1" sofa="12" begin="0" end="16" documentId="doc" isLastSegment="false"/>
+    <type5:Token xmi:id="19" sofa="12" begin="0" end="4"/>
+    <type5:Token xmi:id="28" sofa="12" begin="5" end="7"/>
+    <type5:Token xmi:id="37" sofa="12" begin="8" end="9"/>
+    <type5:Token xmi:id="46" sofa="12" begin="10" end="14"/>
+    <type5:Token xmi:id="55" sofa="12" begin="15" end="16"/>
+    <type5:Sentence xmi:id="64" sofa="12" begin="0" end="16"/>
+    <custom:ComplexRelation xmi:id="68" sofa="12" begin="15" end="16" Governor="19" Dependent="55" value="nsubj" boolValue="true" intValue="42"/>
+    <cas:Sofa xmi:id="12" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString="This is a test ."/>
+    <cas:View sofa="12" members="1 19 28 37 46 55 64 68"/>
+</xmi:XMI>

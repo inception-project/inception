@@ -1,38 +1,45 @@
 <!--
-  Copyright 2017
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.18.0-SNAPSHOT</version>
+    <version>0.19.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
   <name>INCEpTION - Web-Application</name>
   <packaging>war</packaging>
   <dependencies>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-api</artifactId>
+    </dependency>
+  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-dashboard</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -46,8 +53,28 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-image</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-tagsets</artifactId>
+    </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-kb</artifactId>
@@ -73,6 +100,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation-api</artifactId>
     </dependency>
     <!--
       <dependency>
@@ -150,35 +181,35 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-pdf-editor</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-review-editor</artifactId>
+    </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-json</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-json</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-tsv</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-webanno-tsv</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-project</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-text</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-text</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-tcf</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-tcf</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-conll</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-conll</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-xmi</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-xmi</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -207,36 +238,20 @@
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-plugin-manager</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-plugin-manager</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-plugin-api</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-plugin-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-automation</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api-automation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-annotation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-curation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-tagsets</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-brat</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-brat-editor</artifactId>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -245,52 +260,49 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-project</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-core</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-formats</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api-formats</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-support</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support-standalone</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-support-standalone</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-monitoring</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-monitoring</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-remote</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-remote</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-security</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-security</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-model</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-model</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-telemetry</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-telemetry</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-doc</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
     </dependency>
 
     <!-- UIMA DEPENDENCIES -->
@@ -415,10 +427,6 @@
     <!-- <artifactId>hibernate-entitymanager</artifactId> -->
     <!-- </dependency> -->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-dbcp2</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
     </dependency>
@@ -426,6 +434,14 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-jcache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
     </dependency>
 
     <dependency>
@@ -533,6 +549,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-workload-dynamic</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-sharing</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -553,6 +573,17 @@
       -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <!-- 
+          - Downgrade version to avoid exception during Eclipse builds:
+          - 
+          - Execution assemble-documentation of goal 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single failed: 
+          - An API incompatibility was encountered while executing 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
+          - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
+          -  .setFilenameComparator(java.util.Comparator)'
+         -->
+        <version>3.1.1</version>
         <executions>
           <execution>
             <id>assemble-documentation</id>
@@ -582,11 +613,11 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-              <imagesDir>./user-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./user-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -599,11 +630,11 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-              <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./developer-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -636,11 +667,11 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <delete includeemptydirs="true" failonerror="false">
                   <fileset dir="src/main/resources/public/doc" includes="**/*" />
                 </delete>
-              </tasks>
+              </target>
             </configuration>
           </execution>
           <execution>
@@ -650,7 +681,7 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <mkdir dir="src/main/resources/public/doc" />
 
                 <!--
@@ -667,20 +698,13 @@
 
                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
                   <include name="**/*.html" />
-                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
-                  <replacefilter
-                    token="https://code.jquery.com/jquery-migrate-3.1.0.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
-                  <replacefilter
-                    token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
-                  <replacefilter
-                    token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
                 </replace>
 
-              </tasks>
+              </target>
             </configuration>
           </execution>
         </executions>
@@ -726,6 +750,13 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredDependencies>
+              <!-- 
+                - Detection of this dependency is flickering. We need it for a menu-item. So
+                - for the moment, completely ignore it in the dependency checking.
+                -->
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-ui-project</ignoredDependency>
+            </ignoredDependencies>
             <ignoredUsedUndeclaredDependencies>
               <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
@@ -736,11 +767,11 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
-              <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
+			  <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
@@ -754,41 +785,39 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-tagsets</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-json</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tcf</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-xmi</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-json</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-webanno-tsv</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tcf</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-xmi</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-text</usedDependency>
               <!-- WebAnno UI Modules - they auto-register via reflection -->
               <!-- Detected because we explicitly exclude their menu items
-                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
-                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
-                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
-              -->
-              <!-- Detected because we include a special access menu item to the project settings
-                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-curation</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-monitoring</usedDependency>
               -->
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-telemetry</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
+              <usedDependency>org.hibernate:hibernate-jcache</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.liquibase:liquibase-core</usedDependency>
+              <usedDependency>org.ehcache:ehcache</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
               <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
@@ -928,11 +957,11 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory"/>
-                    <!--
-                      We want the original file to be the WAR and the repackaged all-inclusive runnable
-                      thing with the embedded Tomcat to be the JAR.
-                     -->
+                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <!--
+                    We want the original file to be the WAR and the repackaged all-inclusive runnable
+                    thing with the embedded Tomcat to be the JAR.
+                  -->
                   <attach>false</attach>
                   <classifier>standalone</classifier>
                 </configuration>
@@ -958,8 +987,7 @@
                 </goals>
                 <configuration>
                   <target>
-                    <move file="target/${project.artifactId}-${project.version}-standalone.war"
-                      tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
                   </target>
                 </configuration>
               </execution>
@@ -987,7 +1015,7 @@
               </execution>
             </executions>
           </plugin>
-              </plugins>
+        </plugins>
       </build>
     </profile>
     <profile>
@@ -1018,11 +1046,11 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-                    <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./user-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -1035,11 +1063,11 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-                    <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./developer-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>

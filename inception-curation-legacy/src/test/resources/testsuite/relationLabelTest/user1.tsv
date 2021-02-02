@@ -1,0 +1,33 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS|PosValue|coarseValue
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma|value
+#T_RL=de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency|DependencyType|flavor|BT_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS
+
+
+#Text=Heutzutage beklagen sich viele darüber , dass das Wissen , das in Universitäten beigebracht wird , nichts zu tun hat mit der sogenannten wirklichen Welt .
+1-1	0-10	Heutzutage	ADV	ADV	heutzutage	ADV	basic	1-2	
+1-2	11-19	beklagen	VVFIN	VVFIN	beklagen	S	basic	1-2	
+1-3	20-24	sich	PRF	PRF	er\|es\|sie	OBJA	basic	1-2	
+1-4	25-30	viele	PIS	PIS	viel	SUBJ	basic	1-2	
+1-5	31-38	darüber	PROAV	PROAV	darüber	OBJP	basic	1-2	
+1-6	39-40	,	$,	$,	,	ROOT	basic	1-6	
+1-7	41-45	dass	KOUS	KOUS	dass	KONJ	basic	1-19	
+1-8	46-49	das	ART	ART	d	DET	basic	1-9	
+1-9	50-56	Wissen	NN	NN	Wissen	SUBJ	basic	1-20	
+1-10	57-58	,	$,	$,	,	ROOT	basic	1-10	
+1-11	59-62	das	PRELS	PRELS	d	SUBJ	basic	1-15	
+1-12	63-65	in	APPR	APPR	in	PP	basic	1-14	
+1-13	66-79	Universitäten	NN	NN	Universität	PN	basic	1-12	
+1-14	80-91	beigebracht	VVPP	VVPP	beibringen	AUX	basic	1-15	
+1-15	92-96	wird	VAFIN	VAFIN	werden	REL	basic	1-9	
+1-16	97-98	,	$,	$,	,	ROOT	basic	1-16	
+1-17	99-105	nichts	PIS	PIS	nichts	OBJA	basic	1-19	
+1-18	106-108	zu	PTKZU	PTKZU	zu	PART	basic	1-19	
+1-19	109-112	tun	VVINF	VVINF	tun	AUX	basic	1-20	
+1-20	113-116	hat	VAFIN	VAFIN	haben	NEB	basic	1-2	
+1-21	117-120	mit	APPR	APPR	mit	PP	basic	1-20	
+1-22	121-124	der	ART	ART	d	DET	basic	1-25	
+1-23	125-136	sogenannten	ADJA	ADJA	sogenannt	ATTR	basic	1-25	
+1-24	137-147	wirklichen	ADJA	ADJA	wirklich	ATTR	basic	1-25	
+1-25	148-152	Welt	NN	NN	Welt	PN	basic	1-21	
+1-26	153-154	.	$.	$.	.	ROOT	basic	1-26

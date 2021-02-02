@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -56,16 +56,15 @@ public interface WorkflowExtension
      */
     default boolean loadNextDocument(List<SourceDocument> aSourceDocuments, Project aProject,
             WorkloadManager aCurrentWorkload, AnnotationPageBase aPage, AjaxRequestTarget aTarget,
-            WorkloadManagementService workloadManagementService,
-            DynamicWorkloadExtension dynamicWorkloadExtension, DocumentService documentService)
+            WorkloadManagementService aWorkloadManagementService, DynamicWorkloadTraits aTraits,
+            DocumentService documentService)
     {
         // Go through all documents of the list
         for (SourceDocument doc : aSourceDocuments) {
             // Check if there are less annotators working on the selected document than
             // the default number of annotation set by the project manager
-            if ((workloadManagementService.getNumberOfUsersWorkingOnADocument(doc,
-                    aProject)) < (dynamicWorkloadExtension.readTraits(aCurrentWorkload)
-                            .getDefaultNumberOfAnnotations())) {
+            if ((aWorkloadManagementService.getNumberOfUsersWorkingOnADocument(doc,
+                    aProject)) < (aTraits.getDefaultNumberOfAnnotations())) {
                 // This was the case, so load the document and return
                 aPage.getModelObject().setDocument(doc,
                         documentService.listSourceDocuments(aProject));

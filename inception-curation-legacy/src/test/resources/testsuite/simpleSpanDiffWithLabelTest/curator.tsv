@@ -1,0 +1,13 @@
+#FORMAT=WebAnno TSV 3.3
+
+
+#Text=This is a simple sentence to be executed . 
+1-1	0-4	This	
+1-2	5-7	is	
+1-3	8-9	a	
+1-4	10-16	simple	
+1-5	17-25	sentence	
+1-6	26-28	to	
+1-7	29-31	be	
+1-8	32-40	executed	
+1-9	41-42	.	

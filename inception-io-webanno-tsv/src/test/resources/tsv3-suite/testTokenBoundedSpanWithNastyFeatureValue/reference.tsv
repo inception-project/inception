@@ -1,0 +1,10 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.Span|value
+
+
+#Text=This is a test .
+1-1	0-4	This	de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:value	
+1-2	5-7	is	de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:value	
+1-3	8-9	a	de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:value	
+1-4	10-14	test	de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:value	
+1-5	15-16	.	de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity:value	

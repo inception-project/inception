@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <name>WebAnno Internal Type System</name>
+  <description>This type system contains several types which are used by WebAnno internally, but which are removed before export.</description>
+  <version>1.0</version>
+  <vendor/>
+  <types>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>projectId</name>
+          <description>The ID of the project to which these annotations belong.</description>
+          <rangeTypeName>uima.cas.Long</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>projectName</name>
+          <description>The name of the project to which these annotations belong.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>sourceDocumentId</name>
+          <description>The ID of the source documents to which these annotations belong.</description>
+          <rangeTypeName>uima.cas.Long</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>sourceDocumentName</name>
+          <description>The name of the source documents to which these annotations belong.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>username</name>
+          <description>The name of the user to whom the annotations in this CAS belong.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>lastChangedOnDisk</name>
+          <description>When a CAS is loaded, the last-changed timestamp of the CAS file on disk is stored here. This is used to detect whether the CAS file has concurrently changed when an attempt is made to write the CAS back to disk. A value of -1 indicates that the CAS has never been stored to disk so far.</description>
+          <rangeTypeName>uima.cas.Long</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>
