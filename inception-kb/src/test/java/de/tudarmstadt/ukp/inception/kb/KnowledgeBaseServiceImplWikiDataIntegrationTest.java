@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -25,7 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
@@ -108,13 +109,18 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
     @Parameterized.Parameters(name = "Reification = {0}")
     public static Collection<Object[]> data()
     {
-        return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
-                .collect(Collectors.toList());
+        return Arrays.stream(Reification.values()) //
+                .map(r -> new Object[] { r }) //
+                .collect(toList());
     }
 
     @Before
     public void setUp() throws Exception
     {
+        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+        String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
+        assumeEndpointIsAvailable(wikidataAccessUrl);
+
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
@@ -123,17 +129,17 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
-        String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
-
     }
 
     @After
     public void tearDown() throws Exception
     {
         testEntityManager.clear();
+
+        if (sut != null) {
         sut.destroy();
+    }
     }
 
     @Test
@@ -243,7 +249,6 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
 
     private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException
     {
-        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         kb_wikidata_direct.setProject(project);
         kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
