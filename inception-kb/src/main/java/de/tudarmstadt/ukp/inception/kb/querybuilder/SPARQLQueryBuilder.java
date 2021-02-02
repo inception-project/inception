@@ -665,8 +665,10 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
-                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+        String[] values = Arrays.stream(aValues) //
+                .map(SPARQLQueryBuilder::trimQueryString) //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
 
         if (values.length == 0) {
             returnEmptyResult = true;
@@ -711,15 +713,17 @@ public class SPARQLQueryBuilder
         String language = kb.getDefaultLanguage();
 
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            String sanitizedValue = sanitizeQueryString_noFTS(value);
+
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
 
             if (language != null) {
-                values.add(literalOfLanguage(value, language));
+                values.add(literalOfLanguage(sanitizedValue, language));
             }
 
-            values.add(literalOf(value));
+            values.add(literalOf(sanitizedValue));
         }
 
         return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
@@ -734,7 +738,7 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -758,7 +762,7 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             // We assume that the FTS is case insensitive and found that some FTSes (i.e.
             // Fuseki) can have trouble matching if they get upper-case query when they
@@ -786,7 +790,7 @@ public class SPARQLQueryBuilder
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -810,7 +814,7 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -828,7 +832,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
+        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::trimQueryString)
                 .filter(StringUtils::isNotBlank).toArray(String[]::new);
 
         if (values.length == 0) {
@@ -880,7 +884,7 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -898,7 +902,7 @@ public class SPARQLQueryBuilder
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -919,7 +923,7 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
             String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
             if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
@@ -950,7 +954,7 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
@@ -972,7 +976,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::sanitizeQueryString)
+        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::trimQueryString)
                 .filter(StringUtils::isNotBlank).toArray(String[]::new);
 
         if (values.length == 0) {
@@ -1035,7 +1039,7 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -1059,7 +1063,7 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             // We assume that the FTS is case insensitive and found that some FTSes (i.e.
             // Fuseki) can have trouble matching if they get upper-case query when they
@@ -1087,7 +1091,7 @@ public class SPARQLQueryBuilder
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -1111,7 +1115,7 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String sanitizedValue = sanitizeQueryString_FTS(value);
 
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
@@ -1129,7 +1133,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
-        String value = sanitizeQueryString(aPrefixQuery);
+        String value = trimQueryString(aPrefixQuery);
 
         if (value == null || value.length() == 0) {
             returnEmptyResult = true;
@@ -1190,7 +1194,7 @@ public class SPARQLQueryBuilder
             returnEmptyResult = true;
         }
 
-        String sanitizedValue = sanitizeQueryStringForFTS(aPrefix);
+        String sanitizedValue = sanitizeQueryString_FTS(aPrefix);
 
         return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
@@ -1204,7 +1208,7 @@ public class SPARQLQueryBuilder
         ftsQueryString.append("\"");
 
         // Strip single quotes and asterisks because they have special semantics
-        String sanitizedQuery = sanitizeQueryStringForFTS(aPrefixQuery);
+        String sanitizedQuery = sanitizeQueryString_FTS(aPrefixQuery);
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
@@ -1261,7 +1265,7 @@ public class SPARQLQueryBuilder
         prefixes.add(PREFIX_LUCENE_SEARCH);
 
         // Strip single quotes and asterisks because they have special semantics
-        String sanitizedValue = sanitizeQueryStringForFTS(aPrefixQuery);
+        String sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
 
         if (StringUtils.isBlank(sanitizedValue)) {
             returnEmptyResult = true;
@@ -1947,7 +1951,7 @@ public class SPARQLQueryBuilder
      * Removes leading and trailing space and single quote characters which could cause the query
      * string to escape its quotes in the SPARQL query.
      */
-    public static String sanitizeQueryString(String aQuery)
+    public static String trimQueryString(String aQuery)
     {
         if (aQuery == null || aQuery.length() == 0) {
             return aQuery;
@@ -1983,7 +1987,15 @@ public class SPARQLQueryBuilder
         return aQuery;
     }
 
-    public static String sanitizeQueryStringForFTS(String aQuery)
+    public static String sanitizeQueryString_noFTS(String aQuery)
+    {
+        return aQuery
+                // character classes to replace with a simple space
+                .replaceAll("[\\p{Space}\\p{Cntrl}]+", " ") //
+                .trim();
+    }
+
+    public static String sanitizeQueryString_FTS(String aQuery)
     {
         return aQuery
                 // character classes to replace with a simple space
