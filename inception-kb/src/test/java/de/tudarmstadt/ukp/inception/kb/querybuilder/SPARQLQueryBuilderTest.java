@@ -256,7 +256,7 @@ public class SPARQLQueryBuilderTest
     private Repository buildSparqlRepository(String aUrl)
     {
         SPARQLRepository repo = new SPARQLRepository(aUrl);
-        repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        // repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
         repo.init();
         return repo;
     }

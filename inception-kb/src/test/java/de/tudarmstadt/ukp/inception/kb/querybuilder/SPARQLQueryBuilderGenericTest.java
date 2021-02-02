@@ -90,7 +90,6 @@ public class SPARQLQueryBuilderGenericTest
 
         kb = buildKnowledgeBase(profile);
         repo = buildRepository(profile);
-        }
     }
 
     @Test
