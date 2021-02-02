@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
+import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -40,6 +41,7 @@ import java.util.Set;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.Repository;
@@ -202,8 +204,34 @@ public class SPARQLQueryBuilderGenericTest
             builder.asHandles(conn, true);
 
             // We don't need an assertion here since we do not expect any results - it is only
-            // important
-            // that the query does not crash
+            // important that the query does not crash
+        }
+    }
+
+    @Test
+    public void thatLineBreaksAndWhitespaceAreSafe_noFts()
+    {
+        IRI originalFtsIri = kb.getFullTextSearchIri();
+
+        try (RepositoryConnection conn = repo.getConnection()) {
+            kb.setFullTextSearchIri(FTS_NONE);
+
+            SPARQLQueryOptionalElements builder = SPARQLQueryBuilder //
+                    .forItems(kb) //
+                    .withLabelMatchingExactlyAnyOf("Lord\n\r\tLady") //
+                    .limit(3);
+
+            System.out.printf("Query   : %n");
+            Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
+                    .forEachOrdered(l -> System.out.printf("          %s%n", l));
+
+            builder.asHandles(conn, true);
+
+            // We don't need an assertion here since we do not expect any results - it is only
+            // important that the query does not crash
+        }
+        finally {
+            kb.setFullTextSearchIri(originalFtsIri);
         }
     }
 
