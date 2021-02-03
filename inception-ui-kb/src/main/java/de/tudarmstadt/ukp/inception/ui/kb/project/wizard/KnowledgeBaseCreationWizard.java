@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -203,6 +205,8 @@ public class KnowledgeBaseCreationWizard
             case LOCAL:
                 // local knowledge bases are editable by default
                 kbModel.getObject().getKb().setReadOnly(false);
+                // local KBs are always RDF4J + Lucene, so we can set the FTS mode accordingly
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_LUCENE);
                 break;
             case REMOTE:
                 // MB: as of 2018-02, all remote knowledge bases are read-only, hence the
