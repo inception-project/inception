@@ -70,9 +70,9 @@ british_museum:
     website-url: https://www.britishmuseum.org/about_us/news_and_press/press_releases/2011/semantic_web_endpoint.aspx
 
 db_pedia:
-  name: DBpedia
+  name: DBpedia (German)
   type: REMOTE
-  default-language: en
+  default-language: de
   reification: NONE
   access:
     access-url: http://de.dbpedia.org/sparql
