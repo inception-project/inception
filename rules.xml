@@ -1,0 +1,38 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<ruleset comparisonMethod="maven"
+         xmlns="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0 http://mojo.codehaus.org/versions-maven-plugin/xsd/rule-2.0.0.xsd">
+  <ignoreVersions>
+    <ignoreVersion type="regex">(?i).*[-_\.]CR[0-9\.]*</ignoreVersion>
+    <ignoreVersion type="regex">(?i).*[-_\.]b[0-9\.]*</ignoreVersion>
+    <ignoreVersion type="regex">(?i).*[-_\.]M[0-9\.]*</ignoreVersion>
+    <ignoreVersion type="regex">(?i).*[-_\.]rc[0-9\.-]*</ignoreVersion>
+    <ignoreVersion type="regex">(?i).*[-_\.]alpha[0-9\.-]*</ignoreVersion>
+    <ignoreVersion type="regex">(?i).*[-_\.]beta[0-9\.-]*</ignoreVersion>
+    <!-- e.g. commons-collections:commons-collections ... 3.2.1.redhat-7 -> 20040117.000000 -->
+    <ignoreVersion type="regex">\d{4,}.*</ignoreVersion>
+  </ignoreVersions>
+  <rules>
+    <rule groupId="org.codehaus.mojo" artifactId="properties-maven-plugin" comparisonMethod="maven">
+      <ignoreVersions>
+        <ignoreVersion type="regex">.*-tc</ignoreVersion>
+      </ignoreVersions>
+    </rule>
+  </rules>
+</ruleset>

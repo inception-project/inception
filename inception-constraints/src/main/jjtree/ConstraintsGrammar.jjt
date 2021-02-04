@@ -1,0 +1,332 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * JavaCC template file for parsing the WebAnno constraints language
+ */
+
+PARSER_BEGIN(ConstraintsParser)
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.clarin.webanno.constraints.grammar;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+
+public class ConstraintsParser
+{
+    public static ParsedConstraints parseFile(String aFile) throws ParseException, IOException
+    {
+        return parse(new File(aFile));
+    }
+
+    public static ParsedConstraints parse(File aFile) throws ParseException, IOException
+    {
+        // Unfortunately, JavaCC doesn't support try-with-resources
+        FileInputStream is = new FileInputStream(aFile);
+        try {
+           return parse(is);
+        }
+        finally {
+            if (is != null) {
+                try {
+                  is.close();
+                }
+                catch (Exception e) {
+                    // Ignore
+                }
+            }
+        }
+    }
+    
+    public static ParsedConstraints parse(InputStream aInputStream) throws ParseException
+    {
+        return parse(aInputStream, "UTF-8");
+    }
+
+    public static ParsedConstraints parse(InputStream aInputStream, String aEncoding)
+        throws ParseException
+    {
+        ConstraintsParser parser = new ConstraintsParser(aInputStream, aEncoding);
+        ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
+        return new ParsedConstraints(astConstraintsSet);
+    }
+    
+    public static ParsedConstraints parse(String aInput) throws ParseException
+    {
+        StringReader reader = null;
+        try {
+            reader = new StringReader(aInput);
+            ConstraintsParser parser = new ConstraintsParser(reader);
+            ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
+            return new ParsedConstraints(astConstraintsSet);
+        }
+        finally {
+            if (reader != null) {
+                try {
+                  reader.close();
+                }
+                catch (Exception e) {
+                    // Ignore
+                }
+            }
+        }
+    }
+    
+    public static String asFlatString(SimpleNode aToken) {
+        StringBuilder sb = new StringBuilder();
+        
+        Token t = aToken.jjtGetFirstToken();
+        while (t != aToken.jjtGetLastToken() && t != null) {
+            sb.append(t.image);
+            t = t.next;
+            if (t.specialToken != null) {
+                sb.append(t.specialToken.image);
+            }
+        }
+        sb.append(t.image);
+        return sb.toString();
+    }
+    
+    public static String unquote(String aString)
+    {
+        return aString.substring(1, aString.length() - 1).replace("\\\"", "\"");
+    }
+}
+
+PARSER_END(ConstraintsParser)
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+SPECIAL_TOKEN :
+{
+  /* Only multi-line comments are currently supported */
+  < MULTI_LINE_COMMENT :
+    "/*" (~[ "*" ])* "*"
+    (
+      "*"
+    |
+      (
+        ~[ "*", "/" ] (~[ "*" ])* "*"
+      )
+    )*
+    "/" >
+}
+
+TOKEN :
+{
+  < IMPORT : "import" >
+| < AS : "as" >
+| < SEMICOLON : ";" >
+| < IMPLIES : "->" >
+| < EQUALS : "=" >
+| < FLAG_IMPORTANT : "!" >
+| < RRB : ")" >
+| < LRB : "(" >
+| < RCB : "}" >
+| < LCB : "{" >
+| < RSB : "]" >
+| < LSB : "[" >
+| < IDENTIFIER : <LETTER> (<LETTER> | <DIGIT>)* >
+| < #LETTER : [ "a"-"z", "A"-"Z", "_" ] >
+| < #DIGIT : [ "0"-"9" ] >
+| < STRING_LITERAL : "\"" ("\\" ~[ ] | ~["\"", "\\"])* "\"" >
+}
+
+/*
+ * ACTUAL GRAMMAR IMPLEMENTATION
+ */
+ASTConstraintsSet constraintsSet() #ConstraintsSet : {
+  ASTQualifiedTypeName qualifiedTypeName;
+  ASTSimpleTypeName shortTypeName;
+  ASTSimpleTypeName scope;
+  ASTRule rule;
+} {
+  (
+    (
+      <IMPORT> 
+      qualifiedTypeName = qualifiedTypeName()
+      <AS> 
+      shortTypeName = simpleTypeName()
+      <SEMICOLON>
+    ) { 
+      jjtThis.addAlias(asFlatString(qualifiedTypeName), asFlatString(shortTypeName));
+    }
+  )*
+  
+  (
+    scope = simpleTypeName()
+    <LCB> 
+    (
+      rule = rule() { jjtThis.addRule(asFlatString(scope), rule); }
+    )* 
+    <RCB>
+  )*
+  <EOF>
+  
+  { return jjtThis; }
+}
+
+ASTQualifiedTypeName qualifiedTypeName() #QualifiedTypeName : {} {
+  <IDENTIFIER> ( "."  <IDENTIFIER> )*
+  
+  { return jjtThis; }
+}
+
+ASTSimpleTypeName simpleTypeName() #SimpleTypeName : {} {
+  <IDENTIFIER>  
+  
+  { return jjtThis; }
+}
+
+ASTRule rule() #Rule : {
+  ASTConditions conditions;
+  ASTRestrictions restrictions;
+} {
+  conditions = conditions() { jjtThis.setConditions(conditions); }
+  <IMPLIES> 
+  restrictions = restrictions() { jjtThis.setRestrictions(restrictions); }
+  <SEMICOLON>
+  
+  { return jjtThis; }
+}
+
+ASTConditions conditions() #Conditions : {
+  ASTCondition condition;
+} {
+  condition = condition() { jjtThis.addCondition(condition); }
+  (
+    LOOKAHEAD(2) 
+    "&" 
+    condition = condition() { jjtThis.addCondition(condition); }
+  )*
+  
+  { return jjtThis; }
+}
+
+ASTCondition condition() #Condition : {
+  ASTPath path;
+  Token value;
+} {
+  path = path() { jjtThis.setPath(path); }
+  <EQUALS> 
+  value = <STRING_LITERAL> { jjtThis.setValue(unquote(value.image)); }
+  
+  { return jjtThis; }
+}
+
+ASTRestrictions restrictions() #Restrictions : {
+  ASTRestriction restriction;
+} {
+  restriction = restriction() { jjtThis.addRestriction(restriction); }
+  (
+    LOOKAHEAD(2) 
+    "|" 
+    restriction = restriction() { jjtThis.addRestriction(restriction); }
+  )*
+  
+  { return jjtThis; }
+}
+
+ASTRestriction restriction() #Restriction :  {
+  ASTPath path;
+  Token value;
+} {
+  path = path() { jjtThis.setPath(path); }
+  <EQUALS>
+  value = <STRING_LITERAL> { jjtThis.setValue(unquote(value.image)); }
+  (
+    <LRB>
+    (<FLAG_IMPORTANT> { jjtThis.setImportant(true); })?
+    <RRB>
+  )?
+  
+  { return jjtThis; }
+}
+
+ASTPath path() #Path : {} {
+  pathElement() 
+  (
+    "." 
+    pathElement()
+  )*
+  
+  { return jjtThis; }
+}
+
+ASTPathElement pathElement() #PathElement : {} {
+  (
+    LOOKAHEAD(2) functionPathElement() 
+    | featurePathElement() 
+    | layerPathElement()
+  )
+  
+  { return jjtThis; }
+}
+
+ASTFeaturePathElement featurePathElement() #FeaturePathElement : {} {
+  <IDENTIFIER>
+  
+  { return jjtThis; }
+}
+
+ASTLayerPathElement layerPathElement() #LayerPathElement : {} {
+  "@" simpleTypeName()
+  
+  { return jjtThis; }
+}
+
+ASTFunctionPathElement functionPathElement() #FunctionPathElement : {} {
+  <IDENTIFIER> argumentList()
+  
+  { return jjtThis; }
+}
+
+ASTArgumentList argumentList() #ArgumentList : {} {
+  <LRB><RRB>
+  
+  { return jjtThis; }
+}

@@ -1,0 +1,33 @@
+= Paging
+
+Typically, an annotation editor only shows a a part of a document on screen to allow working with 
+large files without running into performance problems during rendering.
+The paging strategy defines how a document is divided into the units (e.g. lines, sentences, 
+paragraphs, pages, etc.) from which the visible part of the document is constructed. The `AnnotationEditorFactory.initState()` method is intended to set up the editor state to be compatible
+with the editor. In particular, it is the place where the editor can inject its paging strategy.
+Contrary to many other modularized parts of the code, paging strategies are not Spring beans but
+simple stateless and serializable Java classes.
+
+There are presently two paging strategies:
+
+* `SentenceOrientedPagingStrategy` - divides the document into sentences using the `Sentence` annotations
+  present in the CAS.
+* `LineOrientedPagingStrategy` - divides the document into lines considering using the newline character
+  (LF, dec: 10, hex: 0A) as a line separator.
+
+A `PagingStrategy` has to implement three methods:
+
+* `List<Unit> units(CAS, n, m)` to extract units *n* through *m* from the given CAS. If the value 
+  provided for *m* is greater than the number of units in the document, the returned list simply
+  contains the maximum available units. If *n* is greater than the number of available units, an 
+  empty list is returned.
+* `createPositionLabel(...)` creates a UI element displaying the current position within the document
+  as well as which document is currently opened.
+* `createPageNavigator(...)` creates a UI element to navigate through the pages. For most cases, the
+  provided `DefaultPagingNavigator` should be fine.
+* (optional) `unitCount(...)` fetches the number of units in the given CAS. It is usually faster to
+  provide a special implementation for this method than to rely on the default implementation which
+  resorts to calling `units(...).size()`.
+  
+If an annotation editor needs access to the visible units (e.g. to split spans overlapping units 
+into multiple ranges), it can call `AnnotatorState.getVisibleUnits()`.

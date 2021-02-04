@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div wicket:id="noFeaturesWarning" class="flex-content flex-h-container no-data-notice mt-2 border-top">
+      <div>No features on this layer</div>
+    </div>
+    <div class="flex-content feature-editors-sidebar" wicket:id="featureEditorContainer">
+      <wicket:container wicket:id="featureEditors">
+        <div wicket:id="editor"></div>
+      </wicket:container>
+      <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
+        <input wicket:id="focusResetHelper" tabindex="-1"></input>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
+</html>

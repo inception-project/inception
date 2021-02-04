@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <name>TypeSystem</name>
+  <description>This is a default Type System. It includes general types necessary to store annotations in the Annotation DB and interface with Protege</description>
+  <version>1.0</version>
+  <vendor>UCDenver - CCP</vendor>
+  <types>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPDocumentInformation</name>
+      <description>The CCPDocumentInformation annotation includes document metadata such as the document ID, document collection ID, secondary document IDs, document size, etc.</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>documentID</name>
+          <description>The document ID is a String representing a unique identifier for a particular document within a particular document collection.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>documentCollectionID</name>
+          <description>The document collection ID is an Integer that uniquely identifies a particular document collection.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>documentSize</name>
+          <description>The size of a document is logged as the number of characters it contains.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>secondaryDocumentIDs</name>
+          <description>This StringArray is used for secondary document ID storage. For example, in the biomedical domain, a particular document might be associated with a PubMed ID, however it might also have a deprecated Medline ID, or perhaps a PubMed Central ID, either of which could be stored in this StringArray. It is recommended that the type of ID along with the ID itself be stored, e.g. "MedlineID:12345".</description>
+          <rangeTypeName>uima.cas.StringArray</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>classificationType</name>
+          <description>This String provides a means for classifying a particular document.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>encoding</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPTextAnnotation</name>
+      <description>The CCP TextAnnotation extends the base annotation class to include an annotation ID, the capability for multiple annotation spans, a link to the annotator responsible for generating the annotation, membership to annotation sets, and a link to a class mention which defines the class of this annotation.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPAnnotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>annotationID</name>
+          <description>The annotation ID provides a means for identifying a particular annotation. Setting this ID is optional. The default value should be -1.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>annotator</name>
+          <description>The annotator was responsible for generating this annotation.</description>
+          <rangeTypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPAnnotator</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>documentSectionID</name>
+          <description>The document section ID is optionally used to log what section of a document this annotation is from. Values can be specified by the user. See edu.uchsc.ccp.util.nlp.document.DocumentSectionTypes for a few common sections.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>annotationSets</name>
+          <description>Annotation Sets provide an arbitrary means of categorizing and clustering annotations into groups.</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPAnnotationSet</elementType>
+        </featureDescription>
+        <featureDescription>
+          <name>numberOfSpans</name>
+          <description>The number of spans comprising this annotation. The CCP TextAnnotation allows the use of multiple spans for a single annotation.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>spans</name>
+          <description>This FSArray stores the CCPSpans which comprise this annotation. It should be noted that for an annotation with multiple spans, the default begin and end fields are set to the beginning of the first span and the end of the final span, respectively.</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPSpan</elementType>
+        </featureDescription>
+        <featureDescription>
+          <name>classMention</name>
+          <description>The CCP ClassMention indicates the type (or class) for this annotation.</description>
+          <rangeTypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPClassMention</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPClassMention</name>
+      <description>The CCP ClassMention is the root of a flexible class structure that can be used to store virtually any frame-based representation of a particular class. Common class mention types include, but are not limited to, such things as entities (protein, cell type, cell line, disease, tissue, etc.) and frames (interaction, transport, regulation, etc.).</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPMention</supertypeName>
+      <features>
+        <featureDescription>
+          <name>slotMentions</name>
+          <description>A class mention optionally has slot mentions which represent attributes of that class. These slot mentions are stored in the slotMentions FSArray. There are two types of slot mentions, complex and non-complex.  The difference between complex and non-complex slot mentions is simply the type of filler (or slot value) for each. Complex slot mentions are filled with a class mention, whereas non-complex slot mentions are filled by simple Strings.</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.ucdenver.ccp.nlp.core.uima.mention.CCPSlotMention</elementType>
+        </featureDescription>
+        <featureDescription>
+          <name>ccpTextAnnotation</name>
+          <description>Just as CCPTextAnnotations are linked to a CCPClassMention, it is sometimes useful to be able to follow a CCPClassMention back to its corresponding CCPTextAnnotation.</description>
+          <rangeTypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPTextAnnotation</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPAnnotation</name>
+      <description>The superclass for all CCP annotations.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>annotationMetadata</name>
+          <description>Stores metadata for an annotation.</description>
+          <rangeTypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.AnnotationMetadata</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPComplexSlotMention</name>
+      <description>A slot mention is deemed "complex" when its slot filler is a class mention as opposed to a String (See non-complex slot mention for String fillers). An example of a complex slot mention is the "transported entity" slot for the protein-transport class which would be filled with a protein class mention.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPSlotMention</supertypeName>
+      <features>
+        <featureDescription>
+          <name>classMentions</name>
+          <description>The class mentions which are the slot fillers for this complex slot.</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.ucdenver.ccp.nlp.core.uima.mention.CCPClassMention</elementType>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPMention</name>
+      <description>The superclass for all CCP Mentions (class mention, complex slot mention, and non-complex slot mention)</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>mentionName</name>
+          <description>The name of this mention.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>mentionID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Long</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>traversalIDs</name>
+          <description/>
+          <rangeTypeName>uima.cas.StringArray</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>traversalMentionIDs</name>
+          <description/>
+          <rangeTypeName>uima.cas.StringArray</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPSlotMention</name>
+      <description>The superclass for all slot mentions (complex and non-complex).</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPMention</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPSpan</name>
+      <description>The span object holds span information.This is a supplement to the default UIMA annotation which cannot handle multi-span annotations.</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>spanStart</name>
+          <description>The character offset for the start of the span.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>spanEnd</name>
+          <description>The character offset for the end of the span.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPAnnotator</name>
+      <description>The annotator object contains information which is used to determine who/what generated an annotation.</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>annotatorID</name>
+          <description>This Integer should be a unique ID for a particular annotator.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>firstName</name>
+          <description>The first name of the annotator. Use of this field is optional as the annotator ID is primarily used for determining the source of an annotation.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>lastName</name>
+          <description>The last name of the annotator. Use of this field is optional as the annotator ID is primarily used for determining the source of an annotation.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>affiliation</name>
+          <description>The affiliation of the annotator. Use of this field is optional as the annotator ID is primarily used for determining the source of an annotation.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPAnnotationSet</name>
+      <description>The annotation set provides a means for arbitrarily categorizing or clustering groups of annotations. Annotations can be associated with multiple annotation groups. Examples of use include, defining Gold Standard annotation sets, and delineating between the use of different parameters during annotation, among others. Each annotation set is associated with a unique ID, a name and a description.</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>annotationSetID</name>
+          <description>An integer uniquely identifying a particular annotation set.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>annotationSetName</name>
+          <description>The name of the annotation set.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>annotationSetDescription</name>
+          <description>A textual description of an annotation set.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.AnnotationMetadata</name>
+      <description>A class to store annotation metadata, provenance, etc.</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>confidence</name>
+          <description/>
+          <rangeTypeName>uima.cas.Float</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>metadataProperties</name>
+          <description/>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.AnnotationMetadataProperty</elementType>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.AnnotationMetadataProperty</name>
+      <description>Superclass for annotation metadata properties</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.AnnotationSetMembershipProperty</name>
+      <description>A metadata property for declaring AnnotationSet membership. This will eventually replace the annotationSets field that is currently part of the CCPTextAnnotation class.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.AnnotationMetadataProperty</supertypeName>
+      <features>
+        <featureDescription>
+          <name>annotationSet</name>
+          <description/>
+          <rangeTypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.CCPAnnotationSet</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.EvaluationResultProperty</name>
+      <description>Superclass for metadata properties describing the result of an evaluation against a gold standard, e.g. TP, FP, FN, etc.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.AnnotationMetadataProperty</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.TruePositiveProperty</name>
+      <description>Indicates this annotation was scored as a True Positive during an evaluation.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.TestSetProperty</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.FalsePositiveProperty</name>
+      <description>Indicates that an annotation was scored as a False Positive during an evaluation.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.TestSetProperty</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.GoldStandardSetProperty</name>
+      <description>Indicates that an annotation was part of the Gold Standard during an evaluation.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.EvaluationResultProperty</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.PartialMatchProperty</name>
+      <description>A subclass of False Positive Property. This property is used to indicate an annotation that was scored as a False Positive during an evaluation, but is a partial match to the Gold Standard. That is, what is present is correct and the reason it was scored as a False Positive is because it is missing something.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.TruePositiveProperty</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.FalseNegativeProperty</name>
+      <description>A subclass of the Gold Standard Property, the False Negative Property indicates a Gold Standard Annotation that was scored as a False Negative during an evaluation.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.GoldStandardSetProperty</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.TestSetProperty</name>
+      <description/>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.EvaluationResultProperty</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPPrimitiveSlotMention</name>
+      <description>An abstract class for grouping all primitive (string, float, boolean, integer) slot mentions.</description>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPSlotMention</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPStringSlotMention</name>
+      <description/>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPPrimitiveSlotMention</supertypeName>
+      <features>
+        <featureDescription>
+          <name>slotValues</name>
+          <description/>
+          <rangeTypeName>uima.cas.StringArray</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPFloatSlotMention</name>
+      <description/>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPPrimitiveSlotMention</supertypeName>
+      <features>
+        <featureDescription>
+          <name>slotValues</name>
+          <description/>
+          <rangeTypeName>uima.cas.FloatArray</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPDoubleSlotMention</name>
+      <description/>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPPrimitiveSlotMention</supertypeName>
+      <features>
+        <featureDescription>
+          <name>slotValues</name>
+          <description/>
+          <rangeTypeName>uima.cas.DoubleArray</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPBooleanSlotMention</name>
+      <description/>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPPrimitiveSlotMention</supertypeName>
+      <features>
+        <featureDescription>
+          <name>slotValue</name>
+          <description/>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.mention.CCPIntegerSlotMention</name>
+      <description/>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.mention.CCPPrimitiveSlotMention</supertypeName>
+      <features>
+        <featureDescription>
+          <name>slotValues</name>
+          <description/>
+          <rangeTypeName>uima.cas.IntegerArray</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.AnnotationCommentProperty</name>
+      <description/>
+      <supertypeName>edu.ucdenver.ccp.nlp.core.uima.annotation.metadata.AnnotationMetadataProperty</supertypeName>
+      <features>
+        <featureDescription>
+          <name>comment</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>

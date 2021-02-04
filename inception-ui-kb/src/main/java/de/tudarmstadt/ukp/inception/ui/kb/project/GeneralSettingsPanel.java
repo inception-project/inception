@@ -90,7 +90,9 @@ public class GeneralSettingsPanel
 
     private CheckBox createCheckbox(String aId, String aProperty)
     {
-        return new CheckBox(aId, kbModel.bind(aProperty));
+        CheckBox cb = new CheckBox(aId, kbModel.bind(aProperty));
+        cb.setOutputMarkupId(true);
+        return cb;
     }
 
     private ComboBox<String> basePrefixField(String aId, String aProperty)

@@ -1,0 +1,105 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS|PosValue
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value
+#T_RL=de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency|DependencyType|BT_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS
+
+
+#Text=Ms. Haag plays Elianti .
+1-1	0-3	Ms.	NNP	PER[2]	SUBJ	1-3	
+1-2	4-8	Haag	NNP	PER[2]	SBJ	1-3	
+1-3	9-14	plays	VBD	_	P|ROOT	1-5|1-3	
+1-4	15-22	Elianti	NNP	OTH	OBJ	1-3	
+1-5	23-24	.	.	_	_	_	
+
+#Text=Rolls-Royce Motor Cars Inc. said it expects its U.S. sales to remain steady at about 1,200 cars in 1990 .
+2-1	25-36	Rolls-Royce	NNP	ORG[4]	NAME	2-3	
+2-2	37-42	Motor	NNP	ORG[4]	NAME	2-3	
+2-3	43-47	Cars	NNPS	_	SBJ	2-5	
+2-4	48-52	Inc.	NNP	_	POSTHON	2-3	
+2-5	53-57	said	VBD	_	ROOT	2-5	
+2-6	58-60	it	PRP	_	SBJ	2-7	
+2-7	61-68	expects	VBZ	_	OBJ|OPRD	2-5|2-11	
+2-8	69-72	its	PRP$	_	NMOD	2-10	
+2-9	73-77	U.S.	NNP	LOC	NMOD	2-10	
+2-10	78-83	sales	NNS	_	OBJ	2-7	
+2-11	84-86	to	TO	_	_	_	
+2-12	87-93	remain	VB	_	IM	2-11	
+2-13	94-100	steady	JJ	_	PRD	2-12	
+2-14	101-103	at	IN	_	LOC	2-13	
+2-15	104-109	about	IN	_	DEP	2-16	
+2-16	110-115	1,200	CD	_	NMOD	2-17	
+2-17	116-120	cars	NNS	_	PMOD|TMP	2-14|2-18	
+2-18	121-123	in	IN	_	_	_	
+2-19	124-128	1990	CD	_	PMOD	2-18	
+2-20	129-130	.	.	_	P	2-5	
+
+#Text=The luxury auto maker last year sold 1,214 cars in the U.S.
+3-1	131-134	The	DT	_	NMOD	3-4	
+3-2	135-141	luxury	NN	_	NMOD	3-3	
+3-3	142-146	auto	NN	_	NMOD	3-4	
+3-4	147-152	maker	NN	_	SBJ	3-7	
+3-5	153-157	last	JJ	_	NMOD	3-6	
+3-6	158-162	year	NN	_	TMP	3-4	
+3-7	163-167	sold	VBD	_	ROOT	3-7	
+3-8	168-173	1,214	CD	_	NMOD	3-9	
+3-9	174-178	cars	NNS	_	OBJ	3-7	
+3-10	179-181	in	IN	_	LOC	3-9	
+3-11	182-185	the	DT	_	NMOD	3-12	
+3-12	186-190	U.S.	NNP	LOC	PMOD	3-10	
+
+#Text=BELL INDUSTRIES Inc. increased its quarterly to 10 cents from seven cents a share .
+4-1	191-195	BELL	NNP	ORG[7]|PER[8]	NAME	4-2	
+4-2	196-206	INDUSTRIES	NNP	ORG[7]	SBJ	4-4	
+4-3	207-211	Inc.	NNP	ORG[7]	POSTHON	4-2	
+4-4	212-221	increased	VBD	_	ROOT	4-4	
+4-5	222-225	its	PRP$	_	NMOD	4-6	
+4-6	226-235	quarterly	NN	_	OBJ	4-4	
+4-7	236-238	to	TO	_	DIR	4-4	
+4-8	239-241	10	CD	_	NMOD	4-9	
+4-9	242-247	cents	NNS	_	PMOD	4-7	
+4-10	248-252	from	IN	_	DIR	4-9	
+4-11	253-258	seven	CD	_	NMOD	4-12	
+4-12	259-264	cents	NNS	_	PMOD	4-10	
+4-13	265-266	a	DT	_	NMOD	4-14	
+4-14	267-272	share	NN	_	ADV	4-12	
+4-15	273-274	.	.	_	P	4-4	
+
+#Text=The new rate will be payable Feb. 15 .
+5-1	275-278	The	DT	_	NMOD	5-3	
+5-2	279-282	new	JJ	_	NMOD	5-3	
+5-3	283-287	rate	NN	_	SBJ	5-4	
+5-4	288-292	will	MD	_	ROOT	5-4	
+5-5	293-295	be	VB	_	VC	5-4	
+5-6	296-303	payable	JJ	_	PRD	5-5	
+5-7	304-308	Feb.	NNP	_	TMP	5-5	
+5-8	309-311	15	CD	_	NMOD	5-7	
+5-9	312-313	.	.	_	P	5-4	
+
+#Text=A record date has n't been set .
+6-1	314-315	A	DT	_	NMOD	6-3	
+6-2	316-322	record	NN	_	NMOD	6-3	
+6-3	323-327	date	NN	_	SBJ	6-4	
+6-4	328-331	has	VBZ	_	ROOT	6-4	
+6-5	332-335	n't	RB	_	ADV	6-4	
+6-6	336-340	been	VBN	_	VC	6-4	
+6-7	341-344	set	VBN	_	VC	6-6	
+6-8	345-346	.	.	_	P	6-4	
+
+#Text=Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
+7-1	347-351	Bell	NNP	ORG	SBJ	7-8	
+7-2	352-353	,	,	_	P	7-1	
+7-3	354-359	based	VBN	_	APPO	7-1	
+7-4	360-362	in	IN	_	LOC	7-3	
+7-5	363-366	Los	NNP	LOC[10]	NAME	7-6	
+7-6	367-374	Angeles	NNP	LOC[10]	PMOD	7-4	
+7-7	375-376	,	,	_	P	7-1	
+7-8	377-382	makes	VBZ	_	ROOT	7-8	
+7-9	383-386	and	CC	_	COORD	7-8	
+7-10	387-398	distributes	VBZ	_	CONJ	7-9	
+7-11	399-409	electronic	JJ	_	NMOD	7-16	
+7-12	410-411	,	,	_	P	7-11	
+7-13	412-420	computer	NN	_	COORD	7-11	
+7-14	421-424	and	CC	_	COORD	7-13	
+7-15	425-433	building	NN	_	CONJ	7-14	
+7-16	434-442	products	NNS	_	OBJ	7-8	
+7-17	443-444	.	.	_	P	7-8	

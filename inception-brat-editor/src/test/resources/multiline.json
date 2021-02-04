@@ -1,0 +1,22 @@
+{
+  "action" : "getDocument",
+  "messages" : [ ],
+  "modifications" : [ ],
+  "text" : "This is line 1.  This is line 3. This is line 4. ",
+  "ctime" : 0,
+  "mtime" : 0,
+  "info" : null,
+  "relations" : [ ],
+  "entities" : [ ],
+  "attributes" : [ ],
+  "equivs" : [ ],
+  "comments" : [ ],
+  "normalizations" : [ ],
+  "args" : { },
+  "rtl_mode" : false,
+  "font_zoom" : 100,
+  "sentence_number_offset" : 1,
+  "source_files" : [ ],
+  "token_offsets" : [ [ 0, 4 ], [ 5, 7 ], [ 8, 12 ], [ 13, 14 ], [ 14, 15 ], [ 17, 21 ], [ 22, 24 ], [ 25, 29 ], [ 30, 31 ], [ 31, 32 ], [ 33, 37 ], [ 38, 40 ], [ 41, 45 ], [ 46, 47 ], [ 47, 48 ] ],
+  "sentence_offsets" : [ [ 0, 15 ], [ 16, 16 ], [ 17, 32 ], [ 33, 48 ], [ 49, 49 ] ]
+}

@@ -1,0 +1,15 @@
+/* this is 
+me comment*/
+
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.semantics.Predicate as Frame;
+import pos.value as value;
+
+SemanticPredicate {
+  @Lemma.value="jump" -> frame = "Jumping";
+  frame="Jumping" -> arguments.role = "Arg1" (!) | arguments.role = "Arg2" (!);
+}
+
+Verb {
+  @access = "open" & location = "parent" -> showPath.withoutQuotes = "false" | useCaching = "false" (!);
+}

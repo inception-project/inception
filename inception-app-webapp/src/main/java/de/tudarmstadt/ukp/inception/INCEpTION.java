@@ -55,9 +55,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
 import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
 import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -93,9 +90,9 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
             AgreementPageMenuItem.class,
 
             // INCEpTION uses its recommenders, not the WebAnno automation code
-            AutomationService.class, 
-            AutomationMiraTemplateExporter.class,
-            AutomationTrainingDocumentExporter.class
+            // AutomationService.class, 
+            // AutomationMiraTemplateExporter.class,
+            // AutomationTrainingDocumentExporter.class
     })})
 @EntityScan(basePackages = {
     // Include WebAnno entity packages separately so we can skip the automation entities!

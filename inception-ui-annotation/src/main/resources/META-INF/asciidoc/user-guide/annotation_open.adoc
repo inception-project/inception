@@ -1,0 +1,35 @@
+////
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+= Opening a Document
+
+When navigating to the *Annotation* page, a dialogue opens that allows you to select a project, and 
+a document within the project. If you want to open a different project or document later, click on 
+*Open* to open the dialog.
+
+image::open_doc.png[align="center"]
+
+Projects appear as folders, and contain the documents of the project. Double-click on a document to 
+open it for annotation. Document names written in black show that the document has not been opened 
+by the current user, blue font means that it has already been opened, whereas red font indicates 
+that the document has already been marked as *done*.
+
+Users that are managers can additionally open other users' documents to view their annotations but cannot change them.
+This is done by selecting the project, user and then document in the described dialogue. The user's own name is listed at the top and marked _(me)_.
+
+image::open_doc_manager.png[align="center"]

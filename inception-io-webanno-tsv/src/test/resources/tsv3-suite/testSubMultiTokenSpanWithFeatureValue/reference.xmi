@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?><xmi:XMI xmlns:pos="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos.ecore" xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:cas="http:///uima/cas.ecore" xmlns:tweet="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos/tweet.ecore" xmlns:morph="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/morph.ecore" xmlns:dependency="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/dependency.ecore" xmlns:type6="http:///de/tudarmstadt/ukp/dkpro/core/api/semantics/type.ecore" xmlns:type="http:///de/tudarmstadt/ukp/dkpro/core/api/anomaly/type.ecore" xmlns:type7="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type.ecore" xmlns:type3="http:///de/tudarmstadt/ukp/dkpro/core/api/metadata/type.ecore" xmlns:type4="http:///de/tudarmstadt/ukp/dkpro/core/api/ner/type.ecore" xmlns:type5="http:///de/tudarmstadt/ukp/dkpro/core/api/segmentation/type.ecore" xmlns:type2="http:///de/tudarmstadt/ukp/dkpro/core/api/coref/type.ecore" xmlns:constituent="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/constituent.ecore" xmlns:chunk="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/chunk.ecore" xmlns:custom="http:///webanno/custom.ecore" xmi:version="2.0">
+    <cas:NULL xmi:id="0"/>
+    <type3:DocumentMetaData xmi:id="1" sofa="2" begin="0" end="20" documentId="doc" isLastSegment="false"/>
+    <type5:Token xmi:id="3" sofa="2" begin="0" end="6"/>
+    <type5:Token xmi:id="4" sofa="2" begin="7" end="13"/>
+    <type5:Token xmi:id="5" sofa="2" begin="14" end="20"/>
+    <type5:Sentence xmi:id="7" sofa="2" begin="0" end="20"/>
+    <type4:NamedEntity xmi:id="9" sofa="2" begin="0" end="13" value="2"/>
+    <type4:NamedEntity xmi:id="14" sofa="2" begin="0" end="10" value="7"/>
+    <type4:NamedEntity xmi:id="8" sofa="2" begin="0" end="6" value="1"/>
+    <type4:NamedEntity xmi:id="16" sofa="2" begin="3" end="17" value="9"/>
+    <type4:NamedEntity xmi:id="13" sofa="2" begin="3" end="13" value="6"/>
+    <type4:NamedEntity xmi:id="15" sofa="2" begin="3" end="10" value="8"/>
+    <type4:NamedEntity xmi:id="11" sofa="2" begin="7" end="11" value="4"/>
+    <type4:NamedEntity xmi:id="18" sofa="2" begin="7" end="7" value="11"/>
+    <type4:NamedEntity xmi:id="12" sofa="2" begin="9" end="13" value="5"/>
+    <type4:NamedEntity xmi:id="10" sofa="2" begin="9" end="11" value="3"/>
+    <type4:NamedEntity xmi:id="17" sofa="2" begin="10" end="10" value="10"/>
+    <type4:NamedEntity xmi:id="19" sofa="2" begin="13" end="13" value="12"/>
+    <cas:Sofa xmi:id="2" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString="aaaaaa bbbbbb cccccc"/>
+    <cas:View sofa="2" members="1 3 4 5 7 9 14 8 16 13 15 11 18 12 10 17 19"/>
+</xmi:XMI>
