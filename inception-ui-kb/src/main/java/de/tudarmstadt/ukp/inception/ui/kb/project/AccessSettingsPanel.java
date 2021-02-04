@@ -57,6 +57,8 @@ public class AccessSettingsPanel
 
     private CheckBox createCheckbox(String aId, String aProperty)
     {
-        return new CheckBox(aId, kbModel.bind(aProperty));
+        CheckBox checkbox = new CheckBox(aId, kbModel.bind(aProperty));
+        checkbox.setOutputMarkupId(true);
+        return checkbox;
     }
 }
