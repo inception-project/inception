@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * A generic response send from the server to the Brat client. Serves as base-class for responses to
@@ -27,7 +31,7 @@ import java.util.List;
 public class AjaxResponse
 {
     private String action;
-    private List<String> messages = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<String> messages = new ArrayList<>();
 
     public AjaxResponse()
     {

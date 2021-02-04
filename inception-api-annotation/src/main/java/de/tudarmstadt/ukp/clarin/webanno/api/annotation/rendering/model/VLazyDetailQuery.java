@@ -29,6 +29,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
  */
 public class VLazyDetailQuery
 {
+    public static final VLazyDetailQuery LAYER_LEVEL_QUERY = new VLazyDetailQuery(null, null);
+
     private final String feature;
     private final String query;
 

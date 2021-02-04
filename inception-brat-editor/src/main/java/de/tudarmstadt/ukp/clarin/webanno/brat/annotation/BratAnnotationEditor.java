@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderT
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
+import static java.util.stream.Collectors.toList;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -73,10 +74,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -138,6 +142,7 @@ public class BratAnnotationEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
@@ -341,7 +346,7 @@ public class BratAnnotationEditor
 
         StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
 
-        if (layerParam.isEmpty() || keyParam.isEmpty() || databaseParam.isEmpty()) {
+        if (layerParam.isEmpty() || databaseParam.isEmpty()) {
             return response;
         }
 
@@ -352,10 +357,15 @@ public class BratAnnotationEditor
                 .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
                         + "] does not exist in project [" + state.getProject().getName() + "]("
                         + state.getProject().getId() + ")"));
-        AnnotationFeature feature = annotationService.getFeature(database, layer);
 
         // Check where the query needs to be routed: to an editor extension or to a feature support
         if (paramId.isSynthetic()) {
+            if (keyParam.isEmpty()) {
+                return response;
+            }
+
+            AnnotationFeature feature = annotationService.getFeature(database, layer);
+
             String extensionId = paramId.getExtensionId();
             response.setResults(extensionRegistry.getExtension(extensionId)
                     .renderLazyDetails(state.getDocument(), state.getUser(), paramId, feature,
@@ -366,14 +376,29 @@ public class BratAnnotationEditor
         }
 
         try {
-            response.setResults(featureSupportRegistry.findExtension(feature)
-                    .renderLazyDetails(feature, keyParam.toString()).stream()
+            List<VLazyDetailResult> details;
+
+            // Is it a layer-level lazy detail?
+            if (Renderer.QUERY_LAYER_LEVEL_DETAILS.equals(database)) {
+                details = layerSupportRegistry.getLayerSupport(layer)
+                        .createRenderer(layer, () -> annotationService.listAnnotationFeature(layer))
+                        .renderLazyDetails(getCasProvider().get(), paramId);
+            }
+            // Is it a feature-level lazy detail?
+            else {
+                AnnotationFeature feature = annotationService.getFeature(database, layer);
+                details = featureSupportRegistry.findExtension(feature).renderLazyDetails(feature,
+                        keyParam.toString());
+            }
+
+            response.setResults(details.stream()
                     .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
-                    .collect(Collectors.toList()));
+                    .collect(toList()));
         }
         catch (Exception e) {
             LOG.error("Unable to load data", e);
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
 
         return response;
