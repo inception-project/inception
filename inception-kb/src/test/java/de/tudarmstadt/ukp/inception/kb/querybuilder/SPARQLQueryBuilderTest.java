@@ -241,7 +241,7 @@ public class SPARQLQueryBuilderTest
         ukpVirtuosoRepo = buildSparqlRepository(
                 "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
         wikidata = buildSparqlRepository("https://query.wikidata.org/sparql");
-        dbpedia = buildSparqlRepository("https://dbpedia.org/sparql");
+        dbpedia = buildSparqlRepository("http://de.dbpedia.org/sparql");
         yago = buildSparqlRepository("https://yago-knowledge.org/sparql/query");
         hucit = buildSparqlRepository("http://nlp.dainst.org:8888/sparql");
         britishMuseum = buildSparqlRepository("http://collection.britishmuseum.org/sparql");
@@ -1548,7 +1548,6 @@ public class SPARQLQueryBuilderTest
                 .contains("http://www.wikidata.org/entity/Q35120");
     }
 
-    @Ignore("https://github.com/inception-project/inception/issues/1931")
     @Category(SlowTests.class)
     @Test
     public void thatRootsCanBeRetrieved_DBPedia()
@@ -1556,7 +1555,6 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(dbpedia);
 
         kb.setType(REMOTE);
-        kb.setDefaultDatasetIri(SimpleValueFactory.getInstance().createIRI("http://dbpedia.org"));
 
         List<KBHandle> results = asHandles(dbpedia,
                 SPARQLQueryBuilder.forClasses(kb).roots().retrieveLabel());
@@ -1568,7 +1566,6 @@ public class SPARQLQueryBuilderTest
                 .contains("Thing");
     }
 
-    @Ignore("https://github.com/inception-project/inception/issues/1931")
     @Category(SlowTests.class)
     @Test
     public void thatParentsCanBeRetrieved_DBPedia()

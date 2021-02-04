@@ -294,7 +294,7 @@ public class AccessSpecificSettingsPanel
         };
 
         FileInputConfig config = new FileInputConfig();
-        config.initialCaption("Import project archives ...");
+        config.initialCaption("Import knowledge base ...");
         config.showPreview(false);
         config.showUpload(false);
         config.removeIcon("<i class=\"fa fa-remove\"></i>");
