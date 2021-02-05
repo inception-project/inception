@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,11 +34,13 @@ import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
+import static org.hibernate.annotations.QueryHints.CACHEABLE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,6 +65,7 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
+import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +107,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Implementation of methods defined in the {@link AnnotationSchemaService} interface
@@ -246,7 +251,7 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void createLayer(AnnotationLayer aLayer)
+    public void createOrUpdateLayer(AnnotationLayer aLayer)
     {
         if (isNull(aLayer.getId())) {
             entityManager.persist(aLayer);
@@ -273,20 +278,20 @@ public class AnnotationSchemaServiceImpl
         else {
             entityManager.merge(aFeature);
         }
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aFeature.getProject().getId()))) {
+            Project project = aFeature.getProject();
+            log.info("Created feature [{}]({}) in project [{}]({})", aFeature.getName(),
+                    aFeature.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
     @Transactional
     public Optional<Tag> getTag(long aId)
     {
-        try {
-            final String query = "FROM Tag WHERE id = :id";
-            return Optional.of(entityManager.createQuery(query, Tag.class).setParameter("id", aId)
-                    .getSingleResult());
-        }
-        catch (NoResultException e) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(entityManager.find(Tag.class, aId));
     }
 
     @Override
@@ -381,17 +386,17 @@ public class AnnotationSchemaServiceImpl
     @Override
     public boolean existsFeature(String aName, AnnotationLayer aLayer)
     {
-
         try {
             entityManager
                     .createQuery("FROM AnnotationFeature WHERE name = :name AND layer = :layer",
                             AnnotationFeature.class)
-                    .setParameter("name", aName).setParameter("layer", aLayer).getSingleResult();
+                    .setParameter("name", aName) //
+                    .setParameter("layer", aLayer) //
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
             return false;
-
         }
     }
 
@@ -401,36 +406,37 @@ public class AnnotationSchemaServiceImpl
     {
         return entityManager
                 .createQuery("FROM TagSet WHERE name = :name AND project =:project", TagSet.class)
-                .setParameter("name", aName).setParameter("project", aProject).getSingleResult();
+                .setParameter("name", aName) //
+                .setParameter("project", aProject) //
+                .getSingleResult();
     }
 
     @Override
     @Transactional
     public TagSet getTagSet(long aId)
     {
-        return entityManager.createQuery("FROM TagSet WHERE id = :id", TagSet.class)
-                .setParameter("id", aId).getSingleResult();
+        return entityManager.find(TagSet.class, aId);
     }
 
     @Override
     @Transactional
     public AnnotationLayer getLayer(long aId)
     {
-        String query = String.join("\n", "FROM AnnotationLayer", "WHERE id = :id");
-
-        return entityManager.createQuery(query, AnnotationLayer.class).setParameter("id", aId)
-                .getSingleResult();
+        return entityManager.find(AnnotationLayer.class, aId);
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId)
     {
-        String query = String.join("\n", "FROM AnnotationLayer", "WHERE id = :id",
-                "AND project = :project");
+        AnnotationLayer layer = getLayer(aLayerId);
 
-        return entityManager.createQuery(query, AnnotationLayer.class).setParameter("id", aLayerId)
-                .setParameter("project", aProject).getResultStream().findFirst();
+        // Check that the layer actually belongs to the project
+        if (layer != null && !Objects.equals(layer.getProject().getId(), aProject.getId())) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(layer);
     }
 
     @Override
@@ -494,11 +500,16 @@ public class AnnotationSchemaServiceImpl
 
     private Optional<AnnotationLayer> getLayerInternal(String aName, Project aProject)
     {
-        String query = String.join("\n", "FROM AnnotationLayer ",
+        String query = String.join("\n", //
+                "FROM AnnotationLayer ", //
                 "WHERE name = :name AND project = :project");
 
-        return entityManager.createQuery(query, AnnotationLayer.class).setParameter("name", aName)
-                .setParameter("project", aProject).getResultStream().findFirst();
+        return entityManager.createQuery(query, AnnotationLayer.class) //
+                .setParameter("name", aName) //
+                .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
+                .getResultStream() //
+                .findFirst();
     }
 
     @Override
@@ -604,39 +615,74 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listAnnotationLayer(Project aProject)
     {
-        return entityManager
-                .createQuery("FROM AnnotationLayer WHERE project =:project ORDER BY uiName",
-                        AnnotationLayer.class)
-                .setParameter("project", aProject).getResultList();
+        String query = String.join("\n", //
+                "FROM AnnotationLayer", //
+                "WHERE project = :project ", //
+                "ORDER BY uiName");
+
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
     @Transactional
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
     {
-        return entityManager
-                .createQuery("SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f "
-                        + "WHERE l.type = :type AND l.project = :project AND "
-                        + "(l.attachType = :attachType OR f.type = :attachTypeName) "
-                        + "ORDER BY l.uiName", AnnotationLayer.class)
-                .setParameter("type", RELATION_TYPE).setParameter("attachType", aLayer)
+        String query = String.join("\n",
+                "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f ", //
+                "WHERE l.type        = :type AND ", //
+                "      l.project     = :project AND ", //
+                "      (l.attachType = :attachType OR f.type = :attachTypeName) ", //
+                "ORDER BY l.uiName");
+
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("type", RELATION_TYPE) //
+                .setParameter("attachType", aLayer) //
                 .setParameter("attachTypeName", aLayer.getName())
                 // Checking for project is necessary because type match is string-based
-                .setParameter("project", aLayer.getProject()).getResultList();
+                .setParameter("project", aLayer.getProject()) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
+    }
+
+    @Transactional
+    public List<AnnotationFeature> listAttachingFeatures(AnnotationLayer aLayer)
+    {
+        String query = String.join("\n", //
+                "FROM AnnotationFeature ", //
+                "WHERE type    = :type AND", //
+                "      project = :project", //
+                "ORDER BY uiName");
+
+        // This should not be cached because we do not have a proper foreign key relation to
+        // the type.
+        return entityManager.createQuery(query, AnnotationFeature.class)
+                .setParameter("type", aLayer.getName()) //
+                // Checking for project is necessary because type match is string-based
+                .setParameter("project", aLayer.getProject()) //
+                .getResultList();
     }
 
     @Override
     @Transactional
     public List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer aLayer)
     {
-        return entityManager.createQuery(
-                "FROM AnnotationFeature WHERE linkMode in (:modes) AND project = :project AND "
-                        + "type in (:attachType) ORDER BY uiName",
-                AnnotationFeature.class)
+        String query = String.join("\n", //
+                "FROM AnnotationFeature", //
+                "WHERE linkMode in (:modes) AND ", //
+                "      project = :project AND ", //
+                "      type in (:attachType) ", //
+                "ORDER BY uiName");
+
+        return entityManager.createQuery(query, AnnotationFeature.class)
                 .setParameter("modes", asList(LinkMode.SIMPLE, LinkMode.WITH_ROLE))
                 .setParameter("attachType", asList(aLayer.getName(), CAS.TYPE_NAME_ANNOTATION))
                 // Checking for project is necessary because type match is string-based
-                .setParameter("project", aLayer.getProject()).getResultList();
+                .setParameter("project", aLayer.getProject()) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -647,11 +693,15 @@ public class AnnotationSchemaServiceImpl
             return new ArrayList<>();
         }
 
-        String query = String.join("\n", "FROM AnnotationFeature", "WHERE layer = :layer",
+        String query = String.join("\n", //
+                "FROM AnnotationFeature", //
+                "WHERE layer = :layer", //
                 "ORDER BY uiName");
 
         return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer).getResultList();
+                .setParameter("layer", aLayer) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -662,11 +712,16 @@ public class AnnotationSchemaServiceImpl
             return new ArrayList<>();
         }
 
-        String query = String.join("\n", "FROM AnnotationFeature", "WHERE layer = :layer",
-                "AND enabled = true", "ORDER BY uiName");
+        String query = String.join("\n", //
+                "FROM AnnotationFeature", //
+                "WHERE layer = :layer", //
+                "AND enabled = true", //
+                "ORDER BY uiName"); //
 
         return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer).getResultList();
+                .setParameter("layer", aLayer) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -675,7 +730,10 @@ public class AnnotationSchemaServiceImpl
     {
         return entityManager.createQuery(
                 "FROM AnnotationFeature f WHERE project =:project ORDER BY f.layer.uiName, f.uiName",
-                AnnotationFeature.class).setParameter("project", aProject).getResultList();
+                AnnotationFeature.class) //
+                .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -684,7 +742,8 @@ public class AnnotationSchemaServiceImpl
     {
         return entityManager
                 .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
-                .setParameter("tagSet", aTagSet).getResultList();
+                .setParameter("tagSet", aTagSet) //
+                .getResultList();
     }
 
     private List<ImmutableTag> loadImmutableTags(TagSet aTagSet)
@@ -701,6 +760,10 @@ public class AnnotationSchemaServiceImpl
     @Override
     public List<ImmutableTag> listTagsImmutable(TagSet aTagSet)
     {
+        if (aTagSet == null) {
+            return Collections.emptyList();
+        }
+
         return immutableTagsCache.get(aTagSet);
     }
 
@@ -758,17 +821,47 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void removeAnnotationFeature(AnnotationFeature aFeature)
+    public void removeFeature(AnnotationFeature aFeature)
     {
         entityManager.remove(
                 entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aFeature.getProject().getId()))) {
+            Project project = aFeature.getProject();
+            log.info("Removed feature [{}]({}) from project [{}]({})", aFeature.getName(),
+                    aFeature.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
     @Transactional
-    public void removeAnnotationLayer(AnnotationLayer aLayer)
+    public void removeLayer(AnnotationLayer aLayer)
     {
-        entityManager.remove(aLayer);
+        AnnotationLayer layer = entityManager.contains(aLayer) ? aLayer
+                : entityManager.merge(aLayer);
+
+        // We must not rely on the DB-level CASCADE ON DELETE if Hibernate 2nd-level caching is
+        // enabled because if we do, then Hibernate will not know that entries have gone from the
+        // DB, will still try to re-hydrate them from the cache and will fail filling in gaps
+        // from the DB. So we delete explicitly through Hibernate
+        listAnnotationFeature(aLayer).forEach(this::removeFeature);
+
+        // Remove all features in other layers that connect to the layer to be removed. This is
+        // necessary so Hibernate cache knows they are gone and also because the relation is
+        // modeled by name, so we couldn't use a DB-level CASCADE ON DELETE anyway.
+        // It is also necessary to that e.g. the "pos" feature in the built-in "Token" layer gets
+        // cleaned up - which the user could never do manually.
+        listAttachingFeatures(aLayer).forEach(this::removeFeature);
+
+        entityManager.remove(layer);
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aLayer.getProject().getId()))) {
+            Project project = aLayer.getProject();
+            log.info("Removed layer [{}]({}) from project [{}]({})", aLayer.getName(),
+                    aLayer.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
@@ -813,7 +906,7 @@ public class AnnotationSchemaServiceImpl
 
         for (AnnotationFeature f : listAnnotationFeature(aProject)) {
             try {
-                featureSupportRegistry.getFeatureSupport(f);
+                featureSupportRegistry.findExtension(f);
             }
             catch (IllegalArgumentException e) {
                 // Skip unsupported features
@@ -835,7 +928,7 @@ public class AnnotationSchemaServiceImpl
 
         for (AnnotationFeature f : listAnnotationFeature(aLayer)) {
             try {
-                featureSupportRegistry.getFeatureSupport(f);
+                featureSupportRegistry.findExtension(f);
             }
             catch (IllegalArgumentException e) {
                 // Skip unsupported features
@@ -868,16 +961,15 @@ public class AnnotationSchemaServiceImpl
     public TypeSystemDescription getAllProjectTypes(Project aProject)
         throws ResourceInitializationException
     {
-        // Create a new type system from scratch
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
-
         List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
         List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
 
+        List<TypeSystemDescription> allTsds = new ArrayList<>();
         for (AnnotationLayer layer : allLayersInProject) {
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
 
             // for built-in layers, we clone the information from the built-in type descriptors
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
             if (layer.isBuiltIn()) {
                 for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
                     exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
@@ -887,9 +979,26 @@ public class AnnotationSchemaServiceImpl
             else {
                 layerSupport.generateTypes(tsd, layer, allFeaturesInProject);
             }
+            allTsds.add(tsd);
         }
 
-        return tsd;
+        {
+            // Explicitly add Token because the layer may not be declared in the project
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            exportBuiltInTypeDescription(builtInTypes, tsd, Token.class.getName());
+            allTsds.add(tsd);
+        }
+
+        {
+            // Explicitly add Sentence because the layer may not be declared in the project
+            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            exportBuiltInTypeDescription(builtInTypes, tsd, Sentence.class.getName());
+            allTsds.add(tsd);
+        }
+
+        // The merging action here takes care of removing/conflating potential duplicate
+        // declarations
+        return CasCreationUtils.mergeTypeSystems(allTsds);
     }
 
     private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
@@ -1225,13 +1334,13 @@ public class AnnotationSchemaServiceImpl
                         // If it does not exist in the project yet, then we create it
                         attachLayer = analysis.getLayer(relDetails.getAttachLayer());
                         attachLayer.setProject(aProject);
-                        createLayer(attachLayer);
+                        createOrUpdateLayer(attachLayer);
                     }
 
                     l.setAttachType(attachLayer);
                 }
 
-                createLayer(l);
+                createOrUpdateLayer(l);
             }
 
             // Import the features for the layer except if the layer is a built-in layer.

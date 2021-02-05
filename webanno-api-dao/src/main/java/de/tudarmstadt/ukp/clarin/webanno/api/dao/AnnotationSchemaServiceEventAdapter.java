@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -34,17 +34,22 @@ public class AnnotationSchemaServiceEventAdapter
     private @Autowired AnnotationSchemaService service;
 
     @EventListener
+    @Transactional
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
         Project project = aEvent.getProject();
 
-        for (AnnotationFeature feature : service.listAnnotationFeature(project)) {
-            service.removeAnnotationFeature(feature);
+        // clear the attach feature and attach type fields to clear up circular references
+        // on columns on which we have defined foreign key constraints
+        for (AnnotationLayer layer : service.listAnnotationLayer(project)) {
+            layer.setAttachFeature(null);
+            layer.setAttachType(null);
+            service.createOrUpdateLayer(layer);
         }
 
         // remove the layers too
         for (AnnotationLayer layer : service.listAnnotationLayer(project)) {
-            service.removeAnnotationLayer(layer);
+            service.removeLayer(layer);
         }
 
         for (TagSet tagSet : service.listTagSets(project)) {

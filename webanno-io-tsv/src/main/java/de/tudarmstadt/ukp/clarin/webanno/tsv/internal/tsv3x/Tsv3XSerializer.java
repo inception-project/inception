@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,6 +33,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatC
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.LINE_BREAK;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.NULL_COLUMN;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.NULL_VALUE;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.PREFIX_SENTENCE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.PREFIX_TEXT;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.SLOT_SEP;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.STACK_SEP;
@@ -41,6 +42,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSche
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_SLOT_TARGET;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.splitPreserveAllTokens;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 
@@ -178,6 +180,14 @@ public class Tsv3XSerializer
     {
         String[] lines = splitPreserveAllTokens(aSentence.getUimaSentence().getCoveredText(),
                 LINE_BREAK);
+
+        String sentenceId = aSentence.getUimaSentence().getId();
+        if (isNotBlank(sentenceId)) {
+            aOut.print(PREFIX_SENTENCE_ID);
+            aOut.print(escapeText(sentenceId));
+            aOut.print(LINE_BREAK);
+        }
+        
         for (String line : lines) {
             aOut.print(PREFIX_TEXT);
             aOut.print(escapeText(line));

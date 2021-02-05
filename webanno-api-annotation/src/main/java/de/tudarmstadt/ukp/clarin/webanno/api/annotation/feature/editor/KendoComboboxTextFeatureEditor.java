@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
-import static com.googlecode.wicket.kendo.ui.KendoUIBehavior.widget;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -36,6 +36,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 /**
  * String feature editor using a Kendo ComboBox field.
@@ -147,21 +149,14 @@ public class KendoComboboxTextFeatureEditor
 
                 // Trigger a re-loading of the tagset from the server as constraints may have
                 // changed the ordering
-                RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
-                    LOG.trace("onInitialize() requesting datasource re-reading");
-                    // @formatter:off
-                    target.appendJavaScript(String.join("\n",
-                            "try {",
-                            "  var $w = " + widget(this, ComboBoxBehavior.METHOD) + ";",
-                            "  if ($w) {",
-                            "    $w.dataSource.read();",
-                            "  }",
-                            "}",
-                            "catch(error) {",
-                            "  console.error(error);",
-                            "}"));
-                    // @formatter:on
-                });
+                Optional<AjaxRequestTarget> target = RequestCycle.get()
+                        .find(AjaxRequestTarget.class);
+                if (target.isPresent()) {
+                    target.get()
+                            .appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
+                                    "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                                    KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
+                }
             }
         };
     }

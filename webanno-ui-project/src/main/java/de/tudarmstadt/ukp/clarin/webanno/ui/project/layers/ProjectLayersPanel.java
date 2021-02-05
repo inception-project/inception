@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.BufferedInputStream;
@@ -50,6 +55,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
@@ -57,7 +63,7 @@ import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -69,6 +75,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
@@ -77,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -156,6 +165,10 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
+        private final Map<AnnotationLayer, String> colors = new HashMap<>();
+
+        private final WebMarkupContainer initializersContainer;
+
         public LayerSelectionPane(String id, IModel<AnnotationLayer> aModel)
         {
             super(id, aModel);
@@ -176,41 +189,9 @@ public class ProjectLayersPanel
                                 + "').focus();"));
             }));
 
-            final Map<AnnotationLayer, String> colors = new HashMap<>();
-
             layerSelection = new Select<>("layerSelection", aModel);
             ListView<AnnotationLayer> layers = new ListView<AnnotationLayer>("layers",
-                    new LoadableDetachableModel<List<AnnotationLayer>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<AnnotationLayer> load()
-                        {
-                            Project project = ProjectLayersPanel.this.getModelObject();
-
-                            if (project.getId() != null) {
-                                List<AnnotationLayer> _layers = annotationService
-                                        .listAnnotationLayer(project);
-                                AnnotationLayer tokenLayer = annotationService.findLayer(project,
-                                        Token.class.getName());
-                                _layers.remove(tokenLayer);
-                                for (AnnotationLayer layer : _layers) {
-                                    if (layer.isBuiltIn() && layer.isEnabled()) {
-                                        colors.put(layer, "green");
-                                    }
-                                    else if (layer.isEnabled()) {
-                                        colors.put(layer, "blue");
-                                    }
-                                    else {
-                                        colors.put(layer, "red");
-                                    }
-                                }
-                                return _layers;
-                            }
-                            return new ArrayList<>();
-                        }
-                    })
+                    LambdaModel.of(this::listLayers))
             {
                 private static final long serialVersionUID = 8901519963052692214L;
 
@@ -234,6 +215,31 @@ public class ProjectLayersPanel
                 }
             };
 
+            ListView<ProjectInitializer> initializers = new ListView<ProjectInitializer>(
+                    "initializers", LambdaModel.of(this::listInitializers))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void populateItem(ListItem<ProjectInitializer> aItem)
+                {
+                    LambdaAjaxLink link = new LambdaAjaxLink("applyInitializer",
+                            _target -> applyInitializer(_target, aItem.getModelObject()));
+                    link.add(new Label("name", Model.of(aItem.getModelObject().getName())));
+                    aItem.add(link);
+                }
+            };
+
+            WebMarkupContainer noInitializersInfo = new WebMarkupContainer("noInitializersInfo");
+            noInitializersInfo.setOutputMarkupPlaceholderTag(true);
+            noInitializersInfo.add(visibleWhen(() -> initializers.getModelObject().isEmpty()));
+
+            initializersContainer = new WebMarkupContainer("initializersContainer");
+            initializersContainer.setOutputMarkupId(true);
+            initializersContainer.add(initializers);
+            initializersContainer.add(noInitializersInfo);
+            add(initializersContainer);
+
             add(layerSelection.add(layers));
             layerSelection.setOutputMarkupId(true);
             layerSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
@@ -244,10 +250,68 @@ public class ProjectLayersPanel
                 // updates go through their respective setModelObject() calls
                 layerDetailForm.modelChanged();
 
+                _target.add(initializersContainer);
                 _target.add(layerDetailForm);
                 _target.add(featureSelectionForm);
                 _target.add(featureDetailForm);
             }));
+        }
+
+        private void applyInitializer(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
+        {
+            try {
+                aTarget.add(initializersContainer);
+                aTarget.add(layerSelection);
+                aTarget.addChildren(getPage(), IFeedback.class);
+                repository.initializeProject(getModelObject(), asList(aInitializer));
+                info("Applying project initializer [" + aInitializer.getName() + "]");
+            }
+            catch (Exception e) {
+                error("Error applying project initializer [" + aInitializer.getName() + "]: "
+                        + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error("Error applying project initializer {}", aInitializer, e);
+            }
+
+            applicationEventPublisherHolder.get().publishEvent(new LayerConfigurationChangedEvent(
+                    this, ProjectLayersPanel.this.getModelObject()));
+        }
+
+        private List<ProjectInitializer> listInitializers()
+        {
+            if (getModelObject() == null) {
+                return emptyList();
+            }
+
+            return repository.listProjectInitializers().stream()
+                    .filter(initializer -> initializer instanceof LayerInitializer)
+                    .filter(initializer -> !initializer.alreadyApplied(getModelObject()))
+                    .sorted(comparing(ProjectInitializer::getName)) //
+                    .collect(toList());
+        }
+
+        private List<AnnotationLayer> listLayers()
+        {
+            Project project = ProjectLayersPanel.this.getModelObject();
+
+            if (project.getId() != null) {
+                List<AnnotationLayer> _layers = annotationService.listAnnotationLayer(project);
+                AnnotationLayer tokenLayer = annotationService.findLayer(project,
+                        Token.class.getName());
+                _layers.remove(tokenLayer);
+                for (AnnotationLayer layer : _layers) {
+                    if (layer.isBuiltIn() && layer.isEnabled()) {
+                        colors.put(layer, "green");
+                    }
+                    else if (layer.isEnabled()) {
+                        colors.put(layer, "blue");
+                    }
+                    else {
+                        colors.put(layer, "red");
+                    }
+                }
+                return _layers;
+            }
+            return new ArrayList<>();
         }
     }
 
@@ -353,7 +417,7 @@ public class ProjectLayersPanel
                             .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                     layer.setAttachFeature(attachFeature);
                 }
-                annotationService.createLayer(layer);
+                annotationService.createOrUpdateLayer(layer);
             }
 
             layerDetailForm.setModelObject(layersMap.get(exLayers[0].getName()));

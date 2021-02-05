@@ -1,4 +1,4 @@
-#FORMAT=WebAnno TSV 3.2
+#FORMAT=WebAnno TSV 3.3
 #T_SP=webanno.custom.SimpleSpan|
 #T_SP=webanno.custom.FlexLinkHost|ROLE_webanno.custom.FlexLinkHost:links_webanno.custom.FlexLinkType|uima.tcas.Annotation
 

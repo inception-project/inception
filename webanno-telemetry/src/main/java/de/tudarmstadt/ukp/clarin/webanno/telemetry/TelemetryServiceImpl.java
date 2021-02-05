@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.DESKTOP;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR_DOCKER;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR_DOCKER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 import java.awt.GraphicsEnvironment;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,18 +125,52 @@ public class TelemetryServiceImpl
                 !GraphicsEnvironment.isHeadless();
     }
 
+    /**
+     * The embedded server was used (i.e. not running as a WAR) and running in Docker.
+     */
+    public boolean isDockerized()
+    {
+        final String cgroupPath = "/proc/1/cgroup";
+
+        try {
+            File cgroup = new File(cgroupPath);
+            if (cgroup.exists() && cgroup.canRead()) {
+                String content = readFileToString(cgroup, UTF_8);
+                if (content.contains("docker")) {
+                    return true;
+                }
+            }
+        }
+        catch (Exception e) {
+            log.debug("Unable to check [{}]", cgroupPath, e);
+        }
+
+        return false;
+    }
+
     @Override
     public DeploymentMode getDeploymentMode()
     {
+        boolean dockerized = isDockerized();
+
         if (isDesktopInstance()) {
-            return DeploymentMode.DESKTOP;
+            return DESKTOP;
         }
-        else if (isEmbeddedServerDeployment()) {
-            return DeploymentMode.SERVER_JAR;
+
+        boolean embeddedServerDeployment = isEmbeddedServerDeployment();
+        if (dockerized && embeddedServerDeployment) {
+            return SERVER_JAR_DOCKER;
         }
-        else {
-            return DeploymentMode.SERVER_WAR;
+
+        if (embeddedServerDeployment) {
+            return SERVER_JAR;
         }
+
+        if (dockerized) {
+            return SERVER_WAR_DOCKER;
+        }
+
+        return SERVER_WAR;
     }
 
     @Override

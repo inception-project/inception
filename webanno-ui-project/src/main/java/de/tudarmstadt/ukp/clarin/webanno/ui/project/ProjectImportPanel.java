@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -138,11 +138,23 @@ public class ProjectImportPanel
             importPermissions = false;
         }
 
-        // If the current user is a project creator then we assume that the user is importing the
-        // project for own use, so we add the user as a project manager. We do not do this if the
-        // user is "just" an administrator but not a project creator.
-        Optional<User> manager = currentUserIsProjectCreator ? Optional.of(currentUser)
-                : Optional.empty();
+        // If the current user is an administrator and importing of permissions is *DISABLED*, we
+        // configure the current user as a project manager. But if importing of permissions is
+        // *ENABLED*, we do not set the admin up as a project manager because we would assume that
+        // the admin wants to restore a project (maybe one exported from another instance) and in
+        // that case we want to maintain the permissions the project originally had without adding
+        // the admin as a manager.
+        Optional<User> manager = Optional.empty();
+        if (currentUserIsAdministrator) {
+            if (!importPermissions) {
+                manager = Optional.of(currentUser);
+            }
+        }
+        // If the current user is NOT an admin but a project creator then we assume that the user is
+        // importing the project for own use, so we add the user as a project manager.
+        else if (currentUserIsProjectCreator) {
+            manager = Optional.of(currentUser);
+        }
 
         Project importedProject = null;
         for (FileUpload exportedProject : exportedProjects) {

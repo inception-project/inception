@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universit?t Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,9 +64,9 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasure;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -102,7 +102,7 @@ public class AgreementPage
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean AggreementMeasureSupportRegistry agreementRegistry;
+    private @SpringBean AgreementMeasureSupportRegistry agreementRegistry;
 
     private ProjectSelectionForm projectSelectionForm;
     private AgreementForm agreementForm;
@@ -209,7 +209,7 @@ public class AgreementPage
                     // editor
                     Component newTraits;
                     if (getModelObject() != null) {
-                        AggreementMeasureSupport ams = agreementRegistry
+                        AgreementMeasureSupport ams = agreementRegistry
                                 .getAgreementMeasureSupport(getModelObject().getKey());
                         newTraits = ams.createTraitsEditor(MID_TRAITS, featureList.getModel(),
                                 Model.of(ams.createTraits()));
@@ -255,10 +255,10 @@ public class AgreementPage
                 return;
             }
 
-            AggreementMeasureSupport ams = agreementRegistry
+            AgreementMeasureSupport ams = agreementRegistry
                     .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
 
-            AggreementMeasure measure = ams.createMeasure(feature,
+            AgreementMeasure measure = ams.createMeasure(feature,
                     (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
                             .getDefaultModelObject());
 

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,7 +92,7 @@ public interface AnnotationSchemaService
      *            the type.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createLayer(AnnotationLayer type);
+    void createOrUpdateLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
 
@@ -435,7 +435,7 @@ public interface AnnotationSchemaService
      * @param feature
      *            the feature.
      */
-    void removeAnnotationFeature(AnnotationFeature feature);
+    void removeFeature(AnnotationFeature feature);
 
     /**
      * Should be called with care. Only when a project hosting this layer is removed
@@ -443,7 +443,7 @@ public interface AnnotationSchemaService
      * @param type
      *            the type.
      */
-    void removeAnnotationLayer(AnnotationLayer type);
+    void removeLayer(AnnotationLayer type);
 
     TagSet createTagSet(String aDescription, String aLanguage, String aTagSetName, String[] aTags,
             String[] aTagDescription, Project aProject)

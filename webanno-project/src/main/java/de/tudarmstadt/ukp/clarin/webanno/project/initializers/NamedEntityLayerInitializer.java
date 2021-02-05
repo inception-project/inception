@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,11 +25,10 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -51,22 +50,36 @@ public class NamedEntityLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Named entity tagging";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        // Because locks to token boundaries
-        return asList(TokenLayerInitializer.class);
+        return asList(
+                // Because locks to token boundaries
+                TokenLayerInitializer.class,
+                // Tagsets
+                NamedEntityTagSetInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(NamedEntity.class.getName(), aProject);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet nerTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-ne-webanno.json").getInputStream(),
-                annotationSchemaService);
+        TagSet nerTagSet = annotationSchemaService
+                .getTagSet(NamedEntityTagSetInitializer.TAG_SET_NAME, aProject);
 
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
-        annotationSchemaService.createLayer(neLayer);
+        annotationSchemaService.createOrUpdateLayer(neLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
                 "value", CAS.TYPE_NAME_STRING, "Named entity type", nerTagSet));

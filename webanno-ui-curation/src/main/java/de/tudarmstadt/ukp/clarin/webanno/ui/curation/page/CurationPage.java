@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
@@ -83,7 +84,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -96,6 +96,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -130,7 +131,6 @@ public class CurationPage
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean AnnotationEditorProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
@@ -219,7 +219,7 @@ public class CurationPage
                         (c, e) -> e.getRequestHandler().add(c))));
 
         // Ensure that a user is set
-        getModelObject().setUser(userRepository.getCurrentUser());
+        getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
 
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
@@ -535,11 +535,11 @@ public class CurationPage
      */
     protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
+        LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
 
         AnnotatorState state = getModelObject();
 
-        state.setUser(userRepository.getCurrentUser());
+        state.setUser(new User(CURATION_USER, Role.ROLE_USER));
 
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
@@ -592,7 +592,7 @@ public class CurationPage
             handleException(aTarget, e);
         }
 
-        LOG.info("END LOAD_DOCUMENT_ACTION");
+        LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
     public CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
@@ -709,7 +709,8 @@ public class CurationPage
         }
 
         // Check access to project
-        if (project != null && !projectService.isCurator(project, getModelObject().getUser())) {
+        if (project != null
+                && !projectService.isCurator(project, userRepository.getCurrentUser())) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }

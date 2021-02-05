@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -219,7 +219,7 @@ public class LegacyProjectInitializer
                 aProject, true, SINGLE_TOKEN, NO_OVERLAP);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
-        annotationSchemaService.createLayer(lemmaLayer);
+        annotationSchemaService.createOrUpdateLayer(lemmaLayer);
 
         AnnotationFeature lemmaFeature = new AnnotationFeature();
         lemmaFeature.setDescription("lemma Annotation");
@@ -239,7 +239,7 @@ public class LegacyProjectInitializer
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
                 CHAIN_TYPE, aProject, true, TOKENS, ANY_OVERLAP);
         base.setCrossSentence(true);
-        annotationSchemaService.createLayer(base);
+        annotationSchemaService.createOrUpdateLayer(base);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
                 "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", aCorefTypeTags));
@@ -254,7 +254,7 @@ public class LegacyProjectInitializer
     {
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true, TOKENS, ANY_OVERLAP);
-        annotationSchemaService.createLayer(neLayer);
+        annotationSchemaService.createOrUpdateLayer(neLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
                 "value", CAS.TYPE_NAME_STRING, "Named entity type", aTagSet));
@@ -264,7 +264,7 @@ public class LegacyProjectInitializer
     {
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
                 aProject, true, TOKENS, NO_OVERLAP);
-        annotationSchemaService.createLayer(chunkLayer);
+        annotationSchemaService.createOrUpdateLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();
         chunkValueFeature.setDescription("Chunk tag");
@@ -295,7 +295,7 @@ public class LegacyProjectInitializer
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenPosFeature);
 
-        annotationSchemaService.createLayer(depLayer);
+        annotationSchemaService.createOrUpdateLayer(depLayer);
         annotationSchemaService
                 .createFeature(new AnnotationFeature(aProject, depLayer, "DependencyType",
                         "Relation", CAS.TYPE_NAME_STRING, "Dependency relation", aTagset));
@@ -323,7 +323,7 @@ public class LegacyProjectInitializer
 
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
-        annotationSchemaService.createLayer(posLayer);
+        annotationSchemaService.createOrUpdateLayer(posLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, posLayer, "PosValue",
                 "PosValue", CAS.TYPE_NAME_STRING, "Part-of-speech tag", aPosTagset));
@@ -334,7 +334,7 @@ public class LegacyProjectInitializer
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
                 aProject, true, SINGLE_TOKEN, NO_OVERLAP);
 
-        annotationSchemaService.createLayer(tokenLayer);
+        annotationSchemaService.createOrUpdateLayer(tokenLayer);
         return tokenLayer;
     }
 }

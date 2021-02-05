@@ -1,13 +1,13 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
+
+import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,6 +66,11 @@ public class MenuItemRegistryImpl
 
             for (MenuItem fs : exts) {
                 log.info("Found menu item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+
+                if (fs.getPageClass() == null) {
+                    throw new IllegalStateException("Menu item [" + fs.getClass().getName()
+                            + "] does not declare a page class.");
+                }
             }
         }
 
@@ -73,12 +80,20 @@ public class MenuItemRegistryImpl
     @Override
     public Optional<MenuItem> getMenuItem(Class<? extends Page> aClass)
     {
+        if (extensions == null) {
+            return Optional.empty();
+        }
+
         return extensions.stream().filter(mi -> mi.getPageClass().equals(aClass)).findFirst();
     }
 
     @Override
     public List<MenuItem> getMenuItems()
     {
+        if (extensions == null) {
+            return emptyList();
+        }
+
         return extensions;
     }
 }

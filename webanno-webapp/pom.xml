@@ -1,14 +1,14 @@
 <!--
-  Copyright 2012
-  Ubiquitous Knowledge Processing (UKP) Lab
-  Technische Universität Darmstadt
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
   http://www.apache.org/licenses/LICENSE-2.0
-
+  
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -283,6 +283,17 @@
        -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <!-- 
+          - Downgrade version to avoid exception during Eclipse builds:
+          - 
+          - Execution assemble-documentation of goal 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single failed: 
+          - An API incompatibility was encountered while executing 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
+          - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
+          -  .setFilenameComparator(java.util.Comparator)'
+         -->
+        <version>3.1.1</version>
         <executions>
           <execution>
             <id>assemble-documentation</id>
@@ -312,10 +323,10 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-              <imagesDir>./user-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
+                <imagesDir>./user-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -328,10 +339,10 @@
             <configuration>
               <backend>html5</backend>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-              <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
+                <imagesDir>./developer-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -363,11 +374,11 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <delete includeemptydirs="true" failonerror="false">
                   <fileset dir="src/main/resources/public/doc" includes="**/*" />
                 </delete>
-              </tasks>
+              </target>
             </configuration>
           </execution>
           <execution>
@@ -377,7 +388,7 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <mkdir dir="src/main/resources/public/doc" />
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
@@ -390,7 +401,7 @@
                     <include name="**/*.jpg" />
                   </fileset>
                 </sync>
-              </tasks>
+              </target>
             </configuration>
           </execution>
         </executions>
@@ -643,10 +654,10 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
-                    <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
+                      <imagesDir>./user-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -659,10 +670,10 @@
                   <configuration>
                     <backend>pdf</backend>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
-                    <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
+                      <imagesDir>./developer-guide/images</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>

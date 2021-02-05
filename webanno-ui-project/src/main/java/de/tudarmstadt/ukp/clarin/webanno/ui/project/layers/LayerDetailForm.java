@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -53,7 +54,9 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -61,6 +64,8 @@ import org.apache.wicket.util.resource.IResourceStream;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
@@ -72,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerRef
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -97,6 +103,8 @@ public class LayerDetailForm
 
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CasStorageService casStorageService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private DropDownChoice<LayerType> layerTypeSelect;
@@ -108,6 +116,7 @@ public class LayerDetailForm
     private FeatureDetailForm featureDetailForm;
 
     private WebMarkupContainer traitsContainer;
+    private final ChallengeResponseDialog confirmationDialog;
 
     private LayerExportMode exportMode = LayerExportMode.JSON;
 
@@ -209,7 +218,13 @@ public class LayerDetailForm
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
+        add(new LambdaAjaxButton<>("delete", this::actionDelete).add(enabledWhen(
+                () -> !isNull(getModelObject().getId()) && isLayerDeletable(getModelObject()))));
         add(new LambdaAjaxLink("cancel", this::actionCancel));
+
+        confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
+        confirmationDialog.setTitleModel(new StringResourceModel("DeleteLayerDialog.title", this));
+        add(confirmationDialog);
     }
 
     private String getEffectiveAttachTypeName()
@@ -295,6 +310,36 @@ public class LayerDetailForm
         return candidateLayers;
     }
 
+    private boolean isLayerDeletable(AnnotationLayer aLayer)
+    {
+        return annotationService.listAttachedRelationLayers(aLayer).isEmpty()
+                && annotationService.listAttachedLinkFeatures(aLayer).isEmpty();
+    }
+
+    private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
+    {
+        confirmationDialog.setChallengeModel(new StringResourceModel("DeleteLayerDialog.text", this)
+                .setParameters(escapeMarkup(getModelObject().getName())));
+        confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
+        confirmationDialog.show(aTarget);
+
+        confirmationDialog.setConfirmAction((_target) -> {
+            annotationService.removeLayer(getModelObject());
+
+            Project project = getModelObject().getProject();
+
+            setModelObject(null);
+
+            documentService.upgradeAllAnnotationDocuments(project);
+
+            // Trigger LayerConfigurationChangedEvent
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new LayerConfigurationChangedEvent(this, project));
+
+            _target.add(getPage());
+        });
+    }
+
     private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
     {
         aTarget.add(getParent());
@@ -340,7 +385,7 @@ public class LayerDetailForm
             return;
         }
 
-        annotationService.createLayer(layer);
+        annotationService.createOrUpdateLayer(layer);
 
         // Initialize default features if necessary but only after the layer has actually been
         // persisted in the database.

@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
 
 import java.io.Serializable;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -34,6 +35,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
 /**
@@ -48,6 +51,8 @@ import org.hibernate.annotations.Type;
 @Entity
 @Table(name = "annotation_type", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "name", "project" }) })
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class AnnotationLayer
     implements Serializable
 {
@@ -86,15 +91,18 @@ public class AnnotationLayer
     // @ForeignKey(ConstraintMode.NO_CONSTRAINT)
     @JoinColumn(name = "annotation_type", //
             foreignKey = @ForeignKey(name = "none", value = NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationLayer attachType;
 
     @ManyToOne
     @JoinColumn(name = "annotation_feature", //
             foreignKey = @ForeignKey(name = "none", value = NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationFeature attachFeature;
 
     @ManyToOne
     @JoinColumn(name = "project")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Project project;
 
     @Column(name = "crossSentence")
@@ -117,24 +125,6 @@ public class AnnotationLayer
     @Column(name = "validation_mode")
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ValidationModeType")
     private ValidationMode validationMode = ValidationMode.ALWAYS;
-
-    // This column is no longer used and should be removed with the next major version.
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "multipleTokens")
-    private boolean multipleTokens;
-
-    // This column is no longer used and should be removed with the next major version
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "lockToTokenOffset")
-    private boolean lockToTokenOffset = true;
-
-    // This column is no longer used and should be removed with the next major version
-    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
-    @Deprecated
-    @Column(name = "allowSTacking")
-    private boolean allowStacking;
 
     @Lob
     @Column(length = 64000)
@@ -467,12 +457,6 @@ public class AnnotationLayer
     public boolean isAllowStacking()
     {
         return asList(OverlapMode.ANY_OVERLAP, OverlapMode.STACKING_ONLY).contains(overlapMode);
-    }
-
-    @Deprecated
-    public void setAllowStacking(boolean allowStacking)
-    {
-        this.allowStacking = allowStacking;
     }
 
     public OverlapMode getOverlapMode()

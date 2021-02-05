@@ -1,14 +1,14 @@
 /*
- * Copyright 2012
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRAD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
@@ -32,6 +33,7 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -689,7 +691,6 @@ public class DocumentServiceImpl
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
-
     {
         return readAnnotationCas(aAnnotationDocument, NO_CAS_UPGRADE);
     }
@@ -1067,5 +1068,34 @@ public class DocumentServiceImpl
     {
         String query = String.join("\n", "SELECT COUNT(*)", "FROM AnnotationDocument");
         return entityManager.createQuery(query, Long.class).getSingleResult();
+    }
+
+    @Override
+    public void upgradeAllAnnotationDocuments(Project aProject) throws IOException
+    {
+        // Perform a forced upgrade on all CASes in the project. This action affects all users
+        // currently logged in and working on the project. E.g. an annotator working on a
+        // document will be unable to make changes to the document anymore until the user
+        // re-opens the document because the force upgrade invalidates the VIDs used in the
+        // annotation editor. How exactly (if at all) the user gets information of this is
+        // currently undefined.
+        for (SourceDocument doc : listSourceDocuments(aProject)) {
+            for (AnnotationDocument ann : listAllAnnotationDocuments(doc)) {
+                try {
+                    casStorageService.upgradeCas(doc, ann.getUser());
+                }
+                catch (FileNotFoundException e) {
+                    // If there is no CAS file, we do not have to upgrade it. Ignoring.
+                }
+            }
+
+            // Also upgrade the curation CAS if it exists
+            try {
+                casStorageService.upgradeCas(doc, CURATION_USER);
+            }
+            catch (FileNotFoundException e) {
+                // If there is no CAS file, we do not have to upgrade it. Ignoring.
+            }
+        }
     }
 }
