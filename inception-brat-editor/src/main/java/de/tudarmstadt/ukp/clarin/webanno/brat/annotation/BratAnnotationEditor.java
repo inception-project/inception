@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderT
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -35,7 +36,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -181,10 +181,6 @@ public class BratAnnotationEditor
 
                 long timerStart = System.currentTimeMillis();
 
-                // We always refresh the feedback panel - only doing this in the case were actually
-                // something worth reporting occurs is too much of a hassel...
-                aTarget.addChildren(getPage(), IFeedback.class);
-
                 final IRequestParameters request = getRequest().getPostParameters();
 
                 // Get action from the request
@@ -226,8 +222,7 @@ public class BratAnnotationEditor
                         cas = getCasProvider().get();
                     }
                     catch (Exception e) {
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                        handleError("Unable to load data: " + getRootCauseMessage(e), e);
                         return;
                     }
                 }
@@ -286,18 +281,8 @@ public class BratAnnotationEditor
                         }
                     }
                 }
-                catch (AnnotationException e) {
-                    // These are common exceptions happening as part of the user interaction. We do
-                    // not really need to log their stack trace to the log.
-                    error("Error: " + e.getMessage());
-                    // If debug is enabled, we'll also write the error to the log just in case.
-                    if (LOG.isDebugEnabled()) {
-                        LOG.error("Error: {}", e.getMessage(), e);
-                    }
-                }
                 catch (Exception e) {
-                    error("Error: " + e.getMessage());
-                    LOG.error("Error: {}", e.getMessage(), e);
+                    handleError("Error: " + getRootCauseMessage(e), e);
                 }
 
                 // Serialize updated document to JSON
@@ -396,9 +381,7 @@ public class BratAnnotationEditor
                     .collect(toList()));
         }
         catch (Exception e) {
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), IFeedback.class);
+            handleError("Unable to load data", e);
         }
 
         return response;
@@ -525,9 +508,7 @@ public class BratAnnotationEditor
             cas = getCasProvider().get();
         }
         catch (Exception e) {
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), IFeedback.class);
+            handleError("Unable to load data", e);
             return;
         }
 
@@ -906,9 +887,7 @@ public class BratAnnotationEditor
             });
         }
         catch (IOException e) {
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), IFeedback.class);
+            handleError("Unable to load data", e);
         }
     }
 
@@ -934,8 +913,29 @@ public class BratAnnotationEditor
             }
         }
         catch (IOException e) {
-            error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            handleError("Unable to produce JSON response", e);
         }
         return json;
+    }
+
+    private void handleError(String aMessage, Exception e)
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        requestCycle.find(AjaxRequestTarget.class)
+                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+
+        if (e instanceof AnnotationException) {
+            // These are common exceptions happening as part of the user interaction. We do
+            // not really need to log their stack trace to the log.
+            error(aMessage + ": " + e.getMessage());
+            // If debug is enabled, we'll also write the error to the log just in case.
+            if (LOG.isDebugEnabled()) {
+                LOG.error("{}: {}", aMessage, e.getMessage(), e);
+            }
+            return;
+        }
+
+        LOG.error("{}", aMessage, e);
+        error(aMessage);
     }
 }
