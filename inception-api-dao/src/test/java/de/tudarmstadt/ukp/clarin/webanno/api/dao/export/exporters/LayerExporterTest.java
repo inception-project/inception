@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
@@ -72,7 +71,6 @@ public class LayerExporterTest
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
-        project.setMode(PROJECT_TYPE_ANNOTATION);
 
         workFolder = tempFolder.newFolder();
 

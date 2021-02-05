@@ -56,7 +56,6 @@ import org.junit.Assume;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
@@ -85,7 +84,6 @@ public class TestFixtures
     {
         Project project = new Project();
         project.setName(name);
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         return entityManager.persist(project);
     }
 

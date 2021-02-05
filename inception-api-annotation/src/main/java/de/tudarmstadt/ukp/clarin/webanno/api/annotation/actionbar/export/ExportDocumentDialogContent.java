@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -101,23 +99,11 @@ public class ExportDocumentDialogContent
 
     private FileResourceStream export()
     {
-        File downloadFile = null;
-
-        String username;
-
-        if (state.getObject().getMode().equals(Mode.AUTOMATION)
-                && preferences.getObject().documentType.equals(SELECTEXPORT.AUTOMATED.toString())) {
-            username = WebAnnoConst.CORRECTION_USER;
-        }
-        else {
-            username = state.getObject().getUser().getUsername();
-        }
-
         try {
-            downloadFile = importExportService.exportAnnotationDocument(
-                    state.getObject().getDocument(), username,
+            return new FileResourceStream(importExportService.exportAnnotationDocument(
+                    state.getObject().getDocument(), state.getObject().getUser().getUsername(),
                     importExportService.getFormatByName(preferences.getObject().format).get(),
-                    state.getObject().getDocument().getName(), state.getObject().getMode());
+                    state.getObject().getDocument().getName(), state.getObject().getMode()));
         }
         catch (Exception e) {
             LOG.error("Export failed", e);
@@ -127,8 +113,6 @@ public class ExportDocumentDialogContent
             // RestartResponseException the feedback message only flashes.
             throw new NonResettingRestartException(getPage().getPageClass());
         }
-
-        return new FileResourceStream(downloadFile);
     }
 
     private static class Preferences

@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.nio.file.Files.newDirectoryStream;
-import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -68,21 +67,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
@@ -114,8 +109,6 @@ public class ProjectServiceImpl
     private List<ProjectInitializer> initializers;
 
     private boolean running = false;
-
-    private List<ProjectType> projectTypes;
 
     @Autowired
     public ProjectServiceImpl(UserDao aUserRepository,
@@ -748,7 +741,6 @@ public class ProjectServiceImpl
     public void start()
     {
         running = true;
-        scanProjectTypes();
     }
 
     @Override
@@ -774,41 +766,6 @@ public class ProjectServiceImpl
     {
         stop();
         aCallback.run();
-    }
-
-    private void scanProjectTypes()
-    {
-        projectTypes = new ArrayList<>();
-
-        // Scan for project type annotations
-        ClassPathScanningCandidateComponentProvider scanner = //
-                new ClassPathScanningCandidateComponentProvider(false);
-        scanner.addIncludeFilter(new AnnotationTypeFilter(ProjectType.class));
-
-        for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
-            try {
-                Class<?> clazz = Class.forName(bd.getBeanClassName());
-                ProjectType pt = clazz.getAnnotation(ProjectType.class);
-
-                if (projectTypes.stream().anyMatch(t -> t.id().equals(pt.id()))) {
-                    log.debug("Ignoring duplicate project type: {} ({})", pt.id(), pt.prio());
-                }
-                else {
-                    log.debug("Found project type: {} ({})", pt.id(), pt.prio());
-                    projectTypes.add(pt);
-                }
-            }
-            catch (ClassNotFoundException e) {
-                log.error("Class [{}] not found", bd.getBeanClassName(), e);
-            }
-        }
-        projectTypes.sort(comparingInt(ProjectType::prio));
-    }
-
-    @Override
-    public List<ProjectType> listProjectTypes()
-    {
-        return Collections.unmodifiableList(projectTypes);
     }
 
     @Override

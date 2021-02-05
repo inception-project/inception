@@ -19,13 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData.CURRENT_PROJECT;
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -59,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
 public class ProjectDetailPanel
@@ -76,7 +72,6 @@ public class ProjectDetailPanel
     private IModel<Project> projectModel;
 
     private Label idLabel;
-    private DropDownChoice<String> projectTypes;
 
     public ProjectDetailPanel(String id, IModel<Project> aModel)
     {
@@ -109,35 +104,7 @@ public class ProjectDetailPanel
 
         form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
-        form.add(projectTypes = makeProjectTypeChoice());
-
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
-    }
-
-    private DropDownChoice<String> makeProjectTypeChoice()
-    {
-        List<String> types = projectService.listProjectTypes().stream().map(t -> t.id())
-                .collect(Collectors.toList());
-
-        DropDownChoice<String> projTypes = new BootstrapSelect<>("mode", types);
-        projTypes.setRequired(true);
-        projTypes.add(LambdaBehavior.onConfigure(_this -> {
-            // If there is only a single project type and the project mode has not been set yet,
-            // then we can simply select that and do not need to show the choice at all.
-            Project project = projectModel.getObject();
-            if (projectTypes.getChoices().size() == 1 && project.getMode() == null) {
-                project.setMode(projectTypes.getChoices().get(0));
-            }
-
-            _this.setEnabled(
-                    nonNull(projectModel.getObject()) && isNull(projectModel.getObject().getId()));
-
-            // If there is only a single project type, then we can simply select that and do not
-            // need to show the choice at all.
-            _this.setVisible(projTypes.getChoices().size() > 1);
-        }));
-
-        return projTypes;
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)

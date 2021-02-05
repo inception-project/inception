@@ -25,7 +25,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
@@ -61,8 +60,7 @@ public class AnnotationPageMenuItem
     @Override
     public boolean applies()
     {
-        return annotationEnabeled(projectService, userRepo.getCurrentUser(),
-                WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        return annotationEnabeled(projectService, userRepo.getCurrentUser());
     }
 
     @Override

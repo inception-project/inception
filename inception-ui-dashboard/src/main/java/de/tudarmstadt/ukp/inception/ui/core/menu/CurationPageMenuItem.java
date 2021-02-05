@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.menu;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static java.lang.String.format;
 
@@ -83,8 +82,7 @@ public class CurationPageMenuItem
 
         // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        return projectService.isCurator(project, user)
-                && PROJECT_TYPE_ANNOTATION.equals(project.getMode());
+        return projectService.isCurator(project, user);
     }
 
     @Override
