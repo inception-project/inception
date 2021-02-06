@@ -267,7 +267,7 @@ public abstract class AnnotationPageBase
     {
         AnnotatorState state = getModelObject();
         PreferencesUtil.loadPreferences(userPreferenceService, annotationService, state,
-                state.getUser().getUsername());
+                userRepository.getCurrentUsername());
     }
 
     public void ensureIsEditable() throws NotEditableException
