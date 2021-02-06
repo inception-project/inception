@@ -44,7 +44,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
@@ -82,7 +81,6 @@ public class MtasUimaParserTest
         project = new Project();
         project.setId(1l);
         project.setName("test project");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         layerSupportRegistry = new LayerSupportRegistryImpl(emptyList());
 

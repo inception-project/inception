@@ -20,9 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.project;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 
 import java.util.List;
@@ -117,9 +114,7 @@ public class ProjectDashboardPage
         }
 
         // if not either a curator or annotator, display warning message
-        if (!annotationEnabeled(projectService, user, PROJECT_TYPE_ANNOTATION)
-                && !annotationEnabeled(projectService, user, PROJECT_TYPE_AUTOMATION)
-                && !annotationEnabeled(projectService, user, PROJECT_TYPE_CORRECTION)
+        if (!annotationEnabeled(projectService, user)
                 && !curationEnabeled(projectService, user)) {
             info("You are not member of any projects to annotate or curate");
         }

@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -143,13 +146,23 @@ public class KnowledgeBaseCreationWizard
             Component accessSettings = new AccessSettingsPanel("accessSettings", aKbModel);
             add(accessSettings);
             accessSettings.get("writeprotection").setOutputMarkupId(true).setVisible(false);
-
         }
 
         @Override
         public void applyState()
         {
             kbModel.getObject().getKb().setMaxResults(kbProperties.getDefaultMaxResults());
+
+            switch (kbModel.getObject().getKb().getType()) {
+            case LOCAL:
+                // local KBs are always RDF4J + Lucene, so we can set the FTS mode accordingly
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_LUCENE);
+                break;
+            case REMOTE:
+                // remote KBs are by default not using FTS but if we apply a remote DB profile,
+                // then it will set the FTS according to the setting in the profile
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_NONE);
+            }
         }
 
         @Override

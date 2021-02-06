@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.uima.cas.FeatureStructure;
@@ -51,7 +50,7 @@ public class VArc
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
     {
-        super(aLayer, aVid, aType, aEquivalenceSet, aFeatures, Collections.emptyMap());
+        super(aLayer, aVid, aType, aEquivalenceSet, aFeatures);
         source = new VID(getAddr(aSourceFS));
         target = new VID(getAddr(aTargetFS));
     }
@@ -59,7 +58,7 @@ public class VArc
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
             String aLabel, Map<String, String> aFeatures, String aColor)
     {
-        super(aLayer, aVid, aType, aFeatures, Collections.emptyMap());
+        super(aLayer, aVid, aType, aFeatures);
         setColorHint(aColor);
         setLabelHint(aLabel);
         source = aSource;

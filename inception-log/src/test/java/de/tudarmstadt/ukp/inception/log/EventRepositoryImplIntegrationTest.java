@@ -38,7 +38,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
@@ -255,7 +254,6 @@ public class EventRepositoryImplIntegrationTest
     {
         Project project = new Project();
         project.setName(aName);
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         return testEntityManager.persist(project);
     }
 

@@ -28,7 +28,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
@@ -179,51 +178,6 @@ public final class TypeUtil
         else {
             // If there are no label features at all, then use the layer UI name
             return "(" + aAdapter.getLayer().getUiName() + ")";
-        }
-    }
-
-    /**
-     * Construct the hover text used in the user interface.
-     *
-     * @param aAdapter
-     *            the adapter.
-     * @param aFs
-     *            the annotation.
-     * @param aFeatures
-     *            the features.
-     * @return the hover text.
-     */
-    public static String getUiHoverText(TypeAdapter aAdapter, AnnotationFS aFs,
-            List<AnnotationFeature> aFeatures)
-    {
-        StringBuilder hoverText = new StringBuilder();
-        for (AnnotationFeature feature : aFeatures) {
-
-            if (!feature.isEnabled() || !feature.isIncludeInHover()
-                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
-                continue;
-            }
-
-            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-            String text = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
-
-            if (hoverText.length() > 0 && text.length() > 0) {
-                hoverText.append(TypeAdapter.FEATURE_SEPARATOR);
-            }
-
-            hoverText.append(text);
-        }
-
-        if (hoverText.length() > 0) {
-            if (aAdapter.getLayer().isShowTextInHover()) {
-                return String.format("\"%s\" %s", aFs.getCoveredText(), hoverText.toString());
-            }
-            return hoverText.toString();
-        }
-        else {
-            // If there are no label features at all, then use the spantext, which
-            // is the default if no hover text is provided
-            return null;
         }
     }
 

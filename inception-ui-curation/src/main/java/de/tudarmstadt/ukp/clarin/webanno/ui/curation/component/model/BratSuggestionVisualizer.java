@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
@@ -67,19 +66,14 @@ public abstract class BratSuggestionVisualizer
     {
         super(id, aModel);
         String username;
-        if (getModelObject().getAnnotatorState().getMode().equals(Mode.AUTOMATION)
-                || getModelObject().getAnnotatorState().getMode().equals(Mode.CORRECTION)) {
-            username = "Suggestion";
+
+        Project project = getModelObject().getAnnotatorState().getProject();
+        if (project.isAnonymousCuration()
+                && !projectService.isManager(project, userService.getCurrentUser())) {
+            username = "Anonymized annotator " + (aPosition + 1);
         }
         else {
-            Project project = getModelObject().getAnnotatorState().getProject();
-            if (project.isAnonymousCuration()
-                    && !projectService.isManager(project, userService.getCurrentUser())) {
-                username = "Anonymized annotator " + (aPosition + 1);
-            }
-            else {
-                username = getModelObject().getUsername();
-            }
+            username = getModelObject().getUsername();
         }
 
         add(new Label("username", username));

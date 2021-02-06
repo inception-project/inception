@@ -23,6 +23,8 @@ import java.util.Collection;
 
 import org.springframework.util.ReflectionUtils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.BeanProperty;
@@ -112,7 +114,12 @@ public class BeanAsArraySerializer
                 ReflectionUtils.makeAccessible(field);
                 Object elem = field.get(value);
                 if (elem == null) {
-                    provider.defaultSerializeNull(jgen);
+                    JsonInclude include = field.getAnnotation(JsonInclude.class);
+                    boolean renderNull = (include == null) ? false
+                            : include.value() == Include.ALWAYS;
+                    if (renderNull) {
+                        provider.defaultSerializeNull(jgen);
+                    }
                 }
                 else {
                     Class<?> cc = elem.getClass();

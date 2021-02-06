@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
+import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
@@ -116,6 +116,10 @@ public class KnowledgeBaseServiceRemoteTest
     @Before
     public void setUp() throws Exception
     {
+        Assume.assumeTrue("Remote repository at [" + sutConfig.getDataUrl() + "] is not reachable",
+                sutConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
+                        || TestFixtures.isReachable(sutConfig.getDataUrl()));
+
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
 
         RepositoryProperties repoProps = new RepositoryProperties();
@@ -132,7 +136,7 @@ public class KnowledgeBaseServiceRemoteTest
             importKnowledgeBase(sutConfig.getDataUrl());
         }
         else if (kb.getType() == RepositoryType.REMOTE) {
-            testFixtures.assumeEndpointIsAvailable(sutConfig.getDataUrl());
+            assumeEndpointIsAvailable(sutConfig.getDataUrl());
             sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
         }
@@ -152,10 +156,6 @@ public class KnowledgeBaseServiceRemoteTest
     public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
     {
         sutConfig = aConfig;
-
-        Assume.assumeTrue("Remote repository at [" + aConfig.getDataUrl() + "] is not reachable",
-                aConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
-                        || isReachable(aConfig.getDataUrl()));
     }
 
     @Parameterized.Parameters(name = "KB = {0}")
@@ -252,28 +252,26 @@ public class KnowledgeBaseServiceRemoteTest
         // "http://www.wikidata.org/entity/Q19576436", rootConcepts));
         // }
 
-        // See: #1931 - DBPedia tests time out and fail
-        // https://github.com/inception-project/inception/issues/1931
-        // {
-        // KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
-        // KnowledgeBase kb_dbpedia = new KnowledgeBase();
-        // kb_dbpedia.setName(profile.getName());
-        // kb_dbpedia.setType(profile.getType());
-        // kb_dbpedia.setReification(profile.getReification());
-        // kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-        // kb_dbpedia.applyMapping(profile.getMapping());
-        // kb_dbpedia.applyRootConcepts(profile);
-        // kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
-        // kb_dbpedia.setMaxResults(maxResults);
-        // kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
-        // rootConcepts = new HashSet<String>();
-        // rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
-        // parentChildConcepts = new HashMap<String, String>();
-        // parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
-        // "http://dbpedia.org/ontology/Biomolecule");
-        // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
-        // "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
-        // }
+        {
+            KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
+            KnowledgeBase kb_dbpedia = new KnowledgeBase();
+            kb_dbpedia.setName(profile.getName());
+            kb_dbpedia.setType(profile.getType());
+            kb_dbpedia.setReification(profile.getReification());
+            kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+            kb_dbpedia.applyMapping(profile.getMapping());
+            kb_dbpedia.applyRootConcepts(profile);
+            kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
+            kb_dbpedia.setMaxResults(maxResults);
+            kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+                    "http://dbpedia.org/ontology/Biomolecule");
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
+                    "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
+        }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("yago");

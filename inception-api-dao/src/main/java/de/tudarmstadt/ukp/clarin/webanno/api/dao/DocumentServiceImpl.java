@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
@@ -448,18 +447,10 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        List<SourceDocument> sourceDocuments = entityManager
+        return entityManager
                 .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC",
                         SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
-        List<SourceDocument> tabSepDocuments = new ArrayList<>();
-        for (SourceDocument sourceDocument : sourceDocuments) {
-            if (sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
-                tabSepDocuments.add(sourceDocument);
-            }
-        }
-        sourceDocuments.removeAll(tabSepDocuments);
-        return sourceDocuments;
     }
 
     @Override

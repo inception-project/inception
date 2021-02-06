@@ -67,9 +67,7 @@ import org.wicketstuff.urlfragment.UrlFragment;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
@@ -114,7 +112,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
         "/annotate-by-name/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_NAME + "}",
         "/annotate-by-project-and-document-name/${" + PAGE_PARAM_PROJECT_NAME + "}/${"
                 + PAGE_PARAM_DOCUMENT_NAME + "}" })
-@ProjectType(id = WebAnnoConst.PROJECT_TYPE_ANNOTATION, prio = 100)
 public class AnnotationPage
     extends AnnotationPageBase
 {
@@ -227,8 +224,7 @@ public class AnnotationPage
             User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
-                if (projectService.isAnnotator(project, user)
-                        && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())) {
+                if (projectService.isAnnotator(project, user)) {
                     allowedProject.add(DecoratedObject.of(project));
                 }
             }
