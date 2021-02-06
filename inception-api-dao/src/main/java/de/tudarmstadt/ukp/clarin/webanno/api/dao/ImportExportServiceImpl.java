@@ -27,9 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.AUTOMATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
 import static java.io.File.createTempFile;
@@ -232,16 +229,16 @@ public class ImportExportServiceImpl
         }
 
         String username;
-        // for Correction, it will export the corrected document (of the logged in user)
-        // (CORRECTION_USER.ser is the automated result displayed for the user to correct it, not
-        // the final result) for automation, it will export either the corrected document
-        // (Annotated) or the automated document
-        if (aMode.equals(ANNOTATION) || aMode.equals(AUTOMATION) || aMode.equals(CORRECTION)) {
+        switch (aMode) {
+        case ANNOTATION:
             username = aUser;
-        }
-        // The merge result will be exported
-        else {
+            break;
+        case CURATION:
+            // The merge result will be exported
             username = CURATION_USER;
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown mode [" + aMode + "]");
         }
 
         // Read file

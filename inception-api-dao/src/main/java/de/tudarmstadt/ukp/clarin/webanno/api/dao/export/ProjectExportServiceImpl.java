@@ -34,7 +34,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -50,7 +49,6 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -268,11 +266,6 @@ public class ProjectExportServiceImpl
                 projectName = copyProjectName(projectName);
             }
             project.setName(projectName);
-
-            // We need to set the mode here already because the mode is a non-null column.
-            // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
-            // during export but as lower-case in the database. This is compensating for this case.
-            project.setMode(StringUtils.lowerCase(exProject.getMode(), Locale.US));
 
             // Initial saving of the project
             projectService.createProject(project);

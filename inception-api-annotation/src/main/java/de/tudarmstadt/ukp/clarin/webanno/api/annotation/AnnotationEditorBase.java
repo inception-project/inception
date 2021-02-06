@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotat
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -190,9 +190,7 @@ public abstract class AnnotationEditorBase
             boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName());
             boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                    && (state.getMode().equals(Mode.AUTOMATION)
-                            || state.getMode().equals(Mode.CORRECTION)
-                            || state.getMode().equals(Mode.CURATION));
+                    && CURATION == state.getMode();
 
             if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
                 layersToRender.add(layer);

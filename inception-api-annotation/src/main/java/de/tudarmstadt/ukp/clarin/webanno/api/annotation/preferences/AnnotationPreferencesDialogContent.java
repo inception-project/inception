@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
@@ -221,9 +220,7 @@ public class AnnotationPreferencesDialogContent
                 // hide Token layer
                 .filter(layer -> !Token.class.getName().equals(layer.getName()))
                 .filter(layer -> !(layer.getType().equals(CHAIN_TYPE)
-                        && (state.getMode().equals(CORRECTION)
-                                // disable coreference annotation for correction/curation pages
-                                || state.getMode().equals(CURATION))))
+                        && CURATION == state.getMode()))
                 .collect(Collectors.toList());
 
         return model;

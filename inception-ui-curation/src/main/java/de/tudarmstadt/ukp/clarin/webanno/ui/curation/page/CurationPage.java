@@ -72,8 +72,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
@@ -125,9 +123,7 @@ public class CurationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentService documentService;
-    private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
@@ -575,9 +571,8 @@ public class CurationPage
 
             currentprojectId = state.getProject().getId();
 
-            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
-                    correctionDocumentService, curationDocumentService, annotationService,
-                    userRepository);
+            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                    curationDocumentService, annotationService, userRepository);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setState(state);
             editor.reset(aTarget);
@@ -627,9 +622,8 @@ public class CurationPage
 
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
 
-        SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
-                correctionDocumentService, curationDocumentService, annotationService,
-                userRepository);
+        SuggestionBuilder cb = new SuggestionBuilder(documentService, curationDocumentService,
+                annotationService, userRepository);
         Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
                 state.getMode());
         CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses, randomAnnotationDocument,

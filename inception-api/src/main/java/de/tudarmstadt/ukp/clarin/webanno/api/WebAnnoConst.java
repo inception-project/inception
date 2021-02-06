@@ -51,20 +51,11 @@ public class WebAnnoConst
     public static final String COREFERENCE_RELATION_FEATURE = "referenceRelation";
     public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
 
-    public static final String TAB_SEP = "TAB-SEP";
     public static final String COREFERENCE_LAYER = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
-    public static final String MIRA = "/mira/";
-    public static final String MIRA_TEMPLATE = "/template/";
     public static final String DOCUMENT = "/document/";
-    public static final String TRAIN = "/train/";
 
     public static final String CURATION_USER = "CURATION_USER";
-    public static final String CORRECTION_USER = "CORRECTION_USER";
     public static final String INITIAL_CAS_PSEUDO_USER = "INITIAL_CAS";
-
-    public static final String PROJECT_TYPE_ANNOTATION = "annotation";
-    public static final String PROJECT_TYPE_AUTOMATION = "automation";
-    public static final String PROJECT_TYPE_CORRECTION = "correction";
 
     public static final List<String> RESTRICTED_FEATURE_NAMES = new ArrayList<String>(Arrays.asList(
             "address", "begin", "end", "coveredText", "booleanValue", "doubleValue", "byteValue",
@@ -88,5 +79,4 @@ public class WebAnnoConst
             return false;
         }
     };
-
 }

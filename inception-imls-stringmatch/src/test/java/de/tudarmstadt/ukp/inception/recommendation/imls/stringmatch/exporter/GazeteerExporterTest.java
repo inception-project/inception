@@ -44,7 +44,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -84,7 +83,6 @@ public class GazeteerExporterTest
         sourceProject = new Project();
         sourceProject.setId(1l);
         sourceProject.setName("Test Project");
-        sourceProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         sourceLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS,
                 NO_OVERLAP);
@@ -96,7 +94,6 @@ public class GazeteerExporterTest
         targetProject = new Project();
         targetProject.setId(2l);
         targetProject.setName("Test Project");
-        targetProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         targetLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS,
                 NO_OVERLAP);

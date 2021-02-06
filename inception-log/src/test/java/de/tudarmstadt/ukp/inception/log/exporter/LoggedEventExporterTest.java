@@ -44,7 +44,6 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -74,7 +73,6 @@ public class LoggedEventExporterTest
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         workFolder = tempFolder.newFolder();
 

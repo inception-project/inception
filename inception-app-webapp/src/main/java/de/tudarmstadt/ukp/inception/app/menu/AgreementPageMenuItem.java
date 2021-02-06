@@ -24,7 +24,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -83,9 +82,7 @@ public class AgreementPageMenuItem
 
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
-        return (projectService.isCurator(project, user)
-                || projectService.isProjectAdmin(project, user))
-                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode());
+        return (projectService.isCurator(project, user) || projectService.isManager(project, user));
     }
 
     @Override

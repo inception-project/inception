@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -91,8 +90,7 @@ public class KnowledgeBasePageMenuItem
 
         // Not visible if the current user is not an annotator
         User user = userRepo.getCurrentUser();
-        if (!(projectService.isAnnotator(project, user)
-                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode()))) {
+        if (!(projectService.isAnnotator(project, user))) {
             return false;
         }
 

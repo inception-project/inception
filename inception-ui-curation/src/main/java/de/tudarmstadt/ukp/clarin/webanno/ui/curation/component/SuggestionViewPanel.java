@@ -67,7 +67,6 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
@@ -102,7 +101,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -142,7 +140,6 @@ public class SuggestionViewPanel
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
-    private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean UserDao userRepository;
@@ -397,43 +394,33 @@ public class SuggestionViewPanel
 
     private CAS readEditorCas(AnnotatorState aState) throws IOException
     {
-        User user = userRepository.getCurrentUser();
-        SourceDocument sourceDocument = aState.getDocument();
-        return (aState.getMode().equals(Mode.AUTOMATION)
-                || aState.getMode().equals(Mode.CORRECTION))
-                        ? documentService.readAnnotationCas(
-                                documentService.getAnnotationDocument(sourceDocument, user))
-                        : curationDocumentService.readCurationCas(sourceDocument);
+        return curationDocumentService.readCurationCas(aState.getDocument());
     }
 
     private void writeEditorCas(AnnotatorState state, CAS aCas) throws IOException
     {
-        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-                || state.getMode().equals(Mode.CORRECTION)) {
+        switch (state.getMode()) {
+        case ANNOTATION:
             documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
             updateDocumentTimestampAfterWrite(state, documentService
                     .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
-        }
-        else if (state.getMode().equals(Mode.CURATION)) {
+            break;
+        case CURATION:
             curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
             updateDocumentTimestampAfterWrite(state,
                     curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+            break;
+        default:
+            throw new IllegalStateException("Unknown mode [" + state.getMode() + "]");
         }
     }
 
     private CAS readAnnotatorCas(UserAnnotationSegment aSegment) throws IOException
     {
-        AnnotatorState state = aSegment.getAnnotatorState();
-
-        if (state.getMode().equals(Mode.AUTOMATION) || state.getMode().equals(Mode.CORRECTION)) {
-            return correctionDocumentService.readCorrectionCas(state.getDocument());
-        }
-        else {
-            return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
-                    aSegment.getUsername());
-        }
+        return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
+                aSegment.getUsername());
     }
 
     /**
@@ -549,15 +536,11 @@ public class SuggestionViewPanel
         Collections.sort(usernamesSorted);
 
         final Mode mode = state.getMode();
-        boolean isAutomationMode = mode.equals(Mode.AUTOMATION);
-        boolean isCorrectionMode = mode.equals(Mode.CORRECTION);
         boolean isCurationMode = mode.equals(Mode.CURATION);
 
         List<UserAnnotationSegment> segments = new ArrayList<>();
         for (String username : usernamesSorted) {
-            if ((!username.equals(CURATION_USER) && isCurationMode)
-                    || (username.equals(CURATION_USER) && (isAutomationMode || isCorrectionMode))) {
-
+            if ((!username.equals(CURATION_USER) && isCurationMode)) {
                 CAS cas = casses.get(username);
 
                 // Set up coloring strategy
@@ -799,43 +782,23 @@ public class SuggestionViewPanel
             SourceDocument sourceDocument, Map<String, CAS> aCasses)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        CAS annotatorCas;
-        if (aBModel.getMode().equals(Mode.AUTOMATION)
-                || aBModel.getMode().equals(Mode.CORRECTION)) {
-            // If this is a CORRECTION or AUTOMATION project, then we get the CORRECTION document
-            // and put it in as the single document to compare with. Basically what we do is that
-            // we treat consider this scenario as a curation scenario where the CORRECTION document
-            // is the only document we compare with.
+        // The CAS the user can edit is the one from the virtual CURATION USER
+        CAS annotatorCas = curationDocumentService.readCurationCas(sourceDocument);
 
-            // The CAS the user can edit is the one from the virtual CORRECTION USER
-            annotatorCas = correctionDocumentService.readCorrectionCas(sourceDocument);
+        // If this is a true CURATION then we get all the annotation documents from all the
+        // active users.
+        // Now we get all the other CASes from the repository
+        List<AnnotationDocument> annotationDocuments = documentService
+                .listAnnotationDocuments(sourceDocument);
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            String username = annotationDocument.getUser();
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
+                    || username.equals(CURATION_USER)) {
+                CAS cas = documentService.readAnnotationCas(annotationDocument);
+                aCasses.put(username, cas);
 
-            User user = userRepository.getCurrentUser();
-            AnnotationDocument annotationDocument = documentService
-                    .getAnnotationDocument(sourceDocument, user);
-            aCasses.put(user.getUsername(), documentService.readAnnotationCas(annotationDocument));
-            aAnnotationSelectionByUsernameAndAddress.put(CURATION_USER, new HashMap<>());
-        }
-        else {
-            // If this is a true CURATION then we get all the annotation documents from all the
-            // active users.
-
-            // The CAS the user can edit is the one from the virtual CURATION USER
-            annotatorCas = curationDocumentService.readCurationCas(sourceDocument);
-
-            // Now we get all the other CASes from the repository
-            List<AnnotationDocument> annotationDocuments = documentService
-                    .listAnnotationDocuments(sourceDocument);
-            for (AnnotationDocument annotationDocument : annotationDocuments) {
-                String username = annotationDocument.getUser();
-                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
-                        || username.equals(CURATION_USER)) {
-                    CAS cas = documentService.readAnnotationCas(annotationDocument);
-                    aCasses.put(username, cas);
-
-                    // cleanup annotationSelections
-                    aAnnotationSelectionByUsernameAndAddress.put(username, new HashMap<>());
-                }
+                // cleanup annotationSelections
+                aAnnotationSelectionByUsernameAndAddress.put(username, new HashMap<>());
             }
         }
         return annotatorCas;
