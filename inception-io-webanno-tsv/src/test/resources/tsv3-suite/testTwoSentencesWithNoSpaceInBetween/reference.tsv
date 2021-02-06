@@ -1,0 +1,8 @@
+#FORMAT=WebAnno TSV 3.3
+
+
+#Text=one
+1-1	0-3	one	
+
+#Text=two
+2-1	3-6	two	

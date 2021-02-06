@@ -1,0 +1,10 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.Span|value
+
+
+#Text=I like it 😊 .
+1-1	0-1	I	_	
+1-2	2-6	like	_	
+1-3	7-9	it	_	
+1-4	10-12	😊	*	
+1-5	13-14	.	_	

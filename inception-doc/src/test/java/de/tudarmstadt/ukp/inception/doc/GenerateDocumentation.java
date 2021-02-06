@@ -78,14 +78,12 @@ public class GenerateDocumentation
     {
 
         Path inceptionDir = getInceptionDir();
-        Path webannoDir = inceptionDir.getParent().resolve("webanno");
         Path outputDir = Paths.get(System.getProperty("user.dir")).resolve("target")
                 .resolve("doc-out");
 
         Files.createDirectories(outputDir);
 
         List<Path> modules = new ArrayList<>();
-        modules.addAll(getAsciiDocs(webannoDir));
         modules.addAll(getAsciiDocs(inceptionDir));
 
         FileUtils.deleteQuietly(outputDir.toFile());

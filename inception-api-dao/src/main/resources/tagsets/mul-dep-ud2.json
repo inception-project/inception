@@ -1,0 +1,122 @@
+{
+  "name" : "UD Universal Dependencies (v2)",
+  "typeUiName" : null,
+  "description" : "The idea of universal dependencies is to propose a set of universal grammatical relations which can be used with relative fidelity to capture any dependency relation between words in any language. Each dependency relation should be typed with one of the relations in the table below.\r\n\r\nThe following table lists the 37 universal syntactic relations used in UD v2. It is a revised version of the relations originally described in Universal Stanford Dependencies: A cross-linguistic typology (de Marneffe et al. 2014).\r\n\r\n© 2014-2017 Universal Dependencies contributors.\r\n\r\nSee also: https://universaldependencies.org/u/dep/index.html",
+  "language" : "mul",
+  "type" : null,
+  "type_name" : null,
+  "type_description" : null,
+  "tags" : [ {
+    "tag_name" : "acl",
+    "tag_description" : "clausal modifier of noun (adjectival clause)"
+  }, {
+    "tag_name" : "advcl",
+    "tag_description" : "adverbial clause modifier"
+  }, {
+    "tag_name" : "advmod",
+    "tag_description" : "adverbial modifier"
+  }, {
+    "tag_name" : "amod",
+    "tag_description" : "adjectival modifier"
+  }, {
+    "tag_name" : "appos",
+    "tag_description" : "appositional modifier"
+  }, {
+    "tag_name" : "aux",
+    "tag_description" : "auxiliary"
+  }, {
+    "tag_name" : "case",
+    "tag_description" : "case marking"
+  }, {
+    "tag_name" : "cc",
+    "tag_description" : "coordinating conjunction"
+  }, {
+    "tag_name" : "ccomp",
+    "tag_description" : "clausal complement"
+  }, {
+    "tag_name" : "clf",
+    "tag_description" : "classifier"
+  }, {
+    "tag_name" : "compound",
+    "tag_description" : "compound"
+  }, {
+    "tag_name" : "conj",
+    "tag_description" : "conjunct"
+  }, {
+    "tag_name" : "cop",
+    "tag_description" : "copula"
+  }, {
+    "tag_name" : "csubj",
+    "tag_description" : "clausal subject"
+  }, {
+    "tag_name" : "dep",
+    "tag_description" : "unspecified dependency"
+  }, {
+    "tag_name" : "det",
+    "tag_description" : "determiner"
+  }, {
+    "tag_name" : "discourse",
+    "tag_description" : "discourse element"
+  }, {
+    "tag_name" : "dislocated",
+    "tag_description" : "dislocated elements"
+  }, {
+    "tag_name" : "expl",
+    "tag_description" : "expletive"
+  }, {
+    "tag_name" : "fixed",
+    "tag_description" : "fixed multiword expression"
+  }, {
+    "tag_name" : "flat",
+    "tag_description" : "flat multiword expression"
+  }, {
+    "tag_name" : "goeswith",
+    "tag_description" : "goes with"
+  }, {
+    "tag_name" : "iobj",
+    "tag_description" : "indirect object"
+  }, {
+    "tag_name" : "list",
+    "tag_description" : "list"
+  }, {
+    "tag_name" : "mark",
+    "tag_description" : "marker"
+  }, {
+    "tag_name" : "nmod",
+    "tag_description" : "nominal modifier"
+  }, {
+    "tag_name" : "nsubj",
+    "tag_description" : "nominal subject"
+  }, {
+    "tag_name" : "nummod",
+    "tag_description" : "numeric modifier"
+  }, {
+    "tag_name" : "obj",
+    "tag_description" : "object"
+  }, {
+    "tag_name" : "obl",
+    "tag_description" : "oblique nominal"
+  }, {
+    "tag_name" : "orphan",
+    "tag_description" : "orphan"
+  }, {
+    "tag_name" : "parataxis",
+    "tag_description" : "parataxis"
+  }, {
+    "tag_name" : "punct",
+    "tag_description" : "punctuation"
+  }, {
+    "tag_name" : "reparandum",
+    "tag_description" : "overridden disfluency"
+  }, {
+    "tag_name" : "root",
+    "tag_description" : "root"
+  }, {
+    "tag_name" : "vocative",
+    "tag_description" : "vocative"
+  }, {
+    "tag_name" : "xcomp",
+    "tag_description" : "open clausal complement"
+  } ],
+  "create_tag" : false
+}

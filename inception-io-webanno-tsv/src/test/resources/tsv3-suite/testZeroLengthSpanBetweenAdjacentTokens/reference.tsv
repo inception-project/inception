@@ -1,0 +1,8 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.SimpleSpan|
+
+
+#Text=word.
+1-1	0-4	word	_	
+1-1.1	4-4		*	
+1-2	4-5	.	_	

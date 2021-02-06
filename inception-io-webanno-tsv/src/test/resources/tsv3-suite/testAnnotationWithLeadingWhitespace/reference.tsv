@@ -1,0 +1,7 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|identifier|value
+
+
+#Text=one  two
+1-1	0-3	one	_	_	
+1-2	5-8	two	*	*	

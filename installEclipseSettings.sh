@@ -7,13 +7,13 @@ JDT_CORE_PREFS="inception-build/src/main/resources/inception/eclipse/org.eclipse
 JDT_UI_PREFS="inception-build/src/main/resources/inception/eclipse/org.eclipse.jdt.ui.prefs"
 
 function installPrefs {
+  mkdir -p $1/.settings/
   cp -v $JDT_CORE_PREFS $1/.settings/
   cp -v $JDT_UI_PREFS $1/.settings/
 }
 
 installPrefs inception-active-learning
 installPrefs inception-plugin-parent
-installPrefs inception-website
 installPrefs inception-active-learning
 installPrefs inception-app-webapp
 installPrefs inception-build
@@ -52,3 +52,36 @@ installPrefs inception-ui-search
 installPrefs inception-workload
 installPrefs inception-workload-dynamic
 installPrefs inception-workload-matrix
+installPrefs inception-agreement
+installPrefs inception-api
+installPrefs inception-api-annotation
+installPrefs inception-api-dao
+installPrefs inception-api-formats
+installPrefs inception-boot-loader
+installPrefs inception-brat-editor
+installPrefs inception-build
+installPrefs inception-constraints
+installPrefs inception-curation-legacy
+installPrefs inception-diag
+installPrefs inception-export
+installPrefs inception-io-conll
+installPrefs inception-io-json
+installPrefs inception-io-tcf
+installPrefs inception-io-text
+installPrefs inception-io-webanno-tsv
+installPrefs inception-io-xmi
+installPrefs inception-model
+installPrefs inception-model-export
+installPrefs inception-plugin-api
+installPrefs inception-plugin-manager
+installPrefs inception-plugin-parent
+installPrefs inception-project
+installPrefs inception-remote
+installPrefs inception-security
+installPrefs inception-support-standalone
+installPrefs inception-telemetry
+installPrefs inception-ui-annotation
+installPrefs inception-ui-curation
+installPrefs inception-ui-monitoring
+installPrefs inception-ui-project
+installPrefs inception-ui-tagsets
