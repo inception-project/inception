@@ -93,7 +93,7 @@ import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer
  * <ul>
  * <li>Render annotation suggestions into the main editor area;</li>
  * <li>Intercept user actions on the annotation suggestions, in particular accepting or rejecting
- * annotatons.</li>
+ * annotations.</li>
  * </ul>
  * <p>
  * This class is exposed as a Spring Component via
@@ -148,19 +148,12 @@ public class RecommendationEditorExtension
         if (!aVID.getExtensionId().equals(BEAN_NAME)) {
             return;
         }
-        VID vid = VID.parse(aVID.getExtensionPayload());
-        VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(),
-                vid.getSubId(), vid.getAttribute(), vid.getSlot(), aVID.getExtensionPayload());
         // Create annotation
-        if (SpanAnnotationResponse.is(aAction))
-        || 
-        AcceptActionResponse.is(aAction)) {
+        if (SpanAnnotationResponse.is(aAction) || AcceptActionResponse.is(aAction)) {
             actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         // Reject annotation
-        else if (DoActionResponse.is(aAction)
-        || 
-        RejectActionResponse.is(aAction)) {
+        else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
     }
