@@ -182,7 +182,9 @@ public class BratRenderer
                     // response for *every annotation on this layer*!)
                     entity.getAttributes().setHoverText("");
                 }
-                aResponse.addEntity(entity);
+
+                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
+                        color, vspan.isActionButtons()));
 
                 vspan.getLazyDetails().stream()
                         .map(d -> new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))

@@ -617,6 +617,9 @@ var Visualizer = (function($, window, undefined) {
             if (attributes.hasOwnProperty('h')) {
               span.hovertext = attributes.h;
             }
+            if(attributes.hasOwnProperty('a')) {
+              span.actionButtons = !!(attributes.a);
+            }
           }
 // WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);
@@ -4094,7 +4097,13 @@ Util.profileStart('before render');
               span.comment && span.comment.text,
               span.comment && span.comment.type,
               span.normalizations]);
-
+// BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
+console.log(span);
+console.log(span.actionButtons);
+          if (span.actionButtons) {
+            dispatcher.post('displaySpanButtons', [evt, target, span.id]);
+          }
+// END WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
           var spanDesc = spanTypes[span.type];
           var bgColor = ((spanDesc && spanDesc.bgColor) ||
                          (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
