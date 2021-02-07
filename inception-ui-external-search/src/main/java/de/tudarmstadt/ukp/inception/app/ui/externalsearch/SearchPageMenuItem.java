@@ -22,16 +22,13 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 /**
  * Menu item for the external search page.
@@ -42,10 +39,9 @@ import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
  */
 @Order(50)
 public class SearchPageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private @Autowired ExternalSearchService externalSearchService;
-    private @Autowired ProjectService projectService;
 
     @Override
     public String getPath()
@@ -66,18 +62,9 @@ public class SearchPageMenuItem
     }
 
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        Project sessionProject = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
-        if (sessionProject == null) {
-            return false;
-        }
-
-        // The project object stored in the session is detached from the persistence context and
-        // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
-        Project project = projectService.getProject(sessionProject.getId());
-
-        return !externalSearchService.listDocumentRepositories(project).isEmpty();
+        return !externalSearchService.listDocumentRepositories(aProject).isEmpty();
     }
 
     @Override

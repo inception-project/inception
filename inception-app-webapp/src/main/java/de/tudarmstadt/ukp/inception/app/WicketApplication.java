@@ -28,9 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.app.config.InceptionResourcesBehavior;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
-import de.tudarmstadt.ukp.inception.ui.core.ErrorPage;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
 import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
 
 @org.springframework.stereotype.Component("wicketApplication")
@@ -55,7 +54,7 @@ public class WicketApplication
     @Override
     public Class<? extends Page> getHomePage()
     {
-        return ProjectDashboardPage.class;
+        return ProjectsOverviewPage.class;
     }
 
     @Override
@@ -66,11 +65,15 @@ public class WicketApplication
 
     private void initErrorPage()
     {
-        getApplicationSettings().setInternalErrorPage(ErrorPage.class);
-        getApplicationSettings().setAccessDeniedPage(ErrorPage.class);
-        getApplicationSettings().setPageExpiredErrorPage(ErrorPage.class);
+        // Instead of configuring the different types of errors to refer to our error page, we
+        // use @WicketInternalErrorPage and friends on our ErrorPage
         getExceptionSettings().setUnexpectedExceptionDisplay(SHOW_INTERNAL_ERROR_PAGE);
         getRequestCycleListeners().add(new ErrorListener());
+
+        // When running in development mode, we mount the exception test page
+        if (DEVELOPMENT.equals(getConfigurationType())) {
+            mountPage("/whoops/test", ErrorTestPage.class);
+        }
     }
 
     @Override
@@ -107,20 +110,5 @@ public class WicketApplication
         }
 
         return super.getMimeType(aFileName);
-    }
-
-    @Override
-    protected void initDefaultPageMounts()
-    {
-        super.initDefaultPageMounts();
-
-        // We don't want the project dashboard to be linked as "welcome.html" but rather only under
-        // its default URL as defined in the ProjectDashboard class
-        unmount("/welcome.html");
-
-        // When running in development mode, we mount the exception test page
-        if (DEVELOPMENT.equals(getConfigurationType())) {
-            mountPage("/whoops/test", ErrorTestPage.class);
-        }
     }
 }

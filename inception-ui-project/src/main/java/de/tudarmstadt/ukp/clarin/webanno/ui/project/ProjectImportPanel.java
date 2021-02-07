@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData.CURRENT_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
@@ -36,7 +35,6 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Component;
-import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -185,12 +183,6 @@ public class ProjectImportPanel
                 error("Error importing project: " + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error importing project", e);
             }
-        }
-
-        if (importedProject != null) {
-            selectedModel.setObject(importedProject);
-            aTarget.add(getPage());
-            Session.get().setMetaData(CURRENT_PROJECT, importedProject);
         }
     }
 

@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.IOException;
@@ -27,7 +31,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RestartResponseException;
-import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
@@ -54,13 +57,13 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
@@ -69,11 +72,10 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.ui.core.LinkProvider;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
-@MountPath("/search.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/search")
 public class SearchPage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = 4090656233059899062L;
 
@@ -87,16 +89,15 @@ public class SearchPage
 
     private WebMarkupContainer dataTableContainer;
 
-    private Project project;
-
     ExternalResultDataProvider dataProvider;
 
-    public SearchPage()
+    public SearchPage(final PageParameters aParameters)
     {
-        project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
-        if (project == null) {
-            abort();
-        }
+        super(aParameters);
+
+        User user = userRepository.getCurrentUser();
+
+        requireProjectRole(user, ANNOTATOR, CURATOR);
 
         add(new SearchForm("searchForm"));
 
@@ -118,8 +119,7 @@ public class SearchPage
             }
         });
 
-        dataProvider = new ExternalResultDataProvider(externalSearchService,
-                userRepository.getCurrentUser());
+        dataProvider = new ExternalResultDataProvider(externalSearchService, user);
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
         dataTableContainer.setOutputMarkupId(true);
@@ -132,7 +132,7 @@ public class SearchPage
     {
         try {
             documentImporter.importDocumentFromDocumentRepository(userRepository.getCurrentUser(),
-                    project, aResult.getCollectionId(), aResult.getDocumentId(),
+                    getProject(), aResult.getCollectionId(), aResult.getDocumentId(),
                     aResult.getRepository());
             aTarget.add(dataTableContainer);
         }
@@ -166,7 +166,7 @@ public class SearchPage
             DropDownChoice<DocumentRepository> repositoryCombo = new BootstrapSelect<DocumentRepository>(
                     "repository");
             repositoryCombo.setChoices(LoadableDetachableModel
-                    .of(() -> externalSearchService.listDocumentRepositories(project)));
+                    .of(() -> externalSearchService.listDocumentRepositories(getProject())));
             repositoryCombo.setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
             repositoryCombo.setNullValid(false);
             add(repositoryCombo);
@@ -245,7 +245,7 @@ public class SearchPage
 
             String title = defaultIfBlank(result.getDocumentTitle(), defaultIfBlank(
                     result.getDocumentId(), defaultIfBlank(result.getOriginalUri(), "<no title>")));
-            boolean existsSourceDocument = documentService.existsSourceDocument(project,
+            boolean existsSourceDocument = documentService.existsSourceDocument(getProject(),
                     result.getDocumentId());
 
             link.add(new Label("title", title));
@@ -258,7 +258,7 @@ public class SearchPage
                     .add(visibleWhen(() -> !existsSourceDocument)));
 
             add(LinkProvider
-                    .createDocumentPageLink(documentService, project, result.getDocumentId(),
+                    .createDocumentPageLink(documentService, getProject(), result.getDocumentId(),
                             "openLink", AnnotationPage.class)
                     .add(visibleWhen(() -> existsSourceDocument)));
         }

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
@@ -29,6 +28,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +45,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -74,7 +74,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -113,7 +112,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotat
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MountPath("/curation.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curation")
 public class CurationPage
     extends AnnotationPageBase
 {
@@ -160,25 +159,25 @@ public class CurationPage
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
 
-    public CurationPage()
-    {
-        super();
-        LOG.debug("Setting up curation page without parameters");
-        commonInit();
-
-        Map<String, StringValue> fragmentParameters = Session.get()
-                .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-        if (fragmentParameters != null) {
-            // Clear the URL fragment parameters - we only use them once!
-            Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-
-            StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-            StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-            StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-
-            handleParameters(null, project, document, focus, false);
-        }
-    }
+    // public CurationPage()
+    // {
+    // super();
+    // LOG.debug("Setting up curation page without parameters");
+    // commonInit();
+    //
+    // Map<String, StringValue> fragmentParameters = Session.get()
+    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
+    // if (fragmentParameters != null) {
+    // // Clear the URL fragment parameters - we only use them once!
+    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
+    //
+    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
+    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
+    // StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
+    //
+    // handleParameters(null, project, document, focus, false);
+    // }
+    // }
 
     public CurationPage(final PageParameters aPageParameters)
     {
@@ -187,7 +186,7 @@ public class CurationPage
 
         commonInit();
 
-        StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT);
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
 

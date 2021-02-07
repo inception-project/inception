@@ -18,11 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -83,12 +86,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-@MountPath("/agreement.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/agreement")
 public class AgreementPage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = 5333662917247971912L;
 
@@ -108,42 +111,20 @@ public class AgreementPage
     private AgreementForm agreementForm;
     private WebMarkupContainer resultsContainer;
 
-    public AgreementPage()
-    {
-        super();
-
-        commonInit();
-    }
-
     public AgreementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
         commonInit();
 
-        projectSelectionForm.setVisibilityAllowed(false);
-
         User user = userRepository.getCurrentUser();
 
-        // Get current project from parameters
-        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        Optional<Project> project = getProjectFromParameters(projectParameter);
+        Project project = getProject();
 
-        if (project.isPresent()) {
-            Project p = project.get();
+        requireProjectRole(user, MANAGER, CURATOR);
 
-            // Check access to project
-            if (!(projectService.isCurator(p, user) || projectService.isManager(p, user))) {
-                error("You have no permission to access project [" + p.getId() + "]");
-                setResponsePage(getApplication().getHomePage());
-            }
-
-            projectSelectionForm.getModelObject().project = p;
-        }
-        else {
-            error("Project [" + projectParameter + "] does not exist");
-            setResponsePage(getApplication().getHomePage());
-        }
+        projectSelectionForm.getModelObject().project = project;
+        projectSelectionForm.setVisibilityAllowed(false);
     }
 
     private void commonInit()

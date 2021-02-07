@@ -51,6 +51,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.savedrequest.SavedRequest;
+import org.wicketstuff.annotation.mount.MountPath;
+
+import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -63,6 +66,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 /**
  * The login page.
  */
+@WicketSignInPage
+@MountPath("/login.html")
 @StatelessComponent
 public class LoginPage
     extends ApplicationPageBase

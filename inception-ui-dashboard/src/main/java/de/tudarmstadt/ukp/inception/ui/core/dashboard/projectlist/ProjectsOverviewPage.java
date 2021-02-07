@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage.NEW_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage.NEW_PROJECT_ID;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
@@ -74,10 +74,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
-@MountPath(value = "/projects.html")
+@MountPath(value = "/")
 public class ProjectsOverviewPage
     extends ApplicationPageBase
 {
@@ -221,7 +221,7 @@ public class ProjectsOverviewPage
             protected void populateItem(ListItem<Project> aItem)
             {
                 PageParameters pageParameters = new PageParameters().add(
-                        ProjectDashboardPage.PAGE_PARAM_PROJECT_ID, aItem.getModelObject().getId());
+                        ProjectDashboardPage.PAGE_PARAM_PROJECT, aItem.getModelObject().getId());
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
@@ -379,8 +379,8 @@ public class ProjectsOverviewPage
     private void actionCreateProject(AjaxRequestTarget aTarget)
     {
         PageParameters params = new PageParameters();
-        params.set(PAGE_PARAM_PROJECT_ID, NEW_PROJECT_ID);
-        setResponsePage(ProjectPage.class, params);
+        params.set(PAGE_PARAM_PROJECT, NEW_PROJECT_ID);
+        setResponsePage(ProjectSettingsPage.class, params);
     }
 
     private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
@@ -403,7 +403,7 @@ public class ProjectsOverviewPage
             projectService.initializeProject(project, asList(aInitializer));
 
             PageParameters pageParameters = new PageParameters()
-                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT_ID, project.getId());
+                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
         catch (IOException e) {

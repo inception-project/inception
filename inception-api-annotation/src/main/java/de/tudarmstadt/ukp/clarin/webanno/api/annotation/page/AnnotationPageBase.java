@@ -57,12 +57,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 
 public abstract class AnnotationPageBase
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
+
+    public static final String PAGE_PARAM_DOCUMENT_ID = "d";
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
@@ -71,11 +73,6 @@ public abstract class AnnotationPageBase
 
     private LoadableDetachableModel<Boolean> annotationFinished = LoadableDetachableModel
             .of(this::loadAnnotationFinished);
-
-    public AnnotationPageBase()
-    {
-        super();
-    }
 
     protected AnnotationPageBase(PageParameters aParameters)
     {

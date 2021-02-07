@@ -22,20 +22,19 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_NAME;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_NAME;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -44,7 +43,6 @@ import javax.persistence.NoResultException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
-import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
@@ -67,7 +65,6 @@ import org.wicketstuff.urlfragment.UrlFragment;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
@@ -107,11 +104,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
  */
-@MountPath(value = "/annotation.html", alt = { "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}",
-        "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_ID + "}",
-        "/annotate-by-name/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_NAME + "}",
-        "/annotate-by-project-and-document-name/${" + PAGE_PARAM_PROJECT_NAME + "}/${"
-                + PAGE_PARAM_DOCUMENT_NAME + "}" })
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT_ID + "}")
 public class AnnotationPage
     extends AnnotationPageBase
 {
@@ -139,44 +132,42 @@ public class AnnotationPage
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
 
-    public AnnotationPage()
-    {
-        super();
-        LOG.debug("Setting up annotation page without parameters");
-
-        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-        // Ensure that a user is set
-        getModelObject().setUser(userRepository.getCurrentUser());
-
-        Map<String, StringValue> fragmentParameters = Session.get()
-                .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-        StringValue focus = StringValue.valueOf(0);
-        if (fragmentParameters != null) {
-            // Clear the URL fragment parameters - we only use them once!
-            Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-
-            StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-            StringValue projectName = fragmentParameters.get(PAGE_PARAM_PROJECT_NAME);
-            StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-            StringValue name = fragmentParameters.get(PAGE_PARAM_DOCUMENT_NAME);
-            focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-
-            handleParameters(project, projectName, document, name, focus, false);
-        }
-        commonInit(focus);
-    }
+    // public AnnotationPage()
+    // {
+    // super();
+    // LOG.debug("Setting up annotation page without parameters");
+    //
+    // setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
+    // // Ensure that a user is set
+    // getModelObject().setUser(userRepository.getCurrentUser());
+    //
+    // Map<String, StringValue> fragmentParameters = Session.get()
+    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
+    // StringValue focus = StringValue.valueOf(0);
+    // if (fragmentParameters != null) {
+    // // Clear the URL fragment parameters - we only use them once!
+    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
+    //
+    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
+    // StringValue projectName = fragmentParameters.get(PAGE_PARAM_PROJECT_NAME);
+    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
+    // StringValue name = fragmentParameters.get(PAGE_PARAM_DOCUMENT_NAME);
+    // focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
+    //
+    // handleParameters(project, projectName, document, name, focus, false);
+    // }
+    // commonInit(focus);
+    // }
 
     public AnnotationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
         LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
 
-        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-        // Ensure that a user is set
-        getModelObject().setUser(userRepository.getCurrentUser());
+        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setUser(userRepository.getCurrentUser());
+        setModel(Model.of(state));
 
-        StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        StringValue projectName = aPageParameters.get(PAGE_PARAM_PROJECT_NAME);
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
         StringValue name = aPageParameters.get(PAGE_PARAM_DOCUMENT_NAME);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
@@ -184,16 +175,11 @@ public class AnnotationPage
             focus = StringValue.valueOf(0);
         }
 
-        handleParameters(project, projectName, document, name, focus, true);
-        commonInit(focus);
-    }
+        handleParameters(document, name, focus, true);
 
-    protected void commonInit(StringValue focus)
-    {
         createChildComponents();
-        SourceDocument doc = getModelObject().getDocument();
 
-        updateDocumentView(null, doc, focus);
+        updateDocumentView(null, getModelObject().getDocument(), focus);
     }
 
     private void createChildComponents()
@@ -611,9 +597,6 @@ public class AnnotationPage
             protected void onParameterArrival(IRequestParameters aRequestParameters,
                     AjaxRequestTarget aTarget)
             {
-                StringValue project = aRequestParameters.getParameterValue(PAGE_PARAM_PROJECT_ID);
-                StringValue projectName = aRequestParameters
-                        .getParameterValue(PAGE_PARAM_PROJECT_NAME);
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
                 StringValue name = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_NAME);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
@@ -624,7 +607,7 @@ public class AnnotationPage
                     return;
                 }
                 SourceDocument previousDoc = getModelObject().getDocument();
-                handleParameters(project, projectName, document, name, focus, false);
+                handleParameters(document, name, focus, false);
 
                 // url is from external link, not just paging through documents,
                 // tabs may have changed depending on user rights
@@ -647,20 +630,10 @@ public class AnnotationPage
         aTarget.registerRespondListener(new UrlFragmentUpdateListener());
     }
 
-    private void handleParameters(StringValue aProjectParameter, StringValue aProjectNameParameter,
-            StringValue aDocumentParameter, StringValue aNameParameter, StringValue aFocusParameter,
-            boolean aLockIfPreset)
+    private void handleParameters(StringValue aDocumentParameter, StringValue aNameParameter,
+            StringValue aFocusParameter, boolean aLockIfPreset)
     {
-        // Get current project from parameters
-        Project project = null;
-        try {
-            project = getProjectFromParameters(aProjectParameter, aProjectNameParameter);
-        }
-        catch (NoResultException e) {
-            error("Project [" + aProjectParameter + "/" + aProjectNameParameter
-                    + "] does not exist");
-            return;
-        }
+        Project project = getProject();
 
         // Get current document from parameters
         SourceDocument document = null;
@@ -813,7 +786,7 @@ public class AnnotationPage
 
             UrlFragment fragment = new UrlFragment(aTarget);
 
-            fragment.putParameter(PAGE_PARAM_PROJECT_ID, currentProjectId);
+            fragment.putParameter(PAGE_PARAM_PROJECT, currentProjectId);
             fragment.putParameter(PAGE_PARAM_DOCUMENT_ID, currentDocumentId);
             if (state.getFocusUnitIndex() > 0) {
                 fragment.putParameter(PAGE_PARAM_FOCUS, currentFocusUnitIndex);

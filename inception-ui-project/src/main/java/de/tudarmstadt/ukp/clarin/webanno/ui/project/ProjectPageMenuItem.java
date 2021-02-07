@@ -64,6 +64,6 @@ public class ProjectPageMenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ProjectPage.class;
+        return ProjectSettingsPage.class;
     }
 }
