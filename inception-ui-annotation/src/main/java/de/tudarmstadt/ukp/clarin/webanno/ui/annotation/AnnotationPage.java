@@ -19,11 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_NAME;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
@@ -38,8 +36,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
@@ -51,7 +47,6 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -60,7 +55,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
-import org.wicketstuff.urlfragment.UrlFragment;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -95,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
@@ -104,7 +97,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
  */
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT_ID + "}")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class AnnotationPage
     extends AnnotationPageBase
 {
@@ -162,24 +155,24 @@ public class AnnotationPage
     public AnnotationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
+
         LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setUser(userRepository.getCurrentUser());
         setModel(Model.of(state));
 
-        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
-        StringValue name = aPageParameters.get(PAGE_PARAM_DOCUMENT_NAME);
+        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
         if (focus == null) {
             focus = StringValue.valueOf(0);
         }
 
-        handleParameters(document, name, focus, true);
+        handleParameters(document, focus, true);
 
         createChildComponents();
 
-        updateDocumentView(null, getModelObject().getDocument(), focus);
+        updateDocumentView(null, null, focus);
     }
 
     private void createChildComponents()
@@ -560,121 +553,42 @@ public class AnnotationPage
         updateUrlFragment(aTarget);
     }
 
-    private Project getProjectFromParameters(StringValue projectParam, StringValue projectNameParam)
-    {
-        Project project = null;
-        if (projectParam != null && !projectParam.isEmpty()) {
-            long projectId = projectParam.toLong();
-            project = projectService.getProject(projectId);
-        }
-        else if (projectNameParam != null && !projectNameParam.isEmpty()) {
-            project = projectService.getProject(projectNameParam.toString());
-        }
-        return project;
-    }
-
-    private SourceDocument getDocumentFromParameters(Project aProject, StringValue documentParam,
-            StringValue nameParam)
-    {
-        SourceDocument document = null;
-        if (documentParam != null && !documentParam.isEmpty()) {
-            long documentId = documentParam.toLong();
-            document = documentService.getSourceDocument(aProject.getId(), documentId);
-        }
-        else if (nameParam != null && !nameParam.isEmpty()) {
-            document = documentService.getSourceDocument(aProject, nameParam.toString());
-        }
-        return document;
-    }
-
-    private UrlParametersReceivingBehavior createUrlFragmentBehavior()
-    {
-        return new UrlParametersReceivingBehavior()
-        {
-            private static final long serialVersionUID = -3860933016636718816L;
-
-            @Override
-            protected void onParameterArrival(IRequestParameters aRequestParameters,
-                    AjaxRequestTarget aTarget)
-            {
-                StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
-                StringValue name = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_NAME);
-                StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
-
-                // nothing changed, do not check for project, because inception always opens
-                // on a project
-                if (document.isEmpty() && name.isEmpty() && focus.isEmpty()) {
-                    return;
-                }
-                SourceDocument previousDoc = getModelObject().getDocument();
-                handleParameters(document, name, focus, false);
-
-                // url is from external link, not just paging through documents,
-                // tabs may have changed depending on user rights
-                if (previousDoc == null) {
-                    leftSidebar.refreshTabs(aTarget);
-                }
-
-                updateDocumentView(aTarget, previousDoc, focus);
-            }
-        };
-    }
-
-    private void updateUrlFragment(AjaxRequestTarget aTarget)
-    {
-        // No AJAX request - nothing to do
-        if (aTarget == null) {
-            return;
-        }
-
-        aTarget.registerRespondListener(new UrlFragmentUpdateListener());
-    }
-
-    private void handleParameters(StringValue aDocumentParameter, StringValue aNameParameter,
-            StringValue aFocusParameter, boolean aLockIfPreset)
+    @Override
+    protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
+            boolean aLockIfPreset)
     {
         Project project = getProject();
 
-        // Get current document from parameters
-        SourceDocument document = null;
-        if (project != null) {
-            try {
-                document = getDocumentFromParameters(project, aDocumentParameter, aNameParameter);
-            }
-            catch (NoResultException e) {
-                error("Document [" + aDocumentParameter + "/" + aNameParameter
-                        + "] does not exist in project [" + project.getId() + "]");
-            }
-        }
+        SourceDocument document = getDocumentFromParameters(project, aDocumentParameter);
+
+        AnnotatorState state = getModelObject();
 
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        if (document != null && document.equals(getModelObject().getDocument())
-                && aFocusParameter != null
-                && aFocusParameter.toInt(0) == getModelObject().getFocusUnitIndex()) {
+        if (document != null && document.equals(state.getDocument()) && aFocusParameter != null
+                && aFocusParameter.toInt(0) == state.getFocusUnitIndex()) {
             return;
         }
 
         // Check access to project for annotator or current user if admin is viewing.
         // Default curation user should have access to all projects.
-        if (project != null && !projectService.isAnnotator(project, getModelObject().getUser())
+        if (projectService.isAnnotator(project, state.getUser())
                 && !projectService.isManager(project, userRepository.getCurrentUser())
-                && !getModelObject().getUser().getUsername().equals(CURATION_USER)) {
+                && !state.getUser().getUsername().equals(CURATION_USER)) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
 
         // Check if document is locked for the user
-        if (project != null && document != null
-                && documentService.existsAnnotationDocument(document, getModelObject().getUser())) {
+        if (document != null
+                && documentService.existsAnnotationDocument(document, state.getUser())) {
             AnnotationDocument adoc = documentService.getAnnotationDocument(document,
-                    getModelObject().getUser());
+                    state.getUser());
 
             if (AnnotationDocumentState.IGNORE.equals(adoc.getState()) && isEditable()) {
                 error("Document [" + document.getId() + "] in project [" + project.getId()
-                        + "] is locked for user [" + getModelObject().getUser().getUsername()
-                        + "]");
+                        + "] is locked for user [" + state.getUser().getUsername() + "]");
                 return;
             }
         }
@@ -682,23 +596,28 @@ public class AnnotationPage
         // Update project in state
         // Mind that this is relevant if the project was specified as a query parameter
         // i.e. not only in the case that it was a URL fragment parameter.
-        if (project != null) {
-            getModelObject().setProject(project);
-            if (aLockIfPreset) {
-                getModelObject().setProjectLocked(true);
-            }
+        state.setProject(project);
+        if (aLockIfPreset) {
+            state.setProjectLocked(true);
         }
 
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
-        if (document != null && !document.equals(getModelObject().getDocument())) {
-            getModelObject().setDocument(document, getListOfDocs());
+        if (document != null && !document.equals(state.getDocument())) {
+            state.setDocument(document, getListOfDocs());
         }
     }
 
+    @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
             StringValue aFocusParameter)
     {
+        // url is from external link, not just paging through documents,
+        // tabs may have changed depending on user rights
+        if (aTarget != null && aPreviousDocument == null) {
+            leftSidebar.refreshTabs(aTarget);
+        }
+
         SourceDocument currentDocument = getModelObject().getDocument();
         if (currentDocument == null) {
             return;
@@ -730,7 +649,9 @@ public class AnnotationPage
                 actionRefreshDocument(aTarget);
             }
             catch (Exception e) {
-                aTarget.addChildren(getPage(), IFeedback.class);
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
                 LOG.info("Error reading CAS " + e.getMessage());
                 error("Error reading CAS " + e.getMessage());
             }
@@ -751,99 +672,4 @@ public class AnnotationPage
             super.loadPreferences();
         }
     }
-
-    /**
-     * This is a special AJAX target response listener which implements hashCode and equals. It uses
-     * the markup ID of its host component to identify itself. This enables us to add multiple
-     * instances of this listener to an AJAX response without *actually* adding multiple instances
-     * since the AJAX response internally keeps track of the listeners using a set.
-     */
-    private class UrlFragmentUpdateListener
-        implements AjaxRequestTarget.ITargetRespondListener
-    {
-        @Override
-        public void onTargetRespond(AjaxRequestTarget aTarget)
-        {
-            AnnotatorState state = getModelObject();
-
-            if (state.getDocument() == null) {
-                return;
-            }
-
-            Long currentProjectId = state.getDocument().getProject().getId();
-            Long currentDocumentId = state.getDocument().getId();
-            int currentFocusUnitIndex = state.getFocusUnitIndex();
-
-            // Check if the relevant parameters have actually changed since the URL parameters were
-            // last set - if this is not the case, then let's not set the parameters because that
-            // triggers another AJAX request telling us that the parameters were updated (stupid,
-            // right?)
-            if (Objects.equals(urlFragmentLastProjectId, currentProjectId)
-                    && Objects.equals(urlFragmentLastDocumentId, currentDocumentId)
-                    && urlFragmentLastFocusUnitIndex == currentFocusUnitIndex) {
-                return;
-            }
-
-            UrlFragment fragment = new UrlFragment(aTarget);
-
-            fragment.putParameter(PAGE_PARAM_PROJECT, currentProjectId);
-            fragment.putParameter(PAGE_PARAM_DOCUMENT_ID, currentDocumentId);
-            if (state.getFocusUnitIndex() > 0) {
-                fragment.putParameter(PAGE_PARAM_FOCUS, currentFocusUnitIndex);
-            }
-            else {
-                fragment.removeParameter(PAGE_PARAM_FOCUS);
-            }
-
-            urlFragmentLastProjectId = currentProjectId;
-            urlFragmentLastDocumentId = currentDocumentId;
-            urlFragmentLastFocusUnitIndex = currentFocusUnitIndex;
-
-            // If we do not manually set editedFragment to false, then changing the URL
-            // manually or using the back/forward buttons in the browser only works every
-            // second time. Might be a bug in wicketstuff urlfragment... not sure.
-            aTarget.appendJavaScript(
-                    "try{if(window.UrlUtil){window.UrlUtil.editedFragment = false;}}catch(e){}");
-
-        }
-
-        private AnnotationPage getOuterType()
-        {
-            return AnnotationPage.this;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getOuterType().hashCode();
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            UrlFragmentUpdateListener other = (UrlFragmentUpdateListener) obj;
-            if (!getOuterType().equals(other.getOuterType())) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    // These are page state variables used by the UrlFragmentUpdateListener to determine whether an
-    // update of the URL parameters is necessary at all
-    private Long urlFragmentLastProjectId;
-    private Long urlFragmentLastDocumentId;
-    private int urlFragmentLastFocusUnitIndex;
 }
