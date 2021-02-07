@@ -20,39 +20,17 @@
 <head>
   <wicket:head>
   <style type="text/css">
-    .page-content {
-      overflow: auto;
-    }
+    .page-content { overflow: auto; }
+    .document-matrix tr td, .document-matrix tr th { text-align: center; }
+    .document-matrix tr td:nth-child(2), .document-matrix tr th:nth-child(2) { text-align: left; }
   </style>
 </wicket:head>
 </head>
 <body>
   <wicket:extend>
     <div class="flex-content flex-h-container flex-gutter">
-      <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container flex-gutter">
-        <div class="flex-content card">
-          <div class="card-header">
-            <wicket:message key="projects" />
-          </div>
-          <div class="scrolling card-body fit-child-snug">
-            <select wicket:id="project" size="20" class="form-control"></select>
-          </div>
-        </div>
-      </form>
-
       <div class="flex-content flex-v-container flex-gutter">
-        <div class="flex-content flex-v-container" wicket:enclosure="overallProjectProgressImage">
-          <div class="flex-content card">
-            <div class="card-header">
-              <wicket:message key="progress" />
-            </div>
-            <div class="scrolling card-body">
-              <div wicket:id="overallProjectProgressImage" style="max-width: 600px;"></div>
-            </div>
-          </div>
-        </div>
-     
-        <form wicket:id="monitoringDetailForm" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+        <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
           <div class="page-header">
             <h1><wicket:container wicket:id="name"/></h1>
           </div>
@@ -89,12 +67,12 @@
               </div>
               <div class="flex-content scrolling">
                 <div class="fit-child-snug">
-                  <table class="table table-sm" wicket:id="rsTable"></table>
+                  <table class="table table-sm document-matrix" wicket:id="documentMatrix"></table>
                 </div>
               </div>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </wicket:extend>
