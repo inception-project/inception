@@ -98,12 +98,13 @@
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
     <bootstrap.version>4.5.3</bootstrap.version>
 
+    <lucene.version>7.7.2</lucene.version> <!-- 8.7.0 -->
+    <elasticsearch.version>6.8.8</elasticsearch.version><!-- 7.10.2 -->
+    <solr.version>8.5.1</solr.version> <!-- 8.7.0 -->
+    <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
+    <rdf4j.version>3.5.1</rdf4j.version>
+
     <servlet-api.version>4.0.1</servlet-api.version>
-    <lucene.version>7.3.1</lucene.version>
-    <elasticsearch.version>6.3.0</elasticsearch.version>
-    <solr.version>8.5.1</solr.version>
-    <mtas.version>7.3.0.3</mtas.version>
-    <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <okhttp.version>3.14.2</okhttp.version>
 
     <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
@@ -1297,7 +1298,7 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>nl.knaw.meertens.mtas</groupId>
+        <groupId>org.textexploration.mtas</groupId>
         <artifactId>mtas</artifactId>
         <version>${mtas.version}</version>
         <exclusions>
