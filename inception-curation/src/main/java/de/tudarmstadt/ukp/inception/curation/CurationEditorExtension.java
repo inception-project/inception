@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.inception.curation.CurationMetadata.CURATION_USER_PROJECT;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -57,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -68,19 +69,19 @@ public class CurationEditorExtension
     implements AnnotationEditorExtension
 {
     public static final String EXTENSION_ID = "curationEditorExtension";
-    
+
     // actions from the ui when selecting span or arc annotation
-    private static final String ACTION_SELECT_ARC = "arcOpenDialog"; 
+    private static final String ACTION_SELECT_ARC = "arcOpenDialog";
     private static final String ACTION_SELECT_SPAN = "spanOpenDialog";
-    
+
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired CurationService curationService;
     private @Autowired PreRenderer preRenderer;
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired DocumentService documentService;
     private @Autowired UserDao userRepository;
-    
+
     @Override
     public String getBeanName()
     {
@@ -97,12 +98,12 @@ public class CurationEditorExtension
             return;
         }
         VID extendedVID = parse(aParamId);
-        
+
         if (!aAction.equals(ACTION_SELECT_ARC) && !aAction.equals(ACTION_SELECT_SPAN)) {
             return;
         }
         // Annotation has been selected for gold
-        saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID);        
+        saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID);
     }
 
     /**
@@ -113,20 +114,19 @@ public class CurationEditorExtension
         throws IOException, AnnotationException
     {
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
-        
+
         // get user CAS and annotation (to be merged into curator's)
         SourceDocument doc = aState.getDocument();
         String srcUser = ((CurationVID) aVID).getUsername();
-        
+
         if (!documentService.existsAnnotationDocument(doc, srcUser)) {
-            log.error(
-                  String.format("Source CAS of %s for curation not found", srcUser));
+            log.error(String.format("Source CAS of %s for curation not found", srcUser));
             return;
         }
-        
+
         CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
         AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, aVID.getId());
-        
+
         // merge into curator's CAS depending on annotation type (span or arc)
         CasMerge casMerge = new CasMerge(annotationService);
         CasMergeOperationResult mergeResult;
@@ -136,7 +136,7 @@ public class CurationEditorExtension
             // open created/updates FS in annotation detail editorpanel
             aState.getSelection().selectSpan(new VID(mergeResult.getResultFSAddress()), aTargetCas,
                     sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
-            
+
         }
         else if (ACTION_SELECT_ARC.equals(aAction.toString())) {
             // this is a slot arc
@@ -155,7 +155,7 @@ public class CurationEditorExtension
             else {
                 mergeResult = casMerge.mergeRelationAnnotation(doc, srcUser, layer, aTargetCas,
                         sourceAnnotation, layer.isAllowStacking());
-                // open created/updates FS in annotation detail editorpanel 
+                // open created/updates FS in annotation detail editorpanel
                 AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
                         mergeResult.getResultFSAddress());
                 Type depType = mergedAnno.getType();
@@ -167,9 +167,9 @@ public class CurationEditorExtension
                         targetFS);
             }
         }
-        
+
         aPanel.actionSelect(aTarget);
-        aPanel.actionCreateOrUpdate(aTarget, aTargetCas);  //should also update timestamps
+        aPanel.actionCreateOrUpdate(aTarget, aTargetCas); // should also update timestamps
     }
 
     /**
@@ -179,53 +179,50 @@ public class CurationEditorExtension
     {
         // format of extension payload is <USER>:<VID> with standard VID format
         // <ID>-<SUB>.<ATTR>.<SLOT>@<LAYER>
-        Matcher matcher = Pattern.compile("(?:(?<USER>\\w+)\\:)" 
-                + "(?<VID>.+)").matcher(aParamId.getExtensionPayload());
+        Matcher matcher = Pattern.compile("(?:(?<USER>\\w+)\\:)" + "(?<VID>.+)")
+                .matcher(aParamId.getExtensionPayload());
         if (!matcher.matches()) {
             return aParamId;
         }
-        
-        if (matcher.group("VID") == null || 
-                matcher.group("USER") == null ) {
+
+        if (matcher.group("VID") == null || matcher.group("USER") == null) {
             return aParamId;
         }
-        
+
         String vidStr = matcher.group("VID");
         String username = matcher.group("USER");
-        return new CurationVID(aParamId.getExtensionId(), username, 
-                VID.parse(vidStr), aParamId.getExtensionPayload());
+        return new CurationVID(aParamId.getExtensionId(), username, VID.parse(vidStr),
+                aParamId.getExtensionPayload());
     }
 
     @Override
     public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
             int aWindowEndOffset)
     {
-        if (!aState.getMode().equals(Mode.ANNOTATION)) {
+        if (!aState.getMode().equals(ANNOTATION)) {
             return;
         }
-        
-        // check if user already finished with this document
-        User currentUser = userRepository.getCurrentUser();
-        if (documentService.isAnnotationFinished(aState.getDocument(), currentUser)) {
-            return;
-        }
-        
-        //check annotatorstate metadata if user is currently curating for this project
+
+        // Check annotator state metadata if user is currently curating for this project
         long projectId = aState.getProject().getId();
-        Boolean isCurating = aState.getMetaData(CurationMetadata.CURATION_USER_PROJECT);
+        Boolean isCurating = aState.getMetaData(CURATION_USER_PROJECT);
         if (isCurating == null || !isCurating) {
             return;
         }
-            
-        List<User> selectedUsers = curationService
-                .listUsersReadyForCuration(currentUser.getUsername(), 
-                        aState.getProject(), aState.getDocument());
+
+        // check if user already finished with this document
+        String currentUsername = userRepository.getCurrentUsername();
+        if (curationService.isCurationFinished(aState, currentUsername)) {
+            return;
+        }
+
+        List<User> selectedUsers = curationService.listUsersReadyForCuration(currentUsername,
+                aState.getProject(), aState.getDocument());
         if (selectedUsers.isEmpty()) {
             return;
         }
 
         for (User user : selectedUsers) {
-                        
             try {
                 CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
                         user.getUsername());
@@ -237,12 +234,12 @@ public class CurationEditorExtension
                 VDocument tmpDoc = new VDocument();
                 preRenderer.render(tmpDoc, aWindowBeginOffset, aWindowEndOffset, userCas,
                         aState.getAnnotationLayers());
-                
+
                 String username = user.getUsername();
-                String color = "#ccccff";  //"#cccccc" is the color for recommendations
+                String color = "#ccccff"; // "#cccccc" is the color for recommendations
 
                 // copy all arcs and spans to existing doc with new VID
-                
+
                 // copy all spans and add to map as possible varc dependents
                 // spans with new vids identified by their old vid for lookup in varcs
                 Map<VID, VSpan> newIdSpan = new HashMap<>();
@@ -272,8 +269,8 @@ public class CurationEditorExtension
                     // set target and src with new vids for arc
                     VSpan targetSpan = newIdSpan.get(varc.getTarget());
                     VSpan srcSpan = newIdSpan.get(varc.getSource());
-                    VArc newVarc = new VArc(varc.getLayer(),extendedVID, varc.getType(), 
-                            srcSpan.getVid(), targetSpan.getVid(), varc.getLabelHint(), 
+                    VArc newVarc = new VArc(varc.getLayer(), extendedVID, varc.getType(),
+                            srcSpan.getVid(), targetSpan.getVid(), varc.getLabelHint(),
                             varc.getFeatures(), color);
                     // set user name as comment
                     aVdoc.add(new VComment(extendedVID, VCommentType.INFO, username));

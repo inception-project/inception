@@ -1,0 +1,20 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|identifier|value
+
+
+#Text=Mourinho admitted a top four finish for Champions League qualification would now be tough .
+1-1	0-8	Mourinho	_	_	
+1-2	9-17	admitted	B	false	
+1-3	18-19	a	_	_	
+1-4	20-23	top	_	_	
+1-5	24-28	four	_	_	
+1-6	29-35	finish	_	_	
+1-7	36-39	for	_	_	
+1-8	40-49	Champions	_	_	
+1-9	50-56	League	_	_	
+1-10	57-70	qualification	_	_	
+1-11	71-76	would	_	_	
+1-12	77-80	now	_	_	
+1-13	81-83	be	_	_	
+1-14	84-89	tough	_	_	
+1-15	90-91	.	_	_	

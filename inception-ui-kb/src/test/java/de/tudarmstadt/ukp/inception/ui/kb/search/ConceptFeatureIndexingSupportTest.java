@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -70,16 +69,15 @@ public class ConceptFeatureIndexingSupportTest
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private FeatureIndexingSupportRegistryImpl featureIndexingSupportRegistry;
     private JCas jcas;
-    
+
     @Before
     public void setup() throws Exception
     {
         initMocks(this);
-        
+
         project = new Project();
         project.setId(1l);
         project.setName("test project");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         kb = new KnowledgeBase();
 
@@ -87,12 +85,12 @@ public class ConceptFeatureIndexingSupportTest
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
                         new NumberFeatureSupport(), new ConceptFeatureSupport(kbService)));
         featureSupportRegistry.init();
-        
-        featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(asList(
-                new PrimitiveUimaIndexingSupport(featureSupportRegistry),
-                new ConceptFeatureIndexingSupport(featureSupportRegistry, kbService)));
+
+        featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(
+                asList(new PrimitiveUimaIndexingSupport(featureSupportRegistry),
+                        new ConceptFeatureIndexingSupport(featureSupportRegistry, kbService)));
         featureIndexingSupportRegistry.init();
-        
+
         // Resetting the JCas is faster than re-creating it
         if (jcas == null) {
             jcas = JCasFactory.createJCas();
@@ -101,7 +99,7 @@ public class ConceptFeatureIndexingSupportTest
             jcas.reset();
         }
     }
-    
+
     @Test
     public void testConceptFeature() throws Exception
     {
@@ -119,25 +117,24 @@ public class ConceptFeatureIndexingSupportTest
         ne.addToIndexes();
         builder.add(" ");
         builder.add(".", Token.class);
-        
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
+
+        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
-        when(kbService.readInstance(any(Project.class), any(String.class))).thenReturn(
-                Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
-        
-        
+        when(kbService.readInstance(any(Project.class), any(String.class)))
+                .thenReturn(Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
+
         KBInstance kbInstance = new KBInstance("urn:dummy-concept", "Dummy concept");
         kbInstance.setKB(kb);
-        
+
         when(kbService.readItem(any(Project.class), any(String.class)))
                 .thenReturn(Optional.of(kbInstance));
 
         List<KBHandle> dummyValue = new ArrayList<KBHandle>();
         dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
-        
+
         when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),
                 any(Boolean.class))).thenReturn(dummyValue);
 
@@ -147,18 +144,16 @@ public class ConceptFeatureIndexingSupportTest
                 annotationSchemaService, featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
-        
+
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
-                
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPrefix)
-            .contains("Named_Entity", "Named_Entity.identifier", "Named_Entity.identifier-exact");
-    
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPostfix)
-            .contains("", "urn:dummy-concept", "Dummy concept");
+
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPrefix).contains("Named_Entity",
+                        "Named_Entity.identifier", "Named_Entity.identifier-exact");
+
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPostfix)
+                .contains("", "urn:dummy-concept", "Dummy concept");
     }
 }

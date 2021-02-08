@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 
-public class SchedulingServiceTest {
+public class SchedulingServiceTest
+{
 
     @Mock
     private ApplicationContext mockContext;
@@ -66,11 +67,8 @@ public class SchedulingServiceTest {
     @Test
     public void thatRunningTasksCanBeRetrieved()
     {
-        List<Task> tasks = asList(
-            buildDummyTask("user1", "project1"),
-            buildDummyTask("user1", "project2"),
-            buildDummyTask("user2", "project1")
-        );
+        List<Task> tasks = asList(buildDummyTask("user1", "project1"),
+                buildDummyTask("user1", "project2"), buildDummyTask("user2", "project1"));
 
         for (Task task : tasks) {
             sut.enqueue(task);
@@ -86,8 +84,7 @@ public class SchedulingServiceTest {
     @Test
     public void thatTasksForUserCanBeStopped()
     {
-        List<Task> tasks = asList(
-                buildDummyTask("testUser", "project1"),
+        List<Task> tasks = asList(buildDummyTask("testUser", "project1"),
                 buildDummyTask("unimportantUser1", "project1"),
                 buildDummyTask("unimportantUser2", "project2"),
                 buildDummyTask("unimportantUser3", "project3"),
@@ -98,12 +95,9 @@ public class SchedulingServiceTest {
                 buildDummyTask("testUser", "project4"),
                 buildDummyTask("unimportantUser2", "project3"),
                 buildDummyTask("unimportantUser3", "project4"),
-                buildDummyTask("testUser", "project2"),
-                buildDummyTask("testUser", "project2")
-        );
+                buildDummyTask("testUser", "project2"), buildDummyTask("testUser", "project2"));
         Task[] tasksToRemove = tasks.stream()
-                .filter(t -> t.getUser().getUsername().equals("testUser"))
-                .toArray(Task[]::new);
+                .filter(t -> t.getUser().getUsername().equals("testUser")).toArray(Task[]::new);
 
         for (Task task : tasks) {
             sut.enqueue(task);
@@ -133,10 +127,11 @@ public class SchedulingServiceTest {
     }
 
     /**
-     * DummyTask is a task that does nothing and just sleeps until interrupted. if interrupted,
-     * it just finishes running and returns.
+     * DummyTask is a task that does nothing and just sleeps until interrupted. if interrupted, it
+     * just finishes running and returns.
      */
-    private static class DummyTask extends Task
+    private static class DummyTask
+        extends Task
     {
         DummyTask(User aUser, Project aProject)
         {
@@ -144,11 +139,13 @@ public class SchedulingServiceTest {
         }
 
         @Override
-        public void run() {
+        public void run()
+        {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
+                }
+                catch (InterruptedException e) {
                     break;
                 }
             }

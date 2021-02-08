@@ -1,13 +1,13 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
  *  
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,17 +40,18 @@ public class TutorialFooterPanel
 
     public TutorialFooterPanel(String aId)
     {
-        super(aId); 
+        super(aId);
     }
-    
+
     @Override
-    public void renderHead(IHeaderResponse aResponse) {
+    public void renderHead(IHeaderResponse aResponse)
+    {
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
-        
-        //TODO move it back to web jars after latest release
+
+        // TODO move it back to web jars after latest release
         aResponse.render(JavaScriptHeaderItem.forReference(EnjoyHintJsReference.get()));
-//        aResponse.render(JavaScriptHeaderItem
-//                .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/enjoyhint.js")));
+        // aResponse.render(JavaScriptHeaderItem
+        // .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/enjoyhint.js")));
 
         // Loading resources for the tour guide feature for the new users
         aResponse.render(JavaScriptHeaderItem.forReference(
@@ -64,14 +65,13 @@ public class TutorialFooterPanel
 
         aResponse.render(JavaScriptHeaderItem.forReference(TutorialJavascriptReference.get()));
         // add top-margin to next button to fix label and buttons overlapping
-        aResponse.render(CssHeaderItem.forCSS(
-                ".enjoyhint_next_btn{\n" +
-                "  margin-top: 8px;\n" +
-                "}",
+        aResponse.render(CssHeaderItem.forCSS(//
+                ".enjoyhint_next_btn{\n" + //
+                        "  margin-top: 8px;\n" + //
+                        "}", //
                 "enjoyhint"));
         // check if the tutorial will need to be run
-        aResponse.render(OnLoadHeaderItem
-                .forScript("setContextPath('" + context.getContextPath() + "');\n" +
-                           "runRoutines();"));
+        aResponse.render(OnLoadHeaderItem.forScript(
+                "setContextPath('" + context.getContextPath() + "');\n" + "runRoutines();"));
     }
 }

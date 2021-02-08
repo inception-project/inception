@@ -1,14 +1,14 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,57 +47,60 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
-public class CurationServiceTest {
-    
+public class CurationServiceTest
+{
+
     private CurationService sut;
-    
+
     @Autowired
     private TestEntityManager testEntityManager;
-        
+
     private Project testProject;
     private SourceDocument testDocument;
     private User beate;
     private User kevin;
-    
+
     @Before
     public void setUp() throws Exception
     {
         sut = new CurationServiceImpl(testEntityManager.getEntityManager());
-        
-        //create users
+
+        // create users
         User current = new User("current", Role.ROLE_USER);
         beate = new User("beate", Role.ROLE_USER);
         kevin = new User("kevin", Role.ROLE_USER);
         testEntityManager.persist(current);
         testEntityManager.persist(beate);
         testEntityManager.persist(kevin);
-        
-        //create project
+
+        // create project
         testProject = new Project("testProject");
         testEntityManager.persist(testProject);
         testEntityManager.persist(new ProjectPermission(testProject, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "beate", CURATOR));
-        
-        //create sourcedocument
+
+        // create sourcedocument
         testDocument = new SourceDocument("testDoc", testProject, "text");
         testEntityManager.persist(testDocument);
-        
+
         // add selected users to sut
         List<User> selectedUsers = new ArrayList<>();
         selectedUsers.add(kevin);
         selectedUsers.add(beate);
         sut.updateUsersSelectedForCuration("current", testProject.getId(), selectedUsers);
     }
-    
+
     @After
-    public void tearDown() {
+    public void tearDown()
+    {
         testEntityManager.clear();
     }
 
     @Test
-    public void listUsersReadyForCuration_ShouldReturnFinishedUsers() {
-        //create finished annotationdocuments
+    public void listUsersReadyForCuration_ShouldReturnFinishedUsers()
+    {
+        // create finished annotationdocuments
         AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", testProject, "beate",
                 testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
@@ -106,16 +109,17 @@ public class CurationServiceTest {
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
-        
+
         List<User> finishedUsers = sut.listUsersReadyForCuration("current", testProject,
                 testDocument);
-        
+
         assertThat(finishedUsers).containsExactly(beate, kevin);
     }
-    
+
     @Test
-    public void listFinishedUsers_ShouldReturnFinishedUsers() {
-        //create finished annotationdocuments
+    public void listFinishedUsers_ShouldReturnFinishedUsers()
+    {
+        // create finished annotationdocuments
         AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", testProject, "beate",
                 testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
@@ -124,32 +128,29 @@ public class CurationServiceTest {
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
-        
-        List<User> finishedUsers = sut.listFinishedUsers(testProject,
-                testDocument);
-        
+
+        List<User> finishedUsers = sut.listFinishedUsers(testProject, testDocument);
+
         assertThat(finishedUsers).containsExactly(beate, kevin);
     }
-    
+
     @Test
-    public void listUsersReadyForCuration_NoFinishedUsers() {
+    public void listUsersReadyForCuration_NoFinishedUsers()
+    {
         List<User> finishedUsers = sut.listUsersReadyForCuration("current", testProject,
                 testDocument);
-        
+
         assertThat(finishedUsers).isEmpty();
     }
-    
+
     @SpringBootConfiguration
-    @EnableAutoConfiguration 
-    @EntityScan(
-            basePackages = {
-                "de.tudarmstadt.ukp.inception.curation",
-                "de.tudarmstadt.ukp.clarin.webanno.model",
-                "de.tudarmstadt.ukp.clarin.webanno.security.model" 
-    })
-    public static class SpringConfig {
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.curation",
+            "de.tudarmstadt.ukp.clarin.webanno.model",
+            "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+    public static class SpringConfig
+    {
         // No content
     }
-    
-    
+
 }

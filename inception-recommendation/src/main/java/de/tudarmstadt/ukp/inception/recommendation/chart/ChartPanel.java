@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,7 +67,7 @@ public class ChartPanel
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
     }
-    
+
     public LearningCurve getModelObject()
     {
         return (LearningCurve) getDefaultModelObject();
@@ -92,18 +92,18 @@ public class ChartPanel
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
 
         aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
-        
-        String chartTriggerJavascript = String.join("\n",
-                "$(document).ready(function(){", 
-                "   $.ajax({",
-                "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',",
-                "       type:'post',",
-                "       contentType:'application/json',",
-                "       dataType:'json',",
-                "       success : function(result){",
-                "           updateLearningCurveDiagram(result)",
-                "       }",
-                "   })",
+
+        String chartTriggerJavascript = String.join("\n", //
+                "$(document).ready(function(){", //
+                "   $.ajax({", //
+                "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',", //
+                "       type:'post',", //
+                "       contentType:'application/json',", //
+                "       dataType:'json',", //
+                "       success : function(result){", //
+                "           updateLearningCurveDiagram(result)", //
+                "       }", //
+                "   })", //
                 "})");
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));

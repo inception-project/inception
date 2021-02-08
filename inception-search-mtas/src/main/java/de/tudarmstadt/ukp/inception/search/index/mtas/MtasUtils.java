@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,16 +42,16 @@ public final class MtasUtils
                 widths[i] = Math.max(widths[i], String.valueOf(dump[n][i]).length());
             }
         }
-        
+
         for (int n = 0; n < dump.length; n++) {
             for (int i = 0; i < dump[n].length; i++) {
                 System.out.print(StringUtils.rightPad(String.valueOf(dump[n][i]), widths[i]));
                 System.out.print(" | ");
             }
             System.out.println();
-        }        
+        }
     }
-    
+
     public static BytesRef encodeFSAddress(int aFeatureStructureAddress)
     {
         return new BytesRef(ByteBuffer.allocate(4).putInt(aFeatureStructureAddress).array());
@@ -66,7 +66,7 @@ public final class MtasUtils
         ((Buffer) buffer).flip();
         return buffer.getInt();
     }
-    
+
     public static char[] bytesToChars(byte[] aBytes)
     {
         // Reserve sufficient space of the length and the char-encoded byte array
@@ -75,7 +75,7 @@ public final class MtasUtils
         // Encode the length of the byte array
         chars[0] = (char) ((aBytes.length & 0xFFFF0000) >> 16);
         chars[1] = (char) (aBytes.length & 0x0000FFFF);
-        
+
         // Encode the byte array into the char array
         for (int i = 0; i < aBytes.length; i++) {
             if (i % 2 == 0) {
@@ -85,15 +85,15 @@ public final class MtasUtils
                 chars[2 + (i / 2)] |= (char) (aBytes[i] & 0x00FF);
             }
         }
-        
+
         return chars;
     }
-    
+
     public static byte[] charsToBytes(char[] aChars)
     {
         int len = ((int) aChars[0] << 16) | aChars[1];
         byte[] bytes = new byte[len];
-        
+
         for (int i = 0; i < len; i++) {
             if (i % 2 == 0) {
                 bytes[i] = (byte) (aChars[2 + (i / 2)] >>> 8);
@@ -102,7 +102,7 @@ public final class MtasUtils
                 bytes[i] = (byte) (aChars[2 + (i / 2)] & 0x00FF);
             }
         }
-        
+
         return bytes;
     }
 }

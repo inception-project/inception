@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,10 +23,12 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-public class LearningRecordTest {
+public class LearningRecordTest
+{
 
     @Test
-    public void thatTokenTextIsTruncated() {
+    public void thatTokenTextIsTruncated()
+    {
         char[] charArray = new char[300];
         Arrays.fill(charArray, 'X');
         String longTokenText = new String(charArray);
@@ -34,8 +36,6 @@ public class LearningRecordTest {
         LearningRecord sut = new LearningRecord();
         sut.setTokenText(longTokenText);
 
-        assertThat(sut.getTokenText())
-            .as("TokenText has been truncated")
-            .hasSize(255);
+        assertThat(sut.getTokenText()).as("TokenText has been truncated").hasSize(255);
     }
 }

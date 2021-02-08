@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,18 +37,19 @@ public class TrainingStatesChoice
 {
     private static final long serialVersionUID = 7627977162174971025L;
 
-    public TrainingStatesChoice(String aId,
-            IModel<Recommender> recommenderModel)
+    public TrainingStatesChoice(String aId, IModel<Recommender> recommenderModel)
     {
         super(aId);
-        
+
         // We need to invert the states in documentStates, as the recommender stores the
         // ones to ignore, not the ones to consider
-        IModel<Set<AnnotationDocumentState>> model = new IModel<Set<AnnotationDocumentState>>() {
+        IModel<Set<AnnotationDocumentState>> model = new IModel<Set<AnnotationDocumentState>>()
+        {
             private static final long serialVersionUID = 2894838629097952859L;
 
             @Override
-            public void setObject(Set<AnnotationDocumentState> states) {
+            public void setObject(Set<AnnotationDocumentState> states)
+            {
                 // The model can be null after save and delete
                 if (recommenderModel.getObject() != null) {
                     recommenderModel.getObject().setStatesIgnoredForTraining(invert(states));
@@ -56,14 +57,16 @@ public class TrainingStatesChoice
             }
 
             @Override
-            public Set<AnnotationDocumentState> getObject() {
+            public Set<AnnotationDocumentState> getObject()
+            {
                 Set<AnnotationDocumentState> ignoredStates = recommenderModel.getObject()
                         .getStatesIgnoredForTraining();
 
                 return invert(ignoredStates);
             }
 
-            private Set<AnnotationDocumentState> invert(Set<AnnotationDocumentState> states) {
+            private Set<AnnotationDocumentState> invert(Set<AnnotationDocumentState> states)
+            {
                 Set<AnnotationDocumentState> result = getAllPossibleDocumentStates();
 
                 if (states == null) {
@@ -90,7 +93,7 @@ public class TrainingStatesChoice
         attributes.put("class", "form-check-label");
         return attributes;
     }
-    
+
     @Override
     protected IValueMap getAdditionalAttributes(int aIndex, AnnotationDocumentState aChoice)
     {
@@ -98,7 +101,7 @@ public class TrainingStatesChoice
         attributes.put("class", "form-check-input");
         return attributes;
     }
-    
+
     private static Set<AnnotationDocumentState> getAllPossibleDocumentStates()
     {
         return new HashSet<>(asList(AnnotationDocumentState.values()));

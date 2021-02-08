@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -58,8 +58,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.sass.KnowledgeBasePageLRR;
  * selected concept instead</li>
  * </ul>
  */
-@MountPath(value =  "/${" + PAGE_PARAM_PROJECT_ID + "}/kb/${" + PAGE_PARAM_KB_NAME + "}",
-    alt = {"/${" + PAGE_PARAM_PROJECT_ID + "}/kb"})
+@MountPath(value = "/${" + PAGE_PARAM_PROJECT_ID + "}/kb/${" + PAGE_PARAM_KB_NAME + "}", alt = {
+        "/${" + PAGE_PARAM_PROJECT_ID + "}/kb" })
 public class KnowledgeBasePage
     extends ApplicationPageBase
 {
@@ -70,8 +70,9 @@ public class KnowledgeBasePage
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     private @SpringBean KnowledgeBaseService kbService;
-        
-    public KnowledgeBasePage() {
+
+    public KnowledgeBasePage()
+    {
         super();
         LOG.debug("Setting up page without parameters");
         Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
@@ -81,7 +82,8 @@ public class KnowledgeBasePage
         commonInit(project, null);
     }
 
-    public KnowledgeBasePage(PageParameters aPageParameters) {
+    public KnowledgeBasePage(PageParameters aPageParameters)
+    {
         super(aPageParameters);
 
         User user = userRepository.getCurrentUser();
@@ -93,7 +95,7 @@ public class KnowledgeBasePage
             long projectId = projectParam.toLong();
             try {
                 project = projectService.getProject(projectId);
-                
+
                 // Check access to project
                 if (!projectService.isAnnotator(project, user)) {
                     error("You have no permission to access project [" + project.getId() + "]");
@@ -115,12 +117,14 @@ public class KnowledgeBasePage
 
         commonInit(project, kb);
     }
-    
-    private void abort() {
+
+    private void abort()
+    {
         throw new RestartResponseException(getApplication().getHomePage());
     }
-    
-    private void commonInit(Project aProject, KnowledgeBase aKb) {
+
+    private void commonInit(Project aProject, KnowledgeBase aKb)
+    {
         IModel<Project> projectModel = new LambdaModel<>(() -> aProject);
 
         List<KnowledgeBase> knowledgeBases = new ArrayList<>();
@@ -129,9 +133,9 @@ public class KnowledgeBasePage
         }
         catch (Exception e) {
             error("Unable to fetch knowledgebases: " + e.getLocalizedMessage());
-            LOG.error("Unable to fetch knowledgebases.",e);
+            LOG.error("Unable to fetch knowledgebases.", e);
         }
-        
+
         if (knowledgeBases.isEmpty()) {
             abort();
         }
@@ -141,9 +145,10 @@ public class KnowledgeBasePage
         KnowledgeBasePanel panel = new KnowledgeBasePanel("content", projectModel, kbModel);
         add(panel);
     }
-    
+
     @Override
-    public void renderHead(IHeaderResponse response) {
+    public void renderHead(IHeaderResponse response)
+    {
         super.renderHead(response);
         response.render(CssReferenceHeaderItem.forReference(KnowledgeBasePageLRR.get()));
     }

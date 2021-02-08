@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ public class IncrementalSplitter
     private int trainCount;
     private int testCount;
     private int ignoreCount;
-    
+
     private final int increment;
     private int limit;
     private boolean hitTheLimit = true;
@@ -48,7 +48,7 @@ public class IncrementalSplitter
         increment = aIncrement;
         lowSampleThreshold = aLowSampleThreshold;
     }
-    
+
     public IncrementalSplitter(int aTrainBatchSize, int aTestBatchSize, int aIncrement,
             int aLowSampleThreshold)
     {
@@ -63,7 +63,7 @@ public class IncrementalSplitter
     {
         int module = trainBatchSize + testBatchSize;
         int count = trainCount + testCount + ignoreCount;
-        
+
         TargetSet target;
         // Low sample count behavior
         if (count < lowSampleThreshold) {
@@ -83,12 +83,12 @@ public class IncrementalSplitter
         else {
             target = count % module < trainBatchSize ? TRAIN : TEST;
         }
-        
+
         if (trainCount >= limit && target == TRAIN) {
             target = IGNORE;
             hitTheLimit = true;
         }
-        
+
         switch (target) {
         case TRAIN:
             trainCount++;
@@ -119,9 +119,9 @@ public class IncrementalSplitter
         testCount = 0;
         ignoreCount = 0;
         hitTheLimit = false;
-        
+
         limit += increment;
-        
+
         return this;
     }
 }

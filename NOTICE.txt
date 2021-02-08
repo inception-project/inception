@@ -1,0 +1,15 @@
+The copyright of the code in this repository belongs to the respective contributors who
+license their contribution under the terms of the Apache License 2.0.
+
+Besides invididual contributions, the copyright in this codebase largely belongs to:
+
+Copyright 2018-2021 Ubiquitous Knowledge Processing (UKP) Lab
+                    Technische Universität Darmstadt
+                    (in the context of the INCEpTION project)
+
+Copyright 2012-2016 Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+                    Technische Universität Darmstadt
+                    (in the context of the WebAnno project(s))
+
+For individual contributions, please check the CONTRIBITORS.txt file as well as the history
+contained in this repository.

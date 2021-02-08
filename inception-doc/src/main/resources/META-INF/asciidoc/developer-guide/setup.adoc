@@ -2,10 +2,14 @@
 // Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 // Technische Universität Darmstadt
 // 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -225,6 +229,13 @@ way is to go to `File -> Open` and the select the `pom.xml` in the {product-name
 IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
 INCEpTION can now be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
 
+If you get errors that certain classes are not found, then open a terminal, go to the INCEpTION
+repository root and run
+
+    mvn clean install -DskipTests=true -Dcheckstyle.skip=true
+
+Alternatively, you can run the `clean` and `install` Maven goals from IntelliJ manually.
+
 === Checkstyle and Formatting
 
 We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
@@ -238,11 +249,15 @@ check the box next to the newly created configuration and apply it as well.
 
 In order to achieve the same formatting and import order as Eclipse, install the
 https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter/versions[Eclipse Code Formatter].
-Download the https://dkpro.github.io/files/DKProCoreStyle_20170725.xml[DKPro Eclipse Code Style file].
+Download the https://dkpro.github.io/files/DKProStyle_latest.xml[DKPro Eclipse Code Style file].
 In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new profile using this
 file.
 
 Also make sure to enable auto import optimization in `File | Settings | Editor | General | Auto Import`.
+
+To format your source code on save, we also recommend to install the
+https://plugins.jetbrains.com/plugin/7642-save-actions[Save Actions] plugin and configure it
+accordingly.
 
 === IntelliJ IDEA Tomcat Integration
 
@@ -269,8 +284,8 @@ will be in `target/doc-out`.
 
 === Developing INCEpTION and webanno together
 
-INCEpTION builds on Webanno. Therefore, it can be desirable to work on Webanno and INCEpTION at the same time
-so that changes in Webanno are directly visible in your INCEpTION development. For this, check out Webanno from
+INCEpTION builds on WebAnno. Therefore, it can be desirable to work on WebAnno and INCEpTION at the same time
+so that changes in WebAnno are directly visible in your INCEpTION development. For this, check out WebAnno from
 Github. Then, import it as a Maven project: first, open the Maven sidebar on the right. Then, click on the `+`
-and select the Webanno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
+and select the WebAnno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
 make sure to check `Always update snapshots`.

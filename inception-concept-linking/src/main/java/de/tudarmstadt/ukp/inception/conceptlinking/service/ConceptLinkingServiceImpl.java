@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -88,30 +88,28 @@ public class ConceptLinkingServiceImpl
 
     private final List<EntityRankingFeatureGenerator> featureGeneratorsProxy;
     private List<EntityRankingFeatureGenerator> featureGenerators;
-    
+
     @Autowired
     public ConceptLinkingServiceImpl(KnowledgeBaseService aKbService,
-            EntityLinkingPropertiesImpl aProperties,
-            RepositoryProperties aRepoProperties,
-            @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
-                    aFeatureGenerators)
+            EntityLinkingPropertiesImpl aProperties, RepositoryProperties aRepoProperties,
+            @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> aFeatureGenerators)
     {
         Validate.notNull(aKbService);
         Validate.notNull(aProperties);
-        
+
         kbService = aKbService;
         properties = aProperties;
         featureGeneratorsProxy = aFeatureGenerators;
         repoProperties = aRepoProperties;
     }
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
         File stopwordsFile = new File(repoProperties.getPath(), "resources/stopwords-en.txt");
         stopwords = FileUtils.loadStopwordFile(stopwordsFile);
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
@@ -125,7 +123,7 @@ public class ConceptLinkingServiceImpl
         if (featureGeneratorsProxy != null) {
             generators.addAll(featureGeneratorsProxy);
             AnnotationAwareOrderComparator.sort(generators);
-        
+
             for (EntityRankingFeatureGenerator generator : generators) {
                 log.info("Found entity ranking feature generator: {}",
                         ClassUtils.getAbbreviatedName(generator.getClass(), 20));
@@ -151,21 +149,21 @@ public class ConceptLinkingServiceImpl
             throw new IllegalArgumentException("Unknown item type: [" + aValueType + "]");
         }
     }
-    
+
     public Set<KBHandle> generateCandidates(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention)
     {
         // If the query of the user is smaller or equal to this threshold, then we only use it for
         // exact matching. If it is longer, we look for concepts which start with or which contain
-        // the users input. This is meant as a performance optimization for large KBs where we 
+        // the users input. This is meant as a performance optimization for large KBs where we
         // want to avoid long reaction times when there is large number of candidates (which is
         // very likely when e.g. searching for all items starting with or containing a specific
         // letter.
         final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
-        
+
         long startTime = currentTimeMillis();
         Set<KBHandle> result = new HashSet<>();
-        
+
         if (aQuery != null) {
             ParsedIRI iri = null;
             try {
@@ -177,14 +175,12 @@ public class ConceptLinkingServiceImpl
             if (iri != null && iri.isAbsolute()) {
                 SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
                         .withIdentifier(aQuery);
-                
+
                 if (aConceptScope != null) {
                     iriMatchBuilder.descendantsOf(aConceptScope);
                 }
-                
-                iriMatchBuilder
-                        .retrieveLabel()
-                        .retrieveDescription();
+
+                iriMatchBuilder.retrieveLabel().retrieveDescription();
 
                 List<KBHandle> iriMatches;
                 if (aKB.isReadOnly()) {
@@ -193,38 +189,36 @@ public class ConceptLinkingServiceImpl
                 else {
                     iriMatches = kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true));
                 }
-                
+
                 log.debug("Found [{}] candidates exactly matching IRI [{}]", iriMatches.size(),
                         aQuery);
 
                 result.addAll(iriMatches);
             }
         }
-        
+
         SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB);
-        
+
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
             exactBuilder.descendantsOf(aConceptScope);
         }
-        
+
         // Collect exact matches - although exact matches are theoretically contained in the
         // set of containing matches, due to the ranking performed by the KB/FTS, we might
         // not actually see the exact matches within the first N results. So we query for
         // the exact matches separately to ensure we have them.
-        // Mind, we use the query and the mention text here - of course we don't only want 
+        // Mind, we use the query and the mention text here - of course we don't only want
         // exact matches of the query but also of the mention :)
-        String[] exactLabels = asList(aQuery, aMention).stream()
-                .filter(StringUtils::isNotBlank)
+        String[] exactLabels = asList(aQuery, aMention).stream() //
+                .filter(StringUtils::isNotBlank) //
                 .toArray(String[]::new);
-        
+
         if (exactLabels.length > 0) {
             exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
-            
-            exactBuilder
-                    .retrieveLabel()
-                    .retrieveDescription();
-    
+
+            exactBuilder.retrieveLabel().retrieveDescription();
+
             List<KBHandle> exactMatches;
             if (aKB.isReadOnly()) {
                 exactMatches = kbService.listHandlesCaching(aKB, exactBuilder, true);
@@ -232,11 +226,10 @@ public class ConceptLinkingServiceImpl
             else {
                 exactMatches = kbService.read(aKB, conn -> exactBuilder.asHandles(conn, true));
             }
-            
-            
-            log.debug("Found [{}] candidates exactly matching {}",
-                    exactMatches.size(), asList(exactLabels));
-    
+
+            log.debug("Found [{}] candidates exactly matching {}", exactMatches.size(),
+                    asList(exactLabels));
+
             result.addAll(exactMatches);
         }
 
@@ -245,71 +238,64 @@ public class ConceptLinkingServiceImpl
         // would be slow - and also the results would likely not be very accurate
         if (aQuery != null && aQuery.trim().length() >= threshold) {
             SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
-            
+
             if (aConceptScope != null) {
                 // Scope-limiting must always happen before label matching!
                 startingWithBuilder.descendantsOf(aConceptScope);
             }
-            
+
             // Collect matches starting with the query - this is the main driver for the
             // auto-complete functionality
             startingWithBuilder.withLabelStartingWith(aQuery);
-            
-            startingWithBuilder
-                    .retrieveLabel()
-                    .retrieveDescription();
-            
+
+            startingWithBuilder.retrieveLabel().retrieveDescription();
+
             List<KBHandle> startingWithMatches;
             if (aKB.isReadOnly()) {
                 startingWithMatches = kbService.listHandlesCaching(aKB, startingWithBuilder, true);
             }
             else {
                 startingWithMatches = kbService.read(aKB,
-                    conn -> startingWithBuilder.asHandles(conn, true));
+                        conn -> startingWithBuilder.asHandles(conn, true));
             }
-                        
-            log.debug("Found [{}] candidates starting with [{}]]",
-                    startingWithMatches.size(), aQuery);            
-            
+
+            log.debug("Found [{}] candidates starting with [{}]]", startingWithMatches.size(),
+                    aQuery);
+
             result.addAll(startingWithMatches);
         }
-        
+
         // Finally, we use the query and mention also for a "containing" search - but only if they
-        // are longer than the threshold. Again, for very short query/mention, we'd otherwise get 
+        // are longer than the threshold. Again, for very short query/mention, we'd otherwise get
         // way too many matches, being slow and not accurate.
-        String[] longLabels = asList(aQuery, aMention).stream()
-                .filter(Objects::nonNull)
-                .map(s -> s.trim())
-                .filter(s -> s.length() >= threshold)
-                .toArray(String[]::new);
-        
+        String[] longLabels = asList(aQuery, aMention).stream().filter(Objects::nonNull)
+                .map(s -> s.trim()).filter(s -> s.length() >= threshold).toArray(String[]::new);
+
         if (longLabels.length > 0) {
             // Collect containing matches
             SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
-    
+
             if (aConceptScope != null) {
                 // Scope-limiting must always happen before label matching!
                 containingBuilder.descendantsOf(aConceptScope);
             }
-            
+
             containingBuilder.withLabelMatchingAnyOf(longLabels);
-            
-            containingBuilder
-                    .retrieveLabel()
-                    .retrieveDescription();
-            
+
+            containingBuilder.retrieveLabel().retrieveDescription();
+
             List<KBHandle> containingMatches;
             if (aKB.isReadOnly()) {
                 containingMatches = kbService.listHandlesCaching(aKB, containingBuilder, true);
             }
             else {
                 containingMatches = kbService.read(aKB,
-                    conn -> containingBuilder.asHandles(conn, true));
+                        conn -> containingBuilder.asHandles(conn, true));
             }
-            
+
             log.debug("Found [{}] candidates using matching {}", containingMatches.size(),
                     asList(longLabels));
-            
+
             result.addAll(containingMatches);
         }
 
@@ -318,7 +304,7 @@ public class ConceptLinkingServiceImpl
 
         return result;
     }
-    
+
     @Override
     public List<KBHandle> disambiguate(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention,
@@ -334,27 +320,23 @@ public class ConceptLinkingServiceImpl
     {
         candidate.put(KEY_MENTION, aMention);
         candidate.put(KEY_QUERY, aQuery);
-        
+
         if (aCas != null) {
             AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
             if (sentence != null) {
                 List<String> mentionContext = new ArrayList<>();
                 Collection<AnnotationFS> tokens = selectTokensCovered(sentence);
                 // Collect left context
-                tokens.stream()
-                        .filter(t -> t.getEnd() <= aBegin)
+                tokens.stream().filter(t -> t.getEnd() <= aBegin)
                         .sorted(Comparator.comparingInt(AnnotationFS::getBegin).reversed())
                         .limit(properties.getMentionContextSize())
                         .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                        .filter(s -> !stopwords.contains(s))
-                        .forEach(mentionContext::add);
+                        .filter(s -> !stopwords.contains(s)).forEach(mentionContext::add);
                 // Collect right context
-                tokens.stream()
-                        .filter(t -> t.getBegin() >= (aBegin + aMention.length()))
+                tokens.stream().filter(t -> t.getBegin() >= (aBegin + aMention.length()))
                         .limit(properties.getMentionContextSize())
                         .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                        .filter(s -> !stopwords.contains(s))
-                        .forEach(mentionContext::add);
+                        .filter(s -> !stopwords.contains(s)).forEach(mentionContext::add);
                 candidate.put(KEY_MENTION_CONTEXT, mentionContext);
             }
             else {
@@ -363,46 +345,42 @@ public class ConceptLinkingServiceImpl
         }
         return candidate;
     }
-    
+
     @Override
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin)
     {
         long startTime = currentTimeMillis();
-        
+
         // Set the feature values
-        List<CandidateEntity> candidates = aCandidates.stream()
-                .map(CandidateEntity::new)
+        List<CandidateEntity> candidates = aCandidates.stream().map(CandidateEntity::new)
                 .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
                 .map(candidate -> {
                     for (EntityRankingFeatureGenerator generator : featureGenerators) {
                         generator.apply(candidate);
                     }
                     return candidate;
-                })
-                .collect(Collectors.toCollection(ArrayList::new));
-        
+                }).collect(Collectors.toCollection(ArrayList::new));
+
         // Do the main ranking
         // Sort candidates by multiple keys.
         candidates.sort(BaselineRankingStrategy.getInstance());
 
-        List<KBHandle> results = candidates.stream()
-                .map(candidate -> {
-                    KBHandle handle = candidate.getHandle();
-                    handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
-                    return handle;
-                })
-                .collect(Collectors.toList());
-        
+        List<KBHandle> results = candidates.stream().map(candidate -> {
+            KBHandle handle = candidate.getHandle();
+            handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
+            return handle;
+        }).collect(Collectors.toList());
+
         int rank = 1;
         for (KBHandle handle : results) {
             handle.setRank(rank);
             rank++;
         }
-         
+
         log.debug("Ranked [{}] candidates for mention [{}] and query [{}] in [{}] ms",
-                 results.size(), aMention, aQuery, currentTimeMillis() - startTime);
-         
+                results.size(), aMention, aQuery, currentTimeMillis() - startTime);
+
         return results;
     }
 
@@ -413,24 +391,23 @@ public class ConceptLinkingServiceImpl
     {
         // Sanitize query by removing typical wildcard characters
         String query = aQuery.replaceAll("[*?]", "").trim();
-        
+
         // Determine which knowledge bases to query
         List<KnowledgeBase> knowledgeBases = new ArrayList<>();
         if (aRepositoryId != null) {
-            kbService.getKnowledgeBaseById(aProject, aRepositoryId)
-                    .filter(KnowledgeBase::isEnabled)
+            kbService.getKnowledgeBaseById(aProject, aRepositoryId).filter(KnowledgeBase::isEnabled)
                     .ifPresent(knowledgeBases::add);
         }
         else {
             knowledgeBases.addAll(kbService.getEnabledKnowledgeBases(aProject));
         }
-        
+
         // Query the knowledge bases for candidates
         Set<KBHandle> candidates = new HashSet<>();
         for (KnowledgeBase kb : knowledgeBases) {
             candidates.addAll(generateCandidates(kb, aConceptScope, aValueType, query, aMention));
         }
-        
+
         // Rank the candidates and return them
         return rankCandidates(query, aMention, candidates, aCas, aMentionBeginOffset);
     }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -91,9 +91,8 @@ public class OpenNlpDoccatRecommenderTest
 
         sut.train(context, casList);
 
-        assertThat(context.get(OpenNlpDoccatRecommender.KEY_MODEL))
-            .as("Model has been set")
-            .isPresent();
+        assertThat(context.get(OpenNlpDoccatRecommender.KEY_MODEL)).as("Model has been set")
+                .isPresent();
     }
 
     @Test
@@ -101,7 +100,7 @@ public class OpenNlpDoccatRecommenderTest
     {
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
         List<CAS> casList = loadArxivData();
-        
+
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
@@ -114,8 +113,7 @@ public class OpenNlpDoccatRecommenderTest
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
 
     @Test
@@ -136,7 +134,7 @@ public class OpenNlpDoccatRecommenderTest
         System.out.printf("Accuracy: %f%n", accuracy);
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
-        
+
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
         assertThat(recall).isStrictlyBetween(0.0, 1.0);
@@ -153,13 +151,13 @@ public class OpenNlpDoccatRecommenderTest
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
-            
+
             double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
-            
+
             i++;
         }
     }
@@ -168,19 +166,17 @@ public class OpenNlpDoccatRecommenderTest
     {
         Dataset ds = loader.load("sentence-classification-en");
         return loadData(ds, Arrays.stream(ds.getDataFiles())
-                .filter(file -> file.getName().contains("arxiv"))
-                .toArray(File[]::new));
+                .filter(file -> file.getName().contains("arxiv")).toArray(File[]::new));
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Reader.class,
-                Reader.PARAM_PATTERNS, files, 
+        CollectionReader reader = createReader(Reader.class, Reader.PARAM_PATTERNS, files,
                 Reader.PARAM_LANGUAGE, ds.getLanguage());
 
         AnalysisEngine segmenter = createEngine(BreakIteratorSegmenter.class,
                 BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, false);
-        
+
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
             JCas cas = JCasFactory.createJCas();
@@ -195,7 +191,7 @@ public class OpenNlpDoccatRecommenderTest
     {
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());
-        
+
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName("value");
 
@@ -205,8 +201,9 @@ public class OpenNlpDoccatRecommenderTest
 
         return recommender;
     }
-    
-    public static class Reader extends JCasResourceCollectionReader_ImplBase
+
+    public static class Reader
+        extends JCasResourceCollectionReader_ImplBase
     {
         @Override
         public void getNext(JCas aJCas) throws IOException, CollectionException
@@ -215,38 +212,38 @@ public class OpenNlpDoccatRecommenderTest
             initCas(aJCas, res);
 
             StringBuilder text = new StringBuilder();
-            
+
             try (InputStream is = new BufferedInputStream(
                     CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
                 LineIterator i = IOUtils.lineIterator(is, "UTF-8");
                 try {
                     while (i.hasNext()) {
                         String line = i.next();
-                        
+
                         if (line.startsWith("#")) {
                             continue;
                         }
-                        
+
                         String[] fields = line.split("\\s", 2);
-                        
+
                         if (text.length() > 0) {
                             text.append("\n");
                         }
-                        
+
                         int sentenceBegin = text.length();
                         text.append(fields[1]);
-                        
-                        NamedEntity ne = new NamedEntity(aJCas,  sentenceBegin, text.length());
+
+                        NamedEntity ne = new NamedEntity(aJCas, sentenceBegin, text.length());
                         ne.setValue(fields[0]);
                         ne.addToIndexes();
-                        
+
                         new Sentence(aJCas, sentenceBegin, text.length()).addToIndexes();
                     }
                 }
                 finally {
                     LineIterator.closeQuietly(i);
                 }
-                
+
                 aJCas.setDocumentText(text.toString());
             }
         }

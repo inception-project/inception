@@ -1,0 +1,7 @@
+import webanno.custom.ComplexLinkHost as HOST;
+
+HOST {
+  links.target.value = "PER" & links.target.value = "LOC" -> value = "move";
+  links.target.value = "PER" & links.target.value = "ORG" -> value = "buy";
+  links.target.value = "ORG" & links.target.value = "ORG" -> value = "buy";
+}

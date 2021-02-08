@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,7 @@ public class DocumentMetadataLayerSupport
     implements InitializingBean
 {
     public static final String TYPE = "document-metadata";
-    
+
     private final ApplicationEventPublisher eventPublisher;
     private final DocumentMetadataLayerSupportProperties properties;
 
@@ -81,26 +81,26 @@ public class DocumentMetadataLayerSupport
     {
         layerSupportId = aBeanName;
     }
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(TYPE, "Document metadata", layerSupportId, 
-                !properties.isEnabled()));
+        types = asList(
+                new LayerType(TYPE, "Document metadata", layerSupportId, !properties.isEnabled()));
     }
-    
+
     @Override
     public List<LayerType> getSupportedLayerTypes()
     {
         return types;
     }
-    
+
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
         return TYPE.equals(aLayer.getType());
     }
-    
+
     @Override
     public DocumentMetadataLayerAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
@@ -111,19 +111,18 @@ public class DocumentMetadataLayerSupport
 
         return adapter;
     }
-    
+
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
     {
         TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION_BASE);
-        
+
         List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
-                .filter(feature -> aLayer.equals(feature.getLayer()))
-                .collect(toList());
+                .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
         generateFeatures(aTsd, td, featureForLayer);
     }
-    
+
     @Override
     public Renderer createRenderer(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)

@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,35 +47,33 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 @AutoConfigureAfter({ KnowledgeBaseServiceAutoConfiguration.class,
         RecommenderServiceAutoConfiguration.class })
 @ConditionalOnBean(KnowledgeBaseService.class)
-@ConditionalOnProperty(prefix = "knowledge-base.entity-linking", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "knowledge-base.entity-linking", //
+        name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(EntityLinkingPropertiesImpl.class)
 public class EntityLinkingServiceAutoConfiguration
 {
     @Bean
     @Autowired
     public ConceptLinkingService conceptLinkingService(KnowledgeBaseService aKbService,
-            EntityLinkingPropertiesImpl aProperties,
-            RepositoryProperties aRepoProperties,
-            @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
-                    aFeatureGenerators)
+            EntityLinkingPropertiesImpl aProperties, RepositoryProperties aRepoProperties,
+            @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> aFeatureGenerators)
     {
         return new ConceptLinkingServiceImpl(aKbService, aProperties, aRepoProperties,
                 aFeatureGenerators);
     }
-    
+
     @Bean
     public EntityLinkingProperties entityLinkingProperties()
     {
         return new EntityLinkingPropertiesImpl();
     }
-    
+
     @Bean
     public LevenshteinFeatureGenerator levenshteinFeatureGenerator()
     {
         return new LevenshteinFeatureGenerator();
     }
-    
+
     @Bean
     @Autowired
     public WikidataIdRankFeatureGenerator wikidataIdRankFeatureGenerator(
@@ -83,7 +81,7 @@ public class EntityLinkingServiceAutoConfiguration
     {
         return new WikidataIdRankFeatureGenerator(aKbService);
     }
-    
+
     @ConditionalOnBean(RecommendationService.class)
     @Bean
     @Autowired
@@ -92,16 +90,16 @@ public class EntityLinkingServiceAutoConfiguration
     {
         return new NamedEntityLinkerFactory(aKbService, aClService, aFsRegistry);
     }
-    
-//    @Bean
-//    @Autowired
+
+    // @Bean
+    // @Autowired
     public FrequencyFeatureGenerator frequencyFeatureGenerator(RepositoryProperties aRepoProperties)
     {
         return new FrequencyFeatureGenerator(aRepoProperties);
     }
-    
-//  @Bean
-//  @Autowired
+
+    // @Bean
+    // @Autowired
     public SemanticSignatureFeatureGenerator semanticSignatureFeatureGenerator(
             KnowledgeBaseService aKbService, RepositoryProperties aRepoProperties,
             EntityLinkingProperties aProperties)

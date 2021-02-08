@@ -1,0 +1,5 @@
+import System.input.accessStyle as access; 
+
+Verb{
+@access = "open" & location = "parent" -> showPath.withoutQuotes = "false" | useCaching = "false" (!);
+}

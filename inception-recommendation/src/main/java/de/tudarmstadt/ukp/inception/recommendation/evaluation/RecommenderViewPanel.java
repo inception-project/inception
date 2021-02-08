@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ public class RecommenderViewPanel
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
-    
+
     private IModel<Recommender> recommenderModel;
 
     public RecommenderViewPanel(String aId, IModel<Recommender> aRecommender)
@@ -62,18 +62,18 @@ public class RecommenderViewPanel
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
 
-        recommenderModel = aRecommender; 
-        
+        recommenderModel = aRecommender;
+
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
-        
+
         nameField = new TextField<>(MID_NAME, String.class);
         form.add(nameField);
-        
-        tool = new TextField<>(MID_TOOL,String.class);
+
+        tool = new TextField<>(MID_TOOL, String.class);
         form.add(tool);
-        
-        feature = new TextField<AnnotationFeature>(MID_FEATURE );
+
+        feature = new TextField<AnnotationFeature>(MID_FEATURE);
         form.add(feature);
 
         layer = new TextField<AnnotationLayer>(MID_LAYER);
@@ -86,7 +86,7 @@ public class RecommenderViewPanel
         super.onConfigure();
 
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
-        
+
         if (recommenderModel != null && recommenderModel.getObject() != null) {
             String name = recommenderModel.getObject().getLayer().getUiName();
             layer.setDefaultModel(Model.of(name));

@@ -1,0 +1,18 @@
+import webanno.custom.SemPred as SemPred;
+
+SemPred {
+  aFrame = "Abusing" -> 
+    RoleSet.role = "Abuser" (!) |
+    RoleSet.role = "Victim" (!) |
+    RoleSet.role = "Degree" |
+    RoleSet.role = "Duration" |
+    RoleSet.role = "Frequency" |
+    RoleSet.role = "Instrument" |
+    RoleSet.role = "Manner" |
+    RoleSet.role = "Means" |
+    RoleSet.role = "Place" |
+    RoleSet.role = "Purpose" |
+    RoleSet.role = "Reason" |
+    RoleSet.role = "Time" |
+    RoleSet.role = "Type";
+    }
