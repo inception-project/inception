@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntryImpl;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class StringMatchingRecommenderTest
@@ -164,9 +164,9 @@ public class StringMatchingRecommenderTest
         
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        List<GazeteerEntry> gazeteer = new ArrayList<>();
-        gazeteer.add(new GazeteerEntry("John Smith", "ORG"));
-        gazeteer.add(new GazeteerEntry("Peter John", "LOC"));
+        List<GazeteerEntryImpl> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntryImpl("John Smith", "ORG"));
+        gazeteer.add(new GazeteerEntryImpl("Peter John", "LOC"));
 
         sut.pretrain(gazeteer, context);
 
@@ -193,8 +193,8 @@ public class StringMatchingRecommenderTest
         
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        List<GazeteerEntry> gazeteer = new ArrayList<>();
-        gazeteer.add(new GazeteerEntry("Smith . Peter", "ORG"));
+        List<GazeteerEntryImpl> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntryImpl("Smith . Peter", "ORG"));
 
         sut.pretrain(gazeteer, context);
 
@@ -234,10 +234,10 @@ public class StringMatchingRecommenderTest
         CAS cas = casList.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        List<GazeteerEntry> gazeteer = new ArrayList<>();
-        gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
-        gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
-        gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
+        List<GazeteerEntryImpl> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntryImpl("Toyota", "ORG"));
+        gazeteer.add(new GazeteerEntryImpl("Deutschland", "LOC"));
+        gazeteer.add(new GazeteerEntryImpl("Deutschland", "GPE"));
 
         sut.pretrain(gazeteer, context);
 

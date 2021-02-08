@@ -136,6 +136,7 @@
     <module>inception-workload</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
+    <module>inception-regex-recommender</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -1269,6 +1270,11 @@
         <version>${wicket.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+      	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      	<artifactId>inception-regex-recommender</artifactId>
+      	<version>0.17.2-SNAPSHOT</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

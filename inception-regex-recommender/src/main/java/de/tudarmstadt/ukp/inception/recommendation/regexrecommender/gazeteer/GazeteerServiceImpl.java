@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer;
+
+package de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
@@ -43,17 +44,15 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntryImpl;
-
+import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.GazeteerEntryImpl;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link StringMatchingRecommenderAutoConfiguration#gazeteerService}.
+ * {@link RegexRecommenderAutoConfiguration#gazeteerService}.
  * </p>
  */
-
 public class GazeteerServiceImpl
     implements GazeteerService
 {
@@ -85,7 +84,7 @@ public class GazeteerServiceImpl
                 .setParameter("recommender", aRecommender)
                 .getResultList();
     }
-
+    
     @Override
     @Transactional
     public void createOrUpdateGazeteer(Gazeteer aGazeteer)
@@ -115,7 +114,7 @@ public class GazeteerServiceImpl
             }
         }
     }
-
+    
     @Override
     @Transactional
     public void importGazeteerFile(Gazeteer aGazeteer, InputStream aStream) throws IOException
@@ -130,7 +129,7 @@ public class GazeteerServiceImpl
             IOUtils.copyLarge(aStream, os);
         }
     }
-
+    
     @Override
     public File getGazeteerFile(Gazeteer aGazeteer) throws IOException
     {
@@ -141,7 +140,7 @@ public class GazeteerServiceImpl
                 .resolve(aGazeteer.getId() + ".txt")
                 .toFile();
     }
-
+    
     @Override
     @Transactional
     public void deleteGazeteers(Gazeteer aGazeteer) throws IOException
@@ -178,7 +177,8 @@ public class GazeteerServiceImpl
         
         return data;
     }
-    
+
+
     
     public void parseGazeteer(Gazeteer aGaz, InputStream aStream, List<GazeteerEntryImpl> aTarget)
         throws IOException
@@ -195,11 +195,13 @@ public class GazeteerServiceImpl
             }
             
             String[] fields = line.split("\t");
-            if (fields.length == 2) {
-                String text = trimToNull(fields[0]);
+            if (fields.length == 4) {
+                String regex = trimToNull(fields[0]);
                 String label = trimToNull(fields[1]);
-                if (label != null && text != null) {
-                    aTarget.add(new GazeteerEntryImpl(text, label));
+                int accCount = Integer.parseInt(trimToNull(fields[2]));
+                int rejCount = Integer.parseInt(trimToNull(fields[3]));
+                if (label != null && regex != null) {
+                    aTarget.add(new GazeteerEntryImpl(regex, label, accCount, rejCount));
                 }
             }
             else {

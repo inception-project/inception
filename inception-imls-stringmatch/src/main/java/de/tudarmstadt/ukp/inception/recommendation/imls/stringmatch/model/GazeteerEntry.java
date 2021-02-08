@@ -15,44 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
-public class GazeteerEntry
+public interface GazeteerEntry
 {
-    public final String text;
-    public final String label;
-    
-    public GazeteerEntry(String aText, String aLabel)
-    {
-        super();
-        text = aText;
-        label = aLabel;
-    }
 
-    @Override
-    public boolean equals(final Object other)
-    {
-        if (!(other instanceof GazeteerEntry)) {
-            return false;
-        }
-        GazeteerEntry castOther = (GazeteerEntry) other;
-        return new EqualsBuilder().append(text, castOther.text).append(label, castOther.label)
-                .isEquals();
-    }
+    public boolean equals(final Object other);
 
-    @Override
-    public int hashCode()
-    {
-        return new HashCodeBuilder().append(text).append(label).toHashCode();
-    }
+    public int hashCode();
 
-    @Override
-    public String toString()
-    {
-        return new ToStringBuilder(this).append("text", text).append("label", label).toString();
-    }
+    public String toString();
+
 }

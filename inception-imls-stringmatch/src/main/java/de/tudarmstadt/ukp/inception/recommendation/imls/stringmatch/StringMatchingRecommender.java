@@ -53,9 +53,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
 
@@ -70,7 +70,7 @@ public class StringMatchingRecommender
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final StringMatchingRecommenderTraits traits;
 
-    private final GazeteerService gazeteerService;
+    private final GazeteerServiceImpl gazeteerService;
 
     public StringMatchingRecommender(Recommender aRecommender,
             StringMatchingRecommenderTraits aTraits)
@@ -79,10 +79,9 @@ public class StringMatchingRecommender
     }
 
     public StringMatchingRecommender(Recommender aRecommender,
-            StringMatchingRecommenderTraits aTraits, GazeteerService aGazeteerService)
+            StringMatchingRecommenderTraits aTraits, GazeteerServiceImpl aGazeteerService)
     {
         super(aRecommender);
-
         traits = aTraits;
         gazeteerService = aGazeteerService;
     }
@@ -93,12 +92,12 @@ public class StringMatchingRecommender
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
     
-    public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
+    public void pretrain(List<GazeteerEntryImpl> aData, RecommenderContext aContext)
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
         
         if (aData != null) {
-            for (GazeteerEntry entry : aData) {
+            for (GazeteerEntryImpl entry : aData) {
                 learn(dict, entry.text, entry.label);
             }
         }

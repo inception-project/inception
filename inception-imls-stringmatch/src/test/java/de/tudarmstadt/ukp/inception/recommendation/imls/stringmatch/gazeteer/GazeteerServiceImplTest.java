@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntryImpl;
 
 @RunWith(SpringRunner.class) 
 @DataJpaTest
@@ -196,12 +196,12 @@ public class GazeteerServiceImplTest
                 .isEqualToNormalizingNewlines(contentOf(input));
      
         // Check that imported file matches the expectations
-        List<GazeteerEntry> gazData = sut.readGazeteerFile(gaz);
+        List<GazeteerEntryImpl> gazData = sut.readGazeteerFile(gaz);
         assertThat(gazData).containsExactlyInAnyOrder(
-                new GazeteerEntry("John", "PER"),
-                new GazeteerEntry("London", "LOC"),
-                new GazeteerEntry("London", "GPE"),
-                new GazeteerEntry("ACME", "ORG"));
+                new GazeteerEntryImpl("John", "PER"),
+                new GazeteerEntryImpl("London", "LOC"),
+                new GazeteerEntryImpl("London", "GPE"),
+                new GazeteerEntryImpl("ACME", "ORG"));
         
         // Check that gazeteer file has been deleted along with the entity
         sut.deleteGazeteers(gaz);
@@ -220,11 +220,11 @@ public class GazeteerServiceImplTest
                 "# This is a comment",
                 "John\tPER");
         
-        List<GazeteerEntry> data = new ArrayList<>();
+        List<GazeteerEntryImpl> data = new ArrayList<>();
         sut.parseGazeteer(gaz, toInputStream(gazeteer, UTF_8), data);
         
         assertThat(data).containsExactlyInAnyOrder(
-                new GazeteerEntry("John", "PER"));
+                new GazeteerEntryImpl("John", "PER"));
     }
 
     @Test
@@ -232,7 +232,7 @@ public class GazeteerServiceImplTest
     {
         Gazeteer gaz = new Gazeteer("gaz", rec1);
         
-        List<GazeteerEntry> data = new ArrayList<>();
+        List<GazeteerEntryImpl> data = new ArrayList<>();
 
         String gazeteer1 = String.join("\n",
                 "Bill\tPER",

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
+import java.util.Optional;
+
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -33,11 +35,24 @@ public class RecommendationRejectedEvent extends ApplicationEvent
     private final String text;
     private final AnnotationFeature feature;
     private final Object recommendedValue;
+    // this allows the regex-recommender to
+    // know on which regex an accepted recommendation
+    // is based
+    private final Optional<String> confidenceExplanation;
+
     
     public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
             int aBegin, int aEnd, String aText, AnnotationFeature aFeature,
             Object aRecommendedValue)
-    {
+    {   
+        this(aSource, aDocument, aUser, aBegin, aEnd, aText, aFeature, aRecommendedValue,
+             Optional.of(null));
+    }
+    
+    public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            int aBegin, int aEnd, String aText, AnnotationFeature aFeature,
+            Object aRecommendedValue, Optional<String> aConfExplanation)
+    {   
         super(aSource);
         
         document = aDocument;
@@ -47,7 +62,9 @@ public class RecommendationRejectedEvent extends ApplicationEvent
         text = aText;
         feature = aFeature;
         recommendedValue = aRecommendedValue;
+        confidenceExplanation = aConfExplanation;
     }
+    
 
     public SourceDocument getDocument()
     {
@@ -82,6 +99,11 @@ public class RecommendationRejectedEvent extends ApplicationEvent
     public Object getRecommendedValue()
     {
         return recommendedValue;
+    }
+    
+    public Optional<String> getConfidenceExplanation()
+    {
+        return confidenceExplanation;
     }
     
     @Override

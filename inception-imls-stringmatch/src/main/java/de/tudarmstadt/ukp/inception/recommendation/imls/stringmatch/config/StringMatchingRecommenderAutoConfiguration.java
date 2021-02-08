@@ -29,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.exporter.GazeteerExporter;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner.StringMatchingNerClassificationToolFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.pos.StringMatchingPosClassificationToolFactory;
@@ -43,14 +42,14 @@ public class StringMatchingRecommenderAutoConfiguration
     @Bean
     @Autowired
     public GazeteerExporter gazeteerExporter(RecommendationService aRecommendationService,
-            GazeteerService aGazeteerService)
+            GazeteerServiceImpl aGazeteerService)
     {
         return new GazeteerExporter(aRecommendationService, aGazeteerService);
     }
     
     @Bean
     @Autowired
-    public GazeteerService gazeteerService(RepositoryProperties aRepositoryProperties)
+    public GazeteerServiceImpl gazeteerService(RepositoryProperties aRepositoryProperties)
     {
         return new GazeteerServiceImpl(aRepositoryProperties, entityManager);
     }
@@ -70,8 +69,8 @@ public class StringMatchingRecommenderAutoConfiguration
     @Bean
     @Autowired
     public StringMatchingRecommenderFactory stringMatchingRecommenderFactory(
-            GazeteerService aGazeteerService)
-    {
+            GazeteerServiceImpl aGazeteerService)
+    {   
         return new StringMatchingRecommenderFactory(aGazeteerService);
     }
 }

@@ -57,7 +57,7 @@ public interface GazeteerService
     /**
      * Loads the gazeteer.
      */
-    List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz) throws IOException;
+    List<? extends GazeteerEntry> readGazeteerFile(Gazeteer aGaz) throws IOException;
 
     boolean existsGazeteer(Recommender aRecommender, String aName);
 }
