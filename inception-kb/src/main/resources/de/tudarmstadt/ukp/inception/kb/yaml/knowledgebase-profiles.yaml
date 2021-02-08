@@ -70,13 +70,12 @@ british_museum:
     website-url: https://www.britishmuseum.org/about_us/news_and_press/press_releases/2011/semantic_web_endpoint.aspx
 
 db_pedia:
-  name: DBpedia
+  name: DBpedia (German)
   type: REMOTE
-  default-language: en
-  default-dataset: http://dbpedia.org
+  default-language: de
   reification: NONE
   access:
-    access-url: http://dbpedia.org/sparql
+    access-url: http://de.dbpedia.org/sparql
     full-text-search: bif:contains
   mapping:
     class: http://www.w3.org/2002/07/owl#Class
@@ -127,12 +126,11 @@ wikidata:
     - http://www.wikidata.org/entity/Q35120
 
 yago:
-  # Disabled, see #1708 for more info
   name: YAGO v4
-  disabled: true
+  # Disabled, see #1708 for more info
+  #disabled: true
   type: REMOTE
-  # Languages not supported by SPARQL endpoint - causes exception
-  # default-language: eng
+  default-language: en
   reification: NONE
   access:
     access-url: https://yago-knowledge.org/sparql/query
@@ -151,7 +149,7 @@ yago:
     description: YAGO is a semantic knowledge base, derived from Wikipedia WordNet and GeoNames.
     host-institution-name: Max-Planck-Institute Saarbrücken
     author-name: Max-Planck-Institute Saarbrücken, DIG group at Télécom ParisTech University.
-    website-url: https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/
+    website-url: https://yago-knowledge.org
   root-concepts:
     - http://schema.org/Thing
 

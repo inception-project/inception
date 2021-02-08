@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,16 +68,16 @@ public class SimulationLearningCurvePanel
     private static final String MID_SIMULATION_START_BUTTON = "simulation-start-button";
     private static final String MID_FORM = "form";
     private static final String OUTPUT_MID_CHART_CONTAINER = "html-chart-container";
-    
+
     private static final double TRAIN_PERCENTAGE = 0.8;
     private static final int INCREMENT = 250;
     private static final int LOW_SAMPLE_THRESHOLD = 10;
 
     private static final Logger LOG = LoggerFactory.getLogger(SimulationLearningCurvePanel.class);
-    
+
     private static final List<RecommenderEvaluationScoreMetricEnum> DROPDOWN_VALUES = Arrays
             .asList(RecommenderEvaluationScoreMetricEnum.values());
-    
+
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
@@ -86,7 +86,7 @@ public class SimulationLearningCurvePanel
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
 
-    private ChartPanel chartPanel ;
+    private ChartPanel chartPanel;
     private RecommenderEvaluationScoreMetricEnum selectedValue;
     List<EvaluationResult> evaluationResults;
     private boolean evaluate;
@@ -101,11 +101,11 @@ public class SimulationLearningCurvePanel
 
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
-        
-        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = 
-                new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>(
-                "select", new Model<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES.get(0)),
-                new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
+
+        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = //
+                new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>("select",
+                        new Model<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES.get(0)),
+                        new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
         dropdown.setOutputMarkupId(true);
         selectedValue = RecommenderEvaluationScoreMetricEnum.Accuracy;
 
@@ -121,48 +121,45 @@ public class SimulationLearningCurvePanel
                 if (chartPanel == null) {
                     return;
                 }
-                
+
                 startEvaluation(_target, form);
             }
         });
 
         form.add(dropdown);
-        
-        emptyPanel  = new EmptyPanel(MID_CHART_CONTAINER);
+
+        emptyPanel = new EmptyPanel(MID_CHART_CONTAINER);
         emptyPanel.setOutputMarkupPlaceholderTag(true);
         emptyPanel.setMarkupId(OUTPUT_MID_CHART_CONTAINER);
         emptyPanel.setOutputMarkupId(true);
         form.add(emptyPanel);
-        
+
         // clicking the start button the annotated documents are evaluated and the learning curve
         // for the selected recommender is plotted in the hCart Panel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
-            (_target, _form) -> 
-                startEvaluation(_target, _form )
-            );
-        
+                (_target, _form) -> startEvaluation(_target, _form));
+
         form.add(startButton);
     }
 
-    private void startEvaluation(IPartialPageRequestHandler aTarget, MarkupContainer aForm )
+    private void startEvaluation(IPartialPageRequestHandler aTarget, MarkupContainer aForm)
     {
         // replace the empty panel with chart panel on click event so the chard renders
         // with the loadable detachable model.
-        chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER,
                 LoadableDetachableModel.of(this::renderChart));
         chartPanel.setOutputMarkupPlaceholderTag(true);
         chartPanel.setOutputMarkupId(true);
-        
+
         aForm.addOrReplace(chartPanel);
         aTarget.add(chartPanel);
     }
-    
+
     private LearningCurve renderChart()
     {
         String[] scoresAndTrainingSizes = evaluate();
 
-        
         if (scoresAndTrainingSizes == null) {
             // no warning message here because it has already been shown in the method
             // evaluate(_target). There are different scenarios when the score is returned
@@ -184,33 +181,34 @@ public class SimulationLearningCurvePanel
         LearningCurve learningCurve = new LearningCurve();
         learningCurve.setCurveData(curveData);
         learningCurve.setXaxis(trainingSizes);
-        
+
         evaluate = false;
 
         return learningCurve;
     }
-    
+
     /**
-     * evaluates the selected recommender with the help of the annotated documents in the project. 
+     * evaluates the selected recommender with the help of the annotated documents in the project.
      * 
-     * @param aTarget uses to log errors on the page in case of unwanted behaviour
+     * @param aTarget
+     *            uses to log errors on the page in case of unwanted behaviour
      * 
      * @return comma separated string of scores in the first index of the array
      */
     private String[] evaluate()
     {
-        //there must be some recommender selected by the user on the UI
+        // there must be some recommender selected by the user on the UI
         if (selectedRecommenderPanel.getObject() == null
                 || selectedRecommenderPanel.getObject().getTool() == null) {
             LOG.error("Please select a recommender from the list");
             return null;
         }
 
-        //get all the source documents related to the project
+        // get all the source documents related to the project
         Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
                 .listAllDocuments(project, userDao.getCurrentUser());
 
-        //create a list of CAS from the pre-annotated documents of the project
+        // create a list of CAS from the pre-annotated documents of the project
         List<CAS> casList = new ArrayList<>();
         listAllDocuments.forEach((source, annotation) -> {
             try {
@@ -222,26 +220,26 @@ public class SimulationLearningCurvePanel
                 return;
             }
         });
-        
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE,
-                INCREMENT, LOW_SAMPLE_THRESHOLD);
+
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE, INCREMENT,
+                LOW_SAMPLE_THRESHOLD);
 
         @SuppressWarnings("rawtypes")
         RecommendationEngineFactory factory = recommenderRegistry
                 .getFactory(selectedRecommenderPanel.getObject().getTool());
         RecommendationEngine recommender = factory.build(selectedRecommenderPanel.getObject());
-        
+
         if (recommender == null) {
             LOG.warn("Unknown Recommender selected");
             return null;
         }
-        
+
         if (!evaluate) {
             return getEvaluationScore(evaluationResults);
         }
 
         evaluationResults = new ArrayList<EvaluationResult>();
-        
+
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
         while (splitStrategy.hasNext()) {
@@ -249,7 +247,7 @@ public class SimulationLearningCurvePanel
 
             try {
                 EvaluationResult evaluationResult = recommender.evaluate(casList, splitStrategy);
-                
+
                 if (evaluationResult.isEvaluationSkipped()) {
                     LOG.warn("Evaluation skipped. Chart cannot to be shown");
                     continue;
@@ -258,7 +256,7 @@ public class SimulationLearningCurvePanel
                 evaluationResults.add(evaluationResult);
             }
             catch (RecommendationException e) {
-                LOG.error(e.toString(),e);
+                LOG.error(e.toString(), e);
                 continue;
             }
         }
@@ -312,6 +310,6 @@ public class SimulationLearningCurvePanel
     public void recommenderChanged()
     {
         evaluate = true;
-        
+
     }
 }

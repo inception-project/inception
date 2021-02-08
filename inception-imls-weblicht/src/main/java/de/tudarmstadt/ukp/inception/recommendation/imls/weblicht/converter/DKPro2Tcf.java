@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,14 +63,14 @@ import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 public class DKPro2Tcf
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private static final String REL_TYPE_EXPLETIVE = "expletive";
-    
+
     public void convert(JCas aJCas, TextCorpus textCorpus)
     {
         write(aJCas, textCorpus);
     }
-    
+
     public void write(JCas aJCas, TextCorpus aTextCorpus)
     {
         Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap;
@@ -84,7 +88,7 @@ public class DKPro2Tcf
             TextCorpus aTextCorpus)
     {
         boolean tokensLayerCreated = false;
-        
+
         // Create tokens layer if it does not exist
         TokensLayer tokensLayer = aTextCorpus.getTokensLayer();
         if (tokensLayer == null) {
@@ -95,10 +99,8 @@ public class DKPro2Tcf
         else {
             log.debug("Layer [{}]: found", TextCorpusLayerTag.TOKENS.getXmlName());
         }
-        
-        
-        Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap =
-                new HashMap<>();
+
+        Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap = new HashMap<>();
 
         int j = 0;
         for (Token token : select(aJCas, Token.class)) {
@@ -117,7 +119,7 @@ public class DKPro2Tcf
             tokensBeginPositionMap.put(token.getBegin(), tokensLayer.getToken(j));
             j++;
         }
-        
+
         return tokensBeginPositionMap;
     }
 
@@ -132,7 +134,7 @@ public class DKPro2Tcf
 
         // Tokens layer must already exist
         TokensLayer tokensLayer = aTextCorpus.getTokensLayer();
-        
+
         // create POS tag annotation layer
         String posTagSet = "STTS";
         for (TagsetDescription tagSet : select(aJCas, TagsetDescription.class)) {
@@ -141,16 +143,16 @@ public class DKPro2Tcf
                 break;
             }
         }
-        
+
         PosTagsLayer posLayer = aTextCorpus.createPosTagsLayer(posTagSet);
-        
+
         log.debug("Layer [{}]: created", TextCorpusLayerTag.POSTAGS.getXmlName());
-        
+
         int j = 0;
         for (Token coveredToken : select(aJCas, Token.class)) {
             POS pos = coveredToken.getPos();
 
-            if (pos != null && posLayer != null ) {
+            if (pos != null && posLayer != null) {
                 String posValue = coveredToken.getPos().getPosValue();
                 posLayer.addTag(posValue, tokensLayer.getToken(j));
             }
@@ -158,7 +160,7 @@ public class DKPro2Tcf
             j++;
         }
     }
-    
+
     public void writeLemmas(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
@@ -167,10 +169,10 @@ public class DKPro2Tcf
             log.debug("Layer [{}]: empty", TextCorpusLayerTag.LEMMAS.getXmlName());
             return;
         }
-        
+
         // Tokens layer must already exist
         TokensLayer tokensLayer = aTextCorpus.getTokensLayer();
-        
+
         // create lemma annotation layer
         LemmasLayer lemmasLayer = aTextCorpus.createLemmasLayer();
 
@@ -185,10 +187,11 @@ public class DKPro2Tcf
             }
             j++;
         }
-        
+
     }
-    
-    public void writeOrthograph(JCas aJCas, TextCorpus aTextCorpus) {
+
+    public void writeOrthograph(JCas aJCas, TextCorpus aTextCorpus)
+    {
         if (!JCasUtil.exists(aJCas, SofaChangeAnnotation.class)) {
             // Do nothing if there are no SofaChangeAnnotation layer
             // (Which is equivalent to Orthography layer in TCF) in the CAS
@@ -210,7 +213,7 @@ public class DKPro2Tcf
                     token.getBegin(), token.getEnd());
             if (scas.size() > 0 && orthographyLayer != null) {
                 SofaChangeAnnotation change = scas.get(0);
-                
+
                 orthographyLayer.addCorrection(scas.get(0).getValue(), tokensLayer.getToken(j),
                         Optional.ofNullable(change.getOperation()).map(CorrectionOperation::valueOf)
                                 .orElse(null));
@@ -219,7 +222,7 @@ public class DKPro2Tcf
         }
 
     }
-    
+
     public void writeSentence(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
@@ -260,17 +263,16 @@ public class DKPro2Tcf
                 break;
             }
         }
-        
-        Optional<Dependency> hasNonBasic = select(aJCas, Dependency.class).stream()
-            .filter(dep -> dep.getFlavor() != null && 
-                    !DependencyFlavor.BASIC.equals(dep.getFlavor()))
-            .findAny();
-        
+
+        Optional<Dependency> hasNonBasic = select(aJCas, Dependency.class).stream().filter(
+                dep -> dep.getFlavor() != null && !DependencyFlavor.BASIC.equals(dep.getFlavor()))
+                .findAny();
+
         dependencyParsingLayer = aTextCorpus.createDependencyParsingLayer(tagSetName,
                 hasNonBasic.isPresent(), true);
 
         log.debug("Layer [{}]: created", TextCorpusLayerTag.PARSING_DEPENDENCY.getXmlName());
-        
+
         for (Sentence s : select(aJCas, Sentence.class)) {
             List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<>();
             for (Dependency d : selectCovered(Dependency.class, s)) {
@@ -295,7 +297,7 @@ public class DKPro2Tcf
             log.debug("Layer [{}]: empty", TextCorpusLayerTag.NAMED_ENTITIES.getXmlName());
             return;
         }
-        
+
         String tagSetName = "BART";
         for (TagsetDescription tagSet : select(aJCas, TagsetDescription.class)) {
             if (tagSet.getLayer().equals(NamedEntity.class.getName())) {
@@ -307,7 +309,7 @@ public class DKPro2Tcf
         NamedEntitiesLayer namedEntitiesLayer = aTextCorpus.createNamedEntitiesLayer(tagSetName);
 
         log.debug("Layer [{}]: created", TextCorpusLayerTag.NAMED_ENTITIES.getXmlName());
-        
+
         for (NamedEntity namedEntity : select(aJCas, NamedEntity.class)) {
             List<Token> tokensInCas = selectCovered(aJCas, Token.class, namedEntity.getBegin(),
                     namedEntity.getEnd());
@@ -327,7 +329,7 @@ public class DKPro2Tcf
             log.debug("Layer [{}]: empty", TextCorpusLayerTag.REFERENCES.getXmlName());
             return;
         }
-        
+
         String tagSetName = "TueBaDz";
         for (TagsetDescription tagSet : select(aJCas, TagsetDescription.class)) {
             if (tagSet.getLayer().equals(CoreferenceLink.class.getName())) {
@@ -335,19 +337,18 @@ public class DKPro2Tcf
                 break;
             }
         }
-        
+
         ReferencesLayer coreferencesLayer = aTextCorpus.createReferencesLayer(null, tagSetName,
                 null);
-        
+
         log.debug("Layer [{}]: created", TextCorpusLayerTag.REFERENCES.getXmlName());
 
         // Sort by begin to provide a more-or-less stable order for the unit tests
-        List<CoreferenceChain> chains = select(aJCas, CoreferenceChain.class)
-                .stream()
+        List<CoreferenceChain> chains = select(aJCas, CoreferenceChain.class).stream()
                 .filter(chain -> chain.getFirst() != null)
                 .sorted((a, b) -> a.getFirst().getBegin() - b.getFirst().getBegin())
                 .collect(Collectors.toList());
-        
+
         for (CoreferenceChain chain : chains) {
             CoreferenceLink prevLink = null;
             Reference prevRef = null;
@@ -358,7 +359,7 @@ public class DKPro2Tcf
                 for (Token token : selectCovered(Token.class, link)) {
                     tokens.add(aTokensBeginPositionMap.get(token.getBegin()));
                 }
-                
+
                 // Create current reference
                 Reference ref = coreferencesLayer.createReference(link.getReferenceType(), tokens,
                         null);
@@ -368,14 +369,14 @@ public class DKPro2Tcf
                     coreferencesLayer.addRelation(ref, REL_TYPE_EXPLETIVE);
                     // if the relation is expletive, then there must not be a next element in the
                     // chain, so we bail out here.
-                    continue; 
+                    continue;
                 }
-                
+
                 // Create relation between previous and current reference
                 if (prevLink != null) {
                     coreferencesLayer.addRelation(prevRef, prevLink.getReferenceRelation(), ref);
                 }
-                
+
                 prevLink = link;
                 prevRef = ref;
                 refs.add(ref);

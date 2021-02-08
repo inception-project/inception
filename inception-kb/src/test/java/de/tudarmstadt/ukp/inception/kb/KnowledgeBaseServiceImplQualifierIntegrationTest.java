@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -58,7 +59,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 
 @Transactional
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceImplQualifierIntegrationTest
 {
     static {
@@ -104,7 +105,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
         project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.WIKIDATA);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        
+
         concept = testFixtures.buildConcept();
         property = testFixtures.buildProperty();
         sut.createConcept(kb, concept);
@@ -130,39 +131,35 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
 
         assertThat(statements).hasSize(1);
-        
-        assertThat(statements.get(0).getQualifiers())
-            .hasSize(1)
-            .element(0)
-            .hasFieldOrProperty("property")
-            .hasFieldOrPropertyWithValue("value", "Test qualifier");
+
+        assertThat(statements.get(0).getQualifiers()).hasSize(1).element(0)
+                .hasFieldOrProperty("property")
+                .hasFieldOrPropertyWithValue("value", "Test qualifier");
     }
 
     @Test
     public void addQualifier_WithReadOnlyKnowledgeBase_ShouldDoNothing()
     {
         kb.setReadOnly(true);
-        
+
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
         int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
-        
-        assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> sut.addQualifier(kb,
+
+        assertThatExceptionOfType(ReadOnlyException.class).isThrownBy(() -> sut.addQualifier(kb,
                 testFixtures.buildQualifier(statement, property, "Test qualifier")));
 
         int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
-        
-        assertThat(qualifierCountBeforeDeletion)
-            .as("Check that statement was not added")
-            .isEqualTo(qualifierCountAfterDeletion);
+
+        assertThat(qualifierCountBeforeDeletion).as("Check that statement was not added")
+                .isEqualTo(qualifierCountAfterDeletion);
     }
 
     @Test
     public void upsertQualifier_withUnsavedQualifier_shouldCreateQualifier()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
-        
+
         sut.upsertQualifier(kb, qualifier);
 
         sut.read(kb, conn -> {
@@ -175,114 +172,102 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
 
         assertThat(qualifier.getStatement().getQualifiers())
-            .as("Check that KBStatement has updated correctly")
-            .hasSize(1)
-            .element(0)
-            .hasFieldOrProperty("property")
-            .hasFieldOrPropertyWithValue("value", "Test qualifier");
-        
+                .as("Check that KBStatement has updated correctly").hasSize(1).element(0)
+                .hasFieldOrProperty("property")
+                .hasFieldOrPropertyWithValue("value", "Test qualifier");
+
         assertThat(statements.get(0).getQualifiers())
-            .as("Check that Knowledge Base has updated correctly")
-            .hasSize(1)
-            .element(0)
-            .hasFieldOrProperty("property")
-            .hasFieldOrPropertyWithValue("value", "Test qualifier");
+                .as("Check that Knowledge Base has updated correctly").hasSize(1).element(0)
+                .hasFieldOrProperty("property")
+                .hasFieldOrPropertyWithValue("value", "Test qualifier");
     }
 
     @Test
     public void upsertQualifier_withExistingQualifier_shouldUpdateQualifier()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
-        
+
         sut.upsertQualifier(kb, qualifier);
-    
+
         qualifier.setValue("changed Qualifier");
-        
+
         sut.upsertQualifier(kb, qualifier);
-        
+
         assertThat(qualifier.getStatement().getQualifiers())
-            .as("Check that KBStatement has updated correctly")
-            .hasSize(1)
-            .element(0)
-            .hasFieldOrProperty("property")
-            .hasFieldOrPropertyWithValue("value", "changed Qualifier");
-    
+                .as("Check that KBStatement has updated correctly").hasSize(1).element(0)
+                .hasFieldOrProperty("property")
+                .hasFieldOrPropertyWithValue("value", "changed Qualifier");
+
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
-        
+
         assertThat(statements.get(0).getQualifiers())
-            .as("Check that Knowledge Base has updated correctly")
-            .hasSize(1)
-            .element(0)
-            .hasFieldOrProperty("property")
-            .hasFieldOrPropertyWithValue("value", "changed Qualifier");
+                .as("Check that Knowledge Base has updated correctly").hasSize(1).element(0)
+                .hasFieldOrProperty("property")
+                .hasFieldOrPropertyWithValue("value", "changed Qualifier");
     }
 
     @Test
     public void upsertQualifier_withReadOnlyKnowledgeBase_shouldDoNothing()
     {
         kb.setReadOnly(true);
-        
+
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
-    
+
         int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
-        
+
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
-        
+
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> sut.upsertQualifier(kb, qualifier));
-    
+                .isThrownBy(() -> sut.upsertQualifier(kb, qualifier));
+
         int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
-        assertThat(qualifierCountBeforeDeletion)
-            .as("Check that statement was not updated")
-            .isEqualTo(qualifierCountAfterDeletion);
+        assertThat(qualifierCountBeforeDeletion).as("Check that statement was not updated")
+                .isEqualTo(qualifierCountAfterDeletion);
     }
 
     @Test
     public void deleteQualifier_WithExistingQualifier_ShouldDeleteQualifier()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
-        
+
         sut.addQualifier(kb, qualifier);
-        
+
         sut.deleteQualifier(kb, qualifier);
-        
+
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
         List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 
-        assertThat(statements.get(0).getQualifiers())
-            .isEmpty();
+        assertThat(statements.get(0).getQualifiers()).isEmpty();
 
-        assertThat(qualifiers)
-            .as("Check that the qualifier was deleted correctly")
-            .noneMatch(qua -> "Test qualifier".equals(qua.getValue()));
+        assertThat(qualifiers).as("Check that the qualifier was deleted correctly")
+                .noneMatch(qua -> "Test qualifier".equals(qua.getValue()));
     }
 
     @Test
     public void deleteQualifier_WithNonExistentQualifier_ShouldDoNothing()
     {
-        assertThatCode(() -> 
-            sut.deleteQualifier(kb,
-                    testFixtures.buildQualifier(statement, property, "Test qualifier"))
-        ).doesNotThrowAnyException();
+        assertThatCode(() -> sut.deleteQualifier(kb,
+                testFixtures.buildQualifier(statement, property, "Test qualifier")))
+                        .doesNotThrowAnyException();
     }
 
     @Test
     public void deleteQualifier__WithReadOnlyKnowledgeBase_ShouldDoNothing()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
-        
+
         sut.addQualifier(kb, qualifier);
         kb.setReadOnly(true);
-        
+
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
         int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> sut.deleteQualifier(kb, qualifier));
+                .isThrownBy(() -> sut.deleteQualifier(kb, qualifier));
 
         int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
         assertThat(qualifierCountBeforeDeletion).as("Check that statement was not deleted")
-            .isEqualTo(qualifierCountAfterDeletion);
+                .isEqualTo(qualifierCountAfterDeletion);
     }
 
     @Test
@@ -294,12 +279,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
 
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
         List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
-        assertThat(statements)
-            .as("Check that the statement was deleted correctly")
-            .noneMatch(stmt -> "Test statement".equals(stmt.getValue()));
+        assertThat(statements).as("Check that the statement was deleted correctly")
+                .noneMatch(stmt -> "Test statement".equals(stmt.getValue()));
 
-        assertThat(qualifiers)
-            .isEmpty();
+        assertThat(qualifiers).isEmpty();
     }
 
     @Test
@@ -309,10 +292,8 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
 
         List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 
-        assertThat(qualifiers).as("Check that saved qualifier is found")
-            .hasSize(1)
-            .element(0)
-            .hasFieldOrPropertyWithValue("value", "Test qualifier");
+        assertThat(qualifiers).as("Check that saved qualifier is found").hasSize(1).element(0)
+                .hasFieldOrPropertyWithValue("value", "Test qualifier");
     }
 
     @Test
@@ -320,18 +301,15 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
     {
         List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 
-        assertThat(qualifiers)
-            .isEmpty();
+        assertThat(qualifiers).isEmpty();
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration 
-    @EntityScan(
-            basePackages = {
-                "de.tudarmstadt.ukp.inception.kb.model",
-                "de.tudarmstadt.ukp.clarin.webanno.model"
-    })
-    public static class SpringConfig {
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
         // No content
     }
 }

@@ -8,20 +8,10 @@
 | Default
 | Example
 
-| database.dialect
-| Database dialect
-| org.hibernate.dialect.HSQLDialect
-| org.hibernate.dialect.MySQL5InnoDBDialect
-
-| database.driver
-| Database driver
-| org.hsqldb.jdbc.JDBCDriver
-| com.mysql.jdbc.Driver
-
 | database.url
 | JDBC connection string
-| _location in application home_
-| jdbc:mysql://localhost:3306/weblab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+| _HSQLDB location in application home_
+| jdbc:mariadb://localhost:3306/inception?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
 
 | database.username
 | Database username
@@ -32,6 +22,16 @@
 | Database password
 | _unset_
 | pass
+
+| database.dialect
+| Database dialect
+| _unset (auto detected)_
+| org.hibernate.dialect.MariaDB53Dialect
+
+| database.driver
+| Database driver
+| _unset (auto detected)_
+| org.mariadb.jdbc.Driver
 
 | database.initial-pool-size
 | Initial database connection pool size
@@ -66,20 +66,10 @@ The following environment variables can be used:
 | Default
 | Example
 
-| `INCEPTION_DB_DIALECT`
-| Database dialect
-| org.hibernate.dialect.HSQLDialect
-| org.hibernate.dialect.MySQL5InnoDBDialect
-
-| `INCEPTION_DB_DRIVER`
-| Database driver
-| org.hsqldb.jdbc.JDBCDriver
-| com.mysql.jdbc.Driver
-
 | `INCEPTION_DB_URL`
 | JDBC connection string
-| _location in application home_
-| jdbc:mysql://localhost:3306/inception?useUnicode=true&characterEncoding=UTF-8
+| _HSQLDB location in application home_
+| jdbc:mariadb://localhost:3306/inception?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
 
 | `INCEPTION_DB_USERNAME`
 | Database username
@@ -90,4 +80,14 @@ The following environment variables can be used:
 | Database password
 | _unset_
 | pass
+
+| `INCEPTION_DB_DIALECT`
+| Database dialect
+| _unset (auto detected)_
+| org.hibernate.dialect.MariaDB53Dialect
+
+| `INCEPTION_DB_DRIVER`
+| Database driver
+| _unset (auto detected)_
+| org.mariadb.jdbc.Driver
 |===

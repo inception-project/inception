@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,36 +49,36 @@ public class WikiDataReificationTest
     private KnowledgeBase kb;
     private Repository rdf4jLocalRepo;
     private WikiDataReification sut;
-    
-    private static final String TURTLE_PREFIX = String.join("\n",
-            "@prefix wd:  <http://www.wikidata.org/entity/> .",
-            "@prefix wds: <http://www.wikidata.org/entity/statement/> .",
-            "@prefix p:   <http://www.wikidata.org/prop/> .",
-            "@prefix ps:  <http://www.wikidata.org/prop/statement/> .",
+
+    private static final String TURTLE_PREFIX = String.join("\n", //
+            "@prefix wd:  <http://www.wikidata.org/entity/> .", //
+            "@prefix wds: <http://www.wikidata.org/entity/statement/> .", //
+            "@prefix p:   <http://www.wikidata.org/prop/> .", //
+            "@prefix ps:  <http://www.wikidata.org/prop/statement/> .", //
             "@prefix pq:  <http://www.wikidata.org/prop/qualifier/> .");
-    
-    private static final String DATA_MONA_LISA = String.join("\n",
-            "wd:Q12418",
-            "    p:P186  wds:statement1 ;",  // Mona Lisa: material used   : ?statement1
-            "    p:P186  wds:statement2 ;",  // Mona Lisa: material used   : ?statement2
-            "    p:P186  wds:statement3 ;",  // Mona Lisa: material used   : ?statement3
-            "    p:P373  wds:statement4 .",  // Mona Lisa: commons category: ?statement4
-            "",
-            "wds:statement1",
-            "    ps:P186 wd:Q296955 .",      // value: oil paint
-            "",
-            "wds:statement2",
-            "    ps:P186 wd:Q291034 ;",      // value: poplar wood
-            "    pq:P518 wd:Q861259 .",      // qualifier: applies to part: painting surface
-            "",
-            "wds:statement3",
-            "    ps:P186 wd:Q287 ;",         // value: wood
-            "    pq:P518 wd:Q1737943 ;",     // qualifier: applies to part: stretcher bar
-            "    pq:P580 1951 .",            // qualifier: start time: 1951 (pseudo-syntax)  
-            "",
-            "wds:statement4",
-            "    ps:P373 'Mona Lisa' .");    // value: 'Mona Lisa'
-    
+
+    private static final String DATA_MONA_LISA = String.join("\n", //
+            "wd:Q12418", //
+            "    p:P186  wds:statement1 ;", // Mona Lisa: material used : ?statement1
+            "    p:P186  wds:statement2 ;", // Mona Lisa: material used : ?statement2
+            "    p:P186  wds:statement3 ;", // Mona Lisa: material used : ?statement3
+            "    p:P373  wds:statement4 .", // Mona Lisa: commons category: ?statement4
+            "", //
+            "wds:statement1", //
+            "    ps:P186 wd:Q296955 .", // value: oil paint
+            "", //
+            "wds:statement2", //
+            "    ps:P186 wd:Q291034 ;", // value: poplar wood
+            "    pq:P518 wd:Q861259 .", // qualifier: applies to part: painting surface
+            "", //
+            "wds:statement3", //
+            "    ps:P186 wd:Q287 ;", // value: wood
+            "    pq:P518 wd:Q1737943 ;", // qualifier: applies to part: stretcher bar
+            "    pq:P580 1951 .", // qualifier: start time: 1951 (pseudo-syntax)
+            "", //
+            "wds:statement4", //
+            "    ps:P373 'Mona Lisa' ."); // value: 'Mona Lisa'
+
     @Before
     public void setUp()
     {
@@ -87,7 +87,7 @@ public class WikiDataReificationTest
         kb.setType(RepositoryType.LOCAL);
         kb.setFullTextSearchIri(null);
         kb.setMaxResults(1000);
-        
+
         ValueFactory vf = SimpleValueFactory.getInstance();
         kb.setClassIri(vf.createIRI("http://www.wikidata.org/entity/Q35120"));
         kb.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/direct/P279"));
@@ -98,7 +98,7 @@ public class WikiDataReificationTest
         kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
         kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
         kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
-        
+
         // Local in-memory store - this should be used for most tests because we can
         // a) rely on its availability
         // b) import custom test data
@@ -107,20 +107,20 @@ public class WikiDataReificationTest
         lucenesail.setBaseSail(new MemoryStore());
         rdf4jLocalRepo = new SailRepository(lucenesail);
         rdf4jLocalRepo.init();
-        
+
         sut = new WikiDataReification();
     }
-    
+
     @Test
     public void thatAllStatementsCanBeRetrieved() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_MONA_LISA);
 
-//        try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
-//            RDFWriter rdfWriter = Rio.createWriter(RDFFormat.TURTLE, System.out);
-//            conn.export(rdfWriter);
-//        }
-        
+        // try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
+        // RDFWriter rdfWriter = Rio.createWriter(RDFFormat.TURTLE, System.out);
+        // conn.export(rdfWriter);
+        // }
+
         ValueFactory vf = SimpleValueFactory.getInstance();
         final String STMT1 = "http://www.wikidata.org/entity/statement/statement1";
         final String STMT2 = "http://www.wikidata.org/entity/statement/statement2";
@@ -136,12 +136,12 @@ public class WikiDataReificationTest
         final String START_TIME = "http://www.wikidata.org/prop/qualifier/P580";
         final IRI PAINTING_SURFACE = vf.createIRI("http://www.wikidata.org/entity/Q861259");
         final IRI STRETCHER_BAR = vf.createIRI("http://www.wikidata.org/entity/Q1737943");
-        
+
         List<KBStatement> result;
         try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
             result = sut.listStatements(conn, kb, new KBHandle(MONA_LISA), true);
         }
-        
+
         KBStatement stmt1 = new KBStatement(STMT1, MONA_LISA, MATERIAL_USED, OIL_PAINT, "Q296955");
 
         KBStatement stmt2 = new KBStatement(STMT2, MONA_LISA, MATERIAL_USED, POPLAR_WOOD,
@@ -154,25 +154,23 @@ public class WikiDataReificationTest
 
         KBStatement stmt4 = new KBStatement(STMT4, MONA_LISA, COMMONS_CATEGORY,
                 vf.createLiteral("Mona Lisa"), null);
-        
-        assertThat(result)
-                .extracting(stmt -> stmt.getInstance().getIdentifier())
+
+        assertThat(result).extracting(stmt -> stmt.getInstance().getIdentifier())
                 .allMatch(id -> id.equals(MONA_LISA));
-        assertThat(result)
-                .usingElementComparatorIgnoringFields("originalTriples", "qualifiers")
+        assertThat(result).usingElementComparatorIgnoringFields("originalTriples", "qualifiers")
                 .containsExactlyInAnyOrder(stmt1, stmt2, stmt3, stmt4);
     }
-    
+
     private void importDataFromString(RDFFormat aFormat, String... aRdfData) throws IOException
     {
         String data = String.join("\n", aRdfData);
-        
+
         // Load files into the repository
         try (InputStream is = IOUtils.toInputStream(data, UTF_8)) {
             importData(aFormat, is);
         }
     }
-    
+
     private void importData(RDFFormat aFormat, InputStream aIS) throws IOException
     {
         try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
@@ -184,4 +182,3 @@ public class WikiDataReificationTest
         }
     }
 }
-

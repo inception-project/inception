@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,36 +66,29 @@ public class RecommenderEvaluationResultEventAdapter
     }
 
     @Override
-    public String getDetails(RecommenderEvaluationResultEvent aEvent)
+    public String getDetails(RecommenderEvaluationResultEvent aEvent) throws IOException
     {
-        try {
-            Details details = new Details();
+        Details details = new Details();
 
-            details.recommenderId = aEvent.getRecommender().getId();
-            
-            EvaluationResult result = aEvent.getResult();
-            details.accuracy = result.computeAccuracyScore();
-            details.f1 = result.computeF1Score();
-            details.precision = result.computePrecisionScore();
-            details.recall = result.computeRecallScore();
-            
-            
-            details.trainSetSize = result.getTrainingSetSize();
-            details.testSetSize = result.getTestSetSize();
+        details.recommenderId = aEvent.getRecommender().getId();
 
-            details.active = aEvent.isActive();
-            details.duration = aEvent.getDuration();
-            details.threshold = aEvent.getRecommender().getThreshold();
-            details.layer = aEvent.getRecommender().getLayer().getName();
-            details.feature = aEvent.getRecommender().getFeature().getName();
-            details.tool = aEvent.getRecommender().getTool();
+        EvaluationResult result = aEvent.getResult();
+        details.accuracy = result.computeAccuracyScore();
+        details.f1 = result.computeF1Score();
+        details.precision = result.computePrecisionScore();
+        details.recall = result.computeRecallScore();
 
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        details.trainSetSize = result.getTrainingSetSize();
+        details.testSetSize = result.getTestSetSize();
+
+        details.active = aEvent.isActive();
+        details.duration = aEvent.getDuration();
+        details.threshold = aEvent.getRecommender().getThreshold();
+        details.layer = aEvent.getRecommender().getLayer().getName();
+        details.feature = aEvent.getRecommender().getFeature().getName();
+        details.tool = aEvent.getRecommender().getTool();
+
+        return JSONUtil.toJsonString(details);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -117,7 +110,7 @@ public class RecommenderEvaluationResultEventAdapter
         public double f1;
         public double precision;
         public double recall;
-        
+
         // Used data
         public int trainSetSize;
         public int testSetSize;

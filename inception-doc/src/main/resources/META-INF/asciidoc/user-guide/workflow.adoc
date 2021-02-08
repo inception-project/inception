@@ -1,0 +1,26 @@
+= Workflow
+
+The following image shows an exemplary workflow of an annotation project with {product-name}.
+
+image::progress_workflow.jpg[align="center"]
+
+First, the projects need to be set up. In more detail, this means that users are to be added, 
+guidelines need to be provided, documents have to be uploaded, tagsets need to be defined and uploaded,
+etc. The process of setting up and managing a project are explicitly described in <<sect_projects>>.
+
+After the setup of a project, the users who were assigned with the task of annotation annotate the
+documents according to the guidelines. The task of annotation is further explained in <<sect_annotation>>.
+The work of the annotators is managed and controlled by monitoring. Here, the person in charge has
+to assign the workload. For example, in order to prevent redundant annotation, documents which are
+already annotated by several other annotators and need not be annotated by another person, can be
+blocked for others. The person in charge is also able to follow the progress of individual
+annotators. All these tasks are demonstrated in <<sect_monitoring>> in more detail. The person in charge should not only control the quantity, but also the quality of annotation by looking closer into the
+annotations of individual annotators. This can be done by logging in with the credentials of the
+annotators.
+
+After at least two annotators have finished the annotation of the same document by clicking on *Done*, the
+curator can start his work. The curator compares the annotations and corrects them if needed. This
+task is further explained in <<sect_curation>>. 
+
+The document merged by the curator can be exported as soon as the curator clicked on *Done* for the
+document. The extraction of curated documents is also explained in <<sect_projects>>.

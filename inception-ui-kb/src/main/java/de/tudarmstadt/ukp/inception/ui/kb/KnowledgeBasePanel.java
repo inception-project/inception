@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,7 +82,7 @@ public class KnowledgeBasePanel
 {
 
     private static final long serialVersionUID = -3717326058176546655L;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePanel.class);
 
     private static final String DETAIL_CONTAINER_MARKUP_ID = "detailContainer";
@@ -100,9 +100,9 @@ public class KnowledgeBasePanel
     private WebMarkupContainer detailContainer;
     private ConceptTreePanel conceptTreePanel;
     private PropertyListPanel propertyListPanel;
-    
+
     private List<String> labelProperties;
-    
+
     /**
      * right-side component which either displays concept details or property details
      */
@@ -116,19 +116,18 @@ public class KnowledgeBasePanel
         setOutputMarkupId(true);
 
         kbModel = aKbModel;
-        
+
         // add the selector for the knowledge bases
         DropDownChoice<KnowledgeBase> ddc = new BootstrapSelect<KnowledgeBase>("knowledgebases",
                 LoadableDetachableModel
                         .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
-        
+
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             long projectId = aProjectModel.getObject().getId();
             String kbName = aKbModel.getObject().getName();
 
-            PageParameters params = new PageParameters()
-                .set(PAGE_PARAM_PROJECT_ID, projectId)
-                .set(PAGE_PARAM_KB_NAME, kbName);
+            PageParameters params = new PageParameters().set(PAGE_PARAM_PROJECT_ID, projectId)
+                    .set(PAGE_PARAM_KB_NAME, kbName);
 
             setResponsePage(KnowledgeBasePage.class, params);
         }));
@@ -142,29 +141,29 @@ public class KnowledgeBasePanel
         add(conceptTreePanel = new ConceptTreePanel("concepts", kbModel, selectedConceptHandle));
         add(propertyListPanel = new PropertyListPanel("properties", kbModel,
                 selectedPropertyHandle));
-        
+
         detailContainer = new WebMarkupContainer(DETAIL_CONTAINER_MARKUP_ID);
         detailContainer.setOutputMarkupId(true);
         add(detailContainer);
-        
+
         details = new EmptyPanel(DETAILS_MARKUP_ID);
         detailContainer.add(details);
     }
 
     private KnowledgeBaseItemAutoCompleteField createSearchField(String aId,
-        IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
+            IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
     {
-        KnowledgeBaseItemAutoCompleteField field = new KnowledgeBaseItemAutoCompleteField(
-                aId, aHandleModel, _query -> 
-                        listSearchResults(aProjectModel.getObject(), _query)) {
+        KnowledgeBaseItemAutoCompleteField field = new KnowledgeBaseItemAutoCompleteField(aId,
+                aHandleModel, _query -> listSearchResults(aProjectModel.getObject(), _query))
+        {
             private static final long serialVersionUID = 3188821013226116770L;
 
             @Override
             protected void onSelected(AjaxRequestTarget aTarget)
             {
                 KBHandle selectedResource = this.getModelObject();
-                Optional<KBObject> optKbObject = kbService
-                    .readItem(kbModel.getObject(), selectedResource.getIdentifier());
+                Optional<KBObject> optKbObject = kbService.readItem(kbModel.getObject(),
+                        selectedResource.getIdentifier());
 
                 if (optKbObject.isPresent()) {
                     KBObject kbObject = optKbObject.get();
@@ -172,12 +171,13 @@ public class KnowledgeBasePanel
                 }
             }
         };
-        
+
         field.add(AttributeModifier.append("placeholder",
                 new ResourceModel("page.search.placeholder")));
-        
+
         return field;
     }
+
     /**
      * Search for Entities in the current knowledge base based on a typed string. Use full text
      * search if it is available. Returns a sorted/ranked list of KBHandles
@@ -187,27 +187,27 @@ public class KnowledgeBasePanel
         List<KBHandle> results;
         KnowledgeBase kb = kbModel.getObject();
         results = conceptLinkingService.searchItems(kb, aTypedString).stream()
-            .limit(entityLinkingProperties.getCandidateDisplayLimit())
-            .collect(Collectors.toList());
+                .limit(entityLinkingProperties.getCandidateDisplayLimit())
+                .collect(Collectors.toList());
         return results;
     }
 
     /**
      * Send selection-changed events according to type of the selected {@link KBObject}
      */
-    private void sendSelectionChangedEvents(AjaxRequestTarget aTarget, KBObject aKbObject) {
+    private void sendSelectionChangedEvents(AjaxRequestTarget aTarget, KBObject aKbObject)
+    {
         if (aKbObject instanceof KBConcept) {
             send(getPage(), Broadcast.BREADTH,
-                new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+                    new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
         }
         else if (aKbObject instanceof KBInstance) {
             List<KBHandle> conceptsForInstance = kbService
-                .getConceptForInstance(kbModel.getObject(),
-                    aKbObject.getIdentifier(), true);
+                    .getConceptForInstance(kbModel.getObject(), aKbObject.getIdentifier(), true);
 
             if (!conceptsForInstance.isEmpty()) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxConceptSelectionEvent(aTarget, conceptsForInstance.get(0), true));
+                        new AjaxConceptSelectionEvent(aTarget, conceptsForInstance.get(0), true));
             }
             else {
                 error("Unable to find the concept to which the the instance ["
@@ -216,19 +216,19 @@ public class KnowledgeBasePanel
             }
 
             send(getPage(), Broadcast.BREADTH,
-                new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
+                    new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
         }
         else if (aKbObject instanceof KBProperty) {
             send(getPage(), Broadcast.BREADTH,
-                new AjaxPropertySelectionEvent(aTarget, (KBProperty) aKbObject, true));
+                    new AjaxPropertySelectionEvent(aTarget, (KBProperty) aKbObject, true));
         }
         else {
             throw new IllegalArgumentException(String.format(
-                "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
-                aKbObject.getClass().getSimpleName()));
+                    "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
+                    aKbObject.getClass().getSimpleName()));
         }
     }
-    
+
     /**
      * Acts upon statement changes. If the changed statement does <strong>not</strong> involve an
      * RDFS or OWL property, the no action is taken. If the changed statement renames the selected
@@ -253,8 +253,7 @@ public class KnowledgeBasePanel
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
-                        Optional<KBObject> kbObject = kbService
-                            .readItem(kbModel.getObject(),
+                        Optional<KBObject> kbObject = kbService.readItem(kbModel.getObject(),
                                 model.getObject().getIdentifier());
                         if (kbObject.isPresent()) {
                             model.getObject().setName(kbObject.get().getName());
@@ -269,39 +268,38 @@ public class KnowledgeBasePanel
 
     /**
      * Checks if the given statement is (potentially) assigning the label to the item in subject
-     * position. This is the case if the property is a label property. Since we do at this point
-     * not know if the statement is about a class, instance or property, we need to check all
-     * label properties.
+     * position. This is the case if the property is a label property. Since we do at this point not
+     * know if the statement is about a class, instance or property, we need to check all label
+     * properties.
      */
     private boolean isLabelStatement(KBStatement aStatement)
     {
         if (labelProperties == null) {
             labelProperties = kbService.listLabelProperties(kbModel.getObject());
         }
-        
+
         return labelProperties.contains(aStatement.getProperty().getIdentifier());
-        
-        
-//        SimpleValueFactory vf = SimpleValueFactory.getInstance();
-//        
-//        String propertyIri = aStatement.getProperty().getIdentifier();
-//        IRI subjectIri = vf.createIRI(aStatement.getInstance().getIdentifier());
-//        IRI labelIri = kbModel.getObject().getLabelIri();
-//
-//        try (RepositoryConnection conn = kbService.getConnection(kbModel.getObject())) {
-//            
-//            boolean hasMainLabel = RdfUtils
-//                    .readFirst(conn, subjectIri, labelIri, null, kbModel.getObject()).isPresent();
-//            
-//            return propertyIri.equals(labelIri.stringValue())
-//                    || (kbService.isLabelProperty(kbModel.getObject(), propertyIri)
-//                            && !hasMainLabel);
-//        }
+
+        // SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        //
+        // String propertyIri = aStatement.getProperty().getIdentifier();
+        // IRI subjectIri = vf.createIRI(aStatement.getInstance().getIdentifier());
+        // IRI labelIri = kbModel.getObject().getLabelIri();
+        //
+        // try (RepositoryConnection conn = kbService.getConnection(kbModel.getObject())) {
+        //
+        // boolean hasMainLabel = RdfUtils
+        // .readFirst(conn, subjectIri, labelIri, null, kbModel.getObject()).isPresent();
+        //
+        // return propertyIri.equals(labelIri.stringValue())
+        // || (kbService.isLabelProperty(kbModel.getObject(), propertyIri)
+        // && !hasMainLabel);
+        // }
     }
 
     @OnEvent
     public void actionConceptSelectionChanged(AjaxConceptSelectionEvent event)
-    {        
+    {
         // cancel selection of property
         selectedPropertyHandle.setObject(null);
         selectedConceptHandle.setObject(event.getSelection());
@@ -338,7 +336,7 @@ public class KnowledgeBasePanel
             }
         }
         details = details.replaceWith(replacementPanel);
-        
+
         if (event.isRedrawConceptandPropertyListPanels()) {
             event.getTarget().add(conceptTreePanel, propertyListPanel);
         }
@@ -369,7 +367,7 @@ public class KnowledgeBasePanel
         // cancel selection of concept
         selectedConceptHandle.setObject(null);
         selectedPropertyHandle.setObject(event.getNewSelection());
-        
+
         // replace detail view: empty panel if a deselection took place (see lengthy explanation
         // above)
         Component replacementPanel;
@@ -380,7 +378,7 @@ public class KnowledgeBasePanel
             String identifier = selectedPropertyHandle.getObject().getIdentifier();
             try {
                 replacementPanel = kbService.readProperty(kbModel.getObject(), identifier)
-                        .<Component>map(selectedProperty -> {
+                        .<Component> map(selectedProperty -> {
                             Model<KBProperty> model = Model.of(selectedProperty);
                             return new PropertyPanel(DETAILS_MARKUP_ID, kbModel,
                                     selectedPropertyHandle, model);
@@ -393,7 +391,7 @@ public class KnowledgeBasePanel
             }
         }
         details = details.replaceWith(replacementPanel);
-        
+
         if (event.isRedrawConceptandPropertyListPanels()) {
             event.getTarget().add(propertyListPanel, conceptTreePanel);
         }

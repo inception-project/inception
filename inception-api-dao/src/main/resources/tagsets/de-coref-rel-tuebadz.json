@@ -1,0 +1,14 @@
+{
+  "name" : "Coreference relations",
+  "typeUiName" : null,
+  "description" : "coreference relation annotation",
+  "language" : "de",
+  "type" : null,
+  "type_name" : null,
+  "type_description" : null,
+  "tags" : [ {
+    "tag_name" : "anaphoric",
+    "tag_description" : "anaphoric"
+  } ],
+  "create_tag" : false
+}

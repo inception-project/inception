@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,11 +60,13 @@ import org.xml.sax.SAXException;
 import com.github.openjson.JSONObject;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -86,28 +88,29 @@ public class MtasUimaParser
      * indexing and we do not want to waste time in setting up a separate logger for every one.
      */
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    
-    /** 
-     * Lucene can only index terms of a size of up to 32k characters - so we filter out
-     * very long annotations to avoid getting exceptions from Lucene later on. This constant
-     * determines what we consider as an oversized annotation that should be filtered.
+
+    /**
+     * Lucene can only index terms of a size of up to 32k characters - so we filter out very long
+     * annotations to avoid getting exceptions from Lucene later on. This constant determines what
+     * we consider as an oversized annotation that should be filtered.
      */
     private static final int OVERSIZED_ANNOTATION_LIMIT = 30000;
 
     public static final String PARAM_PROJECT_ID = "projectId";
-    
+
     public static final String MTAS_TOKEN_LABEL = "Token";
     public static final String MTAS_SENTENCE_LABEL = "s";
-    
+
     private static final String SPECIAL_ATTR_REL_SOURCE = "source";
     private static final String SPECIAL_ATTR_REL_TARGET = "target";
-    
+
     private static final String CAS_BEING_INDEXED = "casBeingIndexed";
-    
+
     // Annotation schema and project services with knowledge base service
+    private @Autowired ProjectService projectService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
-    
+
     private final Map<String, AnnotationLayer> layers = new HashMap<>();
     private final Map<String, List<AnnotationFeature>> layerFeatures = new HashMap<>();
 
@@ -117,46 +120,53 @@ public class MtasUimaParser
     public MtasUimaParser(MtasConfiguration config)
     {
         super(config);
-        
+
         // Perform dependency injection
         AutowireCapableBeanFactory factory = ApplicationContextProvider.getApplicationContext()
                 .getAutowireCapableBeanFactory();
         factory.autowireBean(this);
         factory.initializeBean(this, "transientParser");
-        
+
         JSONObject jsonParserConfiguration = new JSONObject(
                 config.attributes.get(ARGUMENT_PARSER_ARGS));
-        MtasDocumentIndex index = MtasDocumentIndex
-                .getIndex(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
+        Project project = projectService
+                .getProject(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
 
         // Initialize and populate the hash maps for the layers and features
-        for (AnnotationFeature feature : index.getFeaturesToIndex()) {
-            layers.put(feature.getLayer().getName(), feature.getLayer());
-            layerFeatures
-                    .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
-                    .add(feature);
-        }        
+        annotationSchemaService.listAnnotationLayer(project).stream()
+                .filter(layer -> layer.isEnabled()) //
+                .forEach(layer -> {
+                    layers.put(layer.getName(), layer);
+                    layerFeatures.put(layer.getName(), new ArrayList<>());
+                });
+
+        annotationSchemaService.listAnnotationFeature(project).stream()
+                .filter(feature -> feature.isEnabled() && feature.getLayer().isEnabled())
+                .forEach(feature -> {
+                    layerFeatures
+                            .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
+                            .add(feature);
+                });
     }
-    
+
     // This constructor is used for testing
     public MtasUimaParser(List<AnnotationFeature> aFeaturesToIndex,
             AnnotationSchemaService aAnnotationSchemaService,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry)
     {
         super(null);
-        
+
         annotationSchemaService = aAnnotationSchemaService;
         featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
-        
+
         // Initialize and populate the hash maps for the layers and features
         for (AnnotationFeature feature : aFeaturesToIndex) {
             layers.put(feature.getLayer().getName(), feature.getLayer());
-            layerFeatures
-                    .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
+            layerFeatures.computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
                     .add(feature);
         }
     }
-    
+
     @Override
     public MtasTokenCollection createTokenCollection(Reader aReader)
         throws MtasParserException, MtasConfigException
@@ -164,7 +174,7 @@ public class MtasUimaParser
         try (CasStorageSession session = CasStorageSession.openNested()) {
             long start = System.currentTimeMillis();
             LOG.debug("Starting creation of token collection");
-    
+
             CAS cas;
             try {
                 cas = readCas(aReader);
@@ -174,7 +184,7 @@ public class MtasUimaParser
                 LOG.error("Unable to decode CAS", e);
                 return new MtasTokenCollection();
             }
-    
+
             try {
                 createTokenCollection(cas);
                 LOG.debug("Created token collection in {} ms",
@@ -187,7 +197,7 @@ public class MtasUimaParser
             }
         }
     }
-    
+
     private CAS readCas(Reader aReader) throws UIMAException, IOException, SAXException
     {
         CAS cas = createCas();
@@ -195,7 +205,7 @@ public class MtasUimaParser
         try (InputStream in = new ByteArrayInputStream(charsToBytes(toCharArray(aReader)))) {
             CasIOUtils.load(in, getRealCas(cas));
         }
-        
+
         return cas;
     }
 
@@ -205,7 +215,7 @@ public class MtasUimaParser
         tokenCollection = new MtasTokenCollection();
         int mtasId = 0;
         int tokenNum = 0;
-        
+
         // Build indexes over the token start and end positions such that we can quickly locate
         // tokens based on their offsets.
         tokenBeginIndex = new TreeMap<>();
@@ -215,7 +225,7 @@ public class MtasUimaParser
             tokenEndIndex.put(token.getEnd(), Pair.of(token, tokenNum));
             tokenNum++;
         }
-        
+
         // Loop over the annotations
         for (AnnotationFS annotation : selectAll(aJCas)) {
             // MTAS cannot index zero-width annotations, so we skip them here.
@@ -224,10 +234,10 @@ public class MtasUimaParser
             }
             mtasId = indexAnnotation(tokenCollection, annotation, mtasId);
         }
-        
+
         return tokenCollection;
     }
-    
+
     private Range getRange(AnnotationFS aAnnotation)
     {
         // Get begin of the first token. Special cases:
@@ -241,7 +251,7 @@ public class MtasUimaParser
         else {
             beginToken = tokenBeginIndex.floorEntry(aAnnotation.getBegin()).getValue();
         }
-        
+
         Pair<AnnotationFS, Integer> endToken;
         if (tokenEndIndex.ceilingEntry(aAnnotation.getEnd()) == null) {
             endToken = tokenEndIndex.lastEntry().getValue();
@@ -252,7 +262,7 @@ public class MtasUimaParser
         return new Range(beginToken.getValue(), endToken.getValue(), beginToken.getKey().getBegin(),
                 endToken.getKey().getEnd());
     }
-    
+
     private int indexAnnotation(MtasTokenCollection aTokenCollection, AnnotationFS aAnnotation,
             int aMtasId)
     {
@@ -262,26 +272,26 @@ public class MtasUimaParser
             LOG.trace("Skipping indexing of very long annotation: {} {} characters at [{}-{}]",
                     aAnnotation.getType().getName(), aAnnotation.getEnd() - aAnnotation.getBegin(),
                     aAnnotation.getBegin(), aAnnotation.getEnd());
-            
+
             return mtasId;
         }
-        
+
         // Special case: token values must be indexed
         if (aAnnotation instanceof Token) {
             indexTokenText(aAnnotation, getRange(aAnnotation), mtasId++);
-        } 
+        }
         // Special case: sentences must be indexed
         else if (aAnnotation instanceof Sentence) {
             indexSentenceText(aAnnotation, getRange(aAnnotation), mtasId++);
         }
         else {
             AnnotationLayer layer = layers.get(aAnnotation.getType().getName());
-            
+
             // If the layer is not in the layers index, then it is not enabled.
             if (layer == null) {
                 return mtasId;
             }
-            
+
             if (WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
                 RelationAdapter adapter = (RelationAdapter) annotationSchemaService
                         .getAdapter(layer);
@@ -292,12 +302,10 @@ public class MtasUimaParser
                 AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
                         adapter.getTargetFeatureName(), AnnotationFS.class);
 
-                if (
-                        sourceFs != null && targetFs != null && 
-                        // MTAS cannot index zero-width annotations, so we skip them here.
-                        sourceFs.getBegin() != sourceFs.getEnd() &&
-                        targetFs.getBegin() != targetFs.getEnd()
-                ) {
+                if (sourceFs != null && targetFs != null &&
+                // MTAS cannot index zero-width annotations, so we skip them here.
+                        sourceFs.getBegin() != sourceFs.getEnd()
+                        && targetFs.getBegin() != targetFs.getEnd()) {
                     // If the relation layer uses an attach-feature, index the annotation
                     // referenced by that feature
                     if (layer.getAttachFeature() != null) {
@@ -308,25 +316,25 @@ public class MtasUimaParser
                     }
 
                     Range range = getRange(targetFs);
-                    
+
                     // Index the source annotation text (equals the target)
                     indexAnnotationText(layer.getUiName(), targetFs.getCoveredText(), range,
                             mtasId++, fsAddress);
                     indexAnnotationText(layer.getUiName() + SPECIAL_SEP + SPECIAL_ATTR_REL_TARGET,
                             targetFs.getCoveredText(), range, mtasId++, fsAddress);
-                    
+
                     // Index the target annotation text
                     indexAnnotationText(layer.getUiName() + SPECIAL_SEP + SPECIAL_ATTR_REL_SOURCE,
                             sourceFs.getCoveredText(), range, mtasId++, fsAddress);
 
                     // Index the relation features
                     mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId,
-                        fsAddress);
+                            fsAddress);
 
                     // Index the source features
                     mtasId = indexFeatures(sourceFs, layer.getUiName(),
                             SPECIAL_SEP + SPECIAL_ATTR_REL_SOURCE, range, mtasId, fsAddress);
-                    
+
                     // Index the target features
                     mtasId = indexFeatures(targetFs, layer.getUiName(),
                             SPECIAL_SEP + SPECIAL_ATTR_REL_TARGET, range, mtasId, fsAddress);
@@ -334,21 +342,21 @@ public class MtasUimaParser
             }
             else {
                 Range range = getRange(aAnnotation);
-                
+
                 // Index the annotation text
                 indexAnnotationText(layer.getUiName(), aAnnotation.getCoveredText(), range,
                         mtasId++, fsAddress);
-                
+
                 // Iterate over the features of this layer and index them one-by-one
                 mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId, fsAddress);
             }
         }
-        
+
         return mtasId;
     }
 
     private int indexFeatures(AnnotationFS aAnnotation, String aLayer, Range aRange, int aMtasId,
-        int aFSAddress)
+            int aFSAddress)
     {
         return indexFeatures(aAnnotation, aLayer, "", aRange, aMtasId, aFSAddress);
     }
@@ -363,23 +371,32 @@ public class MtasUimaParser
         if (features == null) {
             return mtasId;
         }
-        
+
         // Iterate over the features of this layer and index them one-by-one
         for (AnnotationFeature feature : features) {
             Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
                     .getIndexingSupport(feature);
             if (fis.isPresent()) {
-                MultiValuedMap<String, String> fieldsAndValues = fis.get()
-                        .indexFeatureValue(aLayer, aAnnotation, aPrefix, feature);
+                MultiValuedMap<String, String> fieldsAndValues = fis.get().indexFeatureValue(aLayer,
+                        aAnnotation, aPrefix, feature);
                 for (Entry<String, String> e : fieldsAndValues.entries()) {
-                    indexFeatureValue(e.getKey(), e.getValue(), mtasId++,
-                            aAnnotation.getBegin(), aAnnotation.getEnd(), aRange, aFSAddress);
+                    indexFeatureValue(e.getKey(), e.getValue(), mtasId++, aAnnotation.getBegin(),
+                            aAnnotation.getEnd(), aRange, aFSAddress);
                 }
-                
-                LOG.trace("FEAT[{}-{}]: {}", aRange.getBegin(), aRange.getEnd(), fieldsAndValues);
+
+                if (LOG.isTraceEnabled()) {
+                    if (fieldsAndValues.isEmpty()) {
+                        LOG.trace("FEAT[{}-{}]: [{}]: Nothing to index", aRange.getBegin(),
+                                aRange.getEnd(), feature.getName());
+                    }
+                    else {
+                        LOG.trace("FEAT[{}-{}]: [{}] = {}", aRange.getBegin(), aRange.getEnd(),
+                                feature.getName(), fieldsAndValues);
+                    }
+                }
             }
         }
-        
+
         return mtasId;
     }
 
@@ -401,8 +418,8 @@ public class MtasUimaParser
         tokenCollection.add(mtasSentence);
     }
 
-    private void indexAnnotationText(String aField, String aValue, Range aRange,
-            int aMtasId, int aFSAddress)
+    private void indexAnnotationText(String aField, String aValue, Range aRange, int aMtasId,
+            int aFSAddress)
     {
         String field = getIndexedName(aField);
 
@@ -414,7 +431,7 @@ public class MtasUimaParser
         // address as the CAS may be out-of-sync with the index and thus the IDs may not match
         mtasSentence.setPayload(encodeFSAddress(aFSAddress));
         tokenCollection.add(mtasSentence);
-        
+
         LOG.trace("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
     }
 
@@ -431,11 +448,12 @@ public class MtasUimaParser
         mtasAnnotationTypeFeatureLabel.setPayload(encodeFSAddress(aFSAddress));
         tokenCollection.add(mtasAnnotationTypeFeatureLabel);
     }
-    
+
     /**
      * Replaces space with underscore in a {@code String}
+     * 
      * @param uiName
-     * @return String replacing the input string spaces with '_' 
+     * @return String replacing the input string spaces with '_'
      */
     public static String getIndexedName(String uiName)
     {
@@ -449,7 +467,7 @@ public class MtasUimaParser
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     private static class Range
     {
         private final int begin;
@@ -475,12 +493,12 @@ public class MtasUimaParser
         {
             return end;
         }
-        
+
         public int getBeginOffset()
         {
             return beginOffset;
         }
-        
+
         public int getEndOffset()
         {
             return endOffset;

@@ -1,0 +1,12 @@
+= Documents
+
+== Source documents
+
+The original document uploaded by a user into a project. The document is preserved in its original
+format.
+
+== Annotation documents
+
+Annotations made by a particular user on a document. The annotation document is persisted separately
+from the original document. There is one annotation document per user per document. Within the tool,
+a CAS data structure is used to represent the annotation document.

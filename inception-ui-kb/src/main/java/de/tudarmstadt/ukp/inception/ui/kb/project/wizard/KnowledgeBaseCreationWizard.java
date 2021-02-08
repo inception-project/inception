@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
+
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,12 +62,13 @@ import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseIriPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseListPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 
-
 /**
  * Wizard for registering a new knowledge base for a project.
  */
-public class KnowledgeBaseCreationWizard extends BootstrapWizard {
-    
+public class KnowledgeBaseCreationWizard
+    extends BootstrapWizard
+{
+
     /*-
      * Wizard structure as of 2018-02 (use http://asciiflow.com):
      * 
@@ -105,10 +109,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     {
         Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
         try {
-            profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles()
-                        .entrySet().stream()
-                        .filter(e -> !e.getValue().isDisabled())
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles().entrySet().stream()
+                    .filter(e -> !e.getValue().isDisabled())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
         catch (IOException e) {
             error("Unable to read knowledge base profiles " + e.getMessage());
@@ -118,13 +121,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     }
 
     /**
-     * Wizard step asking for the KB name and whether it's a local or remote repository.
-     * and language
+     * Wizard step asking for the KB name and whether it's a local or remote repository. and
+     * language
      */
-    private final class TypeStep extends DynamicWizardStep {
+    private final class TypeStep
+        extends DynamicWizardStep
+    {
 
         private static final long serialVersionUID = 2632078392967948962L;
-        
+
         private CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
         public TypeStep(IDynamicWizardStep previousStep,
@@ -134,41 +139,51 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             kbModel = aKbModel;
 
             Component generalSettings = new GeneralSettingsPanel("generalSettings", projectModel,
-                aKbModel);
+                    aKbModel);
             add(generalSettings);
-            generalSettings.get("enabled")
-                    .setOutputMarkupId(true)
-                    .setVisible(false);
+            generalSettings.get("enabled").setOutputMarkupId(true).setVisible(false);
 
             Component accessSettings = new AccessSettingsPanel("accessSettings", aKbModel);
             add(accessSettings);
-            accessSettings.get("writeprotection")
-                    .setOutputMarkupId(true)
-                    .setVisible(false);
-
+            accessSettings.get("writeprotection").setOutputMarkupId(true).setVisible(false);
         }
+
         @Override
         public void applyState()
         {
             kbModel.getObject().getKb().setMaxResults(kbProperties.getDefaultMaxResults());
+
+            switch (kbModel.getObject().getKb().getType()) {
+            case LOCAL:
+                // local KBs are always RDF4J + Lucene, so we can set the FTS mode accordingly
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_LUCENE);
+                break;
+            case REMOTE:
+                // remote KBs are by default not using FTS but if we apply a remote DB profile,
+                // then it will set the FTS according to the setting in the profile
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_NONE);
+            }
         }
 
         @Override
-        public boolean isLastStep() {
+        public boolean isLastStep()
+        {
             return false;
         }
 
         @Override
-        public IDynamicWizardStep next() {
+        public IDynamicWizardStep next()
+        {
             return new AccessSpecificSettingsStep(this, kbModel);
         }
     }
-    
+
     /**
      * Wizard step providing a file upload functionality for local (native) knowledge bases.
      */
     private final class AccessSpecificSettingsStep
-        extends DynamicWizardStep {
+        extends DynamicWizardStep
+    {
 
         private static final long serialVersionUID = 8212277960059805657L;
 
@@ -182,13 +197,13 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             kbModel = aKbModel;
             kbModel.getObject().clearFiles();
 
-            panel = new AccessSpecificSettingsPanel(
-                "accessSpecificSettings", kbModel, knowledgeBaseProfiles);
+            panel = new AccessSpecificSettingsPanel("accessSpecificSettings", kbModel,
+                    knowledgeBaseProfiles);
             add(panel);
             panel.get("localSpecificSettings:exportButtons").setVisible(false);
             panel.get("localSpecificSettings:clear").setVisible(false);
         }
-        
+
         @Override
         public void applyState()
         {
@@ -196,7 +211,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             // form is only called *after* the upload component has already been detached and
             // as a consequence all uploaded files have been cleared
             panel.handleUploadedFiles();
-            
+
             switch (kbModel.getObject().getKb().getType()) {
             case LOCAL:
                 // local knowledge bases are editable by default
@@ -250,14 +265,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
         @Override
         public void applyState()
-        {   
+        {
             KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
-            
+
             wrapper.getKb().setProject(projectModel.getObject());
 
             try {
                 KnowledgeBase kb = wrapper.getKb();
-                
+
                 // set up the repository config, then register the knowledge base
                 RepositoryImplConfig cfg;
                 switch (kb.getType()) {
@@ -314,7 +329,8 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     {
         // add Bootstrap-compatible button bar which closes the parent dialog via the cancel and
         // finish buttons
-        Component buttonBar = new BootstrapWizardButtonBar(id, this) {
+        Component buttonBar = new BootstrapWizardButtonBar(id, this)
+        {
 
             private static final long serialVersionUID = 5657260438232087635L;
 
@@ -326,15 +342,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
                     private static final long serialVersionUID = -7070739469409737740L;
 
                     @Override
-                    public void onAfterSubmit() {
+                    public void onAfterSubmit()
+                    {
                         // update the list panel and close the dialog - this must be done in
                         // onAfterSubmit, otherwise it cancels out the call to onFinish()
-                        
+
                         IWizardStep step = wizardModel.getActiveStep();
                         if (step.isComplete()) {
                             AjaxRequestTarget target = RequestCycle.get()
-                                    .find(AjaxRequestTarget.class)
-                                    .get();
+                                    .find(AjaxRequestTarget.class).get();
                             target.add(findParent(KnowledgeBaseListPanel.class));
                             target.addChildren(getPage(), IFeedback.class);
                             findParent(KnowledgeBaseCreationDialog.class).close(target);
@@ -348,12 +364,14 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             protected WizardButton newCancelButton(String aId, IWizard aWizard)
             {
                 WizardButton button = super.newCancelButton(aId, aWizard);
-                button.add(new AjaxEventBehavior("click") {
+                button.add(new AjaxEventBehavior("click")
+                {
 
                     private static final long serialVersionUID = 3425946914411261187L;
 
                     @Override
-                    protected void onEvent(AjaxRequestTarget target) {
+                    protected void onEvent(AjaxRequestTarget target)
+                    {
                         findParent(KnowledgeBaseCreationDialog.class).close(target);
                     }
                 });

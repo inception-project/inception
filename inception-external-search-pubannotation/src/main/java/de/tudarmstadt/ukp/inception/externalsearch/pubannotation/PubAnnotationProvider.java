@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,28 +65,27 @@ public class PubAnnotationProvider
 
         return response.getBody();
     }
-    
+
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aQuery)
     {
         List<PubAnnotationDocumentHandle> response = query(aTraits, aQuery);
-        
+
         List<ExternalSearchResult> results = new ArrayList<>();
         for (PubAnnotationDocumentHandle handle : response) {
             ExternalSearchResult result = new ExternalSearchResult(aDocumentRepository,
                     handle.getSourceDb(), handle.getSourceId() + ".json");
             result.setOriginalSource(handle.getSourceDb());
             result.setDocumentTitle(handle.getUrl());
-            result.setHighlights(handle.getHighlights().stream()
-                    .map(ExternalSearchHighlight::new)
+            result.setHighlights(handle.getHighlights().stream().map(ExternalSearchHighlight::new)
                     .collect(Collectors.toList()));
             results.add(result);
         }
-        
+
         return results;
     }
-    
+
     @Override
     public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
@@ -102,8 +101,7 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
         return getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId).stream()
-                .map(PubAnnotationDocumentSection::getText)
-                .collect(Collectors.joining("\n\n"));
+                .map(PubAnnotationDocumentSection::getText).collect(Collectors.joining("\n\n"));
     }
 
     @Override
@@ -123,7 +121,7 @@ public class PubAnnotationProvider
         Map<String, String> variables = new HashMap<>();
         variables.put("collectionId", aCollectionId);
         variables.put("documentId", aDocumentId);
- 
+
         RestTemplate restTemplate = new RestTemplate();
 
         try {
@@ -132,7 +130,7 @@ public class PubAnnotationProvider
                     aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
                     HttpMethod.GET, null, PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF,
                     variables);
-           
+
             return response.getBody();
         }
         catch (RestClientException e) {
@@ -140,11 +138,11 @@ public class PubAnnotationProvider
             PubAnnotationDocumentSection section = restTemplate.getForObject(
                     aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
                     PubAnnotationDocumentSection.class, variables);
-            
+
             return asList(section);
         }
     }
-    
+
     @Override
     public String getDocumentFormat(DocumentRepository aRepository,
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)

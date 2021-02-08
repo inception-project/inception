@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
@@ -88,7 +93,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -140,8 +144,7 @@ public class HtmlAnnotationEditor
                 JavaScriptHeaderItem.forReference(AnnotatorJsJavascriptResourceReference.get()));
 
         if (getModelObject().getDocument() != null) {
-            aResponse.render(
-                    OnDomReadyHeaderItem.forScript(initAnnotatorJs(vis, storeAdapter)));
+            aResponse.render(OnDomReadyHeaderItem.forScript(initAnnotatorJs(vis, storeAdapter)));
         }
     }
 
@@ -155,7 +158,7 @@ public class HtmlAnnotationEditor
             handleError("Unable to load data", e);
             return "";
         }
-        
+
         try {
             if (cas.select(XmlDocument.class).isEmpty()) {
                 return renderLegacyHtml(cas);
@@ -169,7 +172,7 @@ public class HtmlAnnotationEditor
             return "";
         }
     }
-    
+
     private String renderHtmlDocumentStructure(CAS aCas)
         throws IOException, TransformerConfigurationException, CASException, SAXException
     {
@@ -181,13 +184,13 @@ public class HtmlAnnotationEditor
             th.getTransformer().setOutputProperty(METHOD, "xml");
             th.getTransformer().setOutputProperty(INDENT, "no");
             th.setResult(new StreamResult(out));
-            
+
             Cas2SaxEvents serializer = new Cas2SaxEvents(th);
             serializer.process(aCas.getJCas());
             return out.toString();
         }
     }
-    
+
     private String renderLegacyHtml(CAS aCas)
     {
         StringBuilder buf = new StringBuilder(Strings.escapeMarkup(aCas.getDocumentText()));
@@ -268,7 +271,7 @@ public class HtmlAnnotationEditor
         script.append("        select:  '" + callbackUrl + "'");
         script.append("    }");
         script.append("});");
-        //script.append("Wicket.$('" + vis.getMarkupId() + "').annotator = ann;");
+        // script.append("Wicket.$('" + vis.getMarkupId() + "').annotator = ann;");
         return WicketUtil.wrapInTryCatch(script.toString());
     }
 
@@ -281,12 +284,12 @@ public class HtmlAnnotationEditor
         aTarget.add(vis);
         aTarget.appendJavaScript(initAnnotatorJs(vis, storeAdapter));
 
-//        aTarget.appendJavaScript(WicketUtil.wrapInTryCatch(String.join("\n",
-//            "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();",
-//            "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();"
-//        )));
+        // aTarget.appendJavaScript(WicketUtil.wrapInTryCatch(String.join("\n",
+        // "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();",
+        // "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();"
+        // )));
     }
-    
+
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
     {
         LOG.error(aMessage, aCause);
@@ -298,7 +301,7 @@ public class HtmlAnnotationEditor
         error(aMessage);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
-    
+
     private class StoreAdapter
         extends AbstractDefaultAjaxBehavior
     {
@@ -354,26 +357,25 @@ public class HtmlAnnotationEditor
                 LOG.error("Error: " + e.getMessage(), e);
             }
         }
-        
+
         private void select(AjaxRequestTarget aTarget, String payload)
             throws JsonParseException, JsonMappingException, IOException
         {
-            Annotation anno = JSONUtil.getObjectMapper().readValue(payload,
-                    Annotation.class);
+            Annotation anno = JSONUtil.getObjectMapper().readValue(payload, Annotation.class);
 
             if (anno.getRanges().isEmpty()) {
                 // Spurious creation event that is to be ignored.
                 return;
             }
-            
+
             VID paramId = VID.parse(anno.getId());
-            
+
             try {
                 CAS cas = getCasProvider().get();
-                
+
                 if (paramId.isSynthetic()) {
-                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                            cas, paramId, "spanOpenDialog");
+                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget, cas,
+                            paramId, "spanOpenDialog");
                     return;
                 }
 
@@ -384,12 +386,11 @@ public class HtmlAnnotationEditor
                         // When filling a slot, the current selection is *NOT* changed. The
                         // Span annotation which owns the slot that is being filled remains
                         // selected!
-                        getActionHandler().actionFillSlot(aTarget, cas, fs.getBegin(),
-                                fs.getEnd(), paramId);
+                        getActionHandler().actionFillSlot(aTarget, cas, fs.getBegin(), fs.getEnd(),
+                                paramId);
                     }
                     else {
-                        state.getSelection().selectSpan(paramId, cas, fs.getBegin(),
-                                fs.getEnd());
+                        state.getSelection().selectSpan(paramId, cas, fs.getBegin(), fs.getEnd());
                         getActionHandler().actionSelect(aTarget);
                     }
                 }
@@ -405,8 +406,7 @@ public class HtmlAnnotationEditor
         private void create(AjaxRequestTarget aTarget, String payload)
             throws JsonParseException, JsonMappingException, IOException
         {
-            Annotation anno = JSONUtil.getObjectMapper().readValue(payload,
-                    Annotation.class);
+            Annotation anno = JSONUtil.getObjectMapper().readValue(payload, Annotation.class);
 
             if (anno.getRanges().isEmpty()) {
                 // Spurious creation event that is to be ignored.
@@ -417,7 +417,8 @@ public class HtmlAnnotationEditor
             // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
             // up from there and then pass it on to AnnotatorJS to do the rendering.
             // String json = toJson(anno);
-            // aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
+            // aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json +
+            // ";");
 
             try {
                 CAS cas = getCasProvider().get();
@@ -429,8 +430,7 @@ public class HtmlAnnotationEditor
                         // When filling a slot, the current selection is *NOT* changed. The
                         // Span annotation which owns the slot that is being filled remains
                         // selected!
-                        getActionHandler().actionFillSlot(aTarget, cas, begin,
-                                end, NONE_ID);
+                        getActionHandler().actionFillSlot(aTarget, cas, begin, end, NONE_ID);
                     }
                     else {
                         state.getSelection().selectSpan(cas, begin, end);
@@ -470,10 +470,10 @@ public class HtmlAnnotationEditor
 
             // Render visible (custom) layers
             Map<String[], Queue<String>> colorQueues = new HashMap<>();
-            for (AnnotationLayer layer : vdoc.getAnnotationLayers()) {
+            for (AnnotationLayer layer : state.getAllAnnotationLayers()) {
                 ColoringStrategy coloringStrategy = coloringService.getStrategy(layer,
                         state.getPreferences(), colorQueues);
-                
+
                 // If the layer is not included in the rendering, then we skip here - but only after
                 // we have obtained a coloring strategy for this layer and thus secured the layer
                 // color. This ensures that the layer colors do not change depending on the number
@@ -481,7 +481,7 @@ public class HtmlAnnotationEditor
                 if (!vdoc.getAnnotationLayers().contains(layer)) {
                     continue;
                 }
-                
+
                 TypeAdapter typeAdapter = annotationService.getAdapter(layer);
 
                 ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
@@ -524,9 +524,7 @@ public class HtmlAnnotationEditor
                 boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
                         || layer.getName().equals(Sentence.class.getName());
                 boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                        && (state.getMode().equals(Mode.AUTOMATION)
-                                || state.getMode().equals(Mode.CORRECTION)
-                                || state.getMode().equals(Mode.CURATION));
+                        && CURATION == state.getMode();
 
                 if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
                     layersToRender.add(layer);

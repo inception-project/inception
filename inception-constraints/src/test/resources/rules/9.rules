@@ -1,0 +1,5 @@
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
+
+Lemma {
+  text() = "is" -> value = "be" (!);
+}

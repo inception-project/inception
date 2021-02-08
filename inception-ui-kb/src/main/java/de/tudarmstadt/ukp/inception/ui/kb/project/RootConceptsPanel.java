@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,9 +51,7 @@ public class RootConceptsPanel
 
     private @SpringBean KnowledgeBaseService kbService;
 
-
-    public RootConceptsPanel(String id,
-        CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
+    public RootConceptsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {
         super(id);
 
@@ -62,7 +60,7 @@ public class RootConceptsPanel
         setOutputMarkupId(true);
 
         ListView<IRI> conceptsListView = new ListView<IRI>("rootConcepts",
-            kbModel.bind("kb.rootConcepts"))
+                kbModel.bind("kb.rootConcepts"))
         {
             private static final long serialVersionUID = 1L;
 
@@ -71,9 +69,8 @@ public class RootConceptsPanel
             {
                 Form<Void> conceptForm = new Form<Void>("conceptForm");
                 conceptForm.add(buildTextField("textField", item.getModel()));
-                conceptForm.add(new LambdaAjaxLink("removeConcept", t -> 
-                    RootConceptsPanel.this.actionRemoveConcept(t, item.getModelObject())
-                ));
+                conceptForm.add(new LambdaAjaxLink("removeConcept",
+                        t -> RootConceptsPanel.this.actionRemoveConcept(t, item.getModelObject())));
                 item.add(conceptForm);
             }
 
@@ -81,20 +78,20 @@ public class RootConceptsPanel
         conceptsListView.setOutputMarkupId(true);
         add(conceptsListView);
 
-        TextField<String> newRootConcept = new TextField<>("newConceptField",
-            newConceptIRIString);
+        TextField<String> newRootConcept = new TextField<>("newConceptField", newConceptIRIString);
         newRootConcept.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         add(newRootConcept);
 
         LambdaAjaxLink specifyConcept = new LambdaAjaxLink("newExplicitConcept",
-            RootConceptsPanel.this::actionNewRootConcept);
+                RootConceptsPanel.this::actionNewRootConcept);
         add(specifyConcept);
     }
 
-    private TextField<String> buildTextField(String id, IModel<IRI> model) {
+    private TextField<String> buildTextField(String id, IModel<IRI> model)
+    {
         IModel<String> adapter = new LambdaModelAdapter<String>(
-            () -> model.getObject().stringValue(),
-            str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
+                () -> model.getObject().stringValue(),
+                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
 
         TextField<String> iriTextfield = new TextField<>(id, adapter);
         iriTextfield.setOutputMarkupId(true);
@@ -105,7 +102,8 @@ public class RootConceptsPanel
         return iriTextfield;
     }
 
-    private void actionNewRootConcept(AjaxRequestTarget aTarget) {
+    private void actionNewRootConcept(AjaxRequestTarget aTarget)
+    {
         ValueFactory vf = SimpleValueFactory.getInstance();
         IRI concept = vf.createIRI(newConceptIRIString.getObject());
         if (isConceptValid(kbModel.getObject().getKb(), concept, true)) {
@@ -120,7 +118,8 @@ public class RootConceptsPanel
         aTarget.add(this);
     }
 
-    private void actionRemoveConcept(AjaxRequestTarget aTarget, IRI iri) {
+    private void actionRemoveConcept(AjaxRequestTarget aTarget, IRI iri)
+    {
         concepts.remove(iri);
         aTarget.add(this);
     }
@@ -128,9 +127,7 @@ public class RootConceptsPanel
     public boolean isConceptValid(KnowledgeBase kb, IRI conceptIRI, boolean aAll)
         throws QueryEvaluationException
     {
-        return kbService
-            .readConcept(kbModel.getObject().getKb(), conceptIRI.stringValue(), true)
-            .isPresent()
-            && !concepts.contains(conceptIRI);
+        return kbService.readConcept(kbModel.getObject().getKb(), conceptIRI.stringValue(), true)
+                .isPresent() && !concepts.contains(conceptIRI);
     }
 }

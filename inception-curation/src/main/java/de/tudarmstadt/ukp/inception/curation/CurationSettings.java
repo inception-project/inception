@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,31 +37,32 @@ import javax.persistence.Table;
 @IdClass(CurationSettingsId.class)
 @Table(name = "curation_settings")
 public class CurationSettings
-{    
+{
     @Id
     @Column(nullable = false)
     private Long projectId;
-    
+
     @Id
     @Column(nullable = false)
     private String username;
-    
+
     @ElementCollection
     @CollectionTable(name = "curationSettings_users", joinColumns = {
             @JoinColumn(name = "settings_projectId", referencedColumnName = "projectId"),
-            @JoinColumn(name = "settings_username",  referencedColumnName = "username")
-            })
+            @JoinColumn(name = "settings_username", referencedColumnName = "username") })
     @Column(name = "selectedUsername", nullable = true, updatable = true)
     private Set<String> selectedUserNames = new HashSet<>();
-    
+
     @Column(nullable = false)
     private String curationUsername;
 
-    protected CurationSettings() {
+    protected CurationSettings()
+    {
         // constructor for JPA
     }
-    
-    public CurationSettings(String aUser, Long aProjectId, String aCurationUser) {
+
+    public CurationSettings(String aUser, Long aProjectId, String aCurationUser)
+    {
         username = aUser;
         projectId = aProjectId;
         curationUsername = aCurationUser;
