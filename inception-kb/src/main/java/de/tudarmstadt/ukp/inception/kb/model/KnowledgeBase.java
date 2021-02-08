@@ -25,7 +25,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -42,9 +41,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -92,33 +88,33 @@ public class KnowledgeBase
      * (Q35120) in Wikidata
      */
     @Column(nullable = false)
-    private IRI classIri;
+    private String classIri;
 
     /**
      * The IRI for a property describing A being a subclass B, e.g. rdfs:subClassOf or subclass of
      * (P279) in Wikidata
      */
     @Column(nullable = false)
-    private IRI subclassIri;
+    private String subclassIri;
 
     /**
      * The IRI for a property describing A being of type B, e.g. rdfs:type or instance of (P31) in
      * Wikidata
      */
     @Column(nullable = false)
-    private IRI typeIri;
+    private String typeIri;
 
     /**
      * The IRI for a property describing B being a subproperty of A
      */
     @Column(nullable = false)
-    private IRI subPropertyIri;
+    private String subPropertyIri;
 
     /**
      * The IRI for a property describing B being a description of A, e.g. schema:description
      */
     @Column(nullable = false)
-    private IRI descriptionIri;
+    private String descriptionIri;
 
     /**
      * The IRI used for full text search, e.g. {@code bif:contains} or
@@ -126,37 +122,37 @@ public class KnowledgeBase
      * supported.
      */
     @Column(nullable = true)
-    private IRI fullTextSearchIri;
+    private String fullTextSearchIri;
 
     /**
      * The IRI for a property describing B being a label for A, e.g. rdfs:label
      */
     @Column(nullable = false)
-    private IRI labelIri;
+    private String labelIri;
 
     /**
      * The IRI for an object describing A is of type propertyType, e.g. rdf:Property
      */
     @Column(nullable = false)
-    private IRI propertyTypeIri;
+    private String propertyTypeIri;
 
     /**
      * The IRI for a label of a property
      */
     @Column(nullable = false)
-    private IRI propertyLabelIri;
+    private String propertyLabelIri;
 
     /**
      * The IRI for a description of a property
      */
     @Column(nullable = false)
-    private IRI propertyDescriptionIri;
+    private String propertyDescriptionIri;
 
     /**
      * The IRI of the default dataset
      */
     @Column(nullable = true)
-    private IRI defaultDatasetIri;
+    private String defaultDatasetIri;
 
     @Column(nullable = false)
     private boolean readOnly;
@@ -183,7 +179,7 @@ public class KnowledgeBase
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "knowledgebase_root_classes")
     @Column(name = "name")
-    private List<IRI> rootConcepts = new ArrayList<>();
+    private List<String> rootConcepts = new ArrayList<>();
 
     /**
      * The default language for labels and descriptions of KB elements
@@ -237,87 +233,87 @@ public class KnowledgeBase
         this.type = type;
     }
 
-    public IRI getClassIri()
+    public String getClassIri()
     {
         return classIri;
     }
 
-    public void setClassIri(IRI aClassIri)
+    public void setClassIri(String aClassIri)
     {
         classIri = aClassIri;
     }
 
-    public IRI getSubclassIri()
+    public String getSubclassIri()
     {
         return subclassIri;
     }
 
-    public void setSubclassIri(IRI aSubclassIri)
+    public void setSubclassIri(String aSubclassIri)
     {
         subclassIri = aSubclassIri;
     }
 
-    public IRI getTypeIri()
+    public String getTypeIri()
     {
         return typeIri;
     }
 
-    public void setTypeIri(IRI aTypeIri)
+    public void setTypeIri(String aTypeIri)
     {
         typeIri = aTypeIri;
     }
 
-    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    public void setPropertyDescriptionIri(String aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
-    public IRI getSubPropertyIri()
+    public String getSubPropertyIri()
     {
         return subPropertyIri;
     }
 
-    public void setSubPropertyIri(IRI aSubPropertyIri)
+    public void setSubPropertyIri(String aSubPropertyIri)
     {
         subPropertyIri = aSubPropertyIri;
     }
 
-    public IRI getDescriptionIri()
+    public String getDescriptionIri()
     {
         return descriptionIri;
     }
 
-    public void setDescriptionIri(IRI aDescriptionIri)
+    public void setDescriptionIri(String aDescriptionIri)
     {
         descriptionIri = aDescriptionIri;
     }
 
-    public IRI getLabelIri()
+    public String getLabelIri()
     {
         return labelIri;
     }
 
-    public void setLabelIri(IRI aLabelIri)
+    public void setLabelIri(String aLabelIri)
     {
         labelIri = aLabelIri;
     }
 
-    public IRI getPropertyTypeIri()
+    public String getPropertyTypeIri()
     {
         return propertyTypeIri;
     }
 
-    public void setPropertyTypeIri(IRI aPropertyTypeIri)
+    public void setPropertyTypeIri(String aPropertyTypeIri)
     {
         propertyTypeIri = aPropertyTypeIri;
     }
 
-    public IRI getFullTextSearchIri()
+    public String getFullTextSearchIri()
     {
         return fullTextSearchIri;
     }
 
-    public void setFullTextSearchIri(IRI aFtsIri)
+    public void setFullTextSearchIri(String aFtsIri)
     {
         fullTextSearchIri = aFtsIri;
     }
@@ -332,17 +328,17 @@ public class KnowledgeBase
         defaultLanguage = aLanguage;
     }
 
-    public IRI getPropertyLabelIri()
+    public String getPropertyLabelIri()
     {
         return propertyLabelIri;
     }
 
-    public void setPropertyLabelIri(IRI aPropertyLabelIri)
+    public void setPropertyLabelIri(String aPropertyLabelIri)
     {
         propertyLabelIri = aPropertyLabelIri;
     }
 
-    public IRI getPropertyDescriptionIri()
+    public String getPropertyDescriptionIri()
     {
         return propertyDescriptionIri;
     }
@@ -401,14 +397,14 @@ public class KnowledgeBase
         basePrefix = aBasePrefix;
     }
 
-    public List<IRI> getRootConcepts()
+    public List<String> getRootConcepts()
     {
         return rootConcepts;
     }
 
-    public void setRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
+    public void setRootConcepts(List<String> aExplicitlyDefinedRootConcepts)
     {
-        rootConcepts = aExplicitlyDefinedRootConcepts;
+        rootConcepts = new ArrayList<>(aExplicitlyDefinedRootConcepts);
     }
 
     public int getMaxResults()
@@ -440,18 +436,16 @@ public class KnowledgeBase
             rootConcepts = emptyList();
         }
         else {
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            rootConcepts = aProfile.getRootConcepts().stream().map(vf::createIRI)
-                    .collect(Collectors.toList());
+            rootConcepts = new ArrayList<>(aProfile.getRootConcepts());
         }
     }
 
-    public IRI getDefaultDatasetIri()
+    public String getDefaultDatasetIri()
     {
         return defaultDatasetIri;
     }
 
-    public void setDefaultDatasetIri(IRI aDefaultDatasetIri)
+    public void setDefaultDatasetIri(String aDefaultDatasetIri)
     {
         defaultDatasetIri = aDefaultDatasetIri;
     }

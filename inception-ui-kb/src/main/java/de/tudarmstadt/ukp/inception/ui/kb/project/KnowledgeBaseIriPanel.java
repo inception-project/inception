@@ -128,15 +128,14 @@ public class KnowledgeBaseIriPanel
             // previously selected profile and just make the IRI mapping ediable. If the user
             // switches to a pre-defined profile, we reset the values.
             if (SchemaProfile.CUSTOMSCHEMA != profile) {
-                classField.setModelObject(profile.getClassIri().stringValue());
-                subclassField.setModelObject(profile.getSubclassIri().stringValue());
-                typeField.setModelObject(profile.getTypeIri().stringValue());
-                descriptionField.setModelObject(profile.getDescriptionIri().stringValue());
-                labelField.setModelObject(profile.getLabelIri().stringValue());
-                propertyTypeField.setModelObject(profile.getPropertyTypeIri().stringValue());
-                propertyLabelField.setModelObject(profile.getPropertyLabelIri().stringValue());
-                propertyDescriptionField
-                        .setModelObject(profile.getPropertyDescriptionIri().stringValue());
+                classField.setModelObject(profile.getClassIri());
+                subclassField.setModelObject(profile.getSubclassIri());
+                typeField.setModelObject(profile.getTypeIri());
+                descriptionField.setModelObject(profile.getDescriptionIri());
+                labelField.setModelObject(profile.getLabelIri());
+                propertyTypeField.setModelObject(profile.getPropertyTypeIri());
+                propertyLabelField.setModelObject(profile.getPropertyLabelIri());
+                propertyDescriptionField.setModelObject(profile.getPropertyDescriptionIri());
             }
             _target.add(comboBoxWrapper, iriSchemaChoice, reificationChoice);
         }));

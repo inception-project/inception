@@ -61,6 +61,6 @@ public class TypeColoringStrategyImpl
     public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB,
             List<String> aLabelProperties)
     {
-        return aPropertyIdentifier.equals(aKB.getTypeIri().stringValue());
+        return aPropertyIdentifier.equals(aKB.getTypeIri());
     }
 }

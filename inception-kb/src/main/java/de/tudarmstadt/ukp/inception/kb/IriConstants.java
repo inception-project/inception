@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -133,9 +132,7 @@ public class IriConstants
     {
         // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not
         // want to filter it out just because we consider the OWL namespace to be implicit.
-        Set<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
-                .collect(Collectors.toSet());
-        if (rootConceptsAsStrings.contains(s)) {
+        if (kb.getRootConcepts().contains(s)) {
             return false;
         }
 

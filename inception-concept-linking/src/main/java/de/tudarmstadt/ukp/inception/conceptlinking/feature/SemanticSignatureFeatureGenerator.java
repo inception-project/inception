@@ -283,7 +283,7 @@ public class SemanticSignatureFeatureGenerator
         tupleQuery.setBinding("language", vf.createLiteral(
                 (aKb.getDefaultLanguage() != null) ? aKb.getDefaultLanguage() : "en"));
         tupleQuery.setBinding("e2", vf.createIRI(aIri));
-        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+        tupleQuery.setBinding("labelIri", vf.createIRI(aKb.getLabelIri()));
         return tupleQuery;
     }
 }

@@ -88,16 +88,15 @@ public class WikiDataReificationTest
         kb.setFullTextSearchIri(null);
         kb.setMaxResults(1000);
 
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setClassIri(vf.createIRI("http://www.wikidata.org/entity/Q35120"));
-        kb.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/direct/P279"));
-        kb.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/direct/P31"));
-        kb.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-        kb.setPropertyTypeIri(vf.createIRI("http://www.wikidata.org/entity/Q18616576"));
-        kb.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-        kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-        kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
-        kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
+        kb.setClassIri("http://www.wikidata.org/entity/Q35120");
+        kb.setSubclassIri("http://www.wikidata.org/prop/direct/P279");
+        kb.setTypeIri("http://www.wikidata.org/prop/direct/P31");
+        kb.setLabelIri("http://www.w3.org/2000/01/rdf-schema#label");
+        kb.setPropertyTypeIri("http://www.wikidata.org/entity/Q18616576");
+        kb.setDescriptionIri("http://schema.org/description");
+        kb.setPropertyLabelIri("http://www.w3.org/2000/01/rdf-schema#label");
+        kb.setPropertyDescriptionIri("http://www.w3.org/2000/01/rdf-schema#comment");
+        kb.setSubPropertyIri("http://www.wikidata.org/prop/direct/P1647");
 
         // Local in-memory store - this should be used for most tests because we can
         // a) rely on its availability
