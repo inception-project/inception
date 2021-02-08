@@ -319,15 +319,9 @@
           <configuration>
             <usedDependencies>
               <!-- RDF4J plugins - used via reflection -->
-              <usedDependency>org.eclipse.rdf4j:rdf4j-model</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-repository-api</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-rio-api</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-rio-rdfxml</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-rio-ntriples</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-query</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-queryresultio-api</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-queryparser-sparql</usedDependency>
-              <usedDependency>org.eclipse.rdf4j:rdf4j-util</usedDependency>
               <!-- Testing - used via reflection -->
               <usedDependency>com.h2database:h2</usedDependency>
               <usedDependency>com.jayway.jsonpath:json-path</usedDependency>
