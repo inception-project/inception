@@ -855,7 +855,7 @@ public class SPARQLQueryBuilder
             addPattern(PRIMARY, withLabelMatchingAnyOf_Wikidata_FTS(values));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelMatchingAnyOf_No_FTS(values));
+            addPattern(SECONDARY, withLabelMatchingAnyOf_No_FTS(values));
         }
         else {
             throw new IllegalStateException(
