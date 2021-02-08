@@ -143,10 +143,6 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-urlfragment</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
