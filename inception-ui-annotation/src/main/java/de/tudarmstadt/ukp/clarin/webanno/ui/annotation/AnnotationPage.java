@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -557,26 +559,29 @@ public class AnnotationPage
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
             boolean aLockIfPreset)
     {
+        AnnotatorState state = getModelObject();
         Project project = getProject();
+        User user = userRepository.getCurrentUser();
+        requireProjectRole(user);
+
+        if (!user.equals(state.getUser())) {
+            if (CURATION_USER.equals(state.getUser().getUsername())) {
+                // Curators can access the special CURATION_USER
+                requireProjectRole(user, MANAGER, CURATOR);
+            }
+            else {
+                // Only managers are allowed to open documents as another user
+                requireProjectRole(user, MANAGER);
+            }
+        }
 
         SourceDocument document = getDocumentFromParameters(project, aDocumentParameter);
-
-        AnnotatorState state = getModelObject();
 
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
         if (document != null && document.equals(state.getDocument()) && aFocusParameter != null
                 && aFocusParameter.toInt(0) == state.getFocusUnitIndex()) {
-            return;
-        }
-
-        // Check access to project for annotator or current user if admin is viewing.
-        // Default curation user should have access to all projects.
-        if (projectService.isAnnotator(project, state.getUser())
-                && !projectService.isManager(project, userRepository.getCurrentUser())
-                && !state.getUser().getUsername().equals(CURATION_USER)) {
-            error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
 
