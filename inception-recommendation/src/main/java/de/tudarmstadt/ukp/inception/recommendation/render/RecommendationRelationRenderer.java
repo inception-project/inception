@@ -20,7 +20,12 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -30,12 +35,15 @@ import org.apache.uima.fit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -113,9 +121,24 @@ public class RecommendationRelationRenderer
         Type type = CasUtil.getType(aCas, aLayer.getName());
         Type attachType = CasUtil.getType(aCas, aLayer.getAttachType().getName());
 
+        // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
+        Map<String, AnnotationFeature> features = aAnnotationService.listSupportedFeatures(aLayer)
+                .stream()
+                .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
+
         for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
-            // TODO: Sort by confidence
-            for (RelationSuggestion suggestion : group) {
+
+            // Sort by confidence
+            List<RelationSuggestion> suggestions = group.stream() //
+                    .sorted(Comparator.comparing(RelationSuggestion::getConfidence).reversed()) //
+                    .collect(Collectors.toList());
+
+            // Limit number of shown predictions
+            int limit = pref.isShowAllPredictions() ? group.size()
+                    : Math.min(pref.getMaxPredictions(), group.size());
+
+            for (int i = 0; i < limit; i++) {
+                RelationSuggestion suggestion = suggestions.get(i);
 
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !suggestion.isVisible()) {
@@ -137,8 +160,21 @@ public class RecommendationRelationRenderer
                 AnnotationFS target = selectAt(aCas, attachType, targetBegin, targetEnd) //
                         .stream().findFirst().orElse(null);
 
+                // Retrieve the UI display label for the given feature value
+                AnnotationFeature feature = features.get(suggestion.getFeature());
+
+                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
+                String annotation = featureSupport.renderFeatureValue(feature,
+                        suggestion.getLabel());
+
+                Map<String, String> featureAnnotation = new HashMap<>();
+                featureAnnotation.put(suggestion.getFeature(), annotation);
+
                 VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
-                        new VID(target), suggestion.getUiLabel(), Collections.emptyMap(), COLOR);
+                        new VID(target), suggestion.getUiLabel(), featureAnnotation, COLOR);
+
+                arc.addLazyDetails(featureSupport.getLazyDetails(feature, suggestion.getLabel()));
+                arc.addLazyDetail(new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
 
                 vdoc.add(arc);
             }
