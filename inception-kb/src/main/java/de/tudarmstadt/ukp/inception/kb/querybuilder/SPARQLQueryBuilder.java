@@ -507,7 +507,8 @@ public class SPARQLQueryBuilder
 
         // The Wikidata search service we are using does not return properties, so we have to do
         // this the old-fashioned way...
-        if (Mode.PROPERTY.equals(mode) && FTS_WIKIDATA.equals(aKB.getFullTextSearchIri())) {
+        if (Mode.PROPERTY.equals(mode)
+                && FTS_WIKIDATA.stringValue().equals(aKB.getFullTextSearchIri())) {
             forceDisableFTS = true;
         }
     }
