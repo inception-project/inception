@@ -25,10 +25,6 @@
   <artifactId>inception-kb</artifactId>
   <name>INCEpTION - Knowledge Base - Core</name>
 
-  <properties>
-    <jena.version>3.13.1</jena.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

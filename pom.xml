@@ -1,21 +1,23 @@
 <!--
   Licensed to the Technische Universität Darmstadt under one
-  or more contributor license agreements.  See the NOTICE file
+  or more contributor license agreements. See the NOTICE file
   distributed with this work for additional information
-  regarding copyright ownership.  The Technische Universität Darmstadt 
+  regarding copyright ownership. The Technische Universität Darmstadt
   licenses this file to you under the Apache License, Version 2.0 (the
   "License"); you may not use this file except in compliance
   with the License.
-   
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.dkpro</groupId>
@@ -98,11 +100,19 @@
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
     <bootstrap.version>4.5.3</bootstrap.version>
 
-    <lucene.version>7.7.2</lucene.version> <!-- 8.7.0 -->
-    <elasticsearch.version>6.8.8</elasticsearch.version><!-- 7.10.2 -->
-    <solr.version>8.5.1</solr.version> <!-- 8.7.0 -->
+    <!--
+      - These are all interconnected - because they share the dependency on Lucene.
+      -
+      - Currently, the Lucene version they all seem to agree most on is 7.7.x. 
+      - At the moment (2020-FEB-09), there are no versions of RDF4J and Jena (Fuseki) which
+      - are built against Lucene 8.x.
+      -->
+    <lucene.version>7.7.3</lucene.version> <!-- 8.7.0 -->
+    <solr.version>7.7.3</solr.version> <!-- 8.5.1 / 8.7.0 -->
     <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
+    <elasticsearch.version>6.8.8</elasticsearch.version> <!-- 7.10.2 -->
     <rdf4j.version>3.5.1</rdf4j.version>
+    <jena.version>3.17.0</jena.version>
 
     <servlet-api.version>4.0.1</servlet-api.version>
     <okhttp.version>3.14.2</okhttp.version>
@@ -142,14 +152,14 @@
       </snapshots>
     </repository>
     <!--
-    <repository>
+      <repository>
       <id>ext-staging</id>
       <name>Staging repo</name>
       <url>https://repository.apache.org/content/repositories/orgapacheuima-1183/</url>
       <releases>
-        <enabled>true</enabled>
+      <enabled>true</enabled>
       </releases>
-    </repository>
+      </repository>
     -->
   </repositories>
   <pluginRepositories>
@@ -410,9 +420,9 @@
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-      	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      	<artifactId>inception-sharing</artifactId>
-      	<version>0.19.0-SNAPSHOT</version>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-sharing</artifactId>
+        <version>0.19.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -544,7 +554,7 @@
         <artifactId>inception-export</artifactId>
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
-      
+
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-json</artifactId>
@@ -748,21 +758,21 @@
         <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
         <version>${wicketstuff.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
         <version>${wicket-bootstrap.version}</version>
       </dependency>
       <dependency>
-         <groupId>de.agilecoders.wicket</groupId>
-         <artifactId>wicket-bootstrap-extensions</artifactId>
-         <version>${wicket-bootstrap.version}</version>
+        <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>wicket-bootstrap-extensions</artifactId>
+        <version>${wicket-bootstrap.version}</version>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>jquery-selectors</artifactId>
-         <version>${wicket-jquery-selectors.version}</version>
+        <version>${wicket-jquery-selectors.version}</version>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
@@ -872,7 +882,7 @@
       <dependency>
         <groupId>org.apache.xmlgraphics</groupId>
         <artifactId>batik-util</artifactId>
-          <version>${batik.version}</version>
+        <version>${batik.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.xmlgraphics</groupId>
@@ -1114,7 +1124,7 @@
         <artifactId>spring-security-web</artifactId>
         <version>${spring.security.version}</version>
       </dependency>
-      
+
       <!-- Tomcat -->
       <dependency>
         <groupId>org.apache.tomcat.embed</groupId>
@@ -1403,7 +1413,7 @@
           </exclusion>
         </exclusions>
       </dependency>
-      
+
       <dependency>
         <groupId>org.dkpro.core</groupId>
         <artifactId>dkpro-core-testing-asl</artifactId>
@@ -1488,13 +1498,13 @@
         <artifactId>jquery.scrollTo</artifactId>
         <version>2.1.2</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.mariadb.jdbc</groupId>
         <artifactId>mariadb-java-client</artifactId>
         <version>${mariadb.driver.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-logging</artifactId>
