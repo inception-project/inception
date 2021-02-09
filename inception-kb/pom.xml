@@ -63,6 +63,10 @@
       <artifactId>commons-compress</artifactId>
     </dependency>
     <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-repository-sail</artifactId>
     </dependency>
@@ -124,12 +128,11 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-vocabulary</artifactId>
-      <version>${rdf4j.version}</version>
+      <artifactId>rdf4j-model-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-model-api</artifactId>
+      <artifactId>rdf4j-model-vocabulary</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
@@ -203,11 +206,6 @@
       <artifactId>jackson-annotations</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-    </dependency>
-  
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
