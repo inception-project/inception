@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.INFO;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
@@ -40,8 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -173,8 +174,10 @@ public class RecommendationRelationRenderer
                 VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
                         new VID(target), suggestion.getUiLabel(), featureAnnotation, COLOR);
 
-                arc.addLazyDetails(featureSupport.getLazyDetails(feature, suggestion.getLabel()));
-                arc.addLazyDetail(new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
+                vdoc.add(
+                        new VComment(suggestion.getVID(), INFO, "Value: " + suggestion.getLabel()));
+                vdoc.add(new VComment(suggestion.getVID(), INFO, String
+                        .format("Confidence: %.2f", suggestion.getConfidence()).replace(",", ".")));
 
                 vdoc.add(arc);
             }
