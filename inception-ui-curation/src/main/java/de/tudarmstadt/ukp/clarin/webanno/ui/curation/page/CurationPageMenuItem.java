@@ -49,7 +49,7 @@ public class CurationPageMenuItem
 
     public String getUrl(long aProjectId, long aDocumentId)
     {
-        return format("%s/p/%d%s#!d=%d", servletContext.getContextPath(), aProjectId, getPath(),
+        return format("%s/p/%d%s/%d", servletContext.getContextPath(), aProjectId, getPath(),
                 aDocumentId);
     }
 

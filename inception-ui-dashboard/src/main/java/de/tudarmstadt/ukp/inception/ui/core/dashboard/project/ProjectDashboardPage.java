@@ -41,8 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ActivitiesDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashlet;
 
 /**
  * Project dashboard page
@@ -89,8 +89,7 @@ public class ProjectDashboardPage
         add(menu);
 
         add(new CurrentProjectDashlet("currentProjectDashlet", Model.of(getProject())));
-        // add(new ActivitiesDashlet("activitiesDashlet", getModel()));
-        add(new VueActivitiesDashlet("activitiesDashlet", Model.of(getProject())));
+        add(new ActivitiesDashlet("activitiesDashlet", Model.of(getProject())));
     }
 
     public void setModel(IModel<Project> aModel) {

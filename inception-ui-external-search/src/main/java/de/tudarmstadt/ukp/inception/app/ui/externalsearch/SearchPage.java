@@ -22,6 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_COLLECTION_ID;
+import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_DOCUMENT_ID;
+import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_REPOSITORY_ID;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.IOException;
@@ -30,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
@@ -43,6 +45,8 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
+import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -71,7 +75,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.ui.core.LinkProvider;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/search")
 public class SearchPage
@@ -204,11 +207,6 @@ public class SearchPage
         }
     }
 
-    private void abort()
-    {
-        throw new RestartResponseException(getApplication().getHomePage());
-    }
-
     public class ResultRowView
         extends Panel
     {
@@ -234,22 +232,18 @@ public class SearchPage
             }
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
 
-            LambdaAjaxLink link = new LambdaAjaxLink("titleLink", _target -> {
-                PageParameters pageParameters = new PageParameters()
-                        .add(DocumentDetailsPage.REPOSITORY_ID, result.getRepository().getId())
-                        .add(DocumentDetailsPage.COLLECTION_ID, result.getCollectionId())
-                        .add(DocumentDetailsPage.DOCUMENT_ID, result.getDocumentId());
-                setResponsePage(DocumentDetailsPage.class, pageParameters);
+            Link<Void> link = new BookmarkablePageLink<>("titleLink", DocumentDetailsPage.class,
+                    new PageParameters().add(PAGE_PARAM_PROJECT, getProject().getId())
+                            .add(PAGE_PARAM_REPOSITORY_ID, result.getRepository().getId())
+                            .add(PAGE_PARAM_COLLECTION_ID, result.getCollectionId())
+                            .add(PAGE_PARAM_DOCUMENT_ID, result.getDocumentId()));
+            link.add(new Label("title",
+                    defaultIfBlank(result.getDocumentTitle(), defaultIfBlank(result.getDocumentId(),
+                            defaultIfBlank(result.getOriginalUri(), "<no title>")))));
+            add(link);
 
-            });
-
-            String title = defaultIfBlank(result.getDocumentTitle(), defaultIfBlank(
-                    result.getDocumentId(), defaultIfBlank(result.getOriginalUri(), "<no title>")));
             boolean existsSourceDocument = documentService.existsSourceDocument(getProject(),
                     result.getDocumentId());
-
-            link.add(new Label("title", title));
-            add(link);
 
             add(new Label("score", result.getScore()));
             add(new Label("importStatus",
@@ -257,10 +251,16 @@ public class SearchPage
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
                     .add(visibleWhen(() -> !existsSourceDocument)));
 
-            add(LinkProvider
-                    .createDocumentPageLink(documentService, getProject(), result.getDocumentId(),
-                            "openLink", AnnotationPage.class)
-                    .add(visibleWhen(() -> existsSourceDocument)));
+            Link<Void> openLink = new BookmarkablePageLink<>("openLink", AnnotationPage.class,
+                    new PageParameters().add(PAGE_PARAM_PROJECT, getProject().getId())
+                            .add(AnnotationPage.PAGE_PARAM_DOCUMENT, result.getDocumentId()));
+            openLink.add(visibleWhen(() -> existsSourceDocument));
+            add(openLink);
+
+            // add(LinkProvider
+            // .createDocumentPageLink(documentService, getProject(), result.getDocumentId(),
+            // "openLink", AnnotationPage.class)
+            // .add(visibleWhen(() -> existsSourceDocument)));
         }
     }
 }

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import java.util.List;
 
-public interface VueActivitiesDashletController
+public interface ActivitiesDashletController
 {
     String BASE_URL = "/de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashletController";
     String LIST_PATH = "/project/{projectId}/list";

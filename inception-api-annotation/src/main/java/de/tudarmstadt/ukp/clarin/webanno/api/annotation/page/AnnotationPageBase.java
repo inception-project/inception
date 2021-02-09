@@ -34,8 +34,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.IRequestParameters;
@@ -85,6 +89,31 @@ public abstract class AnnotationPageBase
     protected AnnotationPageBase(PageParameters aParameters)
     {
         super(aParameters);
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        StringValue documentParameter = getPageParameters().get(PAGE_PARAM_DOCUMENT);
+
+        if (!documentParameter.isEmpty()) {
+            add(new Behavior()
+            {
+                private static final long serialVersionUID = 3142725677020364341L;
+
+                @Override
+                public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                {
+                    aResponse.render(OnLoadHeaderItem
+                            .forScript("try{history.replaceState({}, '', './')}catch(e){}"));
+                    aResponse.render(OnLoadHeaderItem.forScript(String.format(
+                            "try{if(window.UrlUtil){window.UrlUtil.putFragmentParameter('%s','%s');}}catch(e){}",
+                            PAGE_PARAM_DOCUMENT, documentParameter.toString())));
+                }
+            });
+        }
     }
 
     public void setModel(IModel<AnnotatorState> aModel)
@@ -469,7 +498,6 @@ public abstract class AnnotationPageBase
             // second time. Might be a bug in wicketstuff urlfragment... not sure.
             aTarget.appendJavaScript(
                     "try{if(window.UrlUtil){window.UrlUtil.editedFragment = false;}}catch(e){}");
-
         }
 
         private AnnotationPageBase getOuterType()
