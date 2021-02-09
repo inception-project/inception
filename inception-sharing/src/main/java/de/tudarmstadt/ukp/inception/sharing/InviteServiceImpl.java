@@ -62,10 +62,7 @@ public class InviteServiceImpl
     public String generateInviteID(Project aProject)
     {
         // set expiration date one year from now
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.add(Calendar.YEAR, 1);
-        Date expirationDate = calendar.getTime();
+        Date expirationDate = getDateOneYearForth(new Date());
         // generate id
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
@@ -76,6 +73,18 @@ public class InviteServiceImpl
         entityManager.persist(new ProjectInvite(aProject, inviteID, expirationDate));
 
         return inviteID;
+    }
+
+    /**
+     * Get date one year from the given one
+     */
+    private Date getDateOneYearForth(Date aDate)
+    {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(aDate);
+        calendar.add(Calendar.YEAR, 1);
+        Date futureDate = calendar.getTime();
+        return futureDate;
     }
 
     @Override
@@ -138,5 +147,28 @@ public class InviteServiceImpl
 
         String expectedId = getValidInviteID(aProject);
         return expectedId != null && aInviteId.equals(expectedId);
+    }
+
+    @Override
+    public Date getExpirationDate(Project aProject)
+    {
+        ProjectInvite invite = getProjectInvite(aProject);
+        if (invite == null) {
+            return null;
+        }
+        return invite.getExpirationDate();
+    }
+
+    @Transactional
+    @Override
+    public void extendInviteLinkDate(Project aProject)
+    {
+        ProjectInvite invite = getProjectInvite(aProject);
+        if (invite == null) {
+            return;
+        }
+        Date newExpirationDate = getDateOneYearForth(invite.getExpirationDate());
+        invite.setExpirationDate(newExpirationDate);
+        entityManager.merge(invite);
     }
 }

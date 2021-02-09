@@ -17,10 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
@@ -55,6 +62,30 @@ public class InviteProjectSettingsPanel
         inviteLinkContainer = createInviteLinkContainer();
         inviteLinkContainer.setOutputMarkupId(true);
         add(inviteLinkContainer);
+        // add expiration infos
+        Label expirationLabel = new Label("expirationDate", LoadableDetachableModel.of(this::getExpirationDate));
+        expirationLabel.setOutputMarkupId(true);
+        expirationLabel.add(visibleWhen(() -> linkField.getModelObject() != null));
+        inviteLinkContainer.add(expirationLabel);
+        LambdaAjaxLink extendBtn = new LambdaAjaxLink("extendLink", this::actionExtendInviteDate);
+        inviteLinkContainer.add(extendBtn);
+    }
+    
+    private void actionExtendInviteDate(AjaxRequestTarget aTarget) {
+        aTarget.addChildren(getPage(), IFeedback.class);
+        inviteService.extendInviteLinkDate(getModelObject());
+        success("The validity period has been extended.");
+        aTarget.add(inviteLinkContainer);
+    }
+    
+    private String getExpirationDate() {
+        Date expirationDate = inviteService.getExpirationDate(getModelObject());
+        if (expirationDate == null)
+        {
+            return null;
+        }
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        return dateFormatter.format(expirationDate);
     }
 
     private WebMarkupContainer createInviteLinkContainer()

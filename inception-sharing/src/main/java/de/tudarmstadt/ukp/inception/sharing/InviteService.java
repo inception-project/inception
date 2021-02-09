@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.sharing;
 
+import java.util.Date;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface InviteService
@@ -54,4 +56,15 @@ public interface InviteService
      *            invite Id to check
      */
     boolean isValidInviteLink(Project aProject, String aInviteId);
+
+    /**
+     * Get the expiration date of the invite link belonging to the given project
+     * @param aProject the corresponding project
+     */
+    Date getExpirationDate(Project aProject);
+
+    /**
+     * Extend validity of the invite link associated with the given project for another year.
+     */
+    void extendInviteLinkDate(Project aProject);
 }

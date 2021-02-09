@@ -130,4 +130,20 @@ public class InviteServiceImplTest
 
         assertThat(retrievedId).isNull();
     }
+    
+    @Test
+    public void extendExpirationDate_ShouldReturnDateInAYear()
+    {
+        sut.generateInviteID(testProject);
+        Date oldDate = sut.getExpirationDate(testProject);
+        Calendar oldCalendar = Calendar.getInstance();
+        oldCalendar.setTime(oldDate);
+        
+        sut.extendInviteLinkDate(testProject);
+        
+        Date newDate = sut.getExpirationDate(testProject);
+        Calendar newCalendar = Calendar.getInstance();
+        newCalendar.setTime(newDate);
+        assertThat(newCalendar.get(Calendar.YEAR) - oldCalendar.get(Calendar.YEAR)).isEqualTo(1);
+    }
 }
