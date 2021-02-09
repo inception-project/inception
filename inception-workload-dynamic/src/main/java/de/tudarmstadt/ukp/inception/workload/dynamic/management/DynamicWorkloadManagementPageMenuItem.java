@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
@@ -90,7 +89,6 @@ public class DynamicWorkloadManagementPageMenuItem
         User user = userRepo.getCurrentUser();
 
         return (projectService.isCurator(project, user) || projectService.isManager(project, user))
-                && PROJECT_TYPE_ANNOTATION.equals(project.getMode())
                 && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                         .loadOrCreateWorkloadManagerConfiguration(project).getType());
     }

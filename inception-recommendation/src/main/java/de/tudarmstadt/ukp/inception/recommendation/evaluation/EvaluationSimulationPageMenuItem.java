@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 
 import org.apache.wicket.Page;
@@ -79,8 +78,7 @@ public class EvaluationSimulationPageMenuItem
 
         // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        if (!(projectService.isManager(project, user)
-                && PROJECT_TYPE_ANNOTATION.equals(project.getMode()))) {
+        if (!(projectService.isManager(project, user))) {
             return false;
         }
 

@@ -56,8 +56,9 @@ public class Project
     @Column(length = 64000)
     private String description;
 
+    @Deprecated
     @Column(nullable = false)
-    private String mode;
+    private String mode = "annotation";
 
     // version of the project
     private int version = 1;
@@ -161,11 +162,13 @@ public class Project
         this.scriptDirection = scriptDirection;
     }
 
+    @Deprecated
     public String getMode()
     {
         return mode;
     }
 
+    @Deprecated
     public void setMode(String aMode)
     {
         this.mode = aMode;

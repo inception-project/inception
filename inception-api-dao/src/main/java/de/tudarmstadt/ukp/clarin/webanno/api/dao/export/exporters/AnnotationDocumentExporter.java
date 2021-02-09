@@ -20,13 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
 import static java.lang.System.currentTimeMillis;
@@ -262,33 +258,6 @@ public class AnnotationDocumentExporter
                                 + annDoc.getUser() + "] for source document [" + srcDoc.getId()
                                 + "] in project [" + project.getName() + "] with id ["
                                 + project.getId() + "]");
-                    }
-                }
-
-                // Special handling for the virtual CORRECTION_USER data used in automation and
-                // correction type projects.
-                if (PROJECT_TYPE_AUTOMATION.equals(project.getMode())
-                        || PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
-                    File corrSerFile = documentService.getCasFile(srcDoc, CORRECTION_USER);
-                    if (corrSerFile.exists()) {
-                        // Copy CAS - this is used when importing the project again
-                        // Util WebAnno 3.4.x, the CORRECTION_USER CAS was exported to 'curation'
-                        // and 'curation_ser'.
-                        // Since WebAnno 3.5.x, the CORRECTION_USER CAS is exported to 'annotation'
-                        // and 'annotation_ser'.
-                        File curationSerDir = new File(
-                                aStage + ANNOTATION_AS_SERIALISED_CAS + srcDoc.getName());
-                        forceMkdir(curationSerDir);
-                        copyFileToDirectory(corrSerFile, curationSerDir);
-
-                        // Copy secondary export format for convenience - not used during import
-                        File curationDir = new File(
-                                aStage + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-                        forceMkdir(curationDir);
-                        File corrFile = importExportService.exportAnnotationDocument(srcDoc,
-                                CORRECTION_USER, format, CORRECTION_USER, CORRECTION);
-                        copyFileToDirectory(corrFile, curationDir);
-                        forceDelete(corrFile);
                     }
                 }
             }

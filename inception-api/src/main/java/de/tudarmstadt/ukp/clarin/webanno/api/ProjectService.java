@@ -467,8 +467,6 @@ public interface ProjectService
     // Methods related to other things
     // --------------------------------------------------------------------------------------------
 
-    List<ProjectType> listProjectTypes();
-
     /**
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project.

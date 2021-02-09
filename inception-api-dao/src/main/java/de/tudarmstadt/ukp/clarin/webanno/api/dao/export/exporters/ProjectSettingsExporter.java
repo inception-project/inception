@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,7 +48,9 @@ public class ProjectSettingsExporter
         aExProject.setDescription(project.getDescription());
         // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
         // during export but as lower-case in the database. This is compensating for this case.
-        aExProject.setMode(StringUtils.upperCase(project.getMode(), Locale.US));
+        // We keep the mode in the exported model only for a bit of backwards compatibility with
+        // WebAnno.
+        aExProject.setMode("ANNOTATION");
         aExProject.setScriptDirection(project.getScriptDirection());
         aExProject.setVersion(project.getVersion());
         aExProject.setDisableExport(project.isDisableExport());

@@ -45,7 +45,6 @@ import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -330,7 +329,6 @@ public class DL4JSequenceRecommenderTest
         assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
-    @Ignore
     @Test
     public void thatNerTrainingWorks() throws Exception
     {
@@ -344,7 +342,6 @@ public class DL4JSequenceRecommenderTest
                 .isNotNull();
     }
 
-    @Ignore
     @Test
     public void thatNerPredictionWorks() throws Exception
     {
@@ -371,7 +368,6 @@ public class DL4JSequenceRecommenderTest
                 .anyMatch(l -> !l.getValue().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
-    @Ignore
     @Test
     public void thatNerEvaluationWorks() throws Exception
     {
@@ -399,7 +395,6 @@ public class DL4JSequenceRecommenderTest
         assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
-    @Ignore
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {

@@ -33,25 +33,22 @@ public abstract class VObject
     private final int equivalenceSet;
 
     private VID vid;
-    private Map<String, String> hoverFeatures = new HashMap<>();
     private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
     private String colorHint;
     private String label;
 
-    public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures,
-            Map<String, String> aHoverFeatures)
+    public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
     {
-        this(aLayer, aVid, aType, -1, aFeatures, aHoverFeatures);
+        this(aLayer, aVid, aType, -1, aFeatures);
     }
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, int aEquivalenceSet,
-            Map<String, String> aFeatures, Map<String, String> aHoverFeatures)
+            Map<String, String> aFeatures)
     {
         layer = aLayer;
         vid = aVid;
         type = aType;
         features = aFeatures != null ? aFeatures : new HashMap<>();
-        setHoverFeatures(aHoverFeatures);
         equivalenceSet = aEquivalenceSet;
     }
 
@@ -83,21 +80,6 @@ public abstract class VObject
     public Map<String, String> getFeatures()
     {
         return features;
-    }
-
-    public Map<String, String> getHoverFeatures()
-    {
-        return hoverFeatures;
-    }
-
-    public void setHoverFeatures(Map<String, String> aHoverFeatures)
-    {
-        hoverFeatures = aHoverFeatures;
-    }
-
-    public void addHoverFeature(String aFeature, String aValue)
-    {
-        hoverFeatures.put(aFeature, aValue);
     }
 
     public List<VLazyDetailQuery> getLazyDetails()

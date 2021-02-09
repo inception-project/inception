@@ -39,7 +39,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -79,7 +78,6 @@ public class ConceptFeatureIndexingSupportTest
         project = new Project();
         project.setId(1l);
         project.setName("test project");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         kb = new KnowledgeBase();
 

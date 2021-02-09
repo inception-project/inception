@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 
@@ -94,7 +93,6 @@ public class MonitoringPageMenuItem
         User user = userRepo.getCurrentUser();
 
         return (projectService.isCurator(project, user) || projectService.isManager(project, user))
-                && PROJECT_TYPE_ANNOTATION.equals(project.getMode())
                 && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                         .loadOrCreateWorkloadManagerConfiguration(project).getType());
     }

@@ -1,6 +1,5 @@
 {
   "action" : "getCollectionInformation",
-  "messages" : [ ],
   "description" : null,
   "parent" : null,
   "header" : [ [ "Document", "string" ], [ "Modified", "time" ], [ "Entities", "int" ], [ "Relations", "int" ], [ "Events", "int" ] ],

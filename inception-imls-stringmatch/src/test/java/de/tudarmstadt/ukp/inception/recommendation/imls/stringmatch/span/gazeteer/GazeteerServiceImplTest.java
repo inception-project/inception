@@ -21,7 +21,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
@@ -96,7 +95,6 @@ public class GazeteerServiceImplTest
 
         project = new Project();
         project.setName("test");
-        project.setMode(PROJECT_TYPE_ANNOTATION);
         em.persist(project);
 
         spanLayer = new AnnotationLayer("span", "span", SPAN_TYPE, project, false, TOKENS,

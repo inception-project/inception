@@ -17,10 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,8 +100,6 @@ public class AnnotationDocumentsExporterTest
     @Test
     public void thatImportingAnnotationProjectWorks_3_6_1() throws Exception
     {
-        project.setMode(PROJECT_TYPE_ANNOTATION);
-
         // Export the project and import it again
         List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
                 "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip"));
@@ -112,40 +107,6 @@ public class AnnotationDocumentsExporterTest
         // Check that the curation for the document in the project is imported
         assertThat(imported).extracting(p -> p.getKey().getName())
                 .containsExactlyInAnyOrder("example_sentence.txt", "example_sentence.txt");
-        assertThat(imported).extracting(Pair::getValue)
-                .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
-    }
-
-    @Test
-    public void thatImportingCorrectionProjectWorks_3_6_1() throws Exception
-    {
-        project.setMode(PROJECT_TYPE_CORRECTION);
-
-        // Export the project and import it again
-        List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
-                "src/test/resources/exports/Export+Test+-+Curated+correction+project_3_6_1.zip"));
-
-        // Check that the curation for the document in the project is imported
-        assertThat(imported).extracting(p -> p.getKey().getName()).containsExactlyInAnyOrder(
-                "example_sentence.txt", "example_sentence.txt", "example_sentence.txt");
-        // Since WebAnno 3.5.x, the CORRECTION_USER CAS is stored with the annotations
-        assertThat(imported).extracting(Pair::getValue)
-                .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin", CORRECTION_USER);
-    }
-
-    @Test
-    public void thatImportingCorrectionProjectWorks_3_4_x() throws Exception
-    {
-        project.setMode(PROJECT_TYPE_CORRECTION);
-
-        // Export the project and import it again
-        List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
-                "src/test/resources/exports/Export+Test+-+Curated+correction+project_3_4_8.zip"));
-
-        // Check that the curation for the document in the project is imported
-        assertThat(imported).extracting(p -> p.getKey().getName())
-                .containsExactlyInAnyOrder("example_sentence.txt", "example_sentence.txt");
-        // Before WebAnno 3.5.x, the CORRECTION_USER CAS was stored with the curations
         assertThat(imported).extracting(Pair::getValue)
                 .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
     }
