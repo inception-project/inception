@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -59,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -73,6 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -110,8 +113,9 @@ public class ProjectsOverviewPage
     private WebMarkupContainer roleFilters;
     private IModel<Set<PermissionLevel>> activeRoleFilters;
     private ConfirmationDialog confirmLeaveDialog;
-
     private Label emptyListLabel;
+
+    private Set<Long> highlightedProjects = new HashSet<>();
 
     public ProjectsOverviewPage()
     {
@@ -236,6 +240,22 @@ public class ProjectsOverviewPage
                 projectId.add(visibleWhen(
                         () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
                 aItem.add(projectId);
+                aItem.add(new ClassAttributeModifier()
+                {
+                    private static final long serialVersionUID = -5391276660500827257L;
+
+                    @Override
+                    protected Set<String> update(Set<String> aClasses)
+                    {
+                        if (highlightedProjects.contains(aItem.getModelObject().getId())) {
+                            aClasses.add("border border-primary");
+                        }
+                        else {
+                            aClasses.remove("border border-primary");
+                        }
+                        return aClasses;
+                    }
+                });
             }
 
             @Override
@@ -431,4 +451,26 @@ public class ProjectsOverviewPage
         }
     }
 
+    @OnEvent
+    public void onProjectImported(AjaxProjectImportedEvent aEvent)
+    {
+        List<Project> projects = aEvent.getProjects();
+
+        if (projects.size() > 1) {
+            aEvent.getTarget().add(projectListContainer);
+            highlightedProjects.clear();
+            projects.stream().forEach(p -> highlightedProjects.add(p.getId()));
+            projects.stream()
+                    .forEach(p -> success("Project [" + p.getName() + "] successfully imported"));
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        if (!projects.isEmpty()) {
+            Project project = projects.get(0);
+            getSession().success("Project [" + project.getName() + "] successfully imported");
+            setResponsePage(ProjectDashboardPage.class,
+                    new PageParameters().set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId()));
+        }
+    }
 }
