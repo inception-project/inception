@@ -855,7 +855,13 @@ public class SPARQLQueryBuilder
             addPattern(PRIMARY, withLabelMatchingAnyOf_Wikidata_FTS(values));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelMatchingAnyOf_No_FTS(values));
+            // The WikiData search service does not support properties. So we disable the use of the
+            // WikiData search service when looking for properties. But then, searching first by
+            // the label becomes very slow because withLabelMatchingAnyOf falls back to "containing"
+            // when no FTS is used. To avoid forcing the SPARQL server to perform a full scan
+            // of its database, we demote the label matching to a secondary condition, allowing the
+            // the matching by type (e.g. PRIMARY_RESTRICTIONS is-a property) to take precedence.
+            addPattern(SECONDARY, withLabelMatchingAnyOf_No_FTS(values));
         }
         else {
             throw new IllegalStateException(
