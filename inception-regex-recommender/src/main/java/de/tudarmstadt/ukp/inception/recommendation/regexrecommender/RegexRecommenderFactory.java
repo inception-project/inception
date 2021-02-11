@@ -1,5 +1,12 @@
 package de.tudarmstadt.ukp.inception.recommendation.regexrecommender;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static java.util.Arrays.asList;
+
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 
 
@@ -31,17 +38,17 @@ public class RegexRecommenderFactory
     private final GazeteerServiceImpl gazeteerService;
     private final RecommendationAcceptedListener acceptedListener;
     private final RecommendationRejectedListener rejectedListener;
-    private final RegexSet regexSet;
+    private final RegexCounter regexCounter;
     
     public RegexRecommenderFactory(GazeteerServiceImpl aGazeteerService,
                                     RecommendationAcceptedListener aAcceptedListener,
                                     RecommendationRejectedListener aRejectedListener,
-                                    RegexSet aRegexSet)
+                                    RegexCounter aRegexCounter)
     {        
         gazeteerService = aGazeteerService;
         acceptedListener = aAcceptedListener;
         rejectedListener = aRejectedListener;
-        regexSet = aRegexSet;
+        regexCounter = aRegexCounter;
     }
     
     @Override
@@ -59,7 +66,7 @@ public class RegexRecommenderFactory
                 this.acceptedListener,
                 this.rejectedListener,
                 this.gazeteerService,
-                this.regexSet);
+                this.regexCounter);
     }
 
 
@@ -71,8 +78,12 @@ public class RegexRecommenderFactory
 
     @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
-    {    
-        return true;
+    {   
+        // exclude character level because we're operating on lemmata.
+        // exclude sentence level because this would give huge regexes.
+        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
+                && SPAN_TYPE.equals(aLayer.getType())
+                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
     
     @Override

@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexSet;
+import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexCounter;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.exporter.GazeteerExporter;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.GazeteerServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.listener.RecommendationAcceptedListener;
@@ -58,19 +58,19 @@ public class RegexRecommenderAutoConfiguration
 
     @Bean
     @Autowired
-    public RecommendationAcceptedListener recommendationAcceptedListener(RegexSet aRegexSet) {
+    public RecommendationAcceptedListener recommendationAcceptedListener(RegexCounter aRegexSet) {
         return new RecommendationAcceptedListener(aRegexSet);
     }
     
     @Bean
     @Autowired
-    public RecommendationRejectedListener recommendationRejectedListener(RegexSet aRegexSet) {
+    public RecommendationRejectedListener recommendationRejectedListener(RegexCounter aRegexSet) {
         return new RecommendationRejectedListener(aRegexSet);
     }
     
     @Bean
-    public RegexSet regexSet() {
-        return new RegexSet();
+    public RegexCounter regexSet() {
+        return new RegexCounter();
     }
 
   
@@ -79,7 +79,7 @@ public class RegexRecommenderAutoConfiguration
     public RegexRecommenderFactory regexRecommenderFactory(GazeteerServiceImpl aGazeteerService,
                                                        RecommendationAcceptedListener aAccListener,
                                                        RecommendationRejectedListener aRejListener,
-                                                       RegexSet aRegexSet)
+                                                       RegexCounter aRegexSet)
     {   
         return new RegexRecommenderFactory(aGazeteerService, aAccListener, aRejListener, aRegexSet);
     }

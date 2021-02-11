@@ -3,7 +3,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.17.2-SNAPSHOT</version>
+    <version>0.19.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-regex-recommender</artifactId>
     <dependencies>
@@ -16,15 +16,6 @@
       <artifactId>inception-recommendation</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-model</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-support</artifactId>
-    </dependency>
-    
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>

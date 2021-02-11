@@ -4,16 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexSet;
+import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexCounter;
 
 public class RecommendationAcceptedListener
                 implements ApplicationListener<RecommendationAcceptedEvent>
 {
     
-    RegexSet regexSet;
+    RegexCounter regexSet;
  
     @Autowired
-    public RecommendationAcceptedListener(RegexSet aRegexSet)
+    public RecommendationAcceptedListener(RegexCounter aRegexSet)
     {
         this.regexSet = aRegexSet;
     }

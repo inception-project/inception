@@ -1,12 +1,12 @@
 package de.tudarmstadt.ukp.inception.recommendation.regexrecommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -33,12 +33,17 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.GazeteerEntryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.GazeteerServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.listener.RecommendationAcceptedListener;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.listener.RecommendationRejectedListener;
+
+//TODO:
+// fix evaluation
+// fix mouse hovering problem
+// write tests
+// create pull request
 
 
 // tag::classDefinition[]
@@ -49,17 +54,16 @@ public class RegexRecommender
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final GazeteerServiceImpl gazeteerService;
     private final RegexRecommenderTraits traits;
-    private final RegexSet regexSet;
-    private final String uiFeatureName;
+    private final RegexCounter regexCounter;  
     private final String gazeteerName; 
     
     public RegexRecommender(Recommender aRecommender,
             RegexRecommenderTraits aTraits,
             RecommendationAcceptedListener aRecAccListener,
             RecommendationRejectedListener aRecRejListener,
-            RegexSet aRegexSet) {
+            RegexCounter aRegexCounter) {
         
-        this(aRecommender, aTraits, aRecAccListener, aRecRejListener, null, aRegexSet);
+        this(aRecommender, aTraits, aRecAccListener, aRecRejListener, null, aRegexCounter);
     }
      
     public RegexRecommender(Recommender aRecommender,
@@ -67,19 +71,27 @@ public class RegexRecommender
                             RecommendationAcceptedListener aRecAccListener,
                             RecommendationRejectedListener aRecRejListener,
                             GazeteerServiceImpl aGazeteerService,
-                            RegexSet aRegexSet) {
+                            RegexCounter aRegexCounter) {
         
         super(aRecommender);
         
         this.traits = aTraits;
-        this.uiFeatureName = aRecommender.getFeature().getUiName();
         this.gazeteerService = aGazeteerService;
-        this.regexSet = aRegexSet;
-        this.gazeteerName = "New Regexes for "+ uiFeatureName;
+        this.regexCounter = aRegexCounter;
+        this.gazeteerName = "New Regexes for " + aRecommender.getLayer() ;
         // add a new Gazeteer that collects new Regexes
+        // we need something to remember these, otherwise
+        // the user will be asked about all of his new Annotations
+        // at every startup
         if (!gazeteerService.existsGazeteer(aRecommender, gazeteerName)) {
             Gazeteer gaz = new Gazeteer(gazeteerName, aRecommender);
             gazeteerService.createOrUpdateGazeteer(gaz);
+            InputStream is = InputStream.nullInputStream();
+            try {
+				gazeteerService.importGazeteerFile(gaz, is);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
         }
         
     }
@@ -89,7 +101,7 @@ public class RegexRecommender
     {
         return TRAINING_REQUIRED;
     }
-        
+    
     /* returns the concatenation of the lemmas that are covered by aAnnotation, with 
     * whitespace. This is important because whitespace might not always be one space
     */
@@ -123,17 +135,17 @@ public class RegexRecommender
         return lemmaString.toString();
     }
     
+        
+
     private void pretrain()
     {
         for (Gazeteer gaz : gazeteerService.listGazeteers(recommender)) {
             try {                  
                 for (GazeteerEntryImpl entry: gazeteerService.readGazeteerFile(gaz)) {
-                    if (entry.label.equals(uiFeatureName)) {
-                        regexSet.putIfRegexAbsent(entry.label,
+                    regexCounter.putIfRegexAbsent(entry.label,
                                                   entry.regex,
                                                   entry.acceptedCount,
                                                   entry.rejectedCount);
-                    }
                 }
             }
             catch (IOException e) {
@@ -155,82 +167,88 @@ public class RegexRecommender
                 
         for (CAS cas : aCasses) {
             getPredictedType(cas);
-            Type dornseiffType = getPredictedType(cas);
+            Type myType = getPredictedType(cas);
             Feature myFeature = getPredictedFeature(cas);
-            
             // We get a list of all dornseiffAnnotations in the cas.
-            Collection<AnnotationFS> dornseiffAnnos = CasUtil.select(cas, dornseiffType);
-            // we get rid of Annotations that don't have the feature of our recommender
-            List<AnnotationFS> filteredDornseiffAnnos  = dornseiffAnnos.stream()
-                                          .filter(anno -> !(anno.getStringValue(myFeature) == null))
-                                          .collect(Collectors.toList());
-            
+            Collection<AnnotationFS> dornseiffAnnos = CasUtil.select(cas, myType);
             // for each annotation we get the lemmatized text, that the annotation spans.
-            // Then we ask the user if she wants to add the new lemmas to regexSet.
-            for (AnnotationFS ann : filteredDornseiffAnnos) {
+            // Then we ask the user if she wants to add the new lemmas to regexCounter.
+            for (AnnotationFS ann : dornseiffAnnos) {
                 String lemmaString = getUnderlyingLemmaString(cas, ann);
-                regexSet.addWithMsgBox(uiFeatureName, lemmaString);
+                String featureValue = ann.getFeatureValueAsString(myFeature);
+                if (!(featureValue == null)) {
+                    regexCounter.addWithMsgBox(ann.getFeatureValueAsString(myFeature), lemmaString);
+                }
             }        
         }
-        // we check for each regex in the regexSet whether it produces
-        // too many false Annotations.
-        // if it does, we ask the user if she wants to remove the regex.
-        Map<String, Pair<Integer, Integer>> accRejCount = regexSet.get(uiFeatureName);
-        
-        for (Map.Entry<String, Pair<Integer, Integer>> entry: accRejCount.entrySet()) {
-            String regex = entry.getKey(); 
-            double pos = entry.getValue().getLeft().doubleValue();
-            double neg = entry.getValue().getRight().doubleValue();
+        // we check for each feature value and each regex in the regexCounter
+        // whether it produces too many false Annotations.
+        // If it does, we ask the user if she wants to remove the regex.
+        for (String featureValue: regexCounter.getKeys()) {
+            Map<String, Pair<Integer, Integer>> accRejCount = regexCounter.get(featureValue);
             
-            Double accuracy = pos / (pos + neg);
-            if (accuracy < 0.1 && pos + neg > 10 ) {
-                regexSet.removeWithMsgBox(uiFeatureName,
-                                          regex,
-                                          Double.valueOf(pos).intValue(),
-                                          Double.valueOf(neg).intValue());
+            for (Map.Entry<String, Pair<Integer, Integer>> entry: accRejCount.entrySet()) {
+                String regex = entry.getKey(); 
+                double pos = entry.getValue().getLeft().doubleValue();
+                double neg = entry.getValue().getRight().doubleValue();
+                
+                Double accuracy = pos / (pos + neg);
+                if (accuracy < 0.1 && pos + neg > 10 ) {
+                    regexCounter.removeWithMsgBox(featureValue,
+                                                  regex,
+                                                  Double.valueOf(pos).intValue(),
+                                                  Double.valueOf(neg).intValue());
+                }
             }
         }
-        writeToGazeteer();   
+        writeToGazeteer();  
+           
     }
     
     private void writeToGazeteer() {
         
         List<Gazeteer> gazeteers = gazeteerService.listGazeteers(recommender);
-        Gazeteer myGaz;
+        Gazeteer myGaz = null;
         for (Gazeteer gaz: gazeteers) {
             if (gaz.getName().equals(gazeteerName)) {
                 myGaz = gaz;
                 break;
             }
         }
-        myGaz.
-        gazeteerService.createOrUpdateGazeteer(aGazeteer);
+        List<GazeteerEntryImpl> entryList = new ArrayList<>();
+        for (String featureValue: regexCounter.getKeys()) {
+            for (Map.Entry<String, Pair<Integer, Integer>> regex: regexCounter.get(featureValue).entrySet()) {
+            	entryList.add(new GazeteerEntryImpl(regex.getKey(), featureValue, regex.getValue().getLeft(), regex.getValue().getRight()));
+            }
+            try {
+    			gazeteerService.writeGazeteerFile(myGaz, entryList);
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+        }
     }
   
     
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {    
-        return regexSet.size(uiFeatureName) > 0;
+        return !regexCounter.getKeys().isEmpty();
     }
     
-    /*
-     * Takes a Cas and returns a list of Annotation Objects that describe
-     * the Annotations of this recommenders type in the Cas.
-     */
-    private List<Annotation> extractAnnotations(CAS aCas)
+    
+    private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
         List<Annotation> annotations = new ArrayList<>();
-        Type annotationType = getPredictedType(aCas); 
-        Feature predictedFeature = getPredictedFeature(aCas);
 
-        for (AnnotationFS ann : CasUtil.select(aCas, annotationType)) {
-            String label = ann.getFeatureValueAsString(predictedFeature);
-            if (isNotEmpty(label)) {
+        for (CAS cas : aCasses) {
+            Type annotationType = CasUtil.getType(cas, layerName);
+            Feature predictedFeature = annotationType.getFeatureByBaseName(featureName);
+
+            for (AnnotationFS ann : CasUtil.select(cas, annotationType)) {
+                String label = ann.getFeatureValueAsString(predictedFeature);
                 annotations.add(new Annotation(label, ann.getBegin(), ann.getEnd()));
             }
         }
-       
         return annotations;
     }
 
@@ -239,43 +257,45 @@ public class RegexRecommender
      * returns a list of Annotation Objects.
      * Each Annotation Object is a prediction for the user.
      */
-    private List<Annotation> getPredictions(CAS aCas, RegexSet aRegexSet)
-    {       
+    private List<Annotation> getPredictions(CAS aCas)
+    {   
         Type lemmaType = CasUtil.getAnnotationType(aCas, Lemma.class);
         Feature lemmaFeature = lemmaType.getFeatureByBaseName("value");
 
         Collection<AnnotationFS> lemmas = CasUtil.select(aCas, lemmaType);
         
-        //The String is the lemmatizedDocument, The ArrayList is a mapping from character Index
-        //in the lemmatizedDoc to character Index in the normal Doc.
-        //Doc = "The president's wife is beatifull"
-        //LemmatizedDoc = "the president wife be beatifull"
-        //List = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 16 ...
-        //this helps us translate between indexes in lemmatized Doc and tokenized Doc.
-        //See the difference between "president" and "president's"
+        // The String in this pair is the lemmatized document.
+        // The map is a mapping from character Index
+        // in the lemmatized doc to character Index in the token-doc.
+        // Doc = "The president's wife is beatifull"
+        // LemmatizedDoc = "the president wife be beatifull"
+        // Map = 0-0, 1-1, 2-2, 3-3 ... 12-12, 13-15, 14-16, ...
+        // we need this since we check for regex matches on the 
+        // lemmatized document, but add predictions with token
+        // indices.
+        Pair<String, Map<Integer, Integer>> pair = this.createLemmatizedDoc(lemmas,
+                                                                            aCas.getDocumentText(),
+                                                                            lemmaFeature,
+                                                                            lemmaType);
+        String lemmatizedDoc = pair.getLeft();
+        Map<Integer, Integer> lemmaTokenMapping = pair.getRight();
         
-        Pair<String, ArrayList<Integer>> pair = this.createLemmatizedDoc(lemmas,
-                                                                         aCas.getDocumentText(),
-                                                                         lemmaFeature,
-                                                                         lemmaType);
-        String docText = pair.getLeft();
-        List<Integer> lemmaTokenMapping = pair.getRight();
-        
-        List<Annotation> predictions = new ArrayList<>();
+        List<Annotation> predictions = new ArrayList<>(); 
+        for (String featureValue: regexCounter.getKeys()) {
+            for (String regex: regexCounter.getRegexes(featureValue) ) {
+    
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(lemmatizedDoc);
                 
-        for (String item: aRegexSet.getRegexes(uiFeatureName) ) {
-
-            Pattern pattern = Pattern.compile(item);
-            Matcher matcher = pattern.matcher(docText);
-            
-            while (matcher.find()) {
-                //the matches are matches in the lemmatized doc.
-                //we use the lemmaToken Mapping to get the start and
-                //end indices in the normal doc.
-                int tokenBegin = lemmaTokenMapping.get(matcher.start());
-                int tokenEnd = lemmaTokenMapping.get(matcher.end());
-                Annotation anno = new Annotation(this.uiFeatureName, item, tokenBegin, tokenEnd);
-                predictions.add(anno);
+                while (matcher.find()) {
+                    // the matches are matches in the lemmatized doc.
+                    // we use the lemmaToken Mapping to get the corresponding
+                    // token start and end indices 
+                    int tokenBegin = lemmaTokenMapping.get(matcher.start());
+                    int tokenEnd = lemmaTokenMapping.get(matcher.end());
+                    Annotation anno = new Annotation(featureValue, regex, tokenBegin, tokenEnd);
+                    predictions.add(anno);
+                }
             }
         }
         return predictions;
@@ -284,14 +304,7 @@ public class RegexRecommender
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {    
-        List<Annotation> predictions = getPredictions(aCas, regexSet);
-        // We sort the predictions by length, long to short, because 
-        // we want to go through them one by one. If a later one is contained
-        // in an earlier one, we can discard it.
-        // Example: "Der langjährige prozess"
-        // would get an annotation for lang and for langjährig
-        // but we can discard with lang
-        sortListLongToShort(predictions);
+        List<Annotation> predictions = getPredictions(aCas);
         Type predictedType = getPredictedType(aCas);
 
         Feature predictedFeature = getPredictedFeature(aCas);
@@ -299,47 +312,22 @@ public class RegexRecommender
         Feature scoreExplanationFeature = getScoreExplanationFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);       
         
-        int count = 0;
         for (Annotation ann : predictions) {
-            boolean add = true;
-            for (Annotation longerAnno: predictions.subList(0, count)) {
-                if (longerAnno.containsInSpan(ann)) {
-                    add = false;
-                    break;
-                }
+
+            AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
+            annotation.setStringValue(predictedFeature, ann.label);         
+            double pos = regexCounter.get(ann.label).get(ann.regex).getLeft().doubleValue();
+            double neg = regexCounter.get(ann.label).get(ann.regex).getRight().doubleValue();
+            Double score = pos / (pos + neg);
+            if (!score.isInfinite() && !score.isNaN()) {
+                annotation.setDoubleValue(scoreFeature, pos / (pos + neg));                
+            } else {
+                annotation.setDoubleValue(scoreFeature, 1.0);                
             }
-            count ++;
-            if (add) {
-                AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
-                annotation.setStringValue(predictedFeature, ann.label);
-                //here we calculate a confidence score for our prediction
-                //the confidence score is accuracy, estimated by previously rejected
-                //and accepted suggestions of the same type and same regex
-                //TODO: Include annotations that were already there and are not saved 
-                // in the accepted/rejected listeners.
-                //Maybe it would be best to initialize the listeners with the 
-                // annotations that are already there
-                
-                double pos = regexSet.get(uiFeatureName).get(ann.regex).getLeft().doubleValue();
-                double neg = regexSet.get(uiFeatureName).get(ann.regex).getRight().doubleValue();
-                
-                Double score = pos / (pos + neg);
-                if (!score.isInfinite() && !score.isNaN()) {
-                    annotation.setDoubleValue(scoreFeature, pos / (pos + neg));                
-                } else {
-                    annotation.setDoubleValue(scoreFeature, 1.0);                
-    
-                }
-                annotation.setStringValue(scoreExplanationFeature, ann.explanation);
-                annotation.setBooleanValue(isPredictionFeature, true);
-                aCas.addFsToIndexes(annotation);
-            }
+            annotation.setStringValue(scoreExplanationFeature, ann.explanation);
+            annotation.setBooleanValue(isPredictionFeature, true);
+            aCas.addFsToIndexes(annotation);
         }
-    }
-    
-    private void sortListLongToShort(List<Annotation> aList)
-    {
-        aList.sort(Comparator.comparing(Annotation::length).reversed());
     }
     
     /*
@@ -352,76 +340,68 @@ public class RegexRecommender
      * since the begin and end indices are indices in the 
      * token string.
      */
+    private Pair<String, Map<Integer, Integer>> createLemmatizedDoc(Collection<AnnotationFS> aLemmas,
+            String aDocText,
+            Feature aLemmaFeature,
+            Type aLemmaType)
+    {   
     
-    private Pair<String, ArrayList<Integer>> createLemmatizedDoc(Collection<AnnotationFS> aLemmas,
-                                                                 String aDocText,
-                                                                 Feature aLemmaFeature,
-                                                                 Type aLemmaType)
-    {
-      
         StringBuilder lemmatizedDoc = new StringBuilder("");
-        ArrayList<Integer> lemmaTokenMapping = new ArrayList<>();
+        Map<Integer, Integer> lemmaTokenMapping = new HashMap<>();
         AnnotationFS previousLemma = null;
         CharSequence spaceBetween;
-        boolean firstLemma = true;
-        int nextNumber = 0;
-        
+        int nextIndex = 0;
+        int offset = 0;
+                
         for (AnnotationFS lemma: aLemmas) {
             
-            if (firstLemma) {
+            if (previousLemma == null) {
                 spaceBetween = aDocText.subSequence(0, lemma.getBegin());
             } else {
                 spaceBetween = aDocText.subSequence(previousLemma.getEnd(), lemma.getBegin());
             }
-            firstLemma = false;
             
             String lemmaText = lemma.getFeatureValueAsString(aLemmaFeature);
             String tokenText = lemma.getCoveredText();
             
             lemmatizedDoc.append(spaceBetween);
-            lemmaTokenMapping.addAll(range(nextNumber, spaceBetween.length()));
-            nextNumber += spaceBetween.length();
+            for (Integer i: range(nextIndex, spaceBetween.length())) {
+                lemmaTokenMapping.put(i, i+offset);
+            }
             
+            nextIndex += spaceBetween.length();
             lemmatizedDoc.append(lemmaText);
-            
+
             if (lemmaText.length() > tokenText.length()) {
-   
-                lemmaTokenMapping.addAll(range(nextNumber, tokenText.length()));
-                nextNumber += tokenText.length();
-                lemmaTokenMapping.addAll(listOf(nextNumber - 1,
-                                         lemmaText.length() - tokenText.length()));        
+                for (Integer i: range(nextIndex, lemmaText.length())) {
+                    lemmaTokenMapping.put(i, i + offset);
+                }
+                nextIndex += tokenText.length();
+                offset += tokenText.length()-lemmaText.length();
+                for (Integer i: range(nextIndex, lemmaText.length() - tokenText.length())) {
+                    lemmaTokenMapping.put(i, i+offset);
+                }                     
+                nextIndex += lemmaText.length() - tokenText.length();
                         
-            } else if (lemmaText.length() == tokenText.length()) {
-                
-                lemmaTokenMapping.addAll(range(nextNumber, tokenText.length()));
-                nextNumber += tokenText.length();
-                
-            } else if (lemmaText.length() < tokenText.length()) {
-                lemmaTokenMapping.addAll(range(nextNumber, lemmaText.length()));
-                nextNumber += tokenText.length();
+            } else  {            
+                for (Integer i: range(nextIndex, lemmaText.length())) {
+                    lemmaTokenMapping.put(i, i + offset);
+                }
+                nextIndex += lemmaText.length();
+                offset += tokenText.length() - lemmaText.length();
             }
             previousLemma = lemma;          
         }
- 
-        lemmaTokenMapping.add(Integer.valueOf(lemmaTokenMapping.size()));
-        String strlemmatizedDoc = lemmatizedDoc.toString();
         
-        Pair<String, ArrayList<Integer>> pair = new Pair<>(strlemmatizedDoc, lemmaTokenMapping);
-        return pair;
+        String strlemmatizedDoc = lemmatizedDoc.toString();
+        return new Pair<>(strlemmatizedDoc, lemmaTokenMapping);
+        
     }
-
-    
+   
+        
     private List<Integer> range(int aBegin, int aLength)
     {
         List<Integer> numbers = Stream.iterate(aBegin, n -> n + 1) 
-                  .limit(aLength)
-                  .collect(Collectors.toList());
-        return numbers;
-    }
-    
-    private List<Integer> listOf(int aNumber, int aLength)
-    {
-        List<Integer> numbers = Stream.iterate(aNumber, n -> n) 
                   .limit(aLength)
                   .collect(Collectors.toList());
         return numbers;
@@ -432,74 +412,14 @@ public class RegexRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
     {
-        /*
-        List<CAS> trainingCases = new ArrayList<>();
-        List<CAS> testCases = new ArrayList<>();
         
-        for (CAS cas : aCasses) {
-            switch (aDataSplitter.getTargetSet(cas)) {
-            case TRAIN:
-                trainingCases.add(cas);
-                break;
-            case TEST:
-                testCases.add(cas);
-                break;
-            case IGNORE:
-                break;
-            }
-        }
-
-        int trainingSetSize = 0;
-
-        for (CAS cas: trainingCases) {
-            trainingSetSize += extractAnnotations(cas).size();
-        }
-
-        int testSetSize = 0;
-        for (CAS cas: testCases) {
-            testSetSize += extractAnnotations(cas).size();
-        }
-        double trainRatio = 1.0;
-                
-        if (trainingSetSize < 1 || testSetSize < 1) {
-            log.info("Not enough data to evaluate, skipping!");
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
-            result.setEvaluationSkipped(true);
-            return result;
-        }
-        
-        train(trainingCases);
-        
-        List<LabelPair> labelPairs = new ArrayList<>();
-        for (CAS cas: testCases) {
-            List<Annotation> goldAnnotations = extractAnnotations(cas);
-            List<Annotation> predictions = getPredictions(cas);
-            for (Annotation anno: goldAnnotations) {
-                if (predictions.contains(anno)) {
-                    labelPairs.add(new LabelPair(anno.label, anno.label));
-                    predictions.remove(anno);
-                } else {
-                    labelPairs.add(new LabelPair(anno.label, "None"));
-                }
-            }
-            for (Annotation prediction: predictions) {
-                if (goldAnnotations.contains(prediction)) {
-                    labelPairs.add(new LabelPair(prediction.label, prediction.label));
-                    goldAnnotations.remove(prediction);
-                } else {
-                    labelPairs.add(new LabelPair("None", prediction.label));
-                }
-            }
-        }
-
-        // evaluation: collect predicted and gold labels for evaluation
-        EvaluationResult result = labelPairs.stream()
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
-        
+        //TODO: implement the evaluate function.
+        //this is just dummy code to skip the evaluation
+        EvaluationResult result = new EvaluationResult(1, 1, 1);
+        result.setEvaluationSkipped(true);
         return result;
-        */
-        return null;
+        
+        
     }
     
     
@@ -578,16 +498,6 @@ public class RegexRecommender
                     this.end;
         }
         
-        public boolean containsInSpan(Annotation aShorter)
-        {
-            
-            if (this.begin <= aShorter.begin && this.end > aShorter.end) {
-                return true;
-            } else if (this.begin < aShorter.begin && this.end >= aShorter.end) {
-                return true;
-            }
-            return false;
-        }
     }
 
     

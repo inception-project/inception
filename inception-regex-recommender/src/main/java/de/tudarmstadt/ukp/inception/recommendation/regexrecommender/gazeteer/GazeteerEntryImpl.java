@@ -55,5 +55,11 @@ public class GazeteerEntryImpl
                                         .append("rejectedCount", rejectedCount)
                                         .toString();
     }
+    
+    public String toLine()
+    {
+    	return regex + "\t" + label + "\t" +
+    				String.valueOf(acceptedCount) + "\t" + String.valueOf(rejectedCount) + "\n" ;
+    }
 }
 

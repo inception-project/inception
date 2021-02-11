@@ -177,6 +177,17 @@ public class GazeteerServiceImpl
         
         return data;
     }
+    
+    public void writeGazeteerFile(Gazeteer aGaz, List<GazeteerEntryImpl> aEntryList) throws IOException {
+    	File file = getGazeteerFile(aGaz);
+    	try (OutputStream os = new FileOutputStream(file)) {
+    		for (GazeteerEntryImpl entry: aEntryList) {
+    			byte[] entryToBytes = entry.toLine().getBytes();
+    		    os.write(entryToBytes);
+    		}
+    	    
+    	}
+    }
 
 
     
