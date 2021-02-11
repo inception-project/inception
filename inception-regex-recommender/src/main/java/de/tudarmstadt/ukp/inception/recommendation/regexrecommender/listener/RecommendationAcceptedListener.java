@@ -22,7 +22,7 @@ public class RecommendationAcceptedListener
     public void onApplicationEvent(RecommendationAcceptedEvent aEvent)
     {   
         String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
-        String featureName = aEvent.getFeature().getUiName();
+        String featureName = aEvent.getRecommendedValue().toString();
         regexSet.incrementAccepted(featureName, regex);
     }
 }

@@ -21,7 +21,7 @@ public class RecommendationRejectedListener
     public void onApplicationEvent(RecommendationRejectedEvent aEvent)
     {   
         String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
-        String featureName = aEvent.getFeature().getUiName();
+        String featureName = aEvent.getRecommendedValue().toString();
         regexSet.incrementRejected(featureName, regex);
     }
 
