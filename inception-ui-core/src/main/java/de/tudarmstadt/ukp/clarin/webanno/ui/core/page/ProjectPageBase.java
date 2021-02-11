@@ -64,7 +64,7 @@ public abstract class ProjectPageBase
         }
     }
 
-    protected void backToProjectPage()
+    public void backToProjectPage()
     {
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
