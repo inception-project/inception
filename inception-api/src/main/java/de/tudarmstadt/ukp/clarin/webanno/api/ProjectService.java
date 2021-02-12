@@ -463,6 +463,8 @@ public interface ProjectService
      */
     boolean isAnnotator(Project aProject, User aUser);
 
+    boolean hasRole(User aUser, Project aProject, PermissionLevel... aRole);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to other things
     // --------------------------------------------------------------------------------------------
@@ -482,5 +484,4 @@ public interface ProjectService
         throws IOException;
 
     List<ProjectInitializer> listProjectInitializers();
-
 }

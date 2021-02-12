@@ -82,10 +82,6 @@
     
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
     </dependency>
     <dependency>
@@ -171,6 +167,10 @@
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>

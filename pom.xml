@@ -801,6 +801,11 @@
         <version>${wicket-spring-boot.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+        <artifactId>wicket-spring-boot-context</artifactId>
+        <version>${wicket-spring-boot.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
         <version>5.11.2</version>

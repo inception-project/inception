@@ -17,28 +17,40 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static java.lang.String.format;
+
+import javax.servlet.ServletContext;
+
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 
 @Component
 @Order(200)
 public class CurationPageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
+    private @Autowired ServletContext servletContext;
 
     @Override
     public String getPath()
     {
-        return "/curation";
+        return "/curate";
+    }
+
+    public String getUrl(long aProjectId, long aDocumentId)
+    {
+        return format("%s/p/%d%s/%d", servletContext.getContextPath(), aProjectId, getPath(),
+                aDocumentId);
     }
 
     @Override
@@ -53,13 +65,16 @@ public class CurationPageMenuItem
         return "Curation";
     }
 
-    /**
-     * Only project admins and curators can see this page
-     */
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        return SecurityUtil.curationEnabeled(projectService, userRepo.getCurrentUser());
+        if (aProject == null) {
+            return false;
+        }
+
+        // Visible if the current user is a curator
+        User user = userRepo.getCurrentUser();
+        return projectService.isCurator(aProject, user);
     }
 
     @Override

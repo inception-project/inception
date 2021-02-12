@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.nio.file.Files.newDirectoryStream;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -407,6 +408,35 @@ public class ProjectServiceImpl
                 .setParameter("project", aProject) //
                 .setHint(CACHEABLE, true) //
                 .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public boolean hasRole(User aUser, Project aProject, PermissionLevel... aRoles)
+    {
+        if (aRoles == null || aRoles.length == 0) {
+            String query = String.join("\n", //
+                    "SELECT COUNT(*) FROM ProjectPermission ", //
+                    "WHERE user = :user AND project = :project", //
+                    "ORDER BY level");
+
+            return entityManager.createQuery(query, Long.class) //
+                    .setParameter("user", aUser.getUsername()) //
+                    .setParameter("project", aProject) //
+                    .getSingleResult() > 0;
+
+        }
+
+        String query = String.join("\n", //
+                "SELECT COUNT(*) FROM ProjectPermission ", //
+                "WHERE user = :user AND project = :project AND level IN (:roles)", //
+                "ORDER BY level");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("project", aProject) //
+                .setParameter("roles", asList(aRoles)) //
+                .getSingleResult() > 0;
     }
 
     @Override
