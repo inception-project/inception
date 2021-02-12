@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipFile;
@@ -154,7 +156,7 @@ public class ProjectImportPanel
             manager = Optional.of(currentUser);
         }
 
-        Project importedProject = null;
+        List<Project> importedProjects = new ArrayList<>();
         for (FileUpload exportedProject : exportedProjects) {
             try {
                 // Workaround for WICKET-6425
@@ -172,7 +174,8 @@ public class ProjectImportPanel
 
                     ProjectImportRequest request = new ProjectImportRequest(createMissingUsers,
                             importPermissions, manager);
-                    importedProject = exportService.importProject(request, new ZipFile(tempFile));
+                    importedProjects
+                            .add(exportService.importProject(request, new ZipFile(tempFile)));
                 }
                 finally {
                     tempFile.delete();
@@ -184,6 +187,12 @@ public class ProjectImportPanel
                 LOG.error("Error importing project", e);
             }
         }
+
+        if (!importedProjects.isEmpty() && selectedModel != null) {
+            selectedModel.setObject(importedProjects.get(importedProjects.size() - 1));
+        }
+
+        send(this, BUBBLE, new AjaxProjectImportedEvent(aTarget, importedProjects));
     }
 
     static class Preferences

@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import javax.persistence.NoResultException;
 
+import org.apache.wicket.Page;
 import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.core.util.lang.WicketObjects;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -57,8 +59,18 @@ public abstract class ProjectPageBase
         if (!projectService.hasRole(aUser, project, aRoles)) {
             getSession().error("You require any of the the [" + aRoles + "] roles to access the ["
                     + getClass().getSimpleName() + "] project [" + project.getName() + "]");
-            setResponsePage(getApplication().getHomePage());
+
+            backToProjectPage();
         }
+    }
+
+    public void backToProjectPage()
+    {
+        Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
+                "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
+
+        setResponsePage(projectDashboard,
+                new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
     }
 
     protected void setProjectModel(IModel<Project> aModel)

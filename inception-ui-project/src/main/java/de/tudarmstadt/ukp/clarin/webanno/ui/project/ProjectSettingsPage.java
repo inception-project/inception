@@ -29,7 +29,9 @@ import java.util.Optional;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.util.lang.WicketObjects;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
@@ -304,7 +306,11 @@ public class ProjectSettingsPage
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         if (preSelectedModelMode) {
-            setResponsePage(getApplication().getHomePage());
+            Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
+                    "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
+
+            setResponsePage(projectDashboard,
+                    new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
         }
         else {
             selectedProject.setObject(null);

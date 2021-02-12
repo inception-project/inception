@@ -169,6 +169,10 @@
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-core</artifactId>
     </dependency>

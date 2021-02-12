@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanel.PAGE_PARAM_INVITE_ID;
+import static de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage.PAGE_PARAM_INVITE_ID;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -48,6 +48,8 @@ public class AcceptInvitePage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = 5160703195387357692L;
+
+    public static final String PAGE_PARAM_INVITE_ID = "i";
 
     private @SpringBean InviteService inviteService;
     private @SpringBean ProjectService projectService;

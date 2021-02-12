@@ -57,7 +57,8 @@ public class MenuBar
         add(new BookmarkablePageLink<>(CID_HOME_LINK, getApplication().getHomePage()));
 
         ProjectContext projectContext = findParent(ProjectContext.class);
-        if (projectContext != null && projectContext.getProject() != null) {
+        if (projectContext != null && projectContext.getProject() != null
+                && projectContext.getProject().getId() != null) {
             long projectId = projectContext.getProject().getId();
             add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class,
                     new PageParameters().set(PAGE_PARAM_PROJECT, projectId)));

@@ -44,13 +44,13 @@ public class CurationPageMenuItem
     @Override
     public String getPath()
     {
-        return "/curation";
+        return "/curate";
     }
 
     public String getUrl(long aProjectId, long aDocumentId)
     {
-        return format("%s%s#!p=%d&d=%d", servletContext.getContextPath(), getPath() + ".html",
-                aProjectId, aDocumentId);
+        return format("%s/p/%d%s/%d", servletContext.getContextPath(), aProjectId, getPath(),
+                aDocumentId);
     }
 
     @Override
