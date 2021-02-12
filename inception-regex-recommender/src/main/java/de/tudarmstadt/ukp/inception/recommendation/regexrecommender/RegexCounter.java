@@ -8,16 +8,32 @@ import java.util.Set;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+
+
+/*
+ * Keeps track of regexes, their feature values
+ * and the number of times recommendations based on
+ * those regexes have been accepted or rejected by the user.
+ * 
+ */
 public class RegexCounter
 {
-
-    private Map<String, Map<String, Pair<Integer, Integer>>> regexCounts =
-            new HashMap<String, Map<String, Pair<Integer, Integer>>>();
-  
     
-    public RegexCounter()
+    private Map<String, Map<String, Pair<Integer, Integer>>> regexCounts;
+    
+    private AnnotationFeature feature;
+    
+    public RegexCounter(AnnotationFeature aFeature)
     {
-                     
+        regexCounts = new HashMap<String, Map<String, Pair<Integer, Integer>>>();
+        feature = aFeature;
+        System.out.println("NEW REGEXCOUNTER: " + aFeature.getUiName());
+    }
+    
+    public AnnotationFeature getFeature()
+    {
+        return feature;
     }
     
     public Set<String> getKeys() {
@@ -105,7 +121,9 @@ public class RegexCounter
     public void addWithMsgBox(String aFeatureValue, String aLemmaString) {
                                
         if (!containsByRegex(aFeatureValue, aLemmaString)) {
-            String regexString = getFromInputBox("During training the annotation " + aFeatureValue + " based on " + aLemmaString + " was found. \n Please enter regex or discard", "Trainer");
+            String regexString = getFromInputBox("During training the annotation " + aFeatureValue 
+                                                 + " based on " + aLemmaString + " was found. \n"
+                                                 + " Please enter regex or discard", "Trainer");
             if (regexString == null) {
                 add(aFeatureValue, aLemmaString);
             } else {
@@ -114,22 +132,22 @@ public class RegexCounter
         }
     }
     
-    public void remove(String aFeatureName, String aRegex) {
-        regexCounts.get(aFeatureName).remove(aRegex);            
+    public void remove(String aFeatureValue, String aRegex) {
+        regexCounts.get(aFeatureValue).remove(aRegex);            
     }
     
-    public void removeWithMsgBox(String aFeatureName, String aRegex, Integer aPos, Integer aNeg) {
+    public void removeWithMsgBox(String aFeatureValue, String aRegex, Integer aPos, Integer aNeg) {
             
         if (getFromBooleanBox("The regex: " + aRegex + " has been accepted " + aPos.toString() + " times and "
-                + "rejected " + aNeg.toString() + "times.\n The category was " + aFeatureName + 
+                + "rejected " + aNeg.toString() + "times.\n The category was " + aFeatureValue + 
                 ".\n Do you wish to delete this regex?")) {
                 
-            remove(aFeatureName, aRegex);
+            remove(aFeatureValue, aRegex);
         }
     }
     
-    public boolean contains(String aFeatureName, String aRegex) {
-        return regexCounts.get(aFeatureName).containsKey(aRegex);
+    public boolean contains(String aFeatureValue, String aRegex) {
+        return regexCounts.get(aFeatureValue).containsKey(aRegex);
     }
     
     private String getFromInputBox(String aInfoMessage, String aTitleBar)

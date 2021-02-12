@@ -1,28 +1,42 @@
 package de.tudarmstadt.ukp.inception.recommendation.regexrecommender.listener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexCounter;
 
 public class RecommendationRejectedListener
                 implements ApplicationListener<RecommendationRejectedEvent>
 {
-    RegexCounter regexSet;
+    private List<RegexCounter> counterList;
  
     @Autowired
-    public RecommendationRejectedListener(RegexCounter aRegexSet)
+    public RecommendationRejectedListener()
     {
-        this.regexSet = aRegexSet;
+        counterList = new ArrayList<RegexCounter>();
+    }
+    
+    public void addCounter(RegexCounter aRegexCounter) 
+    {
+        counterList.add(aRegexCounter);
     }
     
     @Override
     public void onApplicationEvent(RecommendationRejectedEvent aEvent)
     {   
         String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
-        String featureName = aEvent.getRecommendedValue().toString();
-        regexSet.incrementRejected(featureName, regex);
+        AnnotationFeature feature = aEvent.getFeature();
+        String featureValue = aEvent.getRecommendedValue().toString();
+        for (RegexCounter counter: counterList) {
+            if (counter.getFeature().equals(feature)) {
+                counter.incrementAccepted(featureValue, regex);
+            }
+        }
     }
 
 }

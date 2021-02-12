@@ -43,10 +43,7 @@ import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.listener.Rec
 // fix evaluation
 // fix mouse hovering problem
 // write tests
-// create pull request
 
-
-// tag::classDefinition[]
 
 public class RegexRecommender
         extends RecommendationEngine
@@ -60,25 +57,27 @@ public class RegexRecommender
     public RegexRecommender(Recommender aRecommender,
             RegexRecommenderTraits aTraits,
             RecommendationAcceptedListener aRecAccListener,
-            RecommendationRejectedListener aRecRejListener,
-            RegexCounter aRegexCounter) {
+            RecommendationRejectedListener aRecRejListener) {
         
-        this(aRecommender, aTraits, aRecAccListener, aRecRejListener, null, aRegexCounter);
+        this(aRecommender, aTraits, aRecAccListener, aRecRejListener, null);
     }
      
     public RegexRecommender(Recommender aRecommender,
                             RegexRecommenderTraits aTraits,
                             RecommendationAcceptedListener aRecAccListener,
                             RecommendationRejectedListener aRecRejListener,
-                            GazeteerServiceImpl aGazeteerService,
-                            RegexCounter aRegexCounter) {
+                            GazeteerServiceImpl aGazeteerService) {
         
         super(aRecommender);
         
         this.traits = aTraits;
         this.gazeteerService = aGazeteerService;
-        this.regexCounter = aRegexCounter;
-        this.gazeteerName = "New Regexes for " + aRecommender.getLayer() ;
+        this.regexCounter = new RegexCounter(aRecommender.getFeature());
+        this.gazeteerName = "New Regexes for Layer: "
+                            + aRecommender.getLayer().getUiName()
+                            + "Feature: "
+                            + aRecommender.getFeature().getUiName();
+        
         // add a new Gazeteer that collects new Regexes
         // we need something to remember these, otherwise
         // the user will be asked about all of his new Annotations
@@ -93,6 +92,8 @@ public class RegexRecommender
 				e.printStackTrace();
 			}
         }
+        
+        pretrain();
         
     }
 

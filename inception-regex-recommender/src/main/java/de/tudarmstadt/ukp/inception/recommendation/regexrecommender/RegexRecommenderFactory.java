@@ -38,17 +38,14 @@ public class RegexRecommenderFactory
     private final GazeteerServiceImpl gazeteerService;
     private final RecommendationAcceptedListener acceptedListener;
     private final RecommendationRejectedListener rejectedListener;
-    private final RegexCounter regexCounter;
     
     public RegexRecommenderFactory(GazeteerServiceImpl aGazeteerService,
                                     RecommendationAcceptedListener aAcceptedListener,
-                                    RecommendationRejectedListener aRejectedListener,
-                                    RegexCounter aRegexCounter)
+                                    RecommendationRejectedListener aRejectedListener)
     {        
         gazeteerService = aGazeteerService;
         acceptedListener = aAcceptedListener;
         rejectedListener = aRejectedListener;
-        regexCounter = aRegexCounter;
     }
     
     @Override
@@ -65,8 +62,7 @@ public class RegexRecommenderFactory
         return new RegexRecommender(aRecommender, traits,
                 this.acceptedListener,
                 this.rejectedListener,
-                this.gazeteerService,
-                this.regexCounter);
+                this.gazeteerService);
     }
 
 

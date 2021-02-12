@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.RegexCounter;
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.exporter.GazeteerExporter;
@@ -58,29 +59,29 @@ public class RegexRecommenderAutoConfiguration
 
     @Bean
     @Autowired
-    public RecommendationAcceptedListener recommendationAcceptedListener(RegexCounter aRegexSet) {
-        return new RecommendationAcceptedListener(aRegexSet);
+    public RecommendationAcceptedListener recommendationAcceptedListener() {
+        return new RecommendationAcceptedListener();
     }
     
     @Bean
     @Autowired
-    public RecommendationRejectedListener recommendationRejectedListener(RegexCounter aRegexSet) {
-        return new RecommendationRejectedListener(aRegexSet);
+    public RecommendationRejectedListener recommendationRejectedListener() {
+        return new RecommendationRejectedListener();
     }
     
+    /*
     @Bean
     public RegexCounter regexSet() {
         return new RegexCounter();
     }
-
+    */
   
     @Bean
     @Autowired
     public RegexRecommenderFactory regexRecommenderFactory(GazeteerServiceImpl aGazeteerService,
                                                        RecommendationAcceptedListener aAccListener,
-                                                       RecommendationRejectedListener aRejListener,
-                                                       RegexCounter aRegexSet)
+                                                       RecommendationRejectedListener aRejListener)
     {   
-        return new RegexRecommenderFactory(aGazeteerService, aAccListener, aRejListener, aRegexSet);
+        return new RegexRecommenderFactory(aGazeteerService, aAccListener, aRejListener);
     }
 }
