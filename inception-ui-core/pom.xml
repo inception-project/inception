@@ -137,6 +137,10 @@
     </dependency>
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+      <artifactId>wicket-spring-boot-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
       <artifactId>wicket-spring-boot-starter</artifactId>
       <exclusions>
         <exclusion>
@@ -168,6 +172,11 @@
     <dependency>
       <groupId>io.bit3</groupId>
       <artifactId>jsass</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>javax.persistence</groupId>
+      <artifactId>javax.persistence-api</artifactId>
     </dependency>
   </dependencies>
   

@@ -15,21 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.session;
-
-import org.apache.wicket.MetaDataKey;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public final class SessionMetaData
+public interface ProjectMenuItem
+    extends MenuItem
 {
-    public static final MetaDataKey<Project> CURRENT_PROJECT = new MetaDataKey<Project>()
+    @Override
+    default boolean applies()
     {
-        private static final long serialVersionUID = 1L;
-    };
-
-    private SessionMetaData()
-    {
-        // No instances
+        return false;
     }
+
+    boolean applies(Project aProject);
 }

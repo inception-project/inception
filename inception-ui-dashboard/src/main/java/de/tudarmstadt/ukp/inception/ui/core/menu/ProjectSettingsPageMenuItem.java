@@ -17,10 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.menu;
 
-import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
-
 import org.apache.wicket.Page;
-import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,12 +25,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 
 @Component
 public class ProjectSettingsPageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -60,25 +57,20 @@ public class ProjectSettingsPageMenuItem
      * Only project admins and annotators can see this page
      */
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        Project sessionProject = Session.get().getMetaData(CURRENT_PROJECT);
-        if (sessionProject == null) {
+        if (aProject == null) {
             return false;
         }
-
-        // The project object stored in the session is detached from the persistence context and
-        // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
-        Project project = projectService.getProject(sessionProject.getId());
-
+        
         // Visible if the current user is a project manager or global admin
         User user = userRepo.getCurrentUser();
-        return userRepo.isAdministrator(user) || projectService.isManager(project, user);
+        return userRepo.isAdministrator(user) || projectService.isManager(aProject, user);
     }
 
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ProjectPage.class;
+        return ProjectSettingsPage.class;
     }
 }

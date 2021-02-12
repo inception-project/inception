@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
+import static java.lang.String.format;
+
+import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,21 +27,30 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 
 @Component
 @Order(100)
 public class AnnotationPageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
+    private @Autowired ServletContext servletContext;
 
     @Override
     public String getPath()
     {
-        return "/annotation";
+        return "/annotate";
+    }
+
+    public String getUrl(long aProjectId, long aDocumentId)
+    {
+        return format("%s/p/%d%s/%d", servletContext.getContextPath(), aProjectId, getPath(),
+                aDocumentId);
     }
 
     @Override
@@ -58,9 +69,15 @@ public class AnnotationPageMenuItem
      * Only project admins and annotators can see this page
      */
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        return annotationEnabeled(projectService, userRepo.getCurrentUser());
+        if (aProject == null) {
+            return false;
+        }
+
+        // Visible if the current user is an annotator
+        User user = userRepo.getCurrentUser();
+        return projectService.isAnnotator(aProject, user);
     }
 
     @Override
