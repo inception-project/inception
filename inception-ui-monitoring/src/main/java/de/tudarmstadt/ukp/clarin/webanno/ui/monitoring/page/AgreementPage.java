@@ -18,11 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -30,11 +33,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
-
-import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -49,16 +48,13 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -82,13 +78,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-@MountPath("/agreement.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/agreement")
 public class AgreementPage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = 5333662917247971912L;
 
@@ -104,51 +99,22 @@ public class AgreementPage
     private @SpringBean UserDao userRepository;
     private @SpringBean AgreementMeasureSupportRegistry agreementRegistry;
 
-    private ProjectSelectionForm projectSelectionForm;
     private AgreementForm agreementForm;
     private WebMarkupContainer resultsContainer;
-
-    public AgreementPage()
-    {
-        super();
-
-        commonInit();
-    }
 
     public AgreementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
+    }
 
-        commonInit();
-
-        projectSelectionForm.setVisibilityAllowed(false);
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
 
         User user = userRepository.getCurrentUser();
 
-        // Get current project from parameters
-        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        Optional<Project> project = getProjectFromParameters(projectParameter);
-
-        if (project.isPresent()) {
-            Project p = project.get();
-
-            // Check access to project
-            if (!(projectService.isCurator(p, user) || projectService.isManager(p, user))) {
-                error("You have no permission to access project [" + p.getId() + "]");
-                setResponsePage(getApplication().getHomePage());
-            }
-
-            projectSelectionForm.getModelObject().project = p;
-        }
-        else {
-            error("Project [" + projectParameter + "] does not exist");
-            setResponsePage(getApplication().getHomePage());
-        }
-    }
-
-    private void commonInit()
-    {
-        add(projectSelectionForm = new ProjectSelectionForm("projectSelectionForm"));
+        requireProjectRole(user, MANAGER, CURATOR);
 
         add(agreementForm = new AgreementForm("agreementForm", Model.of(new AgreementFormModel())));
 
@@ -180,8 +146,7 @@ public class AgreementPage
             traitsContainer.setOutputMarkupPlaceholderTag(true);
             traitsContainer.add(new EmptyPanel(MID_TRAITS));
 
-            add(new Label("name",
-                    PropertyModel.of(projectSelectionForm.getModel(), "project.name")));
+            add(new Label("name", getProject().getName()));
 
             add(featureList = new BootstrapSelect<AnnotationFeature>("feature"));
             featureList.setOutputMarkupId(true);
@@ -290,7 +255,7 @@ public class AgreementPage
         private List<AnnotationFeature> getEligibleFeatures()
         {
             List<AnnotationFeature> features = annotationService
-                    .listAnnotationFeature((projectSelectionForm.getModelObject().project));
+                    .listAnnotationFeature(getProject());
             List<AnnotationFeature> unusedFeatures = new ArrayList<>();
             for (AnnotationFeature feature : features) {
                 if (feature.getLayer().getName().equals(Token.class.getName())
@@ -300,15 +265,6 @@ public class AgreementPage
             }
             features.removeAll(unusedFeatures);
             return features;
-        }
-
-        @Override
-        protected void onConfigure()
-        {
-            super.onConfigure();
-
-            ProjectSelectionModel model = projectSelectionForm.getModelObject();
-            setVisible(model != null && model.project != null);
         }
     }
 
@@ -320,67 +276,6 @@ public class AgreementPage
         AnnotationFeature feature;
 
         Pair<String, String> measure;
-    }
-
-    private class ProjectSelectionForm
-        extends Form<ProjectSelectionModel>
-    {
-        private static final long serialVersionUID = -1L;
-
-        public ProjectSelectionForm(String id)
-        {
-            super(id, new CompoundPropertyModel<>(new ProjectSelectionModel()));
-
-            ListChoice<Project> projectList = new OverviewListChoice<>("project");
-            projectList.setChoiceRenderer(new ChoiceRenderer<>("name"));
-            projectList.setChoices(LoadableDetachableModel.of(this::listAllowedProjects));
-            projectList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                    this::onSelectionChanged));
-            add(projectList);
-        }
-
-        private void onSelectionChanged(AjaxRequestTarget aTarget)
-        {
-            agreementForm.setModelObject(new AgreementFormModel());
-            resultsContainer.addOrReplace(new EmptyPanel(MID_RESULTS));
-            aTarget.add(resultsContainer, agreementForm);
-        }
-
-        private List<Project> listAllowedProjects()
-        {
-            User user = userRepository.getCurrentUser();
-
-            List<Project> userProjects = projectService.listManageableCuratableProjects(user);
-            List<Project> allowedProjects = projectService.listProjectsForAgreement();
-            allowedProjects.retainAll(userProjects);
-            return allowedProjects;
-        }
-    }
-
-    static public class ProjectSelectionModel
-        implements Serializable
-    {
-        protected int totalDocuments;
-
-        private static final long serialVersionUID = -1L;
-
-        public Project project;
-        public Map<String, Integer> annotatorsProgress = new TreeMap<>();
-        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
-    }
-
-    private Optional<Project> getProjectFromParameters(StringValue projectParam)
-    {
-        if (projectParam == null || projectParam.isEmpty()) {
-            return Optional.empty();
-        }
-
-        try {
-            return Optional.of(projectService.getProject(projectParam.toLong()));
-        }
-        catch (NoResultException e) {
-            return Optional.empty();
-        }
     }
 
     // The CASes cannot be serialized, so we make them transient here. However, it does not matter

@@ -18,13 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -33,6 +34,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
@@ -115,16 +118,16 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
 
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
  */
-@MountPath("/monitoring.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
 public class MonitoringPage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
 
@@ -187,41 +190,20 @@ public class MonitoringPage
         ICONS = Collections.unmodifiableMap(icons);
     }
 
-    public MonitoringPage()
-    {
-        super();
-
-        commonInit();
-    }
-
     public MonitoringPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
-        commonInit();
-
-        projectSelectionForm.setVisibilityAllowed(false);
-
         User user = userRepository.getCurrentUser();
 
-        // Get current project from parameters
-        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        Optional<Project> project = getProjectFromParameters(projectParameter);
+        Project project = getProject();
 
-        if (project.isPresent()) {
-            // Check access to project
-            if (project != null && !(projectService.isCurator(project.get(), user)
-                    || projectService.isManager(project.get(), user))) {
-                error("You have no permission to access project [" + project.get().getId() + "]");
-                setResponsePage(getApplication().getHomePage());
-            }
+        requireProjectRole(user, CURATOR, MANAGER);
 
-            projectSelectionForm.selectProject(project.get());
-        }
-        else {
-            error("Project [" + projectParameter + "] does not exist");
-            setResponsePage(getApplication().getHomePage());
-        }
+        commonInit();
+
+        projectSelectionForm.selectProject(project);
+        projectSelectionForm.setVisibilityAllowed(false);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

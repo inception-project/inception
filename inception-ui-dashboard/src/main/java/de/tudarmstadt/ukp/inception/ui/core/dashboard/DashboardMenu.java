@@ -17,19 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.util.List;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.Session;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.Link;
-import org.apache.wicket.markup.html.link.StatelessLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -41,14 +39,13 @@ import org.apache.wicket.request.resource.UrlResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 
 public class DashboardMenu
     extends Panel
 {
     private static final long serialVersionUID = 8582941766827165724L;
-
-    private boolean sendProjectIdToPage = true;
 
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
@@ -61,47 +58,43 @@ public class DashboardMenu
             @Override
             protected void populateItem(ListItem<MenuItem> aItem)
             {
-                MenuItem item = aItem.getModelObject();
-                final Class<? extends Page> pageClass = item.getPageClass();
-
-                Link<Void> menulink;
-                if (isSendProjectIdToPage()) {
-                    menulink = new StatelessLink<Void>("item")
-                    {
-                        private static final long serialVersionUID = 4110674757822252390L;
-
-                        @Override
-                        public void onClick()
-                        {
-                            // For legacy WebAnno pages, we set PAGE_PARAM_PROJECT_ID while
-                            // INCEpTION pages may pick the project up from the session.
-                            PageParameters params = new PageParameters();
-                            if (getProject() != null) {
-                                params.set(PAGE_PARAM_PROJECT_ID, getProject().getId());
-                            }
-                            setResponsePage(pageClass, params);
-                        }
-                    };
-                }
-                else {
-                    menulink = new BookmarkablePageLink<>("item", pageClass);
-                }
-
-                UrlResourceReference imageRef = new UrlResourceReference(Url.parse(item.getIcon()));
-                imageRef.setContextRelative(true);
-                menulink.add(new Image("icon", imageRef));
-                menulink.add(new Label("label", item.getLabel()));
-
-                // Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
-                //
-                // boolean isAdminItem = asList("ProjectPage", "ManageUsersPage")
-                // .contains(item.getPageClass().getSimpleName());
-
-                aItem.add(menulink);
-                aItem.setVisible(item.applies() /* && (project != null || isAdminItem) */);
+                generateMenuItem(aItem);
             }
-
         });
+    }
+
+    private void generateMenuItem(ListItem<MenuItem> aItem)
+    {
+        MenuItem item = aItem.getModelObject();
+        final Class<? extends Page> pageClass = item.getPageClass();
+
+        Link<Void> menulink;
+        if (item instanceof ProjectMenuItem) {
+            ProjectMenuItem projectMenuItem = (ProjectMenuItem) item;
+            ProjectPageBase currentPage = findParent(ProjectPageBase.class);
+            
+            if (currentPage == null) {
+                throw new IllegalStateException(
+                        "Menu item targetting a specific project must be on a project page");
+            }
+            
+            Project project = currentPage.getProject();
+            long projectId = project.getId();
+
+            aItem.setVisible(projectMenuItem.applies(currentPage.getProject()));
+
+            menulink = new BookmarkablePageLink<>("item", pageClass,
+                    new PageParameters().set(PAGE_PARAM_PROJECT, projectId));
+        }
+        else {
+            menulink = new BookmarkablePageLink<>("item", pageClass);
+        }
+
+        UrlResourceReference imageRef = new UrlResourceReference(Url.parse(item.getIcon()));
+        imageRef.setContextRelative(true);
+        menulink.add(new Image("icon", imageRef));
+        menulink.add(new Label("label", item.getLabel()));
+        aItem.add(menulink);
     }
 
     @Override
@@ -111,20 +104,5 @@ public class DashboardMenu
 
         aResponse.render(CssHeaderItem
                 .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
-    }
-
-    public boolean isSendProjectIdToPage()
-    {
-        return sendProjectIdToPage;
-    }
-
-    public void setSendProjectIdToPage(boolean aSendProjectIdToPage)
-    {
-        sendProjectIdToPage = aSendProjectIdToPage;
-    }
-
-    public Project getProject()
-    {
-        return Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
     }
 }

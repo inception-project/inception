@@ -18,17 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,13 +39,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -74,7 +72,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -113,7 +110,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotat
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MountPath("/curation.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
     extends AnnotationPageBase
 {
@@ -160,43 +157,53 @@ public class CurationPage
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
 
-    public CurationPage()
-    {
-        super();
-        LOG.debug("Setting up curation page without parameters");
-        commonInit();
-
-        Map<String, StringValue> fragmentParameters = Session.get()
-                .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-        if (fragmentParameters != null) {
-            // Clear the URL fragment parameters - we only use them once!
-            Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-
-            StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-            StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-            StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-
-            handleParameters(null, project, document, focus, false);
-        }
-    }
+    // public CurationPage()
+    // {
+    // super();
+    // LOG.debug("Setting up curation page without parameters");
+    // commonInit();
+    //
+    // Map<String, StringValue> fragmentParameters = Session.get()
+    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
+    // if (fragmentParameters != null) {
+    // // Clear the URL fragment parameters - we only use them once!
+    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
+    //
+    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
+    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
+    // StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
+    //
+    // handleParameters(null, project, document, focus, false);
+    // }
+    // }
 
     public CurationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
+
         LOG.debug("Setting up curation page with parameters: {}", aPageParameters);
+
+        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        // state.setUser(userRepository.getCurrentUser());
+        setModel(Model.of(state));
+
+        User user = userRepository.getCurrentUser();
+
+        requireProjectRole(user, CURATOR);
+
+        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
+        StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
+
+        handleParameters(document, focus, true);
 
         commonInit();
 
-        StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
-        StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
-
-        handleParameters(null, project, document, focus, true);
+        updateDocumentView(null, null, focus);
     }
 
     private void commonInit()
     {
-        setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
+        add(createUrlFragmentBehavior());
 
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
@@ -354,7 +361,6 @@ public class CurationPage
         });
 
         sentenceListContainer.add(sentenceLinksListView);
-
     }
 
     /**
@@ -643,62 +649,21 @@ public class CurationPage
         }
     }
 
-    private Project getProjectFromParameters(StringValue projectParam)
+    @Override
+    protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
+            boolean aLockIfPreset)
     {
-        Project project = null;
-        if (projectParam != null && !projectParam.isEmpty()) {
-            long projectId = projectParam.toLong();
-            project = projectService.getProject(projectId);
-        }
-        return project;
-    }
+        Project project = getProject();
 
-    private SourceDocument getDocumentFromParameters(Project aProject, StringValue documentParam)
-    {
-        SourceDocument document = null;
-        if (documentParam != null && !documentParam.isEmpty()) {
-            long documentId = documentParam.toLong();
-            document = documentService.getSourceDocument(aProject.getId(), documentId);
-        }
-        return document;
-    }
+        SourceDocument document = getDocumentFromParameters(project, aDocumentParameter);
 
-    private void handleParameters(AjaxRequestTarget aTarget, StringValue aProjectParameter,
-            StringValue aDocumentParameter, StringValue aFocusParameter, boolean aLockIfPreset)
-    {
-        // Get current project from parameters
-        Project project = null;
-        try {
-            project = getProjectFromParameters(aProjectParameter);
-        }
-        catch (NoResultException e) {
-            error("Project [" + aProjectParameter + "] does not exist");
-            return;
-        }
-
-        // Get current document from parameters
-        SourceDocument document = null;
-        if (project != null) {
-            try {
-                document = getDocumentFromParameters(project, aDocumentParameter);
-            }
-            catch (NoResultException e) {
-                error("Document [" + aDocumentParameter + "] does not exist in project ["
-                        + project.getId() + "]");
-            }
-        }
-
-        // Get current focus unit from parameters
-        int focus = 0;
-        if (aFocusParameter != null) {
-            focus = aFocusParameter.toInt(0);
-        }
+        AnnotatorState state = getModelObject();
 
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        if (document != null && document.equals(getModelObject().getDocument())
-                && focus == getModelObject().getFocusUnitIndex()) {
+        if (document != null && document.equals(state.getDocument()) && aFocusParameter != null
+                && aFocusParameter.toInt(0) == state.getFocusUnitIndex()) {
             return;
         }
 
@@ -712,30 +677,58 @@ public class CurationPage
         // Update project in state
         // Mind that this is relevant if the project was specified as a query parameter
         // i.e. not only in the case that it was a URL fragment parameter.
-        if (project != null) {
-            getModelObject().setProject(project);
-            if (aLockIfPreset) {
-                getModelObject().setProjectLocked(true);
-            }
+        state.setProject(project);
+        if (aLockIfPreset) {
+            state.setProjectLocked(true);
         }
 
-        if (document != null) {
-            // If we arrive here and the document is not null, then we have a change of document
-            // or a change of focus (or both)
-            if (!document.equals(getModelObject().getDocument())) {
-                getModelObject().setDocument(document, getListOfDocs());
-                actionLoadDocument(aTarget, focus);
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+        if (document != null && !document.equals(state.getDocument())) {
+            state.setDocument(document, getListOfDocs());
+        }
+    }
+
+    @Override
+    protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
+            StringValue aFocusParameter)
+    {
+        SourceDocument currentDocument = getModelObject().getDocument();
+        if (currentDocument == null) {
+            return;
+        }
+
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+
+        // Get current focus unit from parameters
+        int focus = 0;
+        if (aFocusParameter != null) {
+            focus = aFocusParameter.toInt(0);
+        }
+        // If there is no change in the current document, then there is nothing to do. Mind
+        // that document IDs are globally unique and a change in project does not happen unless
+        // there is also a document change.
+        if (aPreviousDocument != null && aPreviousDocument.equals(currentDocument)
+                && focus == getModelObject().getFocusUnitIndex()) {
+            return;
+        }
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+        if (aPreviousDocument == null || !aPreviousDocument.equals(currentDocument)) {
+            actionLoadDocument(aTarget, focus);
+        }
+        else {
+            try {
+                getModelObject().moveToUnit(getEditorCas(), focus, TOP);
+                actionRefreshDocument(aTarget);
             }
-            else {
-                try {
-                    getModelObject().moveToUnit(getEditorCas(), focus, TOP);
-                    actionRefreshDocument(aTarget);
-                }
-                catch (Exception e) {
+            catch (Exception e) {
+                if (aTarget != null) {
                     aTarget.addChildren(getPage(), IFeedback.class);
-                    LOG.info("Error reading CAS " + e.getMessage());
-                    error("Error reading CAS " + e.getMessage());
                 }
+                LOG.info("Error reading CAS " + e.getMessage());
+                error("Error reading CAS " + e.getMessage());
             }
         }
     }

@@ -15,16 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project;
+
+import static java.util.Arrays.asList;
 
 import java.util.List;
 
-public interface VueActivitiesDashletController
+import org.apache.wicket.ajax.AjaxRequestTarget;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public class AjaxProjectImportedEvent
 {
-    String BASE_URL = "/de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashletController";
-    String LIST_PATH = "/project/{projectId}/list";
+    final private AjaxRequestTarget target;
+    final private List<Project> project;
 
-    String listActivitiesUrl(long aProjectId);
+    public AjaxProjectImportedEvent(AjaxRequestTarget aTarget, Project... aProjects)
+    {
+        this.target = aTarget;
+        this.project = asList(aProjects);
+    }
 
-    List<Activity> listActivities(long aProjectId);
+    public AjaxProjectImportedEvent(AjaxRequestTarget aTarget, List<Project> aProjects)
+    {
+        this.target = aTarget;
+        this.project = aProjects;
+    }
+
+    public AjaxRequestTarget getTarget()
+    {
+        return target;
+    }
+
+    public List<Project> getProjects()
+    {
+        return project;
+    }
 }

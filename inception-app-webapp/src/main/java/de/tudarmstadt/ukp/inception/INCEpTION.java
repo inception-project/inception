@@ -33,6 +33,7 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -60,8 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
 
@@ -69,31 +68,22 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 // @formatter:off
-@SpringBootApplication // (exclude = {ErrorMvcAutoConfiguration.class})
+@SpringBootApplication(scanBasePackages = {
+    "de.tudarmstadt.ukp.inception",
+    "de.tudarmstadt.ukp.clarin.webanno"})
+@AutoConfigurationPackage(basePackages = {
+    "de.tudarmstadt.ukp.inception",
+    "de.tudarmstadt.ukp.clarin.webanno" })
 @EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(
-    basePackages = { 
-            "de.tudarmstadt.ukp.inception",  
-            "de.tudarmstadt.ukp.clarin.webanno" },
+    basePackages = {  
+        "de.tudarmstadt.ukp.inception",
+        "de.tudarmstadt.ukp.clarin.webanno" },
     excludeFilters = {
         @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
         @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
-        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
-        @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
-            // The INCEpTION dashboard uses a per-project view while WebAnno uses a global
-            // activation strategies for menu items. Thus, we need to re-implement the menu
-            // items for INCEpTION.
-            de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem.class,
-            de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem.class,
-            MonitoringPageMenuItem.class,
-            AgreementPageMenuItem.class,
-
-            // INCEpTION uses its recommenders, not the WebAnno automation code
-            // AutomationService.class, 
-            // AutomationMiraTemplateExporter.class,
-            // AutomationTrainingDocumentExporter.class
-    })})
+        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
 @EntityScan(basePackages = {
     // Include WebAnno entity packages separately so we can skip the automation entities!
     "de.tudarmstadt.ukp.clarin.webanno.model",

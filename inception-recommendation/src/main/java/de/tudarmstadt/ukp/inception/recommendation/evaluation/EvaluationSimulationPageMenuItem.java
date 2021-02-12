@@ -17,10 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
-import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
-
 import org.apache.wicket.Page;
-import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -28,7 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
@@ -40,7 +37,7 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
  */
 @Order(300)
 public class EvaluationSimulationPageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -65,24 +62,15 @@ public class EvaluationSimulationPageMenuItem
     }
 
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        Project sessionProject = Session.get().getMetaData(CURRENT_PROJECT);
-        if (sessionProject == null) {
-            return false;
-        }
-
-        // The project object stored in the session is detached from the persistence context and
-        // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
-        Project project = projectService.getProject(sessionProject.getId());
-
         // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        if (!(projectService.isManager(project, user))) {
+        if (!(projectService.isManager(aProject, user))) {
             return false;
         }
 
-        return !recommenderService.listRecommenders(sessionProject).isEmpty();
+        return !recommenderService.listRecommenders(aProject).isEmpty();
     }
 
     @Override

@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 
 public class OpenDocumentDialog
     extends ModalWindow
@@ -96,12 +97,19 @@ public class OpenDocumentDialog
             @Override
             public void onClose(AjaxRequestTarget aInnerTarget)
             {
-                // A hack, the dialog opens for the first time, and if no document is
-                // selected window will be "blind down". Something in the brat js causes
-                // this!
+                // If the dialog is aborted without choosing a document, return to a sensible
+                // location.
                 AnnotatorState state = getModelObject();
                 if (state.getProject() == null || state.getDocument() == null) {
-                    setResponsePage(getApplication().getHomePage());
+                    try {
+                        ProjectPageBase ppb = findParent(ProjectPageBase.class);
+                        if (ppb != null) {
+                            ((ProjectPageBase) ppb).backToProjectPage();
+                        }
+                    }
+                    catch (Exception e) {
+                        setResponsePage(getApplication().getHomePage());
+                    }
                 }
 
                 // Dialog was cancelled rather that a document was selected.

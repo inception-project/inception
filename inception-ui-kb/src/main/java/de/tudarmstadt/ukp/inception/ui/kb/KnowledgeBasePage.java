@@ -17,36 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
-import org.apache.wicket.RestartResponseException;
-import org.apache.wicket.Session;
 import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.ui.kb.sass.KnowledgeBasePageLRR;
 
 /**
@@ -58,55 +51,25 @@ import de.tudarmstadt.ukp.inception.ui.kb.sass.KnowledgeBasePageLRR;
  * selected concept instead</li>
  * </ul>
  */
-@MountPath(value = "/${" + PAGE_PARAM_PROJECT_ID + "}/kb/${" + PAGE_PARAM_KB_NAME + "}", alt = {
-        "/${" + PAGE_PARAM_PROJECT_ID + "}/kb" })
+@MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/kb/${" + PAGE_PARAM_KB_NAME
+        + "}", alt = { NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/kb" })
 public class KnowledgeBasePage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = -745797540252091140L;
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePage.class);
     public static final String PAGE_PARAM_KB_NAME = "kb";
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean ProjectService projectService;
     private @SpringBean KnowledgeBaseService kbService;
-
-    public KnowledgeBasePage()
-    {
-        super();
-        LOG.debug("Setting up page without parameters");
-        Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
-        if (project == null) {
-            abort();
-        }
-        commonInit(project, null);
-    }
 
     public KnowledgeBasePage(PageParameters aPageParameters)
     {
         super(aPageParameters);
 
-        User user = userRepository.getCurrentUser();
+        Project project = getProject();
 
-        // Project has been specified when the page was opened
-        Project project = null;
-        StringValue projectParam = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        if (!projectParam.isEmpty()) {
-            long projectId = projectParam.toLong();
-            try {
-                project = projectService.getProject(projectId);
-
-                // Check access to project
-                if (!projectService.isAnnotator(project, user)) {
-                    error("You have no permission to access project [" + project.getId() + "]");
-                    abort();
-                }
-            }
-            catch (NoResultException e) {
-                error("Project [" + projectId + "] does not exist");
-                abort();
-            }
-        }
+        requireProjectRole(userRepository.getCurrentUser(), ANNOTATOR);
 
         // If a KB id was specified in the URL, we try to get it
         KnowledgeBase kb = null;
@@ -115,34 +78,19 @@ public class KnowledgeBasePage
             kb = kbService.getKnowledgeBaseByName(project, kbName).orElse(null);
         }
 
-        commonInit(project, kb);
-    }
-
-    private void abort()
-    {
-        throw new RestartResponseException(getApplication().getHomePage());
-    }
-
-    private void commonInit(Project aProject, KnowledgeBase aKb)
-    {
-        IModel<Project> projectModel = new LambdaModel<>(() -> aProject);
-
         List<KnowledgeBase> knowledgeBases = new ArrayList<>();
         try {
-            knowledgeBases = kbService.getEnabledKnowledgeBases(projectModel.getObject());
+            knowledgeBases = kbService.getEnabledKnowledgeBases(project);
         }
         catch (Exception e) {
-            error("Unable to fetch knowledgebases: " + e.getLocalizedMessage());
+            getSession().error("Unable to fetch knowledgebases: " + e.getLocalizedMessage());
             LOG.error("Unable to fetch knowledgebases.", e);
-        }
-
-        if (knowledgeBases.isEmpty()) {
-            abort();
+            setResponsePage(getApplication().getHomePage());
         }
 
         // add the main content panel
-        IModel<KnowledgeBase> kbModel = Model.of(aKb != null ? aKb : knowledgeBases.get(0));
-        KnowledgeBasePanel panel = new KnowledgeBasePanel("content", projectModel, kbModel);
+        IModel<KnowledgeBase> kbModel = Model.of(kb != null ? kb : knowledgeBases.get(0));
+        KnowledgeBasePanel panel = new KnowledgeBasePanel("content", Model.of(project), kbModel);
         add(panel);
     }
 
