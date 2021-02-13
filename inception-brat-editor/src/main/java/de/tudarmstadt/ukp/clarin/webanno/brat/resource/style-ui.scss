@@ -559,18 +559,18 @@ $background_color_16: pink;
   .span_accept_btn {
     background-color:$background_color_15;
     font-size: 9px;
-    border: none;
+    border:0;
     display: inline;
     opacity: 0.7;
-    padding: 0;
+	position: absolute;
   }
   .span_reject_btn {
     background-color: $background_color_16;
     font-size: 9px;
-    border: none;
+    border:0;
     display:inline;
     opacity: 0.7;
-    padding: 0;
+	position: absolute;
   }
   #span_btns_wrapper {
     margin: 0;
