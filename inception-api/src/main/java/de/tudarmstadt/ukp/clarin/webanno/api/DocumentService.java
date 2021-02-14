@@ -635,6 +635,9 @@ public interface DocumentService
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState);
 
+    void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
+            AnnotationDocumentState aState);
+
     AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentStateTransition aTransition);
 

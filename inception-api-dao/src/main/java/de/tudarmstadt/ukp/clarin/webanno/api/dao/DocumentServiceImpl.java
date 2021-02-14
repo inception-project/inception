@@ -978,6 +978,16 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
+            AnnotationDocumentState aState)
+    {
+        for (AnnotationDocument doc : aDocuments) {
+            setAnnotationDocumentState(doc, aState);
+        }
+    }
+
+    @Override
+    @Transactional
     public AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentStateTransition aTransition)
     {

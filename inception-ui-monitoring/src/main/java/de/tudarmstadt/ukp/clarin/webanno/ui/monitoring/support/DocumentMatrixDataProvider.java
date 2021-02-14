@@ -43,6 +43,11 @@ public class DocumentMatrixDataProvider
         matrixData = aMatrixData;
     }
 
+    public List<DocumentMatrixRow> getMatrixData()
+    {
+        return matrixData;
+    }
+
     @Override
     public Iterator<? extends DocumentMatrixRow> iterator(long aFirst, long aCount)
     {

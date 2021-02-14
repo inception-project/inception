@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
-import org.apache.wicket.ajax.AjaxEventBehavior;
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import java.util.Set;
+
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -29,18 +31,22 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellClickEvent;
 
-public abstract class AnnotatorColumn
+public class AnnotatorColumn
     extends LambdaColumn<DocumentMatrixRow, Void>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
-    public AnnotatorColumn(String aUsername)
+    private IModel<Set<String>> selectedUsers;
+
+    public AnnotatorColumn(String aUsername, IModel<Set<String>> aSelectedUsers)
     {
         super(Model.of(aUsername), row -> row.getAnnotationDocument(aUsername));
+        selectedUsers = aSelectedUsers;
     }
 
     @Override
@@ -49,18 +55,26 @@ public abstract class AnnotatorColumn
     {
         IModel<AnnotationDocument> annDocument = (IModel<AnnotationDocument>) getDataModel(
                 aRowModel);
+
+        DocumentMatrixRow row = aRowModel.getObject();
+
         Label state = new Label(aComponentId,
                 stateSymbol(annDocument.map(AnnotationDocument::getState).orElse(NEW).getObject()));
         state.setEscapeModelStrings(false);
         state.add(new AttributeAppender("style", "cursor: pointer", ";"));
-        state.add(AjaxEventBehavior.onEvent("click", _target -> actionStateChange(_target,
-                aRowModel.getObject().getSourceDocument(), getDisplayModel().getObject())));
+        state.add(onEvent("click",
+                _target -> state.send(state, BUBBLE, new AnnotatorColumnCellClickEvent(_target,
+                        row.getSourceDocument(), getDisplayModel().getObject()))));
 
+        aItem.add(new CssClassNameAppender(isSelected(row) ? "s" : ""));
         aItem.add(state);
     }
 
-    public abstract void actionStateChange(AjaxRequestTarget aTarget,
-            SourceDocument aSourceDocument, String aUsername);
+    private boolean isSelected(DocumentMatrixRow aRow)
+    {
+        return selectedUsers.getObject().contains(getDisplayModel().getObject())
+                || aRow.isSelected();
+    }
 
     private String stateSymbol(AnnotationDocumentState aDocState)
     {

@@ -33,6 +33,8 @@ public class DocumentMatrixRow
     private final SourceDocument sourceDocument;
     private final Map<String, AnnotationDocument> annotationDocuments;
 
+    private boolean selected;
+
     public DocumentMatrixRow(SourceDocument aSourceDocument)
     {
         sourceDocument = aSourceDocument;
@@ -52,6 +54,16 @@ public class DocumentMatrixRow
     public AnnotationDocument getAnnotationDocument(String aUsername)
     {
         return annotationDocuments.get(aUsername);
+    }
+
+    public void setSelected(boolean aSelected)
+    {
+        selected = aSelected;
+    }
+
+    public boolean isSelected()
+    {
+        return selected;
     }
 
     @Override

@@ -17,53 +17,32 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
-
+import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-
-public class SourceDocumentStateColumn
+public class SourceDocumentActionsColumn
     extends LambdaColumn<DocumentMatrixRow, Void>
 {
-    private static final long serialVersionUID = -5675638452449649901L;
+    private static final long serialVersionUID = 8324173231787296215L;
 
-    public SourceDocumentStateColumn()
+    public SourceDocumentActionsColumn()
     {
-        super(Model.of(""), row -> row.getSourceDocument().getState());
+        super(Model.of("Document"), row -> row.getSourceDocument().getName());
     }
 
     @Override
     public void populateItem(Item<ICellPopulator<DocumentMatrixRow>> aItem, String aComponentId,
             IModel<DocumentMatrixRow> aRowModel)
     {
-        IModel<SourceDocumentState> documentState = (IModel<SourceDocumentState>) getDataModel(
-                aRowModel);
-        Label state = new Label(aComponentId, stateSymbol(documentState.orElse(NEW).getObject()));
-        state.setEscapeModelStrings(false);
-        aItem.add(state);
-    }
-
-    private String stateSymbol(SourceDocumentState aDocState)
-    {
-        switch (aDocState) {
-        case NEW:
-            return "<i class=\"far fa-circle\"></i>";
-        case ANNOTATION_IN_PROGRESS:
-            return "<i class=\"far fa-play-circle\"></i>";
-        case ANNOTATION_FINISHED:
-            return "<i class=\"far fa-check-circle\"></i>";
-        case CURATION_IN_PROGRESS:
-            return "<i class=\"fas fa-clipboard\"></i>";
-        case CURATION_FINISHED:
-            return "<i class=\"fas fa-clipboard-check\"></i>";
-        }
-
-        return "";
+        MarkupContainer page = IPageRequestHandler
+                .getPage(RequestCycle.get().getActiveRequestHandler());
+        aItem.add(new Fragment(aComponentId, "actions-column", page, aRowModel));
     }
 }

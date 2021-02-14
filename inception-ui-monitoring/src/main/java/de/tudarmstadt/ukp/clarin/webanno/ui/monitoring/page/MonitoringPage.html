@@ -22,7 +22,8 @@
   <style type="text/css">
     .page-content { overflow: auto; }
     .document-matrix tr td, .document-matrix tr th { text-align: center; }
-    .document-matrix tr td:nth-child(2), .document-matrix tr th:nth-child(2) { text-align: left; }
+    .document-matrix tr td:nth-child(3), .document-matrix tr th:nth-child(3) { text-align: left; width: 100%;}
+    .document-matrix col.s, .document-matrix tr.s , .document-matrix td.s { background-color: var(--primary); }
   </style>
 </wicket:head>
 </head>
@@ -34,6 +35,7 @@
           <div class="page-header">
             <h1><wicket:container wicket:id="name"/></h1>
           </div>
+          <!--
           <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" style="margin-top: 0px; flex: 0.5;">
             <div class="flex-content card" style="min-height: 220px;">
               <div class="card-header">
@@ -53,6 +55,7 @@
               </div>
             </div>
           </div>
+          -->
   
           <div class="flex-content card" style="min-height: 220px;">
             <div class="card-header">
@@ -60,14 +63,78 @@
               <a target="_blank" wicket:message="href:document_status.help.link">
                 <i class="fas fa-question-circle"></i>
               </a>
-            </div>
-            <div class="card-body flex-v-container">
-              <div>
-                <small class="text-muted"><wicket:message key="document_status.hint">[Status hint]</wicket:message></small>
+              <div wicket:id="actionContainer" class="actions">
+                <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="btn-group" role="group">
+                    <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
+                      Bulk change
+                    </button>
+                    <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+                    <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+                      <a wicket:id="bulkClose" class="dropdown-item">
+                        Close selected
+                        <span class="float-right text-muted">
+                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
+                          &nbsp;&nbsp;
+                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
+                        </span>
+                      </a>
+                      <a wicket:id="bulkOpen" class="dropdown-item">
+                        Open selected
+                        <span class="float-right text-muted">
+                          <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
+                          &nbsp;&nbsp;
+                          <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
+                        </span>
+                      </a>
+                      <hr class="dropdown-divider"/>
+                      <a wicket:id="bulkLock" class="dropdown-item">
+                        Lock selected 
+                        <span class="float-right text-muted">
+                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
+                        </span>
+                      </a>
+                      <a wicket:id="bulkUnlock" class="dropdown-item">
+                        Unlock selected
+                        <span class="float-right text-muted">
+                          <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
+                        </span>
+                      </a>
+                      <hr class="dropdown-divider"/>
+                      <a wicket:id="bulkFinish" class="dropdown-item">
+                        Finish selected
+                        <span class="float-right text-muted">
+                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
+                        </span>
+                      </a>
+                      <a wicket:id="bulkResume" class="dropdown-item">
+                        Resume selected
+                        <span class="float-right text-muted">
+                          <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
+                        </span>
+                      </a>
+                      <!--
+                      <hr class="dropdown-divider"/>
+                      <a class="dropdown-item danger">
+                        Reset selected
+                        <span class="float-right badge badge-pill badge-danger">
+                          <i class="fas fa-trash"></i>
+                        </span>
+                      </a>
+                      -->
+                    </div>
+                  </span>
+                </span>
               </div>
+            </div>
+            <div class="card-body p-0 flex-v-container">
               <div class="flex-content scrolling">
                 <div class="fit-child-snug">
                   <table class="table table-sm document-matrix" wicket:id="documentMatrix"></table>
+                  <wicket:fragment wicket:id="actions-column">actions</wicket:fragment>
+                  <wicket:fragment wicket:id="select-column">
+                    <input wicket:id="selected" type="checkbox"/>
+                  </wicket:fragment>
                 </div>
               </div>
             </div>
