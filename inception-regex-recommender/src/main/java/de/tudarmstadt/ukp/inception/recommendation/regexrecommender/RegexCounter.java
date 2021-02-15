@@ -9,6 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 
 /*
@@ -23,17 +24,23 @@ public class RegexCounter
     private Map<String, Map<String, Pair<Integer, Integer>>> regexCounts;
     
     private AnnotationFeature feature;
+    private AnnotationLayer layer;
     
-    public RegexCounter(AnnotationFeature aFeature)
+    public RegexCounter(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
         regexCounts = new HashMap<String, Map<String, Pair<Integer, Integer>>>();
         feature = aFeature;
-        System.out.println("NEW REGEXCOUNTER: " + aFeature.getUiName());
+        layer = aLayer;
     }
     
     public AnnotationFeature getFeature()
     {
         return feature;
+    }
+    
+    public AnnotationLayer getLayer()
+    {
+        return layer;
     }
     
     public Set<String> getKeys() {

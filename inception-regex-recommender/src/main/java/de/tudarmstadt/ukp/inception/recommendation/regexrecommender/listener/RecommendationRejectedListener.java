@@ -22,7 +22,9 @@ public class RecommendationRejectedListener
     }
     
     public void addCounter(RegexCounter aRegexCounter) 
-    {
+    {   
+        counterList.removeIf(counter -> counter.getLayer().equals(aRegexCounter.getLayer())
+                                        && counter.getFeature().equals(aRegexCounter.getFeature()));
         counterList.add(aRegexCounter);
     }
     

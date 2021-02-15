@@ -69,12 +69,6 @@ public class RegexRecommenderAutoConfiguration
         return new RecommendationRejectedListener();
     }
     
-    /*
-    @Bean
-    public RegexCounter regexSet() {
-        return new RegexCounter();
-    }
-    */
   
     @Bean
     @Autowired

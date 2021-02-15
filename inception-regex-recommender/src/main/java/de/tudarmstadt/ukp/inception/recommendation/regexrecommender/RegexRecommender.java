@@ -72,10 +72,12 @@ public class RegexRecommender
         
         this.traits = aTraits;
         this.gazeteerService = aGazeteerService;
-        this.regexCounter = new RegexCounter(aRecommender.getFeature());
+        this.regexCounter = new RegexCounter(aRecommender.getLayer(), aRecommender.getFeature());
+        aRecAccListener.addCounter(regexCounter);
+        aRecRejListener.addCounter(regexCounter);
         this.gazeteerName = "New Regexes for Layer: "
                             + aRecommender.getLayer().getUiName()
-                            + "Feature: "
+                            + " Feature: "
                             + aRecommender.getFeature().getUiName();
         
         // add a new Gazeteer that collects new Regexes
@@ -122,7 +124,7 @@ public class RegexRecommender
         
         for (AnnotationFS lemma: lemmaList) {
             
-            //spaceBetween is the whitespace between two lemmas
+            // spaceBetween is the whitespace between two lemmas
             if (firstLemma) {
                 spaceBetween = docText.subSequence(aAnnotation.getBegin(), lemma.getBegin());
             } else {
@@ -137,7 +139,9 @@ public class RegexRecommender
     }
     
         
-
+    /*
+     * loads regexes from gazeteers
+     */
     private void pretrain()
     {
         for (Gazeteer gaz : gazeteerService.listGazeteers(recommender)) {
@@ -170,21 +174,25 @@ public class RegexRecommender
             getPredictedType(cas);
             Type myType = getPredictedType(cas);
             Feature myFeature = getPredictedFeature(cas);
-            // We get a list of all dornseiffAnnotations in the cas.
-            Collection<AnnotationFS> dornseiffAnnos = CasUtil.select(cas, myType);
-            // for each annotation we get the lemmatized text, that the annotation spans.
-            // Then we ask the user if she wants to add the new lemmas to regexCounter.
-            for (AnnotationFS ann : dornseiffAnnos) {
-                String lemmaString = getUnderlyingLemmaString(cas, ann);
-                String featureValue = ann.getFeatureValueAsString(myFeature);
+            // We get a list of all our Annotations in the cas.
+            Collection<AnnotationFS> annos = CasUtil.select(cas, myType);
+            // For each annotation we get the lemmatized text that the annotation spans.
+            // Then we ask the user if she wants to add the new lemmas to regexCounter
+            // except if we already recommended that annotation.
+            for (AnnotationFS anno : annos) {
+                String lemmaString = getUnderlyingLemmaString(cas, anno);
+                String featureValue = anno.getFeatureValueAsString(myFeature);
                 if (!(featureValue == null)) {
-                    regexCounter.addWithMsgBox(ann.getFeatureValueAsString(myFeature), lemmaString);
+                    regexCounter.addWithMsgBox(anno.getFeatureValueAsString(myFeature), lemmaString);
                 }
             }        
         }
-        // we check for each feature value and each regex in the regexCounter
-        // whether it produces too many false Annotations.
-        // If it does, we ask the user if she wants to remove the regex.
+        // we check for each feature value and each regex
+        // in the regexCounter whether it produces too many
+        // false Annotations. If it does, we ask the user
+        // if she wants to remove the regex.
+        // This could be replaced by automatic removal when
+        // the accuracy of a regex becomes too small.
         for (String featureValue: regexCounter.getKeys()) {
             Map<String, Pair<Integer, Integer>> accRejCount = regexCounter.get(featureValue);
             
@@ -202,10 +210,18 @@ public class RegexRecommender
                 }
             }
         }
-        writeToGazeteer();  
-           
+        writeToGazeteer();
     }
     
+    
+    /*
+     * Adds all the regexes in the regexCounter
+     * to the automatically created gazeteer.
+     * This way we remember the regexes that were
+     * created in a session and the user won't be 
+     * bothered to enter them the next time she
+     * works on her project.
+     */
     private void writeToGazeteer() {
         
         List<Gazeteer> gazeteers = gazeteerService.listGazeteers(recommender);
@@ -434,7 +450,7 @@ public class RegexRecommender
 
         private Annotation(String aLabel, int aBegin, int aEnd)
         {
-            this(aLabel, "not given", aBegin, aEnd);
+            this(aLabel, "NO REGEX", aBegin, aEnd);
         }
         
         private Annotation(String aLabel, String aRegex, int aBegin, 
@@ -503,26 +519,5 @@ public class RegexRecommender
 
     
     
-    public String getFromInputBox(String aInfoMessage, String aTitleBar)
-    {    
-        JFrame f = new JFrame();
-        f.setAlwaysOnTop(true);
-        return JOptionPane.showInputDialog(f,
-                                           aInfoMessage,
-                                           "InfoBox: " + aTitleBar,
-                                           JOptionPane.QUESTION_MESSAGE);
-    }
-    
-    public Boolean getFromBooleanBox(String aInfoMessage)
-    {    
-        JFrame f = new JFrame();
-        f.setAlwaysOnTop(true);
-        int i =  JOptionPane.showConfirmDialog(f, aInfoMessage);
-        
-        if (i == 0) { 
-            return true;
-        } else {
-            return false;
-        }
-    }
+
 }
