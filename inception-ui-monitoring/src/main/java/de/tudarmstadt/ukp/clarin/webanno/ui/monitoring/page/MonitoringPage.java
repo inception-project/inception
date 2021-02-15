@@ -40,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -160,6 +161,7 @@ public class MonitoringPage
         bulkActionDropdown.add(new LambdaAjaxLink("bulkResume", this::actionBulkResume));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkOpen", this::actionBulkOpen));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkReset", this::actionBulkResetDocument));
 
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
         add(contextMenu = new ContextMenu("contextMenu"));
@@ -206,6 +208,33 @@ public class MonitoringPage
         documentMatrix = newMatrix;
 
         aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
+    }
+
+    private void actionBulkResetDocument(AjaxRequestTarget aTarget)
+    {
+        Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == IN_PROGRESS || annDoc.getState() == FINISHED)
+                .collect(Collectors.toList());
+
+        IModel<String> projectNameModel = Model.of(getProject().getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("BulkResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("BulkResetDocumentDialog.text", this)
+                        .setParameters(selectedDocuments.size(), projectNameModel));
+        resetDocumentDialog.setResponseModel(projectNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            Map<String, User> userCache = new HashMap<>();
+            for (AnnotationDocument document : selectedDocuments) {
+                User user = userCache.computeIfAbsent(document.getUser(),
+                        username -> userRepository.get(username));
+                documentService.resetAnnotationCas(document.getDocument(), user);
+            }
+
+            reloadMatrixData();
+            _target.add(documentMatrix);
+        });
+        resetDocumentDialog.show(aTarget);
     }
 
     private void actionResetDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
