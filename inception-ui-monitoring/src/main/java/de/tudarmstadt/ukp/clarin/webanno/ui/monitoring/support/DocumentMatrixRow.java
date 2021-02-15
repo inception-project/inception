@@ -17,6 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +31,7 @@ import java.util.TreeMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 public class DocumentMatrixRow
     implements Serializable
@@ -64,6 +72,30 @@ public class DocumentMatrixRow
     public boolean isSelected()
     {
         return selected;
+    }
+
+    public SourceDocumentState getState()
+    {
+        long newCount = annotationDocuments.values().stream()
+                .filter(annDoc -> annDoc.getState() == NEW).count();
+
+        long finishedCount = annotationDocuments.values().stream()
+                .filter(annDoc -> annDoc.getState() == FINISHED).count();
+
+        long requiredAnnotations = annotationDocuments.values().stream()
+                .filter(annDoc -> annDoc.getState() != IGNORE).count();
+
+        SourceDocumentState state = sourceDocument.getState();
+
+        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)
+                && finishedCount >= requiredAnnotations) {
+            state = ANNOTATION_FINISHED;
+        }
+        else if (newCount == requiredAnnotations) {
+            state = SourceDocumentState.NEW;
+        }
+
+        return state;
     }
 
     @Override

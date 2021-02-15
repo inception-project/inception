@@ -28,6 +28,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTra
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static java.util.stream.Collectors.toList;
@@ -70,6 +75,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
@@ -81,8 +88,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnSelectionChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellClickEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.DocumentRowSelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.AnnotatorColumn;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.CuratorColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixRow;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentNameColumn;
@@ -178,7 +188,7 @@ public class MonitoringPage
         columns.add(sourceDocumentSelectColumn);
         columns.add(new SourceDocumentStateColumn());
         columns.add(new SourceDocumentNameColumn());
-        // columns.add(new AnnotatorColumn(CURATION_USER));
+        columns.add(new CuratorColumn());
 
         List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
                 ANNOTATOR);
@@ -237,7 +247,7 @@ public class MonitoringPage
         resetDocumentDialog.show(aTarget);
     }
 
-    private void actionResetDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+    private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             String aUser)
     {
         IModel<String> documentNameModel = Model.of(aDocument.getName());
@@ -250,6 +260,24 @@ public class MonitoringPage
         resetDocumentDialog.setConfirmAction(_target -> {
             User user = userRepository.get(aUser);
             documentService.resetAnnotationCas(aDocument, user);
+            reloadMatrixData();
+            _target.add(documentMatrix);
+        });
+        resetDocumentDialog.show(aTarget);
+    }
+
+    private void actionResetCurationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    {
+        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetCurationDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("ResetCurationDocumentDialog.text", this)
+                        .setParameters(documentNameModel));
+        resetDocumentDialog.setResponseModel(documentNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            curationService.deleteCurationCas(aDocument);
+            documentService.setSourceDocumentState(aDocument, ANNOTATION_IN_PROGRESS);
             reloadMatrixData();
             _target.add(documentMatrix);
         });
@@ -424,6 +452,30 @@ public class MonitoringPage
     }
 
     @OnEvent
+    public void onCuratorColumnCellClickEvent(CuratorColumnCellClickEvent aEvent)
+    {
+        SourceDocumentStateTransition transition;
+        switch (aEvent.getSourceDocument().getState()) {
+        case CURATION_IN_PROGRESS:
+            transition = CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+            break;
+        case CURATION_FINISHED:
+            transition = CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
+            break;
+        default:
+            info("Curation state can only be changed once curation has started.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        documentService.transitionSourceDocumentState(aEvent.getSourceDocument(), transition);
+
+        reloadMatrixData();
+
+        aEvent.getTarget().add(documentMatrix);
+    }
+
+    @OnEvent
     public void onAnnotatorColumnCellOpenContextMenuEvent(
             AnnotatorColumnCellOpenContextMenuEvent aEvent)
     {
@@ -441,7 +493,31 @@ public class MonitoringPage
         SourceDocument document = aEvent.getSourceDocument();
         String username = aEvent.getUsername();
         items.add(new LambdaMenuItem("Reset",
-                _target -> actionResetDocument(_target, document, username)));
+                _target -> actionResetAnnotationDocument(_target, document, username)));
+
+        contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
+    }
+
+    @OnEvent
+    public void onCuratorColumnCellOpenContextMenuEvent(
+            CuratorColumnCellOpenContextMenuEvent aEvent)
+    {
+        SourceDocumentState state = aEvent.getSourceDocument().getState();
+
+        if (state != CURATION_IN_PROGRESS && state != CURATION_FINISHED) {
+            info("Documents on which curation has not yet been started cannot be reset.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        List<IMenuItem> items = contextMenu.getItemList();
+        items.clear();
+
+        // The CuratorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
+        // the information we need in the menu item here
+        SourceDocument document = aEvent.getSourceDocument();
+        items.add(new LambdaMenuItem("Reset",
+                _target -> actionResetCurationDocument(_target, document)));
 
         contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
     }

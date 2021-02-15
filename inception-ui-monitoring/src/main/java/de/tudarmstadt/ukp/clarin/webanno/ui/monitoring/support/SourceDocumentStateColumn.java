@@ -35,7 +35,7 @@ public class SourceDocumentStateColumn
 
     public SourceDocumentStateColumn()
     {
-        super(Model.of(""), row -> row.getSourceDocument().getState());
+        super(Model.of(""), row -> row.getState());
     }
 
     @Override
