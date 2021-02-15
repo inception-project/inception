@@ -46,15 +46,20 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
+
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -66,10 +71,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnSelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.DocumentRowSelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.AnnotatorColumn;
@@ -98,6 +107,8 @@ public class MonitoringPage
     private WebMarkupContainer actionContainer;
     private WebMarkupContainer bulkActionDropdown;
     private WebMarkupContainer bulkActionDropdownButton;
+    private ChallengeResponseDialog resetDocumentDialog;
+    private ContextMenu contextMenu;
 
     private boolean bulkChangeMode = false;
     private IModel<Set<String>> selectedUsers = new SetModel<>(new HashSet<>());
@@ -149,6 +160,9 @@ public class MonitoringPage
         bulkActionDropdown.add(new LambdaAjaxLink("bulkResume", this::actionBulkResume));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkOpen", this::actionBulkOpen));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
+
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
+        add(contextMenu = new ContextMenu("contextMenu"));
     }
 
     private DataTable<DocumentMatrixRow, Void> createDocumentMatrix(String aComponentId,
@@ -190,7 +204,27 @@ public class MonitoringPage
                 bulkChangeMode);
         documentMatrix.replaceWith(newMatrix);
         documentMatrix = newMatrix;
+
         aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
+    }
+
+    private void actionResetDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            String aUser)
+    {
+        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("ResetDocumentDialog.text", this)
+                        .setParameters(documentNameModel, aUser));
+        resetDocumentDialog.setResponseModel(documentNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            User user = userRepository.get(aUser);
+            documentService.resetAnnotationCas(aDocument, user);
+            reloadMatrixData();
+            _target.add(documentMatrix);
+        });
+        resetDocumentDialog.show(aTarget);
     }
 
     private void actionBulkOpen(AjaxRequestTarget aTarget)
@@ -358,6 +392,29 @@ public class MonitoringPage
         reloadMatrixData();
 
         aEvent.getTarget().add(documentMatrix);
+    }
+
+    @OnEvent
+    public void onAnnotatorColumnCellOpenContextMenuEvent(
+            AnnotatorColumnCellOpenContextMenuEvent aEvent)
+    {
+        if (aEvent.getState() == NEW || aEvent.getState() == IGNORE) {
+            info("Documents on which work has not yet been started cannot be reset.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        List<IMenuItem> items = contextMenu.getItemList();
+        items.clear();
+
+        // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
+        // the information we need in the menu item here
+        SourceDocument document = aEvent.getSourceDocument();
+        String username = aEvent.getUsername();
+        items.add(new LambdaMenuItem("Reset",
+                _target -> actionResetDocument(_target, document, username)));
+
+        contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
     }
 
     private void reloadMatrixData()

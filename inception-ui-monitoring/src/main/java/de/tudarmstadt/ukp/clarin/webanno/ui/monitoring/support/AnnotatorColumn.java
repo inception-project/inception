@@ -23,6 +23,9 @@ import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.Set;
 
+import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -35,6 +38,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellOpenContextMenuEvent;
 
 public class AnnotatorColumn
     extends LambdaColumn<DocumentMatrixRow, Void>
@@ -53,21 +57,42 @@ public class AnnotatorColumn
     public void populateItem(Item<ICellPopulator<DocumentMatrixRow>> aItem, String aComponentId,
             IModel<DocumentMatrixRow> aRowModel)
     {
+        @SuppressWarnings("unchecked")
         IModel<AnnotationDocument> annDocument = (IModel<AnnotationDocument>) getDataModel(
                 aRowModel);
 
         DocumentMatrixRow row = aRowModel.getObject();
 
-        Label state = new Label(aComponentId,
-                stateSymbol(annDocument.map(AnnotationDocument::getState).orElse(NEW).getObject()));
-        state.setEscapeModelStrings(false);
-        state.add(new AttributeAppender("style", "cursor: pointer", ";"));
-        state.add(onEvent("click",
-                _target -> state.send(state, BUBBLE, new AnnotatorColumnCellClickEvent(_target,
-                        row.getSourceDocument(), getDisplayModel().getObject()))));
+        AnnotationDocumentState state = annDocument.map(AnnotationDocument::getState).orElse(NEW)
+                .getObject();
+        Label stateLabel = new Label(aComponentId, stateSymbol(state));
+        stateLabel.setEscapeModelStrings(false);
+        stateLabel.add(new AttributeAppender("style", "cursor: pointer", ";"));
+        stateLabel.add(onEvent("click", //
+                _target -> stateLabel.send(stateLabel, BUBBLE, new AnnotatorColumnCellClickEvent(
+                        _target, row.getSourceDocument(), getDisplayModel().getObject()))));
+        stateLabel.add(new AjaxEventBehavior("contextmenu")
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+            {
+                super.updateAjaxAttributes(aAttributes);
+                aAttributes.setPreventDefault(true);
+            };
+
+            @Override
+            protected void onEvent(AjaxRequestTarget aTarget)
+            {
+                stateLabel.send(stateLabel, BUBBLE,
+                        new AnnotatorColumnCellOpenContextMenuEvent(aTarget, stateLabel,
+                                row.getSourceDocument(), getDisplayModel().getObject(), state));
+            };
+        });
 
         aItem.add(new CssClassNameAppender(isSelected(row) ? "s" : ""));
-        aItem.add(state);
+        aItem.add(stateLabel);
     }
 
     private boolean isSelected(DocumentMatrixRow aRow)
