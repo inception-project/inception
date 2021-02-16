@@ -125,13 +125,15 @@ public class WebAnnoCasUtil
         }
 
         // Check the features (basically limiting to the primitive features)
-        for (Feature f : aFs1.getType().getFeatures()) {
-            if (shouldIgnoreFeatureOnMerge(aFs1, f)) {
+        for (Feature f1 : aFs1.getType().getFeatures()) {
+            if (shouldIgnoreFeatureOnMerge(aFs1, f1)) {
                 continue;
             }
 
-            Object value1 = getFeatureValue(aFs1, f);
-            Object value2 = getFeatureValue(aFs2, f);
+            Object value1 = getFeatureValue(aFs1, f1);
+
+            Feature f2 = aFs2.getType().getFeatureByBaseName(f1.getShortName());
+            Object value2 = f2 != null ? getFeatureValue(aFs2, f2) : getDefaultFeatureValue(f1);
 
             if (!Objects.equals(value1, value2)) {
                 return false;
@@ -177,12 +179,39 @@ public class WebAnnoCasUtil
         case CAS.TYPE_NAME_DOUBLE:
             return aFS.getDoubleValue(aFeature);
         case CAS.TYPE_NAME_LONG:
-            aFS.getLongValue(aFeature);
+            return aFS.getLongValue(aFeature);
         case CAS.TYPE_NAME_SHORT:
-            aFS.getShortValue(aFeature);
+            return aFS.getShortValue(aFeature);
         default:
             return null;
         // return aFS.getFeatureValue(aFeature);
+        }
+    }
+
+    /**
+     * Get the feature value of this {@code Feature} on this annotation
+     */
+    public static Object getDefaultFeatureValue(Feature aFeature)
+    {
+        switch (aFeature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING:
+            return null;
+        case CAS.TYPE_NAME_BOOLEAN:
+            return false;
+        case CAS.TYPE_NAME_FLOAT:
+            return 0.0f;
+        case CAS.TYPE_NAME_INTEGER:
+            return 0;
+        case CAS.TYPE_NAME_BYTE:
+            return (byte) 0;
+        case CAS.TYPE_NAME_DOUBLE:
+            return 0.0d;
+        case CAS.TYPE_NAME_LONG:
+            return 0l;
+        case CAS.TYPE_NAME_SHORT:
+            return (short) 0;
+        default:
+            return null;
         }
     }
 
