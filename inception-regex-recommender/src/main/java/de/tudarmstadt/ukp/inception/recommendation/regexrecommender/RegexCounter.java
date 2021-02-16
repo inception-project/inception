@@ -1,7 +1,10 @@
 package de.tudarmstadt.ukp.inception.recommendation.regexrecommender;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,6 +13,9 @@ import javax.swing.JOptionPane;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.GazeteerEntryImpl;
+import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.GazeteerServiceImpl;
 
 
 /*
@@ -25,12 +31,16 @@ public class RegexCounter
     
     private AnnotationFeature feature;
     private AnnotationLayer layer;
-    
-    public RegexCounter(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    private GazeteerServiceImpl gazeteerService;
+    private Gazeteer gazeteer;
+    public RegexCounter(AnnotationLayer aLayer, AnnotationFeature aFeature, GazeteerServiceImpl aGazeteerService, Gazeteer aGazeteer)
     {
         regexCounts = new HashMap<String, Map<String, Pair<Integer, Integer>>>();
         feature = aFeature;
         layer = aLayer;
+        gazeteerService = aGazeteerService;
+        gazeteer = aGazeteer;
+        System.out.println("NEW REGEXCOUNTER");
     }
     
     public AnnotationFeature getFeature()
@@ -55,12 +65,14 @@ public class RegexCounter
     {
         Pair<Integer, Integer> currentCount = regexCounts.get(aFeatureValue).get(aRegex);
         currentCount.setLeft(currentCount.getLeft() + 1);
+        System.out.println(regexCounts.get(aFeatureValue).get(aRegex));
     }
     
     public void incrementRejected(String aFeatureValue, String aRegex)
     {
         Pair<Integer, Integer> currentCount = regexCounts.get(aFeatureValue).get(aRegex);
         currentCount.setRight(currentCount.getRight() + 1);
+        System.out.println(regexCounts.get(aFeatureValue).get(aRegex));
     }
     
     public Map<String, Pair<Integer, Integer>> get(String aFeatureName)
@@ -86,7 +98,7 @@ public class RegexCounter
     {   
         regexCounts.putIfAbsent(aFeatureValue, new HashMap<String, Pair<Integer, Integer>>());
         Map<String, Pair<Integer, Integer>> regexCountMap = regexCounts.get(aFeatureValue);
-        regexCountMap.putIfAbsent(aRegex, new Pair<Integer, Integer>(aAccCount, aRejCount));       
+        regexCountMap.putIfAbsent(aRegex, new Pair<Integer, Integer>(aAccCount, aRejCount));     
     }
     
     public Set<String> getRegexes(String aFeatureValue) {
@@ -140,7 +152,7 @@ public class RegexCounter
     }
     
     public void remove(String aFeatureValue, String aRegex) {
-        regexCounts.get(aFeatureValue).remove(aRegex);            
+        regexCounts.get(aFeatureValue).remove(aRegex);          
     }
     
     public void removeWithMsgBox(String aFeatureValue, String aRegex, Integer aPos, Integer aNeg) {
@@ -150,6 +162,31 @@ public class RegexCounter
                 ".\n Do you wish to delete this regex?")) {
                 
             remove(aFeatureValue, aRegex);
+        }
+    }
+    
+    /*
+     * Adds all the regexes in the regexCounter
+     * to the automatically created gazeteer.
+     * This way we remember the regexes that were
+     * created in a session and the user won't be 
+     * bothered to enter them the next time she
+     * works on her project.
+     */
+    public void writeToGazeteer() {
+        
+        System.out.println("WRITE");
+        
+        List<GazeteerEntryImpl> entryList = new ArrayList<>();
+        for (String featureValue: this.getKeys()) {
+            for (Map.Entry<String, Pair<Integer, Integer>> regex: this.get(featureValue).entrySet()) {
+                entryList.add(new GazeteerEntryImpl(regex.getKey(), featureValue, regex.getValue().getLeft(), regex.getValue().getRight()));
+            }
+            try {
+                gazeteerService.writeGazeteerFile(gazeteer, entryList);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
     

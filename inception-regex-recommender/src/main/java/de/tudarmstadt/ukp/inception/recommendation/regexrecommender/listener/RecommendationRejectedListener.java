@@ -23,20 +23,41 @@ public class RecommendationRejectedListener
     
     public void addCounter(RegexCounter aRegexCounter) 
     {   
-        counterList.removeIf(counter -> counter.getLayer().equals(aRegexCounter.getLayer())
-                                        && counter.getFeature().equals(aRegexCounter.getFeature()));
+        // TODO: this is hacky.
+        // When a new RegexRecommender Object gets created
+        // we create a RegexCounter for it and add it to the counterList.
+        // Before we add the new RegexCounter, we write the old counter
+        // to its gazeteer and then delete it. 
+        if (counterList.size() > 0) {
+            int i = 0;
+            for (RegexCounter counter: counterList) {
+                if (counter.getLayer().equals(aRegexCounter.getLayer())
+                && counter.getFeature().equals(aRegexCounter.getFeature())) {
+                    counter.writeToGazeteer();
+                    break;
+                }
+                i++;
+            }
+            counterList.remove(i);
+        }
         counterList.add(aRegexCounter);
     }
+    
+    
     
     @Override
     public void onApplicationEvent(RecommendationRejectedEvent aEvent)
     {   
-        String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
-        AnnotationFeature feature = aEvent.getFeature();
-        String featureValue = aEvent.getRecommendedValue().toString();
-        for (RegexCounter counter: counterList) {
-            if (counter.getFeature().equals(feature)) {
-                counter.incrementAccepted(featureValue, regex);
+        if (aEvent.getConfidenceExplanation().isPresent()) {
+            String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
+                    
+                    
+            AnnotationFeature feature = aEvent.getFeature();
+            String featureValue = aEvent.getRecommendedValue().toString();
+            for (RegexCounter counter: counterList) {
+                if (counter.getFeature().equals(feature)) {
+                    counter.incrementRejected(featureValue, regex);
+                }
             }
         }
     }

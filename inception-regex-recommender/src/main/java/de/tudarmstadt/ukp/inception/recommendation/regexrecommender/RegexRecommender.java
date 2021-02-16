@@ -72,28 +72,38 @@ public class RegexRecommender
         
         this.traits = aTraits;
         this.gazeteerService = aGazeteerService;
-        this.regexCounter = new RegexCounter(aRecommender.getLayer(), aRecommender.getFeature());
-        aRecAccListener.addCounter(regexCounter);
-        aRecRejListener.addCounter(regexCounter);
         this.gazeteerName = "New Regexes for Layer: "
-                            + aRecommender.getLayer().getUiName()
-                            + " Feature: "
-                            + aRecommender.getFeature().getUiName();
+                + aRecommender.getLayer().getUiName()
+                + " Feature: "
+                + aRecommender.getFeature().getUiName();
         
         // add a new Gazeteer that collects new Regexes
         // we need something to remember these, otherwise
         // the user will be asked about all of his new Annotations
         // at every startup
+        Gazeteer myGaz = null;
         if (!gazeteerService.existsGazeteer(aRecommender, gazeteerName)) {
-            Gazeteer gaz = new Gazeteer(gazeteerName, aRecommender);
-            gazeteerService.createOrUpdateGazeteer(gaz);
+            myGaz = new Gazeteer(gazeteerName, aRecommender);
+            gazeteerService.createOrUpdateGazeteer(myGaz);
             InputStream is = InputStream.nullInputStream();
             try {
-				gazeteerService.importGazeteerFile(gaz, is);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+                gazeteerService.importGazeteerFile(myGaz, is);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            List<Gazeteer> gazeteers = gazeteerService.listGazeteers(recommender);
+            for (Gazeteer gaz: gazeteers) {
+                if (gaz.getName().equals(gazeteerName)) {
+                    myGaz = gaz;
+                    break;
+                }
+            }
         }
+        
+        this.regexCounter = new RegexCounter(aRecommender.getLayer(), aRecommender.getFeature(), aGazeteerService, myGaz);
+        aRecAccListener.addCounter(regexCounter);
+        aRecRejListener.addCounter(regexCounter);
         
         pretrain();
         
@@ -143,7 +153,8 @@ public class RegexRecommender
      * loads regexes from gazeteers
      */
     private void pretrain()
-    {
+    {   
+        System.out.println("PRETRAIN");
         for (Gazeteer gaz : gazeteerService.listGazeteers(recommender)) {
             try {                  
                 for (GazeteerEntryImpl entry: gazeteerService.readGazeteerFile(gaz)) {
@@ -210,40 +221,10 @@ public class RegexRecommender
                 }
             }
         }
-        writeToGazeteer();
     }
     
     
-    /*
-     * Adds all the regexes in the regexCounter
-     * to the automatically created gazeteer.
-     * This way we remember the regexes that were
-     * created in a session and the user won't be 
-     * bothered to enter them the next time she
-     * works on her project.
-     */
-    private void writeToGazeteer() {
-        
-        List<Gazeteer> gazeteers = gazeteerService.listGazeteers(recommender);
-        Gazeteer myGaz = null;
-        for (Gazeteer gaz: gazeteers) {
-            if (gaz.getName().equals(gazeteerName)) {
-                myGaz = gaz;
-                break;
-            }
-        }
-        List<GazeteerEntryImpl> entryList = new ArrayList<>();
-        for (String featureValue: regexCounter.getKeys()) {
-            for (Map.Entry<String, Pair<Integer, Integer>> regex: regexCounter.get(featureValue).entrySet()) {
-            	entryList.add(new GazeteerEntryImpl(regex.getKey(), featureValue, regex.getValue().getLeft(), regex.getValue().getRight()));
-            }
-            try {
-    			gazeteerService.writeGazeteerFile(myGaz, entryList);
-    		} catch (IOException e) {
-    			e.printStackTrace();
-    		}
-        }
-    }
+    
   
     
     @Override

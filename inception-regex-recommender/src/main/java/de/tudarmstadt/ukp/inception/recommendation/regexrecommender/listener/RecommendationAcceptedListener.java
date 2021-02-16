@@ -28,19 +28,22 @@ public class RecommendationAcceptedListener
         counterList.removeIf(counter -> counter.getLayer().equals(aRegexCounter.getLayer())
                                         && counter.getFeature().equals(aRegexCounter.getFeature()));
         counterList.add(aRegexCounter);
+        
     }
     
     @Override
     public void onApplicationEvent(RecommendationAcceptedEvent aEvent)
     {   
-        String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
-        AnnotationFeature feature = aEvent.getFeature();
-        String featureValue = aEvent.getRecommendedValue().toString();
-        for (RegexCounter counter: counterList) {
-            if (counter.getFeature().equals(feature)) {
-                counter.incrementAccepted(featureValue, regex);
+        if (aEvent.getConfidenceExplanation().isPresent()) {
+
+            String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
+            AnnotationFeature feature = aEvent.getFeature();
+            String featureValue = aEvent.getRecommendedValue().toString();
+            for (RegexCounter counter: counterList) {
+                if (counter.getFeature().equals(feature)) {
+                    counter.incrementAccepted(featureValue, regex);
+                }
             }
         }
-        
     }
 }
