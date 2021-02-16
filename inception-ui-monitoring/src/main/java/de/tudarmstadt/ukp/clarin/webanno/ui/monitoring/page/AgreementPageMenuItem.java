@@ -17,20 +17,23 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 
 @Component
 @Order(300)
 public class AgreementPageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -57,9 +60,18 @@ public class AgreementPageMenuItem
      * Only admins and project managers can see this page
      */
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        return SecurityUtil.monitoringEnabeled(projectService, userRepo.getCurrentUser());
+        // Show agreement menu item only if we have at least 2 annotators or we cannot calculate
+        // pairwise agreement
+        if (projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR).size() < 2) {
+            return false;
+        }
+
+        // Visible if the current user is a curator or project admin
+        User user = userRepo.getCurrentUser();
+        return (projectService.isCurator(aProject, user)
+                || projectService.isManager(aProject, user));
     }
 
     @Override

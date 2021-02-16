@@ -31,6 +31,8 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
@@ -51,7 +53,11 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.savedrequest.SavedRequest;
+import org.wicketstuff.annotation.mount.MountPath;
 
+import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
+
+import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -63,6 +69,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 /**
  * The login page.
  */
+@WicketSignInPage
+@MountPath("/login.html")
 @StatelessComponent
 public class LoginPage
     extends ApplicationPageBase
@@ -131,6 +139,15 @@ public class LoginPage
         super.onConfigure();
 
         redirectIfAlreadyLoggedIn();
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        aResponse.render(CssHeaderItem
+                .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
     }
 
     private void redirectIfAlreadyLoggedIn()

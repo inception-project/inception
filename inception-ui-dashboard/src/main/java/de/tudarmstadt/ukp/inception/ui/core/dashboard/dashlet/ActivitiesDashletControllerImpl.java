@@ -53,15 +53,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-import de.tudarmstadt.ukp.inception.ui.core.menu.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.inception.ui.core.menu.CurationPageMenuItem;
 
 @RestController
-@RequestMapping(VueActivitiesDashletController.BASE_URL)
-public class VueActivitiesDashletControllerImpl
-    implements VueActivitiesDashletController
+@RequestMapping(ActivitiesDashletController.BASE_URL)
+public class ActivitiesDashletControllerImpl
+    implements ActivitiesDashletController
 {
     private final EventRepository eventRepository;
     private final DocumentService documentService;
@@ -86,7 +86,7 @@ public class VueActivitiesDashletControllerImpl
             "DocumentMetadataDeletedEvent");
 
     @Autowired
-    public VueActivitiesDashletControllerImpl(EventRepository aEventRepository,
+    public ActivitiesDashletControllerImpl(EventRepository aEventRepository,
             DocumentService aDocumentService, CurationDocumentService aCurationService,
             ProjectService aProjectRepository, UserDao aUserRepository,
             AnnotationPageMenuItem aAnnotationPageMenuItem,

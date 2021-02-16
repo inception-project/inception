@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +29,9 @@ import java.util.Optional;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.util.lang.WicketObjects;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
@@ -59,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
@@ -73,11 +77,12 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUsersPanel;
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
  */
-@MountPath("/projectsetting.html")
-public class ProjectPage
+@MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings", alt = "/admin/projects")
+public class ProjectSettingsPage
     extends ApplicationPageBase
+    implements ProjectContext
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectSettingsPage.class);
 
     public static final String NEW_PROJECT_ID = "NEW";
 
@@ -99,14 +104,14 @@ public class ProjectPage
 
     private boolean preSelectedModelMode = false;
 
-    public ProjectPage()
+    public ProjectSettingsPage()
     {
         super();
 
         commonInit();
     }
 
-    public ProjectPage(final PageParameters aPageParameters)
+    public ProjectSettingsPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
@@ -117,7 +122,7 @@ public class ProjectPage
         sidebar.setVisible(false);
 
         // Fetch project parameter
-        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT);
         // Check if we are asked to create a new project
         if (projectParameter != null && NEW_PROJECT_ID.equals(projectParameter.toString())) {
             selectedProject.setObject(new Project());
@@ -221,6 +226,12 @@ public class ProjectPage
         });
     }
 
+    @Override
+    public Project getProject()
+    {
+        return selectedProject.getObject();
+    }
+
     private List<ITab> makeTabs()
     {
         List<ITab> tabs = new ArrayList<>();
@@ -295,7 +306,11 @@ public class ProjectPage
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         if (preSelectedModelMode) {
-            setResponsePage(getApplication().getHomePage());
+            Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
+                    "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
+
+            setResponsePage(projectDashboard,
+                    new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
         }
         else {
             selectedProject.setObject(null);
