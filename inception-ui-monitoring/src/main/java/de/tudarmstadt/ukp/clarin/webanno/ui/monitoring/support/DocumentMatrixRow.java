@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -27,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -39,13 +38,15 @@ public class DocumentMatrixRow
     private static final long serialVersionUID = 7351346533262118753L;
 
     private final SourceDocument sourceDocument;
+    private final Set<String> annotators;
     private final Map<String, AnnotationDocument> annotationDocuments;
 
     private boolean selected;
 
-    public DocumentMatrixRow(SourceDocument aSourceDocument)
+    public DocumentMatrixRow(SourceDocument aSourceDocument, Set<String> aAnnotators)
     {
         sourceDocument = aSourceDocument;
+        annotators = aAnnotators;
         annotationDocuments = new TreeMap<>();
     }
 
@@ -76,22 +77,39 @@ public class DocumentMatrixRow
 
     public SourceDocumentState getState()
     {
-        long newCount = annotationDocuments.values().stream()
-                .filter(annDoc -> annDoc.getState() == NEW).count();
+        long newCount = 0;
+        for (String username : annotators) {
+            AnnotationDocument annDoc = annotationDocuments.get(username);
+            if (annDoc == null || annDoc.getState() == NEW) {
+                newCount++;
+            }
+        }
 
-        long finishedCount = annotationDocuments.values().stream()
-                .filter(annDoc -> annDoc.getState() == FINISHED).count();
+        long[] counts = new long[2];
+        annotationDocuments.values().stream() //
+                .filter(annDoc -> annotators.contains(annDoc.getUser())) //
+                .forEach(annDoc -> {
+                    switch (annDoc.getState()) {
+                    case IGNORE:
+                        counts[0]++;
+                        break;
+                    case FINISHED:
+                        counts[1]++;
+                        break;
+                    }
+                });
 
-        long requiredAnnotations = annotationDocuments.values().stream()
-                .filter(annDoc -> annDoc.getState() != IGNORE).count();
+        long ignoredCount = counts[0];
+        long finishedCount = counts[1];
+        long requiredCount = annotators.size() - ignoredCount;
 
         SourceDocumentState state = sourceDocument.getState();
 
         if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)
-                && finishedCount >= requiredAnnotations) {
+                && finishedCount >= requiredCount) {
             state = ANNOTATION_FINISHED;
         }
-        else if (newCount == requiredAnnotations) {
+        else if (newCount == requiredCount) {
             state = SourceDocumentState.NEW;
         }
 

@@ -76,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
@@ -458,21 +457,20 @@ public class MonitoringPage
     @OnEvent
     public void onCuratorColumnCellClickEvent(CuratorColumnCellClickEvent aEvent)
     {
-        SourceDocumentStateTransition transition;
         switch (aEvent.getSourceDocument().getState()) {
         case CURATION_IN_PROGRESS:
-            transition = CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+            documentService.transitionSourceDocumentState(aEvent.getSourceDocument(),
+                    CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
             break;
         case CURATION_FINISHED:
-            transition = CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
+            documentService.transitionSourceDocumentState(aEvent.getSourceDocument(),
+                    CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
             break;
         default:
             info("Curation state can only be changed once curation has started.");
             aEvent.getTarget().addChildren(getPage(), IFeedback.class);
             return;
         }
-
-        documentService.transitionSourceDocumentState(aEvent.getSourceDocument(), transition);
 
         reloadMatrixData();
 
@@ -534,9 +532,13 @@ public class MonitoringPage
 
     private List<DocumentMatrixRow> getMatrixData()
     {
+        Set<String> annotators = projectService
+                .listProjectUsersWithPermissions(getProject(), ANNOTATOR).stream()
+                .map(User::getUsername).collect(Collectors.toSet());
+
         Map<SourceDocument, DocumentMatrixRow> documentMatrixRows = new LinkedHashMap<>();
         for (SourceDocument srcDoc : documentService.listSourceDocuments(getProject())) {
-            documentMatrixRows.put(srcDoc, new DocumentMatrixRow(srcDoc));
+            documentMatrixRows.put(srcDoc, new DocumentMatrixRow(srcDoc, annotators));
         }
 
         for (AnnotationDocument annDoc : documentService.listAnnotationDocuments(getProject())) {

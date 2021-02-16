@@ -36,28 +36,6 @@
           <div class="page-header">
             <h1><wicket:container wicket:id="name"/></h1>
           </div>
-          <!--
-          <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" style="margin-top: 0px; flex: 0.5;">
-            <div class="flex-content card" style="min-height: 220px;">
-              <div class="card-header">
-                Documents finished
-              </div>
-              <div class="scrolling card-body">
-                <div wicket:id="annotator" style="max-width: 300px;"></div>
-              </div>
-            </div>
-            
-            <div class="flex-content card" style="min-height: 220px;">
-              <div class="card-header">
-                <wicket:message key="progress" />
-              </div>
-              <div class="scrolling card-body">
-                <div wicket:id="annotatorPercentage" style="max-width: 300px;"></div>
-              </div>
-            </div>
-          </div>
-          -->
-  
           <div wicket:id="resetDocumentDialog"/>
           <div wicket:id="contextMenu" style="width: 250px;"></div>
           <div class="flex-content card" style="min-height: 220px;">
@@ -67,6 +45,31 @@
                 <i class="fas fa-question-circle"></i>
               </a>
               <div wicket:id="actionContainer" class="actions">
+                <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="btn-group" role="group">
+                    <button class="btn btn-secondary btn-action" type="button">
+                      Legend
+                    </button>
+                    <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+                    <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+                      <li class="dropdown-header">Document states</li>
+                      <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                      <li class="dropdown-item-text"><i class="far fa-play-circle"/> Annotation in progress</li>
+                      <li class="dropdown-item-text"><i class="far fa-check-circle"/> Annotation finished</li>
+                      <li class="dropdown-item-text"><i class="fas fa-clipboard"/> Curation in progress</li>
+                      <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Curation finished</li>
+                      <li class="dropdown-header">Curation states</li>
+                      <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                      <li class="dropdown-item-text"><i class="fas fa-clipboard"/> In progress</li>
+                      <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Finished</li>
+                      <li class="dropdown-header">Annotation states</li>
+                      <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                      <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
+                      <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
+                      <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
+                    </ul>
+                  </span>
+                </span>
                 <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="btn-group" role="group">
                     <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
@@ -132,7 +135,6 @@
               <div class="flex-content scrolling">
                 <div class="fit-child-snug">
                   <table class="table table-sm document-matrix" wicket:id="documentMatrix"></table>
-                  <wicket:fragment wicket:id="actions-column">actions</wicket:fragment>
                   <wicket:fragment wicket:id="select-column">
                     <input wicket:id="selected" type="checkbox"/>
                   </wicket:fragment>
