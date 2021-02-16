@@ -80,6 +80,7 @@ installPrefs inception-remote
 installPrefs inception-security
 installPrefs inception-support-standalone
 installPrefs inception-telemetry
+installPrefs inception-ui-agreement
 installPrefs inception-ui-annotation
 installPrefs inception-ui-curation
 installPrefs inception-ui-monitoring
