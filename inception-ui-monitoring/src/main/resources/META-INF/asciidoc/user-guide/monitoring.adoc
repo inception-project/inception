@@ -19,11 +19,11 @@
 
 NOTE: This functionality is only available to *curators* and *managers*.
 
-This page allows you to monitor the progress of your annotatation project. It also allows you to
+This page allows you to monitor the progress of your annotation project. It also allows you to
 change the status of the annotation and curation documents. This allows you:
 
 * to control which users should annotator which documents,
-* to re-open document marked as finshed so annotators can correct mistakes
+* to re-open document marked as finished so annotators can correct mistakes
 * to close documents to prevent annotators from further working on them
 * to reset documents so annotators can start over from scratch
 
@@ -70,7 +70,7 @@ It is possible to discard all the curation for particular document by right-clic
 | Current state | New state
 
 | Not started yet (new)           
-| *no change possible until curation starts*
+| _(no change possible until curation starts)_
 
 | In progress        
 | Finished
