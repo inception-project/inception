@@ -25,6 +25,8 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageService
@@ -171,4 +173,8 @@ public interface CasStorageService
      *             does not permit writing.
      */
     void upgradeCas(SourceDocument aDocument, String aUser) throws IOException, CasSessionException;
+
+    void forceActionOnCas(SourceDocument aDocument, String aUser, CasStorageServiceLoader aLoader,
+            CasStorageServiceAction aAction, boolean aSave)
+        throws IOException;
 }
