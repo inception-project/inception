@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.DOCUMENT_NAME;
+import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
+
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
@@ -26,7 +29,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 public class DocumentMatrixDataProvider
-    extends SortableDataProvider<DocumentMatrixRow, Void>
+    extends SortableDataProvider<DocumentMatrixRow, DocumentMatrixSortKey>
     implements Serializable
 {
     private static final long serialVersionUID = -3869576909905361406L;
@@ -36,6 +39,8 @@ public class DocumentMatrixDataProvider
     public DocumentMatrixDataProvider(List<DocumentMatrixRow> aData)
     {
         matrixData = aData;
+
+        setSort(DOCUMENT_NAME, ASCENDING);
     }
 
     public void setMatrixData(List<DocumentMatrixRow> aMatrixData)
@@ -51,6 +56,11 @@ public class DocumentMatrixDataProvider
     @Override
     public Iterator<? extends DocumentMatrixRow> iterator(long aFirst, long aCount)
     {
+        matrixData.sort((o1, o2) -> {
+            int dir = getSort().isAscending() ? 1 : -1;
+            return dir * getSort().getProperty().compare(o1, o2);
+        });
+
         return matrixData.subList((int) aFirst, (int) Math.min(matrixData.size(), aFirst + aCount))
                 .iterator();
     }

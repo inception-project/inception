@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.annotatorSortKey;
 import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -41,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCell
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellOpenContextMenuEvent;
 
 public class AnnotatorColumn
-    extends LambdaColumn<DocumentMatrixRow, Void>
+    extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
@@ -49,7 +50,8 @@ public class AnnotatorColumn
 
     public AnnotatorColumn(String aUsername, IModel<Set<String>> aSelectedUsers)
     {
-        super(Model.of(aUsername), row -> row.getAnnotationDocument(aUsername));
+        super(Model.of(aUsername), annotatorSortKey(aUsername),
+                row -> row.getAnnotationDocument(aUsername));
         selectedUsers = aSelectedUsers;
     }
 

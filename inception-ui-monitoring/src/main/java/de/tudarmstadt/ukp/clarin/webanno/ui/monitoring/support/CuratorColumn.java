@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.CURATION_STATE;
 import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -38,13 +39,13 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellCl
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellOpenContextMenuEvent;
 
 public class CuratorColumn
-    extends LambdaColumn<DocumentMatrixRow, Void>
+    extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
     public CuratorColumn()
     {
-        super(Model.of("Curation"), row -> row.getSourceDocument());
+        super(Model.of("Curation"), CURATION_STATE, row -> row.getSourceDocument());
     }
 
     @Override
@@ -90,16 +91,12 @@ public class CuratorColumn
     private String stateSymbol(SourceDocumentState aDocState)
     {
         switch (aDocState) {
-        case NEW:
-        case ANNOTATION_IN_PROGRESS:
-        case ANNOTATION_FINISHED:
-            return "<i class=\"far fa-circle\"></i>";
         case CURATION_IN_PROGRESS:
             return "<i class=\"fas fa-clipboard\"></i>";
         case CURATION_FINISHED:
             return "<i class=\"fas fa-clipboard-check\"></i>";
+        default:
+            return "<i class=\"far fa-circle\"></i>";
         }
-
-        return "";
     }
 }

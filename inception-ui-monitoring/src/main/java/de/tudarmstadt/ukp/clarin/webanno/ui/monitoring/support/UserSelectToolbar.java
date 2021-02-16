@@ -43,8 +43,7 @@ public class UserSelectToolbar
 {
     private static final long serialVersionUID = 8850551593688910044L;
 
-    public UserSelectToolbar(IModel<Set<String>> aSelection,
-            DataTable<DocumentMatrixRow, Void> aTable)
+    public UserSelectToolbar(IModel<Set<String>> aSelection, DataTable<DocumentMatrixRow, ?> aTable)
     {
         super(aSelection, aTable);
 
@@ -68,7 +67,7 @@ public class UserSelectToolbar
             @Override
             protected void populateItem(Item<IColumn<DocumentMatrixRow, Void>> item)
             {
-                final IColumn<DocumentMatrixRow, Void> column = item.getModelObject();
+                final IColumn<DocumentMatrixRow, ?> column = item.getModelObject();
 
                 // if (column instanceof IStyledColumn) {
                 // CssAttributeBehavior cssAttributeBehavior = new DataTable.CssAttributeBehavior()

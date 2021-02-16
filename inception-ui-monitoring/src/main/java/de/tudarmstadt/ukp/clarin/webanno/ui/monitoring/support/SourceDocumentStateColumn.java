@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.DOCUMENT_STATE;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -29,13 +30,13 @@ import org.apache.wicket.model.Model;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 public class SourceDocumentStateColumn
-    extends LambdaColumn<DocumentMatrixRow, Void>
+    extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = -5675638452449649901L;
 
     public SourceDocumentStateColumn()
     {
-        super(Model.of(""), row -> row.getState());
+        super(Model.of("State"), DOCUMENT_STATE, row -> row.getState());
     }
 
     @Override

@@ -95,6 +95,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.CuratorColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixRow;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentNameColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentSelectColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentStateColumn;
@@ -113,7 +114,7 @@ public class MonitoringPage
 
     // private SvgChart annotatorsProgressImage;
     // private SvgChart annotatorsProgressPercentageImage;
-    private DataTable<DocumentMatrixRow, Void> documentMatrix;
+    private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
     private LambdaAjaxLink toggleBulkChange;
     private WebMarkupContainer actionContainer;
     private WebMarkupContainer bulkActionDropdown;
@@ -177,12 +178,17 @@ public class MonitoringPage
         add(contextMenu = new ContextMenu("contextMenu"));
     }
 
-    private DataTable<DocumentMatrixRow, Void> createDocumentMatrix(String aComponentId,
-            boolean aBulkChangeMode)
+    private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> createDocumentMatrix(
+            String aComponentId, boolean aBulkChangeMode)
     {
         DocumentMatrixDataProvider dataProvider = new DocumentMatrixDataProvider(getMatrixData());
 
-        List<IColumn<DocumentMatrixRow, Void>> columns = new ArrayList<>();
+        if (documentMatrix != null) {
+            dataProvider.setSort(
+                    ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getSort());
+        }
+
+        List<IColumn<DocumentMatrixRow, DocumentMatrixSortKey>> columns = new ArrayList<>();
         SourceDocumentSelectColumn sourceDocumentSelectColumn = new SourceDocumentSelectColumn();
         sourceDocumentSelectColumn.setVisible(bulkChangeMode);
         columns.add(sourceDocumentSelectColumn);
@@ -196,8 +202,8 @@ public class MonitoringPage
             columns.add(new AnnotatorColumn(annotator.getUsername(), selectedUsers));
         }
 
-        DataTable<DocumentMatrixRow, Void> table = new DefaultDataTable<>(aComponentId, columns,
-                dataProvider, 50);
+        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> table = new DefaultDataTable<>(
+                aComponentId, columns, dataProvider, 50);
         table.setOutputMarkupId(true);
 
         if (aBulkChangeMode) {
@@ -212,8 +218,8 @@ public class MonitoringPage
         bulkChangeMode = !bulkChangeMode;
         selectedUsers.getObject().clear();
 
-        DataTable<DocumentMatrixRow, Void> newMatrix = createDocumentMatrix("documentMatrix",
-                bulkChangeMode);
+        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> newMatrix = createDocumentMatrix(
+                "documentMatrix", bulkChangeMode);
         documentMatrix.replaceWith(newMatrix);
         documentMatrix = newMatrix;
 

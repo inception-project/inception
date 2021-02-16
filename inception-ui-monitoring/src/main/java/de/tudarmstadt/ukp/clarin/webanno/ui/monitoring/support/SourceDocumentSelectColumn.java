@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.DocumentRowSelectionChangedEvent;
 
 public class SourceDocumentSelectColumn
-    extends LambdaColumn<DocumentMatrixRow, Void>
+    extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 

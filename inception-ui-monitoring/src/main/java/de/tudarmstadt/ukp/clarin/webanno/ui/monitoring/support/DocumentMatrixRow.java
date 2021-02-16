@@ -98,6 +98,18 @@ public class DocumentMatrixRow
         return state;
     }
 
+    public SourceDocumentState getCurationState()
+    {
+        switch (sourceDocument.getState()) {
+        case CURATION_IN_PROGRESS:
+            return CURATION_IN_PROGRESS;
+        case CURATION_FINISHED:
+            return CURATION_FINISHED;
+        default:
+            return SourceDocumentState.NEW;
+        }
+    }
+
     @Override
     public boolean equals(final Object other)
     {
