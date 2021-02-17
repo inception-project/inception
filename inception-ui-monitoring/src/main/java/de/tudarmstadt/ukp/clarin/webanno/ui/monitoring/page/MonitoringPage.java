@@ -35,6 +35,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransit
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -140,9 +141,6 @@ public class MonitoringPage
 
         add(new Label("name", project.getName()));
 
-        // add(annotatorsProgressImage = createAnnotatorProgress());
-        // add(annotatorsProgressPercentageImage = createAnnotatorProgressPercentage());
-
         add(documentMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode));
 
         actionContainer = new WebMarkupContainer("actionContainer");
@@ -244,6 +242,9 @@ public class MonitoringPage
                 documentService.resetAnnotationCas(document.getDocument(), user);
             }
 
+            success(format("The %s document(s) have been set reset.", selectedDocuments.size()));
+            _target.addChildren(getPage(), IFeedback.class);
+
             reloadMatrixData();
             _target.add(documentMatrix);
         });
@@ -263,6 +264,11 @@ public class MonitoringPage
         resetDocumentDialog.setConfirmAction(_target -> {
             User user = userRepository.get(aUser);
             documentService.resetAnnotationCas(aDocument, user);
+
+            success(format("The annotations of document [%s] for user [%s] have been set reset.",
+                    aDocument.getName(), aUser));
+            _target.addChildren(getPage(), IFeedback.class);
+
             reloadMatrixData();
             _target.add(documentMatrix);
         });
@@ -281,6 +287,11 @@ public class MonitoringPage
         resetDocumentDialog.setConfirmAction(_target -> {
             curationService.deleteCurationCas(aDocument);
             documentService.setSourceDocumentState(aDocument, ANNOTATION_IN_PROGRESS);
+
+            success(format("The curation of document [%s] has been set reset.",
+                    aDocument.getName()));
+            _target.addChildren(getPage(), IFeedback.class);
+
             reloadMatrixData();
             _target.add(documentMatrix);
         });
@@ -299,6 +310,12 @@ public class MonitoringPage
                 .filter(annDoc -> annDoc.getState() == FINISHED).collect(toList());
         documentService.bulkSetAnnotationDocumentState(finishedDocuments, IN_PROGRESS);
 
+        success(format("The state of %d document(s) has been set to [%s]", lockedDocuments.size(),
+                NEW));
+        success(format("The state of %d document(s) has been set to [%s]", finishedDocuments.size(),
+                IN_PROGRESS));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         reloadMatrixData();
         aTarget.add(documentMatrix);
     }
@@ -315,6 +332,12 @@ public class MonitoringPage
                 .filter(annDoc -> annDoc.getState() == IN_PROGRESS).collect(toList());
         documentService.bulkSetAnnotationDocumentState(inProgressDocuments, FINISHED);
 
+        success(format("The state of %d document(s) has been set to [%s]", newDocuments.size(),
+                IGNORE));
+        success(format("The state of %d document(s) has been set to [%s]",
+                inProgressDocuments.size(), FINISHED));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         reloadMatrixData();
         aTarget.add(documentMatrix);
     }
@@ -326,16 +349,24 @@ public class MonitoringPage
 
         documentService.bulkSetAnnotationDocumentState(newDocuments, IGNORE);
 
+        success(format("The state of %d document(s) has been set to [%s]", newDocuments.size(),
+                IGNORE));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         reloadMatrixData();
         aTarget.add(documentMatrix);
     }
 
     private void actionBulkUnlock(AjaxRequestTarget aTarget)
     {
-        List<AnnotationDocument> newDocuments = selectedAnnotationDocuments().stream()
+        List<AnnotationDocument> lockedDocuments = selectedAnnotationDocuments().stream()
                 .filter(annDoc -> annDoc.getState() == IGNORE).collect(toList());
 
-        documentService.bulkSetAnnotationDocumentState(newDocuments, NEW);
+        documentService.bulkSetAnnotationDocumentState(lockedDocuments, NEW);
+
+        success(format("The state of %d document(s) has been set to [%s]", lockedDocuments.size(),
+                NEW));
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
         aTarget.add(documentMatrix);
@@ -348,16 +379,24 @@ public class MonitoringPage
 
         documentService.bulkSetAnnotationDocumentState(inProgressDocuments, FINISHED);
 
+        success(format("The state of %d document(s) has been set to [%s]",
+                inProgressDocuments.size(), FINISHED));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         reloadMatrixData();
         aTarget.add(documentMatrix);
     }
 
     private void actionBulkResume(AjaxRequestTarget aTarget)
     {
-        List<AnnotationDocument> inProgressDocuments = selectedAnnotationDocuments().stream()
+        List<AnnotationDocument> finishedDocuments = selectedAnnotationDocuments().stream()
                 .filter(annDoc -> annDoc.getState() == FINISHED).collect(toList());
 
-        documentService.bulkSetAnnotationDocumentState(inProgressDocuments, IN_PROGRESS);
+        documentService.bulkSetAnnotationDocumentState(finishedDocuments, IN_PROGRESS);
+
+        success(format("The state of %d document(s) has been set to [%s]", finishedDocuments.size(),
+                IN_PROGRESS));
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
         aTarget.add(documentMatrix);
@@ -449,8 +488,12 @@ public class MonitoringPage
 
         documentService.transitionAnnotationDocumentState(annotationDocument, transition);
 
-        reloadMatrixData();
+        success(format("The state of document [%s] for user [%s] has been set to [%s]",
+                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                annotationDocument.getState()));
+        aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
+        reloadMatrixData();
         aEvent.getTarget().add(documentMatrix);
     }
 
@@ -472,8 +515,11 @@ public class MonitoringPage
             return;
         }
 
-        reloadMatrixData();
+        success(format("The curation state of document [%s] has been set to [%s]",
+                aEvent.getSourceDocument().getName(), aEvent.getSourceDocument().getState()));
+        aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
+        reloadMatrixData();
         aEvent.getTarget().add(documentMatrix);
     }
 
