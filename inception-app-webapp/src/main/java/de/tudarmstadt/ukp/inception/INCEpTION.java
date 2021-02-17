@@ -31,6 +31,8 @@ import javax.validation.Validator;
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
@@ -40,6 +42,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServer;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -48,6 +52,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -63,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
+import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
 
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.
@@ -95,6 +102,8 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
 public class INCEpTION
     extends SpringBootServletInitializer
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private static final String PROTOCOL = "AJP/1.3";
 
     @Value("${server.ajp.port:-1}")
@@ -109,18 +118,7 @@ public class INCEpTION
     @Value("${server.ajp.address:127.0.0.1}")
     private String ajpAddress;
 
-    // @Bean
-    // public ErrorPageRegistrar errorPageRegistrar()
-    // {
-    // return new ErrorPageRegistrar()
-    // {
-    // @Override
-    // public void registerErrorPages(final ErrorPageRegistry registry)
-    // {
-    // registry.addErrorPages(new ErrorPage("/whoops"));
-    // }
-    // };
-    // }
+    private StartupNoticeValve startupNoticeValve;
 
     @Bean
     @Primary
@@ -183,7 +181,21 @@ public class INCEpTION
                 standardRoot.setCacheMaxSize(maxCacheSize);
                 context.setResources(standardRoot);
             }
+
+            @Override
+            public WebServer getWebServer(ServletContextInitializer... initializers)
+            {
+                final WebServer container = super.getWebServer(initializers);
+
+                // Start server early so we can display the boot-up notice
+                container.start();
+
+                return container;
+            }
         };
+
+        startupNoticeValve = new StartupNoticeValve();
+        factory.addContextValves(startupNoticeValve);
 
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
@@ -193,7 +205,17 @@ public class INCEpTION
             ajpConnector.setProperty("address", ajpAddress);
             factory.addAdditionalTomcatConnectors(ajpConnector);
         }
+
         return factory;
+    }
+
+    @EventListener
+    public void onApplicationEvent(ContextRefreshedEvent event)
+    {
+        if (startupNoticeValve != null && startupNoticeValve.getContainer() != null) {
+            startupNoticeValve.getContainer().getPipeline().removeValve(startupNoticeValve);
+            startupNoticeValve = null;
+        }
     }
 
     @Override
@@ -204,6 +226,7 @@ public class INCEpTION
         // add this property in the case of .war deployment
         builder.properties(REGISTER_SERVER_ENDPOINT_ENABLED + "=false");
         init(builder);
+
         return builder;
     }
 
