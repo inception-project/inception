@@ -356,8 +356,9 @@ public class DocumentServiceImpl
                 .getSingleResult();
     }
 
+    @Override
     @Transactional
-    private SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+    public SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState)
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -752,9 +753,8 @@ public class DocumentServiceImpl
         writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
     }
 
-    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
-    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
+    @Transactional
     public void resetAnnotationCas(SourceDocument aDocument, User aUser)
         throws UIMAException, IOException
     {
@@ -771,6 +771,9 @@ public class DocumentServiceImpl
         }
 
         writeAnnotationCas(cas, aDocument, aUser, false);
+
+        setAnnotationDocumentState(adoc, AnnotationDocumentState.NEW);
+
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
     }
 
@@ -785,37 +788,52 @@ public class DocumentServiceImpl
     @Transactional
     public boolean isAnnotationFinished(SourceDocument aDocument, String aUsername)
     {
-        String query = String.join("\n", "SELECT COUNT(*) FROM AnnotationDocument",
-                "WHERE document = :document", "  AND user     = :user", "  AND state    = :state");
+        String query = String.join("\n", //
+                "SELECT COUNT(*) FROM AnnotationDocument", //
+                "WHERE document = :document", //
+                "  AND user     = :user", //
+                "  AND state    = :state");
 
         return entityManager.createQuery(query, Long.class) //
                 .setParameter("document", aDocument) //
                 .setParameter("user", aUsername) //
-                .setParameter("state", AnnotationDocumentState.FINISHED).getSingleResult() > 0;
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getSingleResult() > 0;
     }
 
     @Override
     public List<AnnotationDocument> listAnnotationDocuments(Project aProject)
     {
-        String query = String.join("\n", "SELECT doc", " FROM AnnotationDocument AS doc",
-                " JOIN ProjectPermission AS perm",
-                "   ON doc.project = perm.project AND doc.user = perm.user", " JOIN User as u",
-                "   ON doc.user = u.username", "WHERE doc.project = :project",
+        String query = String.join("\n", //
+                "SELECT doc", //
+                " FROM AnnotationDocument AS doc", //
+                " JOIN ProjectPermission AS perm", //
+                "   ON doc.project = perm.project AND doc.user = perm.user", //
+                " JOIN User as u", //
+                "   ON doc.user = u.username", //
+                "WHERE doc.project = :project", //
                 "  AND perm.level = :level");
 
         return entityManager.createQuery(query, AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("level", ANNOTATOR).getResultList();
+                .setParameter("project", aProject) //
+                .setParameter("level", ANNOTATOR) //
+                .getResultList();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aDocument)
     {
-        String query = String.join("\n", "SELECT doc", " FROM AnnotationDocument AS doc",
-                " JOIN ProjectPermission AS perm",
-                "   ON doc.project = perm.project AND doc.user = perm.user", " JOIN User as u",
-                "   ON doc.user = u.username", "WHERE doc.project = :project",
-                "  AND doc.document = :document", "  AND perm.level = :level");
+        String query = String.join("\n", //
+                "SELECT doc", //
+                " FROM AnnotationDocument AS doc", //
+                " JOIN ProjectPermission AS perm", //
+                "   ON doc.project = perm.project AND doc.user = perm.user", //
+                " JOIN User as u", //
+                "   ON doc.user = u.username", //
+                "WHERE doc.project = :project", //
+                "  AND doc.document = :document", //
+                "  AND perm.level = :level");
 
         return entityManager.createQuery(query, AnnotationDocument.class) //
                 .setParameter("project", aDocument.getProject()) //
@@ -974,6 +992,16 @@ public class DocumentServiceImpl
         }
 
         return oldState;
+    }
+
+    @Override
+    @Transactional
+    public void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
+            AnnotationDocumentState aState)
+    {
+        for (AnnotationDocument doc : aDocuments) {
+            setAnnotationDocumentState(doc, aState);
+        }
     }
 
     @Override
