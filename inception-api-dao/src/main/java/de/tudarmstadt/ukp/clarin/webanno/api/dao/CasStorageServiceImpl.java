@@ -80,6 +80,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasKey;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -911,14 +913,34 @@ public class CasStorageServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notBlank(aUser, "User must be specified");
 
+        forceActionOnCas(aDocument, aUser, //
+                (doc, user) -> readUnmanagedCas(doc, user),
+                (cas) -> schemaService.upgradeCas(cas, aDocument, aUser), //
+                true);
+    }
+
+    @Override
+    public void forceActionOnCas(SourceDocument aDocument, String aUser,
+            CasStorageServiceLoader aLoader, CasStorageServiceAction aAction, boolean aSave)
+        throws IOException
+    {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // upgrade it, then add this info to a mini-session to ensure that write-access is known
-        try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
-            CAS cas = readUnmanagedCas(aDocument, aUser);
-            try (CasStorageSession session = CasStorageSession.openNested(true)) {
-                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, cas);
-                schemaService.upgradeCas(cas, aDocument, aUser);
-                realWriteCas(aDocument, aUser, cas);
+        try (CasStorageSession session = CasStorageSession.openNested(true)) {
+            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
+
+                CAS cas = aLoader.load(aDocument, aUser);
+                access.setCas(cas);
+
+                aAction.apply(cas);
+
+                if (aSave) {
+                    realWriteCas(aDocument, aUser, cas);
+                }
+            }
+            finally {
+                session.remove(aDocument.getId(), aUser);
             }
         }
         catch (IOException e) {
@@ -1003,7 +1025,9 @@ public class CasStorageServiceImpl
         {
             if (holder != null) {
                 // Unset the release hook for the old CAS
-                ((CASImpl) getRealCas(getCas())).setOwner(null);
+                if (holder.isCasSet()) {
+                    ((CASImpl) getRealCas(getCas())).setOwner(null);
+                }
 
                 // Set the release hook for the new CAS
                 ((CASImpl) getRealCas(aCas))
