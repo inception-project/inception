@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.controller.AnnotationEditorController;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +48,7 @@ public class BratLineOrientedAnnotationEditorFactory
     @Override
     public int getOrder()
     {
-        return 1;
+        return 2;
     }
 
     @Override

@@ -1949,6 +1949,9 @@
     <module>inception-imls-dl4j</module>
     <!-- Packaging -->
     <module>inception-docker</module>
+      <module>inception-api-editor</module>
+      <module>inception-api-editor</module>
+      <module>inception-api-editor</module>
   </modules>
 
   <build>

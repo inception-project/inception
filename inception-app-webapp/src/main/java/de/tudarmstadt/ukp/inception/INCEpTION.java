@@ -61,8 +61,8 @@ import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
-import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
-import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
+import de.tudarmstadt.ukp.inception.config.InceptionApplicationContextInitializer;
+import de.tudarmstadt.ukp.inception.config.InceptionBanner;
 
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.

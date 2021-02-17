@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.controller.AnnotationEditorController;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
@@ -61,8 +62,9 @@ public abstract class AnnotationEditorBase
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
-    private final AnnotationActionHandler actionHandler;
-    private final CasProvider casProvider;
+    private AnnotationActionHandler actionHandler;
+    private CasProvider casProvider;
+    private AnnotationEditorController controller;
     private boolean enableHighlight = true;
 
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
@@ -81,6 +83,16 @@ public abstract class AnnotationEditorBase
 
         // The annotator is invisible when no document has been selected. Make sure that we can
         // make it visible via AJAX once the document has been selected.
+        setOutputMarkupPlaceholderTag(true);
+    }
+
+    public AnnotationEditorBase(final String aId, final AnnotationEditorController aController)
+    {
+        super(aId);
+
+        controller = aController;
+
+        setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
     }
 

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.controller.AnnotationEditorController;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -34,6 +35,11 @@ public interface AnnotationEditorFactory
 
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
+
+    default AnnotationEditorBase create(String id, AnnotationEditorController aController)
+    {
+        return null;
+    }
 
     /**
      * Configure the state to be compatible with the editor produced by this factory. E.g. set the

@@ -56,12 +56,15 @@ public abstract class ProjectPageBase
         Project project = getProjectModel().getObject();
 
         // Check access to project
+        /*
         if (!projectService.hasRole(aUser, project, aRoles)) {
             getSession().error("You require any of the the [" + aRoles + "] roles to access the ["
                     + getClass().getSimpleName() + "] project [" + project.getName() + "]");
 
             backToProjectPage();
         }
+
+         */
     }
 
     public void backToProjectPage()

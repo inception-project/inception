@@ -80,10 +80,13 @@ public class ProjectDashboardPage
         }
 
         // if not either a curator or annotator, display warning message
+        /*
         if (!annotationEnabeled(projectService, user)
                 && !curationEnabeled(projectService, user)) {
             info("You are not member of any projects to annotate or curate");
         }
+
+         */
 
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         add(menu);
