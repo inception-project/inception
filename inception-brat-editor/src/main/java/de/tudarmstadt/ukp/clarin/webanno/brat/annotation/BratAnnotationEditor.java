@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderT
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -34,7 +36,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -73,10 +74,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -138,6 +142,7 @@ public class BratAnnotationEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
@@ -175,10 +180,6 @@ public class BratAnnotationEditor
                 }
 
                 long timerStart = System.currentTimeMillis();
-
-                // We always refresh the feedback panel - only doing this in the case were actually
-                // something worth reporting occurs is too much of a hassel...
-                aTarget.addChildren(getPage(), IFeedback.class);
 
                 final IRequestParameters request = getRequest().getPostParameters();
 
@@ -221,8 +222,7 @@ public class BratAnnotationEditor
                         cas = getCasProvider().get();
                     }
                     catch (Exception e) {
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                        handleError("Unable to load data: " + getRootCauseMessage(e), e);
                         return;
                     }
                 }
@@ -281,18 +281,8 @@ public class BratAnnotationEditor
                         }
                     }
                 }
-                catch (AnnotationException e) {
-                    // These are common exceptions happening as part of the user interaction. We do
-                    // not really need to log their stack trace to the log.
-                    error("Error: " + e.getMessage());
-                    // If debug is enabled, we'll also write the error to the log just in case.
-                    if (LOG.isDebugEnabled()) {
-                        LOG.error("Error: {}", e.getMessage(), e);
-                    }
-                }
                 catch (Exception e) {
-                    error("Error: " + e.getMessage());
-                    LOG.error("Error: {}", e.getMessage(), e);
+                    handleError("Error: " + getRootCauseMessage(e), e);
                 }
 
                 // Serialize updated document to JSON
@@ -341,7 +331,7 @@ public class BratAnnotationEditor
 
         StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
 
-        if (layerParam.isEmpty() || keyParam.isEmpty() || databaseParam.isEmpty()) {
+        if (layerParam.isEmpty() || databaseParam.isEmpty()) {
             return response;
         }
 
@@ -352,10 +342,15 @@ public class BratAnnotationEditor
                 .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
                         + "] does not exist in project [" + state.getProject().getName() + "]("
                         + state.getProject().getId() + ")"));
-        AnnotationFeature feature = annotationService.getFeature(database, layer);
 
         // Check where the query needs to be routed: to an editor extension or to a feature support
         if (paramId.isSynthetic()) {
+            if (keyParam.isEmpty()) {
+                return response;
+            }
+
+            AnnotationFeature feature = annotationService.getFeature(database, layer);
+
             String extensionId = paramId.getExtensionId();
             response.setResults(extensionRegistry.getExtension(extensionId)
                     .renderLazyDetails(state.getDocument(), state.getUser(), paramId, feature,
@@ -366,14 +361,27 @@ public class BratAnnotationEditor
         }
 
         try {
-            response.setResults(featureSupportRegistry.findExtension(feature)
-                    .renderLazyDetails(feature, keyParam.toString()).stream()
+            List<VLazyDetailResult> details;
+
+            // Is it a layer-level lazy detail?
+            if (Renderer.QUERY_LAYER_LEVEL_DETAILS.equals(database)) {
+                details = layerSupportRegistry.getLayerSupport(layer)
+                        .createRenderer(layer, () -> annotationService.listAnnotationFeature(layer))
+                        .renderLazyDetails(getCasProvider().get(), paramId);
+            }
+            // Is it a feature-level lazy detail?
+            else {
+                AnnotationFeature feature = annotationService.getFeature(database, layer);
+                details = featureSupportRegistry.findExtension(feature).renderLazyDetails(feature,
+                        keyParam.toString());
+            }
+
+            response.setResults(details.stream()
                     .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
-                    .collect(Collectors.toList()));
+                    .collect(toList()));
         }
         catch (Exception e) {
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            handleError("Unable to load data", e);
         }
 
         return response;
@@ -500,9 +508,7 @@ public class BratAnnotationEditor
             cas = getCasProvider().get();
         }
         catch (Exception e) {
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), IFeedback.class);
+            handleError("Unable to load data", e);
             return;
         }
 
@@ -881,9 +887,7 @@ public class BratAnnotationEditor
             });
         }
         catch (IOException e) {
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), IFeedback.class);
+            handleError("Unable to load data", e);
         }
     }
 
@@ -909,8 +913,29 @@ public class BratAnnotationEditor
             }
         }
         catch (IOException e) {
-            error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            handleError("Unable to produce JSON response", e);
         }
         return json;
+    }
+
+    private void handleError(String aMessage, Exception e)
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        requestCycle.find(AjaxRequestTarget.class)
+                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+
+        if (e instanceof AnnotationException) {
+            // These are common exceptions happening as part of the user interaction. We do
+            // not really need to log their stack trace to the log.
+            error(aMessage + ": " + e.getMessage());
+            // If debug is enabled, we'll also write the error to the log just in case.
+            if (LOG.isDebugEnabled()) {
+                LOG.error("{}: {}", aMessage, e.getMessage(), e);
+            }
+            return;
+        }
+
+        LOG.error("{}", aMessage, e);
+        error(aMessage);
     }
 }

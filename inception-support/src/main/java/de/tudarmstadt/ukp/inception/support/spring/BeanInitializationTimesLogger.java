@@ -33,10 +33,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+@ConditionalOnProperty(prefix = "profiling", name = "bean-initialization-timing", //
+        havingValue = "true", matchIfMissing = false)
 @Component
 public class BeanInitializationTimesLogger
     implements BeanPostProcessor
@@ -51,7 +54,9 @@ public class BeanInitializationTimesLogger
     public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
         throws BeansException
     {
-        starts.put(aBean, currentTimeMillis());
+        if (starts != null) {
+            starts.put(aBean, currentTimeMillis());
+        }
 
         return BeanPostProcessor.super.postProcessBeforeInitialization(aBean, aBeanName);
     }
@@ -59,17 +64,19 @@ public class BeanInitializationTimesLogger
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException
     {
-        Long start = starts.get(bean);
+        if (starts != null) {
+            Long start = starts.get(bean);
 
-        int id = identityHashCode(bean);
+            int id = identityHashCode(bean);
 
-        if (start != null) {
-            long now = currentTimeMillis();
-            log.trace("Initialized bean: [{}] (id: {}) in {}ms", beanName, id, now - start);
-            timings.add(Pair.of(beanName + " (id: " + id + ")", now - start));
-        }
-        else {
-            log.trace("Initialized bean: [{}]({}) (unknown start) ", beanName, id);
+            if (start != null) {
+                long now = currentTimeMillis();
+                log.trace("Initialized bean: [{}] (id: {}) in {}ms", beanName, id, now - start);
+                timings.add(Pair.of(beanName + " (id: " + id + ")", now - start));
+            }
+            else {
+                log.trace("Initialized bean: [{}]({}) (unknown start) ", beanName, id);
+            }
         }
 
         return bean;
@@ -78,7 +85,7 @@ public class BeanInitializationTimesLogger
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event)
     {
-        if (log.isDebugEnabled()) {
+        if (starts != null && timings != null && log.isDebugEnabled()) {
             Comparator<Pair<String, Long>> cmp = Comparator.comparingLong(Pair::getValue);
             cmp = cmp.reversed();
 
@@ -93,7 +100,10 @@ public class BeanInitializationTimesLogger
             }
         }
 
-        starts.clear();
-        timings.clear();
+        // Once the application has started up, we do not want to track the times anymore. The
+        // application may add beans or perform dependency injection on beans while its is running.
+        // We must not track these / keep references to these because that would be a memory leak.
+        starts = null;
+        timings = null;
     }
 }

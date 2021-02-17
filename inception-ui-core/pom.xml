@@ -89,9 +89,6 @@
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
-    
-
-
 
     <!-- Wicket dependencies -->
 
@@ -137,6 +134,10 @@
     </dependency>
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+      <artifactId>wicket-spring-boot-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
       <artifactId>wicket-spring-boot-starter</artifactId>
       <exclusions>
         <exclusion>
@@ -169,7 +170,37 @@
       <groupId>io.bit3</groupId>
       <artifactId>jsass</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>hover</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>javax.persistence</groupId>
+      <artifactId>javax.persistence-api</artifactId>
+    </dependency>
   </dependencies>
+  
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <!--
+                - Maven doesn't detect the the webjar dependencies because there is
+                - no actual code dependency
+              -->
+              <usedDependency>org.webjars.bower:hover</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
   
   <profiles>
     <profile>

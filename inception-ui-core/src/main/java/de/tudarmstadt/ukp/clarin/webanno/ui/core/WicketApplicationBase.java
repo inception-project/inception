@@ -33,12 +33,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
-import org.apache.wicket.authorization.strategies.page.SimplePageAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
-import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
-import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.request.IRequestMapper;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
@@ -52,10 +48,7 @@ import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.apache.wicket.settings.ExceptionSettings;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.wicketstuff.annotation.scan.AnnotatedMountList;
-import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
@@ -79,8 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 import io.bit3.jsass.Options;
 
@@ -93,31 +84,12 @@ public abstract class WicketApplicationBase
 {
     protected boolean isInitialized = false;
 
-    private @Autowired MenuItemRegistry menuItemRegistry;
-
     @Override
     protected void init()
     {
         super.init();
 
         CompoundAuthorizationStrategy authorizationStrategy = new CompoundAuthorizationStrategy();
-        // Custom authorization strategy which prevents access to pages if the corresponding
-        // menu item does not permit it.
-        authorizationStrategy.add(new SimplePageAuthorizationStrategy(Page.class, getHomePage())
-        {
-            @Override
-            protected <T extends Page> boolean isPageAuthorized(Class<T> aPageClass)
-            {
-                return menuItemRegistry.getMenuItem(aPageClass)
-                        .map(item -> item.isDirectAccessAllowed() || item.applies()).orElse(true);
-            }
-
-            @Override
-            protected boolean isAuthorized()
-            {
-                throw new IllegalStateException("This should not be called");
-            }
-        });
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
@@ -142,8 +114,6 @@ public abstract class WicketApplicationBase
         // getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
 
         initWebFrameworks();
-
-        initDefaultPageMounts();
 
         initLogoReference();
 
@@ -306,21 +276,6 @@ public abstract class WicketApplicationBase
         return "/de/tudarmstadt/ukp/clarin/webanno/ui/core/logo/logo.png";
     }
 
-    protected void initDefaultPageMounts()
-    {
-        mountPage("/login.html", getSignInPageClass());
-        mountPage("/welcome.html", getHomePage());
-
-        // Mount the other pages via @MountPath annotation on the page classes
-        AnnotatedMountList mounts = new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp");
-        for (IRequestMapper mapper : mounts) {
-            if (mapper instanceof HomePageMapper) {
-                System.out.println(mapper);
-            }
-        }
-        mounts.mount(this);
-    }
-
     protected void initJQueryResourceReference()
     {
         // See:
@@ -367,12 +322,6 @@ public abstract class WicketApplicationBase
                 }
             }
         });
-    }
-
-    @Override
-    public Class<? extends WebPage> getSignInPageClass()
-    {
-        return LoginPage.class;
     }
 
     @Override

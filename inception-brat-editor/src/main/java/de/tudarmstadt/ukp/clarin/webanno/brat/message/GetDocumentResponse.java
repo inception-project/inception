@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
@@ -39,7 +43,7 @@ public class GetDocumentResponse
 {
     public static final String COMMAND = "getDocument";
 
-    private List<String> modifications = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<String> modifications = new ArrayList<>();
 
     @JsonProperty("rtl_mode")
     private boolean rtlMode;
@@ -53,16 +57,16 @@ public class GetDocumentResponse
     private String text;
 
     @JsonProperty("source_files")
-    private List<String> sourceFiles = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<String> sourceFiles = new ArrayList<>();
 
-    private long ctime;
-    private long mtime;
+    // private long ctime;
+    // private long mtime;
 
     // This seems to be no longer used in brat
     // https://github.com/nlplab/brat/blob/master/server/src/document.py#L794
     // private int offset;
 
-    private GetCollectionInformationResponse info;
+    private @JsonInclude(NON_NULL) GetCollectionInformationResponse info;
 
     /**
      * [ 0, 3 ]
@@ -76,18 +80,18 @@ public class GetDocumentResponse
     @JsonProperty("sentence_offsets")
     private List<Offsets> sentenceOffsets = new ArrayList<>();
 
-    private List<Relation> relations = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<Relation> relations = new ArrayList<>();
 
     /**
      * ["T1", "Protein", 8, 11]
      *
      * Guess: ID (maybe token ID?), Type, begin offset, end offset
      */
-    private List<Entity> entities = new ArrayList<>();
-    private List<String> attributes = new ArrayList<>();
-    private List<String> equivs = new ArrayList<>();
-    private List<Comment> comments = new ArrayList<>();
-    private List<Normalization> normalizations = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<Entity> entities = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<String> attributes = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<String> equivs = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<Comment> comments = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<Normalization> normalizations = new ArrayList<>();
 
     private Map<String, List<Marker>> args = new HashMap<>();
 
@@ -187,47 +191,47 @@ public class GetDocumentResponse
         sourceFiles = aSourceFiles;
     }
 
-    /**
-     * Get creation time.
-     * 
-     * @return the timestamp.
-     */
-    public long getCtime()
-    {
-        return ctime;
-    }
-
-    /**
-     * Set creation time.
-     *
-     * @param aCtime
-     *            creation time.
-     */
-    public void setCtime(long aCtime)
-    {
-        ctime = aCtime;
-    }
-
-    /**
-     * Get last modification time.
-     *
-     * @return last modification time.
-     */
-    public long getMtime()
-    {
-        return mtime;
-    }
-
-    /**
-     * Set last modification time.
-     *
-     * @param aMtime
-     *            last modfication time.
-     */
-    public void setMtime(long aMtime)
-    {
-        mtime = aMtime;
-    }
+    // /**
+    // * Get creation time.
+    // *
+    // * @return the timestamp.
+    // */
+    // public long getCtime()
+    // {
+    // return ctime;
+    // }
+    //
+    // /**
+    // * Set creation time.
+    // *
+    // * @param aCtime
+    // * creation time.
+    // */
+    // public void setCtime(long aCtime)
+    // {
+    // ctime = aCtime;
+    // }
+    //
+    // /**
+    // * Get last modification time.
+    // *
+    // * @return last modification time.
+    // */
+    // public long getMtime()
+    // {
+    // return mtime;
+    // }
+    //
+    // /**
+    // * Set last modification time.
+    // *
+    // * @param aMtime
+    // * last modfication time.
+    // */
+    // public void setMtime(long aMtime)
+    // {
+    // mtime = aMtime;
+    // }
 
     // public int getOffset()
     // {

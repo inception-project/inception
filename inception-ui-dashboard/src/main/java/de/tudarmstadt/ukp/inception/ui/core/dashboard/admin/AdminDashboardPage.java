@@ -28,7 +28,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
@@ -70,21 +69,12 @@ public class AdminDashboardPage
         }
 
         // if not either a curator or annotator, display warning message
-        if (!annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION)
-                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION)
-                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION)
+        if (!annotationEnabeled(projectService, user)
                 && !curationEnabeled(projectService, user)) {
             info("You are not member of any projects to annotate or curate");
         }
 
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
-        // Pages linked from the admin menu are global ones - we do not want to set the current
-        // project ID there because the same page may support a global and a project-specific view
-        // and we might access the project-specific view through another path. E.g. the project
-        // setting page should be global (with project selection list) when access throught the
-        // administration dashboard, but when accesses through the project dashboard, it should only
-        // show the local project view without the project selection.
-        menu.setSendProjectIdToPage(false);
         add(menu);
 
         add(new SystemStatusDashlet("systemStatusDashlet"));

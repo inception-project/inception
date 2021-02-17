@@ -97,6 +97,7 @@
     <wicket-webjars.version>3.0.2</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
     <bootstrap.version>4.5.3</bootstrap.version>
+    <hover.version>2.0.2</hover.version>
 
     <servlet-api.version>4.0.1</servlet-api.version>
     <lucene.version>7.3.1</lucene.version>
@@ -296,6 +297,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-agreement</artifactId>
+        <version>0.19.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-agreement</artifactId>
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -790,6 +796,11 @@
         <version>${wicket-spring-boot.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+        <artifactId>wicket-spring-boot-context</artifactId>
+        <version>${wicket-spring-boot.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
         <version>5.11.2</version>
@@ -800,9 +811,9 @@
         <version>${bootstrap.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.sommeri</groupId>
-        <artifactId>less4j</artifactId>
-        <version>1.17.2</version>
+        <groupId>org.webjars.bower</groupId>
+        <artifactId>hover</artifactId>
+        <version>${hover.version}</version>
       </dependency>
       <dependency>
         <groupId>io.bit3</groupId>
@@ -833,50 +844,6 @@
         <groupId>commons-fileupload</groupId>
         <artifactId>commons-fileupload</artifactId>
         <version>1.4</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jfree</groupId>
-        <artifactId>jfreechart</artifactId>
-        <version>1.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-dom</artifactId>
-        <version>${batik.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis-ext</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-svg-dom</artifactId>
-        <version>${batik.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-svggen</artifactId>
-        <version>${batik.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-util</artifactId>
-          <version>${batik.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-constants</artifactId>
-        <version>${batik.version}</version>
       </dependency>
       <dependency>
         <groupId>org.dom4j</groupId>
@@ -1397,18 +1364,7 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <dependency>
-        <groupId>dom4j</groupId>
-        <artifactId>dom4j</artifactId>
-        <version>1.6.1</version>
-        <exclusions>
-          <exclusion>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
+      
       <dependency>
         <groupId>org.dkpro.core</groupId>
         <artifactId>dkpro-core-testing-asl</artifactId>
@@ -1884,6 +1840,7 @@
     <module>inception-testing</module>
     <module>inception-agreement</module>
     <module>inception-constraints</module>
+    <module>inception-ui-agreement</module>
     <module>inception-ui-dashboard</module>
     <module>inception-ui-project</module>
     <module>inception-ui-monitoring</module>

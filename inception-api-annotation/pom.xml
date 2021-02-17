@@ -172,6 +172,10 @@
       <artifactId>wicketstuff-input-events</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-urlfragment</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.github.openjson</groupId>
       <artifactId>openjson</artifactId>
     </dependency>
@@ -195,6 +199,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>javax.persistence</groupId>
+      <artifactId>javax.persistence-api</artifactId>
+    </dependency>
+    
 
     <!-- TEST DEPENDENCIES -->
     <dependency>

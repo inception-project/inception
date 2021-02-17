@@ -28,31 +28,18 @@ public enum Mode
     /**
      * This mode is used when the user is in the annotation page of WebAnno and perform any of the
      * tasks such as creating annotation document, setting annotation preference, exporting file and
-     * so on. Besides it help identifying the type of the project (Annotation Project or Correction
-     * Project)
+     * so on.
      *
      */
     ANNOTATION("annotation"),
-    /**
-     * This mode is used when the user is in the Automation Page making correction of automatically
-     * annotated documents as well as automation of annotations (Using prediction or Machine
-     * learning techniques). Besides it help identifying the type of the project (Annotation Project
-     * or Correction or Automation Project)
-     */
-    AUTOMATION("automation"),
+
     /**
      * This mode is used when the user is in the curation page of WebAnno and perform any of the
      * tasks such as creating curation document, setting annotation preference, exporting file and
      * so on.
      *
      */
-    CURATION("curation"),
-    /**
-     * This mode is used when the user is in the Correction Page making correction of automatically
-     * annotated documents. Besides it help identifying the type of the project (Annotation Project
-     * or Correction Project)
-     */
-    CORRECTION("correction");
+    CURATION("curation");
 
     public String getName()
     {
