@@ -417,8 +417,7 @@ public class ProjectServiceImpl
         if (aRoles == null || aRoles.length == 0) {
             String query = String.join("\n", //
                     "SELECT COUNT(*) FROM ProjectPermission ", //
-                    "WHERE user = :user AND project = :project", //
-                    "ORDER BY level");
+                    "WHERE user = :user AND project = :project");
 
             return entityManager.createQuery(query, Long.class) //
                     .setParameter("user", aUser.getUsername()) //
@@ -429,8 +428,7 @@ public class ProjectServiceImpl
 
         String query = String.join("\n", //
                 "SELECT COUNT(*) FROM ProjectPermission ", //
-                "WHERE user = :user AND project = :project AND level IN (:roles)", //
-                "ORDER BY level");
+                "WHERE user = :user AND project = :project AND level IN (:roles)");
 
         return entityManager.createQuery(query, Long.class) //
                 .setParameter("user", aUser.getUsername()) //
@@ -628,7 +626,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<Project> listProjects()
     {
-        String query = "FROM Project " + "ORDER BY name ASC";
+        String query = "FROM Project ORDER BY name ASC";
         return entityManager.createQuery(query, Project.class).getResultList();
     }
 

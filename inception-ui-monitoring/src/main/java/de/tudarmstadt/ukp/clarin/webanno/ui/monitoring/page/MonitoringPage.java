@@ -17,182 +17,121 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static java.util.Collections.emptyMap;
-import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
-import java.awt.Color;
-import java.io.Serializable;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.function.BinaryOperator;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import javax.persistence.NoResultException;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.extensions.markup.html.repeater.data.grid.DataGridView;
-import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
-import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
-import org.danekja.java.misc.serializable.SerializableComparator;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.NumberTickUnit;
-import org.jfree.chart.axis.TickUnits;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.renderer.category.StandardBarPainter;
-import org.jfree.chart.ui.RectangleInsets;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
+
+import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellOpenContextMenuEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnSelectionChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellClickEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellOpenContextMenuEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.DocumentRowSelectionChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.AnnotatorColumn;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.CuratorColumn;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixDataProvider;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixRow;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentNameColumn;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentSelectColumn;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentStateColumn;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.UserSelectToolbar;
 
-/**
- * A Page To display different monitoring and statistics measurements tabularly and graphically.
- */
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
 public class MonitoringPage
     extends ProjectPageBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
-
     private static final long serialVersionUID = -2102136855109258306L;
 
-    /**
-     * The user column in the user-document status table
-     */
-    public static final String USER = "user:";
-
-    /**
-     * The document column in the user-document status table
-     */
-    public static final String DOCUMENT = "document:";
-
-    public static final String CURATION = "curation";
-
-    public static final String LAST_ACCESS = "last access:";
-    public static final String LAST_ACCESS_ROW = "last access";
-
-    private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationService;
 
-    private ProjectSelectionForm projectSelectionForm;
-    private MonitoringDetailForm monitoringDetailForm;
-    private SvgChart annotatorsProgressImage;
-    private SvgChart annotatorsProgressPercentageImage;
-    private SvgChart overallProjectProgressImage;
+    private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
+    private LambdaAjaxLink toggleBulkChange;
+    private WebMarkupContainer actionContainer;
+    private WebMarkupContainer bulkActionDropdown;
+    private WebMarkupContainer bulkActionDropdownButton;
+    private ChallengeResponseDialog resetDocumentDialog;
+    private ContextMenu contextMenu;
 
-    private Panel annotationDocumentStatusTable;
-
-    private static final ResourceReference ICON_FINISHED = new PackageResourceReference(
-            MonitoringPage.class, "accept.png");
-    private static final ResourceReference ICON_IGNORE = new PackageResourceReference(
-            MonitoringPage.class, "lock.png");
-    private static final ResourceReference ICON_INPROGRESS = new PackageResourceReference(
-            MonitoringPage.class, "resultset_next.png");
-    private static final ResourceReference ICON_NEW = new PackageResourceReference(
-            MonitoringPage.class, "new.png");
-
-    private static final Map<Object, ResourceReference> ICONS;
-
-    static {
-        Map<Object, ResourceReference> icons = new HashMap<>();
-        icons.put(ANNOTATION_FINISHED, ICON_FINISHED);
-        icons.put(CURATION_FINISHED, ICON_FINISHED);
-        icons.put(CURATION_IN_PROGRESS, ICON_INPROGRESS);
-        // We only show these icons in the curation column and if the annotation is still in
-        // progress, then this counts as the curation not having stated yet (NEW)
-        icons.put(ANNOTATION_IN_PROGRESS, ICON_NEW);
-        icons.put(NEW, ICON_NEW);
-
-        icons.put(AnnotationDocumentState.FINISHED, ICON_FINISHED);
-        icons.put(AnnotationDocumentState.IGNORE, ICON_IGNORE);
-        icons.put(AnnotationDocumentState.IN_PROGRESS, ICON_INPROGRESS);
-        icons.put(AnnotationDocumentState.NEW, ICON_NEW);
-        ICONS = Collections.unmodifiableMap(icons);
-    }
+    private boolean bulkChangeMode = false;
+    private IModel<Set<String>> selectedUsers = new SetModel<>(new HashSet<>());
 
     public MonitoringPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
 
         User user = userRepository.getCurrentUser();
 
@@ -200,673 +139,458 @@ public class MonitoringPage
 
         requireProjectRole(user, CURATOR, MANAGER);
 
-        commonInit();
+        add(new Label("name", project.getName()));
 
-        projectSelectionForm.selectProject(project);
-        projectSelectionForm.setVisibilityAllowed(false);
+        add(documentMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode));
+
+        actionContainer = new WebMarkupContainer("actionContainer");
+        actionContainer.setOutputMarkupPlaceholderTag(true);
+        add(actionContainer);
+
+        bulkActionDropdown = new WebMarkupContainer("bulkActionDropdown");
+        bulkActionDropdown.add(LambdaBehavior.visibleWhen(() -> bulkChangeMode));
+        actionContainer.add(bulkActionDropdown);
+
+        bulkActionDropdownButton = new WebMarkupContainer("bulkActionDropdownButton");
+        bulkActionDropdownButton.add(LambdaBehavior.visibleWhen(() -> bulkChangeMode));
+        actionContainer.add(bulkActionDropdownButton);
+
+        toggleBulkChange = new LambdaAjaxLink("toggleBulkChange", this::actionToggleBulkChange);
+        toggleBulkChange.setOutputMarkupId(true);
+        toggleBulkChange.add(new CssClassNameAppender(LoadableDetachableModel
+                .of(() -> bulkChangeMode ? "btn-primary active" : "btn-outline-primary")));
+        actionContainer.add(toggleBulkChange);
+
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkLock", this::actionBulkLock));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkUnlock", this::actionBulkUnlock));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkFinish", this::actionBulkFinish));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkResume", this::actionBulkResume));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkOpen", this::actionBulkOpen));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkReset", this::actionBulkResetDocument));
+
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
+        add(contextMenu = new ContextMenu("contextMenu"));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void commonInit()
+    private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> createDocumentMatrix(
+            String aComponentId, boolean aBulkChangeMode)
     {
-        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
+        DocumentMatrixDataProvider dataProvider = new DocumentMatrixDataProvider(getMatrixData());
 
-        monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
-        monitoringDetailForm.setOutputMarkupId(true);
-
-        annotatorsProgressImage = new SvgChart("annotator",
-                LoadableDetachableModel.of(this::renderAnnotatorAbsoluteProgress));
-        annotatorsProgressImage.setOutputMarkupId(true);
-        annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);
-        annotatorsProgressImage.setVisible(false);
-
-        annotatorsProgressPercentageImage = new SvgChart("annotatorPercentage",
-                LoadableDetachableModel.of(this::renderAnnotatorPercentageProgress));
-        annotatorsProgressPercentageImage.setOutputMarkupId(true);
-        annotatorsProgressPercentageImage.setOutputMarkupPlaceholderTag(true);
-        annotatorsProgressPercentageImage.setVisible(false);
-
-        overallProjectProgressImage = new SvgChart("overallProjectProgressImage",
-                LoadableDetachableModel.of(this::renderProjectProgress));
-        overallProjectProgressImage.setOutputMarkupId(true);
-        overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
-        overallProjectProgressImage.setVisible(true);
-        add(overallProjectProgressImage);
-
-        add(projectSelectionForm);
-
-        if (!projectService.listProjects().isEmpty()) {
-            Project project = projectService.listProjects().get(0);
-            List<List<String>> userAnnotationDocumentLists = new ArrayList<>();
-            List<SourceDocument> dc = documentService.listSourceDocuments(project);
-            for (int j = 0; j < projectService.listProjectUsersWithPermissions(project)
-                    .size(); j++) {
-                List<String> userAnnotationDocument = new ArrayList<>();
-                userAnnotationDocument.add("");
-                for (int i = 0; i < dc.size(); i++) {
-                    userAnnotationDocument.add("");
-                }
-                userAnnotationDocumentLists.add(userAnnotationDocument);
-            }
-            List<String> documentListAsColumnHeader = new ArrayList<>();
-            documentListAsColumnHeader.add("Users");
-            for (SourceDocument d : dc) {
-                documentListAsColumnHeader.add(d.getName());
-            }
-            TableDataProvider prov = new TableDataProvider(documentListAsColumnHeader,
-                    userAnnotationDocumentLists);
-            List<IColumn<?, ?>> cols = new ArrayList<>();
-            for (int i = 0; i < prov.getColumnCount(); i++) {
-                cols.add(new DocumentStatusColumnMetaData(prov, i, new Project()));
-            }
-            annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
-            monitoringDetailForm.setVisible(false);
-            add(monitoringDetailForm.add(annotatorsProgressImage)
-                    .add(annotatorsProgressPercentageImage).add(annotationDocumentStatusTable));
-            annotationDocumentStatusTable.setVisible(false);
-        }
-        else {
-            annotationDocumentStatusTable = new EmptyPanel("rsTable");
-            monitoringDetailForm.setVisible(false);
-            add(monitoringDetailForm);
-            annotationDocumentStatusTable.setVisible(false);
-            annotatorsProgressImage.setVisible(false);
-            annotatorsProgressPercentageImage.setVisible(false);
-            info("There are no projects.");
-        }
-    }
-
-    private JFreeChart renderProjectProgress()
-    {
-        Map<String, Integer> data = getOverallProjectProgress();
-        overallProjectProgressImage.getOptions().withViewBox(600, 30 + (data.size() * 18));
-        return createProgressChart(data, 100, true);
-    }
-
-    private JFreeChart renderAnnotatorAbsoluteProgress()
-    {
-        Map<String, Integer> data = projectSelectionForm.getModelObject().annotatorsProgress;
-        annotatorsProgressImage.getOptions().withViewBox(300, 30 + (data.size() * 18));
-        return createProgressChart(data, projectSelectionForm.getModelObject().totalDocuments,
-                false);
-    }
-
-    private JFreeChart renderAnnotatorPercentageProgress()
-    {
-        Map<String, Integer> data = projectSelectionForm
-                .getModelObject().annotatorsProgressInPercent;
-        annotatorsProgressPercentageImage.getOptions().withViewBox(300, 30 + (data.size() * 18));
-        return createProgressChart(
-                projectSelectionForm.getModelObject().annotatorsProgressInPercent, 100, true);
-    }
-
-    private class ProjectSelectionForm
-        extends Form<ProjectSelectionModel>
-    {
-        private static final long serialVersionUID = -1L;
-
-        public ProjectSelectionForm(String id)
-        {
-            super(id, new CompoundPropertyModel<>(new ProjectSelectionModel()));
-
-            add(new ListChoice<Project>("project")
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setChoices(new LoadableDetachableModel<List<Project>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<Project> load()
-                        {
-                            List<Project> allowedProject = new ArrayList<>();
-
-                            User user = userRepository.getCurrentUser();
-
-                            List<Project> allProjects = projectService.listProjects();
-                            for (Project project : allProjects) {
-                                if (projectService.isManager(project, user)
-                                        || projectService.isCurator(project, user)) {
-                                    allowedProject.add(project);
-                                }
-                            }
-                            return allowedProject;
-                        }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<>("name"));
-                    setNullValid(false);
-
-                    add(new FormComponentUpdatingBehavior()
-                    {
-                        private static final long serialVersionUID = -8626216183950181168L;
-
-                        @Override
-                        protected void onUpdate()
-                        {
-                            Project aNewSelection = ProjectSelectionForm.this
-                                    .getModelObject().project;
-                            selectProject(aNewSelection);
-                        };
-                    });
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
+        if (documentMatrix != null) {
+            dataProvider.setSort(
+                    ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getSort());
         }
 
-        private void selectProject(Project aNewSelection)
-        {
+        List<IColumn<DocumentMatrixRow, DocumentMatrixSortKey>> columns = new ArrayList<>();
+        SourceDocumentSelectColumn sourceDocumentSelectColumn = new SourceDocumentSelectColumn();
+        sourceDocumentSelectColumn.setVisible(bulkChangeMode);
+        columns.add(sourceDocumentSelectColumn);
+        columns.add(new SourceDocumentStateColumn());
+        columns.add(new SourceDocumentNameColumn());
+        columns.add(new CuratorColumn());
 
-            if (aNewSelection == null) {
-                return;
-            }
-
-            List<SourceDocument> sourceDocuments = documentService
-                    .listSourceDocuments(aNewSelection);
-
-            monitoringDetailForm.setModelObject(aNewSelection);
-            monitoringDetailForm.setVisible(true);
-
-            ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this
-                    .getModelObject();
-            projectSelectionModel.project = aNewSelection;
-            projectSelectionModel.annotatorsProgress = new TreeMap<>();
-            projectSelectionModel.annotatorsProgressInPercent = new TreeMap<>();
-            projectSelectionModel.totalDocuments = sourceDocuments.size();
-            ProjectSelectionForm.this.setVisible(true);
-
-            // Annotator's Progress
-            if (projectSelectionModel.project != null) {
-                projectSelectionModel.annotatorsProgressInPercent.putAll(
-                        getPercentageOfFinishedDocumentsPerUser(projectSelectionModel.project));
-                projectSelectionModel.annotatorsProgress
-                        .putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
-            }
-            overallProjectProgressImage.setVisible(false);
-            annotatorsProgressImage.setVisible(true);
-            annotatorsProgressPercentageImage.setVisible(true);
-
-            List<String> documentListAsColumnHeader = new ArrayList<>();
-            documentListAsColumnHeader.add("Documents");
-
-            // A column for curation user annotation document status
-            documentListAsColumnHeader.add(CURATION);
-
-            // List of users with USER permission level
-            List<User> users = projectService.listProjectUsersWithPermissions(
-                    projectSelectionModel.project, PermissionLevel.ANNOTATOR);
-
-            for (User user : users) {
-                documentListAsColumnHeader.add(user.getUsername());
-            }
-
-            List<List<String>> userAnnotationDocumentStatusList = new ArrayList<>();
-
-            // Add a timestamp row for every user.
-            List<String> projectTimeStamp = new ArrayList<>();
-            projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first
-                                                                 // column
-            if (projectService.existsProjectTimeStamp(aNewSelection)) {
-                projectTimeStamp.add(LAST_ACCESS + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-                        .format(projectService.getProjectTimeStamp(aNewSelection)));
-            }
-            else {
-                projectTimeStamp.add(LAST_ACCESS + "__");
-            }
-
-            for (User user : users) {
-                if (projectService.existsProjectTimeStamp(projectSelectionModel.project,
-                        user.getUsername())) {
-                    projectTimeStamp.add(LAST_ACCESS + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-                            .format(projectService.getProjectTimeStamp(
-                                    projectSelectionModel.project, user.getUsername())));
-                }
-                else {
-                    projectTimeStamp.add(LAST_ACCESS + "__");
-                }
-            }
-
-            userAnnotationDocumentStatusList.add(projectTimeStamp);
-
-            for (SourceDocument document : sourceDocuments) {
-                List<String> userAnnotationDocuments = new ArrayList<>();
-                userAnnotationDocuments.add(DOCUMENT + document.getName());
-
-                // Curation Document status
-                userAnnotationDocuments
-                        .add(WebAnnoConst.CURATION_USER + "-" + DOCUMENT + document.getName());
-
-                for (User user : users) {
-                    // annotation document status for this annotator
-                    userAnnotationDocuments
-                            .add(user.getUsername() + "-" + DOCUMENT + document.getName());
-                }
-
-                userAnnotationDocumentStatusList.add(userAnnotationDocuments);
-            }
-
-            TableDataProvider provider = new TableDataProvider(documentListAsColumnHeader,
-                    userAnnotationDocumentStatusList);
-
-            List<IColumn<?, ?>> columns = new ArrayList<>();
-
-            for (int i = 0; i < provider.getColumnCount(); i++) {
-                columns.add(new DocumentStatusColumnMetaData(provider, i,
-                        projectSelectionModel.project));
-            }
-            annotationDocumentStatusTable.remove();
-            annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns, provider, 20);
-            annotationDocumentStatusTable.setOutputMarkupId(true);
-            monitoringDetailForm.add(annotationDocumentStatusTable);
-        }
-    }
-
-    Model<Project> projectModel = new Model<Project>()
-    {
-        private static final long serialVersionUID = -6394439155356911110L;
-
-        @Override
-        public Project getObject()
-        {
-            return projectSelectionForm.getModelObject().project;
-        }
-    };
-
-    private Map<String, Integer> getFinishedDocumentsPerUser(Project aProject)
-    {
-        if (aProject == null) {
-            return emptyMap();
-        }
-
-        Map<String, List<AnnotationDocument>> docsPerUser = documentService
-                .listFinishedAnnotationDocuments(aProject).stream()
-                .collect(groupingBy(AnnotationDocument::getUser));
-
-        // We explicitly use HashMap::new below since we *really* want a mutable map and
-        // Collectors.toMap(...) doesn't make guarantees about the mutability of the map type it
-        // internally creates.
-        Map<String, Integer> finishedDocumentsPerUser = docsPerUser.entrySet().stream().collect(
-                toMap(Entry::getKey, e -> e.getValue().size(), throwingMerger(), HashMap::new));
-
-        // Make sure we also have all annotators in the map who have not actually annotated
-        // anything
-        projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR).stream()
-                .map(User::getUsername)
-                .forEach(user -> finishedDocumentsPerUser.computeIfAbsent(user, _it -> 0));
-
-        // Add the finished documents for the curation user
-        List<SourceDocument> curatedDocuments = curationService.listCuratedDocuments(aProject);
-
-        // Little hack: to ensure that the curation user comes first on screen, add a space
-        finishedDocumentsPerUser.put(CURATION_USER, curatedDocuments.size());
-
-        return finishedDocumentsPerUser;
-    }
-
-    private Map<String, Integer> getPercentageOfFinishedDocumentsPerUser(Project aProject)
-    {
-        if (aProject == null) {
-            return emptyMap();
-        }
-
-        Map<String, Integer> finishedDocumentsPerUser = getFinishedDocumentsPerUser(aProject);
-
-        Map<String, Integer> percentageFinishedPerUser = new HashMap<>();
-        List<User> annotators = new ArrayList<>(
-                projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR));
-
-        // Little hack: to ensure that the curation user comes first on screen, add a space
-        annotators.add(new User(CURATION_USER));
-
+        List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
+                ANNOTATOR);
         for (User annotator : annotators) {
-            Map<SourceDocument, AnnotationDocument> docsForUser = documentService
-                    .listAnnotatableDocuments(aProject, annotator);
-
-            int finished = finishedDocumentsPerUser.get(annotator.getUsername());
-            int annotatableDocs = docsForUser.size();
-            percentageFinishedPerUser.put(annotator.getUsername(),
-                    (int) Math.round((double) (finished * 100) / annotatableDocs));
+            columns.add(new AnnotatorColumn(annotator.getUsername(), selectedUsers));
         }
 
-        return percentageFinishedPerUser;
+        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> table = new DefaultDataTable<>(
+                aComponentId, columns, dataProvider, 50);
+        table.setOutputMarkupId(true);
+
+        if (aBulkChangeMode) {
+            table.addTopToolbar(new UserSelectToolbar(selectedUsers, table));
+        }
+
+        return table;
     }
 
-    private Map<String, Integer> getOverallProjectProgress()
+    private void actionToggleBulkChange(AjaxRequestTarget aTarget)
     {
-        Map<String, Integer> overallProjectProgress = new LinkedHashMap<>();
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
-        for (Project project : projectService.listProjects()) {
-            if (projectService.isCurator(project, user)
-                    || projectService.isManager(project, user)) {
-                int annoFinished = documentService.listFinishedAnnotationDocuments(project).size();
-                int allAnno = documentService.numberOfExpectedAnnotationDocuments(project);
-                int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));
-                overallProjectProgress.put(project.getName(), progress);
-            }
-        }
-        return overallProjectProgress;
+        bulkChangeMode = !bulkChangeMode;
+        selectedUsers.getObject().clear();
+
+        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> newMatrix = createDocumentMatrix(
+                "documentMatrix", bulkChangeMode);
+        documentMatrix.replaceWith(newMatrix);
+        documentMatrix = newMatrix;
+
+        aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
     }
 
-    private static SerializableComparator<String> USER_COMPARATOR = (u1,
-            u2) -> new CompareToBuilder().append(u1, CURATION_USER).append(u2, CURATION_USER)
-                    .append(u1, u2).toComparison();
-
-    static public class ProjectSelectionModel
-        implements Serializable
+    private void actionBulkResetDocument(AjaxRequestTarget aTarget)
     {
-        protected int totalDocuments;
+        Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == IN_PROGRESS || annDoc.getState() == FINISHED)
+                .collect(Collectors.toList());
 
-        private static final long serialVersionUID = -1L;
+        IModel<String> projectNameModel = Model.of(getProject().getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("BulkResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("BulkResetDocumentDialog.text", this)
+                        .setParameters(selectedDocuments.size(), projectNameModel));
+        resetDocumentDialog.setResponseModel(projectNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            Map<String, User> userCache = new HashMap<>();
+            for (AnnotationDocument document : selectedDocuments) {
+                User user = userCache.computeIfAbsent(document.getUser(),
+                        username -> userRepository.get(username));
+                documentService.resetAnnotationCas(document.getDocument(), user);
+            }
 
-        public Project project;
-        public Map<String, Integer> annotatorsProgress = new TreeMap<>(USER_COMPARATOR);
-        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>(USER_COMPARATOR);
+            success(format("The %s document(s) have been set reset.", selectedDocuments.size()));
+            _target.addChildren(getPage(), IFeedback.class);
+
+            reloadMatrixData();
+            _target.add(documentMatrix);
+        });
+        resetDocumentDialog.show(aTarget);
     }
 
-    private class MonitoringDetailForm
-        extends Form<Project>
+    private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            String aUser)
     {
-        private static final long serialVersionUID = -1L;
+        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("ResetDocumentDialog.text", this)
+                        .setParameters(documentNameModel, aUser));
+        resetDocumentDialog.setResponseModel(documentNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            User user = userRepository.get(aUser);
+            documentService.resetAnnotationCas(aDocument, user);
 
-        public MonitoringDetailForm(String id)
-        {
-            super(id, new CompoundPropertyModel<>(new EntityModel<>(new Project())));
+            success(format("The annotations of document [%s] for user [%s] have been set reset.",
+                    aDocument.getName(), aUser));
+            _target.addChildren(getPage(), IFeedback.class);
 
-            add(new Label("name"));
-        }
+            reloadMatrixData();
+            _target.add(documentMatrix);
+        });
+        resetDocumentDialog.show(aTarget);
     }
 
-    private JFreeChart createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
-            boolean aIsPercentage)
+    private void actionResetCurationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
-        // fill dataset
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        if (aMaxValue > 0) {
-            for (String chartValue : chartValues.keySet()) {
-                dataset.setValue(chartValues.get(chartValue), "Completion", chartValue);
-            }
-        }
+        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetCurationDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("ResetCurationDocumentDialog.text", this)
+                        .setParameters(documentNameModel));
+        resetDocumentDialog.setResponseModel(documentNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            curationService.deleteCurationCas(aDocument);
+            documentService.setSourceDocumentState(aDocument, ANNOTATION_IN_PROGRESS);
 
-        // create chart
-        JFreeChart chart = ChartFactory.createBarChart(null, null, null, dataset,
-                PlotOrientation.HORIZONTAL, false, false, false);
+            success(format("The curation of document [%s] has been set reset.",
+                    aDocument.getName()));
+            _target.addChildren(getPage(), IFeedback.class);
 
-        CategoryPlot plot = chart.getCategoryPlot();
-        plot.setOutlineVisible(false);
-        plot.setBackgroundPaint(null);
-        plot.setNoDataMessage("No data");
-        plot.setInsets(new RectangleInsets(0, 20, 0, 20));
-        if (aMaxValue > 0) {
-            plot.getRangeAxis().setRange(0.0, aMaxValue);
-            ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
-            // For documents less than 10, avoid repeating the number of documents such
-            // as 0 0 1 1 1 - NumberTickUnit automatically determines the range
-            if (!aIsPercentage && aMaxValue <= 10) {
-                TickUnits standardUnits = new TickUnits();
-                NumberAxis tick = new NumberAxis();
-                tick.setTickUnit(new NumberTickUnit(1));
-                standardUnits.add(tick.getTickUnit());
-                plot.getRangeAxis().setStandardTickUnits(standardUnits);
-            }
-        }
-        else {
-            plot.getRangeAxis().setVisible(false);
-            plot.getDomainAxis().setVisible(false);
-        }
-
-        BarRenderer renderer = new BarRenderer();
-        renderer.setBarPainter(new StandardBarPainter());
-        renderer.setShadowVisible(false);
-        // renderer.setGradientPaintTransformer(new
-        // StandardGradientPaintTransformer(
-        // GradientPaintTransformType.HORIZONTAL));
-        renderer.setSeriesPaint(0, Color.BLUE);
-        chart.getCategoryPlot().setRenderer(renderer);
-
-        return chart;
+            reloadMatrixData();
+            _target.add(documentMatrix);
+        });
+        resetDocumentDialog.show(aTarget);
     }
 
-    /**
-     * Build dynamic columns for the user's annotation documents status {@link DataGridView}
-     */
-    public class DocumentStatusColumnMetaData
-        extends AbstractColumn<List<String>, Object>
+    private void actionBulkOpen(AjaxRequestTarget aTarget)
     {
-        // private RepositoryService projectRepositoryService;
+        Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments();
 
-        private static final long serialVersionUID = 1L;
-        private int columnNumber;
+        List<AnnotationDocument> lockedDocuments = selectedDocuments.stream()
+                .filter(annDoc -> annDoc.getState() == IGNORE).collect(toList());
+        documentService.bulkSetAnnotationDocumentState(lockedDocuments, NEW);
 
-        private Project project;
+        List<AnnotationDocument> finishedDocuments = selectedDocuments.stream()
+                .filter(annDoc -> annDoc.getState() == FINISHED).collect(toList());
+        documentService.bulkSetAnnotationDocumentState(finishedDocuments, IN_PROGRESS);
 
-        public DocumentStatusColumnMetaData(final TableDataProvider prov, final int colNumber,
-                Project aProject)
-        {
-            super(LoadableDetachableModel.of(() -> prov.getColNames().get(colNumber)));
-            columnNumber = colNumber;
-            project = aProject;
-        }
+        success(format("The state of %d document(s) has been set to [%s]", lockedDocuments.size(),
+                NEW));
+        success(format("The state of %d document(s) has been set to [%s]", finishedDocuments.size(),
+                IN_PROGRESS));
+        aTarget.addChildren(getPage(), IFeedback.class);
 
-        @Override
-        public void populateItem(final Item<ICellPopulator<List<String>>> aCellItem,
-                final String componentId, final IModel<List<String>> rowModel)
-        {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            final User user = userRepository.get(username);
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
 
-            int rowNumber = aCellItem.getIndex();
-            aCellItem.setOutputMarkupId(true);
+    private void actionBulkClose(AjaxRequestTarget aTarget)
+    {
+        Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments();
 
-            final String value = getCellValue(rowModel.getObject().get(columnNumber)).trim();
-            if (rowNumber == 0) {
-                aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
-            }
-            else if (value.startsWith(MonitoringPage.LAST_ACCESS)) {
-                aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
-                aCellItem.add(AttributeModifier.append("class", "centering"));
-            }
-            else if (value.substring(0, value.indexOf(":")).equals(WebAnnoConst.CURATION_USER)) {
-                SourceDocument document = documentService.getSourceDocument(project,
-                        value.substring(value.indexOf(":") + 1));
-                SourceDocumentState state = document.getState();
-                EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
-                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                aCellItem.add(icon);
-                aCellItem.add(AttributeModifier.append("class", "centering"));
-                aCellItem.add(new AjaxEventBehavior("click")
-                {
-                    private static final long serialVersionUID = -4213621740511947285L;
+        List<AnnotationDocument> newDocuments = selectedDocuments.stream()
+                .filter(annDoc -> annDoc.getState() == NEW).collect(toList());
+        documentService.bulkSetAnnotationDocumentState(newDocuments, IGNORE);
 
-                    @Override
-                    protected void onEvent(AjaxRequestTarget aTarget)
-                    {
-                        if (!projectService.isCurator(project, user)) {
-                            aTarget.appendJavaScript(
-                                    "alert('the state can only be changed explicitly by the curator')");
-                            return;
-                        }
+        List<AnnotationDocument> inProgressDocuments = selectedDocuments.stream()
+                .filter(annDoc -> annDoc.getState() == IN_PROGRESS).collect(toList());
+        documentService.bulkSetAnnotationDocumentState(inProgressDocuments, FINISHED);
 
-                        SourceDocument doc = documentService.getSourceDocument(project,
-                                value.substring(value.indexOf(":") + 1));
-                        if (doc.getState().equals(CURATION_FINISHED)) {
-                            documentService.transitionSourceDocumentState(doc,
-                                    CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
-                        }
-                        else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
-                            documentService.transitionSourceDocumentState(doc,
-                                    CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-                        }
-                        else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
-                            documentService.transitionSourceDocumentState(doc,
-                                    ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
-                        }
+        success(format("The state of %d document(s) has been set to [%s]", newDocuments.size(),
+                IGNORE));
+        success(format("The state of %d document(s) has been set to [%s]",
+                inProgressDocuments.size(), FINISHED));
+        aTarget.addChildren(getPage(), IFeedback.class);
 
-                        aTarget.add(aCellItem);
-                        updateStats(aTarget, projectSelectionForm.getModelObject());
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
+    private void actionBulkLock(AjaxRequestTarget aTarget)
+    {
+        List<AnnotationDocument> newDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == NEW).collect(toList());
+
+        documentService.bulkSetAnnotationDocumentState(newDocuments, IGNORE);
+
+        success(format("The state of %d document(s) has been set to [%s]", newDocuments.size(),
+                IGNORE));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
+    private void actionBulkUnlock(AjaxRequestTarget aTarget)
+    {
+        List<AnnotationDocument> lockedDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == IGNORE).collect(toList());
+
+        documentService.bulkSetAnnotationDocumentState(lockedDocuments, NEW);
+
+        success(format("The state of %d document(s) has been set to [%s]", lockedDocuments.size(),
+                NEW));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
+    private void actionBulkFinish(AjaxRequestTarget aTarget)
+    {
+        List<AnnotationDocument> inProgressDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == IN_PROGRESS).collect(toList());
+
+        documentService.bulkSetAnnotationDocumentState(inProgressDocuments, FINISHED);
+
+        success(format("The state of %d document(s) has been set to [%s]",
+                inProgressDocuments.size(), FINISHED));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
+    private void actionBulkResume(AjaxRequestTarget aTarget)
+    {
+        List<AnnotationDocument> finishedDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == FINISHED).collect(toList());
+
+        documentService.bulkSetAnnotationDocumentState(finishedDocuments, IN_PROGRESS);
+
+        success(format("The state of %d document(s) has been set to [%s]", finishedDocuments.size(),
+                IN_PROGRESS));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
+    private Collection<AnnotationDocument> selectedAnnotationDocuments()
+    {
+        List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
+                ANNOTATOR);
+
+        Map<String, User> annotatorIndex = new HashMap<>();
+        annotators.forEach(annotator -> annotatorIndex.put(annotator.getUsername(), annotator));
+
+        Set<User> selectedUserObjects = new HashSet<>();
+        selectedUsers.getObject()
+                .forEach(username -> selectedUserObjects.add(annotatorIndex.get(username)));
+
+        Map<Pair<SourceDocument, String>, AnnotationDocument> annotationDocumentsToChange = new HashMap<>();
+
+        List<DocumentMatrixRow> rows = ((DocumentMatrixDataProvider) documentMatrix
+                .getDataProvider()).getMatrixData();
+
+        for (DocumentMatrixRow row : rows) {
+            // Collect annotation documents by row
+            if (row.isSelected()) {
+                for (User annotator : annotators) {
+                    AnnotationDocument annDoc = row.getAnnotationDocument(annotator.getUsername());
+                    if (annDoc == null) {
+                        annDoc = documentService
+                                .createOrGetAnnotationDocument(row.getSourceDocument(), annotator);
                     }
-                });
-            }
-            else {
-                SourceDocument document = documentService.getSourceDocument(project,
-                        value.substring(value.indexOf(":") + 1));
-                User annotator = userRepository.get(value.substring(0, value.indexOf(":")));
 
-                AnnotationDocumentState state;
-                AnnotationDocument annoDoc = null;
-                if (documentService.existsAnnotationDocument(document, annotator)) {
-                    annoDoc = documentService.getAnnotationDocument(document, annotator);
-                    state = annoDoc.getState();
+                    annotationDocumentsToChange
+                            .put(Pair.of(row.getSourceDocument(), annotator.getUsername()), annDoc);
                 }
-                // user didn't even start working on it
-                else {
-                    state = AnnotationDocumentState.NEW;
-                    AnnotationDocument annotationDocument = new AnnotationDocument();
-                    annotationDocument.setDocument(document);
-                    annotationDocument.setName(document.getName());
-                    annotationDocument.setProject(project);
-                    annotationDocument.setUser(annotator.getUsername());
-                    annotationDocument.setState(state);
-                    documentService.createAnnotationDocument(annotationDocument);
+            }
+
+            // Collect annotation documents by column
+            for (User anotator : selectedUserObjects) {
+                Pair<SourceDocument, String> key = Pair.of(row.getSourceDocument(),
+                        anotator.getUsername());
+                if (!annotationDocumentsToChange.containsKey(key)) {
+                    AnnotationDocument annDoc = documentService
+                            .createOrGetAnnotationDocument(row.getSourceDocument(), anotator);
+                    annotationDocumentsToChange.put(key, annDoc);
                 }
-
-                EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
-                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                aCellItem.add(icon);
-                aCellItem.add(AttributeModifier.append("class", "centering"));
-                aCellItem.add(new AjaxEventBehavior("click")
-                {
-                    private static final long serialVersionUID = -5089819284917455111L;
-
-                    @Override
-                    protected void onEvent(AjaxRequestTarget aTarget)
-                    {
-                        SourceDocument document = documentService.getSourceDocument(project,
-                                value.substring(value.indexOf(":") + 1));
-                        User user = userRepository.get(value.substring(0, value.indexOf(":")));
-
-                        AnnotationDocumentState state;
-                        if (documentService.existsAnnotationDocument(document, user)) {
-                            AnnotationDocument annoDoc = documentService
-                                    .getAnnotationDocument(document, user);
-                            state = annoDoc.getState();
-                            if (state.toString()
-                                    .equals(AnnotationDocumentState.FINISHED.toString())) {
-                                changeAnnotationDocumentState(document, user,
-                                        ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
-                            }
-                            else if (state.toString()
-                                    .equals(AnnotationDocumentState.IN_PROGRESS.toString())) {
-                                changeAnnotationDocumentState(document, user,
-                                        ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-                            }
-                            if (state.toString().equals(AnnotationDocumentState.NEW.toString())) {
-                                changeAnnotationDocumentState(document, user, NEW_TO_IGNORE);
-                            }
-                            if (state.toString()
-                                    .equals(AnnotationDocumentState.IGNORE.toString())) {
-                                changeAnnotationDocumentState(document, user, IGNORE_TO_NEW);
-                            }
-                        }
-                        // user didn't even start working on it
-                        else {
-                            AnnotationDocument annotationDocument = new AnnotationDocument();
-                            annotationDocument.setDocument(document);
-                            annotationDocument.setName(document.getName());
-                            annotationDocument.setProject(project);
-                            annotationDocument.setUser(user.getUsername());
-                            documentService.createAnnotationDocument(annotationDocument);
-                            documentService.transitionAnnotationDocumentState(annotationDocument,
-                                    NEW_TO_ANNOTATION_IN_PROGRESS);
-                        }
-
-                        aTarget.add(aCellItem);
-                        updateStats(aTarget, projectSelectionForm.getModelObject());
-                    }
-                });
             }
         }
 
-        private void updateStats(AjaxRequestTarget aTarget, ProjectSelectionModel aModel)
-        {
-            aModel.annotatorsProgress.clear();
-            aModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
-            aTarget.add(annotatorsProgressImage);
-
-            aModel.annotatorsProgressInPercent.clear();
-            aModel.annotatorsProgressInPercent
-                    .putAll(getPercentageOfFinishedDocumentsPerUser(project));
-            aTarget.add(annotatorsProgressPercentageImage);
-
-            aTarget.add(monitoringDetailForm);
-        }
-
-        /**
-         * Helper method to get the cell value for the user-annotation document status as
-         * <b>username:documentName</b>
-         */
-        private String getCellValue(String aValue)
-        {
-            // It is the user column, return user name
-            if (aValue.startsWith(MonitoringPage.DOCUMENT)) {
-                return aValue.substring(aValue.indexOf(MonitoringPage.DOCUMENT));
-            }
-            // return as it is
-            else if (aValue.startsWith(MonitoringPage.LAST_ACCESS)) {
-                return aValue;
-            }
-            // Initialization of the appliaction, no project selected
-            else if (isNull(project.getId())) {
-                return "";
-            }
-            // It is document column, get the status from the database
-            else {
-
-                String username = aValue.substring(0, aValue.indexOf(MonitoringPage.DOCUMENT) - 1);
-                String documentName = aValue.substring(
-                        aValue.indexOf(MonitoringPage.DOCUMENT) + MonitoringPage.DOCUMENT.length());
-                return username + ":" + documentName;
-            }
-        }
-
-        /**
-         * change the state of an annotation document. used to re-open closed documents
-         */
-        private void changeAnnotationDocumentState(SourceDocument aSourceDocument, User aUser,
-                AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
-        {
-            AnnotationDocument annotationDocument = documentService
-                    .getAnnotationDocument(aSourceDocument, aUser);
-
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    aAnnotationDocumentStateTransition);
-        }
+        return annotationDocumentsToChange.values();
     }
 
-    private Optional<Project> getProjectFromParameters(StringValue projectParam)
+    @OnEvent
+    public void onAnnotatorColumnSelectionChangedEvent(AnnotatorColumnSelectionChangedEvent aEvent)
     {
-        if (projectParam == null || projectParam.isEmpty()) {
-            return Optional.empty();
-        }
-
-        try {
-            return Optional.of(projectService.getProject(projectParam.toLong()));
-        }
-        catch (NoResultException e) {
-            return Optional.empty();
-        }
+        aEvent.getTarget().add(documentMatrix);
     }
 
-    private static <T> BinaryOperator<T> throwingMerger()
+    @OnEvent
+    public void onDocumentRowSelectionChangedEvent(DocumentRowSelectionChangedEvent aEvent)
     {
-        return (u, v) -> {
-            throw new IllegalStateException(String.format("Duplicate key %s", u));
-        };
+        aEvent.getTarget().add(documentMatrix);
+    }
+
+    @OnEvent
+    public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
+    {
+        User user = userRepository.get(aEvent.getUsername());
+        AnnotationDocument annotationDocument = documentService
+                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), user);
+
+        AnnotationDocumentStateTransition transition;
+        switch (annotationDocument.getState()) {
+        case NEW:
+            transition = NEW_TO_IGNORE;
+            break;
+        case IGNORE:
+            transition = IGNORE_TO_NEW;
+            break;
+        case IN_PROGRESS:
+            transition = ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+            break;
+        case FINISHED:
+            transition = ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+            break;
+        default:
+            return;
+        }
+
+        documentService.transitionAnnotationDocumentState(annotationDocument, transition);
+
+        success(format("The state of document [%s] for user [%s] has been set to [%s]",
+                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                annotationDocument.getState()));
+        aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aEvent.getTarget().add(documentMatrix);
+    }
+
+    @OnEvent
+    public void onCuratorColumnCellClickEvent(CuratorColumnCellClickEvent aEvent)
+    {
+        switch (aEvent.getSourceDocument().getState()) {
+        case CURATION_IN_PROGRESS:
+            documentService.transitionSourceDocumentState(aEvent.getSourceDocument(),
+                    CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+            break;
+        case CURATION_FINISHED:
+            documentService.transitionSourceDocumentState(aEvent.getSourceDocument(),
+                    CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
+            break;
+        default:
+            info("Curation state can only be changed once curation has started.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        success(format("The curation state of document [%s] has been set to [%s]",
+                aEvent.getSourceDocument().getName(), aEvent.getSourceDocument().getState()));
+        aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aEvent.getTarget().add(documentMatrix);
+    }
+
+    @OnEvent
+    public void onAnnotatorColumnCellOpenContextMenuEvent(
+            AnnotatorColumnCellOpenContextMenuEvent aEvent)
+    {
+        if (aEvent.getState() == NEW || aEvent.getState() == IGNORE) {
+            info("Documents on which work has not yet been started cannot be reset.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        List<IMenuItem> items = contextMenu.getItemList();
+        items.clear();
+
+        // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
+        // the information we need in the menu item here
+        SourceDocument document = aEvent.getSourceDocument();
+        String username = aEvent.getUsername();
+        items.add(new LambdaMenuItem("Reset",
+                _target -> actionResetAnnotationDocument(_target, document, username)));
+
+        contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
+    }
+
+    @OnEvent
+    public void onCuratorColumnCellOpenContextMenuEvent(
+            CuratorColumnCellOpenContextMenuEvent aEvent)
+    {
+        SourceDocumentState state = aEvent.getSourceDocument().getState();
+
+        if (state != CURATION_IN_PROGRESS && state != CURATION_FINISHED) {
+            info("Documents on which curation has not yet been started cannot be reset.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        List<IMenuItem> items = contextMenu.getItemList();
+        items.clear();
+
+        // The CuratorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
+        // the information we need in the menu item here
+        SourceDocument document = aEvent.getSourceDocument();
+        items.add(new LambdaMenuItem("Reset",
+                _target -> actionResetCurationDocument(_target, document)));
+
+        contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
+    }
+
+    private void reloadMatrixData()
+    {
+        ((DocumentMatrixDataProvider) documentMatrix.getDataProvider())
+                .setMatrixData(getMatrixData());
+    }
+
+    private List<DocumentMatrixRow> getMatrixData()
+    {
+        Set<String> annotators = projectService
+                .listProjectUsersWithPermissions(getProject(), ANNOTATOR).stream()
+                .map(User::getUsername).collect(Collectors.toSet());
+
+        Map<SourceDocument, DocumentMatrixRow> documentMatrixRows = new LinkedHashMap<>();
+        for (SourceDocument srcDoc : documentService.listSourceDocuments(getProject())) {
+            documentMatrixRows.put(srcDoc, new DocumentMatrixRow(srcDoc, annotators));
+        }
+
+        for (AnnotationDocument annDoc : documentService.listAnnotationDocuments(getProject())) {
+            documentMatrixRows.get(annDoc.getDocument()).add(annDoc);
+        }
+
+        return new ArrayList<>(documentMatrixRows.values());
     }
 }
