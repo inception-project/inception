@@ -29,14 +29,18 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
+
+import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -53,6 +57,7 @@ public class InviteProjectSettingsPanel
     private @SpringBean ServletContext servletContext;
 
     private final WebMarkupContainer inviteLinkContainer;
+    private final AjaxDatePicker datePicker;
     private TextField<String> linkField;
 
     public InviteProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
@@ -62,6 +67,18 @@ public class InviteProjectSettingsPanel
         inviteLinkContainer = createInviteLinkContainer();
         inviteLinkContainer.setOutputMarkupId(true);
         add(inviteLinkContainer);
+        
+        // add set date dropdown
+        WebMarkupContainer datePickContainer = new WebMarkupContainer("datePickContainer");
+        datePickContainer.setOutputMarkupId(true);
+        inviteLinkContainer.add(datePickContainer);
+        datePicker = new AjaxDatePicker("datePicker",
+                Model.of(inviteService.getExpirationDate(getModelObject())), "MM/dd/yy");
+        Form<Project> datePickForm = new Form<Project>("datePickForm", getModel());
+        datePickForm.add(new LambdaAjaxLink("submitDateLink", this::actionSetDate));
+        datePickForm.add(datePicker);
+        datePickContainer.add(datePickForm);
+
         // add expiration infos
         Label expirationLabel = new Label("expirationDate", LoadableDetachableModel.of(this::getExpirationDate));
         expirationLabel.setOutputMarkupId(true);
@@ -71,11 +88,18 @@ public class InviteProjectSettingsPanel
         inviteLinkContainer.add(extendBtn);
     }
     
-    private void actionExtendInviteDate(AjaxRequestTarget aTarget) {
+    private void actionSetDate(AjaxRequestTarget aTarget) {
+        inviteService.generateInviteWithExpirationDate(getModelObject(), datePicker.getModelObject());
+        success("Set expiration date.");
+        aTarget.add(inviteLinkContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
+    }
+    
+    private void actionExtendInviteDate(AjaxRequestTarget aTarget) {
         inviteService.extendInviteLinkDate(getModelObject());
         success("The validity period has been extended.");
         aTarget.add(inviteLinkContainer);
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
     
     private String getExpirationDate() {

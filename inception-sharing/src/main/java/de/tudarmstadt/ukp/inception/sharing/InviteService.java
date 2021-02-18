@@ -67,4 +67,12 @@ public interface InviteService
      * Extend validity of the invite link associated with the given project for another year.
      */
     void extendInviteLinkDate(Project aProject);
+
+    /**
+     * Set expiration date of the invite link of the given project or 
+     * generate new invite link with the given date
+     * @param aProject the project
+     * @param aExpirationDate the new expiration date
+     */
+    void generateInviteWithExpirationDate(Project aProject, Date aExpirationDate);
 }

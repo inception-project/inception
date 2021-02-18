@@ -61,17 +61,23 @@ public class InviteServiceImpl
     @Transactional
     public String generateInviteID(Project aProject)
     {
+        // remove old invite if necessary
+        removeInviteID(aProject);
         // set expiration date one year from now
         Date expirationDate = getDateOneYearForth(new Date());
+        String inviteID = generateNewInvite(aProject, expirationDate);
+
+        return inviteID;
+    }
+
+    private String generateNewInvite(Project aProject, Date expirationDate)
+    {
         // generate id
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
         String inviteID = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-
-        removeInviteID(aProject);
-        entityManager.flush();
+        
         entityManager.persist(new ProjectInvite(aProject, inviteID, expirationDate));
-
         return inviteID;
     }
 
@@ -96,8 +102,8 @@ public class InviteServiceImpl
         if (invite == null) {
             return;
         }
-
         entityManager.remove(invite);
+        entityManager.flush();
     }
 
     private ProjectInvite getProjectInvite(Project aProject)
@@ -169,6 +175,19 @@ public class InviteServiceImpl
         }
         Date newExpirationDate = getDateOneYearForth(invite.getExpirationDate());
         invite.setExpirationDate(newExpirationDate);
+        entityManager.merge(invite);
+    }
+
+    @Override
+    @Transactional
+    public void generateInviteWithExpirationDate(Project aProject, Date aExpirationDate)
+    {
+        ProjectInvite invite = getProjectInvite(aProject);
+        if (invite == null) {
+            generateNewInvite(aProject, aExpirationDate);
+            return;
+        }
+        invite.setExpirationDate(aExpirationDate);
         entityManager.merge(invite);
     }
 }

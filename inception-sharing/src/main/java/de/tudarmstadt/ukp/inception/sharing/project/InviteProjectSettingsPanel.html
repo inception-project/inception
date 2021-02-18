@@ -27,6 +27,20 @@
 		  <input wicket:id="linkText" class="target flex-content" type="text" readonly/>
 		  <button wicket:id="regen" class="btn btn-primary"><i class="fas fa-sync" wicket:message="title:regen"></i></button>
 		  <button wicket:id="copy" class="btn btn-secondary"><i class="fas fa-paste" wicket:message="title:copy"></i></button>
+		  <span wicket:id="datePickContainer" class="dropdown" aria-haspopup="true" aria-expanded="false">
+		    <button class="btn btn-secondary dropdown-toggle" data-toggle="collapse" data-target="#datePickerCollapse">
+		      <i class="fas fa-clock" wicket:message="title:setDate"></i>
+		    </button>
+		    <div id="datePickerCollapse" class="dropdown-menu dropdown-menu-right" role="menu">
+		    <form wicket:id="datePickForm">
+		       <div class="card-header"><wicket:message key="setDate"></wicket:message></div>
+		       <div class="card-body flex-v-container flex-gutter">
+		         <input wicket:id="datePicker" type="date"/>
+		         <button wicket:id="submitDateLink" type="submit" class="btn btn-secondary"><wicket:message key="save"></wicket:message></button>
+		       </div>
+		    </form>
+		    </div>
+		  </span>
 		  <button wicket:id="remove" class="btn btn-danger"><i class="fas fa-trash" wicket:message="title:remove"></i></button>
 		  </div>
 		  <div class="flex-h-container flex-centered card-body">

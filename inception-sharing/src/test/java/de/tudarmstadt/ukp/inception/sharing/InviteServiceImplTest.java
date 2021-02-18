@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.sharing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -145,5 +147,17 @@ public class InviteServiceImplTest
         Calendar newCalendar = Calendar.getInstance();
         newCalendar.setTime(newDate);
         assertThat(newCalendar.get(Calendar.YEAR) - oldCalendar.get(Calendar.YEAR)).isEqualTo(1);
+    }
+    
+    @Test
+    public void generateInviteWithExpirationDate_ShouldReturnSpecificDate() throws ParseException
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date expectedDate = dateFormat.parse("2022-01-15");
+        sut.generateInviteWithExpirationDate(testProject, expectedDate);
+        
+        Date generatedDate = sut.getExpirationDate(testProject);
+        assertThat(generatedDate).isEqualTo(expectedDate);
+        
     }
 }
