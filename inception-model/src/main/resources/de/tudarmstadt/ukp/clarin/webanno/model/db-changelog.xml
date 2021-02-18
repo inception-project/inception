@@ -1253,4 +1253,13 @@
       <column name="allowSTacking"/>
     </dropColumn>  
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210218-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="WebAnno Team" id="1512223050574-11"/>
+    </preConditions>
+    <dropColumn tableName="source_document">
+      <column name="sentenceAccessed"/>
+    </dropColumn>  
+  </changeSet>
 </databaseChangeLog>

@@ -92,7 +92,6 @@ public class SourceDocumentExporter
             exDocument.setName(sourceDocument.getName());
             exDocument.setState(sourceDocument.getState());
             exDocument.setTimestamp(sourceDocument.getTimestamp());
-            exDocument.setSentenceAccessed(sourceDocument.getSentenceAccessed());
             exDocument.setCreated(sourceDocument.getCreated());
             exDocument.setUpdated(sourceDocument.getUpdated());
 
@@ -171,7 +170,6 @@ public class SourceDocumentExporter
             sourceDocument.setState(importedSourceDocument.getState());
             sourceDocument.setProject(aImportedProject);
             sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
-            sourceDocument.setSentenceAccessed(importedSourceDocument.getSentenceAccessed());
             sourceDocument.setCreated(importedSourceDocument.getCreated());
             sourceDocument.setUpdated(importedSourceDocument.getUpdated());
 
