@@ -17,36 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
-import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
-import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
-import static org.apache.uima.fit.util.CasUtil.getType;
-
-import java.io.IOException;
-
-import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 /**
  * Utility methods.
@@ -76,45 +53,5 @@ public class BratAnnotatorUtility
         catch (Exception e) {
             return false;
         }
-    }
-
-    public static CAS clearAnnotations(CAS aCas) throws IOException
-    {
-        CAS target;
-        try {
-            target = CasFactory.createCas((TypeSystemDescription) null);
-        }
-        catch (UIMAException e) {
-            throw new IOException(e);
-        }
-
-        // Copy the CAS - basically we do this just to keep the full type system information
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
-        deserializeCASComplete(serializer, (CASImpl) getRealCas(target));
-
-        // Remove all annotations from the target CAS but we keep the type system!
-        target.reset();
-
-        // Copy over essential information
-        if (exists(aCas, getType(aCas, DocumentMetaData.class))) {
-            copyDocumentMetadata(aCas, target);
-        }
-        else {
-            WebAnnoCasUtil.createDocumentMetadata(aCas);
-        }
-        target.setDocumentLanguage(aCas.getDocumentLanguage()); // DKPro Core Issue 435
-        target.setDocumentText(aCas.getDocumentText());
-
-        // Transfer token boundaries
-        for (AnnotationFS t : selectTokens(aCas)) {
-            target.addFsToIndexes(createToken(target, t.getBegin(), t.getEnd()));
-        }
-
-        // Transfer sentence boundaries
-        for (AnnotationFS s : selectSentences(aCas)) {
-            target.addFsToIndexes(createSentence(target, s.getBegin(), s.getEnd()));
-        }
-
-        return target;
     }
 }
