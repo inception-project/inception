@@ -21,42 +21,42 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.log.model.CasDetails;
+import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 
 @Component
-public class AfterCasWrittenEventAdapter
-    implements EventLoggingAdapter<AfterCasWrittenEvent>
+public class ChainSpanEventAdapter
+    implements EventLoggingAdapter<ChainSpanEvent>
 {
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof AfterCasWrittenEvent;
+        return aEvent instanceof ChainSpanEvent;
     }
 
     @Override
-    public long getDocument(AfterCasWrittenEvent aEvent)
+    public long getDocument(ChainSpanEvent aEvent)
     {
-        return aEvent.getDocument().getDocument().getId();
+        return aEvent.getDocument().getId();
     }
 
     @Override
-    public long getProject(AfterCasWrittenEvent aEvent)
+    public long getProject(ChainSpanEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
 
     @Override
-    public String getAnnotator(AfterCasWrittenEvent aEvent)
+    public String getAnnotator(ChainSpanEvent aEvent)
     {
-        return aEvent.getDocument().getUser();
+        return aEvent.getUser();
     }
 
     @Override
-    public String getDetails(AfterCasWrittenEvent aEvent) throws IOException
+    public String getDetails(ChainSpanEvent aEvent) throws IOException
     {
-        CasDetails details = new CasDetails(aEvent.getCas());
+        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
         return JSONUtil.toJsonString(details);
     }
 }

@@ -15,22 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
+package de.tudarmstadt.ukp.inception.log.model;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-public class ChainLinkDeletedEvent
-    extends ChainLinkEvent
-    implements AnnotationDeletedEvent
+@JsonInclude(Include.NON_NULL)
+public class CasDetails
 {
-    private static final long serialVersionUID = -1577299485779966337L;
+    private int annotationCount = -1;
 
-    public ChainLinkDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aAnnotation, AnnotationFS aNextLink)
+    public CasDetails()
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation, aNextLink);
+        // Nothing to do
+    }
+
+    public CasDetails(CAS aCas)
+    {
+        annotationCount = aCas.getAnnotationIndex().size();
+    }
+
+    public int getAnnotationCount()
+    {
+        return annotationCount;
+    }
+
+    public void setAnnotationCount(int aAnnotationCount)
+    {
+        annotationCount = aAnnotationCount;
     }
 }
