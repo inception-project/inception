@@ -1253,4 +1253,11 @@
       <column name="allowSTacking"/>
     </dropColumn>  
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210218-2">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="WebAnno Team" id="1512223050574-14"/>
+    </preConditions>
+    <dropTable tableName="train_document" cascadeConstraints="true"/>
+  </changeSet>
 </databaseChangeLog>
