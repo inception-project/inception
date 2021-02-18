@@ -301,6 +301,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-agreement</artifactId>
+        <version>0.19.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-annotation</artifactId>
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
@@ -811,11 +816,6 @@
         <version>${hover.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.sommeri</groupId>
-        <artifactId>less4j</artifactId>
-        <version>1.17.2</version>
-      </dependency>
-      <dependency>
         <groupId>io.bit3</groupId>
         <artifactId>jsass</artifactId>
         <version>5.10.3</version>
@@ -844,50 +844,6 @@
         <groupId>commons-fileupload</groupId>
         <artifactId>commons-fileupload</artifactId>
         <version>1.4</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jfree</groupId>
-        <artifactId>jfreechart</artifactId>
-        <version>1.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-dom</artifactId>
-        <version>${batik.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis-ext</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-svg-dom</artifactId>
-        <version>${batik.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-svggen</artifactId>
-        <version>${batik.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-util</artifactId>
-          <version>${batik.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.xmlgraphics</groupId>
-        <artifactId>batik-constants</artifactId>
-        <version>${batik.version}</version>
       </dependency>
       <dependency>
         <groupId>org.dom4j</groupId>
@@ -1884,6 +1840,7 @@
     <module>inception-testing</module>
     <module>inception-agreement</module>
     <module>inception-constraints</module>
+    <module>inception-ui-agreement</module>
     <module>inception-ui-dashboard</module>
     <module>inception-ui-project</module>
     <module>inception-ui-monitoring</module>

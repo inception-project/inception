@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
 
@@ -51,5 +52,21 @@ public class ContextMenu
         target.appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
                 "jQuery('%s').show().css({position:'fixed', left:'%dpx', top:'%dpx'});",
                 JQueryWidget.getSelector(this), clientX, clientY)));
+    }
+
+    /**
+     * Fired by a component that holds a {@link ContextMenuBehavior}
+     *
+     * @param target
+     *            the {@link AjaxRequestTarget}
+     */
+    public void onOpen(AjaxRequestTarget target, Component aComponent)
+    {
+        onContextMenu(target, aComponent);
+
+        target.add(this);
+        target.appendJavaScript(
+                WicketUtil.wrapInTryCatch(String.format("jQuery('%s').show().position(%s);",
+                        JQueryWidget.getSelector(this), this.getPositionOption(aComponent))));
     }
 }

@@ -50,7 +50,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
@@ -162,9 +161,10 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
 
                 try {
-                    CAS initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
-                    casDoctor.repair(project, initialCas, messageSet.messages);
-                    casStorageService.writeCas(sd, initialCas, INITIAL_CAS_PSEUDO_USER);
+                    casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
+                            (doc, user) -> createOrReadInitialCasWithoutSaving(doc, messageSet),
+                            (cas) -> casDoctor.repair(project, cas, messageSet.messages), //
+                            true);
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
@@ -182,11 +182,11 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CURATION_USER + "]");
                 try {
-                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER,
-                            UNMANAGED_NON_INITIALIZING_ACCESS);
-                    casDoctor.repair(project, curationCas, messageSet.messages);
-                    CasPersistenceUtils.writeSerializedCas(curationCas,
-                            documentService.getCasFile(sd, CURATION_USER));
+                    casStorageService.forceActionOnCas(sd, CURATION_USER,
+                            (doc, user) -> casStorageService.readCas(doc, user,
+                                    UNMANAGED_NON_INITIALIZING_ACCESS),
+                            (cas) -> casDoctor.repair(project, cas, messageSet.messages), //
+                            true);
                 }
                 catch (FileNotFoundException e) {
                     if (asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(sd.getState())) {
@@ -218,11 +218,11 @@ public class ProjectCasDoctorPanel
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
-                        CAS userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
-                                UNMANAGED_NON_INITIALIZING_ACCESS);
-                        casDoctor.repair(project, userCas, messageSet.messages);
-                        CasPersistenceUtils.writeSerializedCas(userCas,
-                                documentService.getCasFile(ad.getDocument(), ad.getUser()));
+                        casStorageService.forceActionOnCas(sd, ad.getUser(),
+                                (doc, user) -> casStorageService.readCas(doc, user,
+                                        UNMANAGED_NON_INITIALIZING_ACCESS),
+                                (cas) -> casDoctor.repair(project, cas, messageSet.messages), //
+                                true);
                     }
                     catch (Exception e) {
                         messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
@@ -258,8 +258,10 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
 
                 try {
-                    CAS initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
-                    casDoctor.analyze(project, initialCas, messageSet.messages);
+                    casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
+                            (doc, user) -> createOrReadInitialCasWithoutSaving(doc, messageSet),
+                            (cas) -> casDoctor.analyze(project, cas, messageSet.messages), //
+                            false);
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
@@ -277,9 +279,11 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CURATION_USER + "]");
                 try {
-                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER,
-                            UNMANAGED_NON_INITIALIZING_ACCESS);
-                    casDoctor.analyze(project, curationCas, messageSet.messages);
+                    casStorageService.forceActionOnCas(sd, CURATION_USER,
+                            (doc, user) -> casStorageService.readCas(doc, user,
+                                    UNMANAGED_NON_INITIALIZING_ACCESS),
+                            (cas) -> casDoctor.analyze(project, cas, messageSet.messages), //
+                            false);
                 }
                 catch (FileNotFoundException e) {
                     // If there is no CAS for the curation user, then curation has not started yet.
@@ -305,9 +309,11 @@ public class ProjectCasDoctorPanel
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
-                        CAS userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
-                                UNMANAGED_NON_INITIALIZING_ACCESS);
-                        casDoctor.analyze(project, userCas, messageSet.messages);
+                        casStorageService.forceActionOnCas(ad.getDocument(), ad.getUser(),
+                                (doc, user) -> casStorageService.readCas(doc, user,
+                                        UNMANAGED_NON_INITIALIZING_ACCESS),
+                                (cas) -> casDoctor.analyze(project, cas, messageSet.messages), //
+                                false);
                     }
                     catch (Exception e) {
                         messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
