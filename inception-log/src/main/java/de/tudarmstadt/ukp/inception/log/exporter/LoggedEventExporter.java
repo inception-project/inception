@@ -125,14 +125,8 @@ public class LoggedEventExporter
                 }
 
                 // Transfer data over to DTO
-                ExportedLoggedEvent exportedEvent = new ExportedLoggedEvent();
-                exportedEvent.setId(event.getId());
-                exportedEvent.setCreated(event.getCreated());
-                exportedEvent.setDocumentName(documentName);
-                exportedEvent.setEvent(event.getEvent());
-                exportedEvent.setAnnotator(event.getAnnotator());
-                exportedEvent.setUser(event.getUser());
-                exportedEvent.setDetails(event.getDetails());
+                ExportedLoggedEvent exportedEvent = ExportedLoggedEvent
+                        .fromLoggedEvent(documentName, event);
 
                 // Write DTO
                 try {
