@@ -24,6 +24,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
+import java.io.IOException;
+
 public interface AnnotationEditorFactory
 {
     /**
@@ -36,8 +38,7 @@ public interface AnnotationEditorFactory
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
 
-    default AnnotationEditorBase create(String id, AnnotationEditorController aController)
-    {
+    default AnnotationEditorBase create(String id, AnnotationEditorController aController, String jsonUser, String jsonProject) throws IOException {
         return null;
     }
 

@@ -28,6 +28,8 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditor;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 @Component("Experimental Editor")
 public class EditorFactory
     implements AnnotationEditorFactory
@@ -49,8 +51,8 @@ public class EditorFactory
     }
 
     @Override
-    public AnnotationEditorBase create(String aId, AnnotationEditorController aController) {
-        return new AnnotationEditor(aId, aController);
+    public AnnotationEditorBase create(String aId, AnnotationEditorController aController, String jsonUser, String jsonProject) throws IOException {
+        return new AnnotationEditor(aId, aController, jsonUser, jsonProject);
     }
 
     @Override

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -146,8 +148,7 @@ public class AnnotationPage
     // commonInit(focus);
     // }
 
-    public AnnotationPage(final PageParameters aPageParameters)
-    {
+    public AnnotationPage(final PageParameters aPageParameters) throws IOException {
         super(aPageParameters);
 
         LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
@@ -169,8 +170,7 @@ public class AnnotationPage
         updateDocumentView(null, null, focus);
     }
 
-    private void createChildComponents()
-    {
+    private void createChildComponents() throws IOException {
         add(createUrlFragmentBehavior());
 
         centerArea = new WebMarkupContainer("centerArea");
@@ -294,8 +294,7 @@ public class AnnotationPage
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
-    private void createAnnotationEditor(IPartialPageRequestHandler aTarget)
-    {
+    private void createAnnotationEditor(IPartialPageRequestHandler aTarget) throws IOException {
         AnnotatorState state = getModelObject();
 
         String editorId = getModelObject().getPreferences().getEditor();
@@ -305,14 +304,26 @@ public class AnnotationPage
             System.out.println(editorRegistry.getEditorFactories().get(i));
         }
 
-        AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
+        //Own editor, JSON here only required for testing / training
+        AnnotationEditorFactory factory = editorRegistry.getEditorFactories().get(2);
 
         if (factory == null) {
             factory = editorRegistry.getDefaultEditorFactory();
         }
 
-        annotationEditor = new AnnotationEditor("editor", controller);// TODO get from factory ->  factory.create("editor", controller);
+
+        annotationEditor = factory.create("editor", controller,
+            JSONUtil.toJsonString(getModelObject().getUser()),
+            JSONUtil.toJsonString(getModelObject().getProject()));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
+
+
+        /*
+        //Standard editor (only required for testing purpose right now
+        AnnotationEditorFactory factory = editorRegistry.getDefaultEditorFactory();
+        annotationEditor = factory.create("editor",getModel(),detailEditor, this::getEditorCas);
+
+         */
 
         centerArea.addOrReplace(annotationEditor);
 
@@ -330,6 +341,8 @@ public class AnnotationPage
                 }
             }
         }
+
+
 
         // Use the proper position labels for the current paging strategy
         centerArea.addOrReplace(
@@ -529,7 +542,7 @@ public class AnnotationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-
+        
         LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 

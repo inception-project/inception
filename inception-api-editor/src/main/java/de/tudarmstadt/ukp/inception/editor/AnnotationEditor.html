@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<script>
+     function writeDocument() {
+        alert(document.getElementById("document_name"));
+    }
+</script>
+<body>
+<wicket:panel>
+    <div class="scrolling flex-content fit-child-loose text-center" style="min-height: unset;">
+        <div class="brat">
+            <textarea onclick=writeDocument()>
+                Test
+            </textarea>
+            <div id="messagepullup" class="messages" style="display: none"></div>
+            <div id="commentpopup"></div>
+            <div id="document_name"></div>
+        </div>
+    </div>
+</wicket:panel>
+</body>
+</html>
