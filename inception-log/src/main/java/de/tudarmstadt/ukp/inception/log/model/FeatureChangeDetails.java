@@ -25,10 +25,13 @@ import org.apache.uima.cas.FeatureStructure;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+
 @JsonInclude(Include.NON_NULL)
 public class FeatureChangeDetails
 {
     private AnnotationDetails ann;
+    private String feature;
     private Object value;
     private Object previousValue;
 
@@ -37,9 +40,11 @@ public class FeatureChangeDetails
         // Nothing to do
     }
 
-    public FeatureChangeDetails(FeatureStructure aFS, Object aNew, Object aOld)
+    public FeatureChangeDetails(FeatureStructure aFS, AnnotationFeature aFeature, Object aNew,
+            Object aOld)
     {
         ann = new AnnotationDetails(aFS);
+        setFeature(aFeature.getName());
         setValue(aNew);
         setPreviousValue(aOld);
     }
@@ -52,6 +57,16 @@ public class FeatureChangeDetails
     public void setAnnotation(AnnotationDetails aAnn)
     {
         ann = aAnn;
+    }
+
+    public String getFeature()
+    {
+        return feature;
+    }
+
+    public void setFeature(String aFeature)
+    {
+        feature = aFeature;
     }
 
     public Object getValue()

@@ -23,6 +23,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+
 public interface EventLoggingAdapter<T>
 {
     boolean accepts(Object aEvent);
@@ -71,5 +73,18 @@ public interface EventLoggingAdapter<T>
         else {
             return "<SYSTEM>";
         }
+    }
+
+    default LoggedEvent toLoggedEvent(T aEvent) throws Exception
+    {
+        LoggedEvent e = new LoggedEvent();
+        e.setCreated(getCreated(aEvent));
+        e.setEvent(getEvent(aEvent));
+        e.setUser(getUser(aEvent));
+        e.setProject(getProject(aEvent));
+        e.setDocument(getDocument(aEvent));
+        e.setAnnotator(getAnnotator(aEvent));
+        e.setDetails(getDetails(aEvent));
+        return e;
     }
 }
