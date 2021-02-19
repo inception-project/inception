@@ -103,7 +103,7 @@ public class AgreementUtils
         if (someCas == null) {
             // Well... there is NOTHING here!
             // All positions are irrelevant
-            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurtionSet(p)));
+            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurationSet(p)));
 
             return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                     completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
@@ -115,7 +115,7 @@ public class AgreementUtils
         // We should just do the right thing here which is: do nothing
         if (ts.getType(aType) == null) {
             // All positions are irrelevant
-            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurtionSet(p)));
+            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurationSet(p)));
 
             return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                     completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
@@ -132,7 +132,7 @@ public class AgreementUtils
                 .isPrimitive();
 
         nextPosition: for (Position p : aDiff.getPositions()) {
-            ConfigurationSet cfgSet = aDiff.getConfigurtionSet(p);
+            ConfigurationSet cfgSet = aDiff.getConfigurationSet(p);
 
             // Only calculate agreement for the given layer
             if (!cfgSet.getPosition().getType().equals(aType)) {

@@ -246,7 +246,7 @@ public class CasMerge
             // Slots are also excluded for the moment
             for (SpanPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
-                ConfigurationSet cfgs = aDiff.getConfigurtionSet(position);
+                ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
                 if (!shouldMerge(aDiff, cfgs)) {
                     continue;
@@ -294,7 +294,7 @@ public class CasMerge
 
             for (SpanPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
-                ConfigurationSet cfgs = aDiff.getConfigurtionSet(position);
+                ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
                 if (!shouldMerge(aDiff, cfgs)) {
                     continue;
@@ -334,7 +334,7 @@ public class CasMerge
 
             for (RelationPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
-                ConfigurationSet cfgs = aDiff.getConfigurtionSet(position);
+                ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
                 if (!shouldMerge(aDiff, cfgs)) {
                     continue;
