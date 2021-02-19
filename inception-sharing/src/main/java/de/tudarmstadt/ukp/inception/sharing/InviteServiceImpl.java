@@ -180,14 +180,18 @@ public class InviteServiceImpl
 
     @Override
     @Transactional
-    public void generateInviteWithExpirationDate(Project aProject, Date aExpirationDate)
+    public boolean generateInviteWithExpirationDate(Project aProject, Date aExpirationDate)
     {
+        if (aExpirationDate.getTime() < new Date().getTime()) {
+            return false;
+        }
         ProjectInvite invite = getProjectInvite(aProject);
         if (invite == null) {
             generateNewInvite(aProject, aExpirationDate);
-            return;
+            return true;
         }
         invite.setExpirationDate(aExpirationDate);
         entityManager.merge(invite);
+        return true;
     }
 }

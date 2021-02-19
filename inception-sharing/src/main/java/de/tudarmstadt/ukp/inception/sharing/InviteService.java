@@ -73,6 +73,7 @@ public interface InviteService
      * generate new invite link with the given date
      * @param aProject the project
      * @param aExpirationDate the new expiration date
+     * @return if invite was generated or date was updated
      */
-    void generateInviteWithExpirationDate(Project aProject, Date aExpirationDate);
+    boolean generateInviteWithExpirationDate(Project aProject, Date aExpirationDate);
 }

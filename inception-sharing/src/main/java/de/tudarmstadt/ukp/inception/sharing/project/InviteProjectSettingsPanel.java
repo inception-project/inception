@@ -73,7 +73,7 @@ public class InviteProjectSettingsPanel
         datePickContainer.setOutputMarkupId(true);
         inviteLinkContainer.add(datePickContainer);
         datePicker = new AjaxDatePicker("datePicker",
-                Model.of(inviteService.getExpirationDate(getModelObject())), "MM/dd/yy");
+                Model.of(inviteService.getExpirationDate(getModelObject())), "yyyy-MM-dd");
         Form<Project> datePickForm = new Form<Project>("datePickForm", getModel());
         datePickForm.add(new LambdaAjaxLink("submitDateLink", this::actionSetDate));
         datePickForm.add(datePicker);
@@ -89,8 +89,14 @@ public class InviteProjectSettingsPanel
     }
     
     private void actionSetDate(AjaxRequestTarget aTarget) {
-        inviteService.generateInviteWithExpirationDate(getModelObject(), datePicker.getModelObject());
-        success("Set expiration date.");
+        if (inviteService.generateInviteWithExpirationDate(getModelObject(),
+                datePicker.getModelObject())) {
+            success("Invite link has been generated/updated.");
+        }
+        else {
+            error("Pick a valid date.");
+        }
+
         aTarget.add(inviteLinkContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
