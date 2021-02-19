@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
@@ -31,8 +29,6 @@ import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
 public class FeatureValueUpdatedEventAdapter
     implements EventLoggingAdapter<FeatureValueUpdatedEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {
@@ -61,7 +57,7 @@ public class FeatureValueUpdatedEventAdapter
     public String getDetails(FeatureValueUpdatedEvent aEvent) throws IOException
     {
         // FIXME This may fail for slot features... let's see.
-        FeatureChangeDetails details = new FeatureChangeDetails(aEvent.getFS(),
+        FeatureChangeDetails details = new FeatureChangeDetails(aEvent.getFS(), aEvent.getFeature(),
                 aEvent.getNewValue(), aEvent.getOldValue());
         return JSONUtil.toJsonString(details);
     }
