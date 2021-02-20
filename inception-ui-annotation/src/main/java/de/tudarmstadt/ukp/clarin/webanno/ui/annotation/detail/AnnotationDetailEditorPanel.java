@@ -827,7 +827,6 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("actionAnnotate() updating progress information");
         int sentenceNumber = getSentenceNumber(aCas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // persist changes
         editorPage.writeEditorCas(aCas);
@@ -1037,7 +1036,6 @@ public abstract class AnnotationDetailEditorPanel
         // Update progress information
         int sentenceNumber = getSentenceNumber(cas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
 
         autoScroll(cas);
 
@@ -1186,7 +1184,6 @@ public abstract class AnnotationDetailEditorPanel
         editorPage.writeEditorCas(cas);
         int sentenceNumber = getSentenceNumber(cas, originFs.getBegin());
         state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
 
         autoScroll(cas);
 
