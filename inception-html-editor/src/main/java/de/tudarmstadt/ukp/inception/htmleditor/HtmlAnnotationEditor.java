@@ -401,15 +401,16 @@ public class HtmlAnnotationEditor
             }
 
             try {
-                CAS cas = getCasProvider().get();
-                int begin = anno.getRanges().get(0).getStartOffset();
-                int end = anno.getRanges().get(0).getEndOffset();
+                // Annotator.js seems to do offsets 1-based (?).
+                int begin = anno.getRanges().get(0).getStartOffset() - 1;
+                int end = anno.getRanges().get(0).getEndOffset() - 1;
 
                 if (!(begin > -1 && end > -1)) {
                     throw new AnnotationException(
                             "Unable to create span annotation: No match was found");
                 }
 
+                CAS cas = getCasProvider().get();
                 AnnotatorState state = getModelObject();
                 if (state.isSlotArmed()) {
                     // When filling a slot, the current selection is *NOT* changed. The
