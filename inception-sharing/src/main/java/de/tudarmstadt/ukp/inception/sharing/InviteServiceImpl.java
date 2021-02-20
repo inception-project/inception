@@ -61,21 +61,36 @@ public class InviteServiceImpl
     @Transactional
     public String generateInviteID(Project aProject)
     {
+        // remove old invite if necessary
+        removeInviteID(aProject);
         // set expiration date one year from now
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.add(Calendar.YEAR, 1);
-        Date expirationDate = calendar.getTime();
+        Date expirationDate = getDateOneYearForth(new Date());
+        String inviteID = generateNewInvite(aProject, expirationDate);
+
+        return inviteID;
+    }
+
+    private String generateNewInvite(Project aProject, Date expirationDate)
+    {
         // generate id
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
         String inviteID = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-
-        removeInviteID(aProject);
-        entityManager.flush();
+        
         entityManager.persist(new ProjectInvite(aProject, inviteID, expirationDate));
-
         return inviteID;
+    }
+
+    /**
+     * Get date one year from the given one
+     */
+    private Date getDateOneYearForth(Date aDate)
+    {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(aDate);
+        calendar.add(Calendar.YEAR, 1);
+        Date futureDate = calendar.getTime();
+        return futureDate;
     }
 
     @Override
@@ -87,8 +102,8 @@ public class InviteServiceImpl
         if (invite == null) {
             return;
         }
-
         entityManager.remove(invite);
+        entityManager.flush();
     }
 
     private ProjectInvite getProjectInvite(Project aProject)
@@ -138,5 +153,45 @@ public class InviteServiceImpl
 
         String expectedId = getValidInviteID(aProject);
         return expectedId != null && aInviteId.equals(expectedId);
+    }
+
+    @Override
+    public Date getExpirationDate(Project aProject)
+    {
+        ProjectInvite invite = getProjectInvite(aProject);
+        if (invite == null) {
+            return null;
+        }
+        return invite.getExpirationDate();
+    }
+
+    @Transactional
+    @Override
+    public void extendInviteLinkDate(Project aProject)
+    {
+        ProjectInvite invite = getProjectInvite(aProject);
+        if (invite == null) {
+            return;
+        }
+        Date newExpirationDate = getDateOneYearForth(invite.getExpirationDate());
+        invite.setExpirationDate(newExpirationDate);
+        entityManager.merge(invite);
+    }
+
+    @Override
+    @Transactional
+    public boolean generateInviteWithExpirationDate(Project aProject, Date aExpirationDate)
+    {
+        if (aExpirationDate.getTime() < new Date().getTime()) {
+            return false;
+        }
+        ProjectInvite invite = getProjectInvite(aProject);
+        if (invite == null) {
+            generateNewInvite(aProject, aExpirationDate);
+            return true;
+        }
+        invite.setExpirationDate(aExpirationDate);
+        entityManager.merge(invite);
+        return true;
     }
 }
