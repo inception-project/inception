@@ -23,14 +23,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class ChainLinkCreatedEvent
-    extends ChainEvent
+    extends ChainLinkEvent
     implements AnnotationCreatedEvent
 {
     private static final long serialVersionUID = 2482532617695805169L;
 
     public ChainLinkCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aAnnotation)
+            AnnotationLayer aLayer, AnnotationFS aAnnotation, AnnotationFS aNextLink)
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        super(aSource, aDocument, aUser, aLayer, aAnnotation, aNextLink);
     }
 }

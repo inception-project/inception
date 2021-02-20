@@ -23,7 +23,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class ChainSpanCreatedEvent
-    extends ChainEvent
+    extends ChainSpanEvent
     implements AnnotationCreatedEvent
 {
     private static final long serialVersionUID = 3606931476385064522L;

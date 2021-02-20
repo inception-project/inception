@@ -21,45 +21,42 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
-import de.tudarmstadt.ukp.inception.log.model.RelationDetails;
 
 @Component
-public class RelationEventAdapter
-    implements EventLoggingAdapter<RelationEvent>
+public class ChainSpanEventAdapter
+    implements EventLoggingAdapter<ChainSpanEvent>
 {
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof RelationEvent;
+        return aEvent instanceof ChainSpanEvent;
     }
 
     @Override
-    public String getDetails(RelationEvent aEvent) throws IOException
-    {
-        AnnotationDetails source = new AnnotationDetails(aEvent.getSourceAnnotation());
-        AnnotationDetails target = new AnnotationDetails(aEvent.getTargetAnnotation());
-        RelationDetails details = new RelationDetails(aEvent.getAnnotation(), source, target);
-        return JSONUtil.toJsonString(details);
-    }
-
-    @Override
-    public long getDocument(RelationEvent aEvent)
+    public long getDocument(ChainSpanEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
 
     @Override
-    public String getAnnotator(RelationEvent aEvent)
+    public long getProject(ChainSpanEvent aEvent)
+    {
+        return aEvent.getDocument().getProject().getId();
+    }
+
+    @Override
+    public String getAnnotator(ChainSpanEvent aEvent)
     {
         return aEvent.getUser();
     }
 
     @Override
-    public long getProject(RelationEvent aEvent)
+    public String getDetails(ChainSpanEvent aEvent) throws IOException
     {
-        return aEvent.getDocument().getProject().getId();
+        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+        return JSONUtil.toJsonString(details);
     }
 }

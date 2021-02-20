@@ -171,9 +171,10 @@ public class ImportDocumentsPanel
                 }
                 info("Document [" + fileName + "] has been imported successfully!");
             }
-            catch (Exception e) {
+            catch (Throwable e) {
                 error("Error while uploading document " + fileName + ": " + getRootCauseMessage(e));
                 LOG.error(fileName + ": " + e.getMessage(), e);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
 
