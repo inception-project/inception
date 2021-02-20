@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.dkpro</groupId>
@@ -27,7 +28,9 @@
   <version>0.19.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
-  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
+  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge
+    Bases
+  </description>
   <url>https://inception-project.github.io</url>
   <inceptionYear>2018</inceptionYear>
   <licenses>
@@ -415,9 +418,9 @@
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-      	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      	<artifactId>inception-sharing</artifactId>
-      	<version>0.19.0-SNAPSHOT</version>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-sharing</artifactId>
+        <version>0.19.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -549,7 +552,7 @@
         <artifactId>inception-export</artifactId>
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
-      
+
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-json</artifactId>
@@ -633,6 +636,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-plugin-manager</artifactId>
+        <version>0.19.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-versioning</artifactId>
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
 
@@ -753,21 +761,21 @@
         <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
         <version>${wicketstuff.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
         <version>${wicket-bootstrap.version}</version>
       </dependency>
       <dependency>
-         <groupId>de.agilecoders.wicket</groupId>
-         <artifactId>wicket-bootstrap-extensions</artifactId>
-         <version>${wicket-bootstrap.version}</version>
+        <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>wicket-bootstrap-extensions</artifactId>
+        <version>${wicket-bootstrap.version}</version>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>jquery-selectors</artifactId>
-         <version>${wicket-jquery-selectors.version}</version>
+        <version>${wicket-jquery-selectors.version}</version>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
@@ -1080,7 +1088,7 @@
         <artifactId>spring-security-web</artifactId>
         <version>${spring.security.version}</version>
       </dependency>
-      
+
       <!-- Tomcat -->
       <dependency>
         <groupId>org.apache.tomcat.embed</groupId>
@@ -1364,7 +1372,7 @@
           </exclusion>
         </exclusions>
       </dependency>
-      
+
       <dependency>
         <groupId>org.dkpro.core</groupId>
         <artifactId>dkpro-core-testing-asl</artifactId>
@@ -1722,6 +1730,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.eclipse.jgit</groupId>
+        <artifactId>org.eclipse.jgit</artifactId>
+        <version>5.10.0.202012080955-r</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>c3</artifactId>
         <version>0.6.6</version>
@@ -1748,13 +1762,13 @@
         <artifactId>jquery.scrollTo</artifactId>
         <version>2.1.2</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.mariadb.jdbc</groupId>
         <artifactId>mariadb-java-client</artifactId>
         <version>${mariadb.driver.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-logging</artifactId>
@@ -1906,6 +1920,8 @@
     <module>inception-imls-dl4j</module>
     <!-- Packaging -->
     <module>inception-docker</module>
+    <!-- Versioning -->
+    <module>inception-versioning</module>
   </modules>
 
   <build>
@@ -2365,7 +2381,7 @@
     <profile>
       <id>full-tests</id>
       <properties>
-        <excludedTestCategories />
+        <excludedTestCategories/>
       </properties>
     </profile>
   </profiles>
