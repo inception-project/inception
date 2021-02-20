@@ -371,23 +371,19 @@ public class HtmlAnnotationEditor
                 }
 
                 AnnotationFS fs = selectByAddr(cas, AnnotationFS.class, paramId.getId());
-                if (fs.getBegin() > -1 && fs.getEnd() > -1) {
-                    AnnotatorState state = getModelObject();
-                    if (state.isSlotArmed()) {
-                        // When filling a slot, the current selection is *NOT* changed. The
-                        // Span annotation which owns the slot that is being filled remains
-                        // selected!
-                        getActionHandler().actionFillSlot(aTarget, cas, fs.getBegin(), fs.getEnd(),
-                                paramId);
-                    }
-                    else {
-                        state.getSelection().selectSpan(paramId, cas, fs.getBegin(), fs.getEnd());
-                        getActionHandler().actionSelect(aTarget);
-                    }
-                }
 
-                throw new AnnotationException(
-                        "Unable to select span annotation: No match was found");
+                AnnotatorState state = getModelObject();
+                if (state.isSlotArmed()) {
+                    // When filling a slot, the current selection is *NOT* changed. The
+                    // Span annotation which owns the slot that is being filled remains
+                    // selected!
+                    getActionHandler().actionFillSlot(aTarget, cas, fs.getBegin(), fs.getEnd(),
+                            paramId);
+                }
+                else {
+                    state.getSelection().selectSpan(paramId, cas, fs.getBegin(), fs.getEnd());
+                    getActionHandler().actionSelect(aTarget);
+                }
             }
             catch (AnnotationException | IOException e) {
                 handleError("Unable to select span annotation", e);
@@ -408,22 +404,23 @@ public class HtmlAnnotationEditor
                 CAS cas = getCasProvider().get();
                 int begin = anno.getRanges().get(0).getStartOffset();
                 int end = anno.getRanges().get(0).getEndOffset();
-                AnnotatorState state = getModelObject();
-                if (begin > -1 && end > -1) {
-                    if (state.isSlotArmed()) {
-                        // When filling a slot, the current selection is *NOT* changed. The
-                        // Span annotation which owns the slot that is being filled remains
-                        // selected!
-                        getActionHandler().actionFillSlot(aTarget, cas, begin, end, NONE_ID);
-                    }
-                    else {
-                        state.getSelection().selectSpan(cas, begin, end);
-                        getActionHandler().actionCreateOrUpdate(aTarget, cas);
-                    }
+
+                if (!(begin > -1 && end > -1)) {
+                    throw new AnnotationException(
+                            "Unable to create span annotation: No match was found");
                 }
 
-                throw new AnnotationException(
-                        "Unable to create span annotation: No match was found");
+                AnnotatorState state = getModelObject();
+                if (state.isSlotArmed()) {
+                    // When filling a slot, the current selection is *NOT* changed. The
+                    // Span annotation which owns the slot that is being filled remains
+                    // selected!
+                    getActionHandler().actionFillSlot(aTarget, cas, begin, end, NONE_ID);
+                }
+                else {
+                    state.getSelection().selectSpan(cas, begin, end);
+                    getActionHandler().actionCreateOrUpdate(aTarget, cas);
+                }
             }
             catch (IOException | AnnotationException e) {
                 handleError("Unable to create span annotation", e);
@@ -496,7 +493,8 @@ public class HtmlAnnotationEditor
 
         private List<Range> toRanges(List<VRange> aRanges)
         {
-            return aRanges.stream().map(r -> new Range(r.getBegin(), r.getEnd()))
+            // Annotator.js seems to do offsets 1-based (?).
+            return aRanges.stream().map(r -> new Range(r.getBegin() + 1, r.getEnd() + 1))
                     .collect(Collectors.toList());
         }
 
