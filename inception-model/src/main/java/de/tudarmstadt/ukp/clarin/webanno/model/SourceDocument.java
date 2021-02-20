@@ -70,8 +70,6 @@ public class SourceDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
-    private int sentenceAccessed = 0;
-
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date created;
@@ -166,16 +164,6 @@ public class SourceDocument
     public void setTimestamp(Date timestamp)
     {
         this.timestamp = timestamp;
-    }
-
-    public int getSentenceAccessed()
-    {
-        return sentenceAccessed;
-    }
-
-    public void setSentenceAccessed(int sentenceAccessed)
-    {
-        this.sentenceAccessed = sentenceAccessed;
     }
 
     @PrePersist

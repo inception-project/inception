@@ -19,48 +19,47 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainLinkEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
+import de.tudarmstadt.ukp.inception.log.model.ChainLinkDetails;
 
 @Component
-public class SpanCreatedEventAdapter
-    implements EventLoggingAdapter<SpanCreatedEvent>
+public class ChainLinkEventAdapter
+    implements EventLoggingAdapter<ChainLinkEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof SpanCreatedEvent;
+        return aEvent instanceof ChainLinkEvent;
     }
 
     @Override
-    public long getDocument(SpanCreatedEvent aEvent)
+    public long getDocument(ChainLinkEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
 
     @Override
-    public long getProject(SpanCreatedEvent aEvent)
+    public long getProject(ChainLinkEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
 
     @Override
-    public String getAnnotator(SpanCreatedEvent aEvent)
+    public String getAnnotator(ChainLinkEvent aEvent)
     {
         return aEvent.getUser();
     }
 
     @Override
-    public String getDetails(SpanCreatedEvent aEvent) throws IOException
+    public String getDetails(ChainLinkEvent aEvent) throws IOException
     {
-        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+        AnnotationDetails annotation = new AnnotationDetails(aEvent.getAnnotation());
+        AnnotationDetails nextLink = new AnnotationDetails(aEvent.getNextLink());
+        ChainLinkDetails details = new ChainLinkDetails(annotation, nextLink);
         return JSONUtil.toJsonString(details);
     }
 }

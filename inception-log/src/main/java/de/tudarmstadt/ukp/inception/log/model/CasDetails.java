@@ -15,21 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model;
+package de.tudarmstadt.ukp.inception.log.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
+import org.apache.uima.cas.CAS;
 
-/**
- * Implementation of {@link PersistentEnumUserType}
- */
-public class TrainDocumentStateType
-    extends PersistentEnumUserType<TrainDocumentState>
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
+public class CasDetails
 {
-    private static final long serialVersionUID = -122915445684300662L;
+    private int annotationCount = -1;
 
-    @Override
-    public Class<TrainDocumentState> returnedClass()
+    public CasDetails()
     {
-        return TrainDocumentState.class;
+        // Nothing to do
+    }
+
+    public CasDetails(CAS aCas)
+    {
+        annotationCount = aCas.getAnnotationIndex().size();
+    }
+
+    public int getAnnotationCount()
+    {
+        return annotationCount;
+    }
+
+    public void setAnnotationCount(int aAnnotationCount)
+    {
+        annotationCount = aAnnotationCount;
     }
 }

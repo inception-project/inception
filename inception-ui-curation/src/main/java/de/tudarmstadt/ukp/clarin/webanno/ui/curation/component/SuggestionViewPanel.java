@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
@@ -245,11 +244,7 @@ public class SuggestionViewPanel
 
             writeEditorCas(sourceState, targetCas);
 
-            // Update timestamp
             AnnotationFS sourceAnnotation = selectAnnotationByAddr(sourceCas, sourceVid.getId());
-            int sentenceNumber = getSentenceNumber(sourceAnnotation.getCAS(),
-                    sourceAnnotation.getBegin());
-            sourceState.getDocument().setSentenceAccessed(sentenceNumber);
 
             if (sourceState.getPreferences().isScrollPage()) {
                 sourceState.getPagingStrategy().moveToOffset(sourceState, targetCas,
