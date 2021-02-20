@@ -48,9 +48,6 @@ public class ExportedSourceDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
-    @JsonProperty("sentence_accessed")
-    private int sentenceAccessed = 0;
-
     @JsonProperty("created")
     @Temporal(TemporalType.TIMESTAMP)
     private Date created;
@@ -97,16 +94,6 @@ public class ExportedSourceDocument
     public void setTimestamp(Date timestamp)
     {
         this.timestamp = timestamp;
-    }
-
-    public int getSentenceAccessed()
-    {
-        return sentenceAccessed;
-    }
-
-    public void setSentenceAccessed(int sentenceAccessed)
-    {
-        this.sentenceAccessed = sentenceAccessed;
     }
 
     public Date getCreated()
