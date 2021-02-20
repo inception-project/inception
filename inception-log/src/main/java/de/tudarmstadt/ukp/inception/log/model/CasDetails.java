@@ -15,7 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Utility classes for brat annotation/curation/correction
- */
-package de.tudarmstadt.ukp.clarin.webanno.brat.util;
+package de.tudarmstadt.ukp.inception.log.model;
+
+import org.apache.uima.cas.CAS;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
+public class CasDetails
+{
+    private int annotationCount = -1;
+
+    public CasDetails()
+    {
+        // Nothing to do
+    }
+
+    public CasDetails(CAS aCas)
+    {
+        annotationCount = aCas.getAnnotationIndex().size();
+    }
+
+    public int getAnnotationCount()
+    {
+        return annotationCount;
+    }
+
+    public void setAnnotationCount(int aAnnotationCount)
+    {
+        annotationCount = aAnnotationCount;
+    }
+}

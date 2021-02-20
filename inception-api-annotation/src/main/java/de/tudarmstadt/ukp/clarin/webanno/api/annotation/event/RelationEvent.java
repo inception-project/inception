@@ -52,7 +52,7 @@ public abstract class RelationEvent
         return targetAnno;
     }
 
-    public AnnotationFS getSourceAnno()
+    public AnnotationFS getSourceAnnotation()
     {
         return sourceAnno;
     }

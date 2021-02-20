@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
@@ -130,10 +131,11 @@ public class ChainAdapter
         AnnotationFS targetNext = getNextLink(aTargetFs);
 
         // adjacent - origin links to target
-        if (WebAnnoCasUtil.isSame(originNext, aTargetFs)) {
+        if (isSame(originNext, aTargetFs)) {
+            // Nothing to do
         }
         // adjacent - target links to origin
-        else if (WebAnnoCasUtil.isSame(targetNext, aOriginFs)) {
+        else if (isSame(targetNext, aOriginFs)) {
             if (isLinkedListBehavior()) {
                 throw new IllegalStateException("Cannot change direction of a link within a chain");
             }
@@ -148,7 +150,7 @@ public class ChainAdapter
 
             AnnotationFS targetPrev = getPrevLink(targetChain, aTargetFs);
 
-            if (!WebAnnoCasUtil.isSame(originChain, targetChain)) {
+            if (!isSame(originChain, targetChain)) {
                 if (isLinkedListBehavior()) {
                     // if the two links are in different chains then split the chains up at the
                     // origin point and target point and create a new link between origin and target
@@ -215,7 +217,9 @@ public class ChainAdapter
             }
         }
 
-        publishEvent(new ChainLinkCreatedEvent(this, aDocument, aUsername, getLayer(), aOriginFs));
+        AnnotationFS nextLink = getNextLink(aOriginFs);
+        publishEvent(new ChainLinkCreatedEvent(this, aDocument, aUsername, getLayer(), aOriginFs,
+                nextLink));
 
         // We do not actually create a new FS for the arc. Features are set on the originFS.
         return WebAnnoCasUtil.getAddr(aOriginFs);
@@ -238,13 +242,14 @@ public class ChainAdapter
 
         // Create the tail chain
         // We know that there must be a next link, otherwise no arc would have been rendered!
-        newChain(aCas, getNextLink(linkToDelete));
+        AnnotationFS nextLink = getNextLink(linkToDelete);
+        newChain(aCas, nextLink);
 
         // Disconnect the tail from the head
         setNextLink(linkToDelete, null);
 
-        publishEvent(
-                new ChainLinkDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete));
+        publishEvent(new ChainLinkDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete,
+                nextLink));
     }
 
     private void deleteSpan(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress)

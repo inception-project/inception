@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -48,7 +49,6 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
@@ -64,6 +64,7 @@ import org.apache.wicket.markup.html.WebComponent;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.dkpro.core.api.xml.Cas2SaxEvents;
@@ -163,9 +164,8 @@ public class HtmlAnnotationEditor
             if (cas.select(XmlDocument.class).isEmpty()) {
                 return renderLegacyHtml(cas);
             }
-            else {
-                return renderHtmlDocumentStructure(cas);
-            }
+
+            return renderHtmlDocumentStructure(cas);
         }
         catch (Exception e) {
             handleError("Unable to render data", e);
@@ -233,13 +233,6 @@ public class HtmlAnnotationEditor
         return buf.toString();
     }
 
-    private void handleError(String aMessage, Throwable aCause)
-    {
-        LOG.error(aMessage, aCause);
-        error(aMessage + ExceptionUtils.getRootCauseMessage(aCause));
-        return;
-    }
-
     private String toJson(Object result)
     {
         String json = "[]";
@@ -271,7 +264,6 @@ public class HtmlAnnotationEditor
         script.append("        select:  '" + callbackUrl + "'");
         script.append("    }");
         script.append("});");
-        // script.append("Wicket.$('" + vis.getMarkupId() + "').annotator = ann;");
         return WicketUtil.wrapInTryCatch(script.toString());
     }
 
@@ -279,27 +271,31 @@ public class HtmlAnnotationEditor
     protected void render(AjaxRequestTarget aTarget)
     {
         // REC: I didn't find a good way of clearing the annotations, so we do it the hard way:
-        // - rerender the entire document
+        // - re-render the entire document
         // - re-add all the annotations
         aTarget.add(vis);
         aTarget.appendJavaScript(initAnnotatorJs(vis, storeAdapter));
-
-        // aTarget.appendJavaScript(WicketUtil.wrapInTryCatch(String.join("\n",
-        // "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();",
-        // "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();"
-        // )));
     }
 
-    private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
+    private void handleError(String aMessage, Exception e)
     {
-        LOG.error(aMessage, aCause);
-        handleError(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause), aTarget);
-    }
+        RequestCycle requestCycle = RequestCycle.get();
+        requestCycle.find(AjaxRequestTarget.class)
+                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
 
-    private void handleError(String aMessage, AjaxRequestTarget aTarget)
-    {
+        if (e instanceof AnnotationException) {
+            // These are common exceptions happening as part of the user interaction. We do
+            // not really need to log their stack trace to the log.
+            error(aMessage + ": " + e.getMessage());
+            // If debug is enabled, we'll also write the error to the log just in case.
+            if (LOG.isDebugEnabled()) {
+                LOG.error("{}: {}", aMessage, e.getMessage(), e);
+            }
+            return;
+        }
+
+        LOG.error("{}", aMessage, e);
         error(aMessage);
-        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private class StoreAdapter
@@ -310,10 +306,6 @@ public class HtmlAnnotationEditor
         @Override
         protected void respond(AjaxRequestTarget aTarget)
         {
-            // We always refresh the feedback panel - only doing this in the case were actually
-            // something worth reporting occurs is too much of a hassel...
-            aTarget.addChildren(getPage(), IFeedback.class);
-
             final IRequestParameters reqParams = getRequest().getRequestParameters();
 
             // We use "emulateHTTP" to get the method as a parameter - this makes it easier to
@@ -333,28 +325,27 @@ public class HtmlAnnotationEditor
                 }
 
                 // Update existing annotation
-                if ("PUT".equals(method) && StringUtils.isNotEmpty(payload)) {
+                if ("PUT".equals(method) && isNotEmpty(payload)) {
                     update(aTarget, payload);
                 }
 
                 // New annotation created
-                if ("POST".equals(method) && StringUtils.isNotEmpty(payload)) {
+                if ("POST".equals(method) && isNotEmpty(payload)) {
                     create(aTarget, payload);
                 }
 
                 // Existing annotation deleted
-                if ("DELETE".equals(method) && StringUtils.isNotEmpty(payload)) {
+                if ("DELETE".equals(method) && isNotEmpty(payload)) {
                     delete(aTarget, payload);
                 }
 
                 // Existing annotation deleted
-                if ("HEAD".equals(method) && StringUtils.isNotEmpty(payload)) {
+                if ("HEAD".equals(method) && isNotEmpty(payload)) {
                     select(aTarget, payload);
                 }
             }
             catch (Exception e) {
-                error("Error: " + e.getMessage());
-                LOG.error("Error: " + e.getMessage(), e);
+                handleError("Error", e);
             }
         }
 
@@ -380,26 +371,22 @@ public class HtmlAnnotationEditor
                 }
 
                 AnnotationFS fs = selectByAddr(cas, AnnotationFS.class, paramId.getId());
-                if (fs.getBegin() > -1 && fs.getEnd() > -1) {
-                    AnnotatorState state = getModelObject();
-                    if (state.isSlotArmed()) {
-                        // When filling a slot, the current selection is *NOT* changed. The
-                        // Span annotation which owns the slot that is being filled remains
-                        // selected!
-                        getActionHandler().actionFillSlot(aTarget, cas, fs.getBegin(), fs.getEnd(),
-                                paramId);
-                    }
-                    else {
-                        state.getSelection().selectSpan(paramId, cas, fs.getBegin(), fs.getEnd());
-                        getActionHandler().actionSelect(aTarget);
-                    }
+
+                AnnotatorState state = getModelObject();
+                if (state.isSlotArmed()) {
+                    // When filling a slot, the current selection is *NOT* changed. The
+                    // Span annotation which owns the slot that is being filled remains
+                    // selected!
+                    getActionHandler().actionFillSlot(aTarget, cas, fs.getBegin(), fs.getEnd(),
+                            paramId);
                 }
                 else {
-                    handleError("Unable to select span annotation: No match was found", aTarget);
+                    state.getSelection().selectSpan(paramId, cas, fs.getBegin(), fs.getEnd());
+                    getActionHandler().actionSelect(aTarget);
                 }
             }
             catch (AnnotationException | IOException e) {
-                handleError("Unable to select span annotation", e, aTarget);
+                handleError("Unable to select span annotation", e);
             }
         }
 
@@ -413,36 +400,31 @@ public class HtmlAnnotationEditor
                 return;
             }
 
-            // Since we cannot pass the JSON directly to AnnotatorJS, we attach it to the HTML
-            // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
-            // up from there and then pass it on to AnnotatorJS to do the rendering.
-            // String json = toJson(anno);
-            // aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json +
-            // ";");
-
             try {
+                // Annotator.js seems to do offsets 1-based (?).
+                int begin = anno.getRanges().get(0).getStartOffset() - 1;
+                int end = anno.getRanges().get(0).getEndOffset() - 1;
+
+                if (!(begin > -1 && end > -1)) {
+                    throw new AnnotationException(
+                            "Unable to create span annotation: No match was found");
+                }
+
                 CAS cas = getCasProvider().get();
-                int begin = anno.getRanges().get(0).getStartOffset();
-                int end = anno.getRanges().get(0).getEndOffset();
                 AnnotatorState state = getModelObject();
-                if (begin > -1 && end > -1) {
-                    if (state.isSlotArmed()) {
-                        // When filling a slot, the current selection is *NOT* changed. The
-                        // Span annotation which owns the slot that is being filled remains
-                        // selected!
-                        getActionHandler().actionFillSlot(aTarget, cas, begin, end, NONE_ID);
-                    }
-                    else {
-                        state.getSelection().selectSpan(cas, begin, end);
-                        getActionHandler().actionCreateOrUpdate(aTarget, cas);
-                    }
+                if (state.isSlotArmed()) {
+                    // When filling a slot, the current selection is *NOT* changed. The
+                    // Span annotation which owns the slot that is being filled remains
+                    // selected!
+                    getActionHandler().actionFillSlot(aTarget, cas, begin, end, NONE_ID);
                 }
                 else {
-                    handleError("Unable to create span annotation: No match was found", aTarget);
+                    state.getSelection().selectSpan(cas, begin, end);
+                    getActionHandler().actionCreateOrUpdate(aTarget, cas);
                 }
             }
             catch (IOException | AnnotationException e) {
-                handleError("Unable to create span annotation", e, aTarget);
+                handleError("Unable to create span annotation", e);
             }
         }
 
@@ -512,7 +494,8 @@ public class HtmlAnnotationEditor
 
         private List<Range> toRanges(List<VRange> aRanges)
         {
-            return aRanges.stream().map(r -> new Range(r.getBegin(), r.getEnd()))
+            // Annotator.js seems to do offsets 1-based (?).
+            return aRanges.stream().map(r -> new Range(r.getBegin() + 1, r.getEnd() + 1))
                     .collect(Collectors.toList());
         }
 

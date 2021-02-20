@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
+import org.apache.uima.cas.text.AnnotationFS;
 
-/**
- * Implementation of {@link PersistentEnumUserType}
- */
-public class TrainDocumentStateType
-    extends PersistentEnumUserType<TrainDocumentState>
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
+public class ChainSpanEvent
+    extends ChainEvent
 {
-    private static final long serialVersionUID = -122915445684300662L;
+    private static final long serialVersionUID = -2905571486287675504L;
 
-    @Override
-    public Class<TrainDocumentState> returnedClass()
+    public ChainSpanEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer, AnnotationFS aAnnotation)
     {
-        return TrainDocumentState.class;
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
     }
 }

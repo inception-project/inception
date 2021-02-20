@@ -19,46 +19,42 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 
 @Component
-public class SpanDeletedEventAdapter
-    implements EventLoggingAdapter<SpanDeletedEvent>
+public class SpanEventAdapter
+    implements EventLoggingAdapter<SpanEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof SpanDeletedEvent;
+        return aEvent instanceof SpanEvent;
     }
 
     @Override
-    public long getDocument(SpanDeletedEvent aEvent)
+    public long getDocument(SpanEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
 
     @Override
-    public long getProject(SpanDeletedEvent aEvent)
+    public long getProject(SpanEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
 
     @Override
-    public String getAnnotator(SpanDeletedEvent aEvent)
+    public String getAnnotator(SpanEvent aEvent)
     {
         return aEvent.getUser();
     }
 
     @Override
-    public String getDetails(SpanDeletedEvent aEvent) throws IOException
+    public String getDetails(SpanEvent aEvent) throws IOException
     {
         AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
         return JSONUtil.toJsonString(details);

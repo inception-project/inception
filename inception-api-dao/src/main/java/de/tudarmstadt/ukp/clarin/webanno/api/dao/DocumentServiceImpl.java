@@ -724,10 +724,6 @@ public class DocumentServiceImpl
                 aAnnotationDocument.getUser());
 
         if (aUpdateTimestamp) {
-            // FIXME REC Does it really make sense to set the accessed sentence from the source
-            // document?!
-            aAnnotationDocument
-                    .setSentenceAccessed(aAnnotationDocument.getDocument().getSentenceAccessed());
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
             setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS);
         }
