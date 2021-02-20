@@ -33,7 +33,6 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,9 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -98,29 +95,19 @@ public class SuggestionBuilder
     public CurationContainer buildCurationContainer(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        CurationContainer curationContainer = new CurationContainer();
-        // initialize Variables
-        SourceDocument sourceDocument = aState.getDocument();
-        Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
-        Map<Integer, Integer> segmentNumber = new HashMap<>();
-        Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<>();
-
         // get annotation documents
-        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
-        for (AnnotationDocument annotationDocument : documentService
-                .listAnnotationDocuments(aState.getDocument())) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                finishedAnnotationDocuments.add(annotationDocument);
-            }
-        }
+        List<AnnotationDocument> finishedAnnotationDocuments = documentService
+                .listFinishedAnnotationDocuments(aState.getDocument());
 
-        Map<String, CAS> casses = listCassesforCuration(finishedAnnotationDocuments,
-                aState.getMode());
-        CAS mergeCas = getMergeCas(aState, sourceDocument, casses, null, false, false, false);
+        Map<String, CAS> casses = readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
+        CAS mergeCas = getMergeCas(aState, aState.getDocument(), casses, null, false, false, false);
 
         int diffWindowStart = getFirstSentence(mergeCas).getBegin();
         int diffWindowEnd = mergeCas.getDocumentText().length();
 
+        Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
+        Map<Integer, Integer> segmentNumber = new HashMap<>();
+        Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<>();
         updateSegment(aState, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
                 CURATION_USER, diffWindowStart, diffWindowEnd);
 
@@ -136,6 +123,7 @@ public class SuggestionBuilder
         long diffStart = System.currentTimeMillis();
         log.debug("Calculating differences...");
         int count = 0;
+        CurationContainer curationContainer = new CurationContainer();
         for (Integer begin : segmentBeginEnd.keySet()) {
             Integer end = segmentBeginEnd.get(begin);
 
@@ -184,7 +172,7 @@ public class SuggestionBuilder
                         segmentAdress.get(username).get(begin));
             }
 
-            curationContainer.getCurationViewByBegin().put(begin, curationSegment);
+            curationContainer.addCurationSegment(curationSegment);
         }
         log.debug("Difference calculation completed in {}ms",
                 (System.currentTimeMillis() - diffStart));
@@ -192,20 +180,14 @@ public class SuggestionBuilder
         return curationContainer;
     }
 
-    public Map<String, CAS> listCassesforCuration(List<AnnotationDocument> annotationDocuments,
-            Mode aMode)
-        throws UIMAException, ClassNotFoundException, IOException
+    public Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
+        throws IOException
     {
         Map<String, CAS> casses = new HashMap<>();
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            String username = annotationDocument.getUser();
-
-            if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                continue;
-            }
-
-            CAS cas = documentService.readAnnotationCas(annotationDocument.getDocument(),
-                    annotationDocument.getUser(), AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+        for (AnnotationDocument annDoc : aDocuments) {
+            String username = annDoc.getUser();
+            CAS cas = documentService.readAnnotationCas(annDoc.getDocument(), username,
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
             casses.put(username, cas);
         }
         return casses;

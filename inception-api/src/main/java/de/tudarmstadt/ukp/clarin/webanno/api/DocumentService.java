@@ -489,8 +489,8 @@ public interface DocumentService
      * {@link SourceDocument}.
      * <p>
      * Note that this method does may not return an {@link AnnotationDocument annotation document}
-     * for every user in the project because they are created lazily when a user opens a document
-     * for annotation the first time.
+     * for every user in @Override the project because they are created lazily when a user opens a
+     * document for annotation the first time.
      * <p>
      * Note that this method <b>DOES NOT</b> return an {@link AnnotationDocument annotation
      * document} if the user owning the document does not actually exist in the system! It does not
@@ -532,14 +532,23 @@ public interface DocumentService
     int numberOfExpectedAnnotationDocuments(Project project);
 
     /**
-     * List all annotation Documents in a project that are already closed. used to compute overall
+     * List all annotation documents in a project that are already closed. used to compute overall
      * project progress
      *
      * @param project
-     *            the project.
+     *            a project.
      * @return the annotation documents.
      */
     List<AnnotationDocument> listFinishedAnnotationDocuments(Project project);
+
+    /**
+     * List all annotation documents for a given source document that are already closed.
+     *
+     * @param aDocument
+     *            a source document.
+     * @return the annotation documents.
+     */
+    List<AnnotationDocument> listFinishedAnnotationDocuments(SourceDocument aDocument);
 
     /**
      * List all annotation documents for this source document (including in active and delted user

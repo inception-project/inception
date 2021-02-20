@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
  * A Model comprises of document and collection brat responses together with the username that will
  * populate the sentence with {@link AnnotationDocument}s
  */
-public class UserAnnotationSegment
+public class AnnotatorSegment
     implements Serializable
 {
     private static final long serialVersionUID = 1785666148278992450L;
@@ -100,7 +100,7 @@ public class UserAnnotationSegment
         selectionByUsernameAndAddress = aSelectionByUsernameAndAddress;
     }
 
-    public boolean equals(UserAnnotationSegment segment)
+    public boolean equals(AnnotatorSegment segment)
     {
         return segment.getCollectionData().equals(collectionData)
                 && segment.getDocumentResponse().equals(documentResponse);

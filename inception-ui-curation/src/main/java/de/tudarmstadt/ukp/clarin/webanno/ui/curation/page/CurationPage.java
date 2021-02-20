@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -99,10 +98,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePan
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -217,8 +216,8 @@ public class CurationPage
 
         curationView = new SourceListView();
 
-        List<UserAnnotationSegment> segments = new LinkedList<>();
-        UserAnnotationSegment userAnnotationSegments = new UserAnnotationSegment();
+        List<AnnotatorSegment> segments = new LinkedList<>();
+        AnnotatorSegment userAnnotationSegments = new AnnotatorSegment();
 
         if (getModelObject() != null) {
             userAnnotationSegments
@@ -531,15 +530,8 @@ public class CurationPage
     {
         AnnotatorState state = getModelObject();
 
-        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
-
-        // FIXME: This is slow and should be done via a proper SQL query
-        for (AnnotationDocument annotationDocument : documentService
-                .listAnnotationDocuments(state.getDocument())) {
-            if (annotationDocument.getState().equals(FINISHED)) {
-                finishedAnnotationDocuments.add(annotationDocument);
-            }
-        }
+        List<AnnotationDocument> finishedAnnotationDocuments = documentService
+                .listFinishedAnnotationDocuments(state.getDocument());
 
         if (finishedAnnotationDocuments.isEmpty()) {
             throw new IllegalStateException("This document has the state "
@@ -560,8 +552,7 @@ public class CurationPage
 
         SuggestionBuilder cb = new SuggestionBuilder(documentService, curationDocumentService,
                 annotationService);
-        Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
-                state.getMode());
+        Map<String, CAS> casses = cb.readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
         CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses, randomAnnotationDocument,
                 true, aMergeIncompleteAnnotations, aForceRecreateCas);
         return mergeCas;
@@ -815,7 +806,8 @@ public class CurationPage
     }
 
     @Override
-    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject, User aUser)
+    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
+            User aUser)
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
         List<SourceDocument> sdocs = curationDocumentService.listCuratableSourceDocuments(aProject);

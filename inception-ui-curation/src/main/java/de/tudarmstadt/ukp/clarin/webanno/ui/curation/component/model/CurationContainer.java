@@ -53,14 +53,9 @@ public class CurationContainer
         return curationViews;
     }
 
-    public Map<Integer, SourceListView> getCurationViewByBegin()
+    public void addCurationSegment(SourceListView aSegment)
     {
-        return curationViewByBegin;
-    }
-
-    public void setCurationSegmentByBegin(Map<Integer, SourceListView> aCurationViewByBegin)
-    {
-        curationViewByBegin = aCurationViewByBegin;
+        curationViewByBegin.put(aSegment.getBegin(), aSegment);
     }
 
     public AnnotatorState getState()

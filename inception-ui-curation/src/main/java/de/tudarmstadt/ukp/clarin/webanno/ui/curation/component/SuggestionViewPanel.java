@@ -31,13 +31,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Anno
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.DISAGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.DO_NOT_USE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.USE;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,12 +48,11 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
@@ -106,18 +105,18 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondList
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * A {@link MarkupContainer} for curation users' sentence annotation (for the lower panel).
+ * Panel with the annotator's annotations.
  */
 public class SuggestionViewPanel
-    extends WebMarkupContainer
+    extends Panel
 {
     private static final Logger LOG = LoggerFactory.getLogger(SuggestionViewPanel.class);
 
@@ -131,7 +130,7 @@ public class SuggestionViewPanel
 
     private static final long serialVersionUID = 8736268179612831795L;
 
-    private final ListView<UserAnnotationSegment> sentenceListView;
+    private final ListView<AnnotatorSegment> annotatorSegments;
     private final ContextMenu contextMenu;
 
     private @SpringBean PreRenderer preRenderer;
@@ -141,7 +140,7 @@ public class SuggestionViewPanel
     private @SpringBean ColoringService coloringService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
-    public SuggestionViewPanel(String id, IModel<List<UserAnnotationSegment>> aModel)
+    public SuggestionViewPanel(String id, IModel<List<AnnotatorSegment>> aModel)
     {
         super(id, aModel);
         setOutputMarkupId(true);
@@ -149,38 +148,38 @@ public class SuggestionViewPanel
         contextMenu = new ContextMenu("contextMenu");
         add(contextMenu);
 
-        sentenceListView = new ListView<UserAnnotationSegment>("sentenceListView", aModel)
+        annotatorSegments = new ListView<AnnotatorSegment>("annotatorSegments", aModel)
         {
             private static final long serialVersionUID = -5389636445364196097L;
 
             @Override
-            protected void populateItem(ListItem<UserAnnotationSegment> aItem)
+            protected void populateItem(ListItem<AnnotatorSegment> aItem)
             {
-                final UserAnnotationSegment curationUserSegment = aItem.getModelObject();
+                final AnnotatorSegment annotatorSegment = aItem.getModelObject();
                 BratSuggestionVisualizer curationVisualizer = new BratSuggestionVisualizer(
-                        "sentence", new Model<>(curationUserSegment), aItem.getIndex())
+                        "annotationViewer", new Model<>(annotatorSegment), aItem.getIndex())
                 {
                     private static final long serialVersionUID = -1205541428144070566L;
 
                     @Override
                     protected void onClientEvent(AjaxRequestTarget aTarget) throws Exception
                     {
-                        SuggestionViewPanel.this.onClientEvent(aTarget, curationUserSegment);
+                        SuggestionViewPanel.this.onClientEvent(aTarget, annotatorSegment);
                     }
                 };
                 curationVisualizer.setOutputMarkupId(true);
                 aItem.add(curationVisualizer);
             }
         };
-        sentenceListView.setOutputMarkupId(true);
-        add(sentenceListView);
+        annotatorSegments.setOutputMarkupId(true);
+        add(annotatorSegments);
     }
 
     /**
      * Method is called, if user has clicked on a span or an arc in the sentence panel. The span or
      * arc respectively is identified and copied to the merge CAS.
      */
-    protected void onClientEvent(AjaxRequestTarget aTarget, UserAnnotationSegment aSegment)
+    protected void onClientEvent(AjaxRequestTarget aTarget, AnnotatorSegment aSegment)
         throws UIMAException, IOException, AnnotationException
     {
         if (isDocumentFinished(documentService, aSegment.getAnnotatorState())) {
@@ -253,7 +252,7 @@ public class SuggestionViewPanel
         }
     }
 
-    private void actionAcceptAll(AjaxRequestTarget aTarget, UserAnnotationSegment aSegment,
+    private void actionAcceptAll(AjaxRequestTarget aTarget, AnnotatorSegment aSegment,
             AnnotationLayer aLayer)
         throws IOException
     {
@@ -400,7 +399,7 @@ public class SuggestionViewPanel
         }
     }
 
-    private CAS readAnnotatorCas(UserAnnotationSegment aSegment) throws IOException
+    private CAS readAnnotatorCas(AnnotatorSegment aSegment) throws IOException
     {
         return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
                 aSegment.getUsername());
@@ -477,8 +476,6 @@ public class SuggestionViewPanel
         casses.put(CURATION_USER, annotatorCas);
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
 
-        Map<String, Map<VID, AnnotationState>> annoStates1 = new HashMap<>();
-
         Project project = state.getProject();
         Mode mode1 = state.getMode();
 
@@ -502,36 +499,29 @@ public class SuggestionViewPanel
             }
         }
 
-        addSuggestionColor(project, mode1, casses, annoStates1, d, false, false);
-        addSuggestionColor(project, mode1, casses, annoStates1, i, true, false);
-
         List<ConfigurationSet> all = new ArrayList<>();
         all.addAll(diff.getConfigurationSets());
         all.removeAll(d);
         all.removeAll(i);
 
-        addSuggestionColor(project, mode1, casses, annoStates1, all, false, true);
-
-        // get differing feature structures
-        Map<String, Map<VID, AnnotationState>> annoStates = annoStates1;
-
-        List<String> usernamesSorted = new ArrayList<>(casses.keySet());
-        Collections.sort(usernamesSorted);
+        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
+        addSuggestionColor(project, mode1, casses, annoStates, d, false, false);
+        addSuggestionColor(project, mode1, casses, annoStates, i, true, false);
+        addSuggestionColor(project, mode1, casses, annoStates, all, false, true);
 
         final Mode mode = state.getMode();
         boolean isCurationMode = mode.equals(Mode.CURATION);
 
-        List<UserAnnotationSegment> segments = new ArrayList<>();
-        for (String username : usernamesSorted) {
+        List<AnnotatorSegment> segments = new ArrayList<>();
+        for (String username : casses.keySet().stream().sorted().collect(toList())) {
             if ((!username.equals(CURATION_USER) && isCurationMode)) {
                 CAS cas = casses.get(username);
 
-                // Set up coloring strategy
                 ColoringStrategy curationColoringStrategy = makeColoringStrategy(
                         annoStates.get(username));
 
                 // Create curation view for the current user
-                UserAnnotationSegment seg = new UserAnnotationSegment();
+                AnnotatorSegment seg = new AnnotatorSegment();
                 seg.setUsername(username);
                 seg.setAnnotatorState(state);
                 seg.setCollectionData(getCollectionInformation(schemaService, aCurationContainer));
@@ -541,7 +531,7 @@ public class SuggestionViewPanel
             }
         }
 
-        sentenceListView.setModelObject(segments);
+        annotatorSegments.setModelObject(segments);
         if (aTarget != null) {
             aTarget.add(this);
         }
@@ -621,9 +611,9 @@ public class SuggestionViewPanel
         addSuggestionColor(project, mode, casses, annoStates, all, false, true);
 
         // get differing feature structures
-        sentenceListView.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
+        annotatorSegments.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
             BratSuggestionVisualizer vis = (BratSuggestionVisualizer) v;
-            UserAnnotationSegment seg = vis.getModelObject();
+            AnnotatorSegment seg = vis.getModelObject();
 
             CAS cas = casses.get(seg.getUsername());
 
