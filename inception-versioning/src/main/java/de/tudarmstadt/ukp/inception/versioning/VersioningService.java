@@ -20,19 +20,16 @@ package de.tudarmstadt.ukp.inception.versioning;
 import java.io.File;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface VersioningService
 {
-    void snapshotUserAnnotations(Project aProject, User aUser);
-
     /**
      * Saves the project configuration and annotations of all users for the given project.
      * 
      * @param aProject
      *            The project to snapshot
      */
-    void snapshotProject(Project aProject);
+    void snapshotCompleteProject(Project aProject);
 
     void labelCurrentVersion(Project aProject, String aLabel);
 

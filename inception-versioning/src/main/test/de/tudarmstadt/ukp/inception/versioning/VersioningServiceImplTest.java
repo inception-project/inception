@@ -44,6 +44,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
@@ -57,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
@@ -98,7 +102,6 @@ public class VersioningServiceImplTest
 
         assertThat(sut.getRepoDir(testProject.getId()))
                 .isDirectoryContaining(f -> f.getName().equals(".git") && f.isDirectory());
-
     }
 
     @Test
@@ -113,17 +116,28 @@ public class VersioningServiceImplTest
         assertThat(sut.getRepoDir(testProject.getId())).doesNotExist();
     }
 
+    @Test
+    public void snapshottingProject_ShouldCommitFiles() throws IOException
+    {
+        projectService.createProject(testProject);
+
+        sut.snapshotCompleteProject(testProject);
+
+        assertThat(sut.getRepoDir(testProject.getId())).isDirectoryContaining(
+                f -> f.getName().equals(VersioningServiceImpl.LAYERS) && f.isFile());
+    }
+
     @SpringBootConfiguration
     @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.sharing.model",
-            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.model" })
+
     public static class TestContext
     {
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
         private @Autowired EntityManager entityManager;
 
         @Bean
-        public RepositoryProperties repositoryProperties() throws IOException
+        public RepositoryProperties repositoryProperties()
         {
             return new RepositoryProperties();
         }
@@ -170,10 +184,23 @@ public class VersioningServiceImplTest
         }
 
         @Bean
-        VersioningService versioningService(RepositoryProperties aRepositoryProperties,
-                AnnotationSchemaService aAnnotationSchemaService)
+        public DocumentService documentService(RepositoryProperties aRepositoryProperties,
+                CasStorageService aCasStorageService, ImportExportService aImportExportService,
+                ProjectService aProjectService,
+                ApplicationEventPublisher aApplicationEventPublisher)
         {
-            return new VersioningServiceImpl(aRepositoryProperties, aAnnotationSchemaService);
+            return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
+                    aImportExportService, aProjectService, aApplicationEventPublisher);
+        }
+
+        @Bean
+        VersioningService versioningService(RepositoryProperties aRepositoryProperties,
+                AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
+                ProjectService aProjectservice, CasStorageService aCasStorageService,
+                UserDao aUserDao)
+        {
+            return new VersioningServiceImpl(aRepositoryProperties, aAnnotationSchemaService,
+                    aDocumentService, aProjectservice, aCasStorageService, aUserDao);
         }
     }
 

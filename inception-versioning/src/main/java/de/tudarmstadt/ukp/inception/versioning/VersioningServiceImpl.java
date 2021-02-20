@@ -17,13 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.SerialFormat;
+import org.apache.uima.util.CasIOUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
@@ -35,11 +44,23 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class VersioningServiceImpl
@@ -47,18 +68,28 @@ public class VersioningServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String REPO_NAME = "git-backup";
-    private static final String TYPESYSTEM = "typesystem.xml";
+    public static final String REPO_NAME = "git-backup";
+    public static final String LAYERS = "layers.json";
+    public static final String DOCUMENTS = "annotation";
 
     private final RepositoryProperties repositoryProperties;
     private final AnnotationSchemaService annotationService;
+    private final DocumentService documentService;
+    private final ProjectService projectService;
+    private final CasStorageService casStorageService;
+    private final UserDao userDao;
 
     @Autowired
     public VersioningServiceImpl(RepositoryProperties aRepoProperties,
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
+            ProjectService aProjectService, CasStorageService aCasStorageService, UserDao aUserDao)
     {
         repositoryProperties = aRepoProperties;
         annotationService = aAnnotationService;
+        documentService = aDocumentService;
+        projectService = aProjectService;
+        casStorageService = aCasStorageService;
+        userDao = aUserDao;
     }
 
     @EventListener
@@ -84,27 +115,54 @@ public class VersioningServiceImpl
     }
 
     @Override
-    public void snapshotUserAnnotations(Project aProject, User aUser)
-    {
-
-    }
-
-    @Override
-    public void snapshotProject(Project aProject)
+    public void snapshotCompleteProject(Project aProject)
     {
         File repoPath = getRepoDir(aProject.getId());
-        File typeSystemPath = new File(repoPath, TYPESYSTEM);
+        File layersJsonPath = new File(repoPath, LAYERS);
 
         try {
             Git git = Git.open(repoPath);
 
-            saveUimaTypeSystem(typeSystemPath, aProject);
-            git.add().addFilepattern(TYPESYSTEM).call();
+            dumpLayers(layersJsonPath, aProject);
+            git.add().addFilepattern(LAYERS).call();
 
-            git.commit().setMessage("Update project settings");
+            for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
+                dumpUserAnnotations(aProject, user);
+            }
+
+            git.add().addFilepattern(ANNOTATION_FOLDER).call();
+
+            commit(git, "Snapshotting complete project");
         }
         catch (IOException | GitAPIException e) {
             log.error("Unable to snapshot project settings", e);
+        }
+    }
+
+    private void dumpUserAnnotations(Project aProject, User aUser) throws IOException
+    {
+        for (AnnotationDocument annotationDocument : documentService
+                .listAnnotationDocuments(aProject, aUser)) {
+            dumpAnnotationDocument(annotationDocument);
+        }
+    }
+
+    private void dumpAnnotationDocument(AnnotationDocument aAnnotationDocument) throws IOException
+    {
+        Project project = aAnnotationDocument.getProject();
+        String user = aAnnotationDocument.getUser();
+
+        File repoDir = getRepoDir(project.getId());
+        Path annotationDir = repoDir.toPath().resolve(DOCUMENTS);
+        Path userDir = annotationDir.resolve(user);
+
+        Files.createDirectories(userDir);
+
+        Path outputPath = userDir.resolve(aAnnotationDocument.getName() + ".xmi");
+        try (CasStorageSession session = CasStorageSession.openNested();
+                OutputStream out = Files.newOutputStream(outputPath)) {
+            CAS cas = casStorageService.readCas(aAnnotationDocument.getDocument(), user);
+            CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
         }
     }
 
@@ -121,14 +179,50 @@ public class VersioningServiceImpl
         return new File(repositoryDir, "/" + PROJECT_FOLDER + "/" + aProjectId + "/" + REPO_NAME);
     }
 
-    private void saveUimaTypeSystem(File aFile, Project aProject)
+    private void commit(Git aGit, String aMessage) throws GitAPIException
     {
-        try (FileOutputStream fOut = new FileOutputStream(aFile)) {
-            TypeSystemDescription tsd = annotationService.getAllProjectTypes(aProject);
-            tsd.toXML(fOut);
+        User user = userDao.getCurrentUser();
+
+        String userName = user.getUsername();
+        String email = user.getEmail();
+        if (StringUtils.isBlank(email)) {
+            email = userName + "@" + "inception";
         }
-        catch (Exception e) {
-            log.error("Unable to generate the UIMA type system file", e);
+
+        if (aGit.status().call().hasUncommittedChanges()) {
+            aGit.commit().setMessage(aMessage) //
+                    .setAuthor(userName, email) //
+                    .call();
+        }
+    }
+
+    private void dumpLayers(File aFile, Project aProject)
+    {
+        try {
+            List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
+            for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+
+                ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null,
+                        layer, annotationService);
+                exLayers.add(exMainLayer);
+
+                // If the layer is attached to another layer, then we also have to export
+                // that, otherwise we would be missing it during re-import.
+                if (layer.getAttachType() != null) {
+                    AnnotationLayer attachLayer = layer.getAttachType();
+                    ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null,
+                            null, attachLayer, annotationService);
+                    exMainLayer.setAttachType(
+                            new ExportedAnnotationLayerReference(exAttachLayer.getName()));
+                    exLayers.add(exAttachLayer);
+                }
+            }
+
+            String json = JSONUtil.toPrettyJsonString(exLayers);
+            Files.write(aFile.toPath(), json.getBytes(StandardCharsets.UTF_8));
+        }
+        catch (IOException e) {
+            log.error("Unable to exporting layer json", e);
         }
     }
 }
