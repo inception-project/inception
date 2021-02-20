@@ -463,11 +463,11 @@ public interface ProjectService
      */
     boolean isAnnotator(Project aProject, User aUser);
 
+    boolean hasRole(User aUser, Project aProject, PermissionLevel... aRole);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to other things
     // --------------------------------------------------------------------------------------------
-
-    List<ProjectType> listProjectTypes();
 
     /**
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
@@ -484,5 +484,4 @@ public interface ProjectService
         throws IOException;
 
     List<ProjectInitializer> listProjectInitializers();
-
 }

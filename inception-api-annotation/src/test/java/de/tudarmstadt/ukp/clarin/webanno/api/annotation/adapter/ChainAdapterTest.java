@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
@@ -75,7 +74,6 @@ public class ChainAdapterTest
 
         project = new Project();
         project.setId(1l);
-        project.setMode(PROJECT_TYPE_ANNOTATION);
 
         document = new SourceDocument();
         document.setId(1l);

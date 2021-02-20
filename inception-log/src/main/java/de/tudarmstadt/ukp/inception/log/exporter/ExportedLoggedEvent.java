@@ -27,6 +27,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -123,5 +125,18 @@ public class ExportedLoggedEvent
     public void setDetails(String aDetails)
     {
         details = aDetails;
+    }
+
+    public static ExportedLoggedEvent fromLoggedEvent(String documentName, LoggedEvent event)
+    {
+        ExportedLoggedEvent exportedEvent = new ExportedLoggedEvent();
+        exportedEvent.setId(event.getId());
+        exportedEvent.setCreated(event.getCreated());
+        exportedEvent.setDocumentName(documentName);
+        exportedEvent.setEvent(event.getEvent());
+        exportedEvent.setAnnotator(event.getAnnotator());
+        exportedEvent.setUser(event.getUser());
+        exportedEvent.setDetails(event.getDetails());
+        return exportedEvent;
     }
 }

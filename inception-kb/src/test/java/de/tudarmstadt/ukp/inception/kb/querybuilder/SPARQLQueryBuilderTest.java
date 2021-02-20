@@ -1348,6 +1348,25 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> "Labour".equals(label));
     }
+    
+    @Category(SlowTests.class)
+    @Test
+    public void testWithPropertyMatchingAnyOf_Wikidata_noFTS() throws Exception
+    {
+        assertIsReachable(wikidata);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(null);
+        initWikidataMapping();
+
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+                .forProperties(kb) //
+                .withLabelMatchingAnyOf("academic"));
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("academic"));
+    }
 
     @Category(SlowTests.class)
     @Test

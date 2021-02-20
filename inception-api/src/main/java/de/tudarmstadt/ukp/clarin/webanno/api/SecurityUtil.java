@@ -140,10 +140,10 @@ public class SecurityUtil
         return false;
     }
 
-    public static boolean annotationEnabeled(ProjectService aRepository, User aUser, String aMode)
+    public static boolean annotationEnabeled(ProjectService aRepository, User aUser)
     {
         for (Project project : aRepository.listProjects()) {
-            if (aRepository.isAnnotator(project, aUser) && aMode.equals(project.getMode())) {
+            if (aRepository.isAnnotator(project, aUser)) {
                 return true;
             }
         }

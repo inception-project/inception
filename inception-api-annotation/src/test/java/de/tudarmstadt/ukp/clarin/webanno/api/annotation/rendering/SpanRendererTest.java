@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
@@ -66,7 +65,6 @@ public class SpanRendererTest
 
         project = new Project();
         project.setId(1l);
-        project.setMode(PROJECT_TYPE_ANNOTATION);
 
         neLayer = new AnnotationLayer(NamedEntity.class.getName(), "NE", SPAN_TYPE, project, true,
                 TOKENS, ANY_OVERLAP);

@@ -22,15 +22,8 @@ import java.util.LinkedHashMap;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.util.string.StringValue;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-
 public final class SessionMetaData
 {
-    public static final MetaDataKey<Project> CURRENT_PROJECT = new MetaDataKey<Project>()
-    {
-        private static final long serialVersionUID = 1L;
-    };
-
     /**
      * Holds parameters that were supplied at login time via an URL fragment. The login page stores
      * them here because they cannot be safely forwarded via the redirection URL.

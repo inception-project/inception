@@ -310,7 +310,6 @@ public class AeroRemoteApiController
         LOG.info("Creating project [" + aName + "]");
         Project project = new Project();
         project.setName(aName);
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         project.setScriptDirection(ScriptDirection.LTR);
         project.setState(ProjectState.NEW);
         projectService.createProject(project);

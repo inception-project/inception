@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
@@ -77,7 +76,6 @@ public class SpanAdapterTest
 
         project = new Project();
         project.setId(1l);
-        project.setMode(PROJECT_TYPE_ANNOTATION);
 
         document = new SourceDocument();
         document.setId(1l);

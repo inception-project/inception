@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.sharing;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanel.PAGE_PARAM_INVITE_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage.PAGE_PARAM_INVITE_ID;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -38,17 +39,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
-@MountPath(value = "/join-project/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_INVITE_ID + "}")
+@MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/join-project/${"
+        + PAGE_PARAM_INVITE_ID + "}")
 public class AcceptInvitePage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = 5160703195387357692L;
 
-    // Page parameters
-    public static final String PAGE_PARAM_PROJECT_ID = "p";
+    public static final String PAGE_PARAM_INVITE_ID = "i";
 
     private @SpringBean InviteService inviteService;
     private @SpringBean ProjectService projectService;
@@ -59,11 +60,9 @@ public class AcceptInvitePage
 
     public AcceptInvitePage(final PageParameters aPageParameters)
     {
-        Long projectId = aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong();
+        super(aPageParameters);
 
-        if (projectId != null) {
-            project = projectService.getProject(projectId);
-        }
+        project = getProject();
 
         // Compare invite param to invite id in db, if correct add user to project
         token = aPageParameters.get(PAGE_PARAM_INVITE_ID).toOptionalString();
@@ -105,7 +104,7 @@ public class AcceptInvitePage
         }
 
         PageParameters parameters = new PageParameters();
-        parameters.set(ProjectDashboardPage.PAGE_PARAM_PROJECT_ID, project.getId());
+        parameters.set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
         getRequestCycle().setResponsePage(ProjectDashboardPage.class, parameters);
     }
 }
