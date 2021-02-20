@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,30 +18,38 @@
 package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
+import org.dkpro.core.io.tcf.TcfReader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -49,22 +57,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSuppo
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
 
 public class PdfAnnoRendererTest
 {
@@ -87,7 +94,7 @@ public class PdfAnnoRendererTest
         project = new Project();
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-            AnchoringMode.SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -101,7 +108,7 @@ public class PdfAnnoRendererTest
         tokenPosFeature.setVisible(true);
 
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-            AnchoringMode.SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
@@ -117,93 +124,126 @@ public class PdfAnnoRendererTest
         posFeature.setVisible(true);
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
-            asList(new PrimitiveUimaFeatureSupport(),
-                new SlotFeatureSupport(schemaService)));
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-            new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry),
-            new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry),
-            new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
 
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
-        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class)))
-            .thenReturn(asList(posFeature));
+        when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
+        when(schemaService.listAnnotationFeature(any(Project.class)))
+                .thenReturn(asList(posFeature));
+        when(schemaService.listSupportedFeatures(any(Project.class)))
+                .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                    () -> schemaService.listAnnotationFeature(layer));
         });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
     }
 
+    /**
+     * Tests if anno file is correctly rendered for a given document
+     */
     @Test
     public void testRender() throws Exception
     {
         String file = "src/test/resources/tcf04-karin-wl.xml";
-        String pdftxt = new Scanner(
-            new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
+        String pdftxt = new Scanner(new File("src/test/resources/rendererTestPdfExtract.txt"))
+                .useDelimiter("\\Z").next();
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
-            TcfReader.PARAM_SOURCE_LOCATION, file);
+                TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
+        state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, 0, cas.getDocumentText().length(),
-            jCas, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
+                schemaService.listAnnotationLayer(project));
 
-        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
-        PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
-            cas.getDocumentText(), schemaService, pdfExtractFile);
+        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
+        PdfAnnoRenderer renderer = new PdfAnnoRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        PdfAnnoModel annoFile = renderer.render(state, vdoc, cas.getDocumentText(), pdfExtractFile,
+                0);
 
-        assertThat(linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"),
-            "UTF-8")).isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
+        assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
+                contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
+    /**
+     * Tests if given offsets for PDFAnno can be converted to offsets for the document in INCEpTION
+     */
     @Test
-    public void tetsConvertToDocumentOffset() throws Exception
+    public void testConvertToDocumentOffset() throws Exception
     {
         String file = "src/test/resources/tcf04-karin-wl.xml";
-        String pdftxt = new Scanner(
-            new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
-        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
+        String pdftxt = new Scanner(new File("src/test/resources/rendererTestPdfExtract.txt"))
+                .useDelimiter("\\Z").next();
+        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
-            TcfReader.PARAM_SOURCE_LOCATION, file);
+                TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
         state.setProject(project);
 
-        Offset docOffsetKarin = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(3, 7));
-        assertThat(docOffsetKarin).isEqualTo(new Offset(0, 5));
-        Offset docOffsetFliegt = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(8, 13));
-        assertThat(docOffsetFliegt).isEqualTo(new Offset(6, 12));
-        Offset docOffsetSie = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(28, 30));
-        assertThat(docOffsetSie).isEqualTo(new Offset(29, 32));
-        Offset docOffsetDort = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(35, 38));
-        assertThat(docOffsetDort).isEqualTo(new Offset(38, 42));
+        DocumentModel documentModel = new DocumentModel(cas.getDocumentText());
+        // List of PDFAnno offsets
+        // indices represent line numbers in the PDFExtractFile for the according character
+        List<Offset> offsets = new ArrayList<>();
+        offsets.add(new Offset(3, 3));
+        offsets.add(new Offset(3, 4));
+        offsets.add(new Offset(3, 5));
+        offsets.add(new Offset(3, 6));
+        offsets.add(new Offset(3, 7));
+        offsets.add(new Offset(3, 8));
+        offsets.add(new Offset(6, 8));
+        offsets.add(new Offset(7, 7));
+        offsets.add(new Offset(7, 8));
+        offsets.add(new Offset(8, 8));
+        offsets.add(new Offset(8, 13));
+        offsets.add(new Offset(28, 28));
+        offsets.add(new Offset(28, 30));
+        offsets.add(new Offset(35, 38));
+        // convert to offests for document in INCEpTION
+        List<Offset> docOffsets = PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel,
+                pdfExtractFile);
+        List<Offset> expectedOffsets = new ArrayList<>();
+        expectedOffsets.add(new Offset(0, 0));
+        expectedOffsets.add(new Offset(0, 1));
+        expectedOffsets.add(new Offset(0, 2));
+        expectedOffsets.add(new Offset(0, 3));
+        expectedOffsets.add(new Offset(0, 4));
+        expectedOffsets.add(new Offset(0, 6));
+        expectedOffsets.add(new Offset(3, 6));
+        expectedOffsets.add(new Offset(4, 4));
+        expectedOffsets.add(new Offset(4, 6));
+        expectedOffsets.add(new Offset(6, 6));
+        expectedOffsets.add(new Offset(6, 11));
+        expectedOffsets.add(new Offset(29, 29));
+        expectedOffsets.add(new Offset(29, 31));
+        expectedOffsets.add(new Offset(38, 41));
+        assertThat(docOffsets).isEqualTo(expectedOffsets);
     }
 }

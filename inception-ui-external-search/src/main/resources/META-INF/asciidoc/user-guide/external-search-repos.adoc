@@ -1,0 +1,4 @@
+[[sect_external-search-repos]]
+= Document repositories
+
+Document repositories can be added via the **Document repository** tab in the project settings.

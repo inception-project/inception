@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -27,8 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public class AnnotationSuggestion
     implements Serializable
 {
-    public static final String EXTENSION_ID = "recommendationEditorExtension";
-    
+    public static final String EXTENSION_ID = "rec";
+
     private static final long serialVersionUID = -1904645143661843249L;
 
     /**
@@ -44,25 +47,24 @@ public class AnnotationSuggestion
      */
     public static final int FLAG_REJECTED = 1 << 2;
     /**
-     * Suggestion has no label
-     */
-    public static final int FLAG_NO_LABEL = 1 << 3;
-    /**
      * User has accepted the suggestion and prediction has not re-run yet (which would reinitialize
      * the visbility state)
      */
-    public static final int FLAG_TRANSIENT_ACCEPTED = 1 << 4;
+    public static final int FLAG_TRANSIENT_ACCEPTED = 1 << 3;
     /**
      * User has rejected the suggestion and prediction has not re-run yet (which would reinitialize
      * the visbility state)
      */
-    public static final int FLAG_TRANSIENT_REJECTED = 1 << 5;
+    public static final int FLAG_TRANSIENT_REJECTED = 1 << 4;
     /**
      * User has corrected the suggestion and prediction has not re-run yet (which would reinitialize
      * the visbility state)
      */
-    public static final int FLAG_TRANSIENT_CORRECTED = 1 << 6;
-    
+    public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
+
+    public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
+            | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
+
     private final int id;
 
     private final long recommenderId;
@@ -79,12 +81,14 @@ public class AnnotationSuggestion
     private final String label;
     private final String uiLabel;
     private final double confidence;
+    private final String confidenceExplanation;
 
     private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-        long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
-        String aCoveredText, String aLabel, String aUiLabel, double aConfidence)
+            long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
+            String aCoveredText, String aLabel, String aUiLabel, double aConfidence,
+            String aConfidenceExplanation)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -93,6 +97,7 @@ public class AnnotationSuggestion
         feature = aFeature;
         recommenderName = aRecommenderName;
         confidence = aConfidence;
+        confidenceExplanation = aConfidenceExplanation;
         recommenderId = aRecommenderId;
         begin = aBegin;
         end = aEnd;
@@ -115,6 +120,7 @@ public class AnnotationSuggestion
         feature = aObject.feature;
         recommenderName = aObject.recommenderName;
         confidence = aObject.confidence;
+        confidenceExplanation = aObject.confidenceExplanation;
         recommenderId = aObject.recommenderId;
         begin = aObject.begin;
         end = aObject.end;
@@ -144,6 +150,13 @@ public class AnnotationSuggestion
         return id;
     }
 
+    /**
+     * Get the annotation's label, might be null if this is a suggestion for an annotation but not
+     * for a specific label.
+     * 
+     * @return the label value or null
+     */
+    @Nullable
     public String getLabel()
     {
         return label;
@@ -158,7 +171,7 @@ public class AnnotationSuggestion
     {
         return layerId;
     }
-    
+
     public String getFeature()
     {
         return feature;
@@ -172,6 +185,11 @@ public class AnnotationSuggestion
     public double getConfidence()
     {
         return confidence;
+    }
+
+    public Optional<String> getConfidenceExplanation()
+    {
+        return Optional.ofNullable(confidenceExplanation);
     }
 
     public long getRecommenderId()
@@ -197,12 +215,12 @@ public class AnnotationSuggestion
     {
         hidingFlags |= aFlags;
     }
-    
+
     public void show(int aFlags)
     {
         hidingFlags &= ~aFlags;
     }
-    
+
     public String getReasonForHiding()
     {
         StringBuilder sb = new StringBuilder();
@@ -215,9 +233,6 @@ public class AnnotationSuggestion
         if ((hidingFlags & FLAG_SKIPPED) != 0) {
             sb.append("skipped ");
         }
-        if ((hidingFlags & FLAG_NO_LABEL) != 0) {
-            sb.append("no-label ");
-        }
         if ((hidingFlags & FLAG_TRANSIENT_ACCEPTED) != 0) {
             sb.append("transient-accepted ");
         }
@@ -226,7 +241,7 @@ public class AnnotationSuggestion
         }
         return sb.toString();
     }
-    
+
     public boolean isVisible()
     {
         return hidingFlags == 0;
@@ -234,7 +249,8 @@ public class AnnotationSuggestion
 
     public VID getVID()
     {
-        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, VID.NONE, VID.NONE);
+        String payload = new VID(layerId, (int) recommenderId, id).toString();
+        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, payload);
     }
 
     @Override
@@ -267,10 +283,21 @@ public class AnnotationSuggestion
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("begin", begin).append("end", end)
-                .append("coveredText", coveredText).append("label", label)
-                .append("uiLabel", uiLabel).append("confidence", confidence)
-                .append("visible", isVisible())
-                .append("reasonForHiding", getReasonForHiding()).toString();
+                .append("begin", begin).append("end", end).append("coveredText", coveredText)
+                .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
+                .append("confindenceExplanation", confidenceExplanation)
+                .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())
+                .toString();
+    }
+
+    /**
+     * Determine if the given label is equal to this object's label or if they are both null
+     * 
+     * @return true if both labels are null or equal
+     */
+    public boolean labelEquals(String aLabel)
+    {
+        return (aLabel == null && label == null) || (label != null && label.equals(aLabel));
+
     }
 }

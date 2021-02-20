@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.inception.kb.model;
 
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -54,17 +56,13 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Entity
-@Table(name = "knowledgebase",
-    uniqueConstraints = { @UniqueConstraint(columnNames = { "project", "name",  }) })
+@Table(name = "knowledgebase", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "project", "name", }) })
 @NamedQueries({
-    @NamedQuery(name = "KnowledgeBase.getByProject",
-    query = "from KnowledgeBase kb where kb.project = :project order by lower(kb.name)"),
-    @NamedQuery(name = "KnowledgeBase.getByName",
-        query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name "),
-    @NamedQuery(name = "KnowledgeBase.getByProjectWhereEnabledTrue",
-    query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true "
-            + "order by lower(kb.name)") 
-})
+        @NamedQuery(name = "KnowledgeBase.getByProject", query = "from KnowledgeBase kb where kb.project = :project order by lower(kb.name)"),
+        @NamedQuery(name = "KnowledgeBase.getByName", query = "from KnowledgeBase kb where kb.project = :project and kb.name = :name "),
+        @NamedQuery(name = "KnowledgeBase.getByProjectWhereEnabledTrue", query = "from KnowledgeBase kb where kb.project = :project and kb.enabled = true "
+                + "order by lower(kb.name)") })
 public class KnowledgeBase
     implements Serializable
 {
@@ -90,28 +88,28 @@ public class KnowledgeBase
     private RepositoryType type;
 
     /**
-     * The IRI for a object describing A being of type class, e.g. rdfs:Class, owl:Class or
-     * entity (Q35120) in Wikidata
+     * The IRI for a object describing A being of type class, e.g. rdfs:Class, owl:Class or entity
+     * (Q35120) in Wikidata
      */
     @Column(nullable = false)
     private IRI classIri;
 
     /**
-     * The IRI for a property describing A being a subclass B, e.g. rdfs:subClassOf or
-     * subclass of (P279) in Wikidata
+     * The IRI for a property describing A being a subclass B, e.g. rdfs:subClassOf or subclass of
+     * (P279) in Wikidata
      */
     @Column(nullable = false)
     private IRI subclassIri;
 
     /**
-     * The IRI for a property describing A being of type B, e.g. rdfs:type or
-     * instance of (P31) in Wikidata
+     * The IRI for a property describing A being of type B, e.g. rdfs:type or instance of (P31) in
+     * Wikidata
      */
     @Column(nullable = false)
     private IRI typeIri;
 
     /**
-     *  The IRI for a property describing B being a subproperty of A
+     * The IRI for a property describing B being a subproperty of A
      */
     @Column(nullable = false)
     private IRI subPropertyIri;
@@ -123,7 +121,7 @@ public class KnowledgeBase
     private IRI descriptionIri;
 
     /**
-     * The IRI used for full text search, e.g. {@code bif:contains} or 
+     * The IRI used for full text search, e.g. {@code bif:contains} or
      * {@code http://www.openrdf.org/contrib/lucenesail#}. If this field is null, then FTS is not
      * supported.
      */
@@ -131,13 +129,13 @@ public class KnowledgeBase
     private IRI fullTextSearchIri;
 
     /**
-     * The IRI for a property describing B being a label for A, e.g. rdfs:label 
+     * The IRI for a property describing B being a label for A, e.g. rdfs:label
      */
     @Column(nullable = false)
     private IRI labelIri;
-    
+
     /**
-     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property 
+     * The IRI for an object describing A is of type propertyType, e.g. rdf:Property
      */
     @Column(nullable = false)
     private IRI propertyTypeIri;
@@ -154,6 +152,12 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI propertyDescriptionIri;
 
+    /**
+     * The IRI of the default dataset
+     */
+    @Column(nullable = true)
+    private IRI defaultDatasetIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -166,13 +170,13 @@ public class KnowledgeBase
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Reification reification = NONE;
-    
+
     /**
-     * All statements created in a local KB are prefixed with this string 
+     * All statements created in a local KB are prefixed with this string
      */
     @Column(nullable = false)
     private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
-    
+
     /**
      * A List of explicitly defined root concepts that can be used if auto detection takes too long
      */
@@ -193,7 +197,8 @@ public class KnowledgeBase
     @Column(nullable = false)
     private int maxResults;
 
-    public String getRepositoryId() {
+    public String getRepositoryId()
+    {
         return repositoryId;
     }
 
@@ -326,7 +331,7 @@ public class KnowledgeBase
     {
         defaultLanguage = aLanguage;
     }
-    
+
     public IRI getPropertyLabelIri()
     {
         return propertyLabelIri;
@@ -380,11 +385,12 @@ public class KnowledgeBase
     {
         return !(repositoryId == null || isEmpty(repositoryId));
     }
-    
-    public boolean isSupportConceptLinking() {
+
+    public boolean isSupportConceptLinking()
+    {
         return fullTextSearchIri != null;
     }
-    
+
     public String getBasePrefix()
     {
         return basePrefix;
@@ -394,7 +400,7 @@ public class KnowledgeBase
     {
         basePrefix = aBasePrefix;
     }
-    
+
     public List<IRI> getRootConcepts()
     {
         return rootConcepts;
@@ -427,20 +433,28 @@ public class KnowledgeBase
         setPropertyLabelIri(aMapping.getPropertyLabelIri());
         setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
     }
-    
+
     public void applyRootConcepts(KnowledgeBaseProfile aProfile)
     {
         if (aProfile.getRootConcepts() == null) {
-            setRootConcepts(new ArrayList<>());
+            rootConcepts = emptyList();
         }
         else {
             ValueFactory vf = SimpleValueFactory.getInstance();
-            for (String rootConcept : aProfile.getRootConcepts()) {
-                rootConcepts.add(vf.createIRI(rootConcept));
-            }
+            rootConcepts = aProfile.getRootConcepts().stream().map(vf::createIRI)
+                    .collect(Collectors.toList());
         }
     }
 
+    public IRI getDefaultDatasetIri()
+    {
+        return defaultDatasetIri;
+    }
+
+    public void setDefaultDatasetIri(IRI aDefaultDatasetIri)
+    {
+        defaultDatasetIri = aDefaultDatasetIri;
+    }
 
     @Override
     public String toString()
@@ -461,7 +475,8 @@ public class KnowledgeBase
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -469,12 +484,12 @@ public class KnowledgeBase
             return false;
         }
         KnowledgeBase that = (KnowledgeBase) o;
-        return Objects.equals(repositoryId, that.repositoryId) &&
-            Objects.equals(name, that.name);
+        return Objects.equals(repositoryId, that.repositoryId) && Objects.equals(name, that.name);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(repositoryId, name);
     }
 }

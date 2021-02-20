@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,12 +29,18 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
-public class StatementColoringRegistryImpl implements StatementColoringRegistry
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#statementColoringRegistry}.
+ * </p>
+ */
+public class StatementColoringRegistryImpl
+    implements StatementColoringRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -42,8 +48,8 @@ public class StatementColoringRegistryImpl implements StatementColoringRegistry
 
     private List<StatementColoringStrategy> statementColoringStrategies;
 
-    public StatementColoringRegistryImpl(@Lazy @Autowired(required = false)
-        List<StatementColoringStrategy> aStatementColoringStrategies)
+    public StatementColoringRegistryImpl(
+            @Lazy @Autowired(required = false) List<StatementColoringStrategy> aStatementColoringStrategies)
     {
         statementColoringStrategiesProxy = aStatementColoringStrategies;
     }
@@ -64,7 +70,7 @@ public class StatementColoringRegistryImpl implements StatementColoringRegistry
 
             for (StatementColoringStrategy fs : fsp) {
                 log.info("Found value type support: {}",
-                    ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
@@ -78,12 +84,12 @@ public class StatementColoringRegistryImpl implements StatementColoringRegistry
     }
 
     @Override
-    public StatementColoringStrategy getStatementColoringStrategy(
-        String aPropertyIdentifier, KnowledgeBase aKB)
+    public StatementColoringStrategy getStatementColoringStrategy(String aPropertyIdentifier,
+            KnowledgeBase aKB, List<String> aLabelProperties)
     {
         for (StatementColoringStrategy coloringStrategy : getStatementColoringStrategies()) {
-            if (coloringStrategy.acceptsProperty(aPropertyIdentifier, aKB)
-                && !(coloringStrategy instanceof DefaultColoringStrategyImpl)) {
+            if (coloringStrategy.acceptsProperty(aPropertyIdentifier, aKB, aLabelProperties)
+                    && !(coloringStrategy instanceof DefaultColoringStrategyImpl)) {
                 return coloringStrategy;
             }
         }

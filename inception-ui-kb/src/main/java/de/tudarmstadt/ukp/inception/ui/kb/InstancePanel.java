@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class InstancePanel
@@ -38,11 +38,11 @@ public class InstancePanel
     private static final long serialVersionUID = -1413622323011843523L;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> selectedInstanceHandle;
-    private IModel<KBHandle> selectedConceptHandle;
-    
+    private IModel<KBObject> selectedInstanceHandle;
+    private IModel<KBObject> selectedConceptHandle;
+
     public InstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aSelectedConceptHandle, IModel<KBHandle> aSelectedInstanceHandle,
+            IModel<KBObject> aSelectedConceptHandle, IModel<KBObject> aSelectedInstanceHandle,
             IModel<KBInstance> aSelectedInstanceModel)
     {
         super(aId, aSelectedInstanceModel);
@@ -50,17 +50,17 @@ public class InstancePanel
         kbModel = aKbModel;
         selectedInstanceHandle = aSelectedInstanceHandle;
         selectedConceptHandle = aSelectedConceptHandle;
-        
+
         addOrReplace(new InstanceInfoPanel("instanceinfo", aKbModel, selectedInstanceHandle,
                 aSelectedInstanceModel));
 
         add(new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()));
     }
-    
+
     private List<ITab> makeTabs()
     {
         List<ITab> tabs = new ArrayList<>();
-                
+
         tabs.add(new AbstractTab(Model.of("Mentions"))
         {
             private static final long serialVersionUID = 6703144434578403272L;
@@ -76,7 +76,7 @@ public class InstancePanel
                     return new EmptyPanel(panelId);
                 }
             }
-        });        
+        });
         return tabs;
     }
 }

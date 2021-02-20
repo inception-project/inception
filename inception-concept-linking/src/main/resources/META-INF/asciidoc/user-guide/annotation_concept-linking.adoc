@@ -1,11 +1,11 @@
-// Copyright 2018
-// Ubiquitous Knowledge Processing (UKP) Lab
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -23,19 +23,13 @@ Use cases of Concept Linking are commonly found in the area of biomedical text m
 to facilitate understanding of unexplained terminology or abbreviations in scientific literature by
 linking biological entities.
 
-
-=== Contextual Disambiguation
+== Contextual Disambiguation
 
 Concept names can be ambiguous. There can be potentially many different concepts
 having the same name (consider the large number of famous people called John Smith). Thus, it is
 helpful to rank the candidates before showing them to the user in the annotation interface. If the
 ranking works well, the user can quickly choose on of the top-ranking candidates instead of having
 to scroll through a long list.
-
-The approach we are using for ranking the candidates considers the context of the concept mention
-in the text as well as the context of the candidate concepts in the knowledge base. This allows
-a ranking to be performed even in projects where no concepts have been linked yet (i.e. there is
-no training data that could be used for a machine learning classifier).
 
 To link a concept mention to the knowledge base, first select the mention annotation, then select
 the concept feature in the right sidebar of the annotation editor and start typing the name of

@@ -1,0 +1,32 @@
+= Architecture
+
+INCEpTION uses a standard 3-layer architecture with the presentation layer using Wicket
+at the top, the business layer heavily relying on Spring Boot and the data layer which is
+interfaced with Hibernate at the bottom.
+
+== Wicket pages
+
+Wicket can only inject components that are interfaces. A pattern for these cases is to create an
+`ExampleComponent` interface and implement it in an `ExampleComponentImpl` class.
+
+== Services
+
+Services encode the core logic of INCEpTION. They can be injected into Wicket pages and
+other services to interact with the rest of the application. Services can inject Spring
+components via autowiring. A good example of a service can e.g. be seen in the
+`SchedulingService.java`.
+
+== Database
+
+The database can be accessed via https://hibernate.org/[Hibernate]. The schema itself
+and migrations are managed by https://www.liquibase.org/[Liquibase].
+
+=== Migration
+
+When changing the database schema, migrations from the current schema to the new one
+need to be defined. They describe how the schema needs to be modified. This way,
+INCEpTION can be upgraded to newer versions without needing to manually alter the
+database schema. The migration process determines the current version of the schema
+and only applies transformations from there to the newest one. Each module defines its
+own data base tables and migrations in a file called `db-changelog.xml`. These are
+automatically discovered by Liquibase and used when starting INCEpTION.

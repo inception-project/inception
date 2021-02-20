@@ -45,7 +45,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   static newInstance (annotation) {
     let a            = new RelationAnnotation()
     a.uuid           = annotation.uuid || uuid()
-    // a.direction      = annotation.direction
     a.direction      = 'relation'
     a.rel1Annotation = AbstractAnnotation.isAnnotation(annotation.rel1) ? annotation.rel1 : window.annotationContainer.findById(annotation.rel1)
     a.rel2Annotation = AbstractAnnotation.isAnnotation(annotation.rel2) ? annotation.rel2 : window.annotationContainer.findById(annotation.rel2)
@@ -62,7 +61,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   static newInstanceFromTomlObject (d) {
     // d.direction = d.dir
     d.direction = 'relation'
-    // TODO Annotation側を、labelに合わせてもいいかも。
     d.text = d.label
     let rel = RelationAnnotation.newInstance(d)
     return rel
@@ -311,6 +309,23 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   handleClickEvent (e) {
     super.handleClickEvent(e)
+    if (this.selected) {
+      var data = {
+        "action": "selectRelation",
+        "id": this.uuid,
+        "origin": this.rel1Annotation.uuid,
+        "target": this.rel2Annotation.uuid
+      }
+      parent.Wicket.Ajax.ajax({
+        "m": "POST",
+        "ep": data,
+        "u": window.apiUrl,
+        "sh": [],
+        "fh": [function () {
+            alert('Something went wrong on selecting a relation annotation for: ' + data)
+        }]
+      });
+    }
   }
 
   /**

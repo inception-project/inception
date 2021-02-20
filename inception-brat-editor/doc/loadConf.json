@@ -1,0 +1,5 @@
+{
+    "action": "loadConf",
+    "messages": [],
+    "config": "{\"abbrevsOn\":true,\"textBackgrounds\":\"striped\",\"visual\":{\"margin\":{\"x\":2,\"y\":1},\"arcTextMargin\":1,\"boxSpacing\":1,\"curlyHeight\":4,\"arcSpacing\":9,\"arcStartHeight\":19},\"svgWidth\":\"100%\",\"rapidModeOn\":false,\"confirmModeOn\":true,\"autorefreshOn\":true}"
+}

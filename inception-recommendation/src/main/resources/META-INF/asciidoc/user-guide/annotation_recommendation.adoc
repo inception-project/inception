@@ -1,7 +1,7 @@
 [[sect_annotation_recommendation]]
 = Recommenders
 After configuring one or more recommender in the <<sect_projects_recommendation, Project Settings>>,
-they can be used during annotation to generate predictions. In the annotation view, prediction are
+they can be used during annotation to generate predictions. In the annotation view, predictions are
 shown as grey bubbles next to normal annotations in blue. Predictions can be accepted by clicking
 once on them. In order to reject, use a double-click. For an example how recommendations look in
 action, please see the screenshot below.
@@ -15,13 +15,17 @@ will remove all predictions, however it will also remove all hand-made annotatio
 == Recommendation Sidebar
 
 Clicking the speech bubble on the left opens the recommendation sidebar. There, one can set the
-maximum number of recommendations that are displayed for each token. Also, by ticking *Show all*,
-all recommendations are shown, even if an annotation at the given position already exists. In order
-to save the new values, press *Apply*.
+maximum number of recommendations that are displayed per span and feature. Also, by
+ticking *Show hidden suggestions*, all recommendations are shown, even if an annotation at the given
+position already exists. In order to save the new values, press *Save*.
 
-image::recommendation3.png[align="center"]
+image::recommendation_sidebar.png[align="center"]
 
 === Learning Curve Diagram
 
-On the bottom of the recommendation sidebar, learning curve diagram is shown. It plots a line for every recommender associated with the project. The learning curve line depicts the scores from a number of recent evaluations of a recommender. The yaxis of the chart represents the scores and the xaxis represents the time indices. For instance, if recent 50 evaluations are plotted, xaxis would be 0-50 with 50 being the latest point in time relative to the other points. Also, if the number of evaluations calculated so far are less than 50 then lesser points are shown on the xaxis. The lines are only plotted for the enabled recommenders.
+On the bottom of the recommendation sidebar, a learning curve diagram is shown. It plots a line for every recommender associated with the project. 
+The learning curve line depicts the scores of a number of recent evaluations of a recommender. The y-axis of the chart represents the scores and the x-axis represents the time indices. For instance, if the recent 50 evaluations are plotted, the x-axis would be 0-50 with 50 being the latest point in time relative to the other points. Also, if the number of evaluations calculated so far are less than 50 then less points are shown on the x-axis. 
+The shown score can be changed from accuracy to other scores via the retractable dropdown above the y-axis. 
+The lines are only plotted for the enabled recommenders.
 
+image::learning_curve_acc.png[500,350,align="center"]

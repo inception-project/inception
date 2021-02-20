@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,13 +37,12 @@ public interface KBObject
     /**
      * Returns the knowledge base of this element.
      * 
-     * @return the {@link KnowledgeBase} for the object 
+     * @return the {@link KnowledgeBase} for the object
      */
     KnowledgeBase getKB();
 
     void setKB(KnowledgeBase kb);
 
-    
     /**
      * Returns the unique identifier of this element.
      * 
@@ -60,9 +59,15 @@ public interface KBObject
 
     /**
      * Sets the label of this element.
-     * @param label the label of this element
+     * 
+     * @param label
+     *            the label of this element
      */
     void setName(String label);
+
+    String getDescription();
+
+    void setDescription(String label);
 
     /**
      * Returns the language (e.g. of label and description) of this element.
@@ -81,7 +86,8 @@ public interface KBObject
      * 
      * @return a UI-friendly representation of this {@code KBObject}.
      */
-    default String getUiLabel() {
+    default String getUiLabel()
+    {
         String name = getName();
         if (name != null) {
             return name;
@@ -96,19 +102,23 @@ public interface KBObject
             else {
                 return getIdentifier();
             }
-        } else {
+        }
+        else {
             return getIdentifier();
         }
     }
-    
+
     /**
      * 
      * @return a {@code KBHandle} from {@code KBObject}
      */
-    default KBHandle toKBHandle() {
+    default KBHandle toKBHandle()
+    {
         KBHandle handle = new KBHandle();
         handle.setIdentifier(getIdentifier());
         handle.setName(getName());
+        handle.setLanguage(getLanguage());
+        handle.setDescription(getDescription());
         return handle;
     }
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,10 +38,17 @@ public class KBHandle
     private String description;
     private KnowledgeBase kb;
     private String language;
-    // domain and range for cases in which the KBHandle represents a property
-    private String domain;
-    private String range;
 
+    private int rank;
+    private double score;
+    private String debugInfo;
+
+    // domain and range for cases in which the KBHandle represents a property
+    @Deprecated
+    private String domain;
+
+    @Deprecated
+    private String range;
 
     public KBHandle()
     {
@@ -65,34 +72,60 @@ public class KBHandle
         description = aDescription;
     }
 
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
+    }
+
+    @Deprecated
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage,
+            String aDomain, String aRange)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
+        domain = aDomain;
+        range = aRange;
+    }
+
+    @Deprecated
     public String getDomain()
     {
         return domain;
     }
 
+    @Deprecated
     public void setDomain(String aDomain)
     {
         domain = aDomain;
     }
 
+    @Deprecated
     public String getRange()
     {
         return range;
     }
 
+    @Deprecated
     public void setRange(String aRange)
     {
         range = aRange;
     }
 
+    @Override
     public String getDescription()
     {
         return description;
     }
 
-    public void setDescription(String description)
+    @Override
+    public void setDescription(String aDescription)
     {
-        this.description = description;
+        description = aDescription;
     }
 
     @Override
@@ -118,7 +151,7 @@ public class KBHandle
     {
         name = aName;
     }
-    
+
     @Override
     public KnowledgeBase getKB()
     {
@@ -141,6 +174,36 @@ public class KBHandle
     public void setLanguage(String aLanguage)
     {
         language = aLanguage;
+    }
+
+    public void setDebugInfo(String aDebugInfo)
+    {
+        debugInfo = aDebugInfo;
+    }
+
+    public String getDebugInfo()
+    {
+        return debugInfo;
+    }
+
+    public int getRank()
+    {
+        return rank;
+    }
+
+    public void setRank(int aRank)
+    {
+        rank = aRank;
+    }
+
+    public double getScore()
+    {
+        return score;
+    }
+
+    public void setScore(double aScore)
+    {
+        score = aScore;
     }
 
     public static KBHandle of(KBObject aObject)
@@ -184,20 +247,22 @@ public class KBHandle
         }
         else {
             throw new IllegalArgumentException(
-                "Can not convert KBHandle to class " + aClass.getName());
+                    "Can not convert KBHandle to class " + aClass.getName());
         }
     }
 
-    public static List<KBHandle> distinctByIri(List<KBHandle> aHandles) {
-        Map<String, KBHandle> hMap = new LinkedHashMap<>();
-        for (KBHandle h : aHandles) {
+    public static <T extends KBObject> List<T> distinctByIri(List<T> aHandles)
+    {
+        Map<String, T> hMap = new LinkedHashMap<>();
+        for (T h : aHandles) {
             hMap.put(h.getIdentifier(), h);
         }
         return new ArrayList<>(hMap.values());
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -209,15 +274,29 @@ public class KBHandle
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(identifier);
     }
 
     @Override
-    public String toString() {
-        return new ToStringBuilder(this, SHORT_PREFIX_STYLE)
-            .append("identifier", identifier)
-            .append("name", name)
-            .toString();
+    public String toString()
+    {
+        ToStringBuilder builder = new ToStringBuilder(this, SHORT_PREFIX_STYLE);
+        builder.append("identifier", identifier);
+        builder.append("name", name);
+        if (description != null) {
+            builder.append("description", description);
+        }
+        if (language != null) {
+            builder.append("language", language);
+        }
+        if (domain != null) {
+            builder.append("domain", domain);
+        }
+        if (range != null) {
+            builder.append("range", range);
+        }
+        return builder.toString();
     }
 }

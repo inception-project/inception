@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,12 +28,10 @@ import org.apache.uima.fit.util.FSUtil;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ListAssert;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
-
 public class CasAssert
     extends AbstractAssert<CasAssert, CAS>
 {
-    private static String TYPE_NE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
+    private static final String TYPE_NE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
 
     public CasAssert(CAS cas)
     {
@@ -46,8 +44,8 @@ public class CasAssert
 
         Type type = CasUtil.getType(actual, TYPE_NE);
         for (AnnotationFS annotation : CasUtil.select(actual, type)) {
-            if (annotation.getCoveredText().equals(text) &&
-                FSUtil.getFeature(annotation, "value", String.class).equals(value)) {
+            if (annotation.getCoveredText().equals(text)
+                    && FSUtil.getFeature(annotation, "value", String.class).equals(value)) {
                 return this;
             }
         }
@@ -57,6 +55,8 @@ public class CasAssert
         return this;
     }
 
+    /* 
+    // @formatter:off
     public CasAssert containsPrediction(String text, String label)
     {
         isNotNull();
@@ -73,6 +73,8 @@ public class CasAssert
 
         return this;
     }
+    // @formatter:on
+    */
 
     public ListAssert<AnnotationFS> extractNamedEntities()
     {

@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,15 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic.traits;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
@@ -36,8 +43,7 @@ public class ElasticSearchProviderTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean ExternalSearchProviderFactory<ElasticSearchProviderTraits> 
-            externalSearchProviderFactory;
+    private @SpringBean ExternalSearchProviderFactory<ElasticSearchProviderTraits> externalSearchProviderFactory;
     private final DocumentRepository documentRepository;
     private final ElasticSearchProviderTraits properties;
 
@@ -48,8 +54,8 @@ public class ElasticSearchProviderTraitsEditor
         documentRepository = aDocumentRepository.getObject();
         properties = externalSearchProviderFactory.readTraits(documentRepository);
 
-        Form<ElasticSearchProviderTraits> form = new Form<ElasticSearchProviderTraits>(
-                MID_FORM, CompoundPropertyModel.of(Model.of(properties)))
+        Form<ElasticSearchProviderTraits> form = new Form<ElasticSearchProviderTraits>(MID_FORM,
+                CompoundPropertyModel.of(Model.of(properties)))
         {
             private static final long serialVersionUID = -3109239608742291123L;
 
@@ -77,6 +83,30 @@ public class ElasticSearchProviderTraitsEditor
         TextField<String> objectType = new TextField<>("objectType");
         objectType.setRequired(true);
         form.add(objectType);
+
+        TextField<String> defaultField = new TextField<>("defaultField");
+        objectType.setRequired(true);
+        form.add(defaultField);
+
+        NumberTextField<Integer> resultSize = new NumberTextField<>("resultSize", Integer.class);
+        resultSize.setMinimum(1);
+        resultSize.setMaximum(10000);
+        resultSize.setRequired(true);
+        form.add(resultSize);
+
+        NumberTextField<Integer> seed = new NumberTextField<Integer>("seed", Integer.class);
+        seed.setMinimum(0);
+        seed.setMaximum(Integer.MAX_VALUE);
+        seed.add(visibleWhen(() -> properties.isRandomOrder()));
+        seed.add(new AttributeModifier("title", new ResourceModel("seedTooltip")));
+        seed.setOutputMarkupPlaceholderTag(true);
+        seed.setRequired(true);
+        form.add(seed);
+
+        CheckBox randomOrder = new CheckBox("randomOrder");
+        randomOrder.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                t -> t.add(seed, randomOrder)));
+        form.add(randomOrder);
 
         add(form);
     }

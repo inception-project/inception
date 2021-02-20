@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.uima.UIMAException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +42,7 @@ public class DocumentImporterImpl
     implements DocumentImporter
 {
     private static final String PLAIN_TEXT = "text";
-    
+
     private final DocumentService documentService;
     private final ExternalSearchService externalSearchService;
 
@@ -56,34 +54,29 @@ public class DocumentImporterImpl
         externalSearchService = aExternalSearchService;
     }
 
-    /**
-     * @return a boolean value. True if import was successful. False if import was aborted because
-     *         the document already exists.
-     */
     @Override
     public boolean importDocumentFromDocumentRepository(User aUser, Project aProject,
-            String aDocumentTitle, DocumentRepository aRepository)
+            String aCollectionId, String aDocumentId, DocumentRepository aRepository)
         throws IOException
     {
-        String text = externalSearchService.getDocumentById(aUser, aRepository, aDocumentTitle)
-            .getText();
-
-        if (documentService.existsSourceDocument(aProject, aDocumentTitle)) {
+        if (documentService.existsSourceDocument(aProject, aDocumentId)) {
             return false;
         }
 
         SourceDocument document = new SourceDocument();
-        document.setName(aDocumentTitle);
+        document.setName(aDocumentId);
         document.setProject(aProject);
-        document.setFormat(PLAIN_TEXT);
+        document.setFormat(
+                externalSearchService.getDocumentFormat(aRepository, aCollectionId, aDocumentId));
 
-        try (InputStream is = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))) {
+        try (InputStream is = externalSearchService.getDocumentAsStream(aRepository, aCollectionId,
+                aDocumentId)) {
             documentService.uploadSourceDocument(is, document);
         }
         catch (IOException | UIMAException e) {
-            throw new IOException("Unable to retrieve document [" + aDocumentTitle + "]", e);
+            throw new IOException("Unable to retrieve document [" + aDocumentId + "]", e);
         }
-        
+
         return true;
     }
 }

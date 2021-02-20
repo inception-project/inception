@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -29,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.uima.cas.CAS;
@@ -41,15 +41,16 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import opennlp.tools.doccat.DoccatFactory;
 import opennlp.tools.doccat.DoccatModel;
-import opennlp.tools.doccat.DocumentCategorizerEvaluator;
 import opennlp.tools.doccat.DocumentCategorizerME;
 import opennlp.tools.doccat.DocumentSample;
 import opennlp.tools.ml.BeamSearch;
@@ -57,35 +58,40 @@ import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpDoccatRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<DoccatModel> KEY_MODEL = new Key<>("model");
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpDoccatRecommender.class);
 
     private static final String NO_CATEGORY = "<NO_CATEGORY>";
 
-    private final String layerName;
-    private final String featureName;
     private final OpenNlpDoccatRecommenderTraits traits;
-    private final int maxRecommendations;
 
     public OpenNlpDoccatRecommender(Recommender aRecommender,
             OpenNlpDoccatRecommenderTraits aTraits)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-        maxRecommendations = aRecommender.getMaxRecommendations();
+        super(aRecommender);
 
         traits = aTraits;
     }
 
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-        throws RecommendationException
+    public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        List<DocumentSample> nameSamples = extractSamples(aCasses);
-        
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+
+    @Override
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
+    {
+        List<DocumentSample> docSamples = extractSamples(aCasses);
+
+        if (docSamples.size() < 2) {
+            LOG.info("Not enough training data: [{}] items", docSamples.size());
+            return;
+        }
+
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
         // OpenNLP
@@ -93,47 +99,58 @@ public class OpenNlpDoccatRecommender
 
         TrainingParameters params = traits.getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
-        
-        DoccatModel model = train(nameSamples, params);
-        if (model != null) {
-            aContext.put(KEY_MODEL, model);
-            aContext.markAsReadyForPrediction();
-        }
+
+        DoccatModel model = train(docSamples, params);
+
+        aContext.put(KEY_MODEL, model);
+    }
+
+    @Override
+    public RecommendationEngineCapability getTrainingCapability()
+    {
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        DoccatModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
-                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
-        
+        DoccatModel model = aContext.get(KEY_MODEL).orElseThrow(
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+
         DocumentCategorizerME finder = new DocumentCategorizerME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
+        Type predictedType = getPredictedType(aCas);
         Type tokenType = getType(aCas, Token.class);
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Feature scoreFeature = getScoreFeature(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
+        int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
+            if (predictionCount >= traits.getPredictionLimit()) {
+                break;
+            }
+            predictionCount++;
+
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
-            String[] tokens = tokenAnnotations.stream()
-                .map(AnnotationFS::getCoveredText)
-                .toArray(String[]::new);
+            String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
+                    .toArray(String[]::new);
 
             double[] outcome = finder.categorize(tokens);
             String label = finder.getBestCategory(outcome);
-            
-            AnnotationFS annotation = aCas.createAnnotation(predictionType, sentence.getBegin(),
+
+            AnnotationFS annotation = aCas.createAnnotation(predictedType, sentence.getBegin(),
                     sentence.getEnd());
-            annotation.setDoubleValue(confidenceFeature, NumberUtils.max(outcome));
-            annotation.setStringValue(labelFeature, label);
+            annotation.setStringValue(predictedFeature, label);
+            annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
+            annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
         List<DocumentSample> data = extractSamples(aCasses);
@@ -151,12 +168,25 @@ public class OpenNlpDoccatRecommender
             default:
                 // Do nothing
                 break;
-            }            
+            }
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
-            LOG.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
+
+        if (trainingSetSize < 2 || testSetSize < 2) {
+            String info = String.format(
+                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s].",
+                    trainingSetSize, testSetSize, data.size());
+            LOG.info(info);
+
+            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+                    trainRatio);
+            result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
+            return result;
         }
 
         LOG.info("Evaluating on {} items (training set size {}, test set size {})", data.size(),
@@ -167,37 +197,38 @@ public class OpenNlpDoccatRecommender
         DocumentCategorizerME doccat = new DocumentCategorizerME(model);
 
         // Evaluate
-        try (DocumentSampleStream stream = new DocumentSampleStream(testSet)) {
-            DocumentCategorizerEvaluator evaluator = new DocumentCategorizerEvaluator(doccat);
-            evaluator.evaluate(stream);
-            return evaluator.getAccuracy();
-        }
-        catch (IOException e) {
-            LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
-            throw new RecommendationException("Error while evaluating OpenNlp NER", e);
-        }
+        EvaluationResult result = testSet.stream()
+                .map(sample -> new LabelPair(sample.getCategory(),
+                        doccat.getBestCategory(doccat.categorize(sample.getText()))))
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio,
+                        NO_CATEGORY));
+
+        return result;
     }
 
     private List<DocumentSample> extractSamples(List<CAS> aCasses)
     {
         List<DocumentSample> samples = new ArrayList<>();
-        for (CAS cas : aCasses) {
+        casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences =
-                indexCovered(cas, sentenceType, tokenType);
-            for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+                    tokenType);
+            for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
-                String[] tokenTexts = tokens.stream()
-                    .map(AnnotationFS::getCoveredText)
-                    .toArray(String[]::new);
-                
+                String[] tokenTexts = tokens.stream().map(AnnotationFS::getCoveredText)
+                        .toArray(String[]::new);
+
                 Type annotationType = getType(cas, layerName);
                 Feature feature = annotationType.getFeatureByBaseName(featureName);
-                
+
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
+                    if (samples.size() >= traits.getTrainingSetSizeLimit()) {
+                        break casses;
+                    }
+
                     String label = annotation.getFeatureValueAsString(feature);
                     DocumentSample nameSample = new DocumentSample(
                             label != null ? label : NO_CATEGORY, tokenTexts);
@@ -207,6 +238,7 @@ public class OpenNlpDoccatRecommender
                 }
             }
         }
+
         return samples;
     }
 

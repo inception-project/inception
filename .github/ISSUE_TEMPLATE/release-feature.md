@@ -8,7 +8,9 @@ about: Release checklist for bug-fix releases (third-digit increase)
 - [ ] Ensure all issues and PRs are resolved/merged
 
 **Local**
-- [ ] Run Maven release (increase third digit of version)
+- [ ] Run Maven release (increase third digit of version). Check that the JDK 
+      used to run the release is not newer than the Java version specified in the minium system
+      requirements!
 - [ ] Sign the standalone JAR
 
 **GitHub release page**
@@ -19,9 +21,14 @@ about: Release checklist for bug-fix releases (third-digit increase)
 - [ ] Update the `releases.yml` file
 - [ ] Add release documentation to GitHub pages
 
-**Test server**
+**Demo/test server**
 - [ ] *stable instance*: Update to release version
+- [ ] *community instance*: Update to release version
 - [ ] *testing instance*: Update auto-deployment script to match new SNAPSHOT version
+- [ ] *demo instance*: Update to release version
+
+**Docker**
+- [ ] Push the release to Docker
 
 **Mailing list**
 - [ ] Send release announcement to mailing list

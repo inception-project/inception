@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,16 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -45,31 +43,30 @@ public class KBConcept
     private String language;
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     private static final IRI CLOSED;
     private boolean closed;
 
     private static final IRI ABSTRACT;
     private boolean abstractClass;
+    // @formatter:on
     */
 
     private List<Statement> originalStatements = new ArrayList<>();
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     static {
         ValueFactory factory = SimpleValueFactory.getInstance();
         CLOSED = factory.createIRI(IriConstants.INCEPTION_SCHEMA_NAMESPACE, "closed");
         ABSTRACT = factory.createIRI(IriConstants.INCEPTION_SCHEMA_NAMESPACE, "abstract");
     }
+    // @formatter:on
     */
 
     public KBConcept()
     {
         super();
-    }
-
-    public KBConcept(String aName)
-    {
-        name = aName;
     }
 
     public KBConcept(String aIdentifier, String aName)
@@ -115,10 +112,12 @@ public class KBConcept
     }
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public void setAbstract(boolean aValue)
     {
         abstractClass = aValue;
     }
+    // @formatter:on
     */
 
     /**
@@ -126,34 +125,42 @@ public class KBConcept
      * hierarchical resource should not have instances.
      */
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public boolean isAbstract()
     {
         return abstractClass;
     }
+    // @formatter:on
     */
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public boolean isClosed()
     {
         return closed;
     }
+    // @formatter:on
     */
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public void setClosed(boolean aClosed)
     {
         closed = aClosed;
     }
+    // @formatter:on
     */
-    
+
     /**
      * @return Gives description for the concept
      */
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String aDescription)
     {
         description = aDescription;
@@ -210,13 +217,14 @@ public class KBConcept
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
+            Statement descStmt = vf.createStatement(subject, kb.getDescriptionIri(),
+                    descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
 
         /* Commented out until the functionality which uses them is actually implemented
+        // @formatter:off
         Statement closedStmt = vf.createStatement(subject, CLOSED, vf.createLiteral(closed));
         originalStatements.add(closedStmt);
         aConn.add(closedStmt);
@@ -225,59 +233,15 @@ public class KBConcept
             .createStatement(subject, ABSTRACT, vf.createLiteral(abstractClass));
         originalStatements.add(abstractStmt);
         aConn.add(abstractStmt);
+    // @formatter:on
         */
-    }
-    
-    public static KBConcept read(RepositoryConnection aConn, Resource aSubject, KnowledgeBase kb)
-    {
-        KBConcept kbConcept = new KBConcept();
-        kbConcept.setIdentifier(aSubject.stringValue());
-        kbConcept.setKB(kb);
-
-        readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage(), kb)
-            .ifPresent((stmt) -> {
-                kbConcept.setName(stmt.getObject().stringValue());
-                kbConcept.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbConcept::setLanguage);
-                }
-            });
-
-        readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage(), kb)
-            .ifPresent((stmt) -> {
-                kbConcept.setDescription(stmt.getObject().stringValue());
-                kbConcept.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbConcept::setLanguage);
-                }
-            });
-
-        /* Commented out until the functionality which uses them is actually implemented
-        readFirst(aConn, aStmt.getSubject(), CLOSED, null).ifPresent((stmt) -> {
-            kbConcept.setClosed(((Literal) stmt.getObject()).booleanValue());
-            kbConcept.originalStatements.add(stmt);
-        });
-        readFirst(aConn, aStmt.getSubject(), ABSTRACT, null).ifPresent((stmt) -> {
-            kbConcept.setAbstract(((Literal) stmt.getObject()).booleanValue());
-            kbConcept.originalStatements.add(stmt);
-        });
-        */
-
-        return kbConcept;
     }
 
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("KBConcept [identifier=");
-        builder.append(identifier);
-        builder.append("]");
-        return builder.toString();
+        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
+                .append("language", language).append("description", description).toString();
     }
 
     @Override

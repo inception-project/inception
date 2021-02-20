@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -63,7 +63,7 @@ public class AnnotatedListIdentifiers
     private @SpringBean UserDao userRepository;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> conceptModel;
+    private IModel<KBObject> conceptModel;
 
     private Project currentProject;
     private User currentUser;
@@ -71,14 +71,14 @@ public class AnnotatedListIdentifiers
     private Model<String> targetQuery = Model.of("");
 
     public AnnotatedListIdentifiers(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aConcept, IModel<KBHandle> aInstance, boolean flagInstanceSelect)
+            IModel<KBObject> aConcept, IModel<KBObject> aInstance, boolean flagInstanceSelect)
     {
         super(aId, aConcept);
         setOutputMarkupId(true);
         kbModel = aKbModel;
         conceptModel = aConcept;
         currentUser = userRepository.getCurrentUser();
-        
+
         String queryIri = flagInstanceSelect ? aInstance.getObject().getIdentifier()
                 : aConcept.getObject().getIdentifier();
         // MTAS internally escapes certain characters, so we need to escape them here as well.
@@ -86,18 +86,19 @@ public class AnnotatedListIdentifiers
         queryIri = queryIri.replaceAll("([\\\"\\)\\(\\<\\>\\.\\@\\#\\]\\[\\{\\}])", "\\\\$1");
         targetQuery = Model.of(
                 String.format("<%s=\"%s\"/>", ConceptFeatureIndexingSupport.KB_ENTITY, queryIri));
-        
+
         LoadableDetachableModel<List<SearchResult>> searchResults = LoadableDetachableModel
                 .of(this::getSearchResults);
-        LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
+        LOG.trace("SearchResult count : {}", searchResults.getObject().size());
         ListView<String> overviewList = new ListView<String>("searchResultGroups")
         {
             private static final long serialVersionUID = -122960232588575731L;
 
-            @Override protected void onConfigure()
+            @Override
+            protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 setVisible(!searchResults.getObject().isEmpty());
             }
 
@@ -110,10 +111,9 @@ public class AnnotatedListIdentifiers
                                 searchResults, aItem.getModelObject())));
             }
         };
-        overviewList.setList(
-            searchResults.getObject().stream().map(res -> res.getDocumentTitle()).distinct()
-                .collect(Collectors.toList()));
-        
+        overviewList.setList(searchResults.getObject().stream().map(res -> res.getDocumentTitle())
+                .distinct().collect(Collectors.toList()));
+
         add(overviewList);
         add(new Label("count", LambdaModel.of(() -> searchResults.getObject().size())));
     }
@@ -138,7 +138,7 @@ public class AnnotatedListIdentifiers
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(conceptModel.getObject() != null
                 && isNotEmpty(conceptModel.getObject().getIdentifier()));
     }
@@ -165,7 +165,7 @@ public class AnnotatedListIdentifiers
         private static final long serialVersionUID = 3540041356505975132L;
 
         public SearchResultGroup(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
-            List<String> aResultList)
+                List<String> aResultList)
         {
             super(aId, aMarkupId, aMarkupProvider);
 
@@ -173,10 +173,10 @@ public class AnnotatedListIdentifiers
             {
                 private static final long serialVersionUID = 5811425707843441458L;
 
-                @Override protected void populateItem(ListItem<String> aItem)
+                @Override
+                protected void populateItem(ListItem<String> aItem)
                 {
-                    aItem.add(
-                        new Label("sentence", aItem.getModelObject())
+                    aItem.add(new Label("sentence", aItem.getModelObject())
                             .setEscapeModelStrings(false));
                 }
             };

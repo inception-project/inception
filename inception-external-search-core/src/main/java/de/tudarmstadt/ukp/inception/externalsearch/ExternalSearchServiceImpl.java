@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -27,12 +27,8 @@ import javax.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
@@ -42,7 +38,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
  * Implementation of the external search service API.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExternalSearchAutoConfiguration#externalSearchService()}.
+ * {@link ExternalSearchAutoConfiguration#externalSearchService}.
  * </p>
  */
 public class ExternalSearchServiceImpl
@@ -52,67 +48,41 @@ public class ExternalSearchServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
 
-    private @Autowired AnnotationSchemaService annotationSchemaService;
-    private @Autowired DocumentService documentService;
-    private @Autowired ProjectService projectService;
-    private @Autowired ExternalSearchProviderRegistry externalSearchProviderRegistry;
+    private final ExternalSearchProviderRegistry externalSearchProviderRegistry;
 
-    // Index factory
-    private final String externalSearchProviderFactoryName = "elasticSearchProviderFactory";
-
-    // FIXME REC: We should not need a static map for these providers. If we need to hold on to 
-    // a provider for a longer time (e.g. to support paging), we need to find another way to handle
-    // this.
-    // The indexes for each project
-    private static Map<Long, ExternalSearchProvider> searchProviders;
-
-    @Value(value = "${repository.path}")
-    private String dir;
-
-    public ExternalSearchServiceImpl()
+    @Autowired
+    public ExternalSearchServiceImpl(ExternalSearchProviderRegistry aExternalSearchProviderRegistry)
     {
-        searchProviders = new HashMap<>();
+        externalSearchProviderRegistry = aExternalSearchProviderRegistry;
     }
 
-    private ExternalSearchProviderFactory getExternalSearchProviderFactory()
+    /**
+     * For testing.
+     */
+    public ExternalSearchServiceImpl(ExternalSearchProviderRegistry aExternalSearchProviderRegistry,
+            EntityManager aEntityManager)
     {
-        return externalSearchProviderRegistry
-                .getExternalSearchProviderFactory(externalSearchProviderFactoryName);
-    }
-    
-    private ExternalSearchProvider getExternalSearchProviderByProject(Project aProject)
-    {
-        if (!searchProviders.containsKey(aProject.getId())) {
-            searchProviders.put(aProject.getId(),
-                    getExternalSearchProviderFactory().getNewExternalSearchProvider(aProject,
-                            annotationSchemaService, documentService, projectService, dir));
-        }
-
-        return searchProviders.get(aProject.getId());
+        externalSearchProviderRegistry = aExternalSearchProviderRegistry;
+        entityManager = aEntityManager;
     }
 
     @Override
-    public List<ExternalSearchResult> query(User aUser, DocumentRepository aDocumentRepository,
+    public List<ExternalSearchResult> query(User aUser, DocumentRepository aRepository,
             String aQuery)
+        throws IOException
     {
-        ExternalSearchProvider provider = getExternalSearchProviderByProject(
-                aDocumentRepository.getProject());
+        log.debug("Running query: {}", aQuery);
 
-        if (provider.isConnected()) {
+        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(aRepository.getType());
 
-            log.debug("Running query: {}", aQuery);
+        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
 
-            Object properties = getExternalSearchProviderFactory().readTraits(aDocumentRepository);
+        Object traits = factory.readTraits(aRepository);
 
-            List<ExternalSearchResult> results = provider.executeQuery(properties, aUser,
-                    aQuery, null, null);
+        List<ExternalSearchResult> results = provider.executeQuery(aRepository, traits, aQuery);
 
-            return results;
-        }
-        else {
-            return null;
-        }
-
+        return results;
     }
 
     @Override
@@ -135,7 +105,7 @@ public class ExternalSearchServiceImpl
         }
         else {
             entityManager.merge(aDocumentRepository);
-        }        
+        }
     }
 
     @Override
@@ -152,23 +122,69 @@ public class ExternalSearchServiceImpl
     }
 
     @Override
-    public ExternalSearchResult getDocumentById(User aUser, DocumentRepository aDocumentRepository,
-            String aId)
+    @Transactional
+    public DocumentRepository getRepository(long aId)
     {
-        ExternalSearchProvider provider = getExternalSearchProviderByProject(
-                aDocumentRepository.getProject());
-
-        if (provider.isConnected()) {
-
-            Object properties = getExternalSearchProviderFactory().readTraits(aDocumentRepository);
-
-            ExternalSearchResult result = provider.getDocumentById(properties, aId);
-            
-            return result;
-        }
-        else {
-            return null;
-        }
+        return entityManager.find(DocumentRepository.class, aId);
     }
 
+    @Override
+    public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
+            String aCollectionId, String aDocumentId)
+        throws IOException
+    {
+        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(aRepository.getType());
+
+        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
+
+        Object traits = factory.readTraits(aRepository);
+
+        return provider.getDocumentResult(aRepository, traits, aCollectionId, aDocumentId);
+    }
+
+    @Override
+    public String getDocumentText(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException
+    {
+        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(aRepository.getType());
+
+        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
+
+        Object traits = factory.readTraits(aRepository);
+
+        return provider.getDocumentText(aRepository, traits, aCollectionId, aDocumentId);
+    }
+
+    @Override
+    public InputStream getDocumentAsStream(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException
+    {
+        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(aRepository.getType());
+
+        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
+
+        Object traits = factory.readTraits(aRepository);
+
+        return provider.getDocumentAsStream(aRepository, traits, aCollectionId, aDocumentId);
+    }
+
+    @Override
+    public String getDocumentFormat(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException
+    {
+        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(aRepository.getType());
+
+        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
+
+        Object traits = factory.readTraits(aRepository);
+
+        return provider.getDocumentFormat(aRepository, traits, aCollectionId, aDocumentId);
+    }
 }

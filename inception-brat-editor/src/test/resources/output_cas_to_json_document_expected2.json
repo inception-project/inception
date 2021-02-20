@@ -1,0 +1,21 @@
+{
+  "action" : "getDocument",
+  "messages" : [ ],
+  "modifications" : [ ],
+  "text" : "Karin fliegt nach New York . Sie will dort Urlaub machen .",
+  "ctime" : 0,
+  "mtime" : 0,
+  "info" : null,
+  "relations" : [ ],
+  "entities" : [ [ "132", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 6, 12 ] ], "LALA", "#8dd3c7", null ], [ "137", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 13, 17 ] ], "APPR", "#8dd3c7", null ], [ "142", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 18, 21 ] ], "NE", "#8dd3c7", null ], [ "147", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 22, 26 ] ], "NE", "#8dd3c7", null ], [ "152", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 27, 28 ] ], "$.", "#8dd3c7", null ], [ "157", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 29, 32 ] ], "PPER", "#8dd3c7", null ], [ "162", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 33, 37 ] ], "VMFIN", "#8dd3c7", null ], [ "167", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 38, 42 ] ], "ADV", "#8dd3c7", null ], [ "172", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 43, 49 ] ], "NN", "#8dd3c7", null ], [ "177", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 50, 56 ] ], "VVINF", "#8dd3c7", null ], [ "182", "0_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS", [ [ 57, 58 ] ], "$.", "#8dd3c7", null ] ],
+  "attributes" : [ ],
+  "equivs" : [ ],
+  "comments" : [ ],
+  "args" : { },
+  "rtl_mode" : false,
+  "font_zoom" : 100,
+  "sentence_number_offset" : 1,
+  "source_files" : [ ],
+  "token_offsets" : [ [ 0, 5 ], [ 6, 12 ], [ 13, 17 ], [ 18, 21 ], [ 22, 26 ], [ 27, 28 ], [ 29, 32 ], [ 33, 37 ], [ 38, 42 ], [ 43, 49 ], [ 50, 56 ], [ 57, 58 ] ],
+  "sentence_offsets" : [ [ 0, 28 ], [ 29, 58 ] ]
+}

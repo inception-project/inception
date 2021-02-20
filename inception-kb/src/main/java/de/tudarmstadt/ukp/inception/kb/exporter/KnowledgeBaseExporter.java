@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,11 +39,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -56,11 +56,19 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
-@Component
-public class KnowledgeBaseExporter implements ProjectExporter
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceAutoConfiguration#knowledgeBaseExporter}.
+ * </p>
+ */
+public class KnowledgeBaseExporter
+    implements ProjectExporter
 {
     private static final String KEY = "knowledge_bases";
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBaseExporter.class);
@@ -88,17 +96,19 @@ public class KnowledgeBaseExporter implements ProjectExporter
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies() {
+    public List<Class<? extends ProjectExporter>> getImportDependencies()
+    {
         return asList(LayerExporter.class);
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aFile)
         throws Exception
     {
         Project project = aRequest.getProject();
         List<ExportedKnowledgeBase> exportedKnowledgeBases = new ArrayList<>();
-        for (KnowledgeBase kb: kbService.getKnowledgeBases(project)) {
+        for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
             ExportedKnowledgeBase exportedKB = new ExportedKnowledgeBase();
             exportedKB.setId(kb.getRepositoryId());
             exportedKB.setName(kb.getName());
@@ -119,12 +129,12 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setReification(kb.getReification().toString());
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
-            exportedKB.setRootConcepts(
-                kb.getRootConcepts()
-                    .stream()
-                    .map(conceptIRI -> conceptIRI.stringValue())
-                    .collect(Collectors.toList()));
+            exportedKB.setRootConcepts(kb.getRootConcepts().stream()
+                    .map(conceptIRI -> conceptIRI.stringValue()).collect(Collectors.toList()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
+            exportedKB.setDefaultDatasetIri(
+                    kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri().stringValue()
+                            : null);
             exportedKB.setMaxResults(kb.getMaxResults());
             exportedKB.setSubPropertyIri(kb.getSubPropertyIri().stringValue());
             exportedKnowledgeBases.add(exportedKB);
@@ -150,15 +160,12 @@ public class KnowledgeBaseExporter implements ProjectExporter
      * exports the source files of local a knowledge base in the format specified in
      * {@link #knowledgeBaseFileExportFormat}
      */
-    private void exportKnowledgeBaseFiles(File aFile, KnowledgeBase kb)
-        throws IOException
+    private void exportKnowledgeBaseFiles(File aFile, KnowledgeBase kb) throws IOException
     {
-        File sourceKnowledgeBaseDir = new File(aFile + KB_FOLDER);
-        FileUtils.forceMkdir(sourceKnowledgeBaseDir);
-
         // create file with name "<knowledgebaseName>.<fileExtension>" in folder
         // KB_FOLDER
         File kbData = new File(aFile + getSourceFileName(kb));
+        FileUtils.forceMkdir(kbData.getParentFile());
         kbData.createNewFile();
         try (OutputStream os = new FileOutputStream(kbData)) {
             kbService.exportData(kb, knowledgeBaseFileExportFormat, os);
@@ -167,11 +174,11 @@ public class KnowledgeBaseExporter implements ProjectExporter
 
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
-        ExportedProject aExProject, ZipFile aZip)
+            ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        ExportedKnowledgeBase[] knowledgeBases = aExProject
-            .getArrayProperty(KEY, ExportedKnowledgeBase.class);
+        ExportedKnowledgeBase[] knowledgeBases = aExProject.getArrayProperty(KEY,
+                ExportedKnowledgeBase.class);
         ValueFactory vf = SimpleValueFactory.getInstance();
         for (ExportedKnowledgeBase exportedKB : knowledgeBases) {
             KnowledgeBase kb = new KnowledgeBase();
@@ -179,33 +186,32 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setType(RepositoryType.valueOf(exportedKB.getType()));
             // set default value for IRIs if no value is present in
             // order to support import of older projects
-            kb.setClassIri(exportedKB.getClassIri() != null ?
-                vf.createIRI(exportedKB.getClassIri()) :
-                DEFAULTPROFILE.getClassIri());
-            kb.setSubclassIri(exportedKB.getSubclassIri() != null ?
-                vf.createIRI(exportedKB.getSubclassIri()) :
-                DEFAULTPROFILE.getSubclassIri());
-            kb.setTypeIri(exportedKB.getTypeIri() != null ?
-                vf.createIRI(exportedKB.getTypeIri()) :
-                DEFAULTPROFILE.getTypeIri());
-            kb.setDescriptionIri(exportedKB.getDescriptionIri() != null ?
-                vf.createIRI(exportedKB.getDescriptionIri()) :
-                DEFAULTPROFILE.getDescriptionIri());
-            kb.setLabelIri(exportedKB.getLabelIri() != null ?
-                vf.createIRI(exportedKB.getLabelIri()) :
-                DEFAULTPROFILE.getLabelIri());
-            kb.setPropertyTypeIri(exportedKB.getPropertyTypeIri() != null ?
-                vf.createIRI(exportedKB.getPropertyTypeIri()) :
-                DEFAULTPROFILE.getPropertyTypeIri());
-            kb.setPropertyLabelIri(exportedKB.getPropertyLabelIri() != null ?
-                vf.createIRI(exportedKB.getPropertyLabelIri()) :
-                DEFAULTPROFILE.getPropertyLabelIri());
-            kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null ?
-                vf.createIRI(exportedKB.getPropertyDescriptionIri()) :
-                DEFAULTPROFILE.getPropertyDescriptionIri());
-            kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null ?
-                    vf.createIRI(exportedKB.getSubPropertyIri()) :
-                    DEFAULTPROFILE.getSubPropertyIri());
+            kb.setClassIri(exportedKB.getClassIri() != null //
+                    ? vf.createIRI(exportedKB.getClassIri())
+                    : DEFAULTPROFILE.getClassIri());
+            kb.setSubclassIri(exportedKB.getSubclassIri() != null //
+                    ? vf.createIRI(exportedKB.getSubclassIri())
+                    : DEFAULTPROFILE.getSubclassIri());
+            kb.setTypeIri(exportedKB.getTypeIri() != null //
+                    ? vf.createIRI(exportedKB.getTypeIri())
+                    : DEFAULTPROFILE.getTypeIri());
+            kb.setDescriptionIri(exportedKB.getDescriptionIri() != null //
+                    ? vf.createIRI(exportedKB.getDescriptionIri())
+                    : DEFAULTPROFILE.getDescriptionIri());
+            kb.setLabelIri(exportedKB.getLabelIri() != null ? vf.createIRI(exportedKB.getLabelIri())
+                    : DEFAULTPROFILE.getLabelIri());
+            kb.setPropertyTypeIri(exportedKB.getPropertyTypeIri() != null //
+                    ? vf.createIRI(exportedKB.getPropertyTypeIri())
+                    : DEFAULTPROFILE.getPropertyTypeIri());
+            kb.setPropertyLabelIri(exportedKB.getPropertyLabelIri() != null //
+                    ? vf.createIRI(exportedKB.getPropertyLabelIri())
+                    : DEFAULTPROFILE.getPropertyLabelIri());
+            kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null //
+                    ? vf.createIRI(exportedKB.getPropertyDescriptionIri())
+                    : DEFAULTPROFILE.getPropertyDescriptionIri());
+            kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null //
+                    ? vf.createIRI(exportedKB.getSubPropertyIri())
+                    : DEFAULTPROFILE.getSubPropertyIri());
             // The imported project may date from a time where we did not yet have the FTS IRI.
             // In that case we use concept linking support as an indicator that we dealt with a
             // remote Virtuoso.
@@ -213,30 +219,32 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
             }
             kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null
-                ? vf.createIRI(exportedKB.getFullTextSearchIri()) : null);
+                    ? vf.createIRI(exportedKB.getFullTextSearchIri())
+                    : null);
 
-            kb.setReadOnly(exportedKB.isReadOnly());
             kb.setEnabled(exportedKB.isEnabled());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
             if (exportedKB.getRootConcepts() != null) {
-                kb.setRootConcepts(
-                    exportedKB.getRootConcepts().stream()
+                kb.setRootConcepts(exportedKB.getRootConcepts().stream()
                         .map(conceptId -> vf.createIRI(conceptId)).collect(Collectors.toList()));
             }
             else {
                 kb.setRootConcepts(new ArrayList<>());
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
+            kb.setDefaultDatasetIri(exportedKB.getDefaultDatasetIri() != null
+                    ? vf.createIRI(exportedKB.getDefaultDatasetIri())
+                    : null);
             kb.setMaxResults(exportedKB.getMaxResults());
             // If not setting, initialize with default
             if (kb.getMaxResults() == 0) {
                 kb.setMaxResults(kbProperties.getDefaultMaxResults());
             }
             // Cap at local min results
-            if (kb.getMaxResults() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
-                kb.setMaxResults(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            if (kb.getMaxResults() < KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS) {
+                kb.setMaxResults(KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS);
             }
             // Cap at local max results
             if (kb.getMaxResults() > kbProperties.getHardMaxResults()) {
@@ -256,10 +264,14 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 kbService.registerKnowledgeBase(kb, cfg);
             }
 
+            // Set read-only flag only at the end to ensure that we do not run into a "read only"
+            // error during import
+            kb.setReadOnly(exportedKB.isReadOnly());
+
             // Early versions of INCEpTION did not set the ID.
             if (exportedKB.getId() == null) {
                 LOG.warn(
-                    "Cannot update concept feature traits: KB identifier is not set in the exported project.");
+                        "Cannot update concept feature traits: KB identifier is not set in the exported project.");
                 continue;
             }
 
@@ -267,7 +279,7 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 if (feature.getType().startsWith("kb:")) {
                     try {
                         ConceptFeatureTraits traits = JSONUtil
-                            .fromJsonString(ConceptFeatureTraits.class, feature.getTraits());
+                                .fromJsonString(ConceptFeatureTraits.class, feature.getTraits());
 
                         if (traits != null && exportedKB.getId().equals(traits.getRepositoryId())) {
                             traits.setRepositoryId(kb.getRepositoryId());
@@ -304,6 +316,6 @@ public class KnowledgeBaseExporter implements ProjectExporter
     private String getSourceFileName(KnowledgeBase kb)
     {
         return KNOWLEDGEBASEFILES + kb.getName() + "."
-            + knowledgeBaseFileExportFormat.getDefaultFileExtension();
+                + knowledgeBaseFileExportFormat.getDefaultFileExtension();
     }
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.util.Collections.unmodifiableSet;
+import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -27,13 +30,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,23 +44,21 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
-import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
-import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -81,23 +79,35 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.lucene.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
+import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
+import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns;
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -106,13 +116,20 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.Path;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-
-@Component(KnowledgeBaseService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceAutoConfiguration#knowledgeBaseService}.
+ * </p>
+ */
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
@@ -122,16 +139,30 @@ public class KnowledgeBaseServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
-    private final Set<String> implicitNamespaces;
     private final File kbRepositoriesRoot;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
+    private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
+
     @Autowired
-    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties)
+    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
+            KnowledgeBaseProperties aKBProperties)
     {
+        Caffeine<QueryKey, List<KBHandle>> cacheBuilder = Caffeine.newBuilder()
+                .maximumWeight(aKBProperties.getCacheSize())
+                .expireAfterAccess(aKBProperties.getCacheExpireDelay())
+                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay())
+                .weigher((QueryKey key, List<KBHandle> value) -> value.size());
+
+        if (log.isTraceEnabled()) {
+            cacheBuilder.recordStats();
+        }
+
+        queryCache = cacheBuilder.build(this::runQuery);
+
         kbRepositoriesRoot = new File(aRepoProperties.getPath(), "kb");
-        
+
         // Originally, the KBs were stored next to the repository folder - but they should be
         // *under* the repository folder
         File legacyLocation = new File(System.getProperty(SettingsUtil.getPropApplicationHome(),
@@ -156,21 +187,19 @@ public class KnowledgeBaseServiceImpl
                         + "the application again.");
             }
         }
-        
+
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
-        
-        implicitNamespaces = new LinkedHashSet<>(IriConstants.IMPLICIT_NAMESPACES);
     }
-    
+
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
-            EntityManager entityManager)
+            KnowledgeBaseProperties aKBProperties, EntityManager entityManager)
     {
-        this(aRepoProperties);
+        this(aRepoProperties, aKBProperties);
         this.entityManager = entityManager;
     }
 
-    @EventListener({ContextRefreshedEvent.class})
+    @EventListener({ ContextRefreshedEvent.class })
     void onContextRefreshed()
     {
         Set<String> orphanedIDs = new HashSet<>();
@@ -182,7 +211,7 @@ public class KnowledgeBaseServiceImpl
                     + "but it means that I cannot check if there are orphaned repositories. I "
                     + "will continue loading the application. Please try to fix the problem.", e);
         }
-        
+
         // We loop over all the local repositories and ensure that they have the latest
         // configuration. One effect of this is that the directory where the full text indexes
         // is stored is updated with respect to the location of the application data repository
@@ -191,20 +220,20 @@ public class KnowledgeBaseServiceImpl
         // this).
         for (KnowledgeBase kb : listKnowledgeBases()) {
             orphanedIDs.remove(kb.getRepositoryId());
-            
+
             if (RepositoryType.LOCAL.equals(kb.getType())) {
                 reconfigureLocalKnowledgeBase(kb);
             }
         }
-        
+
         if (!orphanedIDs.isEmpty()) {
             log.info("Found orphaned KB repositories: {}",
                     orphanedIDs.stream().sorted().collect(Collectors.toList()));
         }
-        
+
         repoManager.refresh();
     }
-    
+
     @Override
     public void destroy() throws Exception
     {
@@ -214,7 +243,8 @@ public class KnowledgeBaseServiceImpl
     /**
      * Sanity check to test if a knowledge base is already registered with RDF4J.
      *
-     * @param aKB a knowledge base
+     * @param aKB
+     *            a knowledge base
      */
     private void assertRegistration(KnowledgeBase aKB)
     {
@@ -232,7 +262,7 @@ public class KnowledgeBaseServiceImpl
         String baseName = "pid-" + Long.toString(aKB.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
         aKB.setRepositoryId(repositoryId);
-        
+
         // We want to have a separate Lucene index for every local repo, so we need to hack the
         // index dir in here because this is the place where we finally know the repo ID.
         setIndexDir(aKB, aCfg);
@@ -240,22 +270,22 @@ public class KnowledgeBaseServiceImpl
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, aCfg));
         entityManager.persist(aKB);
     }
-    
+
     @Override
-    public void defineBaseProperties(KnowledgeBase akb) 
+    public void defineBaseProperties(KnowledgeBase akb)
     {
         // KB will initialize base properties with base IRI schema properties defined by user
         if (akb.getType() == RepositoryType.LOCAL) {
-            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().getLocalName(),
-                    akb.getSubclassIri().stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getLabelIri().getLocalName(),
-                    akb.getLabelIri().stringValue(),null,XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
-                    akb.getDescriptionIri().stringValue(),null,XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
-                    akb.getTypeIri().stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().getLocalName(),
-                    akb.getSubPropertyIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().stringValue(),
+                    akb.getSubclassIri().getLocalName()));
+            createBaseProperty(akb, new KBProperty(akb.getLabelIri().stringValue(),
+                    akb.getLabelIri().getLocalName(), null, XMLSchema.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().stringValue(),
+                    akb.getDescriptionIri().getLocalName(), null, XMLSchema.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getTypeIri().stringValue(),
+                    akb.getTypeIri().getLocalName()));
+            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().stringValue(),
+                    akb.getSubPropertyIri().getLocalName()));
         }
     }
 
@@ -274,6 +304,23 @@ public class KnowledgeBaseServiceImpl
     public Optional<KnowledgeBase> getKnowledgeBaseById(Project aProject, String aId)
     {
         return Optional.ofNullable(entityManager.find(KnowledgeBase.class, aId));
+    }
+
+    @Transactional
+    @Override
+    public Optional<KnowledgeBase> getKnowledgeBaseByName(Project aProject, String aName)
+    {
+        TypedQuery<KnowledgeBase> query = entityManager.createNamedQuery("KnowledgeBase.getByName",
+                KnowledgeBase.class);
+        query.setParameter("project", aProject);
+        query.setParameter("name", aName);
+
+        try {
+            return Optional.of(query.getSingleResult());
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Transactional
@@ -308,11 +355,11 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     public List<KnowledgeBase> listKnowledgeBases()
     {
-        String query = 
-                "FROM KnowledgeBase " +
-                "ORDER BY name ASC";
-        return entityManager
-                .createQuery(query, KnowledgeBase.class)
+        String query = //
+                "FROM KnowledgeBase " + //
+                        "ORDER BY name ASC";
+        return entityManager //
+                .createQuery(query, KnowledgeBase.class) //
                 .getResultList();
     }
 
@@ -332,7 +379,7 @@ public class KnowledgeBaseServiceImpl
         throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(aKB);
-        
+
         repoManager.removeRepository(aKB.getRepositoryId());
 
         entityManager.remove(entityManager.contains(aKB) ? aKB : entityManager.merge(aKB));
@@ -343,7 +390,7 @@ public class KnowledgeBaseServiceImpl
     {
         // See #221 - Disabled because it is too slow during import
         // return new SailRepositoryConfig(
-        //   new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
+        // new ForwardChainingRDFSInferencerConfig(new NativeStoreConfig()));
 
         LuceneSailConfig config = new LuceneSailConfig(new NativeStoreConfig());
         // NOTE: We do not set the index dir here but when the KB is registered because we want each
@@ -363,12 +410,6 @@ public class KnowledgeBaseServiceImpl
     {
         assertRegistration(kb);
         return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
-    }
-
-    @Override
-    public void registerImplicitNamespace(String aImplicitNameSpace)
-    {
-        implicitNamespaces.add(aImplicitNameSpace);
     }
 
     @Override
@@ -410,7 +451,7 @@ public class KnowledgeBaseServiceImpl
             conn.add(is, prefix, format);
         }
     }
-    
+
     @Override
     public void exportData(KnowledgeBase kb, RDFFormat format, OutputStream os)
     {
@@ -441,50 +482,42 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public KBHandle createConcept(KnowledgeBase kb, KBConcept aConcept)
+    public void createConcept(KnowledgeBase kb, KBConcept aConcept)
     {
         if (StringUtils.isNotEmpty(aConcept.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+        update(kb, (conn) -> {
+            String identifier = getReificationStrategy(kb).generateConceptIdentifier(conn, kb);
             aConcept.setIdentifier(identifier);
             aConcept.write(conn, kb);
-            return new KBHandle(identifier, aConcept.getName());
         });
     }
-    
-    @Override 
+
+    @Override
     public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readConcept(aKB, 1,labels);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "oItem");
-        });
-        
-        if (resultList.isEmpty()) {
-            return Optional.empty();
-        }
-        else {
-            KBHandle conceptHandle = resultList.get(0);
-            KBConcept kbConcept = KBHandle.convertTo(KBConcept.class, conceptHandle);
-            return Optional.of(kbConcept);
+        try (StopWatch watch = new StopWatch(log, "readConcept(%s)", aIdentifier)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .withIdentifier(aIdentifier) //
+                    .excludeInferred() //
+                    .retrieveLabel() //
+                    .retrieveDescription();
+
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, aAll));
+            }
+
+            return result.map(handle -> KBHandle.convertTo(KBConcept.class, handle));
         }
     }
-    
+
     @Override
     public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
     {
@@ -494,10 +527,10 @@ public class KnowledgeBaseServiceImpl
                 return concept;
             }
         }
-        
+
         return Optional.empty();
     }
-    
+
     @Override
     public void updateConcept(KnowledgeBase kb, KBConcept aConcept)
     {
@@ -508,85 +541,71 @@ public class KnowledgeBaseServiceImpl
         update(kb, (conn) -> {
             conn.remove(aConcept.getOriginalStatements());
             aConcept.write(conn, kb);
-            return null;
         });
     }
 
     @Override
-    public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
+    public void deleteConcept(KnowledgeBase aKB, KBConcept aConcept)
     {
-        getReificationStrategy(kb).deleteConcept(kb, aConcept);
+        update(aKB, conn -> getReificationStrategy(aKB).deleteConcept(conn, aKB, aConcept));
     }
 
     @Override
     public List<KBHandle> listAllConcepts(KnowledgeBase aKB, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList;
-        resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForAllConceptList(aKB, labels);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    @Override
-    public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
-    {
-        return listAllConcepts(kb, aAll);
+        try (StopWatch watch = new StopWatch(log, "listAllConcepts()")) {
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .retrieveLabel() //
+                    .retrieveDescription() //
+                    .excludeInferred();
+
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+
+            return result;
+        }
     }
 
     @Override
-    public KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty)
+    public void createProperty(KnowledgeBase kb, KBProperty aProperty)
     {
         if (StringUtils.isNotEmpty(aProperty.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+        update(kb, (conn) -> {
+            String identifier = getReificationStrategy(kb).generatePropertyIdentifier(conn, kb);
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
-            return new KBHandle(identifier, aProperty.getName());
         });
     }
 
     @Override
     public Optional<KBProperty> readProperty(KnowledgeBase aKB, String aIdentifier)
     {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readProperty(aKB, 1,labels);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("s", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
-            tupleQuery.setBinding("pDOMAIN", RDFS.DOMAIN);
-            tupleQuery.setBinding("pRANGE", RDFS.RANGE);
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, true, "s");
-        });
+        try (StopWatch watch = new StopWatch(log, "readProperty(%s)", aIdentifier)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forProperties(aKB) //
+                    .withIdentifier(aIdentifier) //
+                    .retrieveDescription() //
+                    .retrieveLabel() //
+                    .retrieveDomainAndRange() //
+                    .excludeInferred();
 
-        if (resultList.isEmpty()) {
-            return Optional.empty();
-        }
-        else {
-            KBHandle propertyHandle = resultList.get(0);
-            KBProperty property = KBHandle.convertTo(KBProperty.class, propertyHandle);
-            return Optional.of(property);
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, true);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, true));
+            }
+
+            return result.map(handle -> KBHandle.convertTo(KBProperty.class, handle));
         }
     }
 
@@ -600,147 +619,82 @@ public class KnowledgeBaseServiceImpl
         update(kb, (conn) -> {
             conn.remove(aProperty.getOriginalStatements());
             aProperty.write(conn, kb);
-            return null;
         });
     }
 
     @Override
-    public void deleteProperty(KnowledgeBase kb, KBProperty aType)
+    public void deleteProperty(KnowledgeBase aKB, KBProperty aType)
     {
-        getReificationStrategy(kb).deleteProperty(kb, aType);
+        update(aKB, conn -> getReificationStrategy(aKB).deleteProperty(conn, aKB, aType));
     }
 
     @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
+    public List<KBProperty> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return listProperties(kb, true, aAll);
+        return listProperties(kb, true, aAll).stream()
+                .map(h -> KBHandle.convertTo(KBProperty.class, h)).collect(Collectors.toList());
     }
 
     @Override
     public List<KBHandle> listProperties(KnowledgeBase aKB, boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB, labels);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    @Override
-    public Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB)
-    {
-        Set<KBHandle> subPropertyLabels = new HashSet<KBHandle>();
-        KBHandle labelHandle = new KBHandle(aKB.getLabelIri().stringValue());
-        getSubPropertyLabelsRecursively(subPropertyLabels, aKB,
-                labelHandle);
-        return subPropertyLabels;
-       
-    }
-    
-    public Set<KBHandle> getSubPropertyLabelsRecursively(Set<KBHandle> subPropertyLabelSet,
-            KnowledgeBase aKB, KBHandle aHandle)
-    {
-        List<KBHandle> subPropertylist = getSubProperty(aKB, aHandle.getIdentifier(), true);
-        for (KBHandle subProp : subPropertylist) {
-            if (!subPropertyLabelSet.contains(subProp)) {
-                subPropertyLabelSet.add(subProp);
-                getSubPropertyLabelsRecursively(subPropertyLabelSet, aKB, subProp);
+        try (StopWatch watch = new StopWatch(log, "listProperties()")) {
+            SPARQLQuery query = SPARQLQueryBuilder.forProperties(aKB) //
+                    .retrieveLabel() //
+                    .retrieveDescription() //
+                    .retrieveDomainAndRange() //
+                    .includeInferred(aIncludeInferred);
+
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
             }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+
+            return result;
         }
-        return subPropertyLabelSet;
     }
 
-    
-    
-    public List<KBHandle> getSubProperty(KnowledgeBase aKB, String aIdentifier, boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.getSubProperty(aKB);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(true);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    } 
-    
     @Override
-    public KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance)
+    public void createInstance(KnowledgeBase kb, KBInstance aInstance)
     {
         if (StringUtils.isNotEmpty(aInstance.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+        update(kb, (conn) -> {
+            String identifier = getReificationStrategy(kb).generateInstanceIdentifier(conn, kb);
             aInstance.setIdentifier(identifier);
             aInstance.write(conn, kb);
-
-            return new KBHandle(identifier, aInstance.getName());
         });
     }
-    
+
     @Override
     public Optional<KBInstance> readInstance(KnowledgeBase aKB, String aIdentifier)
         throws QueryEvaluationException
     {
-        // Get concept for instance
-        KBHandle conceptForInstance = null;
-        List<KBHandle> concepts = getConceptForInstance(aKB, aIdentifier, true);
-        for (KBHandle concept : concepts) {
-            String id = concept.getIdentifier();
-            if (!hasImplicitNamespace(aKB, id) && id.contains(":")) {
-                conceptForInstance = concept;
-                break;
+        try (StopWatch watch = new StopWatch(log, "readInstance(%s)", aIdentifier)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forInstances(aKB) //
+                    .withIdentifier(aIdentifier) //
+                    .retrieveDescription() //
+                    .retrieveLabel() //
+                    .excludeInferred();
+
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, true);
             }
-        }
-        // Didn't find a suitable concept for the instance - consider the instance as
-        // non-existing
-        if (conceptForInstance == null) {
-            return Optional.empty();
-        }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, true));
+            }
 
-        String conceptIdentifier = conceptForInstance.getIdentifier();
-
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readInstance(aKB, 1, labels);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("oConcept", vf.createIRI(conceptIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, true,"oItem");
-        });
-
-        if (resultList.isEmpty()) {
-            return Optional.empty();
-        }
-        else {
-            KBHandle instanceHandle = resultList.get(0);
-            KBInstance kbInstance = KBHandle.convertTo(KBInstance.class, instanceHandle);
-            return Optional.of(kbInstance);
+            return result.map(handle -> KBHandle.convertTo(KBInstance.class, handle));
         }
     }
-    
+
     @Override
     public Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
     {
@@ -750,7 +704,7 @@ public class KnowledgeBaseServiceImpl
                 return instance;
             }
         }
-        
+
         return Optional.empty();
     }
 
@@ -763,49 +717,61 @@ public class KnowledgeBaseServiceImpl
 
         update(kb, (conn) -> {
             conn.remove(aInstance.getOriginalStatements());
-            aInstance.write(conn ,kb);
-            return null;
+            aInstance.write(conn, kb);
         });
     }
 
     @Override
-    public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
+    public void deleteInstance(KnowledgeBase aKB, KBInstance aInstance)
     {
-        getReificationStrategy(kb).deleteInstance(kb, aInstance);
+        update(aKB, conn -> getReificationStrategy(aKB).deleteInstance(conn, aKB, aInstance));
     }
 
     @Override
-    public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
+    public List<KBHandle> listInstances(KnowledgeBase aKB, String aConceptIri, boolean aAll)
     {
-        IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll, kb.getMaxResults());
+        try (StopWatch watch = new StopWatch(log, "readInstance(%s)", aConceptIri)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forInstances(aKB) //
+                    .childrenOf(aConceptIri) //
+                    .retrieveLabel() //
+                    .retrieveDescription();
+
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+
+            return result;
+        }
     }
 
     // Statements
 
     @Override
-    public void initStatement(KnowledgeBase kb, KBStatement aStatement)
+    public void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
+        throws RepositoryException
     {
-        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
-        aStatement.setOriginalStatements(statements);
+        update(aKB, conn -> getReificationStrategy(aKB).upsertStatement(conn, aKB, aStatement));
     }
 
     @Override
-    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
+    public void deleteStatement(KnowledgeBase aKB, KBStatement aStatement)
+        throws RepositoryException
     {
-        getReificationStrategy(kb).upsertStatement(kb, aStatement);
-    }
-
-    @Override
-    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
-    {
-        getReificationStrategy(kb).deleteStatement(kb, aStatement);
+        update(aKB, conn -> getReificationStrategy(aKB).deleteStatement(conn, aKB, aStatement));
     }
 
     @Override
     public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
     {
-        return getReificationStrategy(kb).listStatements(kb, aInstance, aAll);
+        try (StopWatch watch = new StopWatch(log, "listStatements(%s)",
+                aInstance.getIdentifier())) {
+            return read(kb,
+                    conn -> getReificationStrategy(kb).listStatements(conn, kb, aInstance, aAll));
+        }
     }
 
     @Override
@@ -814,47 +780,41 @@ public class KnowledgeBaseServiceImpl
         KBHandle handle = new KBHandle(aInstance.getIdentifier(), aInstance.getName());
         return listStatements(kb, handle, aAll);
     }
-    
+
     @Override
     public List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
             String aIdentifier)
     {
-        try (RepositoryConnection conn = getConnection(kb)) {
-            ValueFactory vf = conn.getValueFactory();
-            IRI iri = vf.createIRI(aIdentifier);
-            try (RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
-                    RepositoryResult<Statement> objStmts = conn.getStatements(null, null, iri)) {
-                List<Statement> allStmts = new ArrayList<>();
-                Iterations.addAll(predStmts, allStmts);
-                Iterations.addAll(objStmts, allStmts);
-                return allStmts;
-
+        try (StopWatch watch = new StopWatch(log,
+                "listStatementsWithPredicateOrObjectReference(%s)", aIdentifier)) {
+            try (RepositoryConnection conn = getConnection(kb)) {
+                ValueFactory vf = conn.getValueFactory();
+                IRI iri = vf.createIRI(aIdentifier);
+                try (RepositoryResult<Statement> predStmts = conn.getStatements(null, iri, null);
+                        RepositoryResult<Statement> objStmts = conn.getStatements(null, null,
+                                iri)) {
+                    List<Statement> allStmts = new ArrayList<>();
+                    Iterations.addAll(predStmts, allStmts);
+                    Iterations.addAll(objStmts, allStmts);
+                    return allStmts;
+                }
             }
         }
     }
 
-    private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
-    {
-        ValueFactory vf = conn.getValueFactory();
-        // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
-        String basePrefix = kb.getBasePrefix();
-        return basePrefix + vf.createBNode().getID();
-    }
-
     @Override
-    public KBHandle update(KnowledgeBase kb, UpdateAction aAction)
+    public void update(KnowledgeBase kb, UpdateAction aAction)
     {
         if (kb.isReadOnly()) {
-            log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
-            return null;
+            throw new ReadOnlyException(
+                    "Knowledge base [" + kb.getName() + "] is read only, will not alter!");
         }
 
-        KBHandle result = null;
         try (RepositoryConnection conn = getConnection(kb)) {
             boolean error = true;
             try {
                 conn.begin();
-                result = aAction.accept(conn);
+                aAction.accept(conn);
                 conn.commit();
                 error = false;
             }
@@ -864,7 +824,6 @@ public class KnowledgeBaseServiceImpl
                 }
             }
         }
-        return result;
     }
 
     @Override
@@ -876,191 +835,55 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> list(KnowledgeBase aKB, IRI aType, boolean aIncludeInferred, boolean aAll,
-            int aLimit)
-        throws QueryEvaluationException
-    {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.listInstances(aKB, labels);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    @Override
-    public List<KBHandle> listDomainProperties(KnowledgeBase aKB, String aDomain,
+    public List<KBProperty> listDomainProperties(KnowledgeBase aKB, String aDomain,
             boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.queryForPropertyListWithDomain(aKB, labels);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("aDomain", vf.createIRI(aDomain));
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-            return evaluateListQuery(aKB, tupleQuery, aAll,  "s");
-        });
-        
-        // Sorting is not done as part of SPARQL queries as it will be more expensive on
-        // SPARQL with sorting the whole data and then setting a limit for the number of
-        // result data set and hence will also skip number of results as part of sorted
-        // data from SPARQL
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    @Override
-    public List<KBHandle> listPropertiesRangeValue(KnowledgeBase aKB, String aProperty,
-            boolean aIncludeInferred, boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            ValueFactory vf = conn.getValueFactory();
-            String QUERY = SPARQLQueryStore.queryForPropertySpecificRange(aKB);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("aProperty", vf.createIRI(aProperty));
-            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
+        try (StopWatch watch = new StopWatch(log, "listDomainProperties(%s)", aDomain)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forProperties(aKB).matchingDomain(aDomain)
+                    .retrieveLabel().retrieveDescription().retrieveDomainAndRange()
+                    .includeInferred(aIncludeInferred);
 
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        
-        List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
-        resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultLabelList;
-    }
-    
-    @Override
-    public List<KBHandle> listProperties(KnowledgeBase aKB, IRI aType, boolean aIncludeInferred,
-            boolean aAll)
-        throws QueryEvaluationException
-    {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB, labels);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
 
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
+            return result.stream().map(handle -> KBHandle.convertTo(KBProperty.class, handle))
+                    .collect(Collectors.toList());
+        }
     }
-    
+
     @Override
     public List<KBHandle> listRootConcepts(KnowledgeBase aKB, boolean aAll)
         throws QueryEvaluationException
     {
-        
-        List<KBHandle> resultList = new ArrayList<>();
+        try (StopWatch watch = new StopWatch(log, "listRootConcepts()")) {
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB).roots().retrieveLabel()
+                    .retrieveDescription();
 
-        if (!aKB.getRootConcepts().isEmpty()) {
-            for (IRI conceptIRI : aKB.getRootConcepts()) {
-                KBConcept concept = readConcept(aKB, conceptIRI.stringValue(), aAll)
-                        .orElseThrow(() -> new QueryEvaluationException("Concept not found: " + 
-                                conceptIRI));
-                KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
-                        concept.getDescription());
-                resultList.add(conceptHandle);
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
             }
-        }
-        else {
-            Set<KBHandle> labels = getSubPropertyLabels(aKB);
-            resultList = read(aKB, (conn) -> {
-                String QUERY = SPARQLQueryStore.listRootConcepts(aKB, labels);
-                TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-                tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-                tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-                tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-                tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-                tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-                tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-                tupleQuery.setIncludeInferred(false);
-    
-                return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-            });
-        }
-        
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    private List<KBHandle> readLabelsWithoutLanguage(KnowledgeBase aKB, boolean aAll,
-            List<KBHandle> resultList)
-    {
-        List<KBHandle> resultLabelList = new ArrayList<>();
-        for (KBHandle result : resultList) {
-            boolean label = false;
-            boolean desc = false;
-            if (result.getName() == null) {
-                label = true;
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
             }
-            if (result.getDescription() == null) {
-                desc = true;
-            }
-            if (label || desc) {
-                Optional<KBHandle> labelHandle = readLabelsWithoutLanguage(aKB, aAll,
-                        result.getIdentifier(), label, desc);
-                if (labelHandle.isPresent() && label) {
-                    result.setName(labelHandle.get().getName());
-                }
-                if (labelHandle.isPresent() && desc) {
-                    result.setDescription(labelHandle.get().getDescription());
-                }
-            }
-            resultLabelList.add(result);
-        }
-        return resultLabelList;
-    }
-    
-    private Optional<KBHandle> readLabelsWithoutLanguage(KnowledgeBase aKB, boolean aAll,
-            String aIdentifier, boolean getLabel, boolean getDescription)
-        throws QueryEvaluationException
-    {
 
-        Optional<KBHandle> handle = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readLabelWithoutLanguage(aKB, 1, getLabel,
-                    getDescription);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQueryLabel = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQueryLabel.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQueryLabel.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQueryLabel.setBinding("oCLASS", aKB.getClassIri());
-            tupleQueryLabel.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQueryLabel.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQueryLabel.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQueryLabel.setIncludeInferred(false);
-            return evaluateGenericLabelQuery(aKB, tupleQueryLabel, aAll, "oItem");
-        });
-        
-        return handle;
+            return result;
+        }
     }
-    
+
     @Override
     public boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll)
     {
-        return !listChildConcepts(aKB, aParentIdentifier, aAll, 1).isEmpty();
+        try (StopWatch watch = new StopWatch(log, "hasChildConcepts(%s)", aParentIdentifier)) {
+            return read(aKB, conn -> SPARQLQueryBuilder.forClasses(aKB)
+                    .childrenOf(aParentIdentifier).exists(conn, aAll));
+        }
     }
 
     @Override
@@ -1068,427 +891,313 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, aKB.getMaxResults());
-    }
-    
-    @Override
-    public List<KBHandle> getParentConcept(KnowledgeBase aKB, KBHandle aHandle,
-            boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForParentConcept(aKB);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oChild", vf.createIRI(aHandle.getIdentifier()));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    @Override
-    public List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier,
-            boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForConceptForInstance(aKB);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("pInstance", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(true);
-
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    @Override
-    public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
-        throws QueryEvaluationException
-    {
-        Set<KBHandle> parentConceptSet = new LinkedHashSet<KBHandle>();
-        if (aIdentifier != null) {
-            Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
-            if (!identifierKBObj.isPresent()) {
-                return parentConceptSet;
-            }
-            else if (identifierKBObj.get() instanceof KBConcept) {
-                parentConceptSet.add(identifierKBObj.get().toKBHandle());
-                getParentConceptListforConcept(parentConceptSet, aKB,
-                        identifierKBObj.get().toKBHandle(), aAll);
-            }
-            else if (identifierKBObj.get() instanceof KBInstance) {
-                List<KBHandle> conceptList = getConceptForInstance(aKB, aIdentifier, aAll);
-                parentConceptSet.addAll(conceptList);
-                for (KBHandle parent : conceptList) {
-                    getParentConceptListforConcept(parentConceptSet, aKB, parent, aAll);
-                }
-            }
-        }
-        return parentConceptSet;
-    }
-    
-    // recursive method to get concept tree
-    public Set<KBHandle> getParentConceptListforConcept(Set<KBHandle> parentConceptSet,
-            KnowledgeBase aKB, KBHandle aHandle, boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> parentList = getParentConcept(aKB, aHandle, aAll);
-        for (KBHandle parent : parentList) {
-            if (!parentConceptSet.contains(parent)) {
-                parentConceptSet.add(parent);
-                getParentConceptListforConcept(parentConceptSet, aKB, parent, aAll);
-            }
-        }
-        return parentConceptSet;
+        return listChildConcepts(aKB, aParentIdentifier, aAll, DEFAULT_LIMIT);
     }
 
     @Override
-    public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
-            boolean aAll, int aLimit)
+    public List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        // The query below only returns subclasses which simultaneously declare being a class
-        // via the class property defined in the KB specification. This means that if the KB
-        // is configured to use rdfs:Class but a subclass defines itself using owl:Class, then
-        // this subclass is *not* returned. We do presently *not* support mixed schemes in a
-        // single KB.
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.listChildConcepts(aKB, labels);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oPARENT", vf.createIRI(aParentIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
+        try (StopWatch watch = new StopWatch(log, "getConceptForInstance(%s)", aIdentifier)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .parentsOf(aIdentifier) //
+                    .retrieveLabel() //
+                    .retrieveDescription();
 
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
-    }
-    
-    @Override
-    public List<KBHandle> listInstancesForChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
-            boolean aAll, int aLimit)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> childConceptInstances = new ArrayList<KBHandle>();
-        List<KBHandle> childConcepts =  listChildConcepts(aKB, aParentIdentifier, aAll, aLimit);
-        for (KBHandle childConcept : childConcepts) {
-            childConceptInstances.addAll(listInstances(aKB, childConcept.getIdentifier(), aAll));
-        }
-        return childConceptInstances;
-    }
-    
-    /**
-     * Method process the Tuple Query Results
-     * @param aKB KnowledgeBase variable
-     * @param tupleQuery Tuple Query Variable
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
-     * @param itemVariable The variable to define the item IRI (eg.'s')
-     * @return list of all the {@link KBHandle}
-     * @throws QueryEvaluationException
-     */
-    private List<KBHandle> evaluateListQuery(KnowledgeBase aKB, TupleQuery tupleQuery, boolean aAll,
-        String itemVariable)
-        throws QueryEvaluationException
-    {
-        TupleQueryResult result = tupleQuery.evaluate();        
-        
-        List<KBHandle> handles = new ArrayList<>();
-        while (result.hasNext()) {
-            BindingSet bindings = result.next();
-            if (bindings.size() == 0) {
-                continue;
-            }
-
-            String id = bindings.getBinding(itemVariable).getValue().stringValue();
-            if (!id.contains(":") || (!aAll && hasImplicitNamespace(aKB, id))) {
-                continue;
-            }
-            Binding label = bindings.getBinding("l");
-            Binding description = bindings.getBinding("d");
-            Binding labelGeneral = bindings.getBinding("lGen");
-            Binding descGeneral = bindings.getBinding("descGeneral");
-            Binding subPropertyLabel = bindings.getBinding("spl");
-            Binding domain = bindings.getBinding("dom");
-            Binding range = bindings.getBinding("range");
-            
-            KBHandle handle = new KBHandle(id);
-            handle.setKB(aKB);
-            if (label != null) {
-                handle.setName(label.getValue().stringValue());
-                if (label.getValue() instanceof Literal) {
-                    Literal literal = (Literal) label.getValue();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(handle::setLanguage);
-                }
-            }
-            else if (labelGeneral != null) {
-                handle.setName(labelGeneral.getValue().stringValue());
-
-            }
-            else if (subPropertyLabel != null) {
-                handle.setName(subPropertyLabel.getValue().stringValue());
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
             }
             else {
-                handle.setName(handle.getUiLabel());
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
             }
 
-            if (description != null ) {
-                handle.setDescription(description.getValue().stringValue());
-            }
-            else if (descGeneral != null) {
-                handle.setDescription(descGeneral.getValue().stringValue());
-            }
-
-            if (domain != null) {
-                handle.setDomain(domain.getValue().stringValue());
-            }
-            if (range != null) {
-                handle.setRange(range.getValue().stringValue());
-            }
-
-            handles.add(handle);
+            return result;
         }
-        return handles;
     }
 
-    /**
-     * Method process the Tuple Query Results
-     * @param aKB KnowledgeBase variable
-     * @param tupleQuery Tuple Query Variable
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
-     * @param itemVariable The variable to define the item IRI (eg.'s')
-     * @return list of all the {@link KBHandle}
-     * @throws QueryEvaluationException
-     */
-    private Optional<KBHandle> evaluateGenericLabelQuery(KnowledgeBase aKB, TupleQuery tupleQuery,
-            boolean aAll, String itemVariable)
+    @Override
+    public List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        TupleQueryResult result = tupleQuery.evaluate();
-        
-        Optional<KBHandle> handleValue =  Optional.of(new KBHandle());
-        while (result.hasNext()) {
-            BindingSet bindings = result.next();
-            if (bindings.size() == 0) {
-                return Optional.empty();
-            }
-            String id = bindings.getBinding(itemVariable).getValue().stringValue();
+        try (StopWatch watch = new StopWatch(log, "getParentConceptList(%s)", aIdentifier)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .ancestorsOf(aIdentifier) //
+                    .retrieveLabel() //
+                    .retrieveDescription();
 
-            if (!id.contains(":") || (!aAll && hasImplicitNamespace(aKB, id))) {
-                continue;
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
             }
-
-            // Bindings without language specifications
-            Binding labelGeneral = bindings.getBinding("lGen");
-            Binding descGeneral = bindings.getBinding("dGen");
-            
-            KBHandle handle = new KBHandle(id);
-            handle.setKB(aKB);
-            if (labelGeneral != null) {
-                handle.setName(labelGeneral.getValue().stringValue());
-                if (labelGeneral.getValue() instanceof Literal) {
-                    Literal literal = (Literal) labelGeneral.getValue();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(handle::setLanguage);
-                }
-            }
-            
-            // needs to be fixed
-            else if (handle.getName() == null) {
-                handle.setName(handle.getUiLabel());
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
             }
 
-            if (descGeneral != null ) {
-                handle.setDescription(descGeneral.getValue().stringValue());
-            }
-            
-            handleValue = Optional.of(handle);
-
+            return result;
         }
-        return handleValue;
     }
-    
+
+    @Override
+    public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
+            boolean aAll, int aLimit)
+        throws QueryEvaluationException
+    {
+        try (StopWatch watch = new StopWatch(log, "listChildConcepts(%s)", aParentIdentifier)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .childrenOf(aParentIdentifier) //
+                    .retrieveLabel() //
+                    .retrieveDescription() //
+                    .limit(aLimit);
+
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+
+            return result;
+        }
+    }
+
     private ReificationStrategy getReificationStrategy(KnowledgeBase kb)
     {
         switch (kb.getReification()) {
         case WIKIDATA:
-            return new WikiDataReification(this);
+            return new WikiDataReification();
         case NONE: // Fallthrough
         default:
-            return new NoReification(this);
+            return new NoReification();
         }
     }
-    
+
     /**
-     * Create base property with a specific IRI as identifier for the base property 
-     * (which includes subClassOf, label and description)   
+     * Create base property with a specific IRI as identifier for the base property (which includes
+     * subClassOf, label and description)
+     * 
      * @param akb
      *            The knowledge base to initialize base properties
      * @param aProperty
      *            Property to be created for KB
      */
-    public KBHandle createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
+    public void createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
     {
-        return update(akb, (conn) -> {
-            aProperty.write(conn, akb);
-            return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
-        });
+        update(akb, (conn) -> aProperty.write(conn, akb));
     }
 
     @Override
-    public boolean hasImplicitNamespace(KnowledgeBase kb, String s)
+    public void addQualifier(KnowledgeBase aKB, KBQualifier newQualifier)
     {
-        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not 
-        // want to filter it out just because we consider the OWL namespace to be implicit.
-        List<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
-                .collect(Collectors.toList());
-        if (rootConceptsAsStrings.contains(s)) {
-            return false;
+        update(aKB, conn -> getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier));
+    }
+
+    @Override
+    public void deleteQualifier(KnowledgeBase aKB, KBQualifier oldQualifier)
+    {
+        update(aKB, conn -> getReificationStrategy(aKB).deleteQualifier(conn, aKB, oldQualifier));
+    }
+
+    @Override
+    public void upsertQualifier(KnowledgeBase aKB, KBQualifier aQualifier)
+    {
+        update(aKB, conn -> getReificationStrategy(aKB).upsertQualifier(conn, aKB, aQualifier));
+    }
+
+    @Override
+    public List<KBQualifier> listQualifiers(KnowledgeBase aKB, KBStatement aStatement)
+    {
+        try (StopWatch watch = new StopWatch(log, "listQualifiers(%s)",
+                aStatement.getStatementId())) {
+            return read(aKB,
+                    conn -> getReificationStrategy(aKB).listQualifiers(conn, aKB, aStatement));
         }
-        
-        for (String ns : implicitNamespaces) {
-            if (s.startsWith(ns)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    public Set<String> getImplicitNamespaces()
-    {
-        return unmodifiableSet(implicitNamespaces);
     }
 
     @Override
-    public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
+    public boolean exists(KnowledgeBase aKB, KBStatement mockStatement)
     {
-        getReificationStrategy(kb).addQualifier(kb, newQualifier);
+        return read(aKB, conn -> getReificationStrategy(aKB).exists(conn, aKB, mockStatement));
     }
 
     @Override
-    public void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier)
-    {
-        getReificationStrategy(kb).deleteQualifier(kb, oldQualifier);
-    }
-
-    @Override
-    public void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier)
-    {
-        getReificationStrategy(kb).upsertQualifier(kb, aQualifier);
-    }
-
-    @Override
-    public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
-    {
-        return getReificationStrategy(kb).listQualifiers(kb, aStatement);
-    }
-
-    @Override
-    public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
-    {
-        return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
-    }
-
-    @Override
-    public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
-        throws IOException
+    public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
         try (Reader r = new InputStreamReader(
-                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
-                StandardCharsets.UTF_8)) {
+                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML), UTF_8)) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, 
-                    new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
+            {
+            });
         }
     }
-    
-    
+
     /**
      * Read identifier IRI and return {@link Optional} of {@link KBObject}
      * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
-    @Override public Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier)
+    @Override
+    public Optional<KBObject> readItem(Project aProject, String aIdentifier)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
-            Optional<KBObject> handle = readKBIdentifier(kb, aIdentifier);
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
+            Optional<KBObject> handle = readItem(kb, aIdentifier);
             if (handle.isPresent()) {
                 return handle;
             }
         }
         return Optional.empty();
     }
-    
+
     @Override
-    public Optional<KBObject> readKBIdentifier(KnowledgeBase aKb, String aIdentifier)
+    public Optional<KBObject> readItem(KnowledgeBase aKb, String aIdentifier)
     {
-        Optional<KBConcept> kbConcept = readConcept(aKb, aIdentifier, false);
-        if (kbConcept.isPresent()) {
-            return kbConcept.flatMap((c) -> Optional.of(c));
+        try (StopWatch watch = new StopWatch(log, "readItem(%s)", aIdentifier)) {
+            Optional<KBConcept> kbConcept = readConcept(aKb, aIdentifier, false);
+            if (kbConcept.isPresent()) {
+                return kbConcept.flatMap((c) -> Optional.of(c));
+            }
+            // In case we don't get the identifier as a concept we look for property/instance
+            Optional<KBProperty> kbProperty = readProperty(aKb, aIdentifier);
+            if (kbProperty.isPresent()) {
+                return kbProperty.flatMap((p) -> Optional.of(p));
+            }
+            Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
+            if (kbInstance.isPresent()) {
+                return kbInstance.flatMap((i) -> Optional.of(i));
+            }
+            return Optional.empty();
         }
-        // In case we don't get the identifier as a concept we look for property/instance
-        Optional<KBProperty> kbProperty = readProperty(aKb, aIdentifier);
-        if (kbProperty.isPresent()) {
-            return kbProperty.flatMap((p) -> Optional.of(p));
-        }
-        Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
-        if (kbInstance.isPresent()) {
-            return kbInstance.flatMap((i) -> Optional.of(i));
-        }
-        return Optional.empty();
     }
 
     @Override
-    public boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier)
+    public Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier)
     {
-        try (RepositoryConnection conn = getConnection(aKB)) {
-            Set<KBHandle> subProperties = getSubPropertyLabels(aKB);
-            for (KBHandle subPropery : subProperties) {
-                if (subPropery.getIdentifier().equals(aIdentifier)) {
-                    return true;
+        try (StopWatch watch = new StopWatch(log, "readHandle(%s)", aIdentifier)) {
+            SPARQLQuery query = SPARQLQueryBuilder.forItems(aKB).withIdentifier(aIdentifier)
+                    .retrieveLabel();
+
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, true);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, true));
+            }
+
+            return result;
+        }
+    }
+
+    @Override
+    public Optional<KBHandle> readHandle(Project aProject, String aIdentifier)
+    {
+        Optional<KBHandle> someResult = Optional.empty();
+
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            Optional<KBHandle> concept = readHandle(kb, aIdentifier);
+            if (!concept.isPresent()) {
+                continue;
+            }
+
+            someResult = concept;
+
+            // If we find a handle with a label, we stop immediately. Otherwise, we continue with
+            // the other KBs to see if there is one with a label. This is necessary because
+            // readHandle *always* returns a result, even if there is no triple actually containing
+            // the IRI in the KB.
+            if (someResult.map(KBHandle::getName).isPresent()) {
+                break;
+            }
+        }
+
+        return someResult;
+    }
+
+    /**
+     * List label properties.
+     * 
+     * @param aKB
+     *            the KB for which to list the properties.
+     * @param aClassInstance
+     *            whether to include label properties for classes and instances.
+     * @param aProperties
+     *            whether to include label properties for properties.
+     * @return list of label properties.
+     */
+    private List<String> listLabelProperties(KnowledgeBase aKB, boolean aClassInstance,
+            boolean aProperties)
+    {
+        return read(aKB, conn -> {
+            Iri pLabel = iri(aKB.getLabelIri());
+
+            Variable property = SparqlBuilder.var("p");
+            SelectQuery query = Queries.SELECT(property).distinct();
+
+            List<GraphPattern> patterns = new ArrayList<>();
+            if (aClassInstance) {
+                Iri pSubProperty = iri(aKB.getSubPropertyIri());
+                patterns.add(property.has(Path.of(zeroOrMore(pSubProperty)), pLabel));
+            }
+            if (aProperties) {
+                Iri pPropertyLabel = iri(aKB.getPropertyLabelIri());
+                patterns.add(property.has(Path.of(zeroOrMore(pPropertyLabel)), pLabel));
+            }
+
+            query.where(GraphPatterns.union(patterns.stream().toArray(GraphPattern[]::new)));
+
+            TupleQuery tupleQuery = conn.prepareTupleQuery(query.getQueryString());
+
+            List<String> labelProperties = new ArrayList<>();
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                while (result.hasNext()) {
+                    BindingSet bindings = result.next();
+                    labelProperties.add(bindings.getValue("p").stringValue());
                 }
             }
-            return false;
+
+            return labelProperties;
+        });
+    }
+
+    @Override
+    public List<String> listLabelProperties(KnowledgeBase aKB)
+    {
+        try (StopWatch watch = new StopWatch(log, "listLabelProperties()")) {
+            return listLabelProperties(aKB, true, true);
+        }
+    }
+
+    @Override
+    public List<String> listConceptOrInstanceLabelProperties(KnowledgeBase aKB)
+    {
+        try (StopWatch watch = new StopWatch(log, "listConceptOrInstanceLabelProperties()")) {
+            return listLabelProperties(aKB, true, false);
+        }
+    }
+
+    @Override
+    public List<String> listPropertyLabelProperties(KnowledgeBase aKB)
+    {
+        try (StopWatch watch = new StopWatch(log, "listPropertyLabelProperties()")) {
+            return listLabelProperties(aKB, false, true);
         }
     }
 
     @Override
     public boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB)
     {
-        return propertyIdentifier.equals(aKB.getLabelIri().stringValue()) || propertyIdentifier
-            .equals(aKB.getSubclassIri().stringValue()) || propertyIdentifier
-            .equals(aKB.getDescriptionIri().stringValue()) || propertyIdentifier
-            .equals(aKB.getTypeIri().stringValue());
+        return propertyIdentifier.equals(aKB.getLabelIri().stringValue())
+                || propertyIdentifier.equals(aKB.getSubclassIri().stringValue())
+                || propertyIdentifier.equals(aKB.getDescriptionIri().stringValue())
+                || propertyIdentifier.equals(aKB.getTypeIri().stringValue());
     }
 
     private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
     {
         /*
+        // @formatter:off
         log.info("Forcing update of configuration for {}", aKB);
         Model model = new TreeModel();
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -1498,17 +1207,18 @@ public class KnowledgeBaseServiceImpl
         StringWriter out = new StringWriter();
         Rio.write(model, out, RDFFormat.TURTLE);
         log.info("Current configuration: {}", out.toString());
-        */
-        
+        // @formatter:on
+         */
+
         RepositoryImplConfig config = getNativeConfig();
         setIndexDir(aKB, config);
         repoManager.addRepositoryConfig(new RepositoryConfig(aKB.getRepositoryId(), config));
     }
-    
+
     private void setIndexDir(KnowledgeBase aKB, RepositoryImplConfig aCfg)
     {
         assertRegistration(aKB);
-        
+
         // We want to have a separate Lucene index for every local repo, so we need to hack the
         // index dir in here because this is the place where we finally know the repo ID.
         if (aCfg instanceof SailRepositoryConfig) {
@@ -1521,20 +1231,20 @@ public class KnowledgeBaseServiceImpl
             }
         }
     }
-    
+
     @Override
     public void rebuildFullTextIndex(KnowledgeBase aKB) throws Exception
     {
         if (!RepositoryType.LOCAL.equals(aKB.getType())) {
             throw new IllegalArgumentException("Reindexing is only supported on local KBs");
         }
-        
+
         boolean reindexSupported = false;
-        
+
         // Handle re-indexing of local repos that use a Lucene FTS
         if (repoManager.getRepository(aKB.getRepositoryId()) instanceof SailRepository) {
             SailRepository sailRepo = (SailRepository) repoManager
-                .getRepository(aKB.getRepositoryId());
+                    .getRepository(aKB.getRepositoryId());
             if (sailRepo.getSail() instanceof LuceneSail) {
                 reindexSupported = true;
                 LuceneSail luceneSail = (LuceneSail) (sailRepo.getSail());
@@ -1544,7 +1254,7 @@ public class KnowledgeBaseServiceImpl
                 }
             }
         }
-        
+
         if (!reindexSupported) {
             throw new IllegalArgumentException(
                     aKB + "] does not support rebuilding its full text index.");
@@ -1552,66 +1262,92 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
-        ConceptFeatureValueType aValueType, Project project)
+    public boolean isKnowledgeBaseEnabled(Project aProject, String aRepositoryId)
     {
-        List<KBHandle> handles = new ArrayList<>();
-        if (aRepositoryId != null) {
-            // If a specific KB is selected, get its instances/concepts
-            Optional<KnowledgeBase> kb = getKnowledgeBaseById(project, aRepositoryId);
-            if (kb.isPresent()) {
-                handles = getEntitiesForKnowledgeBase(kb.get(), aConceptScope, aValueType);
-            }
+        Optional<KnowledgeBase> kb = Optional.empty();
+        String repositoryId = aRepositoryId;
+        if (repositoryId != null) {
+            kb = getKnowledgeBaseById(aProject, aRepositoryId);
         }
-        else {
-            // If no specific KB is selected, collect instances/concepts from all KBs
-            for (KnowledgeBase kb : getEnabledKnowledgeBases(project)) {
-                handles.addAll(getEntitiesForKnowledgeBase(kb, aConceptScope, aValueType));
-            }
-        }
-        return handles;
-    }
-
-    private List<KBHandle> getEntitiesForKnowledgeBase(KnowledgeBase aKB, String aConceptScope,
-        ConceptFeatureValueType aValueType)
-    {
-        List<KBHandle> handles = new ArrayList<>();
-        if (aConceptScope != null) {
-            switch (aValueType) {
-            case INSTANCE:
-                handles = listInstancesForChildConcepts(aKB, aConceptScope, false, 50);
-                break;
-            case CONCEPT:
-                handles = listChildConcepts(aKB, aConceptScope, false);
-                break;
-            default:
-                handles.addAll(listInstancesForChildConcepts(aKB, aConceptScope, false, 50));
-                handles.addAll(listChildConcepts(aKB, aConceptScope, false));
-            }
-        }
-        else {
-            switch (aValueType) {
-            case INSTANCE:
-                handles = listAllInstances(aKB, false);
-                break;
-            case CONCEPT:
-                handles = listConcepts(aKB, false);
-                break;
-            default:
-                handles.addAll(listAllInstances(aKB, false));
-                handles.addAll(listConcepts(aKB, false));
-            }
-        }
-        return handles;
+        return kb.isPresent() && kb.get().isEnabled();
     }
 
     @Override
-    public List<KBHandle> listAllInstances(KnowledgeBase aKB, boolean aAll) {
-        List<KBHandle> instanceList = new ArrayList<>();
-        for (KBHandle concept : listConcepts(aKB, aAll)) {
-            instanceList.addAll(listInstances(aKB, concept.getIdentifier(), aAll));
+    public List<KBHandle> listHandlesCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll)
+    {
+        List<KBHandle> results = queryCache.get(QueryKey.of(aKB, aQuery, aAll));
+        if (log.isTraceEnabled()) {
+            log.trace("KB cache stats: {}", queryCache.stats());
         }
-        return instanceList;
+        return results;
     }
 
+    @Override
+    public Optional<KBHandle> fetchHandleCaching(KnowledgeBase aKB, SPARQLQuery aQuery,
+            boolean aAll)
+    {
+        Optional<KBHandle> result = queryCache.get(QueryKey.of(aKB, aQuery, aAll)).stream()
+                .findFirst();
+        if (log.isTraceEnabled()) {
+            log.trace("KB cache stats: {}", queryCache.stats());
+        }
+        return result;
+    }
+
+    private List<KBHandle> runQuery(QueryKey aKey)
+    {
+        return read(aKey.kb, conn -> aKey.query.asHandles(conn, true));
+    }
+
+    /**
+     * If the KB configuration of a project is changed, clear the caches of any KBs of that project.
+     * 
+     * @param aEvent
+     *            The event containing the project
+     */
+    @EventListener
+    public void onKnowledgeBaseConfigurationChangedEvent(
+            KnowledgeBaseConfigurationChangedEvent aEvent)
+    {
+        queryCache.asMap().keySet().stream()
+                .filter(key -> key.kb.getProject().equals(aEvent.getProject()))
+                .forEach(key -> queryCache.invalidate(key));
+    }
+
+    private static final class QueryKey
+    {
+        private final KnowledgeBase kb;
+        private final SPARQLQuery query;
+        private final boolean all;
+
+        public static QueryKey of(KnowledgeBase aKb, SPARQLQuery aQuery, boolean aAll)
+        {
+            return new QueryKey(aKb, aQuery, aAll);
+        }
+
+        public QueryKey(KnowledgeBase aKb, SPARQLQuery aQuery, boolean aAll)
+        {
+            kb = aKb;
+            query = aQuery;
+            all = aAll;
+        }
+
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof QueryKey)) {
+                return false;
+            }
+
+            QueryKey castOther = (QueryKey) other;
+            return new EqualsBuilder().append(kb, castOther.kb).append(all, castOther.all)
+                    .append(query, castOther.query).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(kb).append(query).append(all).toHashCode();
+        }
+    }
 }

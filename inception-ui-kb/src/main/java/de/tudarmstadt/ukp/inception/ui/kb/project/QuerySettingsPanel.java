@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,17 +30,18 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 
 public class QuerySettingsPanel
     extends Panel
 {
     private static final long serialVersionUID = -1594852739133649866L;
-    
+
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbProperties;
 
@@ -62,7 +63,6 @@ public class QuerySettingsPanel
         add(ftsField("fullTextSearchIri", "kb.fullTextSearchIri"));
 
     }
-
 
     private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> aModel)
     {
@@ -90,7 +90,7 @@ public class QuerySettingsPanel
         NumberTextField<Integer> queryLimit = new NumberTextField<>(id, aModel, Integer.class);
         queryLimit.setOutputMarkupId(true);
         queryLimit.setRequired(true);
-        queryLimit.setMinimum(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+        queryLimit.setMinimum(KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS);
         queryLimit.setMaximum(kbProperties.getHardMaxResults());
         queryLimit.add(LambdaBehavior.onConfigure(it -> {
             // If not setting, initialize with default
@@ -98,8 +98,8 @@ public class QuerySettingsPanel
                 queryLimit.setModelObject(kbProperties.getDefaultMaxResults());
             }
             // Cap at local min results
-            else if (queryLimit.getModelObject() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
-                queryLimit.setModelObject(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            else if (queryLimit.getModelObject() < KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS) {
+                queryLimit.setModelObject(KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS);
             }
             // Cap at local max results
             else if (queryLimit.getModelObject() > kbProperties.getHardMaxResults()) {
@@ -112,7 +112,7 @@ public class QuerySettingsPanel
     private DropDownChoice<IRI> ftsField(String aId, String aProperty)
     {
         DropDownChoice<IRI> ftsField = new BootstrapSelect<>(aId, kbModel.bind(aProperty),
-            IriConstants.FTS_IRIS);
+                IriConstants.FTS_IRIS);
         ftsField.setOutputMarkupId(true);
         ftsField.setNullValid(true);
         return ftsField;

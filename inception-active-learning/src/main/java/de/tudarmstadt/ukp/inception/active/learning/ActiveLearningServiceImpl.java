@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,14 +28,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -46,10 +49,17 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentG
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ActiveLearningAutoConfiguration#activeLearningService}.
+ * </p>
+ */
 public class ActiveLearningServiceImpl
     implements ActiveLearningService
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
     private final UserDao userService;
@@ -67,58 +77,52 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public List<SuggestionGroup> getSuggestions(User aUser,
-            AnnotationLayer aLayer)
+    public List<SuggestionGroup> getSuggestions(User aUser, AnnotationLayer aLayer)
     {
-        Predictions model = recommendationService.getPredictions(aUser, aLayer.getProject());
+        Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
 
-        if (model == null) {
+        if (predictions == null) {
             return Collections.emptyList();
         }
 
-        Map<String, SuggestionDocumentGroup> recommendationsMap = model
+        Map<String, SuggestionDocumentGroup> recommendationsMap = predictions
                 .getPredictionsForWholeProject(aLayer, documentService);
 
-        return recommendationsMap.values().stream()
-                .flatMap(docMap -> docMap.stream())
+        return recommendationsMap.values().stream().flatMap(docMap -> docMap.stream())
                 .collect(toList());
     }
-    
+
     @Override
     public boolean isSuggestionVisible(LearningRecord aRecord)
     {
         User user = userService.get(aRecord.getUser());
-        List<SuggestionGroup> suggestions = getSuggestions(user,
-                aRecord.getLayer());
+        List<SuggestionGroup> suggestions = getSuggestions(user, aRecord.getLayer());
         for (SuggestionGroup listOfAO : suggestions) {
-            if (listOfAO.stream().anyMatch(suggestion -> 
-                    suggestion.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
-                    suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName()) && 
-                    suggestion.getLabel().equals(aRecord.getAnnotation()) && 
-                    suggestion.getBegin() == aRecord.getOffsetCharacterBegin() && 
-                    suggestion.getEnd() == aRecord.getOffsetCharacterEnd() &&
-                    suggestion.isVisible())
-            ) {
+            if (listOfAO.stream().anyMatch(suggestion -> suggestion.getDocumentName()
+                    .equals(aRecord.getSourceDocument().getName())
+                    && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
+                    && suggestion.labelEquals(aRecord.getAnnotation())
+                    && suggestion.getBegin() == aRecord.getOffsetCharacterBegin()
+                    && suggestion.getEnd() == aRecord.getOffsetCharacterEnd()
+                    && suggestion.isVisible())) {
                 return true;
             }
         }
         return false;
     }
-    
+
     @Override
     public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
     {
         return learningHistoryService.hasSkippedSuggestions(aUser, aLayer);
     }
-    
+
     @Override
-    public void hideRejectedOrSkippedAnnotations(User aUser,
-            AnnotationLayer aLayer, boolean filterSkippedRecommendation,
-            List<SuggestionGroup> aSuggestionGroups)
+    public void hideRejectedOrSkippedAnnotations(User aUser, AnnotationLayer aLayer,
+            boolean filterSkippedRecommendation, List<SuggestionGroup> aSuggestionGroups)
     {
-        List<LearningRecord> records = learningHistoryService
-                .listRecords(aUser.getUsername(),
-                        aLayer);
+        List<LearningRecord> records = learningHistoryService.listRecords(aUser.getUsername(),
+                aLayer);
 
         for (SuggestionGroup group : aSuggestionGroups) {
             for (AnnotationSuggestion s : group) {
@@ -132,7 +136,7 @@ public class ActiveLearningServiceImpl
                             .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
                                     && r.getOffsetCharacterBegin() == s.getBegin()
                                     && r.getOffsetCharacterEnd() == s.getEnd()
-                                    && r.getAnnotation().equals(s.getLabel()))
+                                    && s.labelEquals(r.getAnnotation()))
                             .forEach(record -> {
                                 if (REJECTED.equals(record.getUserAction())) {
                                     s.hide(FLAG_REJECTED);
@@ -146,11 +150,68 @@ public class ActiveLearningServiceImpl
             }
         }
     }
-    
-    public static class ActiveLearningUserState implements Serializable
+
+    @Override
+    public Optional<Delta> generateNextSuggestion(User aUser, ActiveLearningUserState alState)
+    {
+        // Fetch the next suggestion to present to the user (if there is any)
+        long startTimer = System.currentTimeMillis();
+        List<SuggestionGroup> suggestions = alState.getSuggestions();
+        long getRecommendationsFromRecommendationService = System.currentTimeMillis();
+        log.trace("Getting recommendations from recommender system costs {} ms.",
+                (getRecommendationsFromRecommendationService - startTimer));
+
+        // remove duplicate recommendations
+        suggestions = suggestions.stream().map(it -> removeDuplicateRecommendations(it))
+                .collect(Collectors.toList());
+        long removeDuplicateRecommendation = System.currentTimeMillis();
+        log.trace("Removing duplicate recommendations costs {} ms.",
+                (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
+
+        // hide rejected recommendations
+        hideRejectedOrSkippedAnnotations(aUser, alState.getLayer(), true, suggestions);
+        long removeRejectedSkippedRecommendation = System.currentTimeMillis();
+        log.trace("Removing rejected or skipped ones costs {} ms.",
+                (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
+        return alState.getStrategy().generateNextSuggestion(suggestions);
+    }
+
+    private static SuggestionGroup removeDuplicateRecommendations(
+            SuggestionGroup unmodifiedRecommendationList)
+    {
+        SuggestionGroup cleanRecommendationList = new SuggestionGroup();
+
+        unmodifiedRecommendationList.forEach(recommendationItem -> {
+            if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
+                cleanRecommendationList.add(recommendationItem);
+            }
+        });
+
+        return cleanRecommendationList;
+    }
+
+    private static boolean isAlreadyInCleanList(SuggestionGroup cleanRecommendationList,
+            AnnotationSuggestion recommendationItem)
+    {
+        String source = recommendationItem.getRecommenderName();
+        String annotation = recommendationItem.getLabel();
+        String documentName = recommendationItem.getDocumentName();
+
+        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) {
+            boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
+            if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
+                    && existingRecommendation.getDocumentName().equals(documentName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static class ActiveLearningUserState
+        implements Serializable
     {
         private static final long serialVersionUID = -167705997822964808L;
-        
+
         private boolean sessionActive = false;
         private boolean doExistRecommenders = true;
         private AnnotationLayer layer;
@@ -248,7 +309,8 @@ public class ActiveLearningServiceImpl
         }
     }
 
-    public static class ActiveLearningUserStateKey implements Serializable
+    public static class ActiveLearningUserStateKey
+        implements Serializable
     {
         private static final long serialVersionUID = -2134294656221484540L;
         private String userName;

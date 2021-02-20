@@ -1,6 +1,23 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class AnnotationJSONObject
     extends JSONOutput
@@ -9,9 +26,9 @@ public class AnnotationJSONObject
     private int begin;
     private int end;
     private int annotationId;
-    private ArrayList<Long> coveredTokens;
+    private List<Long> coveredTokens;
     private long layerId;
-    private ArrayList<FeatureRef<Object>> features;
+    private List<FeatureRef<Object>> features;
 
     public int getBegin()
     {
@@ -43,12 +60,12 @@ public class AnnotationJSONObject
         this.annotationId = annotationId;
     }
 
-    public ArrayList<Long> getCoveredTokens()
+    public List<Long> getCoveredTokens()
     {
         return coveredTokens;
     }
 
-    public void setCoveredTokens(ArrayList<Long> coveredTokens)
+    public void setCoveredTokens(List<Long> coveredTokens)
     {
         this.coveredTokens = coveredTokens;
     }
@@ -63,12 +80,12 @@ public class AnnotationJSONObject
         this.layerId = layerId;
     }
 
-    public ArrayList<FeatureRef<Object>> getFeatures()
+    public List<FeatureRef<Object>> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(ArrayList<FeatureRef<Object>> features)
+    public void setFeatures(List<FeatureRef<Object>> features)
     {
         this.features = features;
     }

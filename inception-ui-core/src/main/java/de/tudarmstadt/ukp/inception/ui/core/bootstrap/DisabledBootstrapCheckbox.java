@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,11 +27,14 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapCheckbox;
  * Extension of {@link BootstrapCheckbox} which can be disabled in the frontend.<br>
  * The input tag of the checkbox will receive the attribute {@code disabled="disabled"}.
  */
-public class DisabledBootstrapCheckbox extends BootstrapCheckbox {
+public class DisabledBootstrapCheckbox
+    extends BootstrapCheckbox
+{
 
     private static final long serialVersionUID = -202721702026002675L;
 
-    public DisabledBootstrapCheckbox(String id, IModel<Boolean> model, IModel<?> labelModel) {
+    public DisabledBootstrapCheckbox(String id, IModel<Boolean> model, IModel<?> labelModel)
+    {
         // MB: Unfortunately, we cannot write a "disableable" checkbox: newCheckBox(...) is called
         // in super(), and at that point in time, attributes of this class (like "boolean disabled")
         // are not defined yet...
@@ -39,7 +42,8 @@ public class DisabledBootstrapCheckbox extends BootstrapCheckbox {
     }
 
     @Override
-    protected CheckBox newCheckBox(String id, IModel<Boolean> model) {
+    protected CheckBox newCheckBox(String id, IModel<Boolean> model)
+    {
         CheckBox checkBox = super.newCheckBox(id, model);
         checkBox.add(new AttributeAppender("disabled", "disabled"));
         return checkBox;

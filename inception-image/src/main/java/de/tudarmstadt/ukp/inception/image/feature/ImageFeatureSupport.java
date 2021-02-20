@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,14 @@ package de.tudarmstadt.ukp.inception.image.feature;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -38,9 +42,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -66,7 +71,7 @@ public class ImageFeatureSupport
     {
         // Nothing to do
     }
-    
+
     @Override
     public String getId()
     {
@@ -78,7 +83,7 @@ public class ImageFeatureSupport
     {
         featureSupportId = aBeanName;
     }
-    
+
     @Override
     public Optional<FeatureType> getFeatureType(AnnotationFeature aFeature)
     {
@@ -108,13 +113,13 @@ public class ImageFeatureSupport
             return false;
         }
     }
-    
+
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new ImageFeatureTraitsEditor(aId, this, aFeatureModel);
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
@@ -126,7 +131,7 @@ public class ImageFeatureSupport
         switch (feature.getMultiValueMode()) {
         case NONE:
             if (feature.getType().startsWith("img:")) {
-                editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                editor = new ImageFeatureEditor(aId, aOwner, aFeatureStateModel);
             }
             else {
                 throw unsupportedMultiValueModeException(feature);
@@ -145,20 +150,19 @@ public class ImageFeatureSupport
     {
         ImageFeatureTraits traits = null;
         try {
-            traits = JSONUtil.fromJsonString(ImageFeatureTraits.class,
-                    aFeature.getTraits());
+            traits = JSONUtil.fromJsonString(ImageFeatureTraits.class, aFeature.getTraits());
         }
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-        
+
         if (traits == null) {
             traits = new ImageFeatureTraits();
         }
-                
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationFeature aFeature, ImageFeatureTraits aTraits)
     {
@@ -169,7 +173,7 @@ public class ImageFeatureSupport
             log.error("Unable to write traits", e);
         }
     }
-    
+
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
@@ -184,8 +188,26 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
-        return aValue;
+        return (Serializable) aValue;
+    }
+
+    @Override
+    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        String label = renderFeatureValue(aFeature, aFs);
+
+        if (StringUtils.isEmpty(label)) {
+            return Collections.emptyList();
+        }
+
+        return asList(new VLazyDetailQuery(aFeature.getName(), label));
+    }
+
+    @Override
+    public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    {
+        return asList(new VLazyDetailResult("<img>", aQuery));
     }
 }

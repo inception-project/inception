@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,16 +22,13 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -44,11 +41,13 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,11 +62,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -78,10 +78,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.PartOfSpeechLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -89,6 +87,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -99,6 +102,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
@@ -106,30 +111,31 @@ import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
+import de.tudarmstadt.ukp.inception.search.config.SearchServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
+import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
-@SpringBootTest
-@EntityScan({ 
-        "de.tudarmstadt.ukp.clarin.webanno.model",
-        "de.tudarmstadt.ukp.inception.search.model",
-        "de.tudarmstadt.ukp.inception.kb.model",
+@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+        "de.tudarmstadt.ukp.inception.search.model", "de.tudarmstadt.ukp.inception.kb.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
-    private @Autowired AnnotationSchemaService annotationSchemaService;
 
     @Rule
     public TestWatcher watcher = new TestWatcher()
@@ -141,7 +147,7 @@ public class MtasDocumentIndexTest
             System.out.printf("\n=== " + methodName + " =====================\n");
         };
     };
-    
+
     @Before
     public void setUp()
     {
@@ -153,37 +159,42 @@ public class MtasDocumentIndexTest
     private void createProject(Project aProject) throws Exception
     {
         projectService.createProject(aProject);
-        annotationSchemaService.initializeProject(aProject);
+        projectService.initializeProject(aProject);
     }
 
     @SafeVarargs
-    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments)
-        throws Exception
+    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments) throws Exception
     {
         Project project = null;
-        for (Pair<SourceDocument, String> doc : aDocuments) {
-            project = doc.getLeft().getProject();
-            
-            try (InputStream fileStream = new ByteArrayInputStream(
-                    doc.getRight().getBytes(UTF_8))) {
-                documentService.uploadSourceDocument(fileStream, doc.getLeft());
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            for (Pair<SourceDocument, String> doc : aDocuments) {
+                log.info("Uploading document via documentService.uploadSourceDocument: {}", doc);
+                project = doc.getLeft().getProject();
+
+                try (InputStream fileStream = new ByteArrayInputStream(
+                        doc.getRight().getBytes(UTF_8))) {
+                    documentService.uploadSourceDocument(fileStream, doc.getLeft());
+                }
             }
         }
-        
+
         // Avoid the compiler complaining about project not being an effectively final variable
+        log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
-        await("Waiting for indexing process to complete")
-                .atMost(60, SECONDS)
+        await("Waiting for indexing process to complete").atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> searchService.isIndexValid(p) && !searchService.isIndexInProgress(p));
+        log.info("Indexing complete!");
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
         throws Exception
     {
+        log.info("Preparing annotated document....");
+
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
-        
+
         JCasBuilder builder = new JCasBuilder(jCas);
 
         builder.add("The", Token.class);
@@ -192,14 +203,14 @@ public class MtasDocumentIndexTest
         builder.add(" ");
         builder.add("of", Token.class);
         builder.add(" ");
-        
+
         int begin = builder.getPosition();
         builder.add("Galicia", Token.class);
-        
+
         NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
         ne.setValue("LOC");
         ne.addToIndexes();
-        
+
         builder.add(" ");
         builder.add("is", Token.class);
         builder.add(" ");
@@ -210,19 +221,22 @@ public class MtasDocumentIndexTest
         builder.add("Compostela", Token.class);
         builder.add(" ");
         builder.add(".", Token.class);
-        
+
         // Create annotation document
         AnnotationDocument annotationDocument = documentService
                 .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
         // Write annotated CAS to annotated document
-        documentService.writeAnnotationCas(jCas, annotationDocument, false);
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            log.info("Writing annotated document using documentService.writeAnnotationCas");
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+        }
 
-        await("Waiting for indexing process to complete")
-                .atMost(60, SECONDS)
-                .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(aProject)
+        log.info("Writing for annotated document to be indexed");
+        await("Waiting for indexing process to complete").atMost(60, SECONDS)
+                .pollInterval(5, SECONDS).until(() -> searchService.isIndexValid(aProject)
                         && !searchService.isIndexInProgress(aProject));
+        log.info("Indexing complete!");
     }
 
     @Test
@@ -230,7 +244,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("TestRawTextQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -254,20 +267,56 @@ public class MtasDocumentIndexTest
         // Test results
         SearchResult expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("test");
-        expectedResult.setText("Galicia ");
-        expectedResult.setLeftContext("capital of ");
-        expectedResult.setRightContext("is ");
+        expectedResult.setDocumentTitle("Raw text document");
+        expectedResult.setLeftContext("The capital of ");
+        expectedResult.setText("Galicia");
+        expectedResult.setRightContext(" is Santiago de");
         expectedResult.setOffsetStart(15);
         expectedResult.setOffsetEnd(22);
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
 
-        assertNotNull(results);
-        if (results != null) {
-            assertEquals(1, results.size());
-            assertEquals(expectedResult, results.get(0));
-        }
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
+    }
+
+    @Test
+    public void thatLastTokenInDocumentCanBeFound() throws Exception
+    {
+        Project project = new Project();
+        project.setName("LastTokenInDocumentCanBeFound");
+
+        createProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("Raw text document");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(Pair.of(sourceDocument, fileContent));
+
+        User user = userRepository.get("admin");
+
+        String query = "\"\\.\"";
+
+        // Execute query
+        List<SearchResult> results = searchService.query(user, project, query);
+
+        // Test results
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(sourceDocument.getId());
+        expectedResult.setDocumentTitle("Raw text document");
+        expectedResult.setLeftContext("Santiago de Compostela");
+        expectedResult.setText(".");
+        expectedResult.setRightContext("");
+        expectedResult.setOffsetStart(48);
+        expectedResult.setOffsetEnd(49);
+        expectedResult.setTokenStart(8);
+        expectedResult.setTokenLength(1);
+
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
 
     @Test
@@ -275,7 +324,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("TestLimitQueryToDocument");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -290,9 +338,8 @@ public class MtasDocumentIndexTest
         sourceDocument2.setProject(project);
         sourceDocument2.setFormat("text");
         String fileContent2 = "The capital of Portugal is Lissabon.";
-        
-        uploadDocument(
-                Pair.of(sourceDocument1, fileContent1),
+
+        uploadDocument(Pair.of(sourceDocument1, fileContent1),
                 Pair.of(sourceDocument2, fileContent2));
 
         User user = userRepository.get("admin");
@@ -310,28 +357,30 @@ public class MtasDocumentIndexTest
         SearchResult expectedResult1 = new SearchResult();
         expectedResult1.setDocumentId(sourceDocument1.getId());
         expectedResult1.setDocumentTitle("Raw text document 1");
-        expectedResult1.setText("capital ");
+        expectedResult1.setText("capital");
         expectedResult1.setLeftContext("The ");
-        expectedResult1.setRightContext("of ");
+        expectedResult1.setRightContext(" of Galicia is");
         expectedResult1.setOffsetStart(4);
         expectedResult1.setOffsetEnd(11);
+        expectedResult1.setTokenStart(1);
+        expectedResult1.setTokenLength(1);
 
         SearchResult expectedResult2 = new SearchResult();
         expectedResult2.setDocumentId(sourceDocument2.getId());
         expectedResult2.setDocumentTitle("Raw text document 2");
-        expectedResult2.setText("capital ");
+        expectedResult2.setText("capital");
         expectedResult2.setLeftContext("The ");
-        expectedResult2.setRightContext("of ");
+        expectedResult2.setRightContext(" of Portugal is");
         expectedResult2.setOffsetStart(4);
         expectedResult2.setOffsetEnd(11);
+        expectedResult2.setTokenStart(1);
+        expectedResult2.setTokenLength(1);
 
-        assertThat(resultsLimited)
-                .containsExactly(expectedResult1)
-                .usingElementComparatorIgnoringFields("tokenStart", "tokenEnd");
-        
-        assertThat(resultsNotLimited)
-                .containsExactlyInAnyOrder(expectedResult1, expectedResult2)
-                .usingElementComparatorIgnoringFields("tokenStart", "tokenEnd");
+        assertThat(resultsLimited).usingFieldByFieldElementComparator()
+                .containsExactly(expectedResult1);
+
+        assertThat(resultsNotLimited).usingFieldByFieldElementComparator()
+                .containsExactlyInAnyOrder(expectedResult1, expectedResult2);
     }
 
     @Test
@@ -339,7 +388,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("SimplifiedTokenTextQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -363,26 +411,23 @@ public class MtasDocumentIndexTest
         // Test results
         SearchResult expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("test");
-        expectedResult.setText("Galicia ");
-        expectedResult.setLeftContext("capital of ");
-        expectedResult.setRightContext("is ");
+        expectedResult.setDocumentTitle("Raw text document");
+        expectedResult.setText("Galicia");
+        expectedResult.setLeftContext("The capital of ");
+        expectedResult.setRightContext(" is Santiago de");
         expectedResult.setOffsetStart(15);
         expectedResult.setOffsetEnd(22);
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
 
-        assertNotNull(results);
-        assertEquals(1, results.size());
-        assertEquals(expectedResult, results.get(0));
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
-    
+
     @Test
     public void testAnnotationQuery() throws Exception
     {
         Project project = new Project();
         project.setName("TestAnnotationQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -406,65 +451,53 @@ public class MtasDocumentIndexTest
         // Test results
         SearchResult expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("test");
-        expectedResult.setText("Galicia ");
-        expectedResult.setLeftContext("capital of ");
-        expectedResult.setRightContext("is ");
+        expectedResult.setDocumentTitle("Annotation document");
+        // When searching for an annotation, we don't get the matching
+        // text back... not sure why...
+        expectedResult.setText("");
+        expectedResult.setLeftContext("");
+        expectedResult.setRightContext("");
         expectedResult.setOffsetStart(15);
         expectedResult.setOffsetEnd(22);
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
 
-        assertNotNull(results);
-        assertEquals(1, results.size());
-        assertEquals(expectedResult, results.get(0));
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
 
     @Configuration
     public static class TestContext
     {
-        @Autowired
-        ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired EntityManager entityManager;
 
-        private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
-        private final File temporaryFolder;
+        @Rule
+        TemporaryFolder folder;
 
-        @Rule TemporaryFolder folder;
-        
-        public TestContext()
-        {
-            try {
-                FileUtils.deleteDirectory(new File(temporaryFolderPath));
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            temporaryFolder = new File(temporaryFolderPath);
-        }
-        
         @Bean
-        public ProjectService projectService()
+        public ProjectService projectService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), aInitializerProxy);
         }
 
         @Bean
-        public PhysicalIndexFactory mtasDocumentIndexFactory()
+        public PhysicalIndexFactory mtasDocumentIndexFactory(DocumentService aDocumentService,
+                AnnotationSchemaService aSchemaService, RepositoryProperties aRepositoryProperties,
+                FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
+                FeatureSupportRegistry aFeatureSupportRegistry)
         {
-            return new MtasDocumentIndexFactory();
+            return new MtasDocumentIndexFactory(aSchemaService, aDocumentService,
+                    aRepositoryProperties, aFeatureIndexingSupportRegistry,
+                    aFeatureSupportRegistry);
         }
 
         @Bean
-        public FeatureSupport featureSupport()
+        public FeatureSupportRegistry featureSupportRegistry()
         {
-            return new PrimitiveUimaFeatureSupport();
-        }
-
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry(
-                @Lazy @Autowired List<FeatureSupport> aFeatureSupports)
-        {
-            return new FeatureSupportRegistryImpl(aFeatureSupports);
+            return new FeatureSupportRegistryImpl(asList(new NumberFeatureSupport(),
+                    new BooleanFeatureSupport(), new StringFeatureSupport()));
         }
 
         @Bean
@@ -483,7 +516,7 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public NamedEntityLayerInitializer NamedEntityLayerInitializer(
+        public NamedEntityLayerInitializer namedEntityLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationService)
         {
             return new NamedEntityLayerInitializer(aAnnotationService);
@@ -491,10 +524,26 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public PartOfSpeechLayerInitializer PartOfSpeechLayerInitializer(
+        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityTagSetInitializer(aAnnotationService);
+        }
+
+        @Lazy
+        @Bean
+        public PartOfSpeechLayerInitializer partOfSpeechLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
             return new PartOfSpeechLayerInitializer(aAnnotationSchemaService);
+        }
+
+        @Lazy
+        @Bean
+        public PartOfSpeechTagSetInitializer partOfSpeechTagSetInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
+        {
+            return new PartOfSpeechTagSetInitializer(aAnnotationSchemaService);
         }
 
         @Lazy
@@ -514,9 +563,20 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public SearchService searchService()
+        public SearchService searchService(DocumentService aDocumentService,
+                ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
+                IndexScheduler aIndexScheduler, SearchServiceProperties aProperties)
         {
-            return new SearchServiceImpl();
+            return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
+                    aIndexScheduler, aProperties);
+        }
+
+        @Bean
+        public SearchServiceProperties searchServiceProperties()
+        {
+            SearchServicePropertiesImpl properties = new SearchServicePropertiesImpl();
+            properties.setEnabled(true);
+            return properties;
         }
 
         @Bean
@@ -528,33 +588,36 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(repositoryProperties());
+            return new KnowledgeBaseServiceImpl(repositoryProperties(), knowledgeBaseProperties());
         }
 
         @Bean
         public IndexScheduler indexScheduler()
         {
-            return new IndexScheduler();
+            return new IndexSchedulerImpl();
         }
 
         @Bean
-        public DocumentService documentService()
+        public DocumentService documentService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(),
-                    applicationEventPublisher);
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
+                    importExportService(), projectService(aInitializerProxy),
+                    applicationEventPublisher, entityManager);
         }
 
         @Bean
         public AnnotationSchemaService annotationSchemaService()
         {
-            return new AnnotationSchemaServiceImpl();
+            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
+                    entityManager);
         }
 
         @Bean
         public CasStorageService casStorageService()
         {
-            return new CasStorageServiceImpl(null, repositoryProperties(), backupProperties());
+            return new CasStorageServiceImpl(null, null, repositoryProperties(),
+                    backupProperties());
         }
 
         @Bean
@@ -578,6 +641,12 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
+        public KnowledgeBaseProperties knowledgeBaseProperties()
+        {
+            return new KnowledgeBasePropertiesImpl();
+        }
+
+        @Bean
         public BackupProperties backupProperties()
         {
             return new BackupProperties();
@@ -588,18 +657,15 @@ public class MtasDocumentIndexTest
         {
             return new ApplicationContextProvider();
         }
-        
+
         @Bean
-        public LayerSupportRegistry layerSupportRegistry(
-                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+        public LayerSupportRegistry layerSupportRegistry()
         {
-            return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService(),
-                            null),
-                    new RelationLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService(), null),
-                    new ChainLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService(), null)));
+            FeatureSupportRegistry fsr = featureSupportRegistry();
+
+            return new LayerSupportRegistryImpl(asList(new SpanLayerSupport(fsr, null, null),
+                    new RelationLayerSupport(fsr, null, null),
+                    new ChainLayerSupport(fsr, null, null)));
         }
     }
 }

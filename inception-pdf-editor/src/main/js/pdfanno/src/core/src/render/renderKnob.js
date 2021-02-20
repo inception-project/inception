@@ -1,4 +1,3 @@
-
 /**
  * Circle radius.
  */
@@ -8,7 +7,7 @@ export const DEFAULT_RADIUS = 7
  * Create a bounding circle.
  * @param {Object} the data for rendering.
  */
-export function renderKnob ({ x, y, readOnly }) {
+export function renderKnob ({ x, y, readOnly, text, color}) {
 
   // Adjust the position.
   [x, y] = adjustPoint(x, (y - (DEFAULT_RADIUS + 2)), DEFAULT_RADIUS)
@@ -20,11 +19,12 @@ export function renderKnob ({ x, y, readOnly }) {
   }
 
   // Create a knob.
-  return $(`<div class="${cssClass}"/>`).css({
+  return $(`<div title="` + text + `" class="${cssClass}"/>`).css({
     top    : `${y}px`,
     left   : `${x}px`,
     width  : DEFAULT_RADIUS + 'px',
-    height : DEFAULT_RADIUS + 'px'
+    height : DEFAULT_RADIUS + 'px',
+    backgroundColor : color
   })
 }
 

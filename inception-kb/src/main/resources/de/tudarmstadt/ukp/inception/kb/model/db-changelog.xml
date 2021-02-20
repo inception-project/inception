@@ -390,4 +390,18 @@
       <where>maxResults = 0</where>
     </update>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20190306-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="defaultDatasetIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="defaultDatasetIri"
+              type="VARCHAR(255)">
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

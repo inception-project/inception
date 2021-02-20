@@ -1,11 +1,11 @@
-// Copyright 2018
-// Ubiquitous Knowledge Processing (UKP) Lab
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -19,14 +19,13 @@ The {product-name} Team
 
 This document targets developers working on {product-name}.
 
+include::{include-dir}introduction.adoc[]
 
+include::{include-dir}setup.adoc[]
 
-= Introduction
-
-include::{include-dir}setup.adoc[leveloffset=+1]
+include::{include-dir}architecture.adoc[]
 
 <<<
-
 
 = Modules
 
@@ -40,17 +39,23 @@ include::{include-dir}annotation-schema-layer-span.adoc[leveloffset=+3]
 
 include::{include-dir}annotation-schema-layer-relation.adoc[leveloffset=+3]
 
-include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+2]
+include::{include-dir}annotation-schema-layer-docmeta.adoc[leveloffset=+3]
 
-include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
+include::{include-dir}annotation-schema-layer-behavior-extensions.adoc[leveloffset=+3]
+
+include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+2]
 
 include::{include-dir}search.adoc[leveloffset=+1]
 
 include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
-include::{include-dir}implementing_recommender_tutorial.adoc[leveloffset=+1]
+include::{include-dir}recommendation.adoc[leveloffset=+1]
 
-include::{include-dir}external_recommender.adoc[leveloffset=+1]
+include::{include-dir}implementing_recommender_tutorial.adoc[leveloffset=+2]
+
+include::{include-dir}external_recommender.adoc[leveloffset=+2]
+
+include::{include-dir}active-learning.adoc[leveloffset=+1]
 
 include::{include-dir}log.adoc[leveloffset=+1]
 
@@ -60,9 +65,21 @@ include::{include-dir}knowledgebase.adoc[leveloffset=+1]
 
 include::{include-dir}knowledgebase_irischema.adoc[leveloffset=+2]
 
+include::{include-dir}concept-linking.adoc[leveloffset=+1]
+
+include::{include-dir}pdf-editor.adoc[leveloffset=+1]
+
+include::{include-dir}format-support-extensions.adoc[leveloffset=+1]
+
+include::{include-dir}repository.adoc[leveloffset=+1]
+
 <<<
 
+= {product-name} Development
 
+include::{include-dir}release.adoc[leveloffset=+1]
+
+<<<
 
 = Appendices 
 

@@ -1,0 +1,7 @@
+= Document Metadata
+
+A document metadata layer can be used to create annotations that apply to an entire document
+instead of to a specific span of text.
+
+Document metadata types inherit from the UIMA `AnnotationBase` type (text annotations inherit from
+`Annotation`). As such, they do not have begin/end offsets.

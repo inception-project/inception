@@ -12,12 +12,32 @@
 
 # Please keep the list sorted.
 
+Contributors to the INCEpTION code-base (please update this list)
+
 Beto Boullosa
-Jan-Christoph Klie [rentier]
-Jennifer Chen [shinyichen]
+Chaitrali Agashe[@chaitraliagashe]
+Christoph Scheunemann [@christophscheunemann]
+Jan-Christoph Klie [@jcklie]
+Jennifer Chen [@shinyichen]
 Michael Bugert
 Peter Jiang
-Richard Eckart de Castilho <richard.eckart@gmail.com> [reckart]
-Ryan Gabbard [rgabbard]
+Richard Eckart de Castilho <richard.eckart@gmail.com> [@reckart]
+Ryan Gabbard [@rgabbard]
 Torsten Dietl
 Wei Ding
+
+
+Contributors to the original WebAnno code-base
+
+Aakash Sharma <aakash.y.sharma@gmail.com> [@aakashysharma]
+Aleks Stier [@astier]
+Andreas Straninger
+Anshul Tak [@anshul-tak]
+Benjamin Milde [@bmilde]
+Darina Benikova 
+Erik-Lân Do Dinh
+Richard Eckart de Castilho <richard.eckart@gmail.com> [@reckart]
+Sarah Holschneider [@sholschneider]
+Seid Muhie Yimam [@seyyaw]
+Steffen Remus [@remstef]
+Sushil Jain 

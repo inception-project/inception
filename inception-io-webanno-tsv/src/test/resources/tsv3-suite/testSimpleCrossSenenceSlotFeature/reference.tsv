@@ -1,0 +1,17 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.SimpleSpan|
+#T_SP=webanno.custom.SimpleLinkHost|ROLE_webanno.custom.SimpleLinkHost:links_webanno.custom.LinkType|webanno.custom.SimpleSpan
+
+
+#Text=He loves her .
+1-1	0-2	He	_	p1;p2	1-2;2-3	
+1-2	3-8	loves	*	_	_	
+1-3	9-12	her	_	_	_	
+1-4	13-14	.	_	_	_	
+
+#Text=She loves him not .
+2-1	15-18	She	_	_	_	
+2-2	19-24	loves	_	_	_	
+2-3	25-28	him	*	_	_	
+2-4	29-32	not	_	_	_	
+2-5	33-34	.	_	_	_	

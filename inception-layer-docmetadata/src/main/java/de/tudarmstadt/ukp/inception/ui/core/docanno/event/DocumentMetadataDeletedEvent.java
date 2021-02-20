@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,54 +18,20 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import org.apache.uima.cas.AnnotationBaseFS;
-import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class DocumentMetadataDeletedEvent extends ApplicationEvent
+public class DocumentMetadataDeletedEvent
+    extends DocumentMetadataEvent
+    implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
-    
-    private final SourceDocument document;
-    private final String user;
-    private final AnnotationBaseFS annotation;
-    
+
     public DocumentMetadataDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationBaseFS aAnnotation)
+            AnnotationLayer aLayer, AnnotationBaseFS aAnnotation)
     {
-        super(aSource);
-        document = aDocument;
-        user = aUser;
-        annotation = aAnnotation;
-    }
-    
-    public SourceDocument getDocument()
-    {
-        return document;
-    }
-    
-    public String getUser()
-    {
-        return user;
-    }
-    
-    public AnnotationBaseFS getAnnotation()
-    {
-        return annotation;
-    }
-    
-    @Override
-    public String toString()
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("DocumentMetadataDeletedEvent [");
-        if (document != null) {
-            builder.append("docID=");
-            builder.append(document.getId());
-            builder.append(", user=");
-            builder.append(user);
-        }
-        builder.append("]");
-        return builder.toString();
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
     }
 }

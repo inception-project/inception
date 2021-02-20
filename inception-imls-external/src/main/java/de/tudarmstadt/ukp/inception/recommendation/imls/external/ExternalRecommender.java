@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -25,17 +28,14 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.CASRuntimeException;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.util.TypeSystemUtil;
 import org.apache.uima.util.XMLSerializer;
@@ -45,14 +45,18 @@ import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -61,10 +65,18 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class ExternalRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
+    public static final Key<Boolean> KEY_TRAINING_COMPLETE = new Key<>("training_complete");
+
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
+
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
+
+    private static final long CONNECT_TIMEOUT = 30;
+    private static final long WRITE_TIMEOUT = 30;
+    private static final long READ_TIMEOUT = 30;
 
     private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
@@ -72,17 +84,29 @@ public class ExternalRecommender
 
     public ExternalRecommender(Recommender aRecommender, ExternalRecommenderTraits aTraits)
     {
+        super(aRecommender);
+
         recommender = aRecommender;
         traits = aTraits;
-        client = new OkHttpClient();
+        client = new OkHttpClient.Builder().connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS).build();
     }
 
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-        throws RecommendationException
+    public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        aContext.markAsReadyForPrediction();
+        if (traits.isTrainable()) {
+            return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
+        }
+        else {
+            return true;
+        }
+    }
 
+    @Override
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
+    {
         TrainingRequest trainingRequest = new TrainingRequest();
         List<Document> documents = new ArrayList<>();
 
@@ -105,35 +129,31 @@ public class ExternalRecommender
 
         trainingRequest.setDocuments(documents);
 
-
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
-            .addPathSegment("train")
-            .build();
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder().addPathSegment("train")
+                .build();
         RequestBody body = RequestBody.create(JSON, toJson(trainingRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
-        Response response = sendRequest(request);
+        try (Response response = sendRequest(request)) {
+            if (response.code() == HTTP_TOO_MANY_REQUESTS) {
+                LOG.info("External recommender is already training");
+            }
+            // If the response indicates that the request was not successful,
+            // then it does not make sense to go on and try to decode the XMI
+            else if (!response.isSuccessful()) {
+                int code = response.code();
+                String responseBody = getResponseBody(response);
+                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+                throw new RecommendationException(msg);
+            }
 
-        // If the response indicates that the request was not successful,
-        // then it does not make sense to go on and try to decode the XMI
-        if (!response.isSuccessful()) {
-            int code = response.code();
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-            throw new RecommendationException(msg);
+            aContext.put(KEY_TRAINING_COMPLETE, true);
         }
     }
 
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        // External recommender can predict arbitrary annotations, not only PredictedSpans.
-        // In order to support the case where the prediction annotation type is the predicted
-        // annotation type (e.g. recommend named entities, recommender creates named entities),
-        // the predicted annotation has to be removed from the CAS first in order to be able
-        // to differentiate between the two
-        removePredictedAnnotations(aCas);
-
         String typeSystem = serializeTypeSystem(aCas);
 
         PredictionRequest predictionRequest = new PredictionRequest();
@@ -143,38 +163,29 @@ public class ExternalRecommender
         // Fill in metadata
         predictionRequest.setMetadata(buildMetadata(aCas));
 
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
-            .addPathSegment("predict")
-            .build();
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder().addPathSegment("predict")
+                .build();
         RequestBody body = RequestBody.create(JSON, toJson(predictionRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
-        Response response = sendRequest(request);
+        try (Response response = sendRequest(request)) {
+            // If the response indicates that the request was not successful,
+            // then it does not make sense to go on and try to decode the XMI
+            if (!response.isSuccessful()) {
+                int code = response.code();
+                String responseBody = getResponseBody(response);
+                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+                throw new RecommendationException(msg);
+            }
 
-        // If the response indicates that the request was not successful,
-        // then it does not make sense to go on and try to decode the XMI
-        if (!response.isSuccessful()) {
-            int code = response.code();
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-            throw new RecommendationException(msg);
-        }
+            PredictionResponse predictionResponse = deserializePredictionResponse(response);
 
-        PredictionResponse predictionResponse = deserializePredictionResponse(response);
-
-        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
-            XmiCasDeserializer.deserialize(is, aCas, true);
-        }
-        catch (SAXException | IOException e) {
-            throw new RecommendationException("Error while deserializing CAS!", e);
-        }
-    }
-
-    private void removePredictedAnnotations(CAS aCas)
-    {
-        Type type = CasUtil.getType(aCas, getPredictedType());
-        for (AnnotationFS annotationFS : CasUtil.select(aCas, type)) {
-            aCas.removeFsFromIndexes(annotationFS);
+            try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
+                XmiCasDeserializer.deserialize(is, WebAnnoCasUtil.getRealCas(aCas), true);
+            }
+            catch (SAXException | IOException e) {
+                throw new RecommendationException("Error while deserializing CAS!", e);
+            }
         }
     }
 
@@ -192,11 +203,12 @@ public class ExternalRecommender
     private String serializeCas(CAS aCas) throws RecommendationException
     {
         try (StringWriter out = new StringWriter()) {
-            // Passing "null" as the type system to the XmiCasSerializer means that we want 
+            // Passing "null" as the type system to the XmiCasSerializer means that we want
             // to serialize all types (i.e. no filtering for a specific target type system).
             XmiCasSerializer xmiCasSerializer = new XmiCasSerializer(null);
             XMLSerializer sax2xml = new XMLSerializer(out, true);
-            xmiCasSerializer.serialize(aCas, sax2xml.getContentHandler(), null, null, null);
+            xmiCasSerializer.serialize(getRealCas(aCas), sax2xml.getContentHandler(), null, null,
+                    null);
             return out.toString();
         }
         catch (CASRuntimeException | SAXException | IOException e) {
@@ -218,7 +230,8 @@ public class ExternalRecommender
     {
         try {
             return JCasUtil.selectSingle(aCas.getJCas(), CASMetadata.class);
-        } catch (CASException | IllegalArgumentException e) {
+        }
+        catch (CASException | IllegalArgumentException e) {
             throw new RecommendationException("Error while reading CAS metadata!", e);
         }
     }
@@ -226,22 +239,20 @@ public class ExternalRecommender
     private Metadata buildMetadata(CAS aCas) throws RecommendationException
     {
         CASMetadata casMetadata = getCasMetadata(aCas);
-        AnnotationLayer layer =  recommender.getLayer();
-        return new Metadata(
-            layer.getName(),
-            recommender.getFeature().getName(),
-            casMetadata.getProjectId(),
-            layer.getAnchoringMode().getId(),
-            layer.isCrossSentence()
-        );
+        AnnotationLayer layer = recommender.getLayer();
+        return new Metadata(layer.getName(), recommender.getFeature().getName(),
+                casMetadata.getProjectId(), layer.getAnchoringMode().getId(),
+                layer.isCrossSentence());
     }
 
     private PredictionResponse deserializePredictionResponse(Response response)
-        throws RecommendationException {
+        throws RecommendationException
+    {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             return objectMapper.readValue(response.body().byteStream(), PredictionResponse.class);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RecommendationException("Error while deserializing prediction response!", e);
         }
     }
@@ -271,41 +282,36 @@ public class ExternalRecommender
         try {
             if (response.body() != null) {
                 return response.body().string();
-            } else {
+            }
+            else {
                 return "";
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RecommendationException("Error while reading response body!", e);
         }
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        return 0;
+        EvaluationResult result = new EvaluationResult();
+        result.setEvaluationSkipped(true);
+        result.setErrorMsg("ExternalRecommender does not support evaluation.");
+        return result;
     }
 
     @Override
-    public String getPredictedType()
+    public RecommendationEngineCapability getTrainingCapability()
     {
-        return recommender.getLayer().getName();
-    }
-
-    @Override
-    public String getPredictedFeature()
-    {
-        return recommender.getFeature().getName();
-    }
-    
-    @Override
-    public Optional<String> getScoreFeature()
-    {
-        return Optional.empty();
-    }
-    
-    @Override
-    public boolean requiresTraining()
-    {
-        return traits.isTrainable();
+        if (traits.isTrainable()) {
+            //
+            // return TRAINING_SUPPORTED;
+            // We need to get at least one training CAS because we need to extract the type system
+            return TRAINING_REQUIRED;
+        }
+        else {
+            return TRAINING_NOT_SUPPORTED;
+        }
     }
 }

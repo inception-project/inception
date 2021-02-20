@@ -1,0 +1,10 @@
+[[sect_external-search-sidabar]]
+= External search sidebar
+
+The external search functionality can be used in the sidebar of the annotation page as well and
+can be opened by clicking on the globe-logo on the sidebar at the left of the annotation page.
+It essentially offers the same functionality as the external search page accessible via the project dashboard.
+Being able to search directly from the annotation page may be more convenient though because the user does not
+have to keep switching between the search page and the annotation page. Additionally, clicking on a search
+result in the external search sidebar automatically imports the document into your project
+and opens it in the annotation view.

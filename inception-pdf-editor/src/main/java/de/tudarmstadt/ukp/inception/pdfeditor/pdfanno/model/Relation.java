@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
-public class Relation {
+public class Relation
+{
+
+    private String id;
 
     private String head;
 
@@ -25,11 +28,20 @@ public class Relation {
 
     private String label;
 
-    public Relation(String aHead, String aTail, String aLabel)
+    private String color;
+
+    public Relation(String aId, String aHead, String aTail, String aLabel, String aColor)
     {
+        id = aId;
         head = aHead;
         tail = aTail;
         label = aLabel;
+        color = aColor;
+    }
+
+    public String getId()
+    {
+        return id;
     }
 
     public String getHead()
@@ -47,12 +59,19 @@ public class Relation {
         return label;
     }
 
+    public String getColor()
+    {
+        return color;
+    }
+
     public String toAnnoFileString()
     {
-        return "[[relations]]\n" +
-            "head = \"" + head +  "\"\n" +
-            "tail = \"" + tail + "\"\n" +
-            "label = \"" + label + "\"\n";
+        return "[[relations]]\n" + //
+                "id = \"" + id + "\"\n" + //
+                "head = \"" + head + "\"\n" + //
+                "tail = \"" + tail + "\"\n" + //
+                "label = \"" + label + "\"\n" + //
+                "color = \"" + color + "\"\n";
     }
 
 }

@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,48 +23,57 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ExportedDocumentRepository {
+public class ExportedDocumentRepository
+{
     @JsonProperty("id")
     private Long id;
-    
+
     @JsonProperty("name")
     private String name;
-    
+
     @JsonProperty("properties")
     private String properties;
-    
+
     @JsonProperty("type")
     private String type;
-    
-    public Long getId() {
+
+    public Long getId()
+    {
         return id;
     }
-    
-    public void setId(Long id) {
+
+    public void setId(Long id)
+    {
         this.id = id;
     }
-    
-    public String getName() {
+
+    public String getName()
+    {
         return name;
     }
-    
-    public void setName(String name) {
+
+    public void setName(String name)
+    {
         this.name = name;
     }
-    
-    public String getProperties() {
+
+    public String getProperties()
+    {
         return properties;
     }
-    
-    public void setProperties(String properties) {
+
+    public void setProperties(String properties)
+    {
         this.properties = properties;
     }
-    
-    public String getType() {
+
+    public String getType()
+    {
         return type;
     }
-    
-    public void setType(String type) {
+
+    public void setType(String type)
+    {
         this.type = type;
     }
 }

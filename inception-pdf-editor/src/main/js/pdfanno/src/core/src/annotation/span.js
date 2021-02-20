@@ -1,7 +1,5 @@
 import { uuid } from 'anno-ui/src/utils'
 import AbstractAnnotation from './abstract'
-// import { convertFromExportY } from '../../../shared/coords'
-// import appendChild from '../render/appendChild'
 
 /**
  * Span Annotation.
@@ -34,7 +32,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  static newInstance (annotation) {
+  static newInstance (annotation, allowZeroWidth) {
     let a          = new SpanAnnotation()
     a.uuid         = annotation.uuid || uuid()
     a.text         = annotation.text
@@ -48,7 +46,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     a.border       = annotation.border !== false
 
     // Calc the position.
-    let rects = window.findTexts(a.page, a.textRange[0], a.textRange[1])
+    let rects = window.findTexts(a.page, a.textRange[0], a.textRange[1], allowZeroWidth)
     rects = window.mergeRects(rects)
     a.rectangles = rects
 
@@ -63,7 +61,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     d.selectedText = d.text
     d.text = d.label
     d.textRange = d.textrange
-    let span = SpanAnnotation.newInstance(d)
+    let span = SpanAnnotation.newInstance(d, true)
     return span
   }
 
@@ -101,7 +99,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     let promise = super.destroy()
     this.emit('delete')
 
-    // TODO オブジェクトベースで削除できるようにしたい.
     window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
     return promise
@@ -205,7 +202,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   handleClickEvent (e) {
     super.handleClickEvent(e)
-// BEGIN INCEpTION EXTENSION - #879 - Selection of spans in PDF editor
     if (this.selected) {
       var data = {
         "action": "selectSpan",
@@ -220,11 +216,10 @@ export default class SpanAnnotation extends AbstractAnnotation {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-           console.log('Something went wrong on selecting an annotation for: ' + data)
+            alert('Something went wrong on selecting a span annotation for: ' + data)
         }]
       });
     }
-// END INCEpTION EXTENSION
   }
 
   export (id) {
@@ -263,14 +258,53 @@ export default class SpanAnnotation extends AbstractAnnotation {
     }
   }
 
+  deleteRecommendation() {
+    var data = {
+      "action": "deleteRecommendation",
+      "id": this.uuid,
+      "page": this.page,
+      "begin": this.textRange[0],
+      "end": this.textRange[1]
+    }
+    parent.Wicket.Ajax.ajax({
+      "m": "POST",
+      "ep": data,
+      "u": window.apiUrl,
+      "sh": [],
+      "fh": [function () {
+          alert('Something went wrong on deleting a recommendation for: ' + data)
+      }]
+    });
+  }
+
   /**
    * Enable view mode.
    */
   enableViewMode () {
     this.disableViewMode()
     super.enableViewMode()
+    var singleClickAction = this.handleClickEvent
+    var doubleClickAction = this.deleteRecommendation
     if (!this.readOnly) {
-      this.$element.find('.anno-knob').on('click', this.handleClickEvent)
+      this.$element.find('.anno-knob').on('click', function (e) {
+        clickCount++
+        if (clickCount === 1) {
+          timer = setTimeout(function () {
+            try {
+              singleClickAction() // perform single-click action
+            } finally {
+              clickCount = 0      // after action performed, reset counter
+            }
+          }, CLICK_DELAY);
+        } else {
+          clearTimeout(timer)     // prevent single-click action
+          try {
+            doubleClickAction()   // perform double-click action
+          } finally {
+            clickCount = 0        // after action performed, reset counter
+          }
+        }
+      })
     }
   }
 
@@ -282,3 +316,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.$element.find('.anno-knob').off('click')
   }
 }
+
+var clickCount = 0;
+var timer = null;
+var CLICK_DELAY = 300;

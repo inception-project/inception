@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,17 +32,16 @@ public class DL4JSequenceRecommenderTraits
 {
     // General parameters
     private int trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int predictionLimit = Integer.MAX_VALUE;
     private int batchSize = 250;
     private int maxTagsetSize = 70;
     private int maxSentenceLength = 150;
     private int nEpochs = 1;
-    
+
     // Network parameters
-    private OptimizationAlgorithm optimizationAlgorithm = 
-            OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT;
+    private OptimizationAlgorithm optimizationAlgorithm = OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT;
     private WeightInit weightInit = WeightInit.RELU;
-    private GradientNormalization gradientNormalization = 
-            GradientNormalization.ClipElementWiseAbsoluteValue;
+    private GradientNormalization gradientNormalization = GradientNormalization.ClipElementWiseAbsoluteValue;
     private double gradientNormalizationThreshold = 1.0;
     private Updater updater = Updater.RMSPROP;
     private double l2 = 1e-5;
@@ -54,6 +57,16 @@ public class DL4JSequenceRecommenderTraits
     public void setTrainingSetSizeLimit(int aLimit)
     {
         trainingSetSizeLimit = aLimit;
+    }
+
+    public int getPredictionLimit()
+    {
+        return predictionLimit;
+    }
+
+    public void setPredictionLimit(int aPredictionLimit)
+    {
+        predictionLimit = aPredictionLimit;
     }
 
     public int getBatchSize()

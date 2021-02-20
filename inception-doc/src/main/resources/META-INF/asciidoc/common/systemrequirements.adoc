@@ -1,11 +1,11 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab
-// Technische Universität Darmstadt
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
 // http://www.apache.org/licenses/LICENSE-2.0
 // 
 // Unless required by applicable law or agreed to in writing, software
@@ -26,20 +26,27 @@
 .Requirements to run the standalone version
 [cols="2*"]
 |===
+| Operating System
+| Linux (64bit), macOS (64bit), Windows (64bit)
+
 | Java Runtime Environment
-| version 9 or higher
+| version 11 or higher
 |===
 
 .Requirements run the server version
 [cols="2*"]
 |===
+| Operating System
+| Linux (64bit), macOS (64bit), Windows (64bit)
+
 | Java Runtime Environment
-| version 9 or higher
+| version 11 or higher
 
-| Apache Tomcat
-| version 8.5 or higher (Servlet API 3.1.0)
+| Apache Tomcat (or compatible)
+| version 9.0 or higher (Servlet API 4.0.0)
 
-| MySQL Server
-| version 5 or higher
+| MariaDB Server (or compatible)
+| version 10.5 or higher 
 |===
 
+NOTE: link:https://mariadb.org[MariaDB] is an open source drop-in replacement for link:https://www.mysql.com[MySQL]. So generally, you can also use MySQL instead of MariaDB. Also, as far as we know, we do not use any fancy features of MariaDB 10.5 and did in fact until recently always use MySQL 5. So you can probably also use an older version of MariaDB or MySQL... but why should you? Think of all the unfixed bugs and consider also upgrading your database if you do a fresh installation of {product-name} - or use <<sect_docker,Docker>>.

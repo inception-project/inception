@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,50 +49,55 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
 
-public class ConceptTreePanel extends Panel {
+public class ConceptTreePanel
+    extends Panel
+{
     private static final long serialVersionUID = -4032884234215283745L;
     private static final Logger LOG = LoggerFactory.getLogger(ConceptTreePanel.class);
-    
+
     private @SpringBean KnowledgeBaseService kbService;
-    
-    private IModel<KBHandle> selectedConcept;
+
+    private IModel<KBObject> selectedConcept;
     private IModel<KnowledgeBase> kbModel;
     private IModel<Preferences> preferences;
-    
+
     public ConceptTreePanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> selectedConceptModel) {
+            IModel<KBObject> selectedConceptModel)
+    {
         super(aId, selectedConceptModel);
-        
+
         setOutputMarkupId(true);
-        
+
         selectedConcept = selectedConceptModel;
         kbModel = aKbModel;
         preferences = Model.of(new Preferences());
-        
-        AbstractTree<KBHandle> tree = new DefaultNestedTree<KBHandle>("tree",
+
+        AbstractTree<KBObject> tree = new DefaultNestedTree<KBObject>("tree",
                 new ConceptTreeProvider(), Model.ofSet(new HashSet<>()))
         {
             private static final long serialVersionUID = -270550186750480253L;
 
             @Override
-            protected Component newContentComponent(String id, IModel<KBHandle> node)
+            protected Component newContentComponent(String id, IModel<KBObject> node)
             {
-                return new Folder<KBHandle>(id, this, node) {
+                return new Folder<KBObject>(id, this, node)
+                {
                     private static final long serialVersionUID = -2007320226995118959L;
 
                     @Override
-                    protected IModel<String> newLabelModel(IModel<KBHandle> aModel)
+                    protected IModel<String> newLabelModel(IModel<KBObject> aModel)
                     {
                         return Model.of(aModel.getObject().getUiLabel());
                     }
-                    
+
                     @Override
                     protected boolean isClickable()
                     {
@@ -115,14 +120,14 @@ public class ConceptTreePanel extends Panel {
                     protected boolean isSelected()
                     {
                         return Objects.equals(getModelObject(), selectedConcept.getObject());
-                    }                
+                    }
                 };
             }
         };
         add(tree);
-        
-        LambdaAjaxLink addLink = new LambdaAjaxLink("add", target -> send(getPage(),
-                Broadcast.BREADTH, new AjaxNewConceptEvent(target)));
+
+        LambdaAjaxLink addLink = new LambdaAjaxLink("add",
+                target -> send(getPage(), Broadcast.BREADTH, new AjaxNewConceptEvent(target)));
         addLink.add(new Label("label", new ResourceModel("concept.list.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
@@ -132,38 +137,44 @@ public class ConceptTreePanel extends Panel {
                 new LambdaAjaxFormSubmittingBehavior("change", this::actionPreferenceChanged)));
         add(form);
     }
-    
-    private void actionSelectionChanged(AjaxRequestTarget aTarget) {
+
+    private void actionSelectionChanged(AjaxRequestTarget aTarget)
+    {
         // if the selection changes, publish an event denoting the change
         AjaxConceptSelectionEvent e = new AjaxConceptSelectionEvent(aTarget,
-                selectedConcept.getObject());
+                selectedConcept.getObject().toKBHandle());
         send(getPage(), Broadcast.BREADTH, e);
     }
-    
+
     /**
      * If the user disabled "show all" but a concept from an implicit namespace was selected, the
      * concept selection is cancelled. In any other case this component is merely updated via AJAX.
      */
-    private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
+    private void actionPreferenceChanged(AjaxRequestTarget aTarget)
+    {
         if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedConcept.getObject())) {
+                && IriConstants.isFromImplicitNamespace(selectedConcept.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
-        } else {
+        }
+        else {
             aTarget.add(this);
         }
     }
-    
-    private class ConceptTreeProvider implements ITreeProvider<KBHandle>
+
+    private class ConceptTreeProvider
+        implements ITreeProvider<KBObject>
     {
         private static final long serialVersionUID = 5318498575532049499L;
 
-        private Map<KBHandle, Boolean> childrenPresentCache = new HashMap<>();
-        private Map<KBHandle, List<KBHandle>> childrensCache = new HashMap<>();
-        
+        private Map<KBObject, Boolean> childrenPresentCache = new HashMap<>();
+        private Map<KBObject, List<KBHandle>> childrensCache = new HashMap<>();
+
         @Override
         public void detach()
         {
-            // Nothing to do
+            if (!kbModel.getObject().isReadOnly()) {
+                childrenPresentCache.clear();
+            }
         }
 
         @Override
@@ -172,7 +183,8 @@ public class ConceptTreePanel extends Panel {
             try {
                 return kbService.listRootConcepts(kbModel.getObject(),
                         preferences.getObject().showAllConcepts).iterator();
-            } catch (QueryEvaluationException e) {
+            }
+            catch (QueryEvaluationException e) {
                 error(getString("listRootConceptsErrorMsg") + ": " + e.getLocalizedMessage());
                 LOG.error("Unable to list root concepts.", e);
                 return Collections.emptyIterator();
@@ -180,21 +192,21 @@ public class ConceptTreePanel extends Panel {
         }
 
         @Override
-        public boolean hasChildren(KBHandle aNode)
+        public boolean hasChildren(KBObject aNode)
         {
             try {
                 // If the KB is read-only, then we cache the values and re-use the cached values.
                 if (kbModel.getObject().isReadOnly()) {
-                    // Leaving this code here because we might make the preemptive loading of 
+                    // Leaving this code here because we might make the preemptive loading of
                     // child presence optional.
-    //                Boolean childrenPresent = childrenPresentCache.get(aNode);
-    //                if (childrenPresent == null) {
-    //                    childrenPresent = kbService.hasChildConcepts(kbModel.getObject(),
-    //                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
-    //                    childrenPresentCache.put(aNode, childrenPresent);
-    //                }
-    //                return childrenPresent;
-                    
+                    // Boolean childrenPresent = childrenPresentCache.get(aNode);
+                    // if (childrenPresent == null) {
+                    // childrenPresent = kbService.hasChildConcepts(kbModel.getObject(),
+                    // aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+                    // childrenPresentCache.put(aNode, childrenPresent);
+                    // }
+                    // return childrenPresent;
+
                     // To avoid having to send a query to the KB for every child node, just assume
                     // that there might be child nodes and show the expander until we have actually
                     // loaded the children, cached them and can show the true information.
@@ -207,8 +219,14 @@ public class ConceptTreePanel extends Panel {
                     }
                 }
                 else {
-                    return kbService.hasChildConcepts(kbModel.getObject(),
-                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+                    Boolean hasChildren = childrenPresentCache.get(aNode);
+                    if (hasChildren == null) {
+                        hasChildren = kbService.hasChildConcepts(kbModel.getObject(),
+                                aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+                        childrenPresentCache.put(aNode, hasChildren);
+                    }
+
+                    return hasChildren;
                 }
             }
             catch (QueryEvaluationException e) {
@@ -219,7 +237,7 @@ public class ConceptTreePanel extends Panel {
         }
 
         @Override
-        public Iterator<? extends KBHandle> getChildren(KBHandle aNode)
+        public Iterator<? extends KBObject> getChildren(KBObject aNode)
         {
             try {
                 // If the KB is read-only, then we cache the values and re-use the cached values.
@@ -245,13 +263,15 @@ public class ConceptTreePanel extends Panel {
         }
 
         @Override
-        public IModel<KBHandle> model(KBHandle aObject)
+        public IModel<KBObject> model(KBObject aObject)
         {
             return Model.of(aObject);
         }
     }
-    
-    static class Preferences implements Serializable {
+
+    static class Preferences
+        implements Serializable
+    {
         private static final long serialVersionUID = 8310379405075949753L;
 
         boolean showAllConcepts;

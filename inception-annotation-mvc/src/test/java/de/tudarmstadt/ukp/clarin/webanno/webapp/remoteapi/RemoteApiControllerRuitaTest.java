@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -38,10 +41,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.persistence.EntityManager;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -76,11 +80,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -93,7 +98,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -115,6 +119,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.AnnotationLayerJSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.CreateOutputMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.FeatureInfo;
@@ -845,10 +850,10 @@ public class RemoteApiControllerRuitaTest
                 .andExpect(jsonPath("$.readonly").value(testLayer.isReadonly()))
                 .andExpect(jsonPath("$.crossSentence").value(testLayer.isCrossSentence()))
                 .andExpect(jsonPath("$.allowStacking").value(testLayer.isAllowStacking()))
-                .andExpect(jsonPath("$.multipleTokens").value(testLayer.getAnchoringMode()
-                        .equals(AnchoringMode.TOKENS)))
-                .andExpect(jsonPath("$.partialTokenCovering").value(!testLayer.getAnchoringMode()
-                                .equals(AnchoringMode.CHARACTERS)))
+                .andExpect(jsonPath("$.multipleTokens")
+                        .value(testLayer.getAnchoringMode().equals(AnchoringMode.TOKENS)))
+                .andExpect(jsonPath("$.partialTokenCovering")
+                        .value(!testLayer.getAnchoringMode().equals(AnchoringMode.CHARACTERS)))
                 .andReturn();
 
         // Get Object out of return value to test features
@@ -959,16 +964,16 @@ public class RemoteApiControllerRuitaTest
         AnnotationDocument annoDoc = documentService.getAnnotationDocument(sourceDoc, user);
 
         AnnotationLayer newLayer = new AnnotationLayer("ReadOnlyLayer", "ReadOnlyLayer", "span",
-                project, false);
+                project, false, CHARACTERS, ANY_OVERLAP);
         newLayer.setReadonly(true);
-        annotationService.createLayer(newLayer);
+        annotationService.createOrUpdateLayer(newLayer);
 
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        CAS cas = documentService.readAnnotationCas(annoDoc);
         // Upgrade the cas
-        try (AutoCloseable AutoJcas = (AutoCloseable) jcas) {
-            annotationService.upgradeCas(jcas.getCas(), sourceDoc, "admin");
+        try (AutoCloseable AutoJcas = (AutoCloseable) cas) {
+            annotationService.upgradeCas(cas, sourceDoc, "admin");
         }
-        long newLayerId = annotationService.getLayer("ReadOnlyLayer", project).getId();
+        long newLayerId = annotationService.findLayer(project, "ReadOnlyLayer").getId();
 
         // Post a new readonly annotation
         MvcResult res = mvc
@@ -1089,9 +1094,9 @@ public class RemoteApiControllerRuitaTest
 
         // Create readonly Layer
         AnnotationLayer newLayer = new AnnotationLayer("ReadOnlyLayer", "ReadOnlyLayer", "span",
-                project, false);
+                project, false, CHARACTERS, ANY_OVERLAP);
         newLayer.setReadonly(true);
-        annotationService.createLayer(newLayer);
+        annotationService.createOrUpdateLayer(newLayer);
 
         // Create Feature
         AnnotationFeature newFeature = new AnnotationFeature();
@@ -1101,12 +1106,12 @@ public class RemoteApiControllerRuitaTest
         newFeature.setType(CAS.TYPE_NAME_STRING);
         annotationService.createFeature(newFeature);
 
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        CAS cas = documentService.readAnnotationCas(annoDoc);
         // Upgrade the cas
-        try (AutoCloseable AutoJcas = (AutoCloseable) jcas) {
-            annotationService.upgradeCas(jcas.getCas(), sourceDoc, "admin");
+        try (AutoCloseable AutoJcas = (AutoCloseable) cas) {
+            annotationService.upgradeCas(cas, sourceDoc, "admin");
         }
-        long newLayerId = annotationService.getLayer("ReadOnlyLayer", project).getId();
+        long newLayerId = annotationService.findLayer(project, "ReadOnlyLayer").getId();
         long newFeatureId = annotationService.getFeature("MyFeature", newLayer).getId();
 
         int id1 = setupSpanAnnotationInTestDocument(1, "test.txt", "admin", (int) newLayerId, 5, 7,
@@ -1219,26 +1224,24 @@ public class RemoteApiControllerRuitaTest
         SourceDocument doc = documentService.getSourceDocument(project, documentName);
         AnnotationDocument anno = documentService.getAnnotationDocument(doc,
                 userRepository.get(username));
-        
+
         // create layer and Adapter
         AnnotationLayer layer = annotationService.getLayer(testLayerId);
         SpanAdapter ad = (SpanAdapter) annotationService.getAdapter(layer);
-        
-        // getJCas
-        // JCas jcas = documentService.readAnnotationCas(anno, 'w');
-        JCas jcas = documentService.readAnnotationCas(anno);
+
+        CAS cas = documentService.readAnnotationCas(anno);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setDocument(doc, asList(doc));
         state.setUser(new User("username"));
-        
+
         // add annotations
         int newAnnotationId = -1;
-        try (AutoCloseable AutoJcas = (AutoCloseable) jcas) {
-            newAnnotationId = ad.add(state, jcas, begin, end);
+        try (AutoCloseable AutoJcas = (AutoCloseable) cas) {
+            newAnnotationId = ad.add(doc, "username", cas, begin, end).getAddress();
             AnnotationFeature aFeature = annotationService.getFeature(featId);
-            ad.setFeatureValue(state, jcas, newAnnotationId, aFeature, simpleFeatValue);
-            Collection<Annotation> col = JCasUtil.select(jcas, Annotation.class);
+            ad.setFeatureValue(state, cas, newAnnotationId, aFeature, simpleFeatValue);
+            Collection<AnnotationFS> col = select(cas, CasUtil.getType(cas, Annotation.class));
             System.out.println(col);
         }
         return newAnnotationId;
@@ -1246,62 +1249,72 @@ public class RemoteApiControllerRuitaTest
     }
 
     @Configuration
-    public static class TestContext {
-        @Autowired ApplicationEventPublisher applicationEventPublisher;
-        
+    public static class TestContext
+    {
+        private @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired EntityManager entityManager;
+
         @Bean
-        public RemoteApiController2 remoteApiV2()
+        public AeroRemoteApiController remoteApiV2()
         {
-            return new RemoteApiController2();
+            return new AeroRemoteApiController();
         }
-        
+
         @Bean
-        public ProjectService projectService()
+        public ProjectService projectService(UserDao aUserDao)
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), null);
         }
-        
+
         @Bean
         public UserDao userRepository()
         {
             return new UserDaoImpl();
         }
-        
+
+        @Bean
+        public ProjectService projectService()
+        {
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), null);
+        }
+
         @Bean
         public DocumentService documentService()
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(),
-                    applicationEventPublisher);
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
+                    importExportService(), projectService(), applicationEventPublisher,
+                    entityManager);
         }
-        
+
         @Bean
         public AnnotationSchemaService annotationService()
         {
             return new AnnotationSchemaServiceImpl();
         }
-        
+
         @Bean
         public FeatureSupportRegistry featureSupportRegistry()
         {
-            return new FeatureSupportRegistryImpl(asList(
-                    new PrimitiveUimaFeatureSupport(),
+            return new FeatureSupportRegistryImpl(asList(new StringFeatureSupport(),
                     new SlotFeatureSupport(annotationService())));
         }
-        
+
         @Bean
         public CasStorageService casStorageService()
         {
-            return new CasStorageServiceImpl(null, repositoryProperties(), backupProperties());
+            return new CasStorageServiceImpl(null, null, repositoryProperties(),
+                    backupProperties());
         }
-        
+
         @Bean
         public ImportExportService importExportService()
         {
             return new ImportExportServiceImpl(repositoryProperties(),
                     asList(new TextFormatSupport()), casStorageService(), annotationService());
         }
-        
+
         @Bean
         public CurationDocumentService curationDocumentService()
         {
@@ -1311,16 +1324,16 @@ public class RemoteApiControllerRuitaTest
         @Bean
         public ProjectExportService exportService()
         {
-            return new ProjectExportServiceImpl(null, projectService());
+            return new ProjectExportServiceImpl(null, null, projectService());
         }
-        
+
         @Bean
         public RepositoryProperties repositoryProperties()
         {
             return new RepositoryProperties();
         }
 
-        @Bean 
+        @Bean
         public BackupProperties backupProperties()
         {
             return new BackupProperties();
@@ -1331,14 +1344,14 @@ public class RemoteApiControllerRuitaTest
         {
             return new ApplicationContextProvider();
         }
-        
+
         @Bean
         public LayerSupportRegistry layerSupportRegistry()
         {
-            return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(featureSupportRegistry(), null, annotationService()),
-                    new RelationLayerSupport(featureSupportRegistry(), null, annotationService()),
-                    new ChainLayerSupport(featureSupportRegistry(), null, annotationService())));
+            return new LayerSupportRegistryImpl(
+                    asList(new SpanLayerSupport(featureSupportRegistry(), null, null),
+                            new RelationLayerSupport(featureSupportRegistry(), null, null),
+                            new ChainLayerSupport(featureSupportRegistry(), null, null)));
         }
     }
 }

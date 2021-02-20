@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -54,26 +55,25 @@ public class SubclassCreationDialog
     extends ModalWindow
 {
     private static final long serialVersionUID = -1304315052590065776L;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePanel.class);
 
     private @SpringBean KnowledgeBaseService kbService;
-    
+
     private IModel<KBConcept> newSubclassConceptModel;
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> parentConceptHandleModel;
-    
+    private IModel<? extends KBObject> parentConceptHandleModel;
+
     public SubclassCreationDialog(String id, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aParentConceptHandleModel)
+            IModel<? extends KBObject> aParentConceptHandleModel)
     {
         super(id);
 
         kbModel = aKbModel;
         parentConceptHandleModel = aParentConceptHandleModel;
         newSubclassConceptModel = Model.of(new KBConcept());
-        newSubclassConceptModel.getObject()
-            .setLanguage(kbModel.getObject().getDefaultLanguage());
-        
+        newSubclassConceptModel.getObject().setLanguage(kbModel.getObject().getDefaultLanguage());
+
         setOutputMarkupPlaceholderTag(true);
 
         setInitialWidth(300);
@@ -100,35 +100,34 @@ public class SubclassCreationDialog
             KnowledgeBase kb = kbModel.getObject();
             KBProperty property = kbService.readProperty(kb, kb.getSubclassIri().stringValue())
                     .get();
-            KBHandle propertyHandle = new KBHandle(property.getIdentifier(), property.getName(),
-                    property.getDescription());
 
             // check whether the subclass name already exists for this superclass
             List<KBHandle> existingSubclasses = kbService.listChildConcepts(kb,
                     parentConceptHandleModel.getObject().getIdentifier(), true);
-            
+
             for (KBHandle subclass : existingSubclasses) {
                 if (newSubclassConceptModel.getObject().getName().equals(subclass.getName())) {
 
-                    error(new StringResourceModel("createSubclassErrorMsg", this).setParameters(
-                            subclass.getName(),
-                            parentConceptHandleModel.getObject().getUiLabel()).getString());
+                    error(new StringResourceModel("createSubclassErrorMsg", this)
+                            .setParameters(subclass.getName(),
+                                    parentConceptHandleModel.getObject().getUiLabel())
+                            .getString());
                     aTarget.addChildren(getPage(), IFeedback.class);
                     return;
                 }
             }
-            
+
             // create the new concept
-            KBHandle newConceptHandle = kbService.createConcept(kb,
-                    newSubclassConceptModel.getObject());
+            KBConcept newConcept = newSubclassConceptModel.getObject();
+            kbService.createConcept(kb, newConcept);
 
             String parentConceptId = parentConceptHandleModel.getObject().getIdentifier();
 
             // create the subclassof statement and add it to the knowledge base
             ValueFactory vf = SimpleValueFactory.getInstance();
-            KBStatement subclassOfStmt = new KBStatement(newConceptHandle, propertyHandle,
+            KBStatement subclassOfStmt = new KBStatement(null, newConcept.toKBHandle(), property,
                     vf.createIRI(parentConceptId));
-            //set reification to NONE just for "upserting" the statement, then restore old value
+            // set reification to NONE just for "upserting" the statement, then restore old value
             Reification kbReification = kb.getReification();
             try {
                 kb.setReification(Reification.NONE);
@@ -145,7 +144,7 @@ public class SubclassCreationDialog
 
             // select newly created concept right away to show the statements
             send(SubclassCreationDialog.this.getPage(), Broadcast.BREADTH,
-                    new AjaxConceptSelectionEvent(aTarget, newConceptHandle,true));
+                    new AjaxConceptSelectionEvent(aTarget, newConcept.toKBHandle(), true));
         }
         catch (Exception e) {
             error("Unable to find property subclassof: " + e.getLocalizedMessage());

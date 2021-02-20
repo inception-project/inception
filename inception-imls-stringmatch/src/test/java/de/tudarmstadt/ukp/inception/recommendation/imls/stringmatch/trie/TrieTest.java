@@ -1,14 +1,14 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,6 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
 
 public class TrieTest
 {
@@ -51,24 +48,24 @@ public class TrieTest
 
         assertThat(sut.size()).isEqualTo(keys.size());
         assertThat(sut.keys()).containsExactlyInAnyOrderElementsOf(keys);
-        assertThat(sut.keyIterator()).containsExactlyInAnyOrderElementsOf(keys);
-        
+        assertThat(sut.keyIterator()).toIterable().containsExactlyInAnyOrderElementsOf(keys);
+
         for (String key : keys) {
             assertThat(sut.getNode(key)).isNotNull();
         }
-        
+
         assertThat(sut.getNode("029332")).isNull();
     }
-    
+
     @Test
     public void testThatKeySanitizerWorks()
     {
         sut = new Trie<String>(WhitespaceNormalizingSanitizer.factory());
-        
+
         sut.put("  this is\ta test  .", "exists");
-        
+
         System.out.println(sut.keys());
-        
+
         assertThat(sut.getNode("this is a test .")).isNotNull();
         assertThat(sut.getNode("  this is\ta test  .")).isNotNull();
     }

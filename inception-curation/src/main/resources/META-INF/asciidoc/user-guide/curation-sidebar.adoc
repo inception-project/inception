@@ -1,0 +1,24 @@
+= Curation
+
+Curation i.e. the process of combining finished annotated documents into a final curated document,
+can be done via the *Curation Page* in INCEpTION (see <<sect_curation, Curation>>) 
+but also via the *Curation Sidebar* on the *Annotation Page*.
+
+image::curation-sidebar.png[Curation Sidebar]
+
+The sidebar allows the user to select the users whose annotations she wants to inspect 
+and merge into the final document. Annotations from other users are shown above the user's annotations when
+the user saves the user selection. 
+The user can decide to *manually* or *automatically* merge their 
+annotations into either her own document or a separate _Curation User Document_ as the final document.
+The target document of the curated annotations can be configured in the sidebar's settings (cog-wheel icon).
+
+The suggestions for manual curation can be stopped by _clearing_ all selected users and the user can return to their document if necessary via the settings cog-wheel.
+Curation settings i.e. the selected users and the opened target document are cleared when leaving the annotation page but will be restored when opening the curation sidebar a next time. This way curation can be easily interrupted and picked up another time.
+
+The user can always copy annotations *manually* from other users into the curation document by clicking on them.
+The *automatic* merge can be triggered by clicking the *Re-Merge* button (sync icon). It will copy all annotations that 
+all selected users agree on into the curation document.
+
+NOTE: This is an experimental feature not recommended for serious use. However, you can try it out
+      and enable it by adding `curation.sidebar.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>). 

@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,21 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-public interface ExternalSearchProvider
+public interface ExternalSearchProvider<T extends Object>
 {
-    public boolean connect(String aUrl, String aUser, String aPassword);
+    List<ExternalSearchResult> executeQuery(DocumentRepository aRepository, T aTraits,
+            String aQuery)
+        throws IOException;
 
-    void disconnect();
+    String getDocumentText(DocumentRepository aRepository, T aTraits, String aSource,
+            String aDocumentId)
+        throws IOException;
 
-    public boolean isConnected();
+    InputStream getDocumentAsStream(DocumentRepository aRepository, T aTraits, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 
-    public List<ExternalSearchResult> executeQuery(Object aProperties, User aUser, String aQuery,
-            String aSortOrder, String... sResultField);
+    String getDocumentFormat(DocumentRepository aRepository, T aTraits, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 
-    public ExternalSearchResult getDocumentById(Object aProperties, String aId);
-
+    ExternalSearchResult getDocumentResult(DocumentRepository aRepository, T aTraits,
+            String aCollectionId, String aDocumentId)
+        throws IOException;
 }

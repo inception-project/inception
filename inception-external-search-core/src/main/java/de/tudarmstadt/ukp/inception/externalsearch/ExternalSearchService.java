@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -28,15 +30,35 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
  */
 public interface ExternalSearchService
 {
-    List<ExternalSearchResult> query(User aUser, DocumentRepository aDocumentRepository,
-            String aQuery);
+    List<ExternalSearchResult> query(User aUser, DocumentRepository aRepository, String aQuery)
+        throws IOException;
 
-    ExternalSearchResult getDocumentById(User aUser, DocumentRepository aDocumentRepository,
-            String aId);
+    ExternalSearchResult getDocumentResult(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
+
+    /**
+     * Obtains only the text from the document.
+     */
+    String getDocumentText(DocumentRepository aRepository, String aCollectionId, String aDocumentId)
+        throws IOException;
+
+    /**
+     * Obtains the document in its original format suitable for import.
+     */
+    InputStream getDocumentAsStream(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 
     List<DocumentRepository> listDocumentRepositories(Project aProject);
 
-    void createOrUpdateDocumentRepository(DocumentRepository aDocumentRepository);
+    void createOrUpdateDocumentRepository(DocumentRepository aRepository);
 
-    void deleteDocumentRepository(DocumentRepository object);
+    void deleteDocumentRepository(DocumentRepository aRepository);
+
+    DocumentRepository getRepository(long aId);
+
+    String getDocumentFormat(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 }

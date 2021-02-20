@@ -3,12 +3,16 @@
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +23,6 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
-import org.apache.uima.jcas.JCas;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -28,44 +30,49 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 /**
  * Abstract search task
  */
-
 public abstract class Task
     implements Runnable
 {
     private final Project project;
     private final String user;
-    private SourceDocument sourceDocument;
-    private AnnotationDocument annotationDocument;
-    private JCas jCas;
+    private final SourceDocument sourceDocument;
+    private final AnnotationDocument annotationDocument;
+
+    private byte[] binaryCas;
 
     public Task(Project aProject, String aUser)
     {
         // notNull(aUser);
         notNull(aProject);
 
-        project = aProject;
         user = aUser;
+        project = aProject;
+        sourceDocument = null;
+        annotationDocument = null;
+        binaryCas = null;
     }
 
-    public Task(SourceDocument aSourceDocument, JCas aJCas)
+    public Task(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
         notNull(aSourceDocument);
 
+        user = null;
         project = aSourceDocument.getProject();
         sourceDocument = aSourceDocument;
-        jCas = aJCas;
-        user = null;
+        annotationDocument = null;
+        binaryCas = aBinaryCas;
     }
 
-    public Task(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    public Task(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
     {
         notNull(aAnnotationDocument);
-        notNull(aJCas);
+        notNull(aBinaryCas);
 
-        project = aAnnotationDocument.getProject();
-        annotationDocument = aAnnotationDocument;
-        jCas = aJCas;
         user = aAnnotationDocument.getUser();
+        project = aAnnotationDocument.getProject();
+        sourceDocument = null;
+        annotationDocument = aAnnotationDocument;
+        binaryCas = aBinaryCas;
     }
 
     public String getUser()
@@ -88,14 +95,14 @@ public abstract class Task
         return annotationDocument;
     }
 
-    public void setJCas(JCas aJCas)
+    public byte[] getBinaryCas()
     {
-        jCas = aJCas;
+        return binaryCas;
     }
 
-    public JCas getJCas()
+    public void setBinaryCas(byte[] aBinaryCas)
     {
-        return jCas;
+        binaryCas = aBinaryCas;
     }
 
     @Override
@@ -114,10 +121,14 @@ public abstract class Task
         builder.append("]");
         return builder.toString();
     }
-    
+
     /**
      * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
      * the given task.
+     * 
+     * @param aTask
+     *            the given scheduling task
+     * @return whether the given task matches this one
      */
     public abstract boolean matches(Task aTask);
 
@@ -128,8 +139,7 @@ public abstract class Task
         int result = 1;
         result = prime * result + ((project == null) ? 0 : project.hashCode());
         result = prime * result + ((user == null) ? 0 : user.hashCode());
-        result = prime * result
-                + ((sourceDocument == null) ? 0 : sourceDocument.hashCode());
+        result = prime * result + ((sourceDocument == null) ? 0 : sourceDocument.hashCode());
         result = prime * result
                 + ((annotationDocument == null) ? 0 : annotationDocument.hashCode());
         return result;

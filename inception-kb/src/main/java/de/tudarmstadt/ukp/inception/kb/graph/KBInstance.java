@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,14 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.eclipse.rdf4j.model.IRI;
@@ -46,9 +44,9 @@ public class KBInstance
     private URI type;
     private List<Statement> originalStatements = new ArrayList<>();
     private String language;
-    private static String ENGLISH = "en";
+    private static final String ENGLISH = "en";
     private KnowledgeBase kb;
-    
+
     public KBInstance()
     {
         // No-args constructor
@@ -83,7 +81,7 @@ public class KBInstance
     {
         name = aName;
     }
-    
+
     @Override
     public KnowledgeBase getKB()
     {
@@ -106,11 +104,13 @@ public class KBInstance
         type = aType;
     }
 
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String aDescription)
     {
         description = aDescription;
@@ -133,7 +133,6 @@ public class KBInstance
         language = aLanguage;
     }
 
-    
     public void write(RepositoryConnection aConn, KnowledgeBase kb)
     {
         ValueFactory vf = aConn.getValueFactory();
@@ -170,49 +169,16 @@ public class KBInstance
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
+            Statement descStmt = vf.createStatement(subject, kb.getDescriptionIri(),
+                    descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
     }
 
-    public static KBInstance read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase aKb)
-    {
-        KBInstance kbInst = new KBInstance();
-        kbInst.setType(URI.create(aStmt.getObject().stringValue()));
-        kbInst.setIdentifier(aStmt.getSubject().stringValue());
-        kbInst.setKB(aKb);
-        kbInst.originalStatements.add(aStmt);
-
-        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage(), aKb)
-            .ifPresent((stmt) -> {
-                kbInst.setName(stmt.getObject().stringValue());
-                kbInst.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbInst::setLanguage);
-                }
-            });
-
-        readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, 
-                aKb.getDefaultLanguage(), aKb)
-            .ifPresent((stmt) -> {
-                kbInst.setDescription(stmt.getObject().stringValue());
-                kbInst.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbInst::setLanguage);
-                }
-            });
-
-        return kbInst;
-    }
-
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -224,18 +190,16 @@ public class KBInstance
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(identifier);
     }
 
     @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-            .append("identifier", identifier)
-            .append("name", name)
-            .append("description", description)
-            .append("type", type)
-            .append("originalStatements", originalStatements)
-            .toString();
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
+                .append("description", description).append("type", type)
+                .append("originalStatements", originalStatements).toString();
     }
 }

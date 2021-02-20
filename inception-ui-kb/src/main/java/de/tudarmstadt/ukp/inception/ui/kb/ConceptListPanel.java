@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,17 +42,19 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmitting
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
 
-public class ConceptListPanel extends Panel {
+public class ConceptListPanel
+    extends Panel
+{
     private static final long serialVersionUID = -4032884234215283745L;
     private static final Logger LOG = LoggerFactory.getLogger(ConceptListPanel.class);
-    
+
     private static final int LIST_MAX_ROWS = 30;
 
     private @SpringBean KnowledgeBaseService kbService;
@@ -62,7 +64,8 @@ public class ConceptListPanel extends Panel {
     private IModel<Preferences> preferences;
 
     public ConceptListPanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> selectedConceptModel) {
+            IModel<KBHandle> selectedConceptModel)
+    {
         super(aId, selectedConceptModel);
 
         setOutputMarkupId(true);
@@ -82,8 +85,8 @@ public class ConceptListPanel extends Panel {
 
         add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
 
-        LambdaAjaxLink addLink = new LambdaAjaxLink("add", target -> send(getPage(),
-                Broadcast.BREADTH, new AjaxNewConceptEvent(target)));
+        LambdaAjaxLink addLink = new LambdaAjaxLink("add",
+                target -> send(getPage(), Broadcast.BREADTH, new AjaxNewConceptEvent(target)));
         addLink.add(new Label("label", new ResourceModel("concept.list.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
@@ -93,47 +96,53 @@ public class ConceptListPanel extends Panel {
                 new LambdaAjaxFormSubmittingBehavior("change", this::actionPreferenceChanged)));
         add(form);
     }
-    
-    private void actionSelectionChanged(AjaxRequestTarget aTarget) {
+
+    private void actionSelectionChanged(AjaxRequestTarget aTarget)
+    {
         // if the selection changes, publish an event denoting the change
         AjaxConceptSelectionEvent e = new AjaxConceptSelectionEvent(aTarget,
                 selectedConcept.getObject());
         send(getPage(), Broadcast.BREADTH, e);
     }
-    
+
     /**
      * If the user disabled "show all" but a concept from an implicit namespace was selected, the
      * concept selection is cancelled. In any other case this component is merely updated via AJAX.
      * 
      * @param aTarget
      */
-    private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
+    private void actionPreferenceChanged(AjaxRequestTarget aTarget)
+    {
         if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedConcept.getObject())) {
+                && IriConstants.isFromImplicitNamespace(selectedConcept.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
-        } else {
+        }
+        else {
             aTarget.add(this);
         }
     }
 
-    private List<KBHandle> getConcepts() {
+    private List<KBHandle> getConcepts()
+    {
         if (isVisibleInHierarchy()) {
             Preferences prefs = preferences.getObject();
             try {
-                return kbService.listConcepts(kbModel.getObject(),
-                    prefs.showAllConcepts);
+                return kbService.listAllConcepts(kbModel.getObject(), prefs.showAllConcepts);
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list concepts: " + e.getLocalizedMessage());
-                LOG.error("Unable to list concepts.",e);
+                LOG.error("Unable to list concepts.", e);
                 return Collections.emptyList();
             }
-        } else {
+        }
+        else {
             return Collections.emptyList();
         }
     }
 
-    static class Preferences implements Serializable {
+    static class Preferences
+        implements Serializable
+    {
         private static final long serialVersionUID = 8310379405075949753L;
 
         boolean showAllConcepts;

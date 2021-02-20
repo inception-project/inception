@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,14 +51,14 @@ import org.mockito.Mock;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -82,21 +84,21 @@ public class KnowledgeBaseExporterTest
         sourceProject = new Project();
         sourceProject.setId(1l);
         sourceProject.setName("Test Project");
-        sourceProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         targetProject = new Project();
         sourceProject.setId(2l);
         targetProject.setName("Test Project");
-        targetProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         when(kbService.getKnowledgeBases(sourceProject)).thenReturn(knowledgeBases());
 
         when(kbService.getKnowledgeBaseConfig(any()))
-            .thenReturn(new SPARQLRepositoryConfig(TestURLEndpoint));
+                .thenReturn(new SPARQLRepositoryConfig(TestURLEndpoint));
 
-        when(schemaService.listAnnotationFeature(sourceProject)).thenReturn(features(sourceProject));
+        when(schemaService.listAnnotationFeature(sourceProject))
+                .thenReturn(features(sourceProject));
 
-        sut = new KnowledgeBaseExporter(kbService, new KnowledgeBaseProperties(), schemaService);
+        sut = new KnowledgeBaseExporter(kbService, new KnowledgeBasePropertiesImpl(),
+                schemaService);
     }
 
     @Test
@@ -104,9 +106,10 @@ public class KnowledgeBaseExporterTest
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, exportedProject, temporaryFolder.getRoot());
+        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder.getRoot());
 
         // Import the project again
         ArgumentCaptor<KnowledgeBase> exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
@@ -120,16 +123,14 @@ public class KnowledgeBaseExporterTest
         // Check how many localKBs have been exported
         List<KnowledgeBase> exportedKbs = exportKbCaptor.getAllValues();
         int numOfLocalKBs = exportedKbs.stream()
-            .filter(kb -> kb.getType().equals(RepositoryType.LOCAL))
-            .collect(Collectors.toList()).size();
+                .filter(kb -> kb.getType().equals(RepositoryType.LOCAL))
+                .collect(Collectors.toList()).size();
 
         // Verify that importData is called as many times as there are localKBs
-        verify(kbService, times(numOfLocalKBs)).importData(any(),
-            any(), any());
+        verify(kbService, times(numOfLocalKBs)).importData(any(), any(), any());
 
-        assertThat(exportedKbs)
-            .usingElementComparatorIgnoringFields("repositoryId", "project")
-            .containsExactlyInAnyOrderElementsOf(knowledgeBases());
+        assertThat(exportedKbs).usingElementComparatorIgnoringFields("repositoryId", "project")
+                .containsExactlyInAnyOrderElementsOf(knowledgeBases());
     }
 
     @Test
@@ -137,9 +138,10 @@ public class KnowledgeBaseExporterTest
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, exportedProject, temporaryFolder.getRoot());
+        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder.getRoot());
 
         // Mock that the KB ID changes during import when registerKnowledgeBase is called
         doAnswer(i -> {
@@ -149,11 +151,12 @@ public class KnowledgeBaseExporterTest
         }).when(kbService).registerKnowledgeBase(any(), any());
 
         // Mock the features in the imported project
-        when(schemaService.listAnnotationFeature(targetProject)).thenReturn(features(targetProject));
+        when(schemaService.listAnnotationFeature(targetProject))
+                .thenReturn(features(targetProject));
 
         // Capture remapped features
         ArgumentCaptor<AnnotationFeature> importedAnnotationFeatureCaptor = ArgumentCaptor
-            .forClass(AnnotationFeature.class);
+                .forClass(AnnotationFeature.class);
         doNothing().when(schemaService).createFeature(importedAnnotationFeatureCaptor.capture());
 
         // Import the project again
@@ -163,17 +166,15 @@ public class KnowledgeBaseExporterTest
 
         // Verify that features were actually processed
         verify(schemaService, times(schemaService.listAnnotationFeature(sourceProject).size()))
-            .createFeature(any());
+                .createFeature(any());
 
         // Check that IDs have been remapped
         List<AnnotationFeature> importedFeatures = importedAnnotationFeatureCaptor.getAllValues();
-        assertThat(importedFeatures)
-            .extracting(feature -> {
-                ConceptFeatureTraits traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
+        assertThat(importedFeatures).extracting(feature -> {
+            ConceptFeatureTraits traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
                     feature.getTraits());
-                return traits.getRepositoryId();
-            })
-            .allSatisfy(id -> assertThat(id).startsWith("imported-"));
+            return traits.getRepositoryId();
+        }).allSatisfy(id -> assertThat(id).startsWith("imported-"));
     }
 
     private List<KnowledgeBase> knowledgeBases() throws Exception
@@ -200,7 +201,7 @@ public class KnowledgeBaseExporterTest
     private List<AnnotationFeature> features(Project aProject) throws Exception
     {
         AnnotationLayer layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE,
-            aProject, false, AnchoringMode.TOKENS);
+                aProject, false, TOKENS, NO_OVERLAP);
 
         AnnotationFeature feat1 = new AnnotationFeature(1, layer1, "conceptFeature", "kb:conceptA");
         ConceptFeatureTraits traits1 = new ConceptFeatureTraits();
@@ -226,9 +227,9 @@ public class KnowledgeBaseExporterTest
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setMaxResults(1000);
         ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setRootConcepts(Arrays
-            .asList(vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"),
-                vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation")));
+        kb.setRootConcepts(
+                Arrays.asList(vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"),
+                        vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation")));
         kb.setDefaultLanguage("en");
         return kb;
     }

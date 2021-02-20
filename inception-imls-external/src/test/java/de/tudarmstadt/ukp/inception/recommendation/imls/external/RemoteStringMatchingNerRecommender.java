@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -48,8 +48,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
@@ -59,16 +59,22 @@ public class RemoteStringMatchingNerRecommender
     private final RecommenderContext context;
     private final StringMatchingRecommender recommendationEngine;
 
+    private final String layerName;
+    private final String featureName;
+
     public RemoteStringMatchingNerRecommender(Recommender aRecommender)
     {
         recommender = aRecommender;
         context = new RecommenderContext();
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
         recommendationEngine = new StringMatchingRecommender(recommender, traits);
+
+        layerName = aRecommender.getLayer().getName();
+        featureName = aRecommender.getFeature().getName();
     }
 
-    public void train(String aTrainingRequestJson) throws Exception
-
+    public void train(String aTrainingRequestJson)
+        throws UIMAException, SAXException, IOException, RecommendationException
     {
         TrainingRequest request = deserializeTrainingRequest(aTrainingRequestJson);
 
@@ -86,31 +92,29 @@ public class RemoteStringMatchingNerRecommender
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(aRequestJson, TrainingRequest.class);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public String predict(String aPredictionRequestJson)
-        throws Exception
+        throws IOException, UIMAException, SAXException, RecommendationException
     {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
 
-        recommendationEngine.predict(context, cas);
+        // Only work on real annotations, not on predictions
+        Type predictedType = CasUtil.getType(cas, recommender.getLayer().getName());
+        Feature feature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
-        // Convert PredictionSpan to NamedEntity annotations
-        Type predictionType = getType(cas, PredictedSpan.class);
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
-        Type neType = getType(cas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
-        Feature valueFeature = neType.getFeatureByBaseName("value");
-
-        for (AnnotationFS fs : CasUtil.select(cas, predictionType)) {
-            AnnotationFS ne = cas.createAnnotation(neType, fs.getBegin(), fs.getEnd());
-            ne.setStringValue(valueFeature, fs.getStringValue(labelFeature));
-            cas.addFsToIndexes(ne);
-            cas.removeFsFromIndexes(fs);
+        for (AnnotationFS fs : CasUtil.select(cas, predictedType)) {
+            if (fs.getBooleanValue(feature)) {
+                cas.removeFsFromIndexes(fs);
+            }
         }
+
+        recommendationEngine.predict(context, cas);
 
         return buildPredictionResponse(cas);
     }

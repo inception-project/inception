@@ -1,12 +1,14 @@
 /*******************************************************************************
- * Copyright 2012
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,11 +21,47 @@
  */
 .dashboard-sidebar { background-color: darkgray; }
 .dashboard-sidebar .nav-pills a { font-size: 18px; color: white; }
+.dashboard-sidebar .nav-stacked > li + li {  margin-top: 0px; }
 .dashboard-sidebar .nav-pills a:hover { color: black; }
+.dashboard-sidebar .hvr-fade:hover, .hvr-fade:focus, .hvr-fade:active { background-color: #e7e7e7; }
 .dashboard-content .flex-tile { 
-  background: #FFFFFF; border: 
-  1px solid #EAEAEA;
+  background: #FFFFFF; 
+  border: 1px solid #EAEAEA;
   margin: 10px; 
   padding: 10px 20px 30px 20px; 
   min-height: 10em;
+}
+
+.k-item .item-title {
+  font-weight: bolder;
+}
+
+.k-item .item-title .badge {
+  font-size: 8px;
+/*  background-color: #eeeeee; */
+}
+
+.k-list-container > .k-footer {
+  background-color: #eeeeee;
+  border-top: 1px solid #bbb;
+  padding: 3px 10px;
+}
+
+.k-item .item-rank {
+  font-weight: lighter;
+}
+
+.k-item .item-identifier {
+  font-size: 85%;
+  line-height: normal; 
+  font-style: italic;
+  padding-left: 10px;
+}
+
+.k-item .item-description {
+  font-size: 85%;
+  font-weight: lighter;
+  white-space: normal;
+  line-height: normal;
+  padding-left: 10px;
 }

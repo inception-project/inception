@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,6 +52,8 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
@@ -62,15 +64,17 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.Fil
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.support.io.FileUploadDownloadHelper;
+import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
 public class AccessSpecificSettingsPanel
     extends Panel
@@ -95,9 +99,8 @@ public class AccessSpecificSettingsPanel
     private final Map<String, File> uploadedFiles;
     private WebMarkupContainer infoContainerLocal;
 
-    //Both
+    // Both
     private CompoundPropertyModel<KnowledgeBaseInfo> kbInfoModel;
-
 
     /**
      * Given the default file extension of an RDF format, returns the corresponding
@@ -109,19 +112,23 @@ public class AccessSpecificSettingsPanel
     private static final RDFFormat getRdfFormatForFileExt(String fileExt)
     {
         return EXPORT_FORMATS.stream().filter(f -> f.getDefaultFileExtension().equals(fileExt))
-            .findAny().get();
+                .findAny().get();
     }
-    private static final List<RDFFormat> EXPORT_FORMATS = Arrays
-        .asList(RDFFormat.RDFXML, RDFFormat.NTRIPLES, RDFFormat.TURTLE);
+
+    private static final List<RDFFormat> EXPORT_FORMATS = Arrays.asList(RDFFormat.RDFXML,
+            RDFFormat.NTRIPLES, RDFFormat.TURTLE);
     private static final List<String> EXPORT_FORMAT_FILE_EXTENSIONS = EXPORT_FORMATS.stream()
-        .map(f -> f.getDefaultFileExtension()).collect(Collectors.toList());
+            .map(f -> f.getDefaultFileExtension()).collect(Collectors.toList());
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbproperties;
 
+    private TextField<String> urlField;
+    private TextField<String> defaultDatasetField;
+
     public AccessSpecificSettingsPanel(String id,
-        CompoundPropertyModel<KnowledgeBaseWrapper> aModel,
-        Map<String, KnowledgeBaseProfile> aKnowledgeBaseProfiles)
+            CompoundPropertyModel<KnowledgeBaseWrapper> aModel,
+            Map<String, KnowledgeBaseProfile> aKnowledgeBaseProfiles)
     {
         super(id);
         setOutputMarkupId(true);
@@ -133,8 +140,8 @@ public class AccessSpecificSettingsPanel
         kbModel.getObject().clearFiles();
         kbInfoModel = CompoundPropertyModel.of(Model.of());
 
-        boolean isHandlingLocalRepository =
-            kbModel.getObject().getKb().getType() == RepositoryType.LOCAL;
+        boolean isHandlingLocalRepository = kbModel.getObject().getKb()
+                .getType() == RepositoryType.LOCAL;
 
         // container for form components related to local KBs
         WebMarkupContainer local = new WebMarkupContainer("localSpecificSettings");
@@ -149,35 +156,50 @@ public class AccessSpecificSettingsPanel
         setUpRemoteSpecificSettings(remote);
     }
 
-    private void setUpRemoteSpecificSettings(WebMarkupContainer wmc) {
-        RequiredTextField<String> urlField = new RequiredTextField<>("url");
+    private void setUpRemoteSpecificSettings(WebMarkupContainer wmc)
+    {
+        urlField = new RequiredTextField<>("url");
         urlField.add(Validators.URL_VALIDATOR);
         wmc.add(urlField);
 
         // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
         // directly fills in the URL field (convenient for both developers AND users :))
-        List<KnowledgeBaseProfile> suggestions = new ArrayList<>(
-            knowledgeBaseProfiles.values().stream()
-                .filter(kb -> RepositoryType.REMOTE.equals(kb.getType()))
+        List<KnowledgeBaseProfile> suggestions = new ArrayList<>(knowledgeBaseProfiles.values()
+                .stream().filter(kb -> RepositoryType.REMOTE.equals(kb.getType()))
                 .collect(Collectors.toList()));
         suggestions = suggestions.subList(0,
-            Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
+                Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
 
         infoContainerRemote = createKbInfoContainer("infoContainer");
         infoContainerRemote.setOutputMarkupId(true);
         wmc.add(infoContainerRemote);
-        wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField));
+        wmc.add(remoteSuggestionsList("suggestions", suggestions));
 
+        defaultDatasetField = defaultDataset("defaultDataset",
+                kbModel.bind("kb.defaultDatasetIri"));
+        wmc.add(defaultDatasetField);
+    }
+
+    private TextField<String> defaultDataset(String aId, IModel<IRI> model)
+    {
+        IModel<String> adapter = new LambdaModelAdapter<String>(() -> {
+            return model.getObject() != null ? model.getObject().stringValue() : null;
+        }, str -> model
+                .setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null));
+        TextField<String> defaultDataset = new TextField<>(aId, adapter);
+        defaultDataset.add(Validators.IRI_VALIDATOR);
+        return defaultDataset;
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
-        List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
+            List<KnowledgeBaseProfile> aSuggestions)
     {
         return new ListView<KnowledgeBaseProfile>(aId, aSuggestions)
         {
             private static final long serialVersionUID = 4179629475064638272L;
 
-            @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
+            @Override
+            protected void populateItem(ListItem<KnowledgeBaseProfile> item)
             {
                 // add a link for one knowledge base with proper label
                 LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", t -> {
@@ -189,12 +211,14 @@ public class AccessSpecificSettingsPanel
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
                     kbInfoModel.setObject(item.getModelObject().getInfo());
                     kbModel.getObject().getKb().setFullTextSearchIri(
-                        item.getModelObject().getAccess().getFullTextSearchIri());
+                            item.getModelObject().getAccess().getFullTextSearchIri());
                     kbModel.getObject().getKb()
-                        .setDefaultLanguage(item.getModelObject().getDefaultLanguage());
+                            .setDefaultLanguage(item.getModelObject().getDefaultLanguage());
                     kbModel.getObject().getKb()
-                        .setReification(item.getModelObject().getReification());
-                    t.add(aUrlField, infoContainerRemote);
+                            .setDefaultDatasetIri(item.getModelObject().getDefaultDataset());
+                    kbModel.getObject().getKb()
+                            .setReification(item.getModelObject().getReification());
+                    t.add(urlField, defaultDatasetField, infoContainerRemote);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                 item.add(link);
@@ -206,14 +230,14 @@ public class AccessSpecificSettingsPanel
     {
         WebMarkupContainer wmc = new WebMarkupContainer(aId);
         wmc.add(new Label("description", kbInfoModel.bind("description"))
-            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+                .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
         wmc.add(new Label("hostInstitutionName", kbInfoModel.bind("hostInstitutionName"))
-            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+                .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
         wmc.add(new Label("authorName", kbInfoModel.bind("authorName"))
-            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+                .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
         wmc.add(new ExternalLink("websiteURL", kbInfoModel.bind("websiteURL"),
-            kbInfoModel.bind("websiteURL"))
-            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+                kbInfoModel.bind("websiteURL"))
+                        .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
         return wmc;
     }
 
@@ -229,8 +253,8 @@ public class AccessSpecificSettingsPanel
         wmc.add(fileExtensionsExportList("exportButtons"));
 
         List<KnowledgeBaseProfile> localKBs = knowledgeBaseProfiles.values().stream()
-            .filter(kb -> RepositoryType.LOCAL.equals(kb.getType()))
-            .collect(Collectors.toList());
+                .filter(kb -> RepositoryType.LOCAL.equals(kb.getType()))
+                .collect(Collectors.toList());
 
         listViewContainer = new WebMarkupContainer("listViewContainer");
         ListView<KnowledgeBaseProfile> suggestions = localSuggestionsList("localKBs", localKBs);
@@ -238,7 +262,7 @@ public class AccessSpecificSettingsPanel
         listViewContainer.setOutputMarkupPlaceholderTag(true);
 
         LambdaAjaxLink addKbButton = new LambdaAjaxLink("addKbButton",
-            this::actionDownloadKbAndSetIRIs);
+                this::actionDownloadKbAndSetIRIs);
         addKbButton.add(new Label("addKbLabel", new ResourceModel("kb.wizard.steps.local.addKb")));
         listViewContainer.add(addKbButton);
 
@@ -249,10 +273,12 @@ public class AccessSpecificSettingsPanel
         wmc.add(listViewContainer);
     }
 
-    private Form<Void> uploadForm(String aFormId, String aFieldId) {
-        Form<Void> importProjectForm = new Form<Void>(aFormId) {
+    private Form<Void> uploadForm(String aFormId, String aFieldId)
+    {
+        Form<Void> importProjectForm = new Form<Void>(aFormId)
+        {
             private static final long serialVersionUID = -8284858297362896476L;
-            
+
             @Override
             protected void onSubmit()
             {
@@ -262,17 +288,17 @@ public class AccessSpecificSettingsPanel
         };
 
         FileInputConfig config = new FileInputConfig();
-        config.initialCaption("Import project archives ...");
+        config.initialCaption("Import knowledge base ...");
         config.showPreview(false);
         config.showUpload(false);
         config.removeIcon("<i class=\"fa fa-remove\"></i>");
-//        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
+        // config.uploadIcon("<i class=\"fa fa-upload\"></i>");
         config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
-        importProjectForm.add(fileUpload = new BootstrapFileInputField(aFieldId,
-            new ListModel<>(), config));
+        importProjectForm
+                .add(fileUpload = new BootstrapFileInputField(aFieldId, new ListModel<>(), config));
         return importProjectForm;
     }
-    
+
     public void handleUploadedFiles()
     {
         try {
@@ -287,13 +313,15 @@ public class AccessSpecificSettingsPanel
         }
     }
 
-    private  AjaxLink<Void> clearLink(String aId) {
+    private AjaxLink<Void> clearLink(String aId)
+    {
         AjaxLink<Void> clearLink = new LambdaAjaxLink(aId, this::actionClear)
         {
 
             private static final long serialVersionUID = -6272361381689154558L;
 
-            @Override public boolean isEnabled()
+            @Override
+            public boolean isEnabled()
             {
                 return !kbService.isEmpty(kbModel.getObject().getKb());
             }
@@ -301,24 +329,24 @@ public class AccessSpecificSettingsPanel
         return clearLink;
     }
 
-    private ListView<String> fileExtensionsExportList(String aId) {
-        ListView<String> fileExListView = new ListView<String>(aId,
-            EXPORT_FORMAT_FILE_EXTENSIONS)
+    private ListView<String> fileExtensionsExportList(String aId)
+    {
+        ListView<String> fileExListView = new ListView<String>(aId, EXPORT_FORMAT_FILE_EXTENSIONS)
         {
 
             private static final long serialVersionUID = -1869762759620557362L;
 
-            @Override protected void populateItem(ListItem<String> item)
+            @Override
+            protected void populateItem(ListItem<String> item)
             {
                 // creates an appropriately labeled {@link AjaxDownloadLink} which triggers the
                 // download of the contents of the current KB in the given format
                 String fileExtension = item.getModelObject();
                 Model<String> exportFileNameModel = Model
-                    .of(kbModel.getObject().getKb().getName() + "." + fileExtension);
+                        .of(kbModel.getObject().getKb().getName() + "." + fileExtension);
                 AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
                         LambdaModel.of(() -> actionExport(fileExtension)));
-                exportLink
-                    .add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
+                exportLink.add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
                 item.add(exportLink);
             }
         };
@@ -326,21 +354,22 @@ public class AccessSpecificSettingsPanel
     }
 
     private ListView<KnowledgeBaseProfile> localSuggestionsList(String aId,
-        List<KnowledgeBaseProfile> localKBs)
+            List<KnowledgeBaseProfile> localKBs)
     {
-        ListView<KnowledgeBaseProfile> suggestions = new ListView<KnowledgeBaseProfile>(
-            aId, localKBs)
+        ListView<KnowledgeBaseProfile> suggestions = new ListView<KnowledgeBaseProfile>(aId,
+                localKBs)
         {
             private static final long serialVersionUID = 1L;
 
-            @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
+            @Override
+            protected void populateItem(ListItem<KnowledgeBaseProfile> item)
             {
-                LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink", _target ->
-                        actionSelectPredefinedKB(_target, item.getModel()));
+                LambdaAjaxLink link = new LambdaAjaxLink("suggestionLink",
+                        _target -> actionSelectPredefinedKB(_target, item.getModel()));
 
                 // Can not import the same KB more than once
                 boolean isImported = downloadedProfiles
-                    .containsKey(item.getModelObject().getName());
+                        .containsKey(item.getModelObject().getName());
                 link.setEnabled(!isImported);
 
                 String itemLabel = item.getModelObject().getName();
@@ -350,8 +379,9 @@ public class AccessSpecificSettingsPanel
                     itemLabel = itemLabel + "  \u2714";
                 }
                 link.add(new Label("suggestionLabel", itemLabel));
-                
-                link.add(new ClassAttributeModifier() {
+
+                link.add(new ClassAttributeModifier()
+                {
                     private static final long serialVersionUID = -3985182168502826951L;
 
                     @Override
@@ -368,11 +398,18 @@ public class AccessSpecificSettingsPanel
                 });
 
                 // Show schema type on mouseover
-                link.add(AttributeModifier.append("title",
-                    new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
-                        .setParameters(
-                            SchemaProfile.checkSchemaProfile(item.getModelObject()).getUiLabel(),
-                            getAccessTypeLabel(item.getModelObject()))));
+                link.add(
+                        AttributeModifier
+                                .append("title",
+                                        new StringResourceModel(
+                                                "kb.wizard.steps.local.schemaOnMouseOver", this)
+                                                        .setParameters(
+                                                                SchemaProfile
+                                                                        .checkSchemaProfile(item
+                                                                                .getModelObject())
+                                                                        .getUiLabel(),
+                                                                getAccessTypeLabel(
+                                                                        item.getModelObject()))));
 
                 item.add(link);
             }
@@ -380,7 +417,7 @@ public class AccessSpecificSettingsPanel
         suggestions.setOutputMarkupId(true);
         return suggestions;
     }
-    
+
     private void actionSelectPredefinedKB(AjaxRequestTarget aTarget,
             IModel<KnowledgeBaseProfile> aModel)
     {
@@ -394,12 +431,12 @@ public class AccessSpecificSettingsPanel
         aTarget.add(listViewContainer, infoContainerLocal);
     }
 
-    private File uploadFile(FileUpload fu) throws Exception
+    private File uploadFile(FileUpload fu) throws IOException
     {
         String fileName = fu.getClientFileName();
         if (!uploadedFiles.containsKey(fileName)) {
             FileUploadDownloadHelper fileUploadDownloadHelper = new FileUploadDownloadHelper(
-                getApplication());
+                    getApplication());
             File tmpFile = fileUploadDownloadHelper.writeFileUploadToTemporaryFile(fu, kbModel);
             uploadedFiles.put(fileName, tmpFile);
         }
@@ -426,8 +463,8 @@ public class AccessSpecificSettingsPanel
 
     private IResourceStream actionExport(String rdfFormatFileExt)
     {
-        return new TempFileResource((os) -> kbService
-            .exportData(kbModel.getObject().getKb(), getRdfFormatForFileExt(rdfFormatFileExt), os));
+        return new TempFileResource((os) -> kbService.exportData(kbModel.getObject().getKb(),
+                getRdfFormatForFileExt(rdfFormatFileExt), os));
     }
 
     private void actionDownloadKbAndSetIRIs(AjaxRequestTarget aTarget)
@@ -437,33 +474,32 @@ public class AccessSpecificSettingsPanel
 
                 String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
 
-                FileUploadDownloadHelper fileUploadDownloadHelper =
-                    new FileUploadDownloadHelper(getApplication());
+                FileUploadDownloadHelper fileUploadDownloadHelper = new FileUploadDownloadHelper(
+                        getApplication());
 
                 if (!accessUrl.startsWith(CLASSPATH_PREFIX)) {
 
                     File tmpFile = fileUploadDownloadHelper
-                        .writeFileDownloadToTemporaryFile(accessUrl, kbModel);
+                            .writeFileDownloadToTemporaryFile(accessUrl, kbModel);
                     kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
                 }
                 else {
                     // import from classpath
                     File kbFile = fileUploadDownloadHelper
-                        .writeClasspathResourceToTemporaryFile(accessUrl, kbModel);
+                            .writeClasspathResourceToTemporaryFile(accessUrl, kbModel);
                     kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
                 }
 
                 kbModel.getObject().getKb().applyRootConcepts(selectedKnowledgeBaseProfile);
-                kbModel.getObject().getKb().applyMapping(
-                    selectedKnowledgeBaseProfile.getMapping());
+                kbModel.getObject().getKb().applyMapping(selectedKnowledgeBaseProfile.getMapping());
                 kbModel.getObject().getKb().setFullTextSearchIri(
-                    selectedKnowledgeBaseProfile.getAccess().getFullTextSearchIri());
+                        selectedKnowledgeBaseProfile.getAccess().getFullTextSearchIri());
                 kbModel.getObject().getKb()
-                    .setDefaultLanguage(selectedKnowledgeBaseProfile.getDefaultLanguage());
+                        .setDefaultLanguage(selectedKnowledgeBaseProfile.getDefaultLanguage());
                 kbModel.getObject().getKb()
-                    .setReification(selectedKnowledgeBaseProfile.getReification());
-                downloadedProfiles
-                    .put(selectedKnowledgeBaseProfile.getName(), selectedKnowledgeBaseProfile);
+                        .setReification(selectedKnowledgeBaseProfile.getReification());
+                downloadedProfiles.put(selectedKnowledgeBaseProfile.getName(),
+                        selectedKnowledgeBaseProfile);
                 aTarget.add(this);
                 selectedKnowledgeBaseProfile = null;
             }

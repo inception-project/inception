@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isSuperAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel.ERROR;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
@@ -35,10 +39,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
@@ -48,10 +52,10 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -66,12 +70,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -96,6 +99,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectNotFoundException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.RemoteApiException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.AnnotationJSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.AnnotationLayerJSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.CreateAndUpdateOutputMessage;
@@ -107,18 +115,11 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.Feat
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.FeatureRef;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.JSONOutput;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.Message;
-
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.ProjectJSONObject;
-
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.TagSetJSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.TokenJSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.UpdateAnnotationJSONInfo;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.ruita.jsonobjects.UpdateOutputMessage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.AccessForbiddenException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.ObjectNotFoundException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.RemoteApiException;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RProject;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
@@ -146,13 +147,13 @@ public class RemoteApiControllerRuita
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    private @Resource DocumentService documentService;
-    private @Resource CurationDocumentService curationService;
-    private @Resource ProjectService projectService;
-    private @Resource ImportExportService importExportService;
-    private @Resource AnnotationSchemaService annotationService;
-    private @Resource UserDao userRepository;
-    private @Resource FeatureSupportRegistry featureSupportRegistry;
+    private @Autowired DocumentService documentService;
+    private @Autowired CurationDocumentService curationService;
+    private @Autowired ProjectService projectService;
+    private @Autowired ImportExportService importExportService;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired UserDao userRepository;
+    private @Autowired FeatureSupportRegistry featureSupportRegistry;
 
     /**
      * API function that returns information about all the layer definitions of a project
@@ -252,12 +253,13 @@ public class RemoteApiControllerRuita
         AnnotationDocument annoDoc = getAnnotation(doc, getCurrentUser(), true);
 
         // JCas jcas = documentService.readAnnotationCas(annoDoc, 'r');
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        CAS jcas = documentService.readAnnotationCas(annoDoc);
 
-        // Get list with Tokens from JCas
-        Collection<Token> tokenColl = JCasUtil.select(jcas, Token.class);
+        // Get list with Tokens from CAS
+        Collection<AnnotationFS> tokenColl = CasUtil.select(jcas,
+                CasUtil.getType(jcas, Token.class));
         ArrayList<TokenJSONObject> tokenJSONList = new ArrayList<TokenJSONObject>();
-        for (Token token : tokenColl) {
+        for (AnnotationFS token : tokenColl) {
             TokenJSONObject tjo = new TokenJSONObject();
             tjo.setTokenId(token.getAddress());
             tjo.setCoveredText(token.getCoveredText());
@@ -328,10 +330,10 @@ public class RemoteApiControllerRuita
         AnnotationDocument annoDoc = getAnnotation(doc, getCurrentUser(), true);
 
         // TODO: Upgrade CAS if there is a new Layer
-        //JCas jcas = documentService.readAnnotationCas(annoDoc, 'w');
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        // JCas jcas = documentService.readAnnotationCas(annoDoc, 'w');
+        CAS cas = documentService.readAnnotationCas(annoDoc);
 
-        try (AutoCloseable AutoJcas = (AutoCloseable) jcas) {
+        try (AutoCloseable AutoJcas = (AutoCloseable) cas) {
 
             int begin = createInfo.getBegin();
             int end = createInfo.getEnd();
@@ -341,14 +343,14 @@ public class RemoteApiControllerRuita
                         + "project manager to re-open it via the Monitoring page");
             }
 
-            if (!layer.isAllowStacking() && isLayerExisting(jcas, layer, project, begin, end)) {
+            if (!layer.isAllowStacking() && isLayerExisting(cas, layer, project, begin, end)) {
                 LOG.warn("Layer not stackable.");
                 return new ResponseEntity<Message>(new Message("Layer not stackable."),
                         HttpStatus.BAD_REQUEST);
             }
 
             if (!AnchoringMode.TOKENS.equals(layer.getAnchoringMode())
-                    && JCasUtil.selectAt(jcas, Token.class, begin, end).size() > 1) {
+                    && selectAt(cas, getType(cas, Token.class), begin, end).size() > 1) {
                 LOG.warn("Layer does not allow multiple token annotations.");
                 return new ResponseEntity<Message>(
                         new Message("Layer does not allow multiple token annotations."),
@@ -359,7 +361,7 @@ public class RemoteApiControllerRuita
             if (!layer.isCrossSentence()) {
                 // If begin and end are the acctuall begin and end of the annotation
                 if (!treatLimitsAsIds) {
-                    if (!WebAnnoCasUtil.isSameSentence(jcas, begin, end)) {
+                    if (!isBeginEndInSameSentence(cas, begin, end)) {
                         LOG.warn("Layer does not allow cross sentence annotations.");
                         return new ResponseEntity<Message>(
                                 new Message("Layer does not allow cross sentence annotations."),
@@ -368,7 +370,7 @@ public class RemoteApiControllerRuita
                 }
                 // If begin and end are Ids of other annotations e.g dependency
                 else {
-                    if (!areAnnotationsSameSentence(jcas, begin, end)) {
+                    if (!areAnnotationsSameSentence(cas, begin, end)) {
                         LOG.warn("Layer does not allow cross sentence annotations.");
                         return new ResponseEntity<Message>(
                                 new Message("Layer does not allow cross sentence annotations."),
@@ -385,14 +387,14 @@ public class RemoteApiControllerRuita
             // we get an exception here. So we try to work around that by catching the exception,
             // upgrading the cas and than try again to create the annotation
             try {
-                newAnnotationId = createNewAnnotation(adapter, doc, jcas, layer, begin, end);
+                newAnnotationId = createNewAnnotation(adapter, annoDoc, cas, layer, begin, end);
             }
             catch (IllegalArgumentException e) {
-                annotationService.upgradeCas(jcas.getCas(), annoDoc);
-                newAnnotationId = createNewAnnotation(adapter, doc, jcas, layer, begin, end);
+                annotationService.upgradeCas(cas, annoDoc);
+                newAnnotationId = createNewAnnotation(adapter, annoDoc, cas, layer, begin, end);
             }
             // Check if the annotation was created with the given parameters
-            AnnotationFS newAnno = WebAnnoCasUtil.selectByAddr(jcas, newAnnotationId);
+            AnnotationFS newAnno = WebAnnoCasUtil.selectAnnotationByAddr(cas, newAnnotationId);
             String outputMessageAddition = "";
             // Inform the user if the annotation's begin and end has been changed due to
             // locking the annotation to Token offsets
@@ -462,12 +464,12 @@ public class RemoteApiControllerRuita
      *            id of second annotation
      * @return whether the annotations are in the same sentence
      */
-    private boolean areAnnotationsSameSentence(JCas aJCas, int id1, int id2)
+    private boolean areAnnotationsSameSentence(CAS aJCas, int id1, int id2)
     {
-        AnnotationFS anno1 = WebAnnoCasUtil.selectByAddr(aJCas, id1);
-        AnnotationFS anno2 = WebAnnoCasUtil.selectByAddr(aJCas, id2);
+        AnnotationFS anno1 = selectAnnotationByAddr(aJCas, id1);
+        AnnotationFS anno2 = selectAnnotationByAddr(aJCas, id2);
 
-        if (!WebAnnoCasUtil.isSameSentence(aJCas, anno1.getBegin(), anno2.getEnd())) {
+        if (!isBeginEndInSameSentence(aJCas, anno1.getBegin(), anno2.getEnd())) {
             return false;
         }
         return true;
@@ -477,7 +479,7 @@ public class RemoteApiControllerRuita
      * Returns true if there already exists the same layer as the given one within this begin and
      * end
      * 
-     * @param jCas
+     * @param aCas
      *            the jcas
      * @param layer
      *            the layer to check
@@ -489,13 +491,13 @@ public class RemoteApiControllerRuita
      *            end of the range
      * @return whether this layer already exists that this position in the text
      */
-    private boolean isLayerExisting(JCas jCas, AnnotationLayer layer, Project project, int begin,
+    private boolean isLayerExisting(CAS aCas, AnnotationLayer layer, Project project, int begin,
             int end)
     {
-        List<Annotation> list = JCasUtil.selectAt(jCas, Annotation.class, begin, end);
+        List<AnnotationFS> list = selectAt(aCas, getType(aCas, Annotation.class), begin, end);
 
-        for (Annotation anno : list) {
-            if (annotationService.getLayer(project, anno).getName().equals(layer.getName())) {
+        for (AnnotationFS anno : list) {
+            if (annotationService.findLayer(project, anno).getName().equals(layer.getName())) {
                 return true;
             }
         }
@@ -521,9 +523,8 @@ public class RemoteApiControllerRuita
     @Transactional
     @ApiOperation(value = "Update an annotation by setting a specified feature")
     @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/"
-            + ANNOTATIONS, method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, 
-            produces = MediaType.APPLICATION_JSON_VALUE)
+            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS, method = RequestMethod.PUT, //
+            consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<? extends Message> updateAnnotation(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
@@ -540,13 +541,13 @@ public class RemoteApiControllerRuita
         // Get AnnotationDocument
         AnnotationDocument annoDoc = getAnnotation(doc, getCurrentUser(), false);
         // JCas jcas = documentService.readAnnotationCas(annoDoc, 'w');
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        CAS jcas = documentService.readAnnotationCas(annoDoc);
 
         try (AutoCloseable AutoJcas = (AutoCloseable) jcas) {
             AnnotationFS annotation;
-            annotation = WebAnnoCasUtil.selectByAddr(jcas, annotationId);
+            annotation = selectAnnotationByAddr(jcas, annotationId);
 
-            AnnotationLayer layer = annotationService.getLayer(project, annotation);
+            AnnotationLayer layer = annotationService.findLayer(project, annotation);
             String typeName = layer.getType();
 
             if (layer.isReadonly()) {
@@ -562,12 +563,10 @@ public class RemoteApiControllerRuita
             MultiValueMode mvMode = annoFeat.getMultiValueMode();
             Object featValue;
             if (MultiValueMode.ARRAY.equals(mvMode)) {
-                ArrayList<HashMap<String, String>> roleLabelInfoList = 
-                        ((ArrayList<HashMap<String, String>>) featureValueObject);
+                List<Map<String, String>> roleLabelInfoList = ((List<Map<String, String>>) featureValueObject);
                 // Extend the old feature-list
-                ArrayList<LinkWithRoleModel> lwrmList = adapter.getFeatureValue(annoFeat,
-                        annotation);
-                for (HashMap<String, String> hm : roleLabelInfoList) {
+                List<LinkWithRoleModel> lwrmList = adapter.getFeatureValue(annoFeat, annotation);
+                for (Map<String, String> hm : roleLabelInfoList) {
                     LinkWithRoleModel lwrm = new LinkWithRoleModel();
                     lwrm.label = hm.get("label");
                     lwrm.role = hm.get("role");
@@ -586,7 +585,7 @@ public class RemoteApiControllerRuita
                 AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
                 state.setDocument(doc, asList(doc));
                 state.setUser(getCurrentUser());
-                
+
                 // By default, if the feature with this featureId is already set it's just
                 // overwritten
 
@@ -598,7 +597,7 @@ public class RemoteApiControllerRuita
                             featValue);
                 }
                 else if ("relation".equals(typeName)) {
-                    ((ArcAdapter) adapter).setFeatureValue(state, jcas, annotationId, annoFeat,
+                    ((RelationAdapter) adapter).setFeatureValue(state, jcas, annotationId, annoFeat,
                             featValue);
                 }
                 else if ("chain".equals(typeName)) {
@@ -640,8 +639,7 @@ public class RemoteApiControllerRuita
     @ApiOperation(value = "Delete an annotation specified by its Id")
     @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
             + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS
-            + "/{annotationId}", method = RequestMethod.DELETE, produces = 
-            MediaType.APPLICATION_JSON_VALUE)
+            + "/{annotationId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Message> deleteAnnotation(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @PathVariable("annotationId") long aAnnotationId)
@@ -658,13 +656,13 @@ public class RemoteApiControllerRuita
         // Get AnnotationDocument
         AnnotationDocument annoDoc = getAnnotation(doc, getCurrentUser(), false);
 
-        //JCas jcas = documentService.readAnnotationCas(annoDoc, 'w');
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        // CAS jcas = documentService.readAnnotationCas(annoDoc, 'w');
+        CAS cas = documentService.readAnnotationCas(annoDoc);
 
-        try (AutoCloseable AutoJcas = (AutoCloseable) jcas) {
-            AnnotationFS fs = WebAnnoCasUtil.selectByAddr(jcas,
+        try (AutoCloseable AutoJcas = (AutoCloseable) cas) {
+            AnnotationFS fs = selectAnnotationByAddr(cas,
                     Integer.parseInt(Long.toString(aAnnotationId)));
-            AnnotationLayer layer = annotationService.getLayer(project, fs);
+            AnnotationLayer layer = annotationService.findLayer(project, fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
             if (layer.isReadonly()) {
@@ -685,19 +683,19 @@ public class RemoteApiControllerRuita
                 AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
                 state.setDocument(doc, asList(doc));
                 state.setUser(getCurrentUser());
-                
+
                 for (AnnotationFS attachedFs : getAttachedRels(fs, layer)) {
-                    AnnotationLayer attachedFSLayer = annotationService.getLayer(project,
+                    AnnotationLayer attachedFSLayer = annotationService.findLayer(project,
                             attachedFs);
                     TypeAdapter adapterForAttachedFS = annotationService
                             .getAdapter(attachedFSLayer);
-                    adapterForAttachedFS.delete(state, jcas, new VID(attachedFs));
+                    adapterForAttachedFS.delete(state, cas, new VID(attachedFs));
 
                     int deletedAddr = WebAnnoCasUtil.getAddr(attachedFs);
 
                     forcedDeletionsList.add(deletedAddr);
                     LOG.info("INFO: The attached annotation for relation type [" + annotationService
-                            .getLayer(attachedFs.getType().getName(), project).getUiName()
+                            .findLayer(project, attachedFs.getType().getName()).getUiName()
                             + "] is deleted");
                 }
             }
@@ -710,7 +708,7 @@ public class RemoteApiControllerRuita
             // to look at span annotations that have the same offsets as the FS to be deleted.
             if (adapter instanceof SpanAdapter && layer.getAttachType() != null
                     && layer.getAttachFeature() != null) {
-                Type spanType = CasUtil.getType(jcas.getCas(), layer.getAttachType().getName());
+                Type spanType = CasUtil.getType(cas, layer.getAttachType().getName());
                 Feature attachFeature = spanType
                         .getFeatureByBaseName(layer.getAttachFeature().getName());
                 for (AnnotationFS attachedFs : getAttachedSpans(fs, layer)) {
@@ -728,10 +726,9 @@ public class RemoteApiControllerRuita
             if (adapter instanceof SpanAdapter) {
                 for (AnnotationFeature linkFeature : annotationService
                         .listAttachedLinkFeatures(layer)) {
-                    Type linkType = CasUtil.getType(jcas.getCas(),
-                            linkFeature.getLayer().getName());
+                    Type linkType = CasUtil.getType(cas, linkFeature.getLayer().getName());
 
-                    for (AnnotationFS linkFS : CasUtil.select(jcas.getCas(), linkType)) {
+                    for (AnnotationFS linkFS : CasUtil.select(cas, linkType)) {
                         List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
                                 linkFS);
                         Iterator<LinkWithRoleModel> i = links.iterator();
@@ -755,7 +752,7 @@ public class RemoteApiControllerRuita
 
             // If the deleted FS is a relation, we don't have to do anything. Nothing can point to a
             // relation.
-            if (adapter instanceof ArcAdapter) {
+            if (adapter instanceof RelationAdapter) {
                 // Do nothing ;)
             }
 
@@ -763,9 +760,9 @@ public class RemoteApiControllerRuita
             AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
             state.setDocument(doc, asList(doc));
             state.setUser(getCurrentUser());
-            
+
             // Actually delete annotation
-            adapter.delete(state, jcas, new VID(fs));
+            adapter.delete(state, cas, new VID(fs));
 
             message = new DeleteOutputMessage("Annotation was successfully deleted",
                     forcedDeletionsList, layer.getId(), layer.getUiName(), aAnnotationId);
@@ -806,13 +803,12 @@ public class RemoteApiControllerRuita
         // Get AnnotationDocument
         AnnotationDocument annoDoc = getAnnotation(doc, getCurrentUser(), true);
 
-        // JCas jcas = documentService.readAnnotationCas(annoDoc, 'r');
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        CAS cas = documentService.readAnnotationCas(annoDoc);
 
-        // Get list with Tokens from JCas
-        Collection<Token> tokenColl = JCasUtil.select(jcas, Token.class);
+        // Get list with Tokens from CAS
+        Collection<AnnotationFS> tokenColl = select(cas, getType(cas, Token.class));
         TokenJSONObject tjo = new TokenJSONObject();
-        for (Token token : tokenColl) {
+        for (AnnotationFS token : tokenColl) {
             if (token.getAddress() == aTokenId) {
                 tjo.setTokenId(token.getAddress());
                 tjo.setCoveredText(token.getCoveredText());
@@ -873,22 +869,22 @@ public class RemoteApiControllerRuita
         // Get AnnotationDocument
         AnnotationDocument annoDoc = getAnnotation(doc, getCurrentUser(), true);
 
-        // JCas jcas = documentService.readAnnotationCas(annoDoc, 'r');
-        JCas jcas = documentService.readAnnotationCas(annoDoc);
+        // CAS jcas = documentService.readAnnotationCas(annoDoc, 'r');
+        CAS jcas = documentService.readAnnotationCas(annoDoc);
 
-        // Get Collection with all Annotations from JCas
-        Collection<Annotation> annotationColl = JCasUtil.select(jcas, Annotation.class);
+        // Get Collection with all Annotations from CAS
+        Collection<AnnotationFS> annotationColl = select(jcas, getType(jcas, Annotation.class));
 
         ArrayList<AnnotationJSONObject> outputList = new ArrayList<AnnotationJSONObject>();
 
         // Iterate through annotations to generate a corresponding AnnotationJSONObject for each one
-        for (Annotation a : annotationColl) {
+        for (AnnotationFS a : annotationColl) {
             String layerName = a.getType().getShortName();
             // We don't want to treat this types as annotations in our json
             if (!("Sentence".equals(layerName) || "DocumentMetaData".equals(layerName)
                     || "Token".equals(layerName))) {
 
-                String layerUiN = annotationService.getLayer(project, a).getUiName().toLowerCase();
+                String layerUiN = annotationService.findLayer(project, a).getUiName().toLowerCase();
                 // If the annotation is not the layer we want or not in the text range, leave it out
                 if (!((layerFilter.isPresent()
                         && !(layerUiN.equals(layerFilter.get().toLowerCase())))
@@ -1040,7 +1036,7 @@ public class RemoteApiControllerRuita
      *            the project that contains the annotation
      * @return AnnotationJSONObject for the given annotation
      */
-    private AnnotationJSONObject getJSONObjFromAnnotation(Annotation a, Project project)
+    private AnnotationJSONObject getJSONObjFromAnnotation(AnnotationFS a, Project project)
     {
         // Create and fill the object that will be used to represent the annotation in json
         AnnotationJSONObject ajo = new AnnotationJSONObject();
@@ -1050,15 +1046,14 @@ public class RemoteApiControllerRuita
         ajo.setEnd(a.getEnd());
         ajo.setAnnotationId(a.getAddress());
         List<Token> tokenls = JCasUtil.selectCovered(Token.class, a);
-        ArrayList<Long> tjoList = new ArrayList<>();
+        List<Long> tjoList = new ArrayList<>();
         for (Token t : tokenls) {
             tjoList.add((long) t.getAddress());
         }
         ajo.setCoveredTokens(tjoList);
-        ArrayList<FeatureRef<Object>> features;
-        features = getAnnotationFeatures(a, project);
+        List<FeatureRef<Object>> features = getAnnotationFeatures(a, project);
 
-        ajo.setLayerId(annotationService.getLayer(project, a).getId());
+        ajo.setLayerId(annotationService.findLayer(project, a).getId());
         ajo.setFeatures(features);
         return ajo;
 
@@ -1074,12 +1069,11 @@ public class RemoteApiControllerRuita
      *            the project that contains the annotation
      * @return List of FeatureReferences (FeatureRefs)
      */
-    private ArrayList<FeatureRef<Object>> getAnnotationFeatures(Annotation annotation,
-            Project project)
+    private List<FeatureRef<Object>> getAnnotationFeatures(AnnotationFS annotation, Project project)
     {
 
         ArrayList<FeatureRef<Object>> returnList = new ArrayList<>();
-        AnnotationLayer layer = annotationService.getLayer(project, annotation);
+        AnnotationLayer layer = annotationService.findLayer(project, annotation);
 
         TypeAdapter aAdapter = annotationService.getAdapter(layer);
 
@@ -1189,7 +1183,7 @@ public class RemoteApiControllerRuita
      * @param aAdapter
      *            adapter to create the annotation
      * @param aJCas
-     *            JCas where the annotation is created
+     *            CAS where the annotation is created
      * @param layer
      *            layer of the annotation
      * @param begin
@@ -1201,9 +1195,9 @@ public class RemoteApiControllerRuita
      *             throw an exception if the a span annotation is not in the same sentence
      * @throws IOException
      *             Signals that an I/O exception of some sort has occurred.
-     * @throws ObjectNotFoundException 
+     * @throws ObjectNotFoundException
      */
-    private int createNewAnnotation(TypeAdapter aAdapter, SourceDocument aDoc, JCas aJCas,
+    private int createNewAnnotation(TypeAdapter aAdapter, AnnotationDocument aDoc, CAS aJCas,
             AnnotationLayer layer, int begin, int end)
         throws AnnotationException, IOException, ObjectNotFoundException
     {
@@ -1213,11 +1207,13 @@ public class RemoteApiControllerRuita
                         + "] does not support arc annotation.");
                 return -1;
             }
-            else if (aAdapter instanceof ArcAdapter) {
-                return createNewRelationAnnotation((ArcAdapter) aAdapter, aJCas, begin, end);
+            else if (aAdapter instanceof RelationAdapter) {
+                return createNewRelationAnnotation(aDoc.getDocument(), aDoc.getUser(),
+                        (RelationAdapter) aAdapter, aJCas, begin, end);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                return createNewChainLinkAnnotation((ChainAdapter) aAdapter, aJCas, begin, end);
+                return createNewChainLinkAnnotation(aDoc.getDocument(), aDoc.getUser(),
+                        (ChainAdapter) aAdapter, aJCas, begin, end);
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -1226,10 +1222,13 @@ public class RemoteApiControllerRuita
         }
         else {
             if (aAdapter instanceof SpanAdapter) {
-                return createNewSpanAnnotation(aDoc, (SpanAdapter) aAdapter, aJCas, begin, end);
+                return createNewSpanAnnotation(aDoc.getDocument(), aDoc.getUser(),
+                        (SpanAdapter) aAdapter, aJCas, begin, end);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                return ((ChainAdapter) aAdapter).addSpan(aJCas, begin, end);
+                return ((ChainAdapter) aAdapter)
+                        .addSpan(aDoc.getDocument(), aDoc.getUser(), aJCas, begin, end)
+                        .getAddress();
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -1244,7 +1243,7 @@ public class RemoteApiControllerRuita
      * @param aAdapter
      *            adapter to create the annotation
      * @param aJCas
-     *            JCas where the annotation is created
+     *            CAS where the annotation is created
      * @param begin
      *            begin of the annotation
      * @param end
@@ -1252,36 +1251,37 @@ public class RemoteApiControllerRuita
      * @return id of the new annotation
      * @throws AnnotationException
      */
-    private int createNewRelationAnnotation(ArcAdapter aAdapter, JCas aJCas, int begin, int end)
+    private int createNewRelationAnnotation(SourceDocument aDoc, String aUser,
+            RelationAdapter aAdapter, CAS aJCas, int begin, int end)
         throws AnnotationException
     {
-        AnnotationFS originFs = WebAnnoCasUtil.selectByAddr(aJCas, begin);
-        AnnotationFS targetFs = WebAnnoCasUtil.selectByAddr(aJCas, end);
-        int endIndex = aJCas.getDocumentText().length();
+        AnnotationFS originFs = selectAnnotationByAddr(aJCas, begin);
+        AnnotationFS targetFs = selectAnnotationByAddr(aJCas, end);
         // Creating a relation
-        AnnotationFS newAnnotationFS = aAdapter.add(originFs, targetFs, aJCas, 0, endIndex - 1);
+        AnnotationFS newAnnotationFS = aAdapter.add(aDoc, aUser, originFs, targetFs, aJCas);
         int newId = WebAnnoCasUtil.getAddr(newAnnotationFS);
         return newId;
     }
 
     /**
      * Method to create a new span annotation
-     * @param aDoc 
+     * 
+     * @param aDoc
      * 
      * @param aAdapter
      *            adapter to create the annotation
      * @param aJCas
-     *            JCas where the annotation is created
+     *            CAS where the annotation is created
      * @param begin
      *            begin of the annotation
      * @param end
      *            end of the annotation
      * @return id of the new annotation
      * @throws AnnotationException
-     * @throws ObjectNotFoundException 
+     * @throws ObjectNotFoundException
      */
-    private int createNewSpanAnnotation(SourceDocument aDoc, SpanAdapter aAdapter, JCas aJCas,
-            int begin, int end)
+    private int createNewSpanAnnotation(SourceDocument aDoc, String aUser, SpanAdapter aAdapter,
+            CAS aJCas, int begin, int end)
         throws IOException, AnnotationException, ObjectNotFoundException
     {
         LOG.info("createNewSpanAnnotation()");
@@ -1295,8 +1295,8 @@ public class RemoteApiControllerRuita
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setDocument(aDoc, asList(aDoc));
         state.setUser(getCurrentUser());
-        
-        return aAdapter.add(state, aJCas, begin, end);
+
+        return aAdapter.add(aDoc, aUser, aJCas, begin, end).getAddress();
     }
 
     /**
@@ -1304,8 +1304,8 @@ public class RemoteApiControllerRuita
      * 
      * @param aAdapter
      *            adapter to create the annotation.
-     * @param aJCas
-     *            JCas where the annotation is created.
+     * @param aCas
+     *            CAS where the annotation is created.
      * @param begin
      *            begin of the annotation.
      * @param end
@@ -1313,15 +1313,16 @@ public class RemoteApiControllerRuita
      * @return id of the new annotation.
      * @throws AnnotationException
      */
-    private int createNewChainLinkAnnotation(ChainAdapter aAdapter, JCas aJCas, int begin, int end)
+    private int createNewChainLinkAnnotation(SourceDocument aDoc, String aUser,
+            ChainAdapter aAdapter, CAS aCas, int begin, int end)
     {
         LOG.info("createNewChainLinkAnnotation()");
 
-        AnnotationFS originFs = WebAnnoCasUtil.selectByAddr(aJCas, begin);
-        AnnotationFS targetFs = WebAnnoCasUtil.selectByAddr(aJCas, end);
+        AnnotationFS originFs = selectAnnotationByAddr(aCas, begin);
+        AnnotationFS targetFs = selectAnnotationByAddr(aCas, end);
 
         // Creating a new chain link
-        return aAdapter.addArc(aJCas, originFs, targetFs);
+        return aAdapter.addArc(aDoc, aUser, aCas, originFs, targetFs);
     }
 
     /**
@@ -1338,7 +1339,8 @@ public class RemoteApiControllerRuita
         CAS cas = aFs.getCAS();
         Set<AnnotationFS> toBeDeleted = new HashSet<>();
         for (AnnotationLayer relationLayer : annotationService.listAttachedRelationLayers(aLayer)) {
-            ArcAdapter relationAdapter = (ArcAdapter) annotationService.getAdapter(relationLayer);
+            RelationAdapter relationAdapter = (RelationAdapter) annotationService
+                    .getAdapter(relationLayer);
             Type relationType = CasUtil.getType(cas, relationLayer.getName());
             Feature sourceFeature = relationType
                     .getFeatureByBaseName(relationAdapter.getSourceFeatureName());
@@ -1637,8 +1639,8 @@ public class RemoteApiControllerRuita
         List<DocumentJSONObject> documentList = new ArrayList<>();
         for (SourceDocument document : documents) {
             AnnotationDocument annoDoc = getAnnotation(document, getCurrentUser(), true);
-            // JCas jcas = documentService.readAnnotationCas(annoDoc, 'r');
-            JCas jcas = documentService.readAnnotationCas(annoDoc);
+            // CAS jcas = documentService.readAnnotationCas(annoDoc, 'r');
+            CAS jcas = documentService.readAnnotationCas(annoDoc);
 
             documentList.add(new DocumentJSONObject(document, jcas));
         }

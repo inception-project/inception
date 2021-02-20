@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="scrolling flex-content flex-v-container flex-gutter">
+      <form wicket:id="casDoctorForm" class="flex-h-container flex-gutter" style="flex: .4; min-height: 250px">
+        <div class="flex-content card">
+          <div class="card-header">
+            Check
+          </div>
+          <div class="scrolling card-body">
+            <div class="col-sm-12">
+              <p>
+                Here, you can perform a bulk diagnosis on all documents in the project. It is 
+                recommended to first <b>Check</b> for potential problems before using the
+                <b>Repair</b> function.
+              </p>
+            </div>
+          </div>
+          <div class="card-footer text-right">
+            <button wicket:id="check" class="btn btn-primary">
+              <i class="fas fa-microscope"></i>&nbsp;
+              <wicket:message key="check"/>
+            </button> 
+          </div>            
+        </div>
+        <div class="flex-content card">
+          <div class="card-header">
+            Active repairs
+          </div>
+          <div class="scrolling card-body">
+            <div class="col-sm-12">
+              <span wicket:id="repairs"></span>
+            </div>
+          </div>
+          <div class="card-footer text-right">
+            <button wicket:id="repair" class="btn btn-primary">
+              <i class="fas fa-hammer"></i>&nbsp;
+              <wicket:message key="repair"/>
+            </button> 
+          </div>
+        </div>
+      </form>
+      <div class="flex-content flex-h-container flex-gutter" style="min-height: 250px">
+        <div class="flex-content card" wicket:enclosure="messageSets">
+          <div class="card-header">
+            Diagnostic Report
+          </div>
+          <div class="scrolling card-body">
+            <table class="col-sm-12 table table-sm">
+              <tbody>
+                <wicket:container wicket:id="messageSets">
+                  <tr class="info" style="vertical-align: top;">
+                    <th style="text-align: left;" colspan="3">
+                      <span wicket:id="name"></span>
+                    </th>
+                  </tr>
+                  <tr style="vertical-align: top;" wicket:id="messages">
+                    <td><span wicket:id="level"></span></td>
+                    <td><span wicket:id="source"></span></td>
+                    <td><span wicket:id="message"></span></td>
+                  </tr>
+                </wicket:container>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
+</html>

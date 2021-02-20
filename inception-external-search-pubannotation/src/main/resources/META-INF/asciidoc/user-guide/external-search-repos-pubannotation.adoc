@@ -1,0 +1,7 @@
+[[sect_external-search-repos-pubannotation]]
+= PubAnnotation
+
+link:http://www.pubannotation.org[PubAnnotation] is a repository through which anyone can share 
+their texts and annotations with others. It can be added as an external document repository by
+selecting the **PubAnnotation** repository type.
+

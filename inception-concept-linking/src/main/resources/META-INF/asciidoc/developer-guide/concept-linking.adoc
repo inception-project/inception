@@ -1,0 +1,47 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_conceptlinking]]
+= Concept Linking
+
+The concept linking module is used to find items from a knowledge base that match a certain query
+and context. It is used e.g. by the `ConceptFeatureEditor` to display items which match a concept
+mention and it can use the mention's context to rank (and optimally disambiguate) the candidate
+items. It can also be used for non-contextualized queries, e.g. via the search field on the 
+knowledge base browsing page. The module consists of the following classes and interfaces:
+
+* The `ConceptLinkingService` interface and its default implementation `ConceptLinkingServiceImpl` which
+  is the main entry point for locating KB items.
+* The `EntityRankingFeatureGenerator` interface. Spring beans which implement this interface are
+  automatically picked up by the `ConceptLinkingServiceImpl` and used to rank candidates.
+
+== Ranking
+
+=== Feature generators
+
+The module currently uses primarily the `LevenshteinFeatureGenerator` which calculate the Levenshtein
+distance between the mention text and the KB item label as well as between the query text (e.g.
+entered into the auto-complete field of the `ConceptFeatureEditor`) and the KB item label.
+
+=== Ranking strategy
+
+The ranking method is currently hard-coded in `ConceptLinkingServiceImpl.baseLineRankingStrategy()`.
+
+== Named entity linking recommender
+
+The module also includes the `NamedEntityLinker` recommender which can be used to generate annotation
+recommendations. It gets triggered for any `NamedEntity` annotations and suggests which KB items to
+link them to.

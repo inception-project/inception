@@ -1,14 +1,14 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -36,9 +37,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public class ExternalResultDataProvider
     extends SortableDataProvider<ExternalSearchResult, String>
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5594618512472876346L;
 
     private static final Logger log = LoggerFactory.getLogger(SearchPage.class);
@@ -47,24 +45,18 @@ public class ExternalResultDataProvider
 
     private ExternalSearchService externalSearchService;
 
-    DocumentRepository repository;
+    private User user;
 
-    User user;
-
-    public ExternalResultDataProvider(ExternalSearchService aExternalSearchService, User aUser,
-            DocumentRepository aRepository, String aQuery)
+    public ExternalResultDataProvider(ExternalSearchService aExternalSearchService, User aUser)
     {
-//        // Set default sort
-//        setSort("documentTitle", SortOrder.ASCENDING);
+        // // Set default sort
+        // setSort("documentTitle", SortOrder.ASCENDING);
 
         // Set external search service
         externalSearchService = aExternalSearchService;
 
         // Set user
         user = aUser;
-
-        // Set repository
-        repository = aRepository;
     }
 
     @Override
@@ -101,24 +93,15 @@ public class ExternalResultDataProvider
         };
     }
 
-    public void searchDocuments(String aQuery)
+    public void searchDocuments(DocumentRepository aRepository, String aQuery) throws IOException
     {
         results.clear();
-        
+
         // No query, no results
         if (StringUtils.isBlank(aQuery)) {
             return;
         }
 
-        try {
-            for (ExternalSearchResult result : externalSearchService.query(user, repository,
-                    aQuery)) {
-                results.add(result);
-            }
-        }
-        catch (Exception e) {
-            log.error("Unable to perform query", e);
-        }
+        results.addAll(externalSearchService.query(user, aRepository, aQuery));
     }
-
 }

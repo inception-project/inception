@@ -1,14 +1,14 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -69,7 +69,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.StringLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 
-public class StatementEditor extends Panel
+public class StatementEditor
+    extends Panel
 {
 
     private static final long serialVersionUID = 7643837763550205L;
@@ -79,34 +80,35 @@ public class StatementEditor extends Panel
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean ValueTypeSupportRegistry valueTypeRegistry;
-    
+
     private IModel<KnowledgeBase> kbModel;
     private IModel<KBStatement> statement;
     private IModel<KBProperty> property;
     private Component content;
 
     public StatementEditor(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBStatement> aStatement, IModel<KBProperty> aProperty) {
+            IModel<KBStatement> aStatement, IModel<KBProperty> aProperty)
+    {
         super(aId, aStatement);
 
         setOutputMarkupId(true);
-        
+
         kbModel = aKbModel;
         statement = aStatement;
         property = aProperty;
 
         // new statements start with edit mode right away
-        boolean isNewStatement = statement.getObject().getOriginalStatements().isEmpty();
+        boolean isNewStatement = statement.getObject().getOriginalTriples().isEmpty();
         if (isNewStatement) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 
             // obtain AjaxRequestTarget and set the focus
-            RequestCycle.get()
-                    .find(AjaxRequestTarget.class)
+            RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
-            
+
             content = editMode;
-        } else {
+        }
+        else {
             content = new ViewMode(CONTENT_MARKUP_ID, statement);
         }
         add(content);
@@ -153,6 +155,13 @@ public class StatementEditor extends Panel
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm)
     {
         KBStatement modifiedStatement = aForm.getModelObject();
+
+        if (modifiedStatement.getValue() == null) {
+            error("The value of statement cannot be empty");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         try {
             // persist the modified statement and replace the original, unchanged model
             KBStatement oldStatement = statement.getObject();
@@ -206,26 +215,28 @@ public class StatementEditor extends Panel
         }
     }
 
-    private class ViewMode extends Fragment {
+    private class ViewMode
+        extends Fragment
+    {
         private static final long serialVersionUID = 2375450134740203778L;
 
         private WebMarkupContainer qualifierListWrapper;
 
-        public ViewMode(String aId, IModel<KBStatement> aStatement) {
+        public ViewMode(String aId, IModel<KBStatement> aStatement)
+        {
             super(aId, "viewMode", StatementEditor.this, aStatement);
 
-            CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
-                    aStatement);
-            
+            CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(aStatement);
+
             WebMarkupContainer presenter;
             try {
                 presenter = valueTypeRegistry
-                    .getValueSupport(aStatement.getObject(), property.getObject())
-                    .createPresenter("value", model, property, kbModel);
+                        .getValueSupport(aStatement.getObject(), property.getObject())
+                        .createPresenter("value", model, property, kbModel);
             }
             catch (IllegalArgumentException e) {
                 LOG.warn("Unable to find an editor that supports the value type. "
-                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
+                        + "String Editor is used as default: {}", e.getLocalizedMessage());
                 presenter = new StringLiteralValuePresenter("value", model);
             }
             add(presenter);
@@ -235,20 +246,21 @@ public class StatementEditor extends Panel
             add(editLink);
 
             LambdaAjaxLink addQualifierLink = new LambdaAjaxLink("addQualifier",
-                t -> actionAddQualifier(t, aStatement.getObject()))
-                .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred() &&
-                    kbModel.getObject().getReification().supportsQualifier()));
+                    t -> actionAddQualifier(t, aStatement.getObject())).onConfigure(
+                            (_this) -> _this.setVisible(!statement.getObject().isInferred()
+                                    && kbModel.getObject().getReification().supportsQualifier()));
             addQualifierLink.add(new Label("label", new ResourceModel("qualifier.add")));
             addQualifierLink.add(new WriteProtectionBehavior(kbModel));
             add(addQualifierLink);
-            
+
             LambdaAjaxLink makeExplicitLink = new LambdaAjaxLink("makeExplicit",
                     StatementEditor.this::actionMakeExplicit).onConfigure(
-                        (_this) -> _this.setVisible(statement.getObject().isInferred()));
+                            (_this) -> _this.setVisible(statement.getObject().isInferred()));
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
 
-            RefreshingView<KBQualifier> qualifierList = new RefreshingView<KBQualifier>("qualifierList")
+            RefreshingView<KBQualifier> qualifierList = new RefreshingView<KBQualifier>(
+                    "qualifierList")
             {
                 private static final long serialVersionUID = -8342276415072873329L;
 
@@ -256,9 +268,10 @@ public class StatementEditor extends Panel
                 protected Iterator<IModel<KBQualifier>> getItemModels()
                 {
                     return new ModelIteratorAdapter<KBQualifier>(
-                        statement.getObject().getQualifiers())
+                            statement.getObject().getQualifiers())
                     {
-                        @Override protected IModel<KBQualifier> model(KBQualifier object)
+                        @Override
+                        protected IModel<KBQualifier> model(KBQualifier object)
                         {
                             return LambdaModel.of(() -> object);
                         }
@@ -269,7 +282,7 @@ public class StatementEditor extends Panel
                 protected void populateItem(Item<KBQualifier> aItem)
                 {
                     QualifierEditor editor = new QualifierEditor("qualifier", kbModel,
-                        aItem.getModel());
+                            aItem.getModel());
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }
@@ -285,26 +298,28 @@ public class StatementEditor extends Panel
         @OnEvent
         public void actionQualifierChanged(AjaxQualifierChangedEvent event)
         {
-            boolean isEventForThisStatement = event.getQualifier().getKbStatement()
-                .equals(statement.getObject());
+            boolean isEventForThisStatement = event.getQualifier().getStatement()
+                    .equals(statement.getObject());
             if (isEventForThisStatement) {
                 if (event.isDeleted()) {
-                    event.getQualifier().getKbStatement().getQualifiers()
-                        .remove(event.getQualifier());
+                    event.getQualifier().getStatement().getQualifiers()
+                            .remove(event.getQualifier());
                 }
-                statement.setObject(event.getQualifier().getKbStatement());
+                statement.setObject(event.getQualifier().getStatement());
                 event.getTarget().add(qualifierListWrapper);
             }
         }
 
     }
 
-    private class EditMode extends Fragment implements Focusable 
+    private class EditMode
+        extends Fragment
+        implements Focusable
     {
         private static final long serialVersionUID = 2489925553729209190L;
 
         private ValueEditor editor;
-        
+
         private DropDownChoice<ValueType> valueType;
 
         /**
@@ -326,17 +341,16 @@ public class StatementEditor extends Panel
          *            whether the statement being edited is new, meaning it has no corresponding
          *            statement in the KB backend
          */
-         
+
         public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement)
         {
             super(aId, "editMode", StatementEditor.this, aStatement);
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
-            List<ValueType> valueTypes;
             // Set property to the property of the current statement
             if (property.getObject() == null) {
                 Optional<KBProperty> prop = kbService.readProperty(kbModel.getObject(),
-                    aStatement.getObject().getProperty().getIdentifier());
+                        aStatement.getObject().getProperty().getIdentifier());
                 if (prop.isPresent()) {
                     property.setObject(prop.get());
                 }
@@ -347,12 +361,16 @@ public class StatementEditor extends Panel
                 rangeValue = property.getObject().getRange();
             }
 
-            valueTypes = valueTypeRegistry.getAllTypes();
+            List<ValueType> valueTypes;
             if (rangeValue != null) {
-                Optional<KBObject> rangeKBHandle = kbService
-                        .readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
+                Optional<KBObject> rangeKBHandle = kbService.readItem(kbModel.getObject(),
+                        rangeValue);
                 valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
             }
+            else {
+                valueTypes = valueTypeRegistry.getAllTypes();
+            }
+
             valueType = new BootstrapSelect<>("valueType", valueTypes);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
@@ -370,12 +388,12 @@ public class StatementEditor extends Panel
             // use the IRI to obtain the appropriate value editor
             try {
                 editor = valueTypeRegistry
-                    .getValueSupport(aStatement.getObject(), property.getObject())
-                   .createEditor("value", model, property, kbModel);
+                        .getValueSupport(aStatement.getObject(), property.getObject())
+                        .createEditor("value", model, property, kbModel);
             }
             catch (IllegalArgumentException e) {
                 LOG.warn("Unable to find an editor that supports the value type. "
-                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
+                        + "String Editor is used as default: {}", e.getLocalizedMessage());
                 editor = new StringLiteralValueEditor("value", model);
             }
             editor.setOutputMarkupId(true);
