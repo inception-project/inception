@@ -250,8 +250,6 @@ public class SuggestionViewPanel
                 sourceState.getPagingStrategy().moveToOffset(sourceState, targetCas,
                         sourceAnnotation.getBegin(), CENTERED);
             }
-
-            onChange(aTarget);
         }
     }
 
@@ -339,13 +337,6 @@ public class SuggestionViewPanel
                         sourceState.getUser().getUsername(), adapter.getLayer()));
 
         aTarget.addChildren(getPage(), IFeedback.class);
-
-        onChange(aTarget);
-    }
-
-    protected void onChange(AjaxRequestTarget aTarget)
-    {
-        // Overriden in curationPanel
     }
 
     private CasMergeOperationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,

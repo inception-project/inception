@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
@@ -233,28 +234,7 @@ public class CurationPage
                 : sourceListModel;
 
         suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
-                new ListModel<>(segments))
-        {
-            private static final long serialVersionUID = 2583509126979792202L;
-
-            @Override
-            public void onChange(AjaxRequestTarget aTarget)
-            {
-                try {
-                    // update begin/end of the curationsegment based on annotator state
-                    // changes
-                    // (like sentence change in auto-scroll mode,....
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                    CurationPage.this.updatePanel(aTarget, curationContainer);
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException | AnnotationException | IOException e) {
-                    error("Error: " + e.getMessage());
-                }
-            }
-        };
+                new ListModel<>(segments));
         suggestionViewPanel.setOutputMarkupPlaceholderTag(true);
         suggestionViewPanel.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getDocument() != null));
@@ -263,24 +243,6 @@ public class CurationPage
         editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
-
-            @Override
-            protected void onChange(AjaxRequestTarget aTarget)
-            {
-                aTarget.addChildren(getPage(), IFeedback.class);
-
-                try {
-                    updatePanel(aTarget, curationContainer);
-                }
-                catch (UIMAException e) {
-                    LOG.error("Error: " + e.getMessage(), e);
-                    error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (Exception e) {
-                    LOG.error("Error: " + e.getMessage(), e);
-                    error("Error: " + e.getMessage());
-                }
-            }
 
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
@@ -340,6 +302,14 @@ public class CurationPage
         });
 
         sentenceListContainer.add(sentenceLinksListView);
+    }
+
+    @OnEvent
+    public void onAnnotationEvent(AnnotationEvent aEvent)
+    {
+        if (aEvent.getRequestTarget() != null) {
+            updatePanel(aEvent.getRequestTarget(), curationContainer);
+        }
     }
 
     /**
@@ -843,7 +813,6 @@ public class CurationPage
     }
 
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         commonUpdate();
 
@@ -858,7 +827,7 @@ public class CurationPage
         aTarget.add(sentenceLinksListView);
     }
 
-    private void commonUpdate() throws IOException
+    private void commonUpdate()
     {
         AnnotatorState state = CurationPage.this.getModelObject();
 
