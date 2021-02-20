@@ -114,10 +114,11 @@ public class VersioningServiceImpl
 
     }
 
-    private File getRepoDir(Long projectId)
+    @Override
+    public File getRepoDir(Long aProjectId)
     {
         File repositoryDir = repositoryProperties.getPath();
-        return new File(repositoryDir, "/" + PROJECT_FOLDER + "/" + projectId + "/" + REPO_NAME);
+        return new File(repositoryDir, "/" + PROJECT_FOLDER + "/" + aProjectId + "/" + REPO_NAME);
     }
 
     private void saveUimaTypeSystem(File aFile, Project aProject)

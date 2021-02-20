@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
+import java.io.File;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -33,4 +35,6 @@ public interface VersioningService
     void snapshotProject(Project aProject);
 
     void labelCurrentVersion(Project aProject, String aLabel);
+
+    File getRepoDir(Long aProjectId);
 }
