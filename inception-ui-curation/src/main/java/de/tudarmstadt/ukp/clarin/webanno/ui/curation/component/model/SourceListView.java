@@ -30,10 +30,10 @@ public class SourceListView
 {
     private static final long serialVersionUID = 9219600871129699568L;
 
-    // begin offset of sentences list, default is the begin of the document
-    private Integer begin;
-    // end offset of sentences list, default is end of the document
-    private Integer end;
+    // begin/end offset of sentences list, default is the begin of the document
+    private final Integer begin;
+    private final Integer end;
+    private final Integer sentenceNumber;
 
     // begin of the curation/suggestion sentences list
     private int curationBegin;
@@ -41,14 +41,23 @@ public class SourceListView
     private int curationEnd;
 
     private SentenceState sentenceState;
-    private Integer sentenceNumber;
+
     private boolean isCurrentSentence;
 
     private Map<String, Integer> sentenceAddress = new LinkedHashMap<>();
 
     public SourceListView()
     {
+        begin = null;
+        end = null;
+        sentenceNumber = null;
+    }
 
+    public SourceListView(int aBegin, int aEnd, int aUnitIndex)
+    {
+        begin = aBegin;
+        end = aEnd;
+        sentenceNumber = aUnitIndex;
     }
 
     public Integer getBegin()
@@ -56,19 +65,9 @@ public class SourceListView
         return begin;
     }
 
-    public void setBegin(Integer begin)
-    {
-        this.begin = begin;
-    }
-
     public Integer getEnd()
     {
         return end;
-    }
-
-    public void setEnd(Integer end)
-    {
-        this.end = end;
     }
 
     public int getCurationBegin()
@@ -114,11 +113,6 @@ public class SourceListView
     public Integer getSentenceNumber()
     {
         return sentenceNumber;
-    }
-
-    public void setSentenceNumber(Integer sentenceNumber)
-    {
-        this.sentenceNumber = sentenceNumber;
     }
 
     public boolean isCurrentSentence()

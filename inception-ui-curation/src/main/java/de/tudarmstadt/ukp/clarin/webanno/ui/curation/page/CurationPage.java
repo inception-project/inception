@@ -147,8 +147,8 @@ public class CurationPage
     private SourceListView curationView;
     private List<SourceListView> sourceListModel;
 
-    private int fSn = 0;
-    private int lSn = 0;
+    private int firstVisibleUnitIndex = 0;
+    private int lastVisibleUnitIndex = 0;
 
     /**
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
@@ -249,23 +249,17 @@ public class CurationPage
             }
 
             @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-
-                setEnabled(getModelObject() != null && getModelObject().getDocument() != null
-                        && !documentService
-                                .getSourceDocument(getModelObject().getDocument().getProject(),
-                                        getModelObject().getDocument().getName())
-                                .getState().equals(SourceDocumentState.CURATION_FINISHED));
-            }
-
-            @Override
             public CAS getEditorCas() throws IOException
             {
                 return CurationPage.this.getEditorCas();
             }
         };
+        editor.add(LambdaBehavior.enabledWhen(() -> getModelObject() != null //
+                && getModelObject().getDocument() != null
+                && !documentService
+                        .getSourceDocument(getModelObject().getDocument().getProject(),
+                                getModelObject().getDocument().getName())
+                        .getState().equals(SourceDocumentState.CURATION_FINISHED)));
         sidebarCell.add(editor);
 
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), editor,
@@ -703,8 +697,8 @@ public class CurationPage
             }
 
             // In range or not?
-            if (curationViewItem.getSentenceNumber() >= fSn
-                    && curationViewItem.getSentenceNumber() <= lSn) {
+            if (curationViewItem.getSentenceNumber() >= firstVisibleUnitIndex
+                    && curationViewItem.getSentenceNumber() <= lastVisibleUnitIndex) {
                 aTag.append("class", "in-range", " ");
             }
             else {
@@ -737,7 +731,7 @@ public class CurationPage
         {
             final SourceListView curationViewItem = getModelObject();
             curationView = curationViewItem;
-            fSn = 0;
+            firstVisibleUnitIndex = 0;
             try {
                 AnnotatorState state = CurationPage.this.getModelObject();
                 CAS cas = curationDocumentService.readCurationCas(state.getDocument());
@@ -816,7 +810,22 @@ public class CurationPage
 
         curationView.setCurationBegin(state.getWindowBeginOffset());
         curationView.setCurationEnd(state.getWindowEndOffset());
-        fSn = state.getFirstVisibleUnitIndex();
-        lSn = state.getLastVisibleUnitIndex();
+        firstVisibleUnitIndex = state.getFirstVisibleUnitIndex();
+        lastVisibleUnitIndex = state.getLastVisibleUnitIndex();
+    }
+
+    @Override
+    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject, User aUser)
+    {
+        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
+        List<SourceDocument> sdocs = curationDocumentService.listCuratableSourceDocuments(aProject);
+
+        for (SourceDocument sourceDocument : sdocs) {
+            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
+            dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
+            dsd.setColor(sourceDocument.getState().getColor());
+            allSourceDocuments.add(dsd);
+        }
+        return allSourceDocuments;
     }
 }

@@ -19,10 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static java.lang.Integer.MAX_VALUE;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -30,10 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.Default
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 
 @Order(0)
@@ -41,7 +34,14 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 public class CurationDocumentNavigatorActionBarExtension
     extends DefaultDocumentNavigatorActionBarExtension
 {
-    private @SpringBean CurationDocumentService curationDocumentService;
+    private final CurationDocumentService curationDocumentService;
+
+    @Autowired
+    public CurationDocumentNavigatorActionBarExtension(
+            CurationDocumentService aCurationDocumentService)
+    {
+        curationDocumentService = aCurationDocumentService;
+    }
 
     @Override
     public String getRole()
@@ -65,21 +65,6 @@ public class CurationDocumentNavigatorActionBarExtension
     protected OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
     {
         return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
-                this::listDocuments);
+                aPage::listAccessibleDocuments);
     }
-
-    private List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
-    {
-        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
-        List<SourceDocument> sdocs = curationDocumentService.listCuratableSourceDocuments(aProject);
-
-        for (SourceDocument sourceDocument : sdocs) {
-            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
-            dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
-            dsd.setColor(sourceDocument.getState().getColor());
-            allSourceDocuments.add(dsd);
-        }
-        return allSourceDocuments;
-    }
-
 }

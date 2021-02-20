@@ -148,10 +148,9 @@ public class SuggestionBuilder
             DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, begin, end)
                     .toResult();
 
-            SourceListView curationSegment = new SourceListView();
-            curationSegment.setBegin(begin);
-            curationSegment.setEnd(end);
-            curationSegment.setSentenceNumber(segmentNumber.get(begin));
+            SourceListView curationSegment = new SourceListView(begin, end,
+                    segmentNumber.get(begin));
+
             if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
                 // Is this confSet a diff due to stacked annotations (with same configuration)?
                 boolean stackedDiff = false;
@@ -184,6 +183,7 @@ public class SuggestionBuilder
                 curationSegment.getSentenceAddressByUserIndex().put(username,
                         segmentAdress.get(username).get(begin));
             }
+
             curationContainer.getCurationViewByBegin().put(begin, curationSegment);
         }
         log.debug("Difference calculation completed in {}ms",
