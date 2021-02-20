@@ -156,6 +156,14 @@ public class LoggedEvent
         document = aDocument;
     }
 
+    /**
+     * For testing only.
+     */
+    public void setId(Long aId)
+    {
+        id = aId;
+    }
+
     public long getId()
     {
         return id;

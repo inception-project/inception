@@ -19,19 +19,17 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.project;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.wicket.Session;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -41,61 +39,36 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ActivitiesDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashlet;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
 
 /**
  * Project dashboard page
  */
-@MountPath(value = "/project/${" + PAGE_PARAM_PROJECT_ID + "}")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}")
 public class ProjectDashboardPage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
-    // Page parameters
-    public static final String PAGE_PARAM_PROJECT_ID = "p";
-
     private static final long serialVersionUID = -2487663821276301436L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectDashboardPage.class);
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
 
     private DashboardMenu menu;
-
+    
     public ProjectDashboardPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
         User currentUser = userRepository.getCurrentUser();
-        Long projectId = aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong();
-
-        // Check if user can access the project
-        Project project = projectService.listAccessibleProjects(currentUser).stream() //
-                .filter(p -> p.getId().equals(projectId)).findFirst().orElse(null);
-
-        // If the user has no access, send the user back to the overview page
-        if (project == null) {
-            setResponsePage(ProjectsOverviewPage.class);
+        
+        if (!userRepository.isAdministrator(currentUser)) {
+            requireProjectRole(currentUser);
         }
-
-        // Otherwise make the project the current project
-        Session.get().setMetaData(CURRENT_PROJECT, project);
-
-        commonInit();
-    }
-
-    public ProjectDashboardPage()
-    {
-        commonInit();
-    }
-
-    protected void commonInit()
-    {
+                
         setStatelessHint(true);
         setVersioned(false);
 
@@ -104,13 +77,6 @@ public class ProjectDashboardPage
         User user = userRepository.getCurrentUser();
         if (user == null) {
             setResponsePage(LoginPage.class);
-        }
-
-        // If no project has been selected yet, redirect to the project overview page. This allows
-        // us to keep the ProjectDashboardPage as the application home page.
-        Project project = Session.get().getMetaData(CURRENT_PROJECT);
-        if (project == null) {
-            setResponsePage(ProjectsOverviewPage.class);
         }
 
         // if not either a curator or annotator, display warning message
@@ -122,26 +88,14 @@ public class ProjectDashboardPage
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         add(menu);
 
-        Model<Project> currentProject = Model.of(getProject());
-        add(new CurrentProjectDashlet("currentProjectDashlet", currentProject));
-        // add(new ActivitiesDashlet("activitiesDashlet", currentProject));
-        add(new VueActivitiesDashlet("activitiesDashlet", currentProject));
+        add(new CurrentProjectDashlet("currentProjectDashlet", Model.of(getProject())));
+        add(new ActivitiesDashlet("activitiesDashlet", Model.of(getProject())));
     }
 
-    /**
-     * Look up project in session but get fresh info from the DB in case the session object is stale
-     * (e.g. if the title/description has changed).
-     */
-    private Project getProject()
-    {
-        Project project = Session.get().getMetaData(CURRENT_PROJECT);
-        if (project == null) {
-            return null;
-        }
-
-        return projectService.getProject(project.getId());
+    public void setModel(IModel<Project> aModel) {
+        setDefaultModel(aModel);
     }
-
+    
     private List<MenuItem> getMenuItems()
     {
         return menuItemService.getMenuItems().stream()

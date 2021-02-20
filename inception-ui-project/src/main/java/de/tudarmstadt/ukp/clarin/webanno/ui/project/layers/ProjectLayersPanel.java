@@ -295,9 +295,16 @@ public class ProjectLayersPanel
 
             if (project.getId() != null) {
                 List<AnnotationLayer> _layers = annotationService.listAnnotationLayer(project);
-                AnnotationLayer tokenLayer = annotationService.findLayer(project,
-                        Token.class.getName());
-                _layers.remove(tokenLayer);
+
+                try {
+                    AnnotationLayer tokenLayer = annotationService.findLayer(project,
+                            Token.class.getName());
+                    _layers.remove(tokenLayer);
+                }
+                catch (Exception e) {
+                    LOG.error("Unable to locate layer for the Token type", e);
+                }
+
                 for (AnnotationLayer layer : _layers) {
                     if (layer.isBuiltIn() && layer.isEnabled()) {
                         colors.put(layer, "green");

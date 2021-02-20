@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_COLLECTION_ID;
+import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_DOCUMENT_ID;
+import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_REPOSITORY_ID;
+
 import java.io.IOException;
 
-import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -30,20 +35,21 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-@MountPath("/documentDetails.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/search/${" + PAGE_PARAM_REPOSITORY_ID
+        + "}/${" + PAGE_PARAM_COLLECTION_ID + "}/${" + PAGE_PARAM_DOCUMENT_ID + "}")
 public class DocumentDetailsPage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = -645134257384090420L;
 
-    public static final String REPOSITORY_ID = "repo";
-    public static final String COLLECTION_ID = "col";
-    public static final String DOCUMENT_ID = "doc";
+    public static final String PAGE_PARAM_REPOSITORY_ID = "repo";
+    public static final String PAGE_PARAM_COLLECTION_ID = "col";
+    public static final String PAGE_PARAM_DOCUMENT_ID = "doc";
 
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean ProjectService projectService;
@@ -55,24 +61,29 @@ public class DocumentDetailsPage
 
     public DocumentDetailsPage(PageParameters aParameters)
     {
-        StringValue repositoryIdStringValue = aParameters.get(REPOSITORY_ID);
-        StringValue collectionIdStringValue = aParameters.get(COLLECTION_ID);
-        StringValue documentIdStringValue = aParameters.get(DOCUMENT_ID);
+        super(aParameters);
 
-        if (repositoryIdStringValue == null || documentIdStringValue == null
-                || collectionIdStringValue == null) {
-            abort();
+        User user = userRepository.getCurrentUser();
+        requireProjectRole(user);
+
+        StringValue repositoryIdStringValue = aParameters.get(PAGE_PARAM_REPOSITORY_ID);
+        StringValue collectionIdStringValue = aParameters.get(PAGE_PARAM_COLLECTION_ID);
+        StringValue documentIdStringValue = aParameters.get(PAGE_PARAM_DOCUMENT_ID);
+
+        if (repositoryIdStringValue.isEmpty() || documentIdStringValue.isEmpty()
+                || collectionIdStringValue.isEmpty()) {
+            backToProjectPage();
         }
 
         repo = externalSearchService.getRepository(repositoryIdStringValue.toLong());
         collectionId = collectionIdStringValue.toString();
         documentId = documentIdStringValue.toString();
+    }
 
-        // Check access to project
-        User currentUser = userRepository.getCurrentUser();
-        if (!projectService.isAnnotator(repo.getProject(), currentUser)) {
-            abort();
-        }
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
 
         add(new Label("title", LoadableDetachableModel.of(this::getDocumentResult).map(
                 r -> r.getDocumentTitle() != null ? r.getDocumentTitle() : r.getDocumentId())));
@@ -97,10 +108,5 @@ public class DocumentDetailsPage
         catch (IOException e) {
             return new ExternalSearchResult(repo, collectionId, documentId);
         }
-    }
-
-    private void abort()
-    {
-        throw new RestartResponseException(getApplication().getHomePage());
     }
 }

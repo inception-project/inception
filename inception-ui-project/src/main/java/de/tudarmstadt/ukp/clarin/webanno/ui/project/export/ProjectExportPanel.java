@@ -69,7 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
@@ -79,7 +79,7 @@ public class ProjectExportPanel
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectSettingsPage.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;

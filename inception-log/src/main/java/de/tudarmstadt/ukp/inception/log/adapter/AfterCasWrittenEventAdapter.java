@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import java.io.IOException;
+
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.log.model.CasDetails;
 
 @Component
 public class AfterCasWrittenEventAdapter
@@ -47,5 +51,12 @@ public class AfterCasWrittenEventAdapter
     public String getAnnotator(AfterCasWrittenEvent aEvent)
     {
         return aEvent.getDocument().getUser();
+    }
+
+    @Override
+    public String getDetails(AfterCasWrittenEvent aEvent) throws IOException
+    {
+        CasDetails details = new CasDetails(aEvent.getCas());
+        return JSONUtil.toJsonString(details);
     }
 }

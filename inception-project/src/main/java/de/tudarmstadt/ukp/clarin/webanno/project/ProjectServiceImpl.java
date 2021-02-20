@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.nio.file.Files.newDirectoryStream;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -410,6 +411,33 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
+    public boolean hasRole(User aUser, Project aProject, PermissionLevel... aRoles)
+    {
+        if (aRoles == null || aRoles.length == 0) {
+            String query = String.join("\n", //
+                    "SELECT COUNT(*) FROM ProjectPermission ", //
+                    "WHERE user = :user AND project = :project");
+
+            return entityManager.createQuery(query, Long.class) //
+                    .setParameter("user", aUser.getUsername()) //
+                    .setParameter("project", aProject) //
+                    .getSingleResult() > 0;
+
+        }
+
+        String query = String.join("\n", //
+                "SELECT COUNT(*) FROM ProjectPermission ", //
+                "WHERE user = :user AND project = :project AND level IN (:roles)");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("project", aProject) //
+                .setParameter("roles", asList(aRoles)) //
+                .getSingleResult() > 0;
+    }
+
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
     {
@@ -598,7 +626,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<Project> listProjects()
     {
-        String query = "FROM Project " + "ORDER BY name ASC";
+        String query = "FROM Project ORDER BY name ASC";
         return entityManager.createQuery(query, Project.class).getResultList();
     }
 

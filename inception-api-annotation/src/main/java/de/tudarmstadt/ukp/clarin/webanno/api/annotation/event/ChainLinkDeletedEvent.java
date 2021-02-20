@@ -23,14 +23,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class ChainLinkDeletedEvent
-    extends ChainEvent
+    extends ChainLinkEvent
     implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = -1577299485779966337L;
 
     public ChainLinkDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aAnnotation)
+            AnnotationLayer aLayer, AnnotationFS aAnnotation, AnnotationFS aNextLink)
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        super(aSource, aDocument, aUser, aLayer, aAnnotation, aNextLink);
     }
 }

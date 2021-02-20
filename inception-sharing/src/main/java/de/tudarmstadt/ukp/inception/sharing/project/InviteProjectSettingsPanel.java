@@ -27,20 +27,20 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 
 public class InviteProjectSettingsPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 947691448582391801L;
-
-    public static final String PAGE_PARAM_INVITE_ID = "i";
 
     private @SpringBean InviteService inviteService;
     private @SpringBean ServletContext servletContext;
@@ -97,10 +97,12 @@ public class InviteProjectSettingsPanel
             return null;
         }
 
-        Url inviteUrl = Url.parse(String.format("%s/join-project/%s/%s",
-                servletContext.getContextPath(), getModelObject().getId(), inviteId));
-        String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(inviteUrl);
-        return fullUrl;
+        CharSequence url = urlFor(AcceptInvitePage.class,
+                new PageParameters()
+                        .set(AcceptInvitePage.PAGE_PARAM_PROJECT, getModelObject().getId())
+                        .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, inviteId));
+
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
     }
 
 }

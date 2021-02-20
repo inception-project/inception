@@ -189,6 +189,9 @@ public interface DocumentService
     SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
             SourceDocumentStateTransition aTransition);
 
+    SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentState aState);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to AnnotationDocuments
     // --------------------------------------------------------------------------------------------
@@ -405,7 +408,7 @@ public interface DocumentService
 
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
-     * This method does not perform an upgrade of the type system in the CAS.
+     * This method does not perform an upgrade of the type@Override system in the CAS.
      * 
      * @param aDocument
      *            the source document.
@@ -633,6 +636,9 @@ public interface DocumentService
     Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, User aUser);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState);
+
+    void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
             AnnotationDocumentState aState);
 
     AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
