@@ -46,13 +46,11 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
@@ -314,25 +312,14 @@ public class CurationPage
 
     /**
      * Re-render the document when the selection has changed.
+     * 
+     * @param aEvent
+     *            the event.
      */
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
         actionRefreshDocument(aEvent.getRequestHandler());
-    }
-
-    public List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
-    {
-        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
-        List<SourceDocument> sdocs = curationDocumentService.listCuratableSourceDocuments(aProject);
-
-        for (SourceDocument sourceDocument : sdocs) {
-            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
-            dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
-            dsd.setColor(sourceDocument.getState().getColor());
-            allSourceDocuments.add(dsd);
-        }
-        return allSourceDocuments;
     }
 
     public void onDocumentSelected(AjaxRequestTarget aTarget)
@@ -456,7 +443,7 @@ public class CurationPage
         }
     }
 
-    public void upgradeCasAndSave(SourceDocument aDocument, String aUsername) throws IOException
+    private void upgradeCasAndSave(SourceDocument aDocument, String aUsername) throws IOException
     {
         User user = userRepository.get(aUsername);
         if (documentService.existsAnnotationDocument(aDocument, user)) {
@@ -484,7 +471,7 @@ public class CurationPage
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
      */
-    protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
+    private void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
         LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
 
@@ -774,11 +761,7 @@ public class CurationPage
         AnnotatorState state = CurationPage.this.getModelObject();
         state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
         aCurationContainer.setState(state);
-        onChange(aTarget);
-    }
 
-    protected void onChange(AjaxRequestTarget aTarget)
-    {
         try {
             actionRefreshDocument(aTarget);
         }
@@ -803,7 +786,7 @@ public class CurationPage
         return curationDocumentService.readCurationCas(state.getDocument());
     }
 
-    public void init(AjaxRequestTarget aTarget, CurationContainer aCC)
+    private void init(AjaxRequestTarget aTarget, CurationContainer aCC)
         throws UIMAException, ClassNotFoundException, IOException
     {
         commonUpdate();
@@ -812,7 +795,7 @@ public class CurationPage
                 curationView);
     }
 
-    public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
+    private void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
     {
         commonUpdate();
 
@@ -835,31 +818,5 @@ public class CurationPage
         curationView.setCurationEnd(state.getWindowEndOffset());
         fSn = state.getFirstVisibleUnitIndex();
         lSn = state.getLastVisibleUnitIndex();
-    }
-
-    /**
-     * Class for combining an on click ajax call and a label
-     */
-    class AjaxLabel
-        extends Label
-    {
-        private static final long serialVersionUID = -4528869530409522295L;
-        private AbstractAjaxBehavior click;
-
-        public AjaxLabel(String id, String label, AbstractAjaxBehavior aClick)
-        {
-            super(id, label);
-            click = aClick;
-        }
-
-        @Override
-        public void onComponentTag(ComponentTag tag)
-        {
-            // add onclick handler to the browser
-            // if clicked in the browser, the function
-            // click.response(AjaxRequestTarget target) is called on the server side
-            tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
-            tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
-        }
     }
 }
