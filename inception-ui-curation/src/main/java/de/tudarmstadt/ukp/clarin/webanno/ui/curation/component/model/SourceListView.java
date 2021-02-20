@@ -29,6 +29,7 @@ public class SourceListView
     implements Serializable
 {
     private static final long serialVersionUID = 9219600871129699568L;
+
     // begin offset of sentences list, default is the begin of the document
     private Integer begin;
     // end offset of sentences list, default is end of the document
@@ -90,7 +91,7 @@ public class SourceListView
         this.curationEnd = curationEnd;
     }
 
-    public Map<String, Integer> getSentenceAddress()
+    public Map<String, Integer> getSentenceAddressByUserIndex()
     {
         return sentenceAddress;
     }

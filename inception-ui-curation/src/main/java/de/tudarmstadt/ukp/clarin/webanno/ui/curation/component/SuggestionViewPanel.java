@@ -100,7 +100,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -116,12 +115,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * A {@link MarkupContainer} for either curation users' sentence annotation (for the lower panel) or
- * the automated annotations
+ * A {@link MarkupContainer} for curation users' sentence annotation (for the lower panel).
  */
 public class SuggestionViewPanel
     extends WebMarkupContainer
 {
+    private static final Logger LOG = LoggerFactory.getLogger(SuggestionViewPanel.class);
+
     private static final String PARAM_TYPE = "type";
     private static final String PARAM_ID = "id";
     private static final String PARAM_ACTION = "action";
@@ -132,8 +132,6 @@ public class SuggestionViewPanel
 
     private static final long serialVersionUID = 8736268179612831795L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(SuggestionViewPanel.class);
-
     private final ListView<UserAnnotationSegment> sentenceListView;
     private final ContextMenu contextMenu;
 
@@ -142,7 +140,6 @@ public class SuggestionViewPanel
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean ColoringService coloringService;
-    private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
     public SuggestionViewPanel(String id, IModel<List<UserAnnotationSegment>> aModel)

@@ -47,7 +47,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -66,8 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -88,19 +85,14 @@ public class SuggestionBuilder
     private final AnnotationSchemaService schemaService;
     private final DocumentService documentService;
     private final CurationDocumentService curationDocumentService;
-    private final UserDao userRepository;
-
-    private int diffRangeBegin;
-    private int diffRangeEnd;
 
     public SuggestionBuilder(DocumentService aDocumentService,
             CurationDocumentService aCurationDocumentService,
-            AnnotationSchemaService aAnnotationService, UserDao aUserDao)
+            AnnotationSchemaService aAnnotationService)
     {
         documentService = aDocumentService;
         curationDocumentService = aCurationDocumentService;
         schemaService = aAnnotationService;
-        userRepository = aUserDao;
     }
 
     public CurationContainer buildCurationContainer(AnnotatorState aState)
@@ -125,13 +117,17 @@ public class SuggestionBuilder
         Map<String, CAS> casses = listCassesforCuration(finishedAnnotationDocuments,
                 aState.getMode());
         CAS mergeCas = getMergeCas(aState, sourceDocument, casses, null, false, false, false);
+
+        int diffWindowStart = getFirstSentence(mergeCas).getBegin();
+        int diffWindowEnd = mergeCas.getDocumentText().length();
+
         updateSegment(aState, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
-                CURATION_USER, getFirstSentence(mergeCas).getBegin(),
-                mergeCas.getDocumentText().length());
+                CURATION_USER, diffWindowStart, diffWindowEnd);
 
         segmentAdress.put(CURATION_USER, new HashMap<>());
         Type sentenceType = getType(mergeCas, Sentence.class);
-        for (AnnotationFS s : selectCovered(mergeCas, sentenceType, diffRangeBegin, diffRangeEnd)) {
+        for (AnnotationFS s : selectCovered(mergeCas, sentenceType, diffWindowStart,
+                diffWindowEnd)) {
             segmentAdress.get(CURATION_USER).put(s.getBegin(), getAddr(s));
         }
 
@@ -185,7 +181,7 @@ public class SuggestionBuilder
             }
 
             for (String username : segmentAdress.keySet()) {
-                curationSegment.getSentenceAddress().put(username,
+                curationSegment.getSentenceAddressByUserIndex().put(username,
                         segmentAdress.get(username).get(begin));
             }
             curationContainer.getCurationViewByBegin().put(begin, curationSegment);
@@ -194,38 +190,6 @@ public class SuggestionBuilder
                 (System.currentTimeMillis() - diffStart));
 
         return curationContainer;
-    }
-
-    /**
-     * Get a sentence at the end of an annotation
-     */
-    private static AnnotationFS getSentenceByAnnoEnd(List<AnnotationFS> aSentences, int aEnd)
-    {
-        int prevEnd = 0;
-        AnnotationFS sent = null;
-        for (AnnotationFS sentence : aSentences) {
-            if (prevEnd >= aEnd) {
-                return sent;
-            }
-            sent = sentence;
-            prevEnd = sent.getEnd();
-        }
-        return sent;
-    }
-
-    private Map<String, CAS> listCasesforCorrection(AnnotationDocument randomAnnotationDocument,
-            SourceDocument aDocument, Mode aMode)
-        throws UIMAException, ClassNotFoundException, IOException
-    {
-        Map<String, CAS> casses = new HashMap<>();
-        User user = userRepository
-                .get(SecurityContextHolder.getContext().getAuthentication().getName());
-        randomAnnotationDocument = documentService.getAnnotationDocument(aDocument, user);
-
-        CAS cas = documentService.readAnnotationCas(randomAnnotationDocument.getDocument(),
-                randomAnnotationDocument.getUser(), AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
-        casses.put(user.getUsername(), cas);
-        return casses;
     }
 
     public Map<String, CAS> listCassesforCuration(List<AnnotationDocument> annotationDocuments,
@@ -315,17 +279,13 @@ public class SuggestionBuilder
             Map<String, Map<Integer, Integer>> aSegmentAdress, CAS aCas, String aUsername,
             int aWindowStart, int aWindowEnd)
     {
-        diffRangeBegin = aWindowStart;
-        diffRangeEnd = aWindowEnd;
-
         // Get the number of the first sentence - instead of fetching the number over and over
         // we can just increment this one.
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(aCas, diffRangeBegin);
+        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(aCas, aWindowStart);
 
         aSegmentAdress.put(aUsername, new HashMap<>());
         Type sentenceType = CasUtil.getType(aCas, Sentence.class);
-        for (AnnotationFS sentence : selectCovered(aCas, sentenceType, diffRangeBegin,
-                diffRangeEnd)) {
+        for (AnnotationFS sentence : selectCovered(aCas, sentenceType, aWindowStart, aWindowEnd)) {
             aIdxSentenceBeginEnd.put(sentence.getBegin(), sentence.getEnd());
             aIdxSentenceBeginNumber.put(sentence.getBegin(), sentenceNumber);
             aSegmentAdress.get(aUsername).put(sentence.getBegin(), getAddr(sentence));

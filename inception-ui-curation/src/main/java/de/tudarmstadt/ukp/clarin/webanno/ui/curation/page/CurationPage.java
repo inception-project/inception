@@ -157,26 +157,6 @@ public class CurationPage
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
 
-    // public CurationPage()
-    // {
-    // super();
-    // LOG.debug("Setting up curation page without parameters");
-    // commonInit();
-    //
-    // Map<String, StringValue> fragmentParameters = Session.get()
-    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-    // if (fragmentParameters != null) {
-    // // Clear the URL fragment parameters - we only use them once!
-    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-    //
-    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-    // StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-    //
-    // handleParameters(null, project, document, focus, false);
-    // }
-    // }
-
     public CurationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -184,7 +164,6 @@ public class CurationPage
         LOG.debug("Setting up curation page with parameters: {}", aPageParameters);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
-        // state.setUser(userRepository.getCurrentUser());
         setModel(Model.of(state));
 
         User user = userRepository.getCurrentUser();
@@ -578,7 +557,7 @@ public class CurationPage
             currentprojectId = state.getProject().getId();
 
             SuggestionBuilder builder = new SuggestionBuilder(documentService,
-                    curationDocumentService, annotationService, userRepository);
+                    curationDocumentService, annotationService);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setState(state);
             editor.reset(aTarget);
@@ -629,7 +608,7 @@ public class CurationPage
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
 
         SuggestionBuilder cb = new SuggestionBuilder(documentService, curationDocumentService,
-                annotationService, userRepository);
+                annotationService);
         Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
                 state.getMode());
         CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses, randomAnnotationDocument,

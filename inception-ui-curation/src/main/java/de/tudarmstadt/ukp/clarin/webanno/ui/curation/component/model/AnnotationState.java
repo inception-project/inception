@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 /**
  * State of an annotated span (or arc). Contains color code for visualization
- *
  */
 public enum AnnotationState
 {
