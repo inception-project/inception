@@ -13,6 +13,8 @@ function installPrefs {
 }
 
 installPrefs inception-active-learning
+installPrefs inception-annotation-custom-ui
+installPrefs inception-annotation-mvc
 installPrefs inception-plugin-parent
 installPrefs inception-active-learning
 installPrefs inception-app-webapp
