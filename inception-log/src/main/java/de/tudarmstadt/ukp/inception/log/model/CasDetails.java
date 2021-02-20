@@ -15,47 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model;
+package de.tudarmstadt.ukp.inception.log.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import org.apache.uima.cas.CAS;
 
-/**
- * Variables for the different states of a {@link TrainingDocument} workflow.
- */
-public enum TrainDocumentState
-    implements PersistentEnum
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
+public class CasDetails
 {
-    /**
-     * This is a newly added training document.
-     */
-    NEW("NEW"),
+    private int annotationCount = -1;
 
-    /**
-     * This training document is processed and used for training a model
-     */
-    CURATION_IN_PROGRESS("PROCESSED");
-
-    public String getName()
+    public CasDetails()
     {
-        return getId();
+        // Nothing to do
     }
 
-    @Override
-    public String toString()
+    public CasDetails(CAS aCas)
     {
-        return getId();
+        annotationCount = aCas.getAnnotationIndex().size();
     }
 
-    TrainDocumentState(String aId)
+    public int getAnnotationCount()
     {
-        this.id = aId;
+        return annotationCount;
     }
 
-    private final String id;
-
-    @Override
-    public String getId()
+    public void setAnnotationCount(int aAnnotationCount)
     {
-        return id;
+        annotationCount = aAnnotationCount;
     }
 }

@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility.isDocumentFinished;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
@@ -99,6 +98,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
@@ -813,5 +813,30 @@ public class SuggestionViewPanel
             updatePanel(_target, aCurationContainer, aAnnotationSelectionByUsernameAndAddress,
                     aCurationSegment);
         }));
+    }
+
+    public static boolean isDocumentFinished(DocumentService aRepository,
+            AnnotatorState aBratAnnotatorModel)
+    {
+        try {
+            if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+                // Load document freshly from DB so we get the latest state. The document state
+                // in the annotator state might be stale.
+                SourceDocument doc = aRepository.getSourceDocument(
+                        aBratAnnotatorModel.getDocument().getProject().getId(),
+                        aBratAnnotatorModel.getDocument().getId());
+                return doc.getState().equals(SourceDocumentState.CURATION_FINISHED);
+            }
+            else {
+                // if annotationDocument is finished, disable editing
+                AnnotationDocument adoc = aRepository.getAnnotationDocument(
+                        aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+
+                return adoc.getState().equals(AnnotationDocumentState.FINISHED);
+            }
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 }
