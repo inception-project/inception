@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+<wicket:panel>
+  <form wicket:id="form" class="flex-content flex-v-container">
+    <div class="flex-content scrolling card-body">
+      <div class="container-fluid">
+        <div class="form-group form-row" wicket:enclosure="id">
+          <label class="col-sm-2 col-form-label">
+            <wicket:message key="id"/>
+          </label>
+          <div class="col-sm-10">
+            <span class="form-control" readonly><wicket:container wicket:id="id" /></span>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="name">
+          <label wicket:for="name" class="col-sm-2 col-form-label">
+            <wicket:label key="name"/>
+          </label>
+          <div class="col-sm-10">
+            <input wicket:id="name" class="form-control"/>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="description">
+          <label wicket:for="description" class="col-sm-2 col-form-label">
+            <wicket:label key="description"/>
+          </label>
+          <div class="col-sm-10">
+            <textarea wicket:id="description" class="form-control" rows="10"></textarea>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="scriptDirection">
+          <label wicket:for="scriptDirection" class="col-sm-2 col-form-label">
+            <wicket:label key="scriptDirection"/>
+          </label>
+          <div class="col-sm-10">
+            <select wicket:id="scriptDirection" class="form-control" data-container="body"></select>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="disableExport">
+          <div class="offset-md-2 col-sm-10">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" wicket:id="disableExport">
+              <label class="form-check-label" wicket:for="disableExport">
+                <wicket:label key="disableExport"/>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="anonymousCuration">
+          <div class="offset-md-2 col-sm-10">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" wicket:id="anonymousCuration">
+              <label class="form-check-label" wicket:for="anonymousCuration">
+                <wicket:label key="anonymousCuration"/>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer text-right">
+      <button wicket:id="save" class="btn btn-primary">
+        <i class="fas fa-save"></i>&nbsp;
+        <wicket:message key="save"/>
+      </button>
+    </div>
+  </form>
+</wicket:panel>
+</body>
+</html>

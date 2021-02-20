@@ -53,7 +53,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -214,7 +213,6 @@ public class RecommendationServiceImplIntegrationTest
     {
         Project project = new Project();
         project.setName(aName);
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         return testEntityManager.persist(project);
     }
 

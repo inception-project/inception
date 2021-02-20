@@ -1,0 +1,39 @@
+The following files are under the Creative Commons Attribution 2.5 license (licences/CC_BY_2_5.txt)
+src/main/webapp/js/css_browser_selector.js
+
+The following icon sets are licensed under a Creative Commons Attribution 3.0 License.(licenses/CC_BY_3.0.txt)
+Source: http://www.fatcow.com/free-icons
+  
+accept.png
+cancel.png
+categories.png
+check_box.png
+cog.png
+cut.png
+data_table.png
+document_back.png
+document_copies.png
+document_export.png
+document_next.png
+document_page_last.png
+document_page_next.png
+document_page_previous.png
+document_page.png
+drawer_open.png
+emotion_question.png
+group.png
+help.png
+home_page.png
+inprogress.png
+logo.png
+page_white_go.png
+recycle.png
+setting_tools.png
+statistics.png
+text_width.png
+update.png
+user_add.png
+user_go.png
+
+The file wicket-jquery-focus-patch.js is a stripped-down version of Apache Wicket's 
+wicket-ajax-jquery.js which is licensed under the Apache License 2.0.

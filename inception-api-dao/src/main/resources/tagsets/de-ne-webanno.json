@@ -1,0 +1,47 @@
+{
+  "name" : "Named Entity tags",
+  "typeUiName" : null,
+  "description" : "Named Entity annotation",
+  "language" : "de",
+  "type" : null,
+  "type_name" : null,
+  "type_description" : null,
+  "tags" : [ {
+    "tag_name" : "LOC",
+    "tag_description" : "Location"
+  }, {
+    "tag_name" : "LOCderiv",
+    "tag_description" : "Location derivative"
+  }, {
+    "tag_name" : "LOCpart",
+    "tag_description" : "Hyphenated part is location"
+  }, {
+    "tag_name" : "ORG",
+    "tag_description" : "Organization"
+  }, {
+    "tag_name" : "ORGderiv",
+    "tag_description" : "Organization derivative"
+  }, {
+    "tag_name" : "ORGpart",
+    "tag_description" : "Hyphenated part is organization"
+  }, {
+    "tag_name" : "OTH",
+    "tag_description" : "Other: Every name that is not a location, person or organisation"
+  }, {
+    "tag_name" : "OTHderiv",
+    "tag_description" : "Other derivative"
+  }, {
+    "tag_name" : "OTHpart",
+    "tag_description" : "Hyphenated part is Other"
+  }, {
+    "tag_name" : "PER",
+    "tag_description" : "Person"
+  }, {
+    "tag_name" : "PERderiv",
+    "tag_description" : "Person derivative"
+  }, {
+    "tag_name" : "PERpart",
+    "tag_description" : "Hyphenated part is person"
+  } ],
+  "create_tag" : false
+}

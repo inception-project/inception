@@ -210,7 +210,8 @@ public class ConceptLinkingServiceImpl
         // the exact matches separately to ensure we have them.
         // Mind, we use the query and the mention text here - of course we don't only want
         // exact matches of the query but also of the mention :)
-        String[] exactLabels = asList(aQuery, aMention).stream().filter(StringUtils::isNotBlank)
+        String[] exactLabels = asList(aQuery, aMention).stream() //
+                .filter(StringUtils::isNotBlank) //
                 .toArray(String[]::new);
 
         if (exactLabels.length > 0) {

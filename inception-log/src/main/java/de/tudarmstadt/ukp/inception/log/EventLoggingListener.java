@@ -147,16 +147,10 @@ public class EventLoggingListener
                 return;
             }
 
-            LoggedEvent e = new LoggedEvent();
+            LoggedEvent e;
 
             try {
-                e.setCreated(a.getCreated(aEvent));
-                e.setEvent(a.getEvent(aEvent));
-                e.setUser(a.getUser(aEvent));
-                e.setProject(a.getProject(aEvent));
-                e.setDocument(a.getDocument(aEvent));
-                e.setAnnotator(a.getAnnotator(aEvent));
-                e.setDetails(a.getDetails(aEvent));
+                e = a.toLoggedEvent(aEvent);
             }
             catch (Exception ex) {
                 log.error("Unable to log event [{}]", aEvent, ex);

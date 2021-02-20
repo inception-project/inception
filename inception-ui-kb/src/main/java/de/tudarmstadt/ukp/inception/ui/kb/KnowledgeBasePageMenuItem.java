@@ -22,18 +22,15 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
@@ -44,7 +41,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfi
  */
 @Order(220)
 public class KnowledgeBasePageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private final UserDao userRepo;
     private final ProjectService projectService;
@@ -78,26 +75,20 @@ public class KnowledgeBasePageMenuItem
     }
 
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        Project sessionProject = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
-        if (sessionProject == null) {
+        if (aProject == null) {
             return false;
         }
 
-        // The project object stored in the session is detached from the persistence context and
-        // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
-        Project project = projectService.getProject(sessionProject.getId());
-
         // Not visible if the current user is not an annotator
         User user = userRepo.getCurrentUser();
-        if (!(projectService.isAnnotator(project, user)
-                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode()))) {
+        if (!(projectService.isAnnotator(aProject, user))) {
             return false;
         }
 
         // not visible if the current project does not have knowledge bases
-        return !kbService.getKnowledgeBases(project).isEmpty();
+        return !kbService.getKnowledgeBases(aProject).isEmpty();
     }
 
     @Override

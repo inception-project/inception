@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <form wicket:id="form" class="w_flex_container">
+    <div class="w_flex_content flex-h-container">
+      <div class="flex-content flex-h-container flex-gutter">
+        <div class="flex-content flex-v-container card" wicket:enclosure="project">
+          <div class="card-header">
+            <wicket:message key="projects"/>
+          </div>
+          <div class="flex-content scrolling fit-child-snug">
+            <select wicket:id="project" class="form-control"></select>
+          </div>
+        </div>
+        <div class="flex-content flex-v-container card" wicket:enclosure="user">
+          <div class="card-header">
+            <wicket:message key="users"/>
+          </div>
+          <div class="flex-content scrolling fit-child-snug">
+            <select wicket:id="user" class="form-control"></select>
+          </div>
+        </div>
+        <div class="flex-content flex-v-container card" wicket:enclosure="documents">
+          <div class="card-header">
+            <wicket:message key="docs"/>
+          </div>
+          <div class="flex-content scrolling fit-child-snug">
+            <select wicket:id="documents" class="form-control"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div wicket:id="buttons" class="w_flex_footer card-footer text-right">
+       <button wicket:id="openButton" class="btn btn-primary">
+        <i class="fas fa-file-alt"></i>&nbsp;
+        <wicket:message key="open"/>
+      </button>
+      <button wicket:id="cancelButton" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="cancel"/>
+      </button>
+    </div>
+  </form>
+</wicket:panel>
+</html>

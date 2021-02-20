@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.18.0-SNAPSHOT</version>
+    <version>0.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-imls-external</artifactId>
@@ -32,20 +32,20 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-model</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-model</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api-annotation</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-support</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support</artifactId>
     </dependency>
 
     <dependency>
@@ -137,8 +137,8 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api-dao</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-dao</artifactId>
       <scope>test</scope>
     </dependency>
 

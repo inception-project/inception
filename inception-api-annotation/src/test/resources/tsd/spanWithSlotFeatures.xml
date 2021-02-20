@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <name />
+  <description />
+  <version />
+  <vendor />
+  <types>
+    <typeDescription>
+      <name>webanno.custom.SlotSpan</name>
+      <description />
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>boundSlot</name>
+          <description />
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>webanno.custom.SlotSpanBoundSlotLink</elementType>
+        </featureDescription>
+        <featureDescription>
+          <name>freeSlot</name>
+          <description />
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>webanno.custom.SlotSpanFreeSlotLink</elementType>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>webanno.custom.SlotSpanBoundSlotLink</name>
+      <description />
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>role</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>target</name>
+          <description />
+          <rangeTypeName>webanno.custom.SlotSpan</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>webanno.custom.SlotSpanFreeSlotLink</name>
+      <description />
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>role</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>target</name>
+          <description />
+          <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>

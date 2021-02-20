@@ -8,7 +8,9 @@ about: Release checklist for bug-fix releases (third-digit increase)
 - [ ] Ensure all issues and PRs are resolved/merged
 
 **Local**
-- [ ] Run Maven release (increase third digit of version)
+- [ ] Run Maven release (increase third digit of version). Check that the JDK 
+      used to run the release is not newer than the Java version specified in the minium system
+      requirements!
 - [ ] Sign the standalone JAR
 
 **GitHub release page**

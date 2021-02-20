@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
@@ -151,28 +152,26 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         WorkloadManager currentWorkload = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
 
+        // If there are no traits set yet, use the DefaultWorkflowExtension
+        // otherwise select the current one
+        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(currentWorkload);
+        WorkflowExtension currentWorkflowExtension = workflowExtensionPoint
+                .getExtension(traits.getWorkflowType());
+        if (currentWorkflowExtension == null) {
+            currentWorkflowExtension = new DefaultWorkflowExtension();
+        }
+
         // Get all documents for which the state is NEW, or which have not been created yet.
         List<SourceDocument> sourceDocuments = workloadManagementService
                 .getAnnotationDocumentListForUser(project, user);
 
-        // If there are no traits set yet, use the DefaultWorkflowExtension
-        // otherwise select the current one
-        WorkflowExtension currentWorkflowExtension = new DefaultWorkflowExtension();
-        for (WorkflowExtension extension : workflowExtensionPoint.getExtensions()) {
-            if (extension.getId().equals(
-                    dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType())) {
-                currentWorkflowExtension = extension;
-                break;
-            }
-        }
         // Rearrange list of documents according to current workflow
         sourceDocuments = currentWorkflowExtension.rankDocuments(sourceDocuments);
 
         // Load the new document, if loadNextDocument() returns false, redirect the user to the
         // homepage
         if (!currentWorkflowExtension.loadNextDocument(sourceDocuments, project, currentWorkload,
-                aPage, target.orElse(null), workloadManagementService, dynamicWorkloadExtension,
-                documentService)) {
+                aPage, target.orElse(null), workloadManagementService, traits, documentService)) {
             redirectUserToHomePage(aPage);
         }
     }
@@ -180,8 +179,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     public void redirectUserToHomePage(ApplicationPageBase aPage)
     {
         // Nothing left, so returning to homepage and showing hint
-        aPage.getSession().info(
-                "There are no more documents to annotate available for you. Please contact your project supervisor.");
+        aPage.getSession().info("There are no more documents to annotate available for you.");
         aPage.setResponsePage(aPage.getApplication().getHomePage());
     }
 }
