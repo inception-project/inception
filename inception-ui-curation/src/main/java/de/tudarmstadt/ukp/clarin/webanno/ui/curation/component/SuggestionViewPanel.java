@@ -584,14 +584,13 @@ public class SuggestionViewPanel
             SourceListView aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        LOG.trace("call update");
         AnnotatorState state = aCurationContainer.getState();
+        SourceDocument sourceDocument = state.getDocument();
 
-        if (state.getDocument() == null) {
+        if (sourceDocument == null) {
             return;
         }
 
-        SourceDocument sourceDocument = state.getDocument();
         Map<String, CAS> casses = new HashMap<>();
 
         // This is the CAS that the user can actively edit
@@ -601,8 +600,6 @@ public class SuggestionViewPanel
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
-
-        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
 
         Project project = state.getProject();
         Mode mode = state.getMode();
@@ -627,14 +624,14 @@ public class SuggestionViewPanel
             }
         }
 
-        addSuggestionColor(project, mode, casses, annoStates, d, false, false);
-        addSuggestionColor(project, mode, casses, annoStates, i, true, false);
-
         List<ConfigurationSet> all = new ArrayList<>();
         all.addAll(diff.getConfigurationSets());
         all.removeAll(d);
         all.removeAll(i);
 
+        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
+        addSuggestionColor(project, mode, casses, annoStates, d, false, false);
+        addSuggestionColor(project, mode, casses, annoStates, i, true, false);
         addSuggestionColor(project, mode, casses, annoStates, all, false, true);
 
         // get differing feature structures
@@ -663,6 +660,7 @@ public class SuggestionViewPanel
             catch (IOException e) {
                 error("Unable to render: " + e.getMessage());
                 LOG.error("Unable to render", e);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
 
             if (isBlank(vis.getDocumentData())) {
@@ -703,12 +701,8 @@ public class SuggestionViewPanel
                         k -> new HashMap<>());
 
                 for (Configuration c : cs.getConfigurations(u)) {
-
                     FeatureStructure fs = c.getFs(u, aCasMap);
-
-                    AnnotationLayer layer = schemaService.findLayer(aProject,
-                            fs.getType().getName());
-                    TypeAdapter typeAdapter = schemaService.getAdapter(layer);
+                    TypeAdapter typeAdapter = schemaService.findAdapter(aProject, fs);
 
                     VID vid;
                     // link FS
