@@ -57,12 +57,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -72,7 +68,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -118,9 +113,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.UnitOverviewLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceOverview;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.UnitClickedEvent;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -163,7 +159,7 @@ public class CurationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
-    private SentenceInfo focussedUnit;
+    private UnitState focussedUnit;
 
     public CurationPage(final PageParameters aPageParameters)
     {
@@ -223,7 +219,7 @@ public class CurationPage
                                 : 10)));
         add(rightSidebar);
 
-        focussedUnit = new SentenceInfo();
+        focussedUnit = new UnitState();
 
         List<AnnotatorSegment> segments = new LinkedList<>();
         AnnotatorSegment annotatorSegment = new AnnotatorSegment();
@@ -284,15 +280,15 @@ public class CurationPage
         // add container for list of sentences panel
         sentenceList = new WebMarkupContainer("sentenceList");
         sentenceList.setOutputMarkupPlaceholderTag(true);
-        sentenceList.add(new ListView<SentenceInfo>("sentence",
+        sentenceList.add(new ListView<UnitState>("sentence",
                 LoadableDetachableModel.of(() -> sentenceIndex.getSentenceInfos()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
             @Override
-            protected void populateItem(ListItem<SentenceInfo> item)
+            protected void populateItem(ListItem<UnitState> item)
             {
-                item.add(new SentenceLink("sentenceNumber", item.getModel(),
+                item.add(new UnitOverviewLink("sentenceNumber", item.getModel(),
                         CurationPage.this.getModel()));
             }
         });
@@ -466,7 +462,7 @@ public class CurationPage
 
             currentprojectId = state.getProject().getId();
 
-            sentenceIndex = buildSentenceOverview(state);
+            sentenceIndex = buildUnitOverview(state);
             detailPanel.reset(aTarget);
             commonUpdate();
 
@@ -622,80 +618,6 @@ public class CurationPage
         }
     }
 
-    public static class SentenceLink
-        extends AjaxLink<SentenceInfo>
-    {
-        private static final long serialVersionUID = 4558300090461815010L;
-
-        private IModel<AnnotatorState> annotatorState;
-
-        public SentenceLink(String aId, IModel<SentenceInfo> aModel,
-                IModel<AnnotatorState> aAnnotatorState)
-        {
-            super(aId, aModel);
-            setBody(Model.of(aModel.getObject().getSentenceNumber().toString()));
-            annotatorState = aAnnotatorState;
-        }
-
-        @Override
-        protected void onComponentTag(ComponentTag aTag)
-        {
-            super.onComponentTag(aTag);
-
-            final SentenceInfo curationViewItem = getModelObject();
-            final AnnotatorState state = annotatorState.getObject();
-
-            // Is in focus?
-            if (curationViewItem.getSentenceNumber() == state.getFocusUnitIndex()) {
-                aTag.append("class", "current", " ");
-            }
-
-            // Agree or disagree?
-            String cC = curationViewItem.getSentenceState().getColor();
-            if (cC != null) {
-                aTag.append("class", "disagree", " ");
-            }
-            else {
-                aTag.append("class", "agree", " ");
-            }
-
-            // In range or not?
-            if (curationViewItem.getSentenceNumber() >= state.getFirstVisibleUnitIndex()
-                    && curationViewItem.getSentenceNumber() <= state.getLastVisibleUnitIndex()) {
-                aTag.append("class", "in-range", " ");
-            }
-            else {
-                aTag.append("class", "out-range", " ");
-            }
-        }
-
-        @Override
-        protected void onAfterRender()
-        {
-            super.onAfterRender();
-
-            // The sentence list is refreshed using AJAX. Unfortunately, the renderHead() method
-            // of the AjaxEventBehavior created by AjaxLink does not seem to be called by Wicket
-            // during an AJAX rendering, causing the sentence links to loose their functionality.
-            // Here, we ensure that the callback scripts are attached to the sentence links even
-            // during AJAX updates.
-            if (isEnabledInHierarchy()) {
-                RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
-                    for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
-                        _target.appendJavaScript(
-                                WicketUtil.wrapInTryCatch(b.getCallbackScript().toString()));
-                    }
-                });
-            }
-        }
-
-        @Override
-        public void onClick(AjaxRequestTarget aTarget)
-        {
-            send(this, Broadcast.BUBBLE, new UnitClickedEvent(aTarget, getModelObject()));
-        }
-    }
-
     @OnEvent
     public void onUnitClickedEvent(UnitClickedEvent aEvent)
     {
@@ -704,7 +626,7 @@ public class CurationPage
             AnnotatorState state = CurationPage.this.getModelObject();
             CAS cas = curationDocumentService.readCurationCas(state.getDocument());
             state.getPagingStrategy().moveToOffset(state, cas, focussedUnit.getBegin(), CENTERED);
-            state.setFocusUnitIndex(focussedUnit.getSentenceNumber());
+            state.setFocusUnitIndex(focussedUnit.getUnitIndex());
 
             actionRefreshDocument(aEvent.getTarget());
         }
@@ -753,7 +675,7 @@ public class CurationPage
         return allSourceDocuments;
     }
 
-    private SentenceOverview buildSentenceOverview(AnnotatorState aState)
+    private SentenceOverview buildUnitOverview(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
@@ -796,7 +718,7 @@ public class CurationPage
             DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, begin, end)
                     .toResult();
 
-            SentenceInfo curationSegment = new SentenceInfo(begin, end, segmentNumber.get(begin));
+            UnitState curationSegment = new UnitState(begin, end, segmentNumber.get(begin));
 
             if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
                 // Is this confSet a diff due to stacked annotations (with same configuration)?

@@ -20,20 +20,20 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.event;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState;
 
 public class UnitClickedEvent
     extends AbstractAjaxAwareEvent
 {
-    private final SentenceInfo unit;
+    private final UnitState unit;
 
-    public UnitClickedEvent(AjaxRequestTarget aTarget, SentenceInfo aUnit)
+    public UnitClickedEvent(AjaxRequestTarget aTarget, UnitState aUnit)
     {
         super(aTarget);
         unit = aUnit;
     }
 
-    public SentenceInfo getUnit()
+    public UnitState getUnit()
     {
         return unit;
     }

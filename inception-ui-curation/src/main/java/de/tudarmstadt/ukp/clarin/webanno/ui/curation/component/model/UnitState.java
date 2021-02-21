@@ -23,7 +23,7 @@ import java.io.Serializable;
  * A model comprises of Curation Segments comprising of the begin and end of the sentences,
  * {@link SentenceState} Sentence number
  */
-public class SentenceInfo
+public class UnitState
     implements Serializable
 {
     private static final long serialVersionUID = 9219600871129699568L;
@@ -42,14 +42,14 @@ public class SentenceInfo
 
     private boolean isCurrentSentence;
 
-    public SentenceInfo()
+    public UnitState()
     {
         begin = null;
         end = null;
         sentenceNumber = null;
     }
 
-    public SentenceInfo(int aBegin, int aEnd, int aUnitIndex)
+    public UnitState(int aBegin, int aEnd, int aUnitIndex)
     {
         begin = aBegin;
         end = aEnd;
@@ -96,7 +96,7 @@ public class SentenceInfo
         this.sentenceState = sentenceState;
     }
 
-    public Integer getSentenceNumber()
+    public Integer getUnitIndex()
     {
         return sentenceNumber;
     }

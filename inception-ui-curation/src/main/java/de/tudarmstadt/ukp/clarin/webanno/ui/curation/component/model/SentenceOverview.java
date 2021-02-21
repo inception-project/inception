@@ -30,16 +30,16 @@ public class SentenceOverview
 {
     private static final long serialVersionUID = -6632707037285383353L;
 
-    private Map<Integer, SentenceInfo> sentenceBeginIndex = new HashMap<>();
+    private Map<Integer, UnitState> sentenceBeginIndex = new HashMap<>();
 
-    public List<SentenceInfo> getSentenceInfos()
+    public List<UnitState> getSentenceInfos()
     {
         return sentenceBeginIndex.values().stream() //
-                .sorted(comparing(SentenceInfo::getBegin)) //
+                .sorted(comparing(UnitState::getBegin)) //
                 .collect(Collectors.toList());
     }
 
-    public void addSentenceInfo(SentenceInfo aSegment)
+    public void addSentenceInfo(UnitState aSegment)
     {
         sentenceBeginIndex.put(aSegment.getBegin(), aSegment);
     }
