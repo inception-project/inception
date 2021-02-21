@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.inception.versioning;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,6 +43,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -68,9 +70,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.text.PretokenizedTextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
@@ -81,6 +87,9 @@ public class VersioningServiceImplTest
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired ProjectService projectService;
+    private @Autowired UserDao userDao;
+    private @Autowired ImportExportService importExportService;
+    private @Autowired DocumentService documentService;
 
     @Rule
     public TemporaryFolder repoDir = new TemporaryFolder();
@@ -122,14 +131,34 @@ public class VersioningServiceImplTest
     }
 
     @Test
-    public void snapshottingProject_ShouldCommitFiles() throws IOException
+    @WithMockUser(username = "admin")
+    public void snapshottingProject_ShouldCommitFiles() throws Exception
     {
         projectService.createProject(testProject);
+        User admin = addUser("admin");
+        User annotator = addUser("annotator");
+
+        File doc1 = getResource("docs/dinos.txt");
+        File doc2 = getResource("docs/lorem.txt");
+
+        importExportService.importCasFromFile(doc1, testProject, "pretokenized-textlines");
+        importExportService.importCasFromFile(doc2, testProject, "pretokenized-textlines");
+
+        for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
+            documentService.createOrGetAnnotationDocument(sourceDocument, admin);
+            documentService.createOrGetAnnotationDocument(sourceDocument, annotator);
+        }
 
         sut.snapshotCompleteProject(testProject);
 
-        assertThat(sut.getRepoDir(testProject)).isDirectoryContaining(
+        File repoDir = sut.getRepoDir(testProject);
+        Path annotationRoot = repoDir.toPath().resolve(VersioningServiceImpl.DOCUMENTS);
+        assertThat(repoDir).isDirectoryContaining(
                 f -> f.getName().equals(VersioningServiceImpl.LAYERS) && f.isFile());
+        assertThat(annotationRoot.resolve("admin").resolve("dinos.txt.xmi")).isRegularFile();
+        assertThat(annotationRoot.resolve("admin").resolve("lorem.txt.xmi")).isRegularFile();
+        assertThat(annotationRoot.resolve("annotator").resolve("dinos.txt.xmi")).isRegularFile();
+        assertThat(annotationRoot.resolve("annotator").resolve("lorem.txt.xmi")).isRegularFile();
     }
 
     @Test
@@ -151,10 +180,26 @@ public class VersioningServiceImplTest
         assertThat(sut.getRemote(testProject)).isEmpty();
     }
 
+    @Test
+    public void repoExists_IfRepoExists_ShouldReturnTrue() throws Exception
+    {
+        projectService.createProject(testProject);
+
+        assertThat(sut.repoExists(testProject)).isTrue();
+    }
+
+    @Test
+    public void repoExists_IfRepoDoesNotExists_ShouldReturnFalse() throws Exception
+    {
+        testProject.setId(42L);
+
+        assertThat(sut.repoExists(testProject)).isFalse();
+    }
+
     @SpringBootConfiguration
     @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.model" })
-
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.model",
+            "de.tudarmstadt.ukp.clarin.webanno.security.model" })
     public static class TestContext
     {
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
@@ -230,7 +275,8 @@ public class VersioningServiceImplTest
                 AnnotationSchemaService aAnnotationSchemaService,
                 CasStorageService aCasStorageService)
         {
-            return new ImportExportServiceImpl(aRepositoryProperties, Lists.emptyList(),
+            return new ImportExportServiceImpl(aRepositoryProperties,
+                    List.of(new XmiFormatSupport(), new PretokenizedTextFormatSupport()),
                     aCasStorageService, aAnnotationSchemaService);
         }
 
@@ -246,4 +292,27 @@ public class VersioningServiceImplTest
 
     }
 
+    private User addUser(String aUserName)
+    {
+        User user = new User();
+        user.setUsername(aUserName);
+        userDao.create(user);
+
+        return user;
+    }
+
+    private SourceDocument buildSourceDocument(long aDocumentId)
+    {
+        SourceDocument doc = new SourceDocument();
+        doc.setProject(testProject);
+        doc.setId(aDocumentId);
+
+        return doc;
+    }
+
+    private File getResource(String aResourceName)
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        return new File(classLoader.getResource(aResourceName).getFile());
+    }
 }
