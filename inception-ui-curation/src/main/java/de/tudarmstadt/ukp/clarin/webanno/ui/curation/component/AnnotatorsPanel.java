@@ -461,16 +461,8 @@ public class AnnotatorsPanel
         Project project = state.getProject();
         Mode mode = state.getMode();
 
-        DiffResult diff;
-        if (mode.equals(CURATION)) {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
-                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd())
-                            .toResult();
-        }
-        else {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, aCurationSegment.getBegin(),
-                    aCurationSegment.getEnd()).toResult();
-        }
+        DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
+                aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd()).toResult();
 
         Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
 

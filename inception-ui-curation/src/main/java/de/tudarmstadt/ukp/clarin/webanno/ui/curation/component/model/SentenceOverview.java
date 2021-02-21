@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SentenceIndex
+public class SentenceOverview
     implements Serializable
 {
     private static final long serialVersionUID = -6632707037285383353L;

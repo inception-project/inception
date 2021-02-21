@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPa
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
@@ -40,8 +39,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.AGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.DISAGREE;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,7 +56,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -94,7 +93,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
@@ -120,8 +118,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePan
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceIndex;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceOverview;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -151,23 +149,19 @@ public class CurationPage
     // Open the dialog window on first load
     private boolean firstLoad = true;
 
-    private SentenceIndex sentenceIndex;
-
-    private WebMarkupContainer centerArea;
-    private WebMarkupContainer actionBar;
-
-    private AnnotatorsPanel annotatorsPanel;
-
     private WebMarkupContainer leftSidebar;
+    private SentenceOverview sentenceIndex;
     private WebMarkupContainer sentenceList;
 
-    private AnnotationEditorBase annotationEditor;
+    private WebMarkupContainer rightSidebar;
     private AnnotationDetailEditorPanel detailPanel;
 
-    private SentenceInfo curationView;
+    private WebMarkupContainer actionBar;
+    private WebMarkupContainer centerArea;
+    private AnnotationEditorBase annotationEditor;
+    private AnnotatorsPanel annotatorsPanel;
 
-    private int firstVisibleUnitIndex = 0;
-    private int lastVisibleUnitIndex = 0;
+    private SentenceInfo focusSentence;
 
     public CurationPage(final PageParameters aPageParameters)
     {
@@ -215,19 +209,19 @@ public class CurationPage
         // Ensure that a user is set
         getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
 
-        sentenceIndex = new SentenceIndex();
+        sentenceIndex = new SentenceOverview();
 
-        WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");
-        sidebarCell.setOutputMarkupPlaceholderTag(true);
+        rightSidebar = new WebMarkupContainer("rightSidebar");
+        rightSidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
-        sidebarCell.add(new AttributeModifier("style",
+        rightSidebar.add(new AttributeModifier("style",
                 () -> String.format("flex-basis: %d%%;",
                         getModelObject() != null
                                 ? getModelObject().getPreferences().getSidebarSize()
                                 : 10)));
-        add(sidebarCell);
+        add(rightSidebar);
 
-        curationView = new SentenceInfo();
+        focusSentence = new SentenceInfo();
 
         List<AnnotatorSegment> segments = new LinkedList<>();
         AnnotatorSegment annotatorSegment = new AnnotatorSegment();
@@ -267,7 +261,7 @@ public class CurationPage
                         .getSourceDocument(getModelObject().getDocument().getProject(),
                                 getModelObject().getDocument().getName())
                         .getState().equals(SourceDocumentState.CURATION_FINISHED)));
-        sidebarCell.add(detailPanel);
+        rightSidebar.add(detailPanel);
 
         annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
                 this::getEditorCas);
@@ -469,11 +463,11 @@ public class CurationPage
 
             currentprojectId = state.getProject().getId();
 
-            sentenceIndex = buildSentenceIndex(state);
+            sentenceIndex = buildSentenceOverview(state);
             detailPanel.reset(aTarget);
             commonUpdate();
 
-            annotatorsPanel.init(aTarget, getModelObject(), curationView);
+            annotatorsPanel.init(aTarget, getModelObject(), focusSentence);
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
@@ -529,7 +523,7 @@ public class CurationPage
             annotationEditor.requestRender(aTarget);
 
             // Render the user annotation segments (lower part)
-            annotatorsPanel.requestRender(aTarget, getModelObject(), curationView);
+            annotatorsPanel.requestRender(aTarget, getModelObject(), focusSentence);
 
             // Render the sentence list sidebar
             aTarget.add(sentenceList);
@@ -659,8 +653,9 @@ public class CurationPage
             }
 
             // In range or not?
-            if (curationViewItem.getSentenceNumber() >= firstVisibleUnitIndex
-                    && curationViewItem.getSentenceNumber() <= lastVisibleUnitIndex) {
+            AnnotatorState state = CurationPage.this.getModelObject();
+            if (curationViewItem.getSentenceNumber() >= state.getFirstVisibleUnitIndex()
+                    && curationViewItem.getSentenceNumber() <= state.getLastVisibleUnitIndex()) {
                 aTag.append("class", "in-range", " ");
             }
             else {
@@ -692,8 +687,7 @@ public class CurationPage
         public void onClick(AjaxRequestTarget aTarget)
         {
             final SentenceInfo curationViewItem = getModelObject();
-            curationView = curationViewItem;
-            firstVisibleUnitIndex = 0;
+            focusSentence = curationViewItem;
             try {
                 AnnotatorState state = CurationPage.this.getModelObject();
                 CAS cas = curationDocumentService.readCurationCas(state.getDocument());
@@ -729,10 +723,8 @@ public class CurationPage
     {
         AnnotatorState state = CurationPage.this.getModelObject();
 
-        curationView.setCurationBegin(state.getWindowBeginOffset());
-        curationView.setCurationEnd(state.getWindowEndOffset());
-        firstVisibleUnitIndex = state.getFirstVisibleUnitIndex();
-        lastVisibleUnitIndex = state.getLastVisibleUnitIndex();
+        focusSentence.setCurationBegin(state.getWindowBeginOffset());
+        focusSentence.setCurationEnd(state.getWindowEndOffset());
     }
 
     @Override
@@ -751,31 +743,28 @@ public class CurationPage
         return allSourceDocuments;
     }
 
-    private SentenceIndex buildSentenceIndex(AnnotatorState aState)
+    private SentenceOverview buildSentenceOverview(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
-        List<AnnotationDocument> finishedAnnotationDocuments = documentService
-                .listFinishedAnnotationDocuments(aState.getDocument());
+        Map<String, CAS> casses = readAllCasesSharedNoUpgrade(
+                documentService.listFinishedAnnotationDocuments(aState.getDocument()));
 
-        Map<String, CAS> casses = readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
-        CAS mergeCas = readCurationCas(aState, aState.getDocument(), casses, null, false, false,
+        CAS editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false, false,
                 false);
-
-        int diffWindowStart = getFirstSentence(mergeCas).getBegin();
-        int diffWindowEnd = mergeCas.getDocumentText().length();
 
         Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
         Map<Integer, Integer> segmentNumber = new HashMap<>();
         Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<>();
-        updateSegment(aState, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
-                CURATION_USER, diffWindowStart, diffWindowEnd);
 
         segmentAdress.put(CURATION_USER, new HashMap<>());
-        Type sentenceType = getType(mergeCas, Sentence.class);
-        for (AnnotationFS s : selectCovered(mergeCas, sentenceType, diffWindowStart,
-                diffWindowEnd)) {
-            segmentAdress.get(CURATION_USER).put(s.getBegin(), getAddr(s));
+        Type sentenceType = getType(editorCas, Sentence.class);
+        int sentenceNumber = 1;
+        for (AnnotationFS sentence : select(editorCas, sentenceType)) {
+            segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
+            segmentNumber.put(sentence.getBegin(), sentenceNumber);
+            segmentAdress.get(CURATION_USER).put(sentence.getBegin(), getAddr(sentence));
+            sentenceNumber += 1;
         }
 
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
@@ -784,7 +773,7 @@ public class CurationPage
         long diffStart = System.currentTimeMillis();
         LOG.debug("Calculating differences...");
         int count = 0;
-        SentenceIndex index = new SentenceIndex();
+        SentenceOverview index = new SentenceOverview();
         for (Integer begin : segmentBeginEnd.keySet()) {
             Integer end = segmentBeginEnd.get(begin);
 
@@ -829,8 +818,7 @@ public class CurationPage
 
             index.addSentenceInfo(curationSegment);
         }
-        LOG.debug("Difference calculation completed in {}ms",
-                (System.currentTimeMillis() - diffStart));
+        LOG.debug("Difference calculation completed in {}ms", (currentTimeMillis() - diffStart));
 
         return index;
     }
@@ -923,29 +911,5 @@ public class CurationPage
                 curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
 
         return editorCas;
-    }
-
-    /**
-     * Puts CASes into a list and get a random annotation document that will be used as a base for
-     * the diff.
-     */
-    private void updateSegment(AnnotatorState aBratAnnotatorModel,
-            Map<Integer, Integer> aIdxSentenceBeginEnd,
-            Map<Integer, Integer> aIdxSentenceBeginNumber,
-            Map<String, Map<Integer, Integer>> aSegmentAdress, CAS aCas, String aUsername,
-            int aWindowStart, int aWindowEnd)
-    {
-        // Get the number of the first sentence - instead of fetching the number over and over
-        // we can just increment this one.
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(aCas, aWindowStart);
-
-        aSegmentAdress.put(aUsername, new HashMap<>());
-        Type sentenceType = CasUtil.getType(aCas, Sentence.class);
-        for (AnnotationFS sentence : selectCovered(aCas, sentenceType, aWindowStart, aWindowEnd)) {
-            aIdxSentenceBeginEnd.put(sentence.getBegin(), sentence.getEnd());
-            aIdxSentenceBeginNumber.put(sentence.getBegin(), sentenceNumber);
-            aSegmentAdress.get(aUsername).put(sentence.getBegin(), getAddr(sentence));
-            sentenceNumber += 1;
-        }
     }
 }
