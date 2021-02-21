@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosit
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
@@ -96,11 +97,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceIndex;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 
 /**
@@ -130,21 +131,21 @@ public class CurationPage
     // Open the dialog window on first load
     private boolean firstLoad = true;
 
-    private CurationContainer curationContainer;
+    private SentenceIndex curationContainer;
 
     private WebMarkupContainer centerArea;
     private WebMarkupContainer actionBar;
 
-    private SuggestionViewPanel suggestionViewPanel;
+    private AnnotatorsPanel annotatorsPanel;
 
-    private WebMarkupContainer sentenceListContainer;
-    private WebMarkupContainer sentenceLinksListView;
+    private WebMarkupContainer leftSidebar;
+    private WebMarkupContainer sentenceList;
 
     private AnnotationEditorBase annotationEditor;
-    private AnnotationDetailEditorPanel editor;
+    private AnnotationDetailEditorPanel detailPanel;
 
-    private SourceListView curationView;
-    private List<SourceListView> sourceListModel;
+    private SentenceInfo curationView;
+    private List<SentenceInfo> sourceListModel;
 
     private int firstVisibleUnitIndex = 0;
     private int lastVisibleUnitIndex = 0;
@@ -201,8 +202,7 @@ public class CurationPage
         // Ensure that a user is set
         getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
 
-        curationContainer = new CurationContainer();
-        curationContainer.setState(getModelObject());
+        curationContainer = new SentenceIndex();
 
         WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");
         sidebarCell.setOutputMarkupPlaceholderTag(true);
@@ -214,7 +214,7 @@ public class CurationPage
                                 : 10)));
         add(sidebarCell);
 
-        curationView = new SourceListView();
+        curationView = new SentenceInfo();
 
         List<AnnotatorSegment> segments = new LinkedList<>();
         AnnotatorSegment userAnnotationSegments = new AnnotatorSegment();
@@ -227,17 +227,17 @@ public class CurationPage
         }
 
         // update source list model only first time.
-        sourceListModel = sourceListModel == null ? curationContainer.getCurationViews()
+        sourceListModel = sourceListModel == null ? curationContainer.getSentenceInfos()
                 : sourceListModel;
 
-        suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
-                new ListModel<>(segments));
-        suggestionViewPanel.setOutputMarkupPlaceholderTag(true);
-        suggestionViewPanel.add(visibleWhen(
+        annotatorsPanel = new AnnotatorsPanel("annotatorsPanel", new ListModel<>(segments));
+        annotatorsPanel.setOutputMarkupPlaceholderTag(true);
+        annotatorsPanel.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getDocument() != null));
-        centerArea.add(suggestionViewPanel);
+        centerArea.add(annotatorsPanel);
 
-        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
+        detailPanel = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this,
+                getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
@@ -253,15 +253,15 @@ public class CurationPage
                 return CurationPage.this.getEditorCas();
             }
         };
-        editor.add(LambdaBehavior.enabledWhen(() -> getModelObject() != null //
+        detailPanel.add(enabledWhen(() -> getModelObject() != null //
                 && getModelObject().getDocument() != null
                 && !documentService
                         .getSourceDocument(getModelObject().getDocument().getProject(),
                                 getModelObject().getDocument().getName())
                         .getState().equals(SourceDocumentState.CURATION_FINISHED)));
-        sidebarCell.add(editor);
+        sidebarCell.add(detailPanel);
 
-        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), editor,
+        annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
                 this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
         annotationEditor.add(visibleWhen(
@@ -271,28 +271,28 @@ public class CurationPage
         centerArea.add(annotationEditor);
 
         // add container for sentences panel
-        sentenceListContainer = new WebMarkupContainer("sentenceListContainer");
-        sentenceListContainer.setOutputMarkupPlaceholderTag(true);
-        sentenceListContainer.add(visibleWhen(
+        leftSidebar = new WebMarkupContainer("leftSidebar");
+        leftSidebar.setOutputMarkupPlaceholderTag(true);
+        leftSidebar.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getDocument() != null));
-        add(sentenceListContainer);
+        add(leftSidebar);
 
         // add container for list of sentences panel
-        sentenceLinksListView = new WebMarkupContainer("sentenceLinkListView");
-        sentenceLinksListView.setOutputMarkupPlaceholderTag(true);
-        sentenceLinksListView.add(new ListView<SourceListView>("sentenceLinkList",
-                LoadableDetachableModel.of(() -> curationContainer.getCurationViews()))
+        sentenceList = new WebMarkupContainer("sentenceList");
+        sentenceList.setOutputMarkupPlaceholderTag(true);
+        sentenceList.add(new ListView<SentenceInfo>("sentence",
+                LoadableDetachableModel.of(() -> curationContainer.getSentenceInfos()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
             @Override
-            protected void populateItem(ListItem<SourceListView> item)
+            protected void populateItem(ListItem<SentenceInfo> item)
             {
                 item.add(new SentenceLink("sentenceNumber", item.getModel()));
             }
         });
 
-        sentenceListContainer.add(sentenceLinksListView);
+        leftSidebar.add(sentenceList);
     }
 
     @OnEvent
@@ -509,8 +509,7 @@ public class CurationPage
             SuggestionBuilder builder = new SuggestionBuilder(documentService,
                     curationDocumentService, annotationService);
             curationContainer = builder.buildCurationContainer(state);
-            curationContainer.setState(state);
-            editor.reset(aTarget);
+            detailPanel.reset(aTarget);
             init(aTarget, curationContainer);
 
             // Re-render whole page as sidebar size preference may have changed
@@ -655,11 +654,11 @@ public class CurationPage
     }
 
     public class SentenceLink
-        extends AjaxLink<SourceListView>
+        extends AjaxLink<SentenceInfo>
     {
         private static final long serialVersionUID = 4558300090461815010L;
 
-        public SentenceLink(String aId, IModel<SourceListView> aModel)
+        public SentenceLink(String aId, IModel<SentenceInfo> aModel)
         {
             super(aId, aModel);
             setBody(Model.of(aModel.getObject().getSentenceNumber().toString()));
@@ -670,7 +669,7 @@ public class CurationPage
         {
             super.onComponentTag(aTag);
 
-            final SourceListView curationViewItem = getModelObject();
+            final SentenceInfo curationViewItem = getModelObject();
 
             // Is in focus?
             if (curationViewItem.getSentenceNumber() == CurationPage.this.getModelObject()
@@ -720,7 +719,7 @@ public class CurationPage
         @Override
         public void onClick(AjaxRequestTarget aTarget)
         {
-            final SourceListView curationViewItem = getModelObject();
+            final SentenceInfo curationViewItem = getModelObject();
             curationView = curationViewItem;
             firstVisibleUnitIndex = 0;
             try {
@@ -735,17 +734,16 @@ public class CurationPage
         }
     }
 
-    public void setModelObject(CurationContainer aModel)
+    public void setModelObject(SentenceIndex aModel)
     {
         setDefaultModelObject(aModel);
     }
 
-    private void updateCurationView(final CurationContainer aCurationContainer,
-            final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
+    private void updateCurationView(final SentenceIndex aCurationContainer,
+            final SentenceInfo curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = CurationPage.this.getModelObject();
         state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
-        aCurationContainer.setState(state);
 
         try {
             actionRefreshDocument(aTarget);
@@ -771,16 +769,16 @@ public class CurationPage
         return curationDocumentService.readCurationCas(state.getDocument());
     }
 
-    private void init(AjaxRequestTarget aTarget, CurationContainer aCC)
+    private void init(AjaxRequestTarget aTarget, SentenceIndex aCC)
         throws UIMAException, ClassNotFoundException, IOException
     {
         commonUpdate();
 
-        suggestionViewPanel.init(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+        annotatorsPanel.init(aTarget, getModelObject(), annotationSelectionByUsernameAndAddress,
                 curationView);
     }
 
-    private void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
+    private void updatePanel(AjaxRequestTarget aTarget, SentenceIndex aCC)
     {
         commonUpdate();
 
@@ -788,11 +786,11 @@ public class CurationPage
         annotationEditor.requestRender(aTarget);
 
         // Render the user annotation segments (lower part)
-        suggestionViewPanel.requestUpdate(aTarget, aCC, annotationSelectionByUsernameAndAddress,
-                curationView);
+        annotatorsPanel.requestUpdate(aTarget, getModelObject(),
+                annotationSelectionByUsernameAndAddress, curationView);
 
         // Render the sentence list sidebar
-        aTarget.add(sentenceLinksListView);
+        aTarget.add(sentenceList);
     }
 
     private void commonUpdate()

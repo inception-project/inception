@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.buildEntityTypes;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
@@ -107,18 +108,17 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationS
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Panel with the annotator's annotations.
  */
-public class SuggestionViewPanel
+public class AnnotatorsPanel
     extends Panel
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SuggestionViewPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotatorsPanel.class);
 
     private static final String PARAM_TYPE = "type";
     private static final String PARAM_ID = "id";
@@ -140,7 +140,7 @@ public class SuggestionViewPanel
     private @SpringBean ColoringService coloringService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
-    public SuggestionViewPanel(String id, IModel<List<AnnotatorSegment>> aModel)
+    public AnnotatorsPanel(String id, IModel<List<AnnotatorSegment>> aModel)
     {
         super(id, aModel);
         setOutputMarkupId(true);
@@ -164,7 +164,7 @@ public class SuggestionViewPanel
                     @Override
                     protected void onClientEvent(AjaxRequestTarget aTarget) throws Exception
                     {
-                        SuggestionViewPanel.this.onClientEvent(aTarget, annotatorSegment);
+                        AnnotatorsPanel.this.onClientEvent(aTarget, annotatorSegment);
                     }
                 };
                 curationVisualizer.setOutputMarkupId(true);
@@ -445,13 +445,12 @@ public class SuggestionViewPanel
     }
 
     private String getCollectionInformation(AnnotationSchemaService aAnnotationService,
-            CurationContainer aCurationContainer)
+            AnnotatorState aState)
         throws IOException
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        info.setEntityTypes(
-                BratRenderer.buildEntityTypes(aCurationContainer.getState().getProject(),
-                        aCurationContainer.getState().getAnnotationLayers(), aAnnotationService));
+        info.setEntityTypes(buildEntityTypes(aState.getProject(), aState.getAnnotationLayers(),
+                aAnnotationService));
 
         return JSONUtil.toInterpretableJsonString(info);
     }
@@ -459,12 +458,11 @@ public class SuggestionViewPanel
     /**
      * Initializes the user annotation segments later to be filled with content.
      */
-    public void init(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
+    public void init(AjaxRequestTarget aTarget, AnnotatorState state,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            SourceListView aCurationSegment)
+            SentenceInfo aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        AnnotatorState state = aCurationContainer.getState();
         SourceDocument sourceDocument = state.getDocument();
 
         Map<String, CAS> casses = new HashMap<>();
@@ -524,7 +522,7 @@ public class SuggestionViewPanel
                 AnnotatorSegment seg = new AnnotatorSegment();
                 seg.setUsername(username);
                 seg.setAnnotatorState(state);
-                seg.setCollectionData(getCollectionInformation(schemaService, aCurationContainer));
+                seg.setCollectionData(getCollectionInformation(schemaService, state));
                 seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
                 seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
                 segments.add(seg);
@@ -555,13 +553,12 @@ public class SuggestionViewPanel
      * @throws AnnotationException
      *             hum?
      */
-    private void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
+    private void updatePanel(AjaxRequestTarget aTarget, AnnotatorState aState,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            SourceListView aCurationSegment)
+            SentenceInfo aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = aCurationContainer.getState();
-        SourceDocument sourceDocument = state.getDocument();
+        SourceDocument sourceDocument = aState.getDocument();
 
         if (sourceDocument == null) {
             return;
@@ -570,15 +567,15 @@ public class SuggestionViewPanel
         Map<String, CAS> casses = new HashMap<>();
 
         // This is the CAS that the user can actively edit
-        CAS annotatorCas = getAnnotatorCas(state, aAnnotationSelectionByUsernameAndAddress,
+        CAS annotatorCas = getAnnotatorCas(aState, aAnnotationSelectionByUsernameAndAddress,
                 sourceDocument, casses);
 
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
-        List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
+        List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
 
-        Project project = state.getProject();
-        Mode mode = state.getMode();
+        Project project = aState.getProject();
+        Mode mode = aState.getMode();
 
         DiffResult diff;
         if (mode.equals(CURATION)) {
@@ -628,9 +625,9 @@ public class SuggestionViewPanel
 
             // Create curation view for the current user
             try {
-                seg.setCollectionData(getCollectionInformation(schemaService, aCurationContainer));
-                seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
-                seg.setAnnotatorState(state);
+                seg.setCollectionData(getCollectionInformation(schemaService, aState));
+                seg.setDocumentResponse(render(cas, aState, curationColoringStrategy));
+                seg.setAnnotatorState(aState);
                 seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
             }
             catch (IOException e) {
@@ -776,13 +773,13 @@ public class SuggestionViewPanel
      * can be called multiple times, even for the same annotation editor, but only resulting in a
      * single update and rendering call.
      */
-    public final void requestUpdate(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
+    public final void requestUpdate(AjaxRequestTarget aTarget, AnnotatorState aState,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            SourceListView aCurationSegment)
+            SentenceInfo aCurationSegment)
     {
         LOG.trace("request update");
         aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
-            updatePanel(_target, aCurationContainer, aAnnotationSelectionByUsernameAndAddress,
+            updatePanel(_target, aState, aAnnotationSelectionByUsernameAndAddress,
                     aCurationSegment);
         }));
     }

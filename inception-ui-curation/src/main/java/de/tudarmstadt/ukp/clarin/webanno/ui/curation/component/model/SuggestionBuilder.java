@@ -71,8 +71,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * all annotations, where all annotators agree on. This is done by copying a random cas and removing
  * all differing annotations.
  *
- * Secondly, the class creates an instance of {@link CurationContainer}, which is the wicket model
- * for the curation panel. The {@link CurationContainer} contains the text for all sentences, which
+ * Secondly, the class creates an instance of {@link SentenceIndex}, which is the wicket model
+ * for the curation panel. The {@link SentenceIndex} contains the text for all sentences, which
  * are displayed at a specific page.
  */
 public class SuggestionBuilder
@@ -92,7 +92,7 @@ public class SuggestionBuilder
         schemaService = aAnnotationService;
     }
 
-    public CurationContainer buildCurationContainer(AnnotatorState aState)
+    public SentenceIndex buildCurationContainer(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
@@ -123,7 +123,7 @@ public class SuggestionBuilder
         long diffStart = System.currentTimeMillis();
         log.debug("Calculating differences...");
         int count = 0;
-        CurationContainer curationContainer = new CurationContainer();
+        SentenceIndex curationContainer = new SentenceIndex();
         for (Integer begin : segmentBeginEnd.keySet()) {
             Integer end = segmentBeginEnd.get(begin);
 
@@ -136,7 +136,7 @@ public class SuggestionBuilder
             DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, begin, end)
                     .toResult();
 
-            SourceListView curationSegment = new SourceListView(begin, end,
+            SentenceInfo curationSegment = new SentenceInfo(begin, end,
                     segmentNumber.get(begin));
 
             if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
@@ -172,7 +172,7 @@ public class SuggestionBuilder
                         segmentAdress.get(username).get(begin));
             }
 
-            curationContainer.addCurationSegment(curationSegment);
+            curationContainer.addSentenceInfo(curationSegment);
         }
         log.debug("Difference calculation completed in {}ms",
                 (System.currentTimeMillis() - diffStart));

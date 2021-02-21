@@ -24,11 +24,6 @@
       flex-direction: column !important;
     }
     
-    .curation-sentence-item {
-        margin: 2px 2px;
-        padding: 2px 2px;
-    }
-    
     .curation-sentence-number {
       border: 1px solid white;
       border-radius: 4px 4px 4px 4px;
@@ -51,15 +46,6 @@
       -webkit-border-radius: 4px 4px 4px 4px;
     }
     
-    .curation-sentence-list {
-      -webkit-box-sizing: border-box;
-      -moz-box-sizing: border-box;
-        box-sizing: border-box;
-        width: 100%;
-        height: 550px;
-        overflow: scroll;
-    }
-
     .hidden-view {
         background-color: #DFDFDF;
     }
@@ -84,29 +70,20 @@
       box-shadow: 0px 0px 5px 1px rgba(231,166,26,1);
         border: 1px solid rgba(231,166,26,1);
     }
-    
-    .suggestion-panel-body {
-      overflow-x: auto;
-    }
   </style>
 </wicket:head>
 </head>
 <body>
   <wicket:extend>
     <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
-      <!-- 
-         We cannot put a 'wicket:enclosure="sentencesListView"' on this div because this 
-         inevitably causes the sentence list to "jump up" when re-rendering it (i.e. when paging
-         or when selecting a sentence).
-       -->
-      <div wicket:id="sentenceListContainer" class="flex-sidebar flex-v-container flex-gutter">
+      <div wicket:id="leftSidebar" class="flex-sidebar flex-v-container flex-gutter">
         <div class="flex-content card">
           <div class="card-header">
             Sentences
           </div>
           <div class="scrolling card-body">
-            <div wicket:id="sentenceLinkListView" style="border-collapse: collapse;">
-              <span wicket:id="sentenceLinkList" class="curation-sentence-number">
+            <div wicket:id="sentenceList" style="border-collapse: collapse;">
+              <span wicket:id="sentence" class="curation-sentence-number">
                 <a wicket:id="sentenceNumber"></a>
               </span>
             </div>
@@ -123,10 +100,10 @@
             </div>
             <div class="card-body flex-v-container" style="padding: 0px;">
               <nav wicket:id="actionBar" class="action-bar"/>
-              <div wicket:id="mergeView" class="text-center flex-content flex-v-container"></div>
+              <div wicket:id="annotationEditor" class="text-center flex-content flex-v-container"/>
             </div>
           </div>
-          <div wicket:id="suggestionViewPanel" class="scrolling flex-content"/>
+          <div wicket:id="annotatorsPanel" class="scrolling flex-content"/>
         </div>
       </div>
 

@@ -25,7 +25,7 @@ import java.util.Map;
  * A model comprises of Curation Segments comprising of the begin and end of the sentences,
  * {@link SentenceState} Sentence number
  */
-public class SourceListView
+public class SentenceInfo
     implements Serializable
 {
     private static final long serialVersionUID = 9219600871129699568L;
@@ -46,14 +46,14 @@ public class SourceListView
 
     private Map<String, Integer> sentenceAddress = new LinkedHashMap<>();
 
-    public SourceListView()
+    public SentenceInfo()
     {
         begin = null;
         end = null;
         sentenceNumber = null;
     }
 
-    public SourceListView(int aBegin, int aEnd, int aUnitIndex)
+    public SentenceInfo(int aBegin, int aEnd, int aUnitIndex)
     {
         begin = aBegin;
         end = aEnd;
