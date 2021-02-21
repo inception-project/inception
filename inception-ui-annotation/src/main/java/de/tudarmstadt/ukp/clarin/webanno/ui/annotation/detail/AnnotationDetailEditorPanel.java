@@ -827,7 +827,6 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("actionAnnotate() updating progress information");
         int sentenceNumber = getSentenceNumber(aCas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // persist changes
         editorPage.writeEditorCas(aCas);
@@ -1037,13 +1036,13 @@ public abstract class AnnotationDetailEditorPanel
         // Update progress information
         int sentenceNumber = getSentenceNumber(cas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
 
         autoScroll(cas);
 
         state.rememberFeatures();
 
         info(generateMessage(state.getSelectedAnnotationLayer(), null, true));
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         reset(aTarget);
 
@@ -1065,6 +1064,8 @@ public abstract class AnnotationDetailEditorPanel
                 aCas.removeFsFromIndexes(rel.getEndpoint());
                 info("The attached annotation for relation type [" + rel.getLayer().getUiName()
                         + "] has been deleted");
+                RequestCycle.get().find(AjaxRequestTarget.class)
+                        .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
             }
         }
 
@@ -1183,7 +1184,6 @@ public abstract class AnnotationDetailEditorPanel
         editorPage.writeEditorCas(cas);
         int sentenceNumber = getSentenceNumber(cas, originFs.getBegin());
         state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
 
         autoScroll(cas);
 
@@ -1323,6 +1323,7 @@ public abstract class AnnotationDetailEditorPanel
                         + "try re-opening the document!");
                 LOG.error(String.format("Unable to find %s in the current cas typesystem",
                         feature.getName()));
+                aTarget.addChildren(getPage(), IFeedback.class);
                 return;
             }
 

@@ -23,7 +23,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class ChainSpanDeletedEvent
-    extends ChainEvent
+    extends ChainSpanEvent
     implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = -6892060493654183356L;

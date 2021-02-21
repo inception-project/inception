@@ -15,47 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import org.apache.uima.cas.text.AnnotationFS;
 
-/**
- * Variables for the different states of a {@link TrainingDocument} workflow.
- */
-public enum TrainDocumentState
-    implements PersistentEnum
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
+public class ChainLinkEvent
+    extends ChainEvent
 {
-    /**
-     * This is a newly added training document.
-     */
-    NEW("NEW"),
+    private static final long serialVersionUID = -6150471041549070098L;
 
-    /**
-     * This training document is processed and used for training a model
-     */
-    CURATION_IN_PROGRESS("PROCESSED");
+    private final AnnotationFS nextLink;
 
-    public String getName()
+    public ChainLinkEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer, AnnotationFS aAnnotation, AnnotationFS aNextLink)
     {
-        return getId();
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+
+        nextLink = aNextLink;
     }
 
-    @Override
-    public String toString()
+    public AnnotationFS getNextLink()
     {
-        return getId();
-    }
-
-    TrainDocumentState(String aId)
-    {
-        this.id = aId;
-    }
-
-    private final String id;
-
-    @Override
-    public String getId()
-    {
-        return id;
+        return nextLink;
     }
 }
