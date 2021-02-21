@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
@@ -45,6 +44,7 @@ import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,7 +54,6 @@ import java.util.Optional;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -685,40 +684,25 @@ public class CurationPage
         CAS editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false, false,
                 false);
 
-        Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
-        Map<Integer, Integer> segmentNumber = new HashMap<>();
-        Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<>();
-
-        segmentAdress.put(CURATION_USER, new HashMap<>());
-        Type sentenceType = getType(editorCas, Sentence.class);
-        int sentenceNumber = 1;
-        for (AnnotationFS sentence : select(editorCas, sentenceType)) {
-            segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
-            segmentNumber.put(sentence.getBegin(), sentenceNumber);
-            segmentAdress.get(CURATION_USER).put(sentence.getBegin(), getAddr(sentence));
-            sentenceNumber += 1;
-        }
-
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
                 aState.getAnnotationLayers());
 
         long diffStart = System.currentTimeMillis();
         LOG.debug("Calculating differences...");
-        int count = 0;
+        int unitIndex = 0;
         SentenceOverview index = new SentenceOverview();
-        for (Integer begin : segmentBeginEnd.keySet()) {
-            Integer end = segmentBeginEnd.get(begin);
-
-            count++;
-            if (count % 100 == 0) {
-                LOG.debug("Processing differences: {} of {} sentences...", count,
-                        segmentBeginEnd.size());
+        Collection<AnnotationFS> units = select(editorCas, getType(editorCas, Sentence.class));
+        for (AnnotationFS unit : units) {
+            unitIndex++;
+            if (unitIndex % 100 == 0) {
+                LOG.debug("Processing differences: {} of {} sentences...", unitIndex, units.size());
             }
 
-            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, begin, end)
-                    .toResult();
+            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
+                    unit.getBegin(), unit.getEnd()).toResult();
 
-            UnitState curationSegment = new UnitState(begin, end, segmentNumber.get(begin));
+            UnitState curationSegment = new UnitState(unit.getBegin(), unit.getEnd(),
+                    unitIndex);
 
             if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
                 // Is this confSet a diff due to stacked annotations (with same configuration)?

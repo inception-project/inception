@@ -62,9 +62,9 @@ public abstract class BratSuggestionVisualizer
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
 
-    public BratSuggestionVisualizer(String id, IModel<AnnotatorSegment> aModel, int aPosition)
+    public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegment> aModel, int aPosition)
     {
-        super(id, aModel);
+        super(aId, aModel);
         String username;
 
         Project project = getModelObject().getAnnotatorState().getProject();
