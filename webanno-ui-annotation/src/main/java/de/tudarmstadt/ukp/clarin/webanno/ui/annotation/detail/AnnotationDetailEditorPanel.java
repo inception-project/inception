@@ -1044,6 +1044,7 @@ public abstract class AnnotationDetailEditorPanel
         state.rememberFeatures();
 
         info(generateMessage(state.getSelectedAnnotationLayer(), null, true));
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         reset(aTarget);
 
@@ -1065,6 +1066,8 @@ public abstract class AnnotationDetailEditorPanel
                 aCas.removeFsFromIndexes(rel.getEndpoint());
                 info("The attached annotation for relation type [" + rel.getLayer().getUiName()
                         + "] has been deleted");
+                RequestCycle.get().find(AjaxRequestTarget.class)
+                        .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
             }
         }
 
@@ -1323,6 +1326,7 @@ public abstract class AnnotationDetailEditorPanel
                         + "try re-opening the document!");
                 LOG.error(String.format("Unable to find %s in the current cas typesystem",
                         feature.getName()));
+                aTarget.addChildren(getPage(), IFeedback.class);
                 return;
             }
 
