@@ -381,22 +381,10 @@ public class AnnotatorsPanel
 
     private void writeEditorCas(AnnotatorState state, CAS aCas) throws IOException
     {
-        switch (state.getMode()) {
-        case ANNOTATION:
-            documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
+        curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
-            updateDocumentTimestampAfterWrite(state, documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
-            break;
-        case CURATION:
-            curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
-
-            updateDocumentTimestampAfterWrite(state,
-                    curationDocumentService.getCurationCasTimestamp(state.getDocument()));
-            break;
-        default:
-            throw new IllegalStateException("Unknown mode [" + state.getMode() + "]");
-        }
+        updateDocumentTimestampAfterWrite(state,
+                curationDocumentService.getCurationCasTimestamp(state.getDocument()));
     }
 
     private CAS readAnnotatorCas(AnnotatorSegment aSegment) throws IOException
@@ -475,10 +463,10 @@ public class AnnotatorsPanel
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
 
         Project project = state.getProject();
-        Mode mode1 = state.getMode();
+        Mode mode = state.getMode();
 
         DiffResult diff;
-        if (mode1.equals(CURATION)) {
+        if (mode.equals(CURATION)) {
             diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
                     aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd())
                             .toResult();
@@ -503,16 +491,13 @@ public class AnnotatorsPanel
         all.removeAll(i);
 
         Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
-        addSuggestionColor(project, mode1, casses, annoStates, d, false, false);
-        addSuggestionColor(project, mode1, casses, annoStates, i, true, false);
-        addSuggestionColor(project, mode1, casses, annoStates, all, false, true);
-
-        final Mode mode = state.getMode();
-        boolean isCurationMode = mode.equals(Mode.CURATION);
+        addSuggestionColor(project, mode, casses, annoStates, d, false, false);
+        addSuggestionColor(project, mode, casses, annoStates, i, true, false);
+        addSuggestionColor(project, mode, casses, annoStates, all, false, true);
 
         List<AnnotatorSegment> segments = new ArrayList<>();
         for (String username : casses.keySet().stream().sorted().collect(toList())) {
-            if ((!username.equals(CURATION_USER) && isCurationMode)) {
+            if ((!username.equals(CURATION_USER) && mode.equals(Mode.CURATION))) {
                 CAS cas = casses.get(username);
 
                 ColoringStrategy curationColoringStrategy = makeColoringStrategy(
