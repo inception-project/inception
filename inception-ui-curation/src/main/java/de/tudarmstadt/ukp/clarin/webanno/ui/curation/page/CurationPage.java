@@ -119,7 +119,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceIndex;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
@@ -169,12 +168,6 @@ public class CurationPage
 
     private int firstVisibleUnitIndex = 0;
     private int lastVisibleUnitIndex = 0;
-
-    /**
-     * Map for tracking curated spans. Key contains the address of the span, the value contains the
-     * username from which the span has been selected
-     */
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
 
     public CurationPage(final PageParameters aPageParameters)
     {
@@ -240,8 +233,6 @@ public class CurationPage
         AnnotatorSegment annotatorSegment = new AnnotatorSegment();
 
         if (getModelObject() != null) {
-            annotatorSegment
-                    .setSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
             annotatorSegment.setAnnotatorState(getModelObject());
             segments.add(annotatorSegment);
         }
@@ -482,8 +473,7 @@ public class CurationPage
             detailPanel.reset(aTarget);
             commonUpdate();
 
-            annotatorsPanel.init(aTarget, getModelObject(), annotationSelectionByUsernameAndAddress,
-                    curationView);
+            annotatorsPanel.init(aTarget, getModelObject(), curationView);
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
@@ -539,8 +529,7 @@ public class CurationPage
             annotationEditor.requestRender(aTarget);
 
             // Render the user annotation segments (lower part)
-            annotatorsPanel.requestRender(aTarget, getModelObject(),
-                    annotationSelectionByUsernameAndAddress, curationView);
+            annotatorsPanel.requestRender(aTarget, getModelObject(), curationView);
 
             // Render the sentence list sidebar
             aTarget.add(sentenceList);

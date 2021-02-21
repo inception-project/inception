@@ -104,7 +104,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
@@ -446,17 +445,14 @@ public class AnnotatorsPanel
     /**
      * Initializes the user annotation segments later to be filled with content.
      */
-    public void init(AjaxRequestTarget aTarget, AnnotatorState state,
-            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            SentenceInfo aCurationSegment)
+    public void init(AjaxRequestTarget aTarget, AnnotatorState state, SentenceInfo aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException
     {
         SourceDocument sourceDocument = state.getDocument();
 
         Map<String, CAS> casses = new HashMap<>();
         // This is the CAS that the user can actively edit
-        CAS annotatorCas = getAnnotatorCas(state, aAnnotationSelectionByUsernameAndAddress,
-                sourceDocument, casses);
+        CAS annotatorCas = getAnnotatorCas(state, sourceDocument, casses);
 
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
@@ -509,7 +505,6 @@ public class AnnotatorsPanel
                 seg.setAnnotatorState(state);
                 seg.setCollectionData(getCollectionInformation(schemaService, state));
                 seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
-                seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
                 segments.add(seg);
             }
         }
@@ -539,7 +534,6 @@ public class AnnotatorsPanel
      *             hum?
      */
     private void updatePanel(AjaxRequestTarget aTarget, AnnotatorState aState,
-            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SentenceInfo aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -552,8 +546,7 @@ public class AnnotatorsPanel
         Map<String, CAS> casses = new HashMap<>();
 
         // This is the CAS that the user can actively edit
-        CAS annotatorCas = getAnnotatorCas(aState, aAnnotationSelectionByUsernameAndAddress,
-                sourceDocument, casses);
+        CAS annotatorCas = getAnnotatorCas(aState, sourceDocument, casses);
 
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
@@ -613,7 +606,6 @@ public class AnnotatorsPanel
                 seg.setCollectionData(getCollectionInformation(schemaService, aState));
                 seg.setDocumentResponse(render(cas, aState, curationColoringStrategy));
                 seg.setAnnotatorState(aState);
-                seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
             }
             catch (IOException e) {
                 error("Unable to render: " + e.getMessage());
@@ -726,9 +718,8 @@ public class AnnotatorsPanel
         }
     }
 
-    private CAS getAnnotatorCas(AnnotatorState aBModel,
-            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            SourceDocument sourceDocument, Map<String, CAS> aCasses)
+    private CAS getAnnotatorCas(AnnotatorState aBModel, SourceDocument sourceDocument,
+            Map<String, CAS> aCasses)
         throws UIMAException, IOException, ClassNotFoundException
     {
         // The CAS the user can edit is the one from the virtual CURATION USER
@@ -745,9 +736,6 @@ public class AnnotatorsPanel
                     || username.equals(CURATION_USER)) {
                 CAS cas = documentService.readAnnotationCas(annotationDocument);
                 aCasses.put(username, cas);
-
-                // cleanup annotationSelections
-                aAnnotationSelectionByUsernameAndAddress.put(username, new HashMap<>());
             }
         }
         return annotatorCas;
@@ -759,13 +747,11 @@ public class AnnotatorsPanel
      * single update and rendering call.
      */
     public final void requestRender(AjaxRequestTarget aTarget, AnnotatorState aState,
-            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SentenceInfo aCurationSegment)
     {
         LOG.trace("request update");
         aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
-            updatePanel(_target, aState, aAnnotationSelectionByUsernameAndAddress,
-                    aCurationSegment);
+            updatePanel(_target, aState, aCurationSegment);
         }));
     }
 

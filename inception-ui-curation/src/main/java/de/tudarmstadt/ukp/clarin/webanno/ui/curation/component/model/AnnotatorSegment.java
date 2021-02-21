@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -36,8 +35,6 @@ public class AnnotatorSegment
     private String collectionData = "{}";
     private String username = "";
     private AnnotatorState state;
-    private AnnotationSelection annotationSelection;
-    private Map<String, Map<Integer, AnnotationSelection>> selectionByUsernameAndAddress;
 
     public String getDocumentResponse()
     {
@@ -77,27 +74,6 @@ public class AnnotatorSegment
     public void setAnnotatorState(AnnotatorState aState)
     {
         state = aState;
-    }
-
-    public AnnotationSelection getAnnotationSelection()
-    {
-        return annotationSelection;
-    }
-
-    public void setAnnotationSelection(AnnotationSelection aAnnotationSelection)
-    {
-        annotationSelection = aAnnotationSelection;
-    }
-
-    public Map<String, Map<Integer, AnnotationSelection>> getSelectionByUsernameAndAddress()
-    {
-        return selectionByUsernameAndAddress;
-    }
-
-    public void setSelectionByUsernameAndAddress(
-            Map<String, Map<Integer, AnnotationSelection>> aSelectionByUsernameAndAddress)
-    {
-        selectionByUsernameAndAddress = aSelectionByUsernameAndAddress;
     }
 
     public boolean equals(AnnotatorSegment segment)
