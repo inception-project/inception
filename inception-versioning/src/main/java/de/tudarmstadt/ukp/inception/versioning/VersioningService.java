@@ -18,6 +18,11 @@
 package de.tudarmstadt.ukp.inception.versioning;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Optional;
+
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -33,5 +38,14 @@ public interface VersioningService
 
     void labelCurrentVersion(Project aProject, String aLabel);
 
-    File getRepoDir(Long aProjectId);
+    File getRepoDir(Project aProject);
+
+    void initializeRepo(Project aProject) throws GitAPIException;
+
+    boolean repoExists(Project aProject);
+
+    Optional<String> getRemote(Project aProject) throws IOException, GitAPIException;
+
+    void setRemote(Project aProject, String aValue)
+        throws IOException, GitAPIException, URISyntaxException;
 }

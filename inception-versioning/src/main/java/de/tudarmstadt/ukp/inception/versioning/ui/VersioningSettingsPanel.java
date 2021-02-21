@@ -53,7 +53,7 @@ public class VersioningSettingsPanel
         versioningContainer.setOutputMarkupId(true);
 
         TextField<String> repoPathField = new TextField<String>("repoPath",
-                Model.of(versioningService.getRepoDir(getModelObject().getId()).getAbsolutePath()));
+                Model.of(versioningService.getRepoDir(getModelObject()).getAbsolutePath()));
 
         versioningContainer.add(repoPathField);
 

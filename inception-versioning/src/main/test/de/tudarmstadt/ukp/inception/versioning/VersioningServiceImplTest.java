@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,8 +61,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -100,7 +105,7 @@ public class VersioningServiceImplTest
     {
         projectService.createProject(testProject);
 
-        assertThat(sut.getRepoDir(testProject.getId()))
+        assertThat(sut.getRepoDir(testProject))
                 .isDirectoryContaining(f -> f.getName().equals(".git") && f.isDirectory());
     }
 
@@ -108,12 +113,12 @@ public class VersioningServiceImplTest
     public void deletingProject_ShouldRemoveGitRepository() throws IOException
     {
         projectService.createProject(testProject);
-        assertThat(sut.getRepoDir(testProject.getId()))
+        assertThat(sut.getRepoDir(testProject))
                 .isDirectoryContaining(f -> f.getName().equals(".git") && f.isDirectory());
 
         projectService.removeProject(testProject);
 
-        assertThat(sut.getRepoDir(testProject.getId())).doesNotExist();
+        assertThat(sut.getRepoDir(testProject)).doesNotExist();
     }
 
     @Test
@@ -123,8 +128,27 @@ public class VersioningServiceImplTest
 
         sut.snapshotCompleteProject(testProject);
 
-        assertThat(sut.getRepoDir(testProject.getId())).isDirectoryContaining(
+        assertThat(sut.getRepoDir(testProject)).isDirectoryContaining(
                 f -> f.getName().equals(VersioningServiceImpl.LAYERS) && f.isFile());
+    }
+
+    @Test
+    public void getRemote_IfUrlSet_ShouldReturnRemoteUrl() throws Exception
+    {
+        String url = "git@github.com:inception-project/inception.git";
+        projectService.createProject(testProject);
+
+        sut.setRemote(testProject, url);
+
+        assertThat(sut.getRemote(testProject)).contains(url);
+    }
+
+    @Test
+    public void getRemote_IfUrlNotSet_ShouldReturnEmpty() throws Exception
+    {
+        projectService.createProject(testProject);
+
+        assertThat(sut.getRemote(testProject)).isEmpty();
     }
 
     @SpringBootConfiguration
@@ -194,7 +218,24 @@ public class VersioningServiceImplTest
         }
 
         @Bean
-        VersioningService versioningService(RepositoryProperties aRepositoryProperties,
+        public CasStorageService casStorageService(AnnotationSchemaService aAnnotationSchemaService,
+                RepositoryProperties aRepositoryProperties)
+        {
+            return new CasStorageServiceImpl(new CasDoctor(), aAnnotationSchemaService,
+                    aRepositoryProperties, new BackupProperties());
+        }
+
+        @Bean
+        public ImportExportService importExportService(RepositoryProperties aRepositoryProperties,
+                AnnotationSchemaService aAnnotationSchemaService,
+                CasStorageService aCasStorageService)
+        {
+            return new ImportExportServiceImpl(aRepositoryProperties, Lists.emptyList(),
+                    aCasStorageService, aAnnotationSchemaService);
+        }
+
+        @Bean
+        public VersioningService versioningService(RepositoryProperties aRepositoryProperties,
                 AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
                 ProjectService aProjectservice, CasStorageService aCasStorageService,
                 UserDao aUserDao)
@@ -202,6 +243,7 @@ public class VersioningServiceImplTest
             return new VersioningServiceImpl(aRepositoryProperties, aAnnotationSchemaService,
                     aDocumentService, aProjectservice, aCasStorageService, aUserDao);
         }
+
     }
 
 }

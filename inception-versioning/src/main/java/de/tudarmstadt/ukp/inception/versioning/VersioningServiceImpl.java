@@ -23,11 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDE
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -35,6 +37,7 @@ import org.apache.uima.cas.SerialFormat;
 import org.apache.uima.util.CasIOUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.transport.URIish;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,10 +99,7 @@ public class VersioningServiceImpl
     @Transactional
     public void onAfterProjectCreated(AfterProjectCreatedEvent aEvent) throws GitAPIException
     {
-        Project project = aEvent.getProject();
-        File repoPath = getRepoDir(project.getId());
-        log.info("Creating git repository for project [{}] at [{}]", project.getId(), repoPath);
-        Git git = Git.init().setDirectory(repoPath).call();
+        initializeRepo(aEvent.getProject());
     }
 
     @EventListener
@@ -107,7 +107,7 @@ public class VersioningServiceImpl
     public void onBeforeProjectRemovedEvent(BeforeProjectRemovedEvent aEvent)
     {
         Project project = aEvent.getProject();
-        File repoPath = getRepoDir(project.getId());
+        File repoPath = getRepoDir(project);
         log.info(
                 "Removing git repository for project [{}] at [{}] because project is being removed",
                 project.getId(), repoPath);
@@ -117,13 +117,13 @@ public class VersioningServiceImpl
     @Override
     public void snapshotCompleteProject(Project aProject)
     {
-        File repoPath = getRepoDir(aProject.getId());
-        File layersJsonPath = new File(repoPath, LAYERS);
+        File repoDir = getRepoDir(aProject);
+        File layersJsonFile = new File(repoDir, LAYERS);
 
         try {
-            Git git = Git.open(repoPath);
+            Git git = Git.open(repoDir);
 
-            dumpLayers(layersJsonPath, aProject);
+            dumpLayers(layersJsonFile, aProject);
             git.add().addFilepattern(LAYERS).call();
 
             for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
@@ -152,7 +152,7 @@ public class VersioningServiceImpl
         Project project = aAnnotationDocument.getProject();
         String user = aAnnotationDocument.getUser();
 
-        File repoDir = getRepoDir(project.getId());
+        File repoDir = getRepoDir(project);
         Path annotationDir = repoDir.toPath().resolve(DOCUMENTS);
         Path userDir = annotationDir.resolve(user);
 
@@ -173,10 +173,52 @@ public class VersioningServiceImpl
     }
 
     @Override
-    public File getRepoDir(Long aProjectId)
+    public File getRepoDir(Project aProject)
     {
-        File repositoryDir = repositoryProperties.getPath();
-        return new File(repositoryDir, "/" + PROJECT_FOLDER + "/" + aProjectId + "/" + REPO_NAME);
+        File inceptionDir = repositoryProperties.getPath();
+        return inceptionDir.toPath() //
+                .resolve(PROJECT_FOLDER) //
+                .resolve(aProject.getId().toString()) //
+                .resolve(REPO_NAME) //
+                .toFile();
+    }
+
+    @Override
+    public void initializeRepo(Project aProject) throws GitAPIException
+    {
+        File repoDir = getRepoDir(aProject);
+        log.info("Creating git repository for project [{}] at [{}]", aProject.getId(), repoDir);
+        Git.init().setDirectory(repoDir).call();
+    }
+
+    @Override
+    public boolean repoExists(Project aProject)
+    {
+        File repoDir = getRepoDir(aProject);
+        File gitDir = repoDir.toPath().resolve(".git").toFile();
+
+        return repoDir.isDirectory() && gitDir.isDirectory();
+    }
+
+    @Override
+    public Optional<String> getRemote(Project aProject) throws IOException, GitAPIException
+    {
+        File repoDir = getRepoDir(aProject);
+        Git git = Git.open(repoDir);
+
+        String url = git.getRepository().getConfig().getString("remote", "origin", "url");
+
+        return Optional.ofNullable(url);
+    }
+
+    @Override
+    public void setRemote(Project aProject, String aValue)
+        throws IOException, GitAPIException, URISyntaxException
+    {
+        File repoDir = getRepoDir(aProject);
+        Git git = Git.open(repoDir);
+
+        git.remoteAdd().setName("origin").setUri(new URIish(aValue)).call();
     }
 
     private void commit(Git aGit, String aMessage) throws GitAPIException
