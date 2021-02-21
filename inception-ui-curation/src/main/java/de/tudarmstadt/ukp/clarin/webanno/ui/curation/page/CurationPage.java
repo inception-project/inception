@@ -78,7 +78,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -153,7 +152,7 @@ public class CurationPage
     // Open the dialog window on first load
     private boolean firstLoad = true;
 
-    private SentenceIndex curationContainer;
+    private SentenceIndex sentenceIndex;
 
     private WebMarkupContainer centerArea;
     private WebMarkupContainer actionBar;
@@ -167,7 +166,6 @@ public class CurationPage
     private AnnotationDetailEditorPanel detailPanel;
 
     private SentenceInfo curationView;
-    private List<SentenceInfo> sourceListModel;
 
     private int firstVisibleUnitIndex = 0;
     private int lastVisibleUnitIndex = 0;
@@ -224,7 +222,7 @@ public class CurationPage
         // Ensure that a user is set
         getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
 
-        curationContainer = new SentenceIndex();
+        sentenceIndex = new SentenceIndex();
 
         WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");
         sidebarCell.setOutputMarkupPlaceholderTag(true);
@@ -249,9 +247,6 @@ public class CurationPage
         }
 
         // update source list model only first time.
-        sourceListModel = sourceListModel == null ? curationContainer.getSentenceInfos()
-                : sourceListModel;
-
         annotatorsPanel = new AnnotatorsPanel("annotatorsPanel", new ListModel<>(segments));
         annotatorsPanel.setOutputMarkupPlaceholderTag(true);
         annotatorsPanel.add(visibleWhen(
@@ -303,7 +298,7 @@ public class CurationPage
         sentenceList = new WebMarkupContainer("sentenceList");
         sentenceList.setOutputMarkupPlaceholderTag(true);
         sentenceList.add(new ListView<SentenceInfo>("sentence",
-                LoadableDetachableModel.of(() -> curationContainer.getSentenceInfos()))
+                LoadableDetachableModel.of(() -> sentenceIndex.getSentenceInfos()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
@@ -321,7 +316,7 @@ public class CurationPage
     public void onAnnotationEvent(AnnotationEvent aEvent)
     {
         if (aEvent.getRequestTarget() != null) {
-            updatePanel(aEvent.getRequestTarget(), curationContainer);
+            actionRefreshDocument(aEvent.getRequestTarget());
         }
     }
 
@@ -347,8 +342,7 @@ public class CurationPage
             @Override
             protected List<DecoratedObject<Project>> load()
             {
-                User user = userRepository
-                        .get(SecurityContextHolder.getContext().getAuthentication().getName());
+                User user = userRepository.getCurrentUser();
                 List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
                 List<Project> projectsWithFinishedAnnos = projectService
                         .listProjectsWithFinishedAnnos();
@@ -484,9 +478,12 @@ public class CurationPage
 
             currentprojectId = state.getProject().getId();
 
-            curationContainer = buildCurationContainer(state);
+            sentenceIndex = buildSentenceIndex(state);
             detailPanel.reset(aTarget);
-            init(aTarget, curationContainer);
+            commonUpdate();
+
+            annotatorsPanel.init(aTarget, getModelObject(), annotationSelectionByUsernameAndAddress,
+                    curationView);
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
@@ -526,7 +523,7 @@ public class CurationPage
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
 
         Map<String, CAS> casses = readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
-        CAS mergeCas = getMergeCas(state, state.getDocument(), casses, randomAnnotationDocument,
+        CAS mergeCas = readCurationCas(state, state.getDocument(), casses, randomAnnotationDocument,
                 true, aMergeIncompleteAnnotations, aForceRecreateCas);
 
         return mergeCas;
@@ -536,7 +533,18 @@ public class CurationPage
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
-            updatePanel(aTarget, curationContainer);
+            commonUpdate();
+
+            // Render the main annotation editor (upper part)
+            annotationEditor.requestRender(aTarget);
+
+            // Render the user annotation segments (lower part)
+            annotatorsPanel.requestRender(aTarget, getModelObject(),
+                    annotationSelectionByUsernameAndAddress, curationView);
+
+            // Render the sentence list sidebar
+            aTarget.add(sentenceList);
+
             aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
@@ -700,26 +708,15 @@ public class CurationPage
             try {
                 AnnotatorState state = CurationPage.this.getModelObject();
                 CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-                updateCurationView(curationContainer, curationViewItem, aTarget, cas);
+                state.getPagingStrategy().moveToOffset(state, cas, curationViewItem.getBegin(),
+                        CENTERED);
                 state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
-            }
-            catch (IOException e) {
-                error("Error: " + e.getMessage());
-            }
-        }
-    }
 
-    private void updateCurationView(final SentenceIndex aCurationContainer,
-            final SentenceInfo curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
-    {
-        AnnotatorState state = CurationPage.this.getModelObject();
-        state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
-
-        try {
-            actionRefreshDocument(aTarget);
-        }
-        catch (Exception e) {
-            handleException(aTarget, e);
+                actionRefreshDocument(aTarget);
+            }
+            catch (Exception e) {
+                handleException(aTarget, e);
+            }
         }
     }
 
@@ -737,30 +734,6 @@ public class CurationPage
                 curationDocumentService.getCurationCasTimestamp(state.getDocument()));
 
         return curationDocumentService.readCurationCas(state.getDocument());
-    }
-
-    private void init(AjaxRequestTarget aTarget, SentenceIndex aCC)
-        throws UIMAException, ClassNotFoundException, IOException
-    {
-        commonUpdate();
-
-        annotatorsPanel.init(aTarget, getModelObject(), annotationSelectionByUsernameAndAddress,
-                curationView);
-    }
-
-    private void updatePanel(AjaxRequestTarget aTarget, SentenceIndex aCC)
-    {
-        commonUpdate();
-
-        // Render the main annotation editor (upper part)
-        annotationEditor.requestRender(aTarget);
-
-        // Render the user annotation segments (lower part)
-        annotatorsPanel.requestUpdate(aTarget, getModelObject(),
-                annotationSelectionByUsernameAndAddress, curationView);
-
-        // Render the sentence list sidebar
-        aTarget.add(sentenceList);
     }
 
     private void commonUpdate()
@@ -789,7 +762,7 @@ public class CurationPage
         return allSourceDocuments;
     }
 
-    private SentenceIndex buildCurationContainer(AnnotatorState aState)
+    private SentenceIndex buildSentenceIndex(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
@@ -797,7 +770,8 @@ public class CurationPage
                 .listFinishedAnnotationDocuments(aState.getDocument());
 
         Map<String, CAS> casses = readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
-        CAS mergeCas = getMergeCas(aState, aState.getDocument(), casses, null, false, false, false);
+        CAS mergeCas = readCurationCas(aState, aState.getDocument(), casses, null, false, false,
+                false);
 
         int diffWindowStart = getFirstSentence(mergeCas).getBegin();
         int diffWindowEnd = mergeCas.getDocumentText().length();
@@ -912,7 +886,7 @@ public class CurationPage
      * @throws AnnotationException
      *             hum?
      */
-    private CAS getMergeCas(AnnotatorState aState, SourceDocument aDocument,
+    private CAS readCurationCas(AnnotatorState aState, SourceDocument aDocument,
             Map<String, CAS> aCasses, AnnotationDocument aTemplate, boolean aUpgrade,
             boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException

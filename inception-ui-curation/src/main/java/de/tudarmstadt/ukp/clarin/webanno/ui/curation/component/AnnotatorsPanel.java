@@ -758,7 +758,7 @@ public class AnnotatorsPanel
      * can be called multiple times, even for the same annotation editor, but only resulting in a
      * single update and rendering call.
      */
-    public final void requestUpdate(AjaxRequestTarget aTarget, AnnotatorState aState,
+    public final void requestRender(AjaxRequestTarget aTarget, AnnotatorState aState,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SentenceInfo aCurationSegment)
     {
