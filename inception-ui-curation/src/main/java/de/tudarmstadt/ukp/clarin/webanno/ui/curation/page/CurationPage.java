@@ -60,6 +60,7 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -120,6 +121,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceOverview;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.UnitClickedEvent;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -161,7 +163,7 @@ public class CurationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
-    private SentenceInfo focusSentence;
+    private SentenceInfo focussedUnit;
 
     public CurationPage(final PageParameters aPageParameters)
     {
@@ -188,6 +190,9 @@ public class CurationPage
 
     private void commonInit()
     {
+        // Ensure that a user is set
+        getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
+
         add(createUrlFragmentBehavior());
 
         centerArea = new WebMarkupContainer("centerArea");
@@ -206,9 +211,6 @@ public class CurationPage
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
                         (c, e) -> e.getRequestHandler().add(c))));
 
-        // Ensure that a user is set
-        getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
-
         sentenceIndex = new SentenceOverview();
 
         rightSidebar = new WebMarkupContainer("rightSidebar");
@@ -221,7 +223,7 @@ public class CurationPage
                                 : 10)));
         add(rightSidebar);
 
-        focusSentence = new SentenceInfo();
+        focussedUnit = new SentenceInfo();
 
         List<AnnotatorSegment> segments = new LinkedList<>();
         AnnotatorSegment annotatorSegment = new AnnotatorSegment();
@@ -290,7 +292,8 @@ public class CurationPage
             @Override
             protected void populateItem(ListItem<SentenceInfo> item)
             {
-                item.add(new SentenceLink("sentenceNumber", item.getModel()));
+                item.add(new SentenceLink("sentenceNumber", item.getModel(),
+                        CurationPage.this.getModel()));
             }
         });
 
@@ -467,7 +470,7 @@ public class CurationPage
             detailPanel.reset(aTarget);
             commonUpdate();
 
-            annotatorsPanel.init(aTarget, getModelObject(), focusSentence);
+            annotatorsPanel.init(aTarget, getModelObject(), focussedUnit);
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
@@ -523,7 +526,7 @@ public class CurationPage
             annotationEditor.requestRender(aTarget);
 
             // Render the user annotation segments (lower part)
-            annotatorsPanel.requestRender(aTarget, getModelObject(), focusSentence);
+            annotatorsPanel.requestRender(aTarget, getModelObject(), focussedUnit);
 
             // Render the sentence list sidebar
             aTarget.add(sentenceList);
@@ -619,15 +622,19 @@ public class CurationPage
         }
     }
 
-    public class SentenceLink
+    public static class SentenceLink
         extends AjaxLink<SentenceInfo>
     {
         private static final long serialVersionUID = 4558300090461815010L;
 
-        public SentenceLink(String aId, IModel<SentenceInfo> aModel)
+        private IModel<AnnotatorState> annotatorState;
+
+        public SentenceLink(String aId, IModel<SentenceInfo> aModel,
+                IModel<AnnotatorState> aAnnotatorState)
         {
             super(aId, aModel);
             setBody(Model.of(aModel.getObject().getSentenceNumber().toString()));
+            annotatorState = aAnnotatorState;
         }
 
         @Override
@@ -636,10 +643,10 @@ public class CurationPage
             super.onComponentTag(aTag);
 
             final SentenceInfo curationViewItem = getModelObject();
+            final AnnotatorState state = annotatorState.getObject();
 
             // Is in focus?
-            if (curationViewItem.getSentenceNumber() == CurationPage.this.getModelObject()
-                    .getFocusUnitIndex()) {
+            if (curationViewItem.getSentenceNumber() == state.getFocusUnitIndex()) {
                 aTag.append("class", "current", " ");
             }
 
@@ -653,7 +660,6 @@ public class CurationPage
             }
 
             // In range or not?
-            AnnotatorState state = CurationPage.this.getModelObject();
             if (curationViewItem.getSentenceNumber() >= state.getFirstVisibleUnitIndex()
                     && curationViewItem.getSentenceNumber() <= state.getLastVisibleUnitIndex()) {
                 aTag.append("class", "in-range", " ");
@@ -686,20 +692,24 @@ public class CurationPage
         @Override
         public void onClick(AjaxRequestTarget aTarget)
         {
-            final SentenceInfo curationViewItem = getModelObject();
-            focusSentence = curationViewItem;
-            try {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-                state.getPagingStrategy().moveToOffset(state, cas, curationViewItem.getBegin(),
-                        CENTERED);
-                state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
+            send(this, Broadcast.BUBBLE, new UnitClickedEvent(aTarget, getModelObject()));
+        }
+    }
 
-                actionRefreshDocument(aTarget);
-            }
-            catch (Exception e) {
-                handleException(aTarget, e);
-            }
+    @OnEvent
+    public void onUnitClickedEvent(UnitClickedEvent aEvent)
+    {
+        focussedUnit = aEvent.getUnit();
+        try {
+            AnnotatorState state = CurationPage.this.getModelObject();
+            CAS cas = curationDocumentService.readCurationCas(state.getDocument());
+            state.getPagingStrategy().moveToOffset(state, cas, focussedUnit.getBegin(), CENTERED);
+            state.setFocusUnitIndex(focussedUnit.getSentenceNumber());
+
+            actionRefreshDocument(aEvent.getTarget());
+        }
+        catch (Exception e) {
+            handleException(aEvent.getTarget(), e);
         }
     }
 
@@ -723,8 +733,8 @@ public class CurationPage
     {
         AnnotatorState state = CurationPage.this.getModelObject();
 
-        focusSentence.setCurationBegin(state.getWindowBeginOffset());
-        focusSentence.setCurationEnd(state.getWindowEndOffset());
+        focussedUnit.setCurationBegin(state.getWindowBeginOffset());
+        focussedUnit.setCurationEnd(state.getWindowEndOffset());
     }
 
     @Override
