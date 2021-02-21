@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * A model comprises of Curation Segments comprising of the begin and end of the sentences,
@@ -43,8 +41,6 @@ public class SentenceInfo
     private SentenceState sentenceState;
 
     private boolean isCurrentSentence;
-
-    private Map<String, Integer> sentenceAddress = new LinkedHashMap<>();
 
     public SentenceInfo()
     {
@@ -88,16 +84,6 @@ public class SentenceInfo
     public void setCurationEnd(int curationEnd)
     {
         this.curationEnd = curationEnd;
-    }
-
-    public Map<String, Integer> getSentenceAddressByUserIndex()
-    {
-        return sentenceAddress;
-    }
-
-    public Boolean getHasDiff()
-    {
-        return sentenceState.hasDiff();
     }
 
     public SentenceState getSentenceState()

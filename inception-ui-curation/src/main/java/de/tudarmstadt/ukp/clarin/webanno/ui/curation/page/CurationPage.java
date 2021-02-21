@@ -650,7 +650,7 @@ public class CurationPage
             }
 
             // Agree or disagree?
-            String cC = curationViewItem.getSentenceState().getValue();
+            String cC = curationViewItem.getSentenceState().getColor();
             if (cC != null) {
                 aTag.append("class", "disagree", " ");
             }
@@ -825,11 +825,6 @@ public class CurationPage
             }
             else {
                 curationSegment.setSentenceState(AGREE);
-            }
-
-            for (String username : segmentAdress.keySet()) {
-                curationSegment.getSentenceAddressByUserIndex().put(username,
-                        segmentAdress.get(username).get(begin));
             }
 
             index.addSentenceInfo(curationSegment);

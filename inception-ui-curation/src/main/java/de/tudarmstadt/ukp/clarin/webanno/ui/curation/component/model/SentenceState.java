@@ -27,48 +27,46 @@ public enum SentenceState
     /**
      * No conflicts of annotation in this sentence, no color - null- white
      */
-    AGREE(false, null),
+    AGREE(null),
+
     /**
      * Conflicts of annotation found in this sentence, mark background in red
      */
-    DISAGREE(true, "#FF9999"),
+    DISAGREE("#FF9999"),
+
     /**
      * Curator resolved conflicts - mark background in yellow
      */
-    RESOLVED(true, "#FFFF99"),
+    RESOLVED("#FFFF99"),
+
     /**
      * Current sentence, where all annotators agree
      */
-    SELECTED_AGREE(true, "#58FAF4"),
+    SELECTED_AGREE("#58FAF4"),
+
     /**
      * Current sentence, where all annotators disagree
      */
-    SELECTED_DISAGREE(true, "#C736D1"),
+    SELECTED_DISAGREE("#C736D1"),
+
     /**
      * In the range of current display window
      */
-    SELECTED_RANGE(true, "#FFFF00"),
+    SELECTED_RANGE("#FFFF00"),
 
     /**
      * Confirmed annotation.
      */
-    CONFIRMED(true, "#99FF99");
+    CONFIRMED("#99FF99");
 
-    private boolean hasDiff;
     private String colorCode;
 
-    SentenceState(boolean aHasDiff, String aColorCode)
+    SentenceState(String aColorCode)
     {
-        hasDiff = aHasDiff;
         colorCode = aColorCode;
     }
 
-    public boolean hasDiff()
-    {
-        return hasDiff;
-    }
-
-    public String getValue()
+    public String getColor()
     {
         return colorCode;
     }
