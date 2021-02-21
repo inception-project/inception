@@ -500,7 +500,7 @@ public class CurationPage
         LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
-    private CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
+    public CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         AnnotatorState state = getModelObject();
