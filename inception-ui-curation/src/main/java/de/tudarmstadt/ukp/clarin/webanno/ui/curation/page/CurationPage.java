@@ -52,7 +52,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -86,7 +85,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
@@ -108,7 +106,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -128,7 +125,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceIndex;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceInfo;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -341,32 +337,6 @@ public class CurationPage
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
-    public void onDocumentSelected(AjaxRequestTarget aTarget)
-    {
-        AnnotatorState state = getModelObject();
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        /*
-         * Changed for #152, getDocument was returning null even after opening a document Also,
-         * surrounded following code into if block to avoid error.
-         */
-        if (state.getProject() == null) {
-            setResponsePage(getApplication().getHomePage());
-            return;
-        }
-        if (state.getDocument() != null) {
-            try {
-                documentService.createSourceDocument(state.getDocument());
-                upgradeCasAndSave(state.getDocument(), username);
-
-                actionLoadDocument(aTarget);
-            }
-            catch (Exception e) {
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-        }
-    }
-
     @Override
     public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
@@ -462,24 +432,6 @@ public class CurationPage
         }
     }
 
-    private void upgradeCasAndSave(SourceDocument aDocument, String aUsername) throws IOException
-    {
-        User user = userRepository.get(aUsername);
-        if (documentService.existsAnnotationDocument(aDocument, user)) {
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
-                    user);
-            try {
-                CAS cas = documentService.readAnnotationCas(annotationDocument);
-                annotationService.upgradeCas(cas, annotationDocument);
-                documentService.writeAnnotationCas(cas, annotationDocument, false);
-            }
-            catch (Exception e) {
-                // no need to catch, it is acceptable that no curation document
-                // exists to be upgraded while there are annotation documents
-            }
-        }
-    }
-
     @Override
     public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
@@ -548,7 +500,7 @@ public class CurationPage
         LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
-    public CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
+    private CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         AnnotatorState state = getModelObject();
@@ -757,11 +709,6 @@ public class CurationPage
         }
     }
 
-    public void setModelObject(SentenceIndex aModel)
-    {
-        setDefaultModelObject(aModel);
-    }
-
     private void updateCurationView(final SentenceIndex aCurationContainer,
             final SentenceInfo curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
@@ -842,7 +789,7 @@ public class CurationPage
         return allSourceDocuments;
     }
 
-    public SentenceIndex buildCurationContainer(AnnotatorState aState)
+    private SentenceIndex buildCurationContainer(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
@@ -874,7 +821,7 @@ public class CurationPage
         long diffStart = System.currentTimeMillis();
         LOG.debug("Calculating differences...");
         int count = 0;
-        SentenceIndex curationContainer = new SentenceIndex();
+        SentenceIndex index = new SentenceIndex();
         for (Integer begin : segmentBeginEnd.keySet()) {
             Integer end = segmentBeginEnd.get(begin);
 
@@ -922,15 +869,15 @@ public class CurationPage
                         segmentAdress.get(username).get(begin));
             }
 
-            curationContainer.addSentenceInfo(curationSegment);
+            index.addSentenceInfo(curationSegment);
         }
         LOG.debug("Difference calculation completed in {}ms",
                 (System.currentTimeMillis() - diffStart));
 
-        return curationContainer;
+        return index;
     }
 
-    public Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
+    private Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
         throws IOException
     {
         Map<String, CAS> casses = new HashMap<>();
@@ -965,17 +912,13 @@ public class CurationPage
      * @throws AnnotationException
      *             hum?
      */
-    public CAS getMergeCas(AnnotatorState aState, SourceDocument aDocument,
+    private CAS getMergeCas(AnnotatorState aState, SourceDocument aDocument,
             Map<String, CAS> aCasses, AnnotationDocument aTemplate, boolean aUpgrade,
             boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        if (aForceRecreateCas) {
-            return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
-        }
-
-        if (!curationDocumentService.existsCurationCas(aDocument)) {
-            return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+        if (aForceRecreateCas || !curationDocumentService.existsCurationCas(aDocument)) {
+            return initializeEditorCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
         }
 
         CAS mergeCas = curationDocumentService.readCurationCas(aDocument);
@@ -989,16 +932,39 @@ public class CurationPage
         return mergeCas;
     }
 
-    public CAS initializeMergeCas(AnnotatorState aState, Map<String, CAS> aCasses,
+    private CAS initializeEditorCas(AnnotatorState aState, Map<String, CAS> aCasses,
             AnnotationDocument aTemplate, boolean aMergeIncompleteAnnotations)
         throws ClassNotFoundException, UIMAException, IOException, AnnotationException
     {
-        CAS mergeCas = createCurationCas(aState, aTemplate, aCasses, aState.getAnnotationLayers(),
-                aMergeIncompleteAnnotations);
+        Validate.notNull(aState, "State must be specified");
+        Validate.notNull(aTemplate, "Annotation document must be specified");
+
+        // We need a modifiable copy of some annotation document which we can use to initialize
+        // the curation CAS. This is an exceptional case where BYPASS is the correct choice
+        CAS editorCas = documentService.readAnnotationCas(aTemplate, UNMANAGED_ACCESS);
+
+        List<DiffAdapter> adapters = getDiffAdapters(annotationService,
+                aState.getAnnotationLayers());
+
+        DiffResult diff;
+        try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCasses, 0,
+                    editorCas.getDocumentText().length()).toResult();
+        }
+
+        try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
+            CasMerge casMerge = new CasMerge(annotationService);
+            casMerge.setMergeIncompleteAnnotations(aMergeIncompleteAnnotations);
+            casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
+                    editorCas, aCasses);
+        }
+
+        curationDocumentService.writeCurationCas(editorCas, aTemplate.getDocument(), false);
+
         updateDocumentTimestampAfterWrite(aState,
                 curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
 
-        return mergeCas;
+        return editorCas;
     }
 
     /**
@@ -1023,74 +989,5 @@ public class CurationPage
             aSegmentAdress.get(aUsername).put(sentence.getBegin(), getAddr(sentence));
             sentenceNumber += 1;
         }
-    }
-
-    @Deprecated
-    public static List<Type> getEntryTypes(CAS aMergeCas, List<AnnotationLayer> aLayers,
-            AnnotationSchemaService aAnnotationService)
-    {
-        List<Type> entryTypes = new LinkedList<>();
-
-        for (AnnotationLayer layer : aLayers) {
-            if (layer.getName().equals(Token.class.getName())) {
-                continue;
-            }
-            if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                continue;
-            }
-            entryTypes.add(aAnnotationService.getAdapter(layer).getAnnotationType(aMergeCas));
-        }
-        return entryTypes;
-    }
-
-    /**
-     * For the first time a curation page is opened, create a MergeCas that contains only agreeing
-     * annotations Using the CAS of the curator user.
-     *
-     * @param aState
-     *            the annotator state
-     * @param aRandomAnnotationDocument
-     *            an annotation document.
-     * @param aCasses
-     *            the CASes
-     * @param aAnnotationLayers
-     *            the layers.
-     * @return the CAS.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    private CAS createCurationCas(AnnotatorState aState,
-            AnnotationDocument aRandomAnnotationDocument, Map<String, CAS> aCasses,
-            List<AnnotationLayer> aAnnotationLayers, boolean aMergeIncompleteAnnotations)
-        throws IOException, UIMAException, AnnotationException
-    {
-        Validate.notNull(aState, "State must be specified");
-        Validate.notNull(aRandomAnnotationDocument, "Annotation document must be specified");
-
-        // We need a modifiable copy of some annotation document which we can use to initialize
-        // the curation CAS. This is an exceptional case where BYPASS is the correct choice
-        CAS mergeCas = documentService.readAnnotationCas(aRandomAnnotationDocument,
-                UNMANAGED_ACCESS);
-
-        List<DiffAdapter> adapters = getDiffAdapters(annotationService,
-                aState.getAnnotationLayers());
-
-        DiffResult diff;
-        try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCasses, 0,
-                    mergeCas.getDocumentText().length()).toResult();
-        }
-
-        try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService);
-            casMerge.setMergeIncompleteAnnotations(aMergeIncompleteAnnotations);
-            casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
-                    mergeCas, aCasses);
-        }
-
-        curationDocumentService.writeCurationCas(mergeCas, aRandomAnnotationDocument.getDocument(),
-                false);
-
-        return mergeCas;
     }
 }
