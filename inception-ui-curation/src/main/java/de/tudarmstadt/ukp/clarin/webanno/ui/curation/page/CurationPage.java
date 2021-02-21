@@ -34,10 +34,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.refreshPage;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.AGREE;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.DISAGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState.DISAGREE;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -108,14 +109,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.UnitOverviewLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceOverview;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.UnitClickedEvent;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -147,18 +146,17 @@ public class CurationPage
     private boolean firstLoad = true;
 
     private WebMarkupContainer leftSidebar;
-    private SentenceOverview sentenceIndex;
-    private WebMarkupContainer sentenceList;
+    private IModel<List<Unit>> units;
+    private WebMarkupContainer unitOverview;
 
     private WebMarkupContainer rightSidebar;
     private AnnotationDetailEditorPanel detailPanel;
 
-    private WebMarkupContainer actionBar;
     private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
-    private UnitState focussedUnit;
+    private Unit focussedUnit;
 
     public CurationPage(final PageParameters aPageParameters)
     {
@@ -187,6 +185,9 @@ public class CurationPage
     {
         // Ensure that a user is set
         getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
+        getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
+        units = new ListModel<>(new ArrayList<>());
+        focussedUnit = new Unit();
 
         add(createUrlFragmentBehavior());
 
@@ -194,49 +195,81 @@ public class CurationPage
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
+        centerArea.add(new ActionBar("actionBar"));
         add(centerArea);
 
-        actionBar = new ActionBar("actionBar");
-        centerArea.add(actionBar);
-
-        getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
                         (c, e) -> e.getRequestHandler().add(c))));
 
-        sentenceIndex = new SentenceOverview();
-
-        rightSidebar = new WebMarkupContainer("rightSidebar");
-        rightSidebar.setOutputMarkupPlaceholderTag(true);
-        // Override sidebar width from preferences
-        rightSidebar.add(new AttributeModifier("style",
-                () -> String.format("flex-basis: %d%%;",
-                        getModelObject() != null
-                                ? getModelObject().getPreferences().getSidebarSize()
-                                : 10)));
-        add(rightSidebar);
-
-        focussedUnit = new UnitState();
-
         List<AnnotatorSegment> segments = new LinkedList<>();
-        AnnotatorSegment annotatorSegment = new AnnotatorSegment();
 
         if (getModelObject() != null) {
+            AnnotatorSegment annotatorSegment = new AnnotatorSegment();
             annotatorSegment.setAnnotatorState(getModelObject());
             segments.add(annotatorSegment);
         }
 
-        // update source list model only first time.
         annotatorsPanel = new AnnotatorsPanel("annotatorsPanel", new ListModel<>(segments));
         annotatorsPanel.setOutputMarkupPlaceholderTag(true);
         annotatorsPanel.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getDocument() != null));
         centerArea.add(annotatorsPanel);
 
-        detailPanel = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this,
-                getModel())
+        rightSidebar = makeRightSidebar("rightSidebar");
+        rightSidebar
+                .add(detailPanel = makeAnnotationDetailEditorPanel("annotationDetailEditorPanel"));
+        add(rightSidebar);
+
+        annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
+                this::getEditorCas);
+        annotationEditor.setHighlightEnabled(false);
+        annotationEditor.add(visibleWhen(
+                () -> getModelObject() != null && getModelObject().getDocument() != null));
+        annotationEditor.setOutputMarkupPlaceholderTag(true);
+        centerArea.add(annotationEditor);
+
+        leftSidebar = new WebMarkupContainer("leftSidebar");
+        leftSidebar.setOutputMarkupPlaceholderTag(true);
+        leftSidebar.add(visibleWhen(
+                () -> getModelObject() != null && getModelObject().getDocument() != null));
+        add(leftSidebar);
+
+        unitOverview = new WebMarkupContainer("unitOverview");
+        unitOverview.setOutputMarkupPlaceholderTag(true);
+        unitOverview.add(new ListView<Unit>("unit", units)
+        {
+            private static final long serialVersionUID = 8539162089561432091L;
+
+            @Override
+            protected void populateItem(ListItem<Unit> item)
+            {
+                item.add(new UnitOverviewLink("label", item.getModel(),
+                        CurationPage.this.getModel()));
+            }
+        });
+
+        leftSidebar.add(unitOverview);
+    }
+
+    private WebMarkupContainer makeRightSidebar(String aId)
+    {
+        WebMarkupContainer sidebar = new WebMarkupContainer(aId);
+        sidebar.setOutputMarkupPlaceholderTag(true);
+        // Override sidebar width from preferences
+        sidebar.add(new AttributeModifier("style",
+                () -> String.format("flex-basis: %d%%;",
+                        getModelObject() != null
+                                ? getModelObject().getPreferences().getSidebarSize()
+                                : 10)));
+        return sidebar;
+    }
+
+    private AnnotationDetailEditorPanel makeAnnotationDetailEditorPanel(String aId)
+    {
+        AnnotationDetailEditorPanel panel = new AnnotationDetailEditorPanel(aId, this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
@@ -252,47 +285,13 @@ public class CurationPage
                 return CurationPage.this.getEditorCas();
             }
         };
-        detailPanel.add(enabledWhen(() -> getModelObject() != null //
+        panel.add(enabledWhen(() -> getModelObject() != null //
                 && getModelObject().getDocument() != null
                 && !documentService
                         .getSourceDocument(getModelObject().getDocument().getProject(),
                                 getModelObject().getDocument().getName())
                         .getState().equals(SourceDocumentState.CURATION_FINISHED)));
-        rightSidebar.add(detailPanel);
-
-        annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
-                this::getEditorCas);
-        annotationEditor.setHighlightEnabled(false);
-        annotationEditor.add(visibleWhen(
-                () -> getModelObject() != null && getModelObject().getDocument() != null));
-        annotationEditor.setOutputMarkupPlaceholderTag(true);
-        // reset sentenceAddress and lastSentenceAddress to the orginal once
-        centerArea.add(annotationEditor);
-
-        // add container for sentences panel
-        leftSidebar = new WebMarkupContainer("leftSidebar");
-        leftSidebar.setOutputMarkupPlaceholderTag(true);
-        leftSidebar.add(visibleWhen(
-                () -> getModelObject() != null && getModelObject().getDocument() != null));
-        add(leftSidebar);
-
-        // add container for list of sentences panel
-        sentenceList = new WebMarkupContainer("sentenceList");
-        sentenceList.setOutputMarkupPlaceholderTag(true);
-        sentenceList.add(new ListView<UnitState>("sentence",
-                LoadableDetachableModel.of(() -> sentenceIndex.getSentenceInfos()))
-        {
-            private static final long serialVersionUID = 8539162089561432091L;
-
-            @Override
-            protected void populateItem(ListItem<UnitState> item)
-            {
-                item.add(new UnitOverviewLink("sentenceNumber", item.getModel(),
-                        CurationPage.this.getModel()));
-            }
-        });
-
-        leftSidebar.add(sentenceList);
+        return panel;
     }
 
     @OnEvent
@@ -313,6 +312,23 @@ public class CurationPage
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
         actionRefreshDocument(aEvent.getRequestHandler());
+    }
+
+    @OnEvent
+    public void onUnitClickedEvent(UnitClickedEvent aEvent)
+    {
+        focussedUnit = aEvent.getUnit();
+        try {
+            AnnotatorState state = CurationPage.this.getModelObject();
+            CAS cas = curationDocumentService.readCurationCas(state.getDocument());
+            state.getPagingStrategy().moveToOffset(state, cas, focussedUnit.getBegin(), CENTERED);
+            state.setFocusUnitIndex(focussedUnit.getUnitIndex());
+
+            actionRefreshDocument(aEvent.getTarget());
+        }
+        catch (Exception e) {
+            handleException(aEvent.getTarget(), e);
+        }
     }
 
     @Override
@@ -394,6 +410,22 @@ public class CurationPage
     }
 
     @Override
+    public CAS getEditorCas() throws IOException
+    {
+        AnnotatorState state = CurationPage.this.getModelObject();
+
+        if (state.getDocument() == null) {
+            throw new IllegalStateException("Please open a document first!");
+        }
+
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        verifyAndUpdateDocumentTimestamp(state,
+                curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+
+        return curationDocumentService.readCurationCas(state.getDocument());
+    }
+
+    @Override
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
         ensureIsEditable();
@@ -461,7 +493,7 @@ public class CurationPage
 
             currentprojectId = state.getProject().getId();
 
-            sentenceIndex = buildUnitOverview(state);
+            units.setObject(buildUnitOverview(state));
             detailPanel.reset(aTarget);
             commonUpdate();
 
@@ -469,7 +501,7 @@ public class CurationPage
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
-                WicketUtil.refreshPage(aTarget, getPage());
+                refreshPage(aTarget, getPage());
             }
         }
         catch (Exception e) {
@@ -516,16 +548,9 @@ public class CurationPage
     {
         try {
             commonUpdate();
-
-            // Render the main annotation editor (upper part)
             annotationEditor.requestRender(aTarget);
-
-            // Render the user annotation segments (lower part)
             annotatorsPanel.requestRender(aTarget, getModelObject(), focussedUnit);
-
-            // Render the sentence list sidebar
-            aTarget.add(sentenceList);
-
+            aTarget.add(unitOverview);
             aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
@@ -617,39 +642,6 @@ public class CurationPage
         }
     }
 
-    @OnEvent
-    public void onUnitClickedEvent(UnitClickedEvent aEvent)
-    {
-        focussedUnit = aEvent.getUnit();
-        try {
-            AnnotatorState state = CurationPage.this.getModelObject();
-            CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-            state.getPagingStrategy().moveToOffset(state, cas, focussedUnit.getBegin(), CENTERED);
-            state.setFocusUnitIndex(focussedUnit.getUnitIndex());
-
-            actionRefreshDocument(aEvent.getTarget());
-        }
-        catch (Exception e) {
-            handleException(aEvent.getTarget(), e);
-        }
-    }
-
-    @Override
-    public CAS getEditorCas() throws IOException
-    {
-        AnnotatorState state = CurationPage.this.getModelObject();
-
-        if (state.getDocument() == null) {
-            throw new IllegalStateException("Please open a document first!");
-        }
-
-        // If we have a timestamp, then use it to detect if there was a concurrent access
-        verifyAndUpdateDocumentTimestamp(state,
-                curationDocumentService.getCurationCasTimestamp(state.getDocument()));
-
-        return curationDocumentService.readCurationCas(state.getDocument());
-    }
-
     private void commonUpdate()
     {
         AnnotatorState state = CurationPage.this.getModelObject();
@@ -674,7 +666,7 @@ public class CurationPage
         return allSourceDocuments;
     }
 
-    private SentenceOverview buildUnitOverview(AnnotatorState aState)
+    private List<Unit> buildUnitOverview(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
@@ -690,19 +682,19 @@ public class CurationPage
         long diffStart = System.currentTimeMillis();
         LOG.debug("Calculating differences...");
         int unitIndex = 0;
-        SentenceOverview index = new SentenceOverview();
-        Collection<AnnotationFS> units = select(editorCas, getType(editorCas, Sentence.class));
-        for (AnnotationFS unit : units) {
+        List<Unit> unitList = new ArrayList<>();
+        Collection<AnnotationFS> unitFSs = select(editorCas, getType(editorCas, Sentence.class));
+        for (AnnotationFS unitFS : unitFSs) {
             unitIndex++;
             if (unitIndex % 100 == 0) {
-                LOG.debug("Processing differences: {} of {} sentences...", unitIndex, units.size());
+                LOG.debug("Processing differences: {} of {} sentences...", unitIndex,
+                        unitFSs.size());
             }
 
-            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
-                    unit.getBegin(), unit.getEnd()).toResult();
+            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, unitFS.getBegin(),
+                    unitFS.getEnd()).toResult();
 
-            UnitState curationSegment = new UnitState(unit.getBegin(), unit.getEnd(),
-                    unitIndex);
+            Unit unit = new Unit(unitFS.getBegin(), unitFS.getEnd(), unitIndex);
 
             if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
                 // Is this confSet a diff due to stacked annotations (with same configuration)?
@@ -719,24 +711,24 @@ public class CurationPage
                 }
 
                 if (stackedDiff) {
-                    curationSegment.setSentenceState(DISAGREE);
+                    unit.setState(DISAGREE);
                 }
                 else if (!diff.getIncompleteConfigurationSets().isEmpty()) {
-                    curationSegment.setSentenceState(DISAGREE);
+                    unit.setState(DISAGREE);
                 }
                 else {
-                    curationSegment.setSentenceState(AGREE);
+                    unit.setState(AGREE);
                 }
             }
             else {
-                curationSegment.setSentenceState(AGREE);
+                unit.setState(AGREE);
             }
 
-            index.addSentenceInfo(curationSegment);
+            unitList.add(unit);
         }
         LOG.debug("Difference calculation completed in {}ms", (currentTimeMillis() - diffStart));
 
-        return index;
+        return unitList;
     }
 
     private Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)

@@ -17,97 +17,57 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
-import java.io.Serializable;
-
 /**
- * A model comprises of Curation Segments comprising of the begin and end of the sentences,
- * {@link SentenceState} Sentence number
+ * An ennumeration to differentiate sentences in a document with different colors so as to easily
+ * identify
+ *
  */
-public class UnitState
-    implements Serializable
+public enum UnitState
 {
-    private static final long serialVersionUID = 9219600871129699568L;
+    /**
+     * No conflicts of annotation in this sentence, no color - null- white
+     */
+    AGREE(null),
 
-    // begin/end offset of sentences list, default is the begin of the document
-    private final Integer begin;
-    private final Integer end;
-    private final Integer sentenceNumber;
+    /**
+     * Conflicts of annotation found in this sentence, mark background in red
+     */
+    DISAGREE("#FF9999"),
 
-    // begin of the curation/suggestion sentences list
-    private int curationBegin;
-    // end of the curation/suggestion sentences list
-    private int curationEnd;
+    /**
+     * Curator resolved conflicts - mark background in yellow
+     */
+    RESOLVED("#FFFF99"),
 
-    private SentenceState sentenceState;
+    /**
+     * Current sentence, where all annotators agree
+     */
+    SELECTED_AGREE("#58FAF4"),
 
-    private boolean isCurrentSentence;
+    /**
+     * Current sentence, where all annotators disagree
+     */
+    SELECTED_DISAGREE("#C736D1"),
 
-    public UnitState()
+    /**
+     * In the range of current display window
+     */
+    SELECTED_RANGE("#FFFF00"),
+
+    /**
+     * Confirmed annotation.
+     */
+    CONFIRMED("#99FF99");
+
+    private String colorCode;
+
+    UnitState(String aColorCode)
     {
-        begin = null;
-        end = null;
-        sentenceNumber = null;
+        colorCode = aColorCode;
     }
 
-    public UnitState(int aBegin, int aEnd, int aUnitIndex)
+    public String getColor()
     {
-        begin = aBegin;
-        end = aEnd;
-        sentenceNumber = aUnitIndex;
-    }
-
-    public Integer getBegin()
-    {
-        return begin;
-    }
-
-    public Integer getEnd()
-    {
-        return end;
-    }
-
-    public int getCurationBegin()
-    {
-        return curationBegin;
-    }
-
-    public void setCurationBegin(int curationBegin)
-    {
-        this.curationBegin = curationBegin;
-    }
-
-    public int getCurationEnd()
-    {
-        return curationEnd;
-    }
-
-    public void setCurationEnd(int curationEnd)
-    {
-        this.curationEnd = curationEnd;
-    }
-
-    public SentenceState getSentenceState()
-    {
-        return sentenceState;
-    }
-
-    public void setSentenceState(SentenceState sentenceState)
-    {
-        this.sentenceState = sentenceState;
-    }
-
-    public Integer getUnitIndex()
-    {
-        return sentenceNumber;
-    }
-
-    public boolean isCurrentSentence()
-    {
-        return isCurrentSentence;
-    }
-
-    public void setCurrentSentence(boolean isCurrentSentence)
-    {
-        this.isCurrentSentence = isCurrentSentence;
+        return colorCode;
     }
 }

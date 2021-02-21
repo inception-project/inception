@@ -29,11 +29,11 @@ import org.apache.wicket.request.cycle.RequestCycle;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.UnitClickedEvent;
 
 public class UnitOverviewLink
-    extends AjaxLink<UnitState>
+    extends AjaxLink<Unit>
 {
     private static final long serialVersionUID = 4558300090461815010L;
 
@@ -47,7 +47,7 @@ public class UnitOverviewLink
 
     private IModel<AnnotatorState> annotatorState;
 
-    public UnitOverviewLink(String aId, IModel<UnitState> aModel,
+    public UnitOverviewLink(String aId, IModel<Unit> aModel,
             IModel<AnnotatorState> aAnnotatorState)
     {
         super(aId, aModel);
@@ -60,7 +60,7 @@ public class UnitOverviewLink
     {
         super.onComponentTag(aTag);
 
-        final UnitState unitState = getModelObject();
+        final Unit unitState = getModelObject();
         final AnnotatorState state = annotatorState.getObject();
 
         // Is in focus?

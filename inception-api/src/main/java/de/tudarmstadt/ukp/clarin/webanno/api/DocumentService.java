@@ -489,8 +489,8 @@ public interface DocumentService
      * {@link SourceDocument}.
      * <p>
      * Note that this method does may not return an {@link AnnotationDocument annotation document}
-     * for every user in @Override the project because they are created lazily when a user opens a
-     * document for annotation the first time.
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
      * <p>
      * Note that this method <b>DOES NOT</b> return an {@link AnnotationDocument annotation
      * document} if the user owning the document does not actually exist in the system! It does not

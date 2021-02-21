@@ -76,6 +76,8 @@ public class AnnotatorSegment
         state = aState;
     }
 
+    // FIXME: Why do we even need this?
+    @Deprecated
     public boolean equals(AnnotatorSegment segment)
     {
         return segment.getCollectionData().equals(collectionData)
