@@ -573,7 +573,7 @@ public class CasDiff
      *            a position.
      * @return the configuration set for the given position.
      */
-    public ConfigurationSet getConfigurtionSet(Position aPosition)
+    public ConfigurationSet getConfigurationSet(Position aPosition)
     {
         return configSets.get(aPosition);
     }
@@ -970,7 +970,7 @@ public class CasDiff
          *            a position.
          * @return the configuration set for the given position.
          */
-        public ConfigurationSet getConfigurtionSet(Position aPosition)
+        public ConfigurationSet getConfigurationSet(Position aPosition)
         {
             return data.get(aPosition);
         }
@@ -1082,7 +1082,7 @@ public class CasDiff
         public void print(PrintStream aOut)
         {
             for (Position p : getPositions()) {
-                ConfigurationSet configurationSet = getConfigurtionSet(p);
+                ConfigurationSet configurationSet = getConfigurationSet(p);
                 aOut.printf("=== %s -> %s %s%n", p,
                         isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
                         isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");

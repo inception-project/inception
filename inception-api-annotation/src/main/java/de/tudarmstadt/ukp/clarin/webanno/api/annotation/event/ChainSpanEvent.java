@@ -15,7 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Utility classes for brat annotation/curation/correction
- */
-package de.tudarmstadt.ukp.clarin.webanno.brat.util;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
+
+import org.apache.uima.cas.text.AnnotationFS;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
+public class ChainSpanEvent
+    extends ChainEvent
+{
+    private static final long serialVersionUID = -2905571486287675504L;
+
+    public ChainSpanEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer, AnnotationFS aAnnotation)
+    {
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+    }
+}

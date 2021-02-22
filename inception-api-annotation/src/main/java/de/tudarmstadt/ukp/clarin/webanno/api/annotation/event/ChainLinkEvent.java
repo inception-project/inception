@@ -15,18 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.util;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.junit.Test;
+import org.apache.uima.cas.text.AnnotationFS;
 
-public class BratAnnotatorUtilityTest
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
+public class ChainLinkEvent
+    extends ChainEvent
 {
-    @Test
-    public void testClearJCasWithoutDocumentMetadata() throws Exception
+    private static final long serialVersionUID = -6150471041549070098L;
+
+    private final AnnotationFS nextLink;
+
+    public ChainLinkEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer, AnnotationFS aAnnotation, AnnotationFS aNextLink)
     {
-        CAS jcas = JCasFactory.createJCas().getCas();
-        BratAnnotatorUtility.clearAnnotations(jcas);
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+
+        nextLink = aNextLink;
+    }
+
+    public AnnotationFS getNextLink()
+    {
+        return nextLink;
     }
 }
