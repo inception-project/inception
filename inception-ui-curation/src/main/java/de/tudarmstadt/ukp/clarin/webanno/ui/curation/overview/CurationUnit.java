@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
 
 import java.io.Serializable;
 
 /**
  * A model comprises of Curation Segments comprising of the begin and end of the sentences,
- * {@link UnitState} Sentence number
+ * {@link CurationUnitState} Sentence number
  */
-public class Unit
+public class CurationUnit
     implements Serializable
 {
     private static final long serialVersionUID = 9219600871129699568L;
@@ -38,18 +38,18 @@ public class Unit
     // end of the curation/suggestion sentences list
     private int curationEnd;
 
-    private UnitState sentenceState;
+    private CurationUnitState sentenceState;
 
     private boolean isCurrentSentence;
 
-    public Unit()
+    public CurationUnit()
     {
         begin = null;
         end = null;
         sentenceNumber = null;
     }
 
-    public Unit(int aBegin, int aEnd, int aUnitIndex)
+    public CurationUnit(int aBegin, int aEnd, int aUnitIndex)
     {
         begin = aBegin;
         end = aEnd;
@@ -86,12 +86,12 @@ public class Unit
         this.curationEnd = curationEnd;
     }
 
-    public UnitState getSentenceState()
+    public CurationUnitState getSentenceState()
     {
         return sentenceState;
     }
 
-    public void setState(UnitState sentenceState)
+    public void setState(CurationUnitState sentenceState)
     {
         this.sentenceState = sentenceState;
     }

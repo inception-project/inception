@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
 
 /**
  * An ennumeration to differentiate sentences in a document with different colors so as to easily
  * identify
  *
  */
-public enum UnitState
+public enum CurationUnitState
 {
     /**
      * No conflicts of annotation in this sentence, no color - null- white
@@ -61,7 +61,7 @@ public enum UnitState
 
     private String colorCode;
 
-    UnitState(String aColorCode)
+    CurationUnitState(String aColorCode)
     {
         colorCode = aColorCode;
     }

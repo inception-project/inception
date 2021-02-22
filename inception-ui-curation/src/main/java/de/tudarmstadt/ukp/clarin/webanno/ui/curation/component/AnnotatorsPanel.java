@@ -107,7 +107,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Unit;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -445,7 +445,7 @@ public class AnnotatorsPanel
     /**
      * Initializes the user annotation segments later to be filled with content.
      */
-    public void init(AjaxRequestTarget aTarget, AnnotatorState state, Unit aCurationSegment)
+    public void init(AjaxRequestTarget aTarget, AnnotatorState state, CurationUnit aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException
     {
         SourceDocument sourceDocument = state.getDocument();
@@ -526,7 +526,7 @@ public class AnnotatorsPanel
      *             hum?
      */
     private void updatePanel(AjaxRequestTarget aTarget, AnnotatorState aState,
-            Unit aCurationSegment)
+            CurationUnit aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         SourceDocument sourceDocument = aState.getDocument();
@@ -739,7 +739,7 @@ public class AnnotatorsPanel
      * single update and rendering call.
      */
     public final void requestRender(AjaxRequestTarget aTarget, AnnotatorState aState,
-            Unit aCurationSegment)
+            CurationUnit aCurationSegment)
     {
         LOG.trace("request update");
         aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
 
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -29,11 +29,10 @@ import org.apache.wicket.request.cycle.RequestCycle;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Unit;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.UnitClickedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 
-public class UnitOverviewLink
-    extends AjaxLink<Unit>
+public class CurationUnitOverviewLink
+    extends AjaxLink<CurationUnit>
 {
     private static final long serialVersionUID = 4558300090461815010L;
 
@@ -47,7 +46,7 @@ public class UnitOverviewLink
 
     private IModel<AnnotatorState> annotatorState;
 
-    public UnitOverviewLink(String aId, IModel<Unit> aModel,
+    public CurationUnitOverviewLink(String aId, IModel<CurationUnit> aModel,
             IModel<AnnotatorState> aAnnotatorState)
     {
         super(aId, aModel);
@@ -60,7 +59,7 @@ public class UnitOverviewLink
     {
         super.onComponentTag(aTag);
 
-        final Unit unitState = getModelObject();
+        final CurationUnit unitState = getModelObject();
         final AnnotatorState state = annotatorState.getObject();
 
         // Is in focus?
@@ -110,6 +109,6 @@ public class UnitOverviewLink
     @Override
     public void onClick(AjaxRequestTarget aTarget)
     {
-        send(this, BUBBLE, new UnitClickedEvent(aTarget, getModelObject()));
+        send(this, BUBBLE, new CurationUnitClickedEvent(aTarget, getModelObject()));
     }
 }

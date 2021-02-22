@@ -37,15 +37,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.refreshPage;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState.AGREE;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UnitState.DISAGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.DISAGREE;
+import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,7 +53,6 @@ import java.util.Optional;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -87,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -112,11 +110,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.UnitOverviewLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Unit;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.UnitClickedEvent;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -146,8 +143,8 @@ public class CurationPage
     private boolean firstLoad = true;
 
     private WebMarkupContainer leftSidebar;
-    private IModel<List<Unit>> units;
-    private WebMarkupContainer unitOverview;
+    private IModel<List<CurationUnit>> curationUnits;
+    private WebMarkupContainer curationUnitOverview;
 
     private WebMarkupContainer rightSidebar;
     private AnnotationDetailEditorPanel detailPanel;
@@ -156,7 +153,7 @@ public class CurationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
-    private Unit focussedUnit;
+    private CurationUnit focussedUnit;
 
     public CurationPage(final PageParameters aPageParameters)
     {
@@ -186,8 +183,8 @@ public class CurationPage
         // Ensure that a user is set
         getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        units = new ListModel<>(new ArrayList<>());
-        focussedUnit = new Unit();
+        curationUnits = new ListModel<>(new ArrayList<>());
+        focussedUnit = new CurationUnit();
 
         add(createUrlFragmentBehavior());
 
@@ -231,27 +228,26 @@ public class CurationPage
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         centerArea.add(annotationEditor);
 
-        leftSidebar = new WebMarkupContainer("leftSidebar");
-        leftSidebar.setOutputMarkupPlaceholderTag(true);
-        leftSidebar.add(visibleWhen(
-                () -> getModelObject() != null && getModelObject().getDocument() != null));
-        add(leftSidebar);
-
-        unitOverview = new WebMarkupContainer("unitOverview");
-        unitOverview.setOutputMarkupPlaceholderTag(true);
-        unitOverview.add(new ListView<Unit>("unit", units)
+        curationUnitOverview = new WebMarkupContainer("unitOverview");
+        curationUnitOverview.setOutputMarkupPlaceholderTag(true);
+        curationUnitOverview.add(new ListView<CurationUnit>("unit", curationUnits)
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
             @Override
-            protected void populateItem(ListItem<Unit> item)
+            protected void populateItem(ListItem<CurationUnit> item)
             {
-                item.add(new UnitOverviewLink("label", item.getModel(),
+                item.add(new CurationUnitOverviewLink("label", item.getModel(),
                         CurationPage.this.getModel()));
             }
         });
 
-        leftSidebar.add(unitOverview);
+        leftSidebar = new WebMarkupContainer("leftSidebar");
+        leftSidebar.setOutputMarkupPlaceholderTag(true);
+        leftSidebar.add(visibleWhen(
+                () -> getModelObject() != null && getModelObject().getDocument() != null));
+        leftSidebar.add(curationUnitOverview);
+        add(leftSidebar);
     }
 
     private WebMarkupContainer makeRightSidebar(String aId)
@@ -260,7 +256,7 @@ public class CurationPage
         sidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         sidebar.add(new AttributeModifier("style",
-                () -> String.format("flex-basis: %d%%;",
+                () -> format("flex-basis: %d%%;",
                         getModelObject() != null
                                 ? getModelObject().getPreferences().getSidebarSize()
                                 : 10)));
@@ -315,7 +311,7 @@ public class CurationPage
     }
 
     @OnEvent
-    public void onUnitClickedEvent(UnitClickedEvent aEvent)
+    public void onUnitClickedEvent(CurationUnitClickedEvent aEvent)
     {
         focussedUnit = aEvent.getUnit();
         try {
@@ -493,7 +489,7 @@ public class CurationPage
 
             currentprojectId = state.getProject().getId();
 
-            units.setObject(buildUnitOverview(state));
+            curationUnits.setObject(buildUnitOverview(state));
             detailPanel.reset(aTarget);
             commonUpdate();
 
@@ -550,7 +546,7 @@ public class CurationPage
             commonUpdate();
             annotationEditor.requestRender(aTarget);
             annotatorsPanel.requestRender(aTarget, getModelObject(), focussedUnit);
-            aTarget.add(unitOverview);
+            aTarget.add(curationUnitOverview);
             aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
@@ -666,7 +662,7 @@ public class CurationPage
         return allSourceDocuments;
     }
 
-    private List<Unit> buildUnitOverview(AnnotatorState aState)
+    private List<CurationUnit> buildUnitOverview(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
@@ -682,19 +678,18 @@ public class CurationPage
         long diffStart = System.currentTimeMillis();
         LOG.debug("Calculating differences...");
         int unitIndex = 0;
-        List<Unit> unitList = new ArrayList<>();
-        Collection<AnnotationFS> unitFSs = select(editorCas, getType(editorCas, Sentence.class));
-        for (AnnotationFS unitFS : unitFSs) {
+        List<CurationUnit> curationUnitList = new ArrayList<>();
+        List<Unit> units = aState.getPagingStrategy().units(editorCas);
+        for (Unit unit : units) {
             unitIndex++;
             if (unitIndex % 100 == 0) {
-                LOG.debug("Processing differences: {} of {} sentences...", unitIndex,
-                        unitFSs.size());
+                LOG.debug("Processing differences: {} of {} units...", unitIndex, units.size());
             }
 
-            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, unitFS.getBegin(),
-                    unitFS.getEnd()).toResult();
+            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, unit.getBegin(),
+                    unit.getEnd()).toResult();
 
-            Unit unit = new Unit(unitFS.getBegin(), unitFS.getEnd(), unitIndex);
+            CurationUnit curationUnit = new CurationUnit(unit.getBegin(), unit.getEnd(), unitIndex);
 
             if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
                 // Is this confSet a diff due to stacked annotations (with same configuration)?
@@ -711,24 +706,24 @@ public class CurationPage
                 }
 
                 if (stackedDiff) {
-                    unit.setState(DISAGREE);
+                    curationUnit.setState(DISAGREE);
                 }
                 else if (!diff.getIncompleteConfigurationSets().isEmpty()) {
-                    unit.setState(DISAGREE);
+                    curationUnit.setState(DISAGREE);
                 }
                 else {
-                    unit.setState(AGREE);
+                    curationUnit.setState(AGREE);
                 }
             }
             else {
-                unit.setState(AGREE);
+                curationUnit.setState(AGREE);
             }
 
-            unitList.add(unit);
+            curationUnitList.add(curationUnit);
         }
         LOG.debug("Difference calculation completed in {}ms", (currentTimeMillis() - diffStart));
 
-        return unitList;
+        return curationUnitList;
     }
 
     private Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
