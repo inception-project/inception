@@ -112,7 +112,7 @@
     <solr.version>7.7.3</solr.version> <!-- 8.5.1 / 8.7.0 -->
     <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
     <elasticsearch.version>6.8.8</elasticsearch.version> <!-- 7.10.2 -->
-    <rdf4j.version>3.6.0-SNAPSHOT</rdf4j.version>
+    <rdf4j.version>3.6.0</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
     <servlet-api.version>4.0.1</servlet-api.version>
@@ -142,6 +142,7 @@
       </snapshots>
     </repository>
     <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
+    <!--
     <repository>
       <id>ukp-oss-snapshots</id>
       <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
@@ -162,7 +163,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-    <!--
       <repository>
       <id>ext-staging</id>
       <name>Staging repo</name>
@@ -174,11 +174,13 @@
     -->
   </repositories>
   <pluginRepositories>
+    <!--  
     <pluginRepository>
       <id>jcenter-snapshots</id>
       <name>jcenter</name>
       <url>https://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
     </pluginRepository>
+    -->
     <pluginRepository>
       <id>jcenter-releases</id>
       <name>jcenter</name>
@@ -189,7 +191,7 @@
     </pluginRepository>
   </pluginRepositories>
   <dependencies>
-    <!-- The logging subsystem used by WebAnno -->
+    <!-- The logging subsystem used by INCEpTION -->
     <dependency>
       <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
