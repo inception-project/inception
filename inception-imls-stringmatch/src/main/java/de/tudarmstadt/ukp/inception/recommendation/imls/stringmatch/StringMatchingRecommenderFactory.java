@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.settings.StringMatchingRecommenderTraitsEditor;
 
 /**
@@ -48,9 +48,9 @@ public class StringMatchingRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender";
 
-    private final GazeteerService gazeteerService;
-
-    public StringMatchingRecommenderFactory(GazeteerService aGazeteerService)
+    private final GazeteerServiceImpl gazeteerService;
+    
+    public StringMatchingRecommenderFactory(GazeteerServiceImpl aGazeteerService)
     {
         gazeteerService = aGazeteerService;
     }

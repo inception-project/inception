@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 
+import java.util.Optional;
+
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.context.ApplicationEvent;
 
@@ -35,9 +37,21 @@ public class RecommendationAcceptedEvent
     private final AnnotationFS fs;
     private final AnnotationFeature feature;
     private final Object recommendedValue;
+    // this allows the regex-recommender to
+    // know on which regex an accepted recommendation
+    // is based
+    private final Optional<String> confidenceExplanation;
 
+    
     public RecommendationAcceptedEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationFS aFS, AnnotationFeature aFeature, Object aRecommendedValue)
+    {
+        this(aSource, aDocument, aUser, aFS, aFeature, aRecommendedValue, Optional.of(null));
+    }
+    
+    public RecommendationAcceptedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationFS aFS, AnnotationFeature aFeature, Object aRecommendedValue,
+            Optional<String> aConfExplanation)
     {
         super(aSource);
 
@@ -46,7 +60,9 @@ public class RecommendationAcceptedEvent
         fs = aFS;
         feature = aFeature;
         recommendedValue = aRecommendedValue;
+        confidenceExplanation = aConfExplanation;
     }
+
 
     public SourceDocument getDocument()
     {
@@ -72,7 +88,12 @@ public class RecommendationAcceptedEvent
     {
         return recommendedValue;
     }
-
+    
+    public Optional<String> getConfidenceExplanation()
+    {
+        return confidenceExplanation;
+    }
+    
     @Override
     public String toString()
     {

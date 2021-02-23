@@ -215,8 +215,9 @@ public class RecommendationEditorExtension
 
         // Send an application event that the suggestion has been accepted
         AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, address);
-        applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this, document,
-                aState.getUser().getUsername(), fs, feature, suggestion.getLabel()));
+        applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
+                document, aState.getUser().getUsername(), fs, feature, suggestion.getLabel(),
+                suggestion.getConfidenceExplanation()));
 
         // Send a UI event that the suggestion has been accepted
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
@@ -273,7 +274,8 @@ public class RecommendationEditorExtension
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
                 aState.getUser().getUsername(), suggestion.getBegin(), suggestion.getEnd(),
-                suggestion.getCoveredText(), feature, suggestion.getLabel()));
+                suggestion.getCoveredText(), feature, suggestion.getLabel(),
+                suggestion.getConfidenceExplanation()));
 
         // Send a UI event that the suggestion has been rejected
         page.send(page, Broadcast.BREADTH,
