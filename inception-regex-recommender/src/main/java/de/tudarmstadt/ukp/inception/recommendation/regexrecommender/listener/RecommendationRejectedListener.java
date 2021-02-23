@@ -28,17 +28,22 @@ public class RecommendationRejectedListener
         // we create a RegexCounter for it and add it to the counterList.
         // Before we add the new RegexCounter, we write the old counter
         // to its gazeteer and then delete it. 
+        boolean remove = false;
         if (counterList.size() > 0) {
             int i = 0;
             for (RegexCounter counter: counterList) {
                 if (counter.getLayer().equals(aRegexCounter.getLayer())
                 && counter.getFeature().equals(aRegexCounter.getFeature())) {
                     counter.writeToGazeteer();
+                    remove = true;
                     break;
                 }
                 i++;
             }
-            counterList.remove(i);
+            if (remove) {
+                counterList.remove(i);
+            }
+            
         }
         counterList.add(aRegexCounter);
     }
@@ -49,9 +54,8 @@ public class RecommendationRejectedListener
     public void onApplicationEvent(RecommendationRejectedEvent aEvent)
     {   
         if (aEvent.getConfidenceExplanation().isPresent()) {
+            
             String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
-                    
-                    
             AnnotationFeature feature = aEvent.getFeature();
             String featureValue = aEvent.getRecommendedValue().toString();
             for (RegexCounter counter: counterList) {

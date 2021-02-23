@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -180,12 +181,11 @@ public class GazeteerServiceImpl
     
     public void writeGazeteerFile(Gazeteer aGaz, List<GazeteerEntryImpl> aEntryList) throws IOException {
     	File file = getGazeteerFile(aGaz);
-    	try (OutputStream os = new FileOutputStream(file)) {
+    	try (OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file), UTF_8)) {
     		for (GazeteerEntryImpl entry: aEntryList) {
-    			byte[] entryToBytes = entry.toLine().getBytes();
-    		    os.write(entryToBytes);
+    			os.write(entry.toLine()); 
     		}
-    	    
+    	   
     	}
     }
 

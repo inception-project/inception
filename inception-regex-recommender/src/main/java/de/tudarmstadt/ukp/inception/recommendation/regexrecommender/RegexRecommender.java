@@ -53,14 +53,6 @@ public class RegexRecommender
     private final RegexRecommenderTraits traits;
     private final RegexCounter regexCounter;  
     private final String gazeteerName; 
-    
-    public RegexRecommender(Recommender aRecommender,
-            RegexRecommenderTraits aTraits,
-            RecommendationAcceptedListener aRecAccListener,
-            RecommendationRejectedListener aRecRejListener) {
-        
-        this(aRecommender, aTraits, aRecAccListener, aRecRejListener, null);
-    }
      
     public RegexRecommender(Recommender aRecommender,
                             RegexRecommenderTraits aTraits,
@@ -154,7 +146,6 @@ public class RegexRecommender
      */
     private void pretrain()
     {   
-        System.out.println("PRETRAIN");
         for (Gazeteer gaz : gazeteerService.listGazeteers(recommender)) {
             try {                  
                 for (GazeteerEntryImpl entry: gazeteerService.readGazeteerFile(gaz)) {
@@ -222,10 +213,6 @@ public class RegexRecommender
             }
         }
     }
-    
-    
-    
-  
     
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
@@ -301,7 +288,7 @@ public class RegexRecommender
 
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
-    {    
+    {   
         List<Annotation> predictions = getPredictions(aCas);
         Type predictedType = getPredictedType(aCas);
 

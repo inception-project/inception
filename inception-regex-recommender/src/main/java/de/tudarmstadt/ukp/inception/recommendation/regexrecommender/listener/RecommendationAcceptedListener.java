@@ -35,7 +35,7 @@ public class RecommendationAcceptedListener
     public void onApplicationEvent(RecommendationAcceptedEvent aEvent)
     {   
         if (aEvent.getConfidenceExplanation().isPresent()) {
-
+            
             String regex = aEvent.getConfidenceExplanation().get().replace("Based on the regex ", "");
             AnnotationFeature feature = aEvent.getFeature();
             String featureValue = aEvent.getRecommendedValue().toString();

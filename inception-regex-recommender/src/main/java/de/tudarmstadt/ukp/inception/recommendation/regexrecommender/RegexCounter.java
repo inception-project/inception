@@ -18,11 +18,10 @@ import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.Gaz
 import de.tudarmstadt.ukp.inception.recommendation.regexrecommender.gazeteer.GazeteerServiceImpl;
 
 
-/*
+/**
  * Keeps track of regexes, their feature values
  * and the number of times recommendations based on
  * those regexes have been accepted or rejected by the user.
- * 
  */
 public class RegexCounter
 {
@@ -40,7 +39,6 @@ public class RegexCounter
         layer = aLayer;
         gazeteerService = aGazeteerService;
         gazeteer = aGazeteer;
-        System.out.println("NEW REGEXCOUNTER");
     }
     
     public AnnotationFeature getFeature()
@@ -65,14 +63,12 @@ public class RegexCounter
     {
         Pair<Integer, Integer> currentCount = regexCounts.get(aFeatureValue).get(aRegex);
         currentCount.setLeft(currentCount.getLeft() + 1);
-        System.out.println(regexCounts.get(aFeatureValue).get(aRegex));
     }
     
     public void incrementRejected(String aFeatureValue, String aRegex)
     {
         Pair<Integer, Integer> currentCount = regexCounts.get(aFeatureValue).get(aRegex);
         currentCount.setRight(currentCount.getRight() + 1);
-        System.out.println(regexCounts.get(aFeatureValue).get(aRegex));
     }
     
     public Map<String, Pair<Integer, Integer>> get(String aFeatureName)
@@ -85,8 +81,7 @@ public class RegexCounter
                             Integer aAcceptedCount,
                             Integer aRejectedCount) 
     {    
-        Map<String, Pair<Integer, Integer>> regexCountMap =
-                new HashMap<String, Pair<Integer, Integer>>();
+        Map<String, Pair<Integer, Integer>> regexCountMap = new HashMap<String, Pair<Integer, Integer>>();
         regexCountMap.put(aRegex, new Pair<Integer, Integer> (aAcceptedCount, aRejectedCount));
         regexCounts.putIfAbsent(aFeatureValue, regexCountMap);
     }
@@ -143,9 +138,7 @@ public class RegexCounter
             String regexString = getFromInputBox("During training the annotation " + aFeatureValue 
                                                  + " based on " + aLemmaString + " was found. \n"
                                                  + " Please enter regex or discard", "Trainer");
-            if (regexString == null) {
-                add(aFeatureValue, aLemmaString);
-            } else {
+            if (!(regexString == null)) {
                 add(aFeatureValue, regexString);
             }
         }
@@ -167,15 +160,13 @@ public class RegexCounter
     
     /*
      * Adds all the regexes in the regexCounter
-     * to the automatically created gazeteer.
+     * to the automatically created gazeteer .
      * This way we remember the regexes that were
      * created in a session and the user won't be 
      * bothered to enter them the next time she
      * works on her project.
      */
     public void writeToGazeteer() {
-        
-        System.out.println("WRITE");
         
         List<GazeteerEntryImpl> entryList = new ArrayList<>();
         for (String featureValue: this.getKeys()) {
@@ -204,6 +195,15 @@ public class RegexCounter
                                            JOptionPane.QUESTION_MESSAGE);
     }
     
+    
+    /**
+     * Displays a message box with <code>aInfoMessage</code>  as text.
+     * Returns true if the user accepts and false if she 
+     * declines
+     * 
+     * @param aInfoMessage The message displayed in the message box
+     * @return true if the user accepts and false if she declines 
+     */
     private Boolean getFromBooleanBox(String aInfoMessage)
     {    
         JFrame f = new JFrame();
