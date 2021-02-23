@@ -72,7 +72,6 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
@@ -539,9 +538,9 @@ public class RecommendationServiceImpl
             // if the user is viewing annotations through an AnnotationPageBase ... still not a
             // bad guess
             IPageRequestHandler handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
-            Page page = (Page) handler.getPage();
-            if (page instanceof AnnotationPageBase) {
-                AnnotatorState state = ((AnnotationPageBase) page).getModelObject();
+            if (handler.isPageInstanceCreated()
+                    && handler.getPage() instanceof AnnotationPageBase) {
+                AnnotatorState state = ((AnnotationPageBase) handler.getPage()).getModelObject();
                 requestCycle.getListeners()
                         .add(new TriggerTrainingTaskListener(state.getDocument()));
             }

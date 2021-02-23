@@ -17,11 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
-import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -30,13 +28,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Order(300)
 @Component
 public class DynamicWorkloadManagementPageMenuItem
-    implements MenuItem
+    implements ProjectMenuItem
 {
     private final UserDao userRepo;
     private final ProjectService projectService;
@@ -73,24 +71,15 @@ public class DynamicWorkloadManagementPageMenuItem
      * Only admins and project managers can see this page
      */
     @Override
-    public boolean applies()
+    public boolean applies(Project aProject)
     {
-        Project sessionProject = Session.get().getMetaData(CURRENT_PROJECT);
-
-        if (sessionProject == null) {
-            return false;
-        }
-
-        // The project object stored in the session is detached from the persistence context and
-        // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
-        Project project = projectService.getProject(sessionProject.getId());
-
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
 
-        return (projectService.isCurator(project, user) || projectService.isManager(project, user))
+        return (projectService.isCurator(aProject, user)
+                || projectService.isManager(aProject, user))
                 && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
-                        .loadOrCreateWorkloadManagerConfiguration(project).getType());
+                        .loadOrCreateWorkloadManagerConfiguration(aProject).getType());
     }
 
     @Override

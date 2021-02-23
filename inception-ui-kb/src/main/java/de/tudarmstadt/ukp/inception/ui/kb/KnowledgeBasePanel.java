@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
 
 import java.util.Arrays;
@@ -126,7 +126,7 @@ public class KnowledgeBasePanel
             long projectId = aProjectModel.getObject().getId();
             String kbName = aKbModel.getObject().getName();
 
-            PageParameters params = new PageParameters().set(PAGE_PARAM_PROJECT_ID, projectId)
+            PageParameters params = new PageParameters().set(PAGE_PARAM_PROJECT, projectId)
                     .set(PAGE_PARAM_KB_NAME, kbName);
 
             setResponsePage(KnowledgeBasePage.class, params);

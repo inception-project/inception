@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ANNOTATORS;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ASSIGNED;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
@@ -40,10 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
-import javax.persistence.NoResultException;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
@@ -78,9 +78,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
@@ -107,7 +104,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
@@ -131,13 +128,11 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * distribution of all documents, the project manager may set a "Default number of annotation" for
  * all documents. This number indicates on how often a document at most assigned to annotators.
  */
-@MountPath("/workload.html")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/workload")
 public class DynamicWorkloadManagementPage
-    extends ApplicationPageBase
+    extends ProjectPageBase
 {
     private static final long serialVersionUID = 1180618893870240262L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(DynamicWorkloadManagementPage.class);
 
     private static final String MID_LABEL = "label";
 
@@ -182,25 +177,13 @@ public class DynamicWorkloadManagementPage
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
 
-    /**
-     * Default Constructor, not used, return with error
-     */
-    public DynamicWorkloadManagementPage()
-    {
-        super();
-        // Error, user is returned to home page, nothing else to do
-        // getSession required to show the message at the homepage
-        setResponsePage(getApplication().getHomePage());
-        getSession().error("No project selected.");
-    }
-
     public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
-        // Get current Project
-        currentProject.setObject(
-                getProjectFromParameters(aPageParameters.get(PAGE_PARAM_PROJECT_ID)).get());
+        requireProjectRole(userRepository.getCurrentUser(), CURATOR, MANAGER);
+
+        currentProject.setObject(getProject());
 
         commonInit();
     }
@@ -800,19 +783,6 @@ public class DynamicWorkloadManagementPage
     {
         dataProvider.setAnnotationQueueItems(getQueue());
         aTarget.add(table);
-    }
-
-    private Optional<Project> getProjectFromParameters(StringValue aProjectParam)
-    {
-        if (aProjectParam == null || aProjectParam.isEmpty()) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(projectService.getProject(aProjectParam.toLong()));
-        }
-        catch (NoResultException e) {
-            return Optional.empty();
-        }
     }
 
     private void actionApplyStateFilter(AjaxRequestTarget aTarget, SourceDocumentState aState)

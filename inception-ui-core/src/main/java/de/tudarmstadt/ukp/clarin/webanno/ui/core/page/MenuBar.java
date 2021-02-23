@@ -34,6 +34,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
 
+/**
+ * @deprecated This should be merged down into
+ *             {@code de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar}
+ */
+@Deprecated
 public class MenuBar
     extends Panel
 {

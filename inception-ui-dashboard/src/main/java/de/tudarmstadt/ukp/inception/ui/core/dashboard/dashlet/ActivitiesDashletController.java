@@ -15,27 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
-import java.util.LinkedHashMap;
+import java.util.List;
 
-import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.util.string.StringValue;
-
-public final class SessionMetaData
+public interface ActivitiesDashletController
 {
-    /**
-     * Holds parameters that were supplied at login time via an URL fragment. The login page stores
-     * them here because they cannot be safely forwarded via the redirection URL.
-     */
-    public static final MetaDataKey<LinkedHashMap<String, StringValue>> LOGIN_URL_FRAGMENT_PARAMS = //
-            new MetaDataKey<LinkedHashMap<String, StringValue>>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    String BASE_URL = "/de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashletController";
+    String LIST_PATH = "/project/{projectId}/list";
 
-    private SessionMetaData()
-    {
-        // No instances
-    }
+    String listActivitiesUrl(long aProjectId);
+
+    List<Activity> listActivities(long aProjectId);
 }
