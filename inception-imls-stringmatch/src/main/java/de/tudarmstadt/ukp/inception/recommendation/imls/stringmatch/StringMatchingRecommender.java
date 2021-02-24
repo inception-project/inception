@@ -511,7 +511,7 @@ public class StringMatchingRecommender
         }
     }
 
-    private static class DictEntry
+    public static class DictEntry
     {
         private String key;
         private String[] labels;

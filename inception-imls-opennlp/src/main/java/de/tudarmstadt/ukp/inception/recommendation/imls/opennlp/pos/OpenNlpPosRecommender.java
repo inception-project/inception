@@ -298,7 +298,7 @@ public class OpenNlpPosRecommender
         // Require at least X percent of the sentence to have tags to avoid class imbalance on PAD
         // tag.
         double coverage = ((double) withTagCount * 100) / (double) numberOfTokens;
-        if (coverage > traits.getTaggedTokensThreshold()) {
+        if (coverage >= traits.getTaggedTokensThreshold()) {
             return Optional.of(new POSSample(tokens, tags));
         }
         else {
