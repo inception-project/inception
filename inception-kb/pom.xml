@@ -92,6 +92,10 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-sail-inferencer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-queryparser-sparql</artifactId>
     </dependency>
     <dependency>
@@ -324,6 +328,7 @@
               <usedDependency>org.eclipse.rdf4j:rdf4j-rio-rdfxml</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-rio-ntriples</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-queryresultio-api</usedDependency>
+              <usedDependency>org.eclipse.rdf4j:rdf4j-sail-inferencer</usedDependency>
               <!-- Testing - used via reflection -->
               <usedDependency>com.h2database:h2</usedDependency>
               <usedDependency>com.jayway.jsonpath:json-path</usedDependency>
