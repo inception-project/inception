@@ -37,10 +37,8 @@ import java.util.stream.Collector;
 public class EvaluationResult
     implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5842125748342833451L;
+
     private final int trainingSetSize;
     private final int testSetSize;
 

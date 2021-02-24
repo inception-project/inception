@@ -102,7 +102,8 @@ public class PredictionGroupTest
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
 
         // Check that the deltas are ok
-        Map<Long, Delta> topDeltas = sut.getTopDeltas();
+        Preferences pref = new Preferences();
+        Map<Long, Delta> topDeltas = sut.getTopDeltas(pref);
         assertThat(topDeltas).hasSize(2);
         assertThat(topDeltas.get(1L).getDelta()).isCloseTo(0.1, within(0.00001));
         assertThat(topDeltas.get(2L).getDelta()).isCloseTo(0.2, within(0.00001));

@@ -28,6 +28,7 @@ import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.IteratorUtils.unmodifiableIterator;
@@ -42,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
@@ -126,6 +128,99 @@ public class SuggestionGroup
         }
     }
 
+    public List<AnnotationSuggestion> bestSuggestionsByFeatureAndLabel(Preferences aPreferences,
+            String aFeature, String aLabel)
+    {
+        LabelMapKey key = new LabelMapKey(aFeature, aLabel);
+
+        Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = suggestionsByLabel(
+                aPreferences);
+
+        Map<Long, AnnotationSuggestion> perRecommender = labelMap.get(key);
+        if (perRecommender == null) {
+            return Collections.emptyList();
+        }
+
+        return perRecommender.values().stream() //
+                .sorted(comparing(AnnotationSuggestion::getConfidence)
+                        .thenComparing(AnnotationSuggestion::getRecommenderName)) //
+                .collect(toList());
+    }
+
+    private Map<LabelMapKey, Map<Long, AnnotationSuggestion>> suggestionsByLabel(
+            Preferences aPreferences)
+    {
+        Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
+
+        // For recommendations with the same label by the same classifier,
+        // show only the confidence of the highest one
+        for (AnnotationSuggestion ao : this) {
+            // Skip rendering suggestions that should not be rendered
+            if (!aPreferences.isShowAllPredictions() && (!ao.isVisible()
+                    || (ao.getConfidence() < aPreferences.getConfidenceThreshold()))) {
+                continue;
+            }
+
+            Map<Long, AnnotationSuggestion> bestSuggestionByRecommender = labelMap
+                    .computeIfAbsent(new LabelMapKey(ao), _label -> new HashMap<>());
+
+            AnnotationSuggestion currentBestSuggestion = bestSuggestionByRecommender
+                    .get(ao.getRecommenderId());
+
+            if (currentBestSuggestion == null
+                    || currentBestSuggestion.getConfidence() < ao.getConfidence()) {
+                bestSuggestionByRecommender.put(ao.getRecommenderId(), ao);
+            }
+        }
+
+        return labelMap;
+    }
+
+    public List<AnnotationSuggestion> bestSuggestions(Preferences aPreferences)
+    {
+        Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = suggestionsByLabel(
+                aPreferences);
+
+        // Determine the maximum confidence per Label
+        Map<LabelMapKey, Double> maxConfidencePerLabel = new HashMap<>();
+        for (LabelMapKey label : labelMap.keySet()) {
+            double maxConfidence = 0;
+            for (Entry<Long, AnnotationSuggestion> classifier : labelMap.get(label).entrySet()) {
+                if (classifier.getValue().getConfidence() > maxConfidence) {
+                    maxConfidence = classifier.getValue().getConfidence();
+                }
+            }
+            maxConfidencePerLabel.put(label, maxConfidence);
+        }
+
+        // Sort by confidence (e.getValue()) and limit labels according to max suggestions
+        // Note: the order in which annotations are rendered is only indicative to the
+        // frontend (e.g. brat) which may choose to re-order them (e.g. for layout reasons).
+        List<LabelMapKey> sortedAndFiltered = maxConfidencePerLabel.entrySet().stream() //
+                .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) //
+                .limit(aPreferences.getMaxPredictions()) //
+                .map(Entry::getKey) //
+                .collect(toList());
+
+        // Create VID using the recommendation with the lowest recommendationId
+        List<AnnotationSuggestion> canonicalSuggestions = new ArrayList<>();
+        for (LabelMapKey label : sortedAndFiltered) {
+            // Pick out the recommendations with the lowest recommendationId as canonical for
+            // generating the VID
+            AnnotationSuggestion ao = stream()
+                    // check for label or feature for no-label annotations as key
+                    .filter(p -> label.equalsAnnotationSuggestion(p))
+                    .max(comparingInt(AnnotationSuggestion::getId)) //
+                    .orElse(null);
+
+            if (ao != null) {
+                canonicalSuggestions.add(ao);
+            }
+        }
+
+        return canonicalSuggestions;
+    }
+
     @Override
     public Stream<AnnotationSuggestion> stream()
     {
@@ -186,14 +281,14 @@ public class SuggestionGroup
      * Additionally, only suggestions that are {@link AnnotationSuggestion#isVisible() visible} are
      * taken into consideration.
      */
-    public Map<Long, Delta> getTopDeltas()
+    public Map<Long, Delta> getTopDeltas(Preferences aPreferences)
     {
         if (isEmpty()) {
             return emptyMap();
         }
         else if (size() == 1) {
             AnnotationSuggestion top = get(0);
-            if (top.isVisible()) {
+            if (top.isVisible() && top.getConfidence() >= aPreferences.getConfidenceThreshold()) {
                 return singletonMap(top.getRecommenderId(), new Delta(top));
             }
             else {
@@ -208,13 +303,16 @@ public class SuggestionGroup
             Map<Long, List<AnnotationSuggestion>> predictionsByRecommenders = stream()
                     .collect(groupingBy(AnnotationSuggestion::getRecommenderId));
 
+            double confidenceThreshold = aPreferences.getConfidenceThreshold();
+
             Map<Long, Delta> result = new HashMap<>();
             for (Entry<Long, List<AnnotationSuggestion>> e : predictionsByRecommenders.entrySet()) {
                 long recommenderId = e.getKey();
                 // We consider only candidates that are visible - note that the filtered list is
                 // still sorted
                 List<AnnotationSuggestion> visibleSuggestions = e.getValue().stream()
-                        .filter(AnnotationSuggestion::isVisible).collect(toList());
+                        .filter(s -> s.isVisible() && s.getConfidence() >= confidenceThreshold)
+                        .collect(toList());
 
                 if (visibleSuggestions.isEmpty()) {
                     // If a recommender has no visible suggestions, we skip it - nothing to do here
@@ -304,20 +402,20 @@ public class SuggestionGroup
 
     public static Collection<SuggestionGroup> group(Collection<AnnotationSuggestion> aSuggestions)
     {
-        SortedMap<GroupKey, SuggestionGroup> grouped = aSuggestions.stream()
-                .collect(groupingBy(GroupKey::new, TreeMap::new, SuggestionGroup.collector()));
+        SortedMap<SuggestionGroupKey, SuggestionGroup> grouped = aSuggestions.stream().collect(
+                groupingBy(SuggestionGroupKey::new, TreeMap::new, SuggestionGroup.collector()));
         return grouped.values();
     }
 
-    private static class GroupKey
-        implements Comparable<GroupKey>
+    public static class SuggestionGroupKey
+        implements Comparable<SuggestionGroupKey>
     {
         private final int begin;
         private final int end;
         private final String feature;
         private final long layerId;
 
-        public GroupKey(AnnotationSuggestion aSuggestion)
+        public SuggestionGroupKey(AnnotationSuggestion aSuggestion)
         {
             super();
             begin = aSuggestion.getBegin();
@@ -329,10 +427,10 @@ public class SuggestionGroup
         @Override
         public boolean equals(final Object other)
         {
-            if (!(other instanceof GroupKey)) {
+            if (!(other instanceof SuggestionGroupKey)) {
                 return false;
             }
-            GroupKey castOther = (GroupKey) other;
+            SuggestionGroupKey castOther = (SuggestionGroupKey) other;
             return new EqualsBuilder().append(begin, castOther.begin).append(end, castOther.end)
                     .append(feature, castOther.feature).append(layerId, castOther.layerId)
                     .isEquals();
@@ -346,7 +444,7 @@ public class SuggestionGroup
         }
 
         @Override
-        public int compareTo(final GroupKey other)
+        public int compareTo(final SuggestionGroupKey other)
         {
             return new CompareToBuilder().append(layerId, other.layerId)
                     .append(feature, other.feature)
@@ -439,4 +537,76 @@ public class SuggestionGroup
             return Collections.emptySet();
         }
     }
+
+    /**
+     * A Key identifying an AnnotationSuggestion by its label or as a suggestion without label.
+     */
+    private static class LabelMapKey
+    {
+
+        private String label;
+
+        private boolean hasNoLabel;
+
+        public LabelMapKey(AnnotationSuggestion aSuggestion)
+        {
+            if (aSuggestion.getLabel() == null) {
+                hasNoLabel = true;
+                label = aSuggestion.getFeature();
+            }
+            else {
+                label = aSuggestion.getLabel();
+            }
+        }
+
+        public LabelMapKey(String aFeature, String aLabel)
+        {
+            if (aLabel == null) {
+                hasNoLabel = true;
+                label = aFeature;
+            }
+            else {
+                label = aLabel;
+            }
+        }
+
+        @Override
+        public boolean equals(Object aObj)
+        {
+            if (aObj == null || getClass() != aObj.getClass()) {
+                return false;
+            }
+
+            LabelMapKey aKey = (LabelMapKey) aObj;
+            return label.equals(aKey.getLabel()) && hasNoLabel == aKey.hasNoLabel();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(label, hasNoLabel);
+        }
+
+        public String getLabel()
+        {
+            return label;
+        }
+
+        public boolean hasNoLabel()
+        {
+            return hasNoLabel;
+        }
+
+        public boolean equalsAnnotationSuggestion(AnnotationSuggestion aSuggestion)
+        {
+            // annotation is label-less
+            if (aSuggestion.getLabel() == null) {
+                return hasNoLabel && label.equals(aSuggestion.getFeature());
+            }
+            else {
+                return !hasNoLabel && label.equals(aSuggestion.getLabel());
+            }
+        }
+    }
+
 }

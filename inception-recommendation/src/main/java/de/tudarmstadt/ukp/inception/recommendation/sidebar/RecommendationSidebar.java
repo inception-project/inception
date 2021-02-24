@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
@@ -110,11 +111,19 @@ public class RecommendationSidebar
                 .add(visibleWhen(() -> !recommenders.isEmpty())));
 
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
+        form.setOutputMarkupId(true);
 
-        form.add(new NumberTextField<Integer>("maxPredictions", Integer.class).setMinimum(1)
-                .setMaximum(10).setStep(1));
+        form.add(new NumberTextField<Integer>("maxPredictions", Integer.class) //
+                .setMinimum(1).setMaximum(10).setStep(1) //
+                .add(visibleWhen(() -> !form.getModelObject().isShowAllPredictions())));
 
-        form.add(new CheckBox("showAllPredictions").setOutputMarkupId(true));
+        form.add(new NumberTextField<Double>("confidenceThreshold", Double.class) //
+                .setStep(0.1d) //
+                .add(visibleWhen(() -> !form.getModelObject().isShowAllPredictions())));
+
+        form.add(new CheckBox("showAllPredictions").setOutputMarkupId(true)
+                .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                        _target -> _target.add(form))));
 
         form.add(new LambdaAjaxButton<>("save",
                 (_target, _form) -> aAnnotationPage.actionRefreshDocument(_target)));
@@ -177,8 +186,9 @@ public class RecommendationSidebar
     {
         AnnotatorState state = getModelObject();
         recommendationService.clearState(state.getUser().getUsername());
-        recommendationService.triggerTrainingAndClassification(state.getUser().getUsername(),
-                state.getProject(), "User request via sidebar", state.getDocument());
+        recommendationService.triggerSelectionTrainingAndClassification(
+                state.getUser().getUsername(), state.getProject(), "User request via sidebar",
+                state.getDocument());
     }
 
     private List<String> findMismatchedRecommenders()

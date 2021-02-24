@@ -83,8 +83,10 @@ public interface RecommendationService
 
     boolean hasActiveRecommenders(String aUser, Project aProject);
 
-    void setActiveRecommenders(User aUser, AnnotationLayer layer,
+    void setEvaluatedRecommenders(User aUser, AnnotationLayer layer,
             List<EvaluatedRecommender> selectedClassificationTools);
+
+    List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer);
 
     List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
@@ -159,6 +161,9 @@ public interface RecommendationService
 
     void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument);
+
+    void triggerSelectionTrainingAndClassification(String aUser, Project aProject,
+            String aEventName, SourceDocument aCurrentDocument);
 
     boolean isPredictForAllDocuments(String aUser, Project aProject);
 
