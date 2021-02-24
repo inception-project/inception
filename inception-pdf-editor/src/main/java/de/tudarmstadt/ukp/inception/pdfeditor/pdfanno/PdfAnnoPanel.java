@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
+import static org.apache.commons.io.FilenameUtils.separatorsToUnix;
+
 import java.io.File;
+import java.nio.file.Path;
 import java.time.Duration;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -28,6 +31,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
+import org.apache.wicket.request.UrlRenderer;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.resource.ContentDisposition;
@@ -137,17 +141,14 @@ public class PdfAnnoPanel
                 String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html"
                         : "index.html";
 
-                String viewerUrl = RequestCycle.get().getUrlRenderer()
-                        .renderFullUrl(Url.parse("resources/pdfanno/" + indexFile));
+                UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
 
-                String pdfUrl = getPage().getRequestCycle().getUrlRenderer()
-                        .renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
+                String viewerUrl = urlRenderer
+                        .renderContextRelativeUrl("resources/pdfanno/" + indexFile);
 
-                String pdftxtUrl = getPage().getRequestCycle().getUrlRenderer()
-                        .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
-
-                String apiUrl = getPage().getRequestCycle().getUrlRenderer()
-                        .renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
+                String pdfUrl = toRelativeUrl(viewerUrl, pdfProvider.getCallbackUrl());
+                String pdftxtUrl = toRelativeUrl(viewerUrl, pdftxtProvider.getCallbackUrl());
+                String apiUrl = toRelativeUrl(viewerUrl, apiProvider.getCallbackUrl());
 
                 viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&api=" + apiUrl;
 
@@ -156,5 +157,22 @@ public class PdfAnnoPanel
                 super.onComponentTag(aTag);
             }
         });
+    }
+
+    private String toRelativeUrl(String aViewerUrl, CharSequence aCallbackUrl)
+    {
+        UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
+
+        Url fullViewerUrl = Url.parse(urlRenderer.renderFullUrl(Url.parse(aViewerUrl)));
+        Path fullViewerPath = Path.of(fullViewerUrl.getPath()).getParent();
+
+        Url fullCallbackUrl = Url.parse(urlRenderer.renderFullUrl(Url.parse(aCallbackUrl)));
+        Path fullCallbackPath = Path.of(fullCallbackUrl.getPath());
+
+        Path relativeCallbackPath = fullViewerPath.relativize(fullCallbackPath);
+        String relativeCallbackUrl = separatorsToUnix(relativeCallbackPath.toString()) + "?"
+                + fullCallbackUrl.getQueryString();
+
+        return relativeCallbackUrl;
     }
 }
