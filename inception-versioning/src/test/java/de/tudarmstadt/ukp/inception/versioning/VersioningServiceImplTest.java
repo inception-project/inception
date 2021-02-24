@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -67,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -138,12 +144,25 @@ public class VersioningServiceImplTest
         User admin = addUser("admin");
         User annotator = addUser("annotator");
 
+        projectService.setProjectPermissionLevels(admin, testProject,
+                asList(ANNOTATOR, CURATOR, MANAGER));
+        projectService.setProjectPermissionLevels(annotator, testProject, asList(ANNOTATOR));
+        
         File doc1 = getResource("docs/dinos.txt");
         File doc2 = getResource("docs/lorem.txt");
 
-        importExportService.importCasFromFile(doc1, testProject, "pretokenized-textlines");
-        importExportService.importCasFromFile(doc2, testProject, "pretokenized-textlines");
-
+        try (CasStorageSession session = CasStorageSession.open()) {
+            try (InputStream is = Files.newInputStream(doc1.toPath())) {
+                documentService.uploadSourceDocument(is,
+                        new SourceDocument(doc1.getName(), testProject, "pretokenized-textlines"));
+            }
+    
+            try (InputStream is = Files.newInputStream(doc2.toPath())) {
+                documentService.uploadSourceDocument(is,
+                        new SourceDocument(doc2.getName(), testProject, "pretokenized-textlines"));
+            }
+        }
+        
         for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
             documentService.createOrGetAnnotationDocument(sourceDocument, admin);
             documentService.createOrGetAnnotationDocument(sourceDocument, annotator);
