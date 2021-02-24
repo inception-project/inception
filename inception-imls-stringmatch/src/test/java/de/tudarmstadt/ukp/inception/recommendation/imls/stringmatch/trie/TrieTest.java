@@ -25,14 +25,16 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender.DictEntry;
+
 public class TrieTest
 {
-    private Trie<String> sut;
+    private Trie<DictEntry> sut;
 
     @Before
     public void setup()
     {
-        sut = new Trie<String>();
+        sut = new Trie<DictEntry>();
     }
 
     @Test
@@ -40,10 +42,8 @@ public class TrieTest
     {
         List<String> keys = asList("1", "asf", "asf sadf", "dsjkla sfasd kj92");
 
-        int i = 0;
         for (String key : keys) {
-            sut.put(key, String.valueOf(i));
-            i++;
+            sut.put(key, new DictEntry(key));
         }
 
         assertThat(sut.size()).isEqualTo(keys.size());
@@ -58,11 +58,19 @@ public class TrieTest
     }
 
     @Test
+    public void thatExactMatchesCanBeFound()
+    {
+        sut.put("in", new DictEntry("in"));
+
+        assertThat(sut.get("initially")).isNull();
+    }
+
+    @Test
     public void testThatKeySanitizerWorks()
     {
-        sut = new Trie<String>(WhitespaceNormalizingSanitizer.factory());
+        sut = new Trie<DictEntry>(WhitespaceNormalizingSanitizer.factory());
 
-        sut.put("  this is\ta test  .", "exists");
+        sut.put("  this is\ta test  .", new DictEntry("exists"));
 
         System.out.println(sut.keys());
 
