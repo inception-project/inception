@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
@@ -93,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -507,9 +507,7 @@ public class HtmlAnnotationEditor
                 boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
                         || layer.getName().equals(Sentence.class.getName());
                 boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                        && (state.getMode().equals(Mode.AUTOMATION)
-                                || state.getMode().equals(Mode.CORRECTION)
-                                || state.getMode().equals(Mode.CURATION));
+                        && CURATION == state.getMode();
 
                 if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
                     layersToRender.add(layer);

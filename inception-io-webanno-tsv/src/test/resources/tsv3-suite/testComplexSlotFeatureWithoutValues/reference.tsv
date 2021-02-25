@@ -1,0 +1,11 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.SimpleSpan|
+#T_SP=webanno.custom.ComplexLinkHost|ROLE_webanno.custom.ComplexLinkHost:links_webanno.custom.ComplexLinkType|webanno.custom.SimpleSpan|value
+
+
+#Text=This is a test .
+1-1	0-4	This	_	*;*	1-2;1-3	*	
+1-2	5-7	is	*	_	_	_	
+1-3	8-9	a	*	_	_	_	
+1-4	10-14	test	_	_	_	_	
+1-5	15-16	.	_	_	_	_	

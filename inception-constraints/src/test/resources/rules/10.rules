@@ -1,0 +1,4 @@
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
+DEPENDENCY {
+  Governor.pos.PosValue = "NN" & Dependent.pos.PosValue = "DET" -> DependencyType = "det";
+}

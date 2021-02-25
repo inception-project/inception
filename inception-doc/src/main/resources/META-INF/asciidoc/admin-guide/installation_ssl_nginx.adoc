@@ -1,0 +1,38 @@
+= Installing NGINX
+
+This section assumes Debian 9.1 (Stretch) as the operating system using link:https://www.nginx.com/[NGINX] as a web server.
+It further assumes that you want to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL
+certificates.
+
+* You can install NGINX by typing
+----
+$ apt-get update
+$ apt-get install nginx
+----
+
+* Verify the installation with
+----
+$ systemctl status nginx
+Output:
+● nginx.service - A high-performance web server and a reverse proxy server
+   Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+   Active: active (running) since Mon 2019-01-21 14:42:01 CET; 20h ago
+     Docs: man:nginx(8)
+  Process: 7947 ExecStop=/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid (code=exited, status=0/SUCCESS)
+  Process: 7953 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+  Process: 7950 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+ Main PID: 7955 (nginx)
+    Tasks: 9 (limit: 4915)
+   CGroup: /system.slice/nginx.service
+           ├─7955 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+           ├─7956 nginx: worker process
+----
+
+* You can stop, start or restart NGINX with
+----
+$ systemctl stop nginx
+
+$ systemctl start nginx
+
+$ systemctl restart nginx
+----

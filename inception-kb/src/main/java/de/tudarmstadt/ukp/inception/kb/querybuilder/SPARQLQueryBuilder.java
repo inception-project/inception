@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static com.github.jsonldjava.shaded.com.google.common.collect.Streams.concat;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
@@ -34,6 +33,7 @@ import static java.lang.Character.isWhitespace;
 import static java.lang.Integer.toHexString;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Stream.concat;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;

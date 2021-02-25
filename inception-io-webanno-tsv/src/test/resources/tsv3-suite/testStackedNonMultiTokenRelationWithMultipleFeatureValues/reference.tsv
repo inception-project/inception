@@ -1,0 +1,11 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.Span|value
+#T_RL=webanno.custom.ComplexRelation|boolValue|integerValue|value|BT_webanno.custom.Span
+
+
+#Text=This is a test .
+1-1	0-4	This	*[1]	_	_	_	_	
+1-2	5-7	is	*[1]	_	_	_	_	
+1-3	8-9	a	*[2]	true|false	42|43	nsubj|obj	1-1[1_2]|1-1[1_2]	
+1-4	10-14	test	*[2]	_	_	_	_	
+1-5	15-16	.	_	_	_	_	_	

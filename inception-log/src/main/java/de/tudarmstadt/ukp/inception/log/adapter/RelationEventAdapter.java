@@ -19,20 +19,17 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
+import de.tudarmstadt.ukp.inception.log.model.RelationDetails;
 
 @Component
 public class RelationEventAdapter
     implements EventLoggingAdapter<RelationEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {
@@ -42,7 +39,9 @@ public class RelationEventAdapter
     @Override
     public String getDetails(RelationEvent aEvent) throws IOException
     {
-        AnnotationDetails details = new AnnotationDetails(aEvent.getTargetAnnotation());
+        AnnotationDetails source = new AnnotationDetails(aEvent.getSourceAnnotation());
+        AnnotationDetails target = new AnnotationDetails(aEvent.getTargetAnnotation());
+        RelationDetails details = new RelationDetails(aEvent.getAnnotation(), source, target);
         return JSONUtil.toJsonString(details);
     }
 

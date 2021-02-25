@@ -1,0 +1,3 @@
+zone{
+@localdb= "schemavalidatorAvailable" & @timezone = "utc1" -> system.timezone.City.cityName="Berlin";
+}

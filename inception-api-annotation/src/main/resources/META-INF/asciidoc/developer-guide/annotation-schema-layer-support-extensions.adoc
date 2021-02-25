@@ -1,0 +1,37 @@
+= Layers
+
+The layers mechanism allows supporting different types of annotation layers, e.g. span layers,
+relation layers or chain layers. It consists of the following classes and interfaces:
+
+* The `LayerSupport` interface provides the API for implementing layer types.
+* The `LayerSupportRegistry` interface and its default implementation `LayerSupportRegistryImpl`
+  serve as an access point to the different supported layer types.
+* The `LayerType` class which represents a short summary of a supported layer type. It is used
+  when selecting the type of a feature in the UI.
+* The `TypeAdapter` interface provides methods to create, manipulate or delete annotations on the
+  given type of layer.
+
+To add support for a new type of layer, create a Spring component class which implements the
+`LayerSupport` interface. Note that a single layer support class can handle multiple layer types. 
+However, it is generally recommended to implement a separate layer support for every layer type.
+Implement the following methods:
+
+* `getId()` to return a unique identifier for the new layer type. Typically the Spring bean name
+  is returned here.
+* `getSupportedLayerTypes()` to return a list of all the supported layer types handled by the new
+  layer support. This values returned here are used to populate the layer type choice when creating
+  a new layer in the project settings.
+* `accepts(AnnotationLayer)` to return `true` for any annotation layer that is handled by the new
+  layer support. I.e. `AnnotationLayer.getType()` must return a layer type identifier that was produced
+  by the given layer support.
+* `generateTypes(TypeSystemDescription, AnnotationLayer)` to generate the UIMA type system for the given
+  annotation layer. This is a partial type system which is merged by the application with the
+  type systems produced by other layer supports as well as with the base type system of the
+  application itself (i.e. the DKPro Core type system and the internal types).
+* `getRenderer(AnnotationLayer)` to return an early-stage renderer for the annotations on the
+  given layer.
+
+NOTE: The concept of layers is not yet fully modularized. Many parts of the application will only 
+      know how to deal with specific types of layers. Adding a new layer type should not crash the
+      application, but it may also not necessarily be possible to actually use the new layer. In
+      particular, changes to the TSV format may be required to support new layer types.

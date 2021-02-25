@@ -33,7 +33,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -56,7 +55,6 @@ public class DocumentRepositoryExporterTest
 
         project = new Project();
         project.setName("Test Project");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         when(externalSearchService.listDocumentRepositories(project))
                 .thenReturn(documentRepositories());

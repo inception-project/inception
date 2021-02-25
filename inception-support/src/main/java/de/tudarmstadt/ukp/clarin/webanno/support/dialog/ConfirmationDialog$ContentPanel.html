@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <form wicket:id="form" class="w_flex_container">
+    <div class="w_flex_content">
+      <div class="fluid-container">
+        <div class="row">
+          <div class="col-sm-12">
+            <p>
+              <wicket:container wicket:id="content" />
+            </p>
+            <p>
+              <span wicket:id="feedback"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="w_flex_footer card-footer text-right">
+      <button wicket:id="confirm" class="btn btn-primary">
+        <i class="fas fa-check"></i>&nbsp;
+        <wicket:message key="confirm.label"/>
+      </button>
+      <button wicket:id="cancel" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="cancel.label"/>
+      </button>
+    </div>
+  </form>
+</wicket:panel>
+</html>

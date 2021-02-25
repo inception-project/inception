@@ -1,0 +1,111 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_conll2012]]
+= CoNLL 2012
+
+The CoNLL 2012 format targets semantic role labeling and coreference. Columns are whitespace-separated (tabs or spaces). Sentences are separated by a blank new line.
+
+Note that this format cannot deal with the following situations:
+* An annotation has no label (e.g. a `SemPred` annotation has no category) - in such a case `null` is
+  written into the corresponding column. However, the reader will actually read this value as the
+  label.
+* If a `SemPred` annotation is at the same position as a `SemArg` annotation linked to it, then only
+  the `(V*)` representing the `SemPred` annotation will be written.
+* `SemPred` annotations spanning more than one token are not supported
+* If there are multiple `SemPred` annotations on the same token, then only one of them is written.
+  This is because the `category` of the `SemPred` annotation goes to the  **Predicate Frameset ID** 
+  and that can only hold one value which.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| link:http://conll.cemantix.org/2012/data.html[CoNLL 2012]
+| yes
+| yes
+| no
+|
+|====
+
+.Columns
+[cols="1,2,3", options="header"]
+|====
+| Column  | Type/Feature | Description
+
+| Document ID
+| ignored
+| This is a variation on the document filename.</li>
+
+| Part number
+| ignored
+| Some files are divided into multiple parts numbered as 000, 001, 002, ... etc.
+
+| Word number
+| ignored
+| 
+
+| Word itself
+| document text
+|  This is the token as segmented/tokenized in the Treebank. Initially the `*_skel` file contain the placeholder `[WORD]` which gets replaced by the actual token from the Treebank which is part of the OntoNotes release.
+
+| Part-of-Speech
+| POS
+| 
+
+| Parse bit
+| Constituent
+| This is the bracketed structure broken before the first open parenthesis in the parse, and the word/part-of-speech leaf replaced with a `*`. The full parse can be created by substituting the asterisk with the `([pos] [word])` string (or leaf) and concatenating the items in the rows of that column.
+
+| Predicate lemma
+| Lemma
+|  The predicate lemma is mentioned for the rows for which we have semantic role information. All other rows are marked with a `-`.
+
+| Predicate Frameset ID
+| SemPred
+| This is the PropBank frameset ID of the predicate in Column 7.
+
+| Word sense
+| ignored
+| This is the word sense of the word in Column 3.
+
+| Speaker/Author
+| ignored
+| This is the speaker or author name where available. Mostly in Broadcast Conversation and Web Log data.
+
+| Named Entities
+| NamedEntity
+| These columns identifies the spans representing various named entities.
+
+| Predicate Arguments
+| SemPred
+| There is one column each of predicate argument structure information for the predicate mentioned in Column 7.
+
+| Coreference
+| CoreferenceChain
+| Coreference chain information encoded in a parenthesis structure.
+|====
+ 
+.Example
+[source,text,tabsize=0]
+----
+en-orig.conll	0	0	John	NNP	(TOP(S(NP*)	john	-	-	-	(PERSON)	(A0)	(1)
+en-orig.conll	0	1	went	VBD	(VP*	go	go.02	-	-	*	(V*)	-
+en-orig.conll	0	2	to	TO	(PP*	to	-	-	-	*	*	-
+en-orig.conll	0	3	the	DT	(NP*	the	-	-	-	*	*	(2
+en-orig.conll	0	4	market	NN	*)))	market	-	-	-	*	(A1)	2)
+en-orig.conll	0	5	.	.	*))	.	-	-	-	*	*	-
+----

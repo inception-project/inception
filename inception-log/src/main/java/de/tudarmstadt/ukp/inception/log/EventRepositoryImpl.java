@@ -73,7 +73,7 @@ public class EventRepositoryImpl
         }
         long duration = System.currentTimeMillis() - start;
 
-        if (aEvents.length > 0) {
+        if (aEvents.length > 0 && !log.isTraceEnabled()) {
             log.debug("... {} events stored ... ({}ms)", aEvents.length, duration);
         }
     }

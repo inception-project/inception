@@ -36,7 +36,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -85,7 +84,6 @@ public class VisibilityCalculationTests
 
         project = new Project();
         project.setName("Test Project");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
         featureList.add(new AnnotationFeature("value", "uima.cas.String"));

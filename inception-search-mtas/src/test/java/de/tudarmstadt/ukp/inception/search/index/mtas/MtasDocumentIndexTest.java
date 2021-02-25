@@ -63,7 +63,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
@@ -245,7 +244,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("TestRawTextQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -286,7 +284,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("LastTokenInDocumentCanBeFound");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -327,7 +324,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("TestLimitQueryToDocument");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -392,7 +388,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("SimplifiedTokenTextQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 
@@ -433,7 +428,6 @@ public class MtasDocumentIndexTest
     {
         Project project = new Project();
         project.setName("TestAnnotationQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
 

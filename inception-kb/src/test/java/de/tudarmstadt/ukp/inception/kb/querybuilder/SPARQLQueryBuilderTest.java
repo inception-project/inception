@@ -26,8 +26,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.sa
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.assertThatChildrenOfExplicitRootCanBeRetrieved;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
-import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
-import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
+import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,8 +35,6 @@ import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -58,8 +55,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
-import org.eclipse.rdf4j.query.TupleQuery;
-import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -213,13 +208,12 @@ public class SPARQLQueryBuilderTest
     @Before
     public void setUp()
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
 
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
         kb.setType(RepositoryType.LOCAL);
         kb.setFullTextSearchIri(null);
-        kb.setMaxResults(1000);
+        kb.setMaxResults(100);
 
         initRdfsMapping();
 
@@ -237,47 +231,33 @@ public class SPARQLQueryBuilderTest
                 .add("/fuseki", createFusekiFTSDataset()) //
                 .build();
         fusekiServer.start();
-        fusekiLocalRepo = new SPARQLRepository(
+
+        fusekiLocalRepo = buildSparqlRepository(
                 "http://localhost:" + fusekiServer.getPort() + "/fuseki");
-        fusekiLocalRepo.init();
-
-        ukpVirtuosoRepo = new SPARQLRepository(
+        ukpVirtuosoRepo = buildSparqlRepository(
                 "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
-        ukpVirtuosoRepo.init();
-
-        // http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/stw/query
-        zbwStw = new SPARQLRepository("http://zbw.eu/beta/sparql/stw/query");
-        zbwStw.init();
-
-        // http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/gnd/query
-        zbwGnd = new SPARQLRepository("http://zbw.eu/beta/sparql/gnd/query");
-        zbwGnd.init();
-
-        // https://query.wikidata.org/sparql
-        wikidata = new SPARQLRepository("https://query.wikidata.org/sparql");
-        wikidata.init();
-
-        // https://dbpedia.org/sparql
-        dbpedia = new SPARQLRepository("https://dbpedia.org/sparql");
-        dbpedia.init();
-
-        // https://linkeddata1.calcul.u-psud.fr/sparql
-        yago = new SPARQLRepository("https://linkeddata1.calcul.u-psud.fr/sparql");
-        yago.init();
-
-        // http://nlp.dainst.org:8888/sparql
-        hucit = new SPARQLRepository("http://nlp.dainst.org:8888/sparql");
-        hucit.init();
-
-        // http://collection.britishmuseum.org/sparql
-        britishMuseum = new SPARQLRepository("http://collection.britishmuseum.org/sparql");
-        britishMuseum.init();
+        wikidata = buildSparqlRepository("https://query.wikidata.org/sparql");
+        dbpedia = buildSparqlRepository("http://de.dbpedia.org/sparql");
+        yago = buildSparqlRepository("https://yago-knowledge.org/sparql/query");
+        hucit = buildSparqlRepository("http://nlp.dainst.org:8888/sparql");
+        britishMuseum = buildSparqlRepository("http://collection.britishmuseum.org/sparql");
+        // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/stw/query
+        zbwStw = buildSparqlRepository("http://zbw.eu/beta/sparql/stw/query");
+        // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/gnd/query
+        zbwGnd = buildSparqlRepository("http://zbw.eu/beta/sparql/gnd/query");
     }
 
     @After
     public void tearDown()
     {
         fusekiServer.stop();
+    }
+
+    private Repository buildSparqlRepository(String aUrl)
+    {
+        SPARQLRepository repo = new SPARQLRepository(aUrl);
+        repo.init();
+        return repo;
     }
 
     /**
@@ -913,7 +893,6 @@ public class SPARQLQueryBuilderTest
     }
 
     @Category(SlowTests.class)
-    @Ignore
     @Test
     public void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
     {
@@ -1267,7 +1246,6 @@ public class SPARQLQueryBuilderTest
     }
 
     @Category(SlowTests.class)
-    @Ignore
     @Test
     public void testWithLabelStartingWith_Wikidata_FTS() throws Exception
     {
@@ -1391,7 +1369,6 @@ public class SPARQLQueryBuilderTest
     }
 
     @Category(SlowTests.class)
-    @Ignore
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Wikidata_FTS() throws Exception
     {
@@ -1412,7 +1389,6 @@ public class SPARQLQueryBuilderTest
     }
 
     @Category(SlowTests.class)
-    @Ignore
     @Test
     public void testWithLabelMatchingExactlyAnyOf_multiple_Wikidata_FTS() throws Exception
     {
@@ -1560,8 +1536,7 @@ public class SPARQLQueryBuilderTest
 
         kb.setType(REMOTE);
 
-        assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago,
-                "http://www.w3.org/2002/07/owl#Thing");
+        assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago, "http://schema.org/Thing");
     }
 
     @Category(SlowTests.class)
@@ -1585,7 +1560,6 @@ public class SPARQLQueryBuilderTest
                 .contains("http://www.wikidata.org/entity/Q35120");
     }
 
-    @Ignore("https://github.com/inception-project/inception/issues/1931")
     @Category(SlowTests.class)
     @Test
     public void thatRootsCanBeRetrieved_DBPedia()
@@ -1593,7 +1567,6 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(dbpedia);
 
         kb.setType(REMOTE);
-        kb.setDefaultDatasetIri(SimpleValueFactory.getInstance().createIRI("http://dbpedia.org"));
 
         List<KBHandle> results = asHandles(dbpedia,
                 SPARQLQueryBuilder.forClasses(kb).roots().retrieveLabel());
@@ -1605,7 +1578,6 @@ public class SPARQLQueryBuilderTest
                 .contains("Thing");
     }
 
-    @Ignore("https://github.com/inception-project/inception/issues/1931")
     @Category(SlowTests.class)
     @Test
     public void thatParentsCanBeRetrieved_DBPedia()
@@ -1746,40 +1718,6 @@ public class SPARQLQueryBuilderTest
         kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
         kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
         kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
-    }
-
-    public static boolean isReachable(String aUrl)
-    {
-        try {
-            URL url = new URL(aUrl);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            con.setConnectTimeout(2500);
-            con.setReadTimeout(2500);
-            con.setRequestProperty("Content-Type", "application/sparql-query");
-            int status = con.getResponseCode();
-
-            if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
-                String location = con.getHeaderField("Location");
-                return isReachable(location);
-            }
-        }
-        catch (Exception e) {
-            return false;
-        }
-
-        SPARQLRepository r = new SPARQLRepository(aUrl);
-        r.init();
-        try (RepositoryConnection conn = r.getConnection()) {
-            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
-            query.setMaxExecutionTime(5);
-            try (TupleQueryResult result = query.evaluate()) {
-                return true;
-            }
-        }
-        catch (Exception e) {
-            return false;
-        }
     }
 
     public static void assertIsReachable(Repository aRepository)

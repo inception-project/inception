@@ -1,0 +1,11 @@
+import de.Country as Country;
+import de.Continent as Continent;
+
+Country {
+  continent.name = "Asia" & name = "Russian Federation" -> regionType = "cold" (!); 
+}
+
+Continent {
+  discovered = "true" -> name = "America";
+  area = "100" -> name = "Fantasy Island";
+}
