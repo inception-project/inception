@@ -368,6 +368,11 @@ var AnnotatorUI = (function($, window, undefined) {
 
       var startArcDrag = function(originId) {
         clearSelection();
+
+        if (!data.spans[originId]) {
+          return;
+        }
+        
         svgElement.addClass('unselectable');
         svgPosition = svgElement.offset();
         arcDragOrigin = originId;
@@ -1908,7 +1913,7 @@ var AnnotatorUI = (function($, window, undefined) {
           
           // If using the selection was not successful, try using the ranges instead. This should
           // work on Firefox.
-          if (!anchorNode[0] || !focusNode[0]) {
+          if (anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) {
             anchorNode = $(sel.getRangeAt(0).startContainer).closest('*[data-chunk-id]');
             anchorOffset = sel.getRangeAt(0).startOffset;
             focusNode = $(sel.getRangeAt(sel.rangeCount - 1).endContainer).closest('*[data-chunk-id]');
@@ -1916,7 +1921,7 @@ var AnnotatorUI = (function($, window, undefined) {
           }
           
           // If neither approach worked, give up - the user didn't click on selectable text.
-          if (!anchorNode[0] || !focusNode[0]) {
+          if (anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) {
             clearSelection();
             stopArcDrag(target);
             return;
