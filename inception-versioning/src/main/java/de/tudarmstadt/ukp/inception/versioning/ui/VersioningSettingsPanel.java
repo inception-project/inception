@@ -18,16 +18,23 @@
 package de.tudarmstadt.ukp.inception.versioning.ui;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.net.URISyntaxException;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.versioning.VersioningService;
@@ -35,47 +42,125 @@ import de.tudarmstadt.ukp.inception.versioning.VersioningService;
 public class VersioningSettingsPanel
     extends ProjectSettingsPanelBase
 {
-    private static final long serialVersionUID = 947691448582391801L;
+    private static final long serialVersionUID = 947691148582391801L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(VersioningSettingsPanel.class);
 
     private @SpringBean VersioningService versioningService;
 
-    private final WebMarkupContainer container;
+    private TextField<String> remoteTextField;
+    private IModel<RepositoryConfig> repositoryConfigModel;
 
     public VersioningSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
 
-        container = createContainer();
-        container.setOutputMarkupId(true);
-        add(container);
-    }
+        RepositoryConfig repositoryConfig = new RepositoryConfig();
 
-    private WebMarkupContainer createContainer()
-    {
-        WebMarkupContainer versioningContainer = new WebMarkupContainer("versioningContainer");
-        versioningContainer.setOutputMarkupId(true);
+        Project project = aProjectModel.getObject();
 
-        TextField<String> repoPathField = new TextField<String>("repoPath",
-                Model.of(versioningService.getRepoDir(getModelObject()).getAbsolutePath()));
+        repositoryConfig.setLocalPath(versioningService.getRepoDir(project).getAbsolutePath());
+        try {
+            repositoryConfig.setRemotePath(versioningService.getRemote(project).orElse(""));
+        }
+        catch (IOException | GitAPIException e) {
+            LOG.error("Error getting remote: {}", e.getMessage());
+            error("Error getting remote: " + ExceptionUtils.getRootCauseMessage(e));
+            return;
+        }
 
-        versioningContainer.add(repoPathField);
+        repositoryConfigModel = new CompoundPropertyModel<>(repositoryConfig);
+        Form<RepositoryConfig> form = new Form<>("form", repositoryConfigModel);
+        add(form);
 
-        LambdaAjaxLink removeBtn = new LambdaAjaxLink("snapshotProject",
+        form.setOutputMarkupId(true);
+
+        // Local path
+        TextField<String> localPathField = new TextField<>("localPath");
+        form.add(localPathField);
+
+        // Set remote
+        String remotePath = "";
+        try {
+            remotePath = versioningService.getRemote(project).orElse("");
+        }
+        catch (IOException | GitAPIException e) {
+            e.printStackTrace();
+        }
+
+        remoteTextField = new TextField<>("remotePath");
+        form.add(remoteTextField);
+
+        form.add(new LambdaAjaxButton<>("setRemoteButton", this::actionSetRemote));
+
+        LambdaAjaxLink snapshotButton = new LambdaAjaxLink("snapshotProject",
                 this::actionSnapshotProject);
-        versioningContainer.add(removeBtn);
+        form.add(snapshotButton);
 
-        return versioningContainer;
+        LambdaAjaxLink pushButton = new LambdaAjaxLink("pushButton", this::actionSnapshotProject);
+        form.add(pushButton);
     }
 
     private void actionSnapshotProject(AjaxRequestTarget aTarget)
     {
         try {
             versioningService.snapshotCompleteProject(getModelObject());
+            aTarget.add(this);
+            info("Snapshotting successful!");
         }
         catch (IOException | GitAPIException e) {
-            // TODO: Show error message
-            e.printStackTrace();
-            aTarget.add(container);
+            LOG.error("Error snapshotting project: {}", e.getMessage());
+            error("Error snapshotting project: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+
+        aTarget.addChildren(getPage(), IFeedback.class);
+    }
+
+    private void pushToRemote(AjaxRequestTarget aTarget)
+    {
+
+    }
+
+    private void actionSetRemote(AjaxRequestTarget aTarget, Form<RepositoryConfig> aForm)
+    {
+        try {
+            versioningService.setRemote(getModelObject(),
+                    repositoryConfigModel.getObject().remotePath);
+            aTarget.add(this);
+        }
+        catch (IOException | GitAPIException | URISyntaxException e) {
+            LOG.error("Error setting remote: {}", e.getMessage());
+            error("Error setting remote: " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+    }
+
+    private static class RepositoryConfig
+        implements Serializable
+    {
+        private static final long serialVersionUID = 5476961483452271801L;
+
+        private String localPath;
+        private String remotePath;
+
+        public String getLocalPath()
+        {
+            return localPath;
+        }
+
+        public void setLocalPath(String aLocalPath)
+        {
+            localPath = aLocalPath;
+        }
+
+        public String getRemotePath()
+        {
+            return remotePath;
+        }
+
+        public void setRemotePath(String aRemotePath)
+        {
+            remotePath = aRemotePath;
         }
     }
 

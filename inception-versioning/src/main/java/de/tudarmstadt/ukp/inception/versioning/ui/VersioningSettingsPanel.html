@@ -17,21 +17,89 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-    <div class="flex-content flex-gutter" style="padding: 4px; margin: 4px">
-        <div wicket:id="versioningContainer" class="flex-content flex-centered flex-h-container flex-gutter">
-            <label>
-                <wicket:message key="instruction"/>
-            </label>
-            <input wicket:id="repoPath" class="target flex-content" type="text" readonly/>
+    <form wicket:id="form" class="flex-content flex-v-container">
+        <div class="flex-content scrolling card-body">
+            <div class="container-fluid">
 
+                <label>
+                    <wicket:message key="instruction"/>
+                </label>
 
-            <div class="btn-group-vertical" role="group" aria-label="Button group with nested dropdown">
-                <button wicket:id="snapshotProject" class="btn btn-primary">
-                    <i class="fas fa-sync"
-                       wicket:message="title:snapshotProject"></i>
-                </button>
+                <div class="container-fluid">
+                    <div class="form-group form-row">
+                        <label class="col-sm-2 col-form-label" for="localPath">
+                            <wicket:message key="localPath"/>
+                            <i class="fas fa-info-circle"></i>
+                        </label>
+
+                        <div class="col-sm-10 ">
+                            <input wicket:id="localPath" type="text" readonly class="form-control" id="localPath">
+                        </div>
+                    </div>
+
+                    <div class="form-group form-row">
+                        <label class="col-sm-2 col-form-label" for="remotePath">
+                            <wicket:message key="remotePath"/>
+                            <i class="fas fa-info-circle"></i>
+                        </label>
+
+                        <div class="col-sm-8 ">
+                            <input wicket:id="remotePath" type="text" class="form-control" id="remotePath">
+                        </div>
+
+                        <div class="col-sm-2 ">
+                            <button wicket:id="setRemoteButton" class="btn btn-primary">
+                                <i class="fas fa-save" wicket:message="title:setRemoteButton"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-row">
+                        <div class="col-sm-12 ">
+
+                            <button wicket:id="snapshotProject" class="btn btn-primary">
+                                <i class="fas fa-bolt"></i>
+                                <wicket:message key="snapshotProject"/>
+                            </button>
+
+                            <button wicket:id="pushButton" class="btn btn-primary">
+                                <i class="fa fa-arrow-up"></i>
+                                <wicket:message key="pushButton"/>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </form>
+
+
+    <!--
+    <div class="flex-content flex-gutter" style="padding: 4px; margin: 4px">
+
+        <div wicket:id="versioningContainer" class="flex-content flex-centered flex-h-container flex-gutter">
+
+
+            <div>
+                <div class="form-group row">
+                    <label for="repoPath" class="col-sm-2 col-form-label">Email</label>
+
+                    <div class="col-sm-10">
+                        <input wicket:id="repoPath" type="text" readonly class="form-control-plaintext" id="repoPath">
+                    </div>
+                </div>
+
+                <div class="btn-group-vertical" role="group" aria-label="Button group with nested dropdown">
+                    <button wicket:id="snapshotProject" class="btn btn-primary">
+                        <i class="fas fa-sync"
+                           wicket:message="title:snapshotProject"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
+    <-->
 </wicket:panel>
 </html>

@@ -127,8 +127,6 @@ public class VersioningServiceImpl
 
         for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
             dumpUserAnnotations(aProject, user);
-            System.out.println(user);
-
         }
 
         git.add().addFilepattern(ANNOTATION_FOLDER).call();
@@ -235,33 +233,28 @@ public class VersioningServiceImpl
         }
     }
 
-    private void dumpLayers(File aFile, Project aProject)
+    private void dumpLayers(File aFile, Project aProject) throws IOException
     {
-        try {
-            List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
-            for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
+        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
 
-                ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null,
-                        layer, annotationService);
-                exLayers.add(exMainLayer);
+            ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null, layer,
+                    annotationService);
+            exLayers.add(exMainLayer);
 
-                // If the layer is attached to another layer, then we also have to export
-                // that, otherwise we would be missing it during re-import.
-                if (layer.getAttachType() != null) {
-                    AnnotationLayer attachLayer = layer.getAttachType();
-                    ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null,
-                            null, attachLayer, annotationService);
-                    exMainLayer.setAttachType(
-                            new ExportedAnnotationLayerReference(exAttachLayer.getName()));
-                    exLayers.add(exAttachLayer);
-                }
+            // If the layer is attached to another layer, then we also have to export
+            // that, otherwise we would be missing it during re-import.
+            if (layer.getAttachType() != null) {
+                AnnotationLayer attachLayer = layer.getAttachType();
+                ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null, null,
+                        attachLayer, annotationService);
+                exMainLayer.setAttachType(
+                        new ExportedAnnotationLayerReference(exAttachLayer.getName()));
+                exLayers.add(exAttachLayer);
             }
+        }
 
-            String json = JSONUtil.toPrettyJsonString(exLayers);
-            Files.write(aFile.toPath(), json.getBytes(StandardCharsets.UTF_8));
-        }
-        catch (IOException e) {
-            log.error("Unable to exporting layer json", e);
-        }
+        String json = JSONUtil.toPrettyJsonString(exLayers);
+        Files.write(aFile.toPath(), json.getBytes(StandardCharsets.UTF_8));
     }
 }
