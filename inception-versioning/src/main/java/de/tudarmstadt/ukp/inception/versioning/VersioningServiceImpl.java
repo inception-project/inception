@@ -216,6 +216,15 @@ public class VersioningServiceImpl
         git.remoteAdd().setName("origin").setUri(new URIish(aValue)).call();
     }
 
+    @Override
+    public void pushToOrigin(Project aProject) throws IOException, GitAPIException
+    {
+        File repoDir = getRepoDir(aProject);
+        Git git = Git.open(repoDir);
+
+        git.push().setRemote("origin").add("master").call();
+    }
+
     private void commit(Git aGit, String aMessage) throws GitAPIException
     {
         User user = userDao.getCurrentUser();

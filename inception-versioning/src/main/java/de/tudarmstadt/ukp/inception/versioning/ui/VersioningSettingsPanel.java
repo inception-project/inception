@@ -97,7 +97,7 @@ public class VersioningSettingsPanel
                 this::actionSnapshotProject);
         form.add(snapshotButton);
 
-        LambdaAjaxLink pushButton = new LambdaAjaxLink("pushButton", this::actionSnapshotProject);
+        LambdaAjaxLink pushButton = new LambdaAjaxLink("pushButton", this::pushToRemote);
         form.add(pushButton);
     }
 
@@ -118,7 +118,17 @@ public class VersioningSettingsPanel
 
     private void pushToRemote(AjaxRequestTarget aTarget)
     {
+        try {
+            versioningService.pushToOrigin(getModelObject());
+            aTarget.add(this);
+            info("Pushing successful!");
+        }
+        catch (IOException | GitAPIException e) {
+            LOG.error("Error pushing to remote repository: {}", e.getMessage());
+            error("Error pushing to remote repository: " + ExceptionUtils.getRootCauseMessage(e));
+        }
 
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private void actionSetRemote(AjaxRequestTarget aTarget, Form<RepositoryConfig> aForm)

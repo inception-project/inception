@@ -48,4 +48,6 @@ public interface VersioningService
 
     void setRemote(Project aProject, String aValue)
         throws IOException, GitAPIException, URISyntaxException;
+
+    void pushToOrigin(Project aProject) throws IOException, GitAPIException;
 }
