@@ -51,8 +51,8 @@ public class EditorFactory
     }
 
     @Override
-    public AnnotationEditorBase create(String aId, AnnotationEditorController aController, String jsonUser, String jsonProject) throws IOException {
-        return new AnnotationEditor(aId, aController, jsonUser, jsonProject);
+    public AnnotationEditorBase create(String aId, AnnotationEditorController aController, String aJsonUser, String aJsonProject) throws IOException {
+        return new AnnotationEditor(aId, aController, aJsonUser, aJsonProject);
     }
 
     @Override

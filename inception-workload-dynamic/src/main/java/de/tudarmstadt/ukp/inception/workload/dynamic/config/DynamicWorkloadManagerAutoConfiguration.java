@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkf
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.RandomizedWorkflowExtension;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean

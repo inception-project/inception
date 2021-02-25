@@ -1,38 +1,18 @@
 package de.tudarmstadt.ukp.inception.editor;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRenderedMetaDataKey;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.controller.AnnotationEditorController;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.*;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
-import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.Component;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 public class AnnotationEditor extends AnnotationEditorBase {
     private static final long serialVersionUID = 2983502506977571078L;
@@ -54,14 +34,27 @@ public class AnnotationEditor extends AnnotationEditorBase {
 
     private final AnnotationEditorController controller;
 
-    public AnnotationEditor(String aId, AnnotationEditorController aController, String jsonUser, String jsonProject) throws IOException {
+    private final ContextMenu contextMenu;
+    private final WebMarkupContainer vis;
+    private CAS cas;
+
+
+    public AnnotationEditor(String aId, AnnotationEditorController aController, String aJsonUser, String aJsonProject) throws IOException {
         super(aId, aController);
 
         controller = aController;
-        currentUser = JSONUtil.fromJsonString(User.class, jsonUser);
-        currentProject = JSONUtil.fromJsonString(Project.class, jsonProject);
+        currentUser = JSONUtil.fromJsonString(User.class, aJsonUser);
+        currentProject = JSONUtil.fromJsonString(Project.class, aJsonProject);
+
+        vis = new WebMarkupContainer("vis");
+        vis.setOutputMarkupId(true);
+        add(vis);
+
+        contextMenu = new ContextMenu("contextMenu");
+        add(contextMenu);
 
         initController();
+
     }
 
     //Whenever the document changes, reinit the controller with the correct values for user, document and project
@@ -75,16 +68,15 @@ public class AnnotationEditor extends AnnotationEditorBase {
         currentDocument = JSONUtil.fromJsonString(SourceDocument.class, jsonDocument);
         controller.updateDocumentService(currentDocument);
     }
-    private void render(CAS aCas)
-    {
-        AnnotatorState aState = getModelObject();
-        VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-        System.out.println(vdoc);
-    }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
+        try {
+            cas = getCasProvider().get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -92,6 +84,7 @@ public class AnnotationEditor extends AnnotationEditorBase {
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
+
     }
 
 }

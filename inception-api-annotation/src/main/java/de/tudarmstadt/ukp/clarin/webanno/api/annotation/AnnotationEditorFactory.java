@@ -38,7 +38,7 @@ public interface AnnotationEditorFactory
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
 
-    default AnnotationEditorBase create(String id, AnnotationEditorController aController, String jsonUser, String jsonProject) throws IOException {
+    default AnnotationEditorBase create(String id, AnnotationEditorController aController, String aJsonUser, String aJsonProject) throws IOException {
         return null;
     }
 
