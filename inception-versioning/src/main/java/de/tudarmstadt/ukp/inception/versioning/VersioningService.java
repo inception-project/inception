@@ -34,7 +34,7 @@ public interface VersioningService
      * @param aProject
      *            The project to snapshot
      */
-    void snapshotCompleteProject(Project aProject);
+    void snapshotCompleteProject(Project aProject) throws IOException, GitAPIException;
 
     void labelCurrentVersion(Project aProject, String aLabel);
 

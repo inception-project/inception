@@ -115,28 +115,25 @@ public class VersioningServiceImpl
     }
 
     @Override
-    public void snapshotCompleteProject(Project aProject)
+    public void snapshotCompleteProject(Project aProject) throws IOException, GitAPIException
     {
         File repoDir = getRepoDir(aProject);
         File layersJsonFile = new File(repoDir, LAYERS);
 
-        try {
-            Git git = Git.open(repoDir);
+        Git git = Git.open(repoDir);
 
-            dumpLayers(layersJsonFile, aProject);
-            git.add().addFilepattern(LAYERS).call();
+        dumpLayers(layersJsonFile, aProject);
+        git.add().addFilepattern(LAYERS).call();
 
-            for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
-                dumpUserAnnotations(aProject, user);
-            }
+        for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
+            dumpUserAnnotations(aProject, user);
+            System.out.println(user);
 
-            git.add().addFilepattern(ANNOTATION_FOLDER).call();
-
-            commit(git, "Snapshotting complete project");
         }
-        catch (IOException | GitAPIException e) {
-            log.error("Unable to snapshot project settings", e);
-        }
+
+        git.add().addFilepattern(ANNOTATION_FOLDER).call();
+
+        commit(git, "Snapshotting complete project");
     }
 
     private void dumpUserAnnotations(Project aProject, User aUser) throws IOException

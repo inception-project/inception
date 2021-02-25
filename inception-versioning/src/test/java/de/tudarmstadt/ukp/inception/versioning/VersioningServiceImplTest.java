@@ -26,12 +26,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.EntityManager;
 
+import org.apache.uima.cas.CAS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,9 +78,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -107,6 +114,7 @@ public class VersioningServiceImplTest
     {
         repositoryProperties.setPath(repoDir.getRoot());
         testProject = new Project("testProject");
+
     }
 
     @After
@@ -116,9 +124,9 @@ public class VersioningServiceImplTest
     }
 
     @Test
-    public void creatingProject_ShouldCreateGitRepository() throws IOException
+    public void creatingProject_ShouldCreateGitRepository() throws Exception
     {
-        projectService.createProject(testProject);
+        createProject(testProject);
 
         assertThat(sut.getRepoDir(testProject))
                 .isDirectoryContaining(f -> f.getName().equals(".git") && f.isDirectory());
@@ -140,33 +148,14 @@ public class VersioningServiceImplTest
     @WithMockUser(username = "admin")
     public void snapshottingProject_ShouldCommitFiles() throws Exception
     {
-        projectService.createProject(testProject);
-        User admin = addUser("admin");
-        User annotator = addUser("annotator");
+        createProject(testProject);
+        User admin = createAdmin();
+        User annotator = createAnnotator();
 
-        projectService.setProjectPermissionLevels(admin, testProject,
-                asList(ANNOTATOR, CURATOR, MANAGER));
-        projectService.setProjectPermissionLevels(annotator, testProject, asList(ANNOTATOR));
-        
-        File doc1 = getResource("docs/dinos.txt");
-        File doc2 = getResource("docs/lorem.txt");
+        uploadDocuments();
 
-        try (CasStorageSession session = CasStorageSession.open()) {
-            try (InputStream is = Files.newInputStream(doc1.toPath())) {
-                documentService.uploadSourceDocument(is,
-                        new SourceDocument(doc1.getName(), testProject, "pretokenized-textlines"));
-            }
-    
-            try (InputStream is = Files.newInputStream(doc2.toPath())) {
-                documentService.uploadSourceDocument(is,
-                        new SourceDocument(doc2.getName(), testProject, "pretokenized-textlines"));
-            }
-        }
-        
-        for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
-            documentService.createOrGetAnnotationDocument(sourceDocument, admin);
-            documentService.createOrGetAnnotationDocument(sourceDocument, annotator);
-        }
+        createAnnotationDocuments(admin);
+        createAnnotationDocuments(annotator);
 
         sut.snapshotCompleteProject(testProject);
 
@@ -184,7 +173,7 @@ public class VersioningServiceImplTest
     public void getRemote_IfUrlSet_ShouldReturnRemoteUrl() throws Exception
     {
         String url = "git@github.com:inception-project/inception.git";
-        projectService.createProject(testProject);
+        createProject(testProject);
 
         sut.setRemote(testProject, url);
 
@@ -194,7 +183,7 @@ public class VersioningServiceImplTest
     @Test
     public void getRemote_IfUrlNotSet_ShouldReturnEmpty() throws Exception
     {
-        projectService.createProject(testProject);
+        createProject(testProject);
 
         assertThat(sut.getRemote(testProject)).isEmpty();
     }
@@ -309,6 +298,29 @@ public class VersioningServiceImplTest
                     aDocumentService, aProjectservice, aCasStorageService, aUserDao);
         }
 
+        @Lazy
+        @Bean
+        public TokenLayerInitializer TokenLayerInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
+        {
+            return new TokenLayerInitializer(aAnnotationSchemaService);
+        }
+
+        @Lazy
+        @Bean
+        public NamedEntityLayerInitializer namedEntityLayerInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityLayerInitializer(aAnnotationService);
+        }
+
+        @Lazy
+        @Bean
+        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
+                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityTagSetInitializer(aAnnotationService);
+        }
     }
 
     private User addUser(String aUserName)
@@ -318,6 +330,12 @@ public class VersioningServiceImplTest
         userDao.create(user);
 
         return user;
+    }
+
+    private void createProject(Project aProject) throws Exception
+    {
+        projectService.createProject(aProject);
+        projectService.initializeProject(aProject);
     }
 
     private SourceDocument buildSourceDocument(long aDocumentId)
@@ -332,6 +350,55 @@ public class VersioningServiceImplTest
     private File getResource(String aResourceName)
     {
         ClassLoader classLoader = getClass().getClassLoader();
-        return new File(classLoader.getResource(aResourceName).getFile());
+        URL resource = classLoader.getResource(aResourceName);
+        Objects.requireNonNull(resource);
+        return new File(resource.getFile());
     }
+
+    private User createAdmin()
+    {
+        User admin = addUser("admin");
+        projectService.setProjectPermissionLevels(admin, testProject,
+                List.of(ANNOTATOR, CURATOR, MANAGER));
+        return admin;
+    }
+
+    private User createAnnotator()
+    {
+        User annotator = addUser("annotator");
+        projectService.setProjectPermissionLevels(annotator, testProject, List.of(ANNOTATOR));
+        return annotator;
+    }
+
+    private void uploadDocuments() throws Exception
+    {
+
+        File doc1 = getResource("docs/dinos.txt");
+        File doc2 = getResource("docs/lorem.txt");
+
+        try (CasStorageSession session = CasStorageSession.open()) {
+            try (InputStream is = Files.newInputStream(doc1.toPath())) {
+                documentService.uploadSourceDocument(is,
+                        new SourceDocument(doc1.getName(), testProject, "pretokenized-textlines"));
+            }
+
+            try (InputStream is = Files.newInputStream(doc2.toPath())) {
+                documentService.uploadSourceDocument(is,
+                        new SourceDocument(doc2.getName(), testProject, "pretokenized-textlines"));
+            }
+        }
+    }
+
+    private void createAnnotationDocuments(User aUser) throws Exception
+    {
+        try (CasStorageSession session = CasStorageSession.open()) {
+            for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
+                AnnotationDocument annotationDocument = documentService
+                        .createOrGetAnnotationDocument(sourceDocument, aUser);
+                CAS cas = documentService.createOrReadInitialCas(sourceDocument);
+                documentService.writeAnnotationCas(cas, sourceDocument, aUser, false);
+            }
+        }
+    }
+
 }

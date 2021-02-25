@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.versioning.ui;
 
+import java.io.IOException;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -66,8 +69,14 @@ public class VersioningSettingsPanel
 
     private void actionSnapshotProject(AjaxRequestTarget aTarget)
     {
-        versioningService.snapshotCompleteProject(getModelObject());
-        aTarget.add(container);
+        try {
+            versioningService.snapshotCompleteProject(getModelObject());
+        }
+        catch (IOException | GitAPIException e) {
+            // TODO: Show error message
+            e.printStackTrace();
+            aTarget.add(container);
+        }
     }
 
 }
