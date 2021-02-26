@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -31,10 +33,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.persistence.EntityManager;
 
 import org.apache.uima.cas.CAS;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -157,16 +163,38 @@ public class VersioningServiceImplTest
         createAnnotationDocuments(admin);
         createAnnotationDocuments(annotator);
 
-        sut.snapshotCompleteProject(testProject);
+        sut.snapshotCompleteProject(testProject, "Test snapshotting");
 
         File repoDir = sut.getRepoDir(testProject);
-        Path annotationRoot = repoDir.toPath().resolve(VersioningServiceImpl.DOCUMENTS);
+
+        // Source documents
+        Path sourceRoot = repoDir.toPath().resolve(SOURCE_FOLDER);
+        assertThat(repoDir).isDirectoryContaining(
+                f -> f.getName().equals(VersioningServiceImpl.LAYERS) && f.isFile());
+        assertThat(sourceRoot.resolve("dinos.txt.xmi")).isRegularFile();
+        assertThat(sourceRoot.resolve("dinos.txt.xmi")).isRegularFile();
+
+        // Annotation documents
+        Path annotationRoot = repoDir.toPath().resolve(ANNOTATION_FOLDER);
         assertThat(repoDir).isDirectoryContaining(
                 f -> f.getName().equals(VersioningServiceImpl.LAYERS) && f.isFile());
         assertThat(annotationRoot.resolve("admin").resolve("dinos.txt.xmi")).isRegularFile();
         assertThat(annotationRoot.resolve("admin").resolve("lorem.txt.xmi")).isRegularFile();
         assertThat(annotationRoot.resolve("annotator").resolve("dinos.txt.xmi")).isRegularFile();
         assertThat(annotationRoot.resolve("annotator").resolve("lorem.txt.xmi")).isRegularFile();
+
+        // Check git repo
+        Git git = Git.open(repoDir);
+
+        List<RevCommit> commits = StreamSupport.stream(git.log() //
+                .call().spliterator(), false) //
+                .collect(Collectors.toList());
+        assertThat(commits).hasSize(1);
+
+        RevCommit commit = commits.get(0);
+        assertThat(commit.getShortMessage()).isEqualTo("Test snapshotting");
+        assertThat(commit.getAuthorIdent().getName()).isEqualTo("admin");
+        assertThat(commit.getAuthorIdent().getEmailAddress()).isEqualTo("admin@inception");
     }
 
     @Test

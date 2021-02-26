@@ -104,7 +104,7 @@ public class VersioningSettingsPanel
     private void actionSnapshotProject(AjaxRequestTarget aTarget)
     {
         try {
-            versioningService.snapshotCompleteProject(getModelObject());
+            versioningService.snapshotCompleteProject(getModelObject(), "Snapshotting");
             aTarget.add(this);
             info("Snapshotting successful!");
         }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.versioning;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerRef
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -73,7 +75,6 @@ public class VersioningServiceImpl
 
     public static final String REPO_NAME = "git-backup";
     public static final String LAYERS = "layers.json";
-    public static final String DOCUMENTS = "annotation";
 
     private final RepositoryProperties repositoryProperties;
     private final AnnotationSchemaService annotationService;
@@ -115,50 +116,54 @@ public class VersioningServiceImpl
     }
 
     @Override
-    public void snapshotCompleteProject(Project aProject) throws IOException, GitAPIException
+    public void snapshotCompleteProject(Project aProject, String aCommitMessage)
+        throws IOException, GitAPIException
     {
         File repoDir = getRepoDir(aProject);
-        File layersJsonFile = new File(repoDir, LAYERS);
+        Path sourceDir = repoDir.toPath().resolve(SOURCE_FOLDER);
+        Path annotationDir = repoDir.toPath().resolve(ANNOTATION_FOLDER);
 
         Git git = Git.open(repoDir);
 
+        // Dump layers
+        File layersJsonFile = new File(repoDir, LAYERS);
         dumpLayers(layersJsonFile, aProject);
         git.add().addFilepattern(LAYERS).call();
 
+        // Dump source documents
+        Files.createDirectories(sourceDir);
+
+        for (SourceDocument sourceDocument : documentService.listSourceDocuments(aProject)) {
+            Path outputPath = sourceDir.resolve(sourceDocument.getName() + ".xmi");
+            try (CasStorageSession session = CasStorageSession.openNested();
+                    OutputStream out = Files.newOutputStream(outputPath)) {
+                CAS cas = documentService.createOrReadInitialCas(sourceDocument);
+                CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
+            }
+        }
+
+        // Dump annotation documents
         for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
-            dumpUserAnnotations(aProject, user);
+            String userName = user.getUsername();
+            Path userDir = annotationDir.resolve(userName);
+
+            for (AnnotationDocument annotationDocument : documentService
+                    .listAnnotationDocuments(aProject, user)) {
+                Files.createDirectories(userDir);
+
+                Path outputPath = userDir.resolve(annotationDocument.getName() + ".xmi");
+                try (CasStorageSession session = CasStorageSession.openNested();
+                        OutputStream out = Files.newOutputStream(outputPath)) {
+                    CAS cas = casStorageService.readCas(annotationDocument.getDocument(), userName);
+                    CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
+                }
+            }
         }
 
         git.add().addFilepattern(ANNOTATION_FOLDER).call();
+        git.add().addFilepattern(SOURCE_FOLDER).call();
 
-        commit(git, "Snapshotting complete project");
-    }
-
-    private void dumpUserAnnotations(Project aProject, User aUser) throws IOException
-    {
-        for (AnnotationDocument annotationDocument : documentService
-                .listAnnotationDocuments(aProject, aUser)) {
-            dumpAnnotationDocument(annotationDocument);
-        }
-    }
-
-    private void dumpAnnotationDocument(AnnotationDocument aAnnotationDocument) throws IOException
-    {
-        Project project = aAnnotationDocument.getProject();
-        String user = aAnnotationDocument.getUser();
-
-        File repoDir = getRepoDir(project);
-        Path annotationDir = repoDir.toPath().resolve(DOCUMENTS);
-        Path userDir = annotationDir.resolve(user);
-
-        Files.createDirectories(userDir);
-
-        Path outputPath = userDir.resolve(aAnnotationDocument.getName() + ".xmi");
-        try (CasStorageSession session = CasStorageSession.openNested();
-                OutputStream out = Files.newOutputStream(outputPath)) {
-            CAS cas = casStorageService.readCas(aAnnotationDocument.getDocument(), user);
-            CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
-        }
+        commit(git, aCommitMessage);
     }
 
     @Override

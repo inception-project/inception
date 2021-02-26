@@ -28,13 +28,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface VersioningService
 {
-    /**
-     * Saves the project configuration and annotations of all users for the given project.
-     * 
-     * @param aProject
-     *            The project to snapshot
-     */
-    void snapshotCompleteProject(Project aProject) throws IOException, GitAPIException;
+
+    void snapshotCompleteProject(Project aProject, String aCommitMessage)
+        throws IOException, GitAPIException;
 
     void labelCurrentVersion(Project aProject, String aLabel);
 
