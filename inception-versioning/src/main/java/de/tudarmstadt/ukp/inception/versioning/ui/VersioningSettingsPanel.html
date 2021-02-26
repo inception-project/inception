@@ -74,6 +74,25 @@
         </div>
     </form>
 
+    <div wicket:id="modal"></div>
+
+    <wicket:fragment wicket:id="pushModalFragment">
+        <div class="modal-body">
+            <div class="container-fluid">
+                <div class="row">
+                    <button wicket:id="pushModalPushButton" class="btn btn-primary">
+                        <i class="fa fa-arrow-up"></i>
+                        <wicket:message key="pushButton"/>
+                    </button>
+
+                    <button wicket:id="pushModalCancelButton" class="btn btn-primary">
+                        <i class="fa fa-ban"></i>
+                        <wicket:message key="cancelPushButton"/>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </wicket:fragment>
 
     <!--
     <div class="flex-content flex-gutter" style="padding: 4px; margin: 4px">

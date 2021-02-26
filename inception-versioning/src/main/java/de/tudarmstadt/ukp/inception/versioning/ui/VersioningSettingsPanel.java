@@ -23,9 +23,13 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.extensions.ajax.markup.html.modal.theme.DefaultTheme;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -54,11 +58,10 @@ public class VersioningSettingsPanel
     public VersioningSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
-
-        RepositoryConfig repositoryConfig = new RepositoryConfig();
-
         Project project = aProjectModel.getObject();
 
+        // RepositoryConfig
+        RepositoryConfig repositoryConfig = new RepositoryConfig();
         repositoryConfig.setLocalPath(versioningService.getRepoDir(project).getAbsolutePath());
         try {
             repositoryConfig.setRemotePath(versioningService.getRemote(project).orElse(""));
@@ -70,35 +73,36 @@ public class VersioningSettingsPanel
         }
 
         repositoryConfigModel = new CompoundPropertyModel<>(repositoryConfig);
-        Form<RepositoryConfig> form = new Form<>("form", repositoryConfigModel);
-        add(form);
 
+        // Form
+        Form<RepositoryConfig> form = new Form<>("form", repositoryConfigModel);
         form.setOutputMarkupId(true);
+        add(form);
 
         // Local path
         TextField<String> localPathField = new TextField<>("localPath");
         form.add(localPathField);
 
-        // Set remote
-        String remotePath = "";
-        try {
-            remotePath = versioningService.getRemote(project).orElse("");
-        }
-        catch (IOException | GitAPIException e) {
-            e.printStackTrace();
-        }
+        // Modal
+        ModalDialog modal = new ModalDialog("modal");
+        modal.add(new DefaultTheme());
+        modal.setOutputMarkupId(true);
 
-        remoteTextField = new TextField<>("remotePath");
-        form.add(remoteTextField);
+        Fragment modalContent = new Fragment(ModalDialog.CONTENT_ID, "pushModalFragment", this);
+        modalContent.add(new Label("pushModalLabel", "Test label"));
+        modalContent.add(new LambdaAjaxLink("pushModalPushButton", this::actionPushToRemote));
+        modalContent.add(new LambdaAjaxLink("pushModalCancelButton", modal::close));
 
+        modal.setContent(modalContent);
+        add(modal);
+
+        // Remote path
+        form.add(new TextField<>("remotePath"));
         form.add(new LambdaAjaxButton<>("setRemoteButton", this::actionSetRemote));
 
-        LambdaAjaxLink snapshotButton = new LambdaAjaxLink("snapshotProject",
-                this::actionSnapshotProject);
-        form.add(snapshotButton);
-
-        LambdaAjaxLink pushButton = new LambdaAjaxLink("pushButton", this::pushToRemote);
-        form.add(pushButton);
+        // Buttons
+        form.add(new LambdaAjaxLink("snapshotProject", this::actionSnapshotProject));
+        form.add(new LambdaAjaxLink("pushButton", modal::open));
     }
 
     private void actionSnapshotProject(AjaxRequestTarget aTarget)
@@ -116,7 +120,7 @@ public class VersioningSettingsPanel
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private void pushToRemote(AjaxRequestTarget aTarget)
+    private void actionPushToRemote(AjaxRequestTarget aTarget)
     {
         try {
             versioningService.pushToOrigin(getModelObject());
