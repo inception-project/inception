@@ -435,11 +435,43 @@ public class DocumentServiceImpl
             return new ArrayList<>();
         }
 
-        return entityManager
-                .createQuery("FROM AnnotationDocument WHERE project = :project AND state = :state"
-                        + " AND user in (:users)", AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("users", users)
-                .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
+        String query = String.join("\n", //
+                "FROM AnnotationDocument", //
+                "WHERE project = :project", //
+                "  AND state   = :state", //
+                "  AND user in (:users)");
+
+        return entityManager.createQuery(query, AnnotationDocument.class)
+                .setParameter("project", aProject) //
+                .setParameter("users", users) //
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getResultList();
+    }
+
+    @Override
+    public List<AnnotationDocument> listFinishedAnnotationDocuments(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Source cocument must be specified");
+
+        // Get all annotators in the project
+        List<String> users = getAllAnnotators(aDocument.getProject());
+        // Bail out already. HQL doesn't seem to like queries with an empty
+        // parameter right of "in"
+        if (users.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String query = String.join("\n", //
+                "FROM AnnotationDocument", //
+                "WHERE document = :document", //
+                "  AND state   = :state", //
+                "  AND user in (:users)");
+
+        return entityManager.createQuery(query, AnnotationDocument.class)
+                .setParameter("document", aDocument) //
+                .setParameter("users", users) //
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getResultList();
     }
 
     @Override

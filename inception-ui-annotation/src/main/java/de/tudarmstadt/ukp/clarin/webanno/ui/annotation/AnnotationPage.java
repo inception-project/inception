@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -676,5 +678,35 @@ public class AnnotationPage
         else {
             super.loadPreferences();
         }
+    }
+
+    @Override
+    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject, User aUser)
+    {
+        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
+
+        // Remove from the list source documents that are in IGNORE state OR
+        // that do not have at least one annotation document marked as
+        // finished for curation dialog
+        Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
+                aUser);
+
+        for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
+            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
+            if (e.getValue() != null) {
+                AnnotationDocument adoc = e.getValue();
+                AnnotationDocumentState docState = adoc.getState();
+                dsd.setColor(docState.getColor());
+
+                boolean userIsSelected = aUser.equals(userRepository.getCurrentUser());
+                // if current user is opening her own docs, don't let her see locked ones
+                if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
+                    continue;
+                }
+            }
+            allSourceDocuments.add(dsd);
+        }
+
+        return allSourceDocuments;
     }
 }

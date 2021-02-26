@@ -227,6 +227,7 @@ public class Trie<V>
         }
         Node last = root;
         Node match = null;
+        int acceptedKeyChars = 0;
         for (int i = offset; i < offset + length; i++) {
             char k = key.charAt(i);
 
@@ -236,6 +237,8 @@ public class Trie<V>
                     continue;
                 }
             }
+
+            acceptedKeyChars++;
 
             final Node cur = last.children.get(k);
             if (cur == null) {
@@ -247,7 +250,11 @@ public class Trie<V>
             last = cur;
         }
 
-        return match;
+        if (match != null && acceptedKeyChars == match.level) {
+            return match;
+        }
+
+        return null;
     }
 
     /**
