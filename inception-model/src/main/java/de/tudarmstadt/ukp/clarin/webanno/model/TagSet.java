@@ -60,6 +60,17 @@ public class TagSet
 
     private boolean createTag = true;
 
+    public TagSet()
+    {
+        // Nothing to do
+    }
+
+    public TagSet(Project aProject, String aName)
+    {
+        project = aProject;
+        name = aName;
+    }
+
     public Long getId()
     {
         return id;
