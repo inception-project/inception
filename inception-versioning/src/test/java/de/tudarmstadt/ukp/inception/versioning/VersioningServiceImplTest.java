@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ import javax.persistence.EntityManager;
 import org.apache.uima.cas.CAS;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -155,6 +157,7 @@ public class VersioningServiceImplTest
     public void snapshottingProject_ShouldCommitFiles() throws Exception
     {
         createProject(testProject);
+
         User admin = createAdmin();
         User annotator = createAnnotator();
 
@@ -195,6 +198,51 @@ public class VersioningServiceImplTest
         assertThat(commit.getShortMessage()).isEqualTo("Test snapshotting");
         assertThat(commit.getAuthorIdent().getName()).isEqualTo("admin");
         assertThat(commit.getAuthorIdent().getEmailAddress()).isEqualTo("admin@inception");
+    }
+
+    @Test
+    @WithMockUser(username = "admin")
+    public void pushingRepository_WithLocalRemote_ShouldPushFiles() throws Exception
+    {
+        createProject(testProject);
+        User admin = createAdmin();
+        uploadDocuments();
+        createAnnotationDocuments(admin);
+
+        File remoteDir = Files.createTempDirectory("remote").toFile();
+        Git remoteGit = Git.init().setDirectory(remoteDir).setBare(true).call();
+
+        sut.snapshotCompleteProject(testProject, "Test snapshotting");
+        sut.setRemote(testProject, remoteDir.getAbsolutePath());
+        sut.pushToOrigin(testProject);
+
+        // Check commit
+        List<RevCommit> commits = StreamSupport.stream(remoteGit.log() //
+                .call().spliterator(), false) //
+                .collect(Collectors.toList());
+        assertThat(commits).hasSize(1);
+
+        RevCommit commit = commits.get(0);
+        assertThat(commit.getFullMessage()).isEqualTo("Test snapshotting");
+        assertThat(commit.getAuthorIdent().getName()).isEqualTo("admin");
+        assertThat(commit.getAuthorIdent().getEmailAddress()).isEqualTo("admin@inception");
+
+        // Check remote repo contents
+        TreeWalk treeWalk = new TreeWalk(remoteGit.getRepository());
+        treeWalk.addTree(commit.getTree());
+        treeWalk.setRecursive(true);
+
+        List<String> remoteFiles = new ArrayList<>();
+        while (treeWalk.next()) {
+            remoteFiles.add(treeWalk.getPathString());
+        }
+        assertThat(remoteFiles).hasSize(5).containsExactlyInAnyOrder( //
+                "layers.json", //
+                "source/dinos.txt.xmi", //
+                "source/lorem.txt.xmi", //
+                "annotation/admin/dinos.txt.xmi", //
+                "annotation/admin/lorem.txt.xmi" //
+        );
     }
 
     @Test
