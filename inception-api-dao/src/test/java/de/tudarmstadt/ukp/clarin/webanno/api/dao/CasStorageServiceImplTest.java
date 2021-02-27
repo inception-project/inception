@@ -214,8 +214,8 @@ public class CasStorageServiceImplTest
 
         CAS mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
 
-        long timestamp = System.currentTimeMillis() + 1;
-        casFile.setLastModified(timestamp);
+        casFile.setLastModified(casFile.lastModified() + 10_000);
+        long timestamp = casFile.lastModified();
 
         assertThatExceptionOfType(IOException.class)
                 .isThrownBy(() -> sut.writeCas(doc, mainCas, user))
