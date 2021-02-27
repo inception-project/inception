@@ -19,22 +19,36 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession.openNested;
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.SerialFormat;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
+import org.apache.uima.util.CasIOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -185,12 +199,75 @@ public class CasStorageServiceImplTest
                 .isNotEqualTo(casIdentity3);
     }
 
+    @Test
+    public void testConcurrentAccess() throws Exception
+    {
+        // Setup fixture
+        SourceDocument doc = makeSourceDocument(2l, 2l);
+        String user = "test";
+        File casFile = sut.getCasFile(doc, user);
+
+        try (CasStorageSession session = openNested(true)) {
+            createCasFile(doc, user, "This is a test");
+            assertThat(casFile).exists();
+        }
+
+        CAS mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
+
+        long timestamp = System.currentTimeMillis() + 1;
+        casFile.setLastModified(timestamp);
+
+        assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> sut.writeCas(doc, mainCas, user))
+                .withMessageContaining("concurrent modification");
+
+        assertThat(casFile).exists();
+        assertThat(casFile.lastModified()).isEqualTo(timestamp);
+    }
+
+    @Test
+    public void testRestorationOfCasWhenSaveFails() throws Exception
+    {
+        // Setup fixture
+        SourceDocument doc = makeSourceDocument(2l, 2l);
+        String user = "test";
+        File casFile = sut.getCasFile(doc, user);
+
+        long casFileSize;
+        long casFileLastModified;
+
+        try (CasStorageSession session = openNested(true)) {
+            createCasFile(doc, user, "This is a test");
+            assertThat(casFile).exists();
+            casFileSize = casFile.length();
+            casFileLastModified = casFile.lastModified();
+        }
+
+        CAS mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
+
+        // Wrap the CAS in a proxy so that UIMA cannot serialize it
+        CAS guardedCas = (CAS) Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class[] { CAS.class }, (proxy, method, args) -> method.invoke(mainCas, args));
+
+        assertThatExceptionOfType(IOException.class).as(
+                "Saving fails because UIMA cannot cast the proxied CAS to something serializable")
+                .isThrownBy(() -> sut.writeCas(doc, guardedCas, user))
+                .withRootCauseInstanceOf(ClassCastException.class);
+
+        assertThat(casFile).exists().hasSize(casFileSize);
+        assertThat(casFile.lastModified()).isEqualTo(casFileLastModified);
+        assertThat(new File(casFile.getParentFile(), user + ".ser.old")).doesNotExist();
+    }
+
     private JCas createCasFile(SourceDocument doc, String user, String text)
         throws CASException, CasSessionException, IOException
     {
         JCas casTemplate = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> {
             try {
-                return JCasFactory.createText(text).getCas();
+                CAS cas = CasFactory.createCas(mergeTypeSystems(
+                        asList(createTypeSystemDescription(), getInternalTypeSystem())));
+                cas.setDocumentText(text);
+                return cas;
             }
             catch (UIMAException e) {
                 throw new IOException(e);
@@ -212,5 +289,38 @@ public class CasStorageServiceImplTest
         doc.setId(aDocumentId);
 
         return doc;
+    }
+
+    private CAS cloneCas(CAS aCas) throws ResourceInitializationException, IOException
+    {
+        byte[] buffer;
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            CasIOUtils.save(aCas, os, SerialFormat.SERIALIZED_TSI);
+            buffer = os.toByteArray();
+        }
+
+        CAS clonedCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null, null);
+        try (ByteArrayInputStream is = new ByteArrayInputStream(buffer)) {
+            CasIOUtils.load(is, clonedCas);
+        }
+
+        return clonedCas;
+    }
+
+    private static class ThreadLockingInvocationHandler
+        implements InvocationHandler
+    {
+        private Object target;
+
+        public ThreadLockingInvocationHandler(Object aTarget)
+        {
+            target = aTarget;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+        {
+            return method.invoke(target, args);
+        }
     }
 }
