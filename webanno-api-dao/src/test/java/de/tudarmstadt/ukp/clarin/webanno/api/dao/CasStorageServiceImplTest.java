@@ -144,8 +144,8 @@ public class CasStorageServiceImplTest
         JCas mainCas = createCasFile(doc, user, "This is a test");
         assertThat(casFile).exists();
 
-        long timestamp = System.currentTimeMillis() + 1;
-        casFile.setLastModified(timestamp);
+        casFile.setLastModified(casFile.lastModified() + 10_000);
+        long timestamp = casFile.lastModified();
 
         assertThatExceptionOfType(IOException.class)
                 .isThrownBy(() -> sut.writeCas(doc, mainCas.getCas(), user))
