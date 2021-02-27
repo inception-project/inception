@@ -23,16 +23,14 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
-import org.apache.wicket.extensions.ajax.markup.html.modal.theme.DefaultTheme;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.validation.validator.UrlValidator;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +52,7 @@ public class VersioningSettingsPanel
 
     private TextField<String> remoteTextField;
     private IModel<RepositoryConfig> repositoryConfigModel;
+    private IModel<PushConfig> pushConfigModel;
 
     public VersioningSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
@@ -74,35 +73,45 @@ public class VersioningSettingsPanel
 
         repositoryConfigModel = new CompoundPropertyModel<>(repositoryConfig);
 
-        // Form
-        Form<RepositoryConfig> form = new Form<>("form", repositoryConfigModel);
-        form.setOutputMarkupId(true);
-        add(form);
+        // Settings settingsForm
+        Form<RepositoryConfig> settingsForm = new Form<>("settingsForm", repositoryConfigModel);
+        settingsForm.setOutputMarkupId(true);
+        add(settingsForm);
 
         // Local path
         TextField<String> localPathField = new TextField<>("localPath");
-        form.add(localPathField);
-
-        // Modal
-        ModalDialog modal = new ModalDialog("modal");
-        modal.add(new DefaultTheme());
-        modal.setOutputMarkupId(true);
-
-        Fragment modalContent = new Fragment(ModalDialog.CONTENT_ID, "pushModalFragment", this);
-        modalContent.add(new Label("pushModalLabel", "Test label"));
-        modalContent.add(new LambdaAjaxLink("pushModalPushButton", this::actionPushToRemote));
-        modalContent.add(new LambdaAjaxLink("pushModalCancelButton", modal::close));
-
-        modal.setContent(modalContent);
-        add(modal);
+        settingsForm.add(localPathField);
 
         // Remote path
-        form.add(new TextField<>("remotePath"));
-        form.add(new LambdaAjaxButton<>("setRemoteButton", this::actionSetRemote));
+        settingsForm.add(new TextField<String>("remotePath").add(new UrlValidator()));
+        settingsForm.add(new LambdaAjaxButton<>("setRemoteButton", this::actionSetRemote));
 
         // Buttons
-        form.add(new LambdaAjaxLink("snapshotProject", this::actionSnapshotProject));
-        form.add(new LambdaAjaxLink("pushButton", modal::open));
+        settingsForm.add(new LambdaAjaxLink("snapshotProject", this::actionSnapshotProject));
+
+        // Push form
+        PushConfig pushConfig = new PushConfig();
+        pushConfigModel = new CompoundPropertyModel<>(pushConfig);
+        Form<PushConfig> pushForm = new Form<>("pushForm", pushConfigModel);
+        pushForm.add(new TextField<>("username"));
+        pushForm.add(new PasswordTextField("password"));
+        pushForm.add(new LambdaAjaxButton<>("pushButton", this::actionPushToRemote));
+        add(pushForm);
+    }
+
+    private void actionSetRemote(AjaxRequestTarget aTarget, Form<RepositoryConfig> aForm)
+    {
+        try {
+            versioningService.setRemote(getModelObject(),
+                    repositoryConfigModel.getObject().remotePath);
+            aTarget.add(this);
+            info("Setting remote successful!");
+        }
+        catch (IOException | GitAPIException | URISyntaxException e) {
+            LOG.error("Error setting remote: {}", e.getMessage());
+            error("Error setting remote: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private void actionSnapshotProject(AjaxRequestTarget aTarget)
@@ -120,10 +129,12 @@ public class VersioningSettingsPanel
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private void actionPushToRemote(AjaxRequestTarget aTarget)
+    private void actionPushToRemote(AjaxRequestTarget aTarget, Form<RepositoryConfig> aForm)
     {
         try {
-            versioningService.pushToOrigin(getModelObject());
+            PushConfig pushConfig = pushConfigModel.getObject();
+            versioningService.pushToOrigin(getModelObject(), pushConfig.getUsername(),
+                    pushConfig.getPassword());
             aTarget.add(this);
             info("Pushing successful!");
         }
@@ -133,20 +144,6 @@ public class VersioningSettingsPanel
         }
 
         aTarget.addChildren(getPage(), IFeedback.class);
-    }
-
-    private void actionSetRemote(AjaxRequestTarget aTarget, Form<RepositoryConfig> aForm)
-    {
-        try {
-            versioningService.setRemote(getModelObject(),
-                    repositoryConfigModel.getObject().remotePath);
-            aTarget.add(this);
-        }
-        catch (IOException | GitAPIException | URISyntaxException e) {
-            LOG.error("Error setting remote: {}", e.getMessage());
-            error("Error setting remote: " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
     }
 
     private static class RepositoryConfig
@@ -175,6 +172,35 @@ public class VersioningSettingsPanel
         public void setRemotePath(String aRemotePath)
         {
             remotePath = aRemotePath;
+        }
+    }
+
+    private static class PushConfig
+        implements Serializable
+    {
+        private static final long serialVersionUID = 3476611483452271801L;
+
+        private String username;
+        private String password;
+
+        public String getUsername()
+        {
+            return username;
+        }
+
+        public void setUsername(String aUsername)
+        {
+            username = aUsername;
+        }
+
+        public String getPassword()
+        {
+            return password;
+        }
+
+        public void setPassword(String aPassword)
+        {
+            password = aPassword;
         }
     }
 

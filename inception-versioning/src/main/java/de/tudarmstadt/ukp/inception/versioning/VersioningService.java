@@ -46,4 +46,8 @@ public interface VersioningService
         throws IOException, GitAPIException, URISyntaxException;
 
     void pushToOrigin(Project aProject) throws IOException, GitAPIException;
+
+    void pushToOrigin(Project aProject, String aUsername, String aPassword)
+        throws IOException, GitAPIException;
+
 }

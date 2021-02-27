@@ -39,6 +39,7 @@ import org.apache.uima.util.CasIOUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -218,7 +219,7 @@ public class VersioningServiceImpl
         File repoDir = getRepoDir(aProject);
         Git git = Git.open(repoDir);
 
-        git.remoteAdd().setName("origin").setUri(new URIish(aValue)).call();
+        git.remoteSetUrl().setRemoteName("origin").setRemoteUri(new URIish(aValue)).call();
     }
 
     @Override
@@ -228,6 +229,21 @@ public class VersioningServiceImpl
         Git git = Git.open(repoDir);
 
         git.push().setRemote("origin").add("master").call();
+    }
+
+    @Override
+    public void pushToOrigin(Project aProject, String aUsername, String aPassword)
+        throws IOException, GitAPIException
+    {
+        File repoDir = getRepoDir(aProject);
+        Git git = Git.open(repoDir);
+
+        git.push() //
+                .setRemote("origin") //
+                .add("master") //
+                .setCredentialsProvider(
+                        new UsernamePasswordCredentialsProvider(aUsername, aPassword)) //
+                .call();
     }
 
     private void commit(Git aGit, String aMessage) throws GitAPIException

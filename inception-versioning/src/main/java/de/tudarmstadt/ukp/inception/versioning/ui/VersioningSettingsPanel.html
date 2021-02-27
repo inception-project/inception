@@ -17,10 +17,12 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-    <form wicket:id="form" class="flex-content flex-v-container">
-        <div class="flex-content scrolling card-body">
-            <div class="container-fluid">
-
+    <div class="container-fluid">
+        <div class="card mt-3">
+            <div class="card-header">
+                <wicket:message key="settingsHeader"/>
+            </div>
+            <form wicket:id="settingsForm" class="card-body">
                 <label>
                     <wicket:message key="instruction"/>
                 </label>
@@ -29,7 +31,6 @@
                     <div class="form-group form-row">
                         <label class="col-sm-2 col-form-label" for="localPath">
                             <wicket:message key="localPath"/>
-                            <i class="fas fa-info-circle"></i>
                         </label>
 
                         <div class="col-sm-10 ">
@@ -40,27 +41,61 @@
                     <div class="form-group form-row">
                         <label class="col-sm-2 col-form-label" for="remotePath">
                             <wicket:message key="remotePath"/>
-                            <i class="fas fa-info-circle"></i>
                         </label>
 
-                        <div class="col-sm-8 ">
+                        <div class="col-sm">
                             <input wicket:id="remotePath" type="text" class="form-control" id="remotePath">
                         </div>
 
-                        <div class="col-sm-2 ">
+                        <div class="col-auto">
                             <button wicket:id="setRemoteButton" class="btn btn-primary">
                                 <i class="fas fa-save" wicket:message="title:setRemoteButton"></i>
                             </button>
                         </div>
                     </div>
 
+                    <button wicket:id="snapshotProject" class="btn btn-primary">
+                        <i class="fas fa-bolt"></i>
+                        <wicket:message key="snapshotProject"/>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <wicket:message key="pushHeader"/>
+            </div>
+
+            <form wicket:id="pushForm" class="card-body">
+                <label>
+                    <wicket:message key="pushInstructions"/>
+                </label>
+
+                <div class="container-fluid">
+                    <div class="form-group form-row">
+                        <label class="col-sm-2 col-form-label" for="username">
+                            <wicket:message key="username"/>
+                        </label>
+
+                        <div class="col-sm-10">
+                            <input wicket:id="username" class="form-control" id="username" placeholder="User name">
+                        </div>
+                    </div>
+
+                    <div class="form-group form-row">
+                        <label class="col-sm-2 col-form-label" for="password">
+                            <wicket:message key="password"/>
+                        </label>
+
+                        <div class="col-sm-10">
+                            <input wicket:id="password" type="password" class="form-control" id="password"
+                                   placeholder="Password">
+                        </div>
+                    </div>
+
                     <div class="form-group form-row">
                         <div class="col-sm-12 ">
-
-                            <button wicket:id="snapshotProject" class="btn btn-primary">
-                                <i class="fas fa-bolt"></i>
-                                <wicket:message key="snapshotProject"/>
-                            </button>
 
                             <button wicket:id="pushButton" class="btn btn-primary">
                                 <i class="fa fa-arrow-up"></i>
@@ -70,29 +105,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+
+            </form>
         </div>
-    </form>
-
-    <div wicket:id="modal"></div>
-
-    <wicket:fragment wicket:id="pushModalFragment">
-        <div class="modal-body">
-            <div class="container-fluid">
-                <div class="row">
-                    <button wicket:id="pushModalPushButton" class="btn btn-primary">
-                        <i class="fa fa-arrow-up"></i>
-                        <wicket:message key="pushButton"/>
-                    </button>
-
-                    <button wicket:id="pushModalCancelButton" class="btn btn-primary">
-                        <i class="fa fa-ban"></i>
-                        <wicket:message key="cancelPushButton"/>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </wicket:fragment>
+    </div>
 
     <!--
     <div class="flex-content flex-gutter" style="padding: 4px; margin: 4px">
