@@ -213,6 +213,7 @@ public class BratAnnotationEditor
 
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
+
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
                         || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action)
                         || DoActionResponse.is(action);
@@ -229,6 +230,7 @@ public class BratAnnotationEditor
                 else {
                     cas = null;
                 }
+
 
                 Object result = null;
                 try {

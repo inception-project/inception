@@ -21,14 +21,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.controller.AnnotationEditorController;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditor;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 @Component("Experimental Editor")
 public class EditorFactory
@@ -46,13 +43,8 @@ public class EditorFactory
     }
 
     @Override
-    public AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel, AnnotationActionHandler aActionHandler, CasProvider aCasProvider) {
-        return null;
-    }
-
-    @Override
-    public AnnotationEditorBase create(String aId, AnnotationEditorController aController, String aJsonUser, String aJsonProject) throws IOException {
-        return new AnnotationEditor(aId, aController, aJsonUser, aJsonProject);
+    public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel, AnnotationActionHandler aActionHandler, CasProvider aCasProvider) {
+        return new AnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
 
     @Override

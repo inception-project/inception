@@ -17,14 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.controller.AnnotationEditorController;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-
-import java.io.IOException;
 
 public interface AnnotationEditorFactory
 {
@@ -37,10 +34,6 @@ public interface AnnotationEditorFactory
 
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
-
-    default AnnotationEditorBase create(String id, AnnotationEditorController aController, String aJsonUser, String aJsonProject) throws IOException {
-        return null;
-    }
 
     /**
      * Configure the state to be compatible with the editor produced by this factory. E.g. set the

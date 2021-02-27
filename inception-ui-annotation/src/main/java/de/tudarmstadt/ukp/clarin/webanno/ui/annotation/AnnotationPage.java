@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -27,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.controller.AnnotationEditorController;
+import de.tudarmstadt.ukp.inception.editor.controller.AnnotationEditorController;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
@@ -50,7 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditor;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
@@ -305,15 +303,10 @@ public class AnnotationPage
         }
 
         //Own editor, JSON here only required for testing / training
+
         AnnotationEditorFactory factory = editorRegistry.getEditorFactories().get(2);
 
-        if (factory == null) {
-            factory = editorRegistry.getDefaultEditorFactory();
-        }
-
-        annotationEditor = factory.create("editor", controller,
-            JSONUtil.toJsonString(getModelObject().getUser()),
-            JSONUtil.toJsonString(getModelObject().getProject()));
+        annotationEditor = factory.create("editor",getModel(),detailEditor, this::getEditorCas);
         annotationEditor.setOutputMarkupPlaceholderTag(true);
 
 
@@ -324,6 +317,7 @@ public class AnnotationPage
         annotationEditor = factory.create("editor",getModel(),detailEditor, this::getEditorCas);
 
          */
+
 
         centerArea.addOrReplace(annotationEditor);
         // Give the new editor an opportunity to configure the current paging strategy

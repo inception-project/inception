@@ -1,4 +1,4 @@
-AnnotationEditor = {
+let AnnotationEditor = {
     layer : "_none",
     test : function() {
         console.log("test")
