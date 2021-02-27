@@ -19,7 +19,7 @@ annotation:
   default-preferences:
     page-size: 5
     auto-scroll: false
-    remember-sayer: true
+    remember-layer: true
 
 ui:
   brat:
