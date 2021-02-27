@@ -15,8 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Provides wicket component for Brat Curation page and Classes for applying a diff on annotated
- * documents
- */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.event;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
+
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
+
+public class CurationUnitClickedEvent
+    extends AbstractAjaxAwareEvent
+{
+    private final CurationUnit unit;
+
+    public CurationUnitClickedEvent(AjaxRequestTarget aTarget, CurationUnit aUnit)
+    {
+        super(aTarget);
+        unit = aUnit;
+    }
+
+    public CurationUnit getUnit()
+    {
+        return unit;
+    }
+}

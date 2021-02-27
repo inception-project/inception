@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.Before;
@@ -146,10 +145,10 @@ public class SPARQLQueryBuilderGenericTest
     @Test
     public void thatLineBreaksAndWhitespaceAreSafe_noFts()
     {
-        IRI originalFtsIri = kb.getFullTextSearchIri();
+        String originalFtsIri = kb.getFullTextSearchIri();
 
         try (RepositoryConnection conn = repo.getConnection()) {
-            kb.setFullTextSearchIri(FTS_NONE);
+            kb.setFullTextSearchIri(FTS_NONE.stringValue());
 
             SPARQLQueryOptionalElements builder = SPARQLQueryBuilder //
                     .forItems(kb) //

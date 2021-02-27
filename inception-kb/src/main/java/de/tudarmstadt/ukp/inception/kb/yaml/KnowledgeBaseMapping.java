@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.kb.yaml;
 
 import java.io.Serializable;
 
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -32,31 +29,31 @@ public class KnowledgeBaseMapping
     private static final long serialVersionUID = 8967034943386456692L;
 
     @JsonProperty("class")
-    private IRI classIri;
+    private String classIri;
 
     @JsonProperty("subclass-of")
-    private IRI subclassIri;
+    private String subclassIri;
 
     @JsonProperty("instance-of")
-    private IRI typeIri;
+    private String typeIri;
 
     @JsonProperty("subproperty-of")
-    private IRI subPropertyIri;
+    private String subPropertyIri;
 
     @JsonProperty("description")
-    private IRI descriptionIri;
+    private String descriptionIri;
 
     @JsonProperty("label")
-    private IRI labelIri;
+    private String labelIri;
 
     @JsonProperty("property-type")
-    private IRI propertyTypeIri;
+    private String propertyTypeIri;
 
     @JsonProperty("property-label")
-    private IRI propertyLabelIri;
+    private String propertyLabelIri;
 
     @JsonProperty("property-description")
-    private IRI propertyDescriptionIri;
+    private String propertyDescriptionIri;
 
     @JsonCreator
     public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
@@ -70,16 +67,15 @@ public class KnowledgeBaseMapping
             @JsonProperty("property-description") String aPropertyDescriptionIri)
 
     {
-        SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        classIri = vf.createIRI(aClassIri);
-        subclassIri = vf.createIRI(aSubclassIri);
-        typeIri = vf.createIRI(aTypeIri);
-        subPropertyIri = vf.createIRI(aSubPropertyIri);
-        descriptionIri = vf.createIRI(aDescriptionIri);
-        labelIri = vf.createIRI(aLabelIri);
-        propertyTypeIri = vf.createIRI(aPropertyTypeIri);
-        propertyLabelIri = vf.createIRI(aPropertyLabelIri);
-        propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
+        classIri = aClassIri;
+        subclassIri = aSubclassIri;
+        typeIri = aTypeIri;
+        subPropertyIri = aSubPropertyIri;
+        descriptionIri = aDescriptionIri;
+        labelIri = aLabelIri;
+        propertyTypeIri = aPropertyTypeIri;
+        propertyLabelIri = aPropertyLabelIri;
+        propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
     public KnowledgeBaseMapping()
@@ -87,94 +83,93 @@ public class KnowledgeBaseMapping
 
     }
 
-    public IRI getClassIri()
+    public String getClassIri()
     {
         return classIri;
     }
 
-    public void setClassIri(IRI aClassIri)
+    public void setClassIri(String aClassIri)
     {
         classIri = aClassIri;
     }
 
-    public IRI getSubclassIri()
+    public String getSubclassIri()
     {
         return subclassIri;
     }
 
-    public void setSubclassIri(IRI aSubclassIri)
+    public void setSubclassIri(String aSubclassIri)
     {
         subclassIri = aSubclassIri;
     }
 
-    public IRI getTypeIri()
+    public String getTypeIri()
     {
         return typeIri;
     }
 
-    public void setTypeIri(IRI aTypeIri)
+    public void setTypeIri(String aTypeIri)
     {
         typeIri = aTypeIri;
     }
 
-    public IRI getSubPropertyIri()
+    public String getSubPropertyIri()
     {
         return subPropertyIri;
     }
 
-    public void setSubPropertyIri(IRI subPropertyIri)
+    public void setSubPropertyIri(String subPropertyIri)
     {
         this.subPropertyIri = subPropertyIri;
     }
 
-    public IRI getDescriptionIri()
+    public String getDescriptionIri()
     {
         return descriptionIri;
     }
 
-    public void setDescriptionIri(IRI aDescriptionIri)
+    public void setDescriptionIri(String aDescriptionIri)
     {
         descriptionIri = aDescriptionIri;
     }
 
-    public IRI getLabelIri()
+    public String getLabelIri()
     {
         return labelIri;
     }
 
-    public void setLabelIri(IRI aLabelIri)
+    public void setLabelIri(String aLabelIri)
     {
         labelIri = aLabelIri;
     }
 
-    public IRI getPropertyTypeIri()
+    public String getPropertyTypeIri()
     {
         return propertyTypeIri;
     }
 
-    public void setPropertyTypeIri(IRI aPropertyTypeIri)
+    public void setPropertyTypeIri(String aPropertyTypeIri)
     {
         propertyTypeIri = aPropertyTypeIri;
     }
 
-    public IRI getPropertyLabelIri()
+    public String getPropertyLabelIri()
     {
         return propertyLabelIri;
     }
 
-    public void setPropertyLabelIri(IRI aPropertyLabelIri)
+    public void setPropertyLabelIri(String aPropertyLabelIri)
     {
         propertyLabelIri = aPropertyLabelIri;
     }
 
-    public IRI getPropertyDescriptionIri()
+    public String getPropertyDescriptionIri()
     {
         return propertyDescriptionIri;
     }
 
-    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    public void setPropertyDescriptionIri(String aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
-
 }

@@ -33,6 +33,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.failOnC
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.writeSerializedCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
 import static java.lang.System.currentTimeMillis;
+import static java.nio.file.Files.move;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -253,41 +255,35 @@ public class CasStorageServiceImpl
     private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
         throws IOException
     {
-        long t0 = System.currentTimeMillis();
+        long t0 = currentTimeMillis();
 
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
-        log.debug(
-                "Preparing to update annotations for user [{}] on document [{}]({}) in project [{}]({})",
-                aUserName, aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
-                aDocument.getProject().getId());
-        // DebugUtils.smallStack();
+        log.debug("Preparing to update annotations for user [{}] on document [{}]({}) " //
+                + "in project [{}]({})", aUserName, aDocument.getName(), aDocument.getId(),
+                aDocument.getProject().getName(), aDocument.getProject().getId());
 
         File annotationFolder = getAnnotationFolder(aDocument);
+        File currentVersion = new File(annotationFolder, aUserName + ".ser");
+        File oldVersion = new File(annotationFolder, aUserName + ".ser.old");
 
-        final String username = aUserName;
-
-        File currentVersion = new File(annotationFolder, username + ".ser");
-        File oldVersion = new File(annotationFolder, username + ".ser.old");
+        // Check if there was a concurrent change to the file on disk
+        if (currentVersion.exists()) {
+            failOnConcurrentModification(aCas, currentVersion, aDocument, aUserName);
+        }
 
         // Save current version
         try {
-            // Check if there was a concurrent change to the file on disk
-            if (currentVersion.exists()) {
-                failOnConcurrentModification(aCas, currentVersion, aDocument, username);
-            }
-
             // Make a backup of the current version of the file before overwriting
             if (currentVersion.exists()) {
-                renameFile(currentVersion, oldVersion);
+                move(currentVersion.toPath(), oldVersion.toPath());
             }
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
+            long start = currentTimeMillis();
             setDocumentId(aCas, aUserName);
-
-            long start = System.currentTimeMillis();
-            writeSerializedCas(aCas, new File(annotationFolder, aUserName + ".ser"));
-            long duration = System.currentTimeMillis() - start;
+            writeSerializedCas(aCas, currentVersion);
+            long duration = currentTimeMillis() - start;
 
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aDocument.getProject().getId()))) {
@@ -296,151 +292,159 @@ public class CasStorageServiceImpl
                         aUserName, aDocument.getName(), aDocument.getId(),
                         aDocument.getProject().getName(), aDocument.getProject().getId(), duration);
             }
-
-            if (currentVersion.length() < oldVersion.length()) {
-                log.debug(
-                        "Annotations truncated for user [{}] on document [{}]({}) in project "
-                                + "[{}]({}): {} -> {} bytes ({} bytes removed)",
-                        aUserName, aDocument.getName(), aDocument.getId(),
-                        aDocument.getProject().getName(), aDocument.getProject().getId(),
-                        oldVersion.length(), currentVersion.length(),
-                        currentVersion.length() - oldVersion.length());
-            }
-
-            // Update the timestamp in the CAS in case we attempt to save it a second time. This
-            // happens for example in an annotation replacement operation (change layer of existing
-            // annotation) which is implemented as a delete/create operation with an intermediate
-            // save.
-            CasMetadataUtils.addOrUpdateCasMetadata(aCas, currentVersion, aDocument, aUserName);
-
-            // If the saving was successful, we delete the old version
-            if (oldVersion.exists()) {
-                FileUtils.forceDelete(oldVersion);
-            }
         }
         catch (Exception e) {
-            log.info(
-                    "Restoring previous annotations due exception when trying to write new annotations: "
-                            + oldVersion);
-            // If we could not save the new version, restore the old one.
-            try {
-                FileUtils.forceDelete(currentVersion);
-            }
-            catch (Exception ex) {
-                log.error("Unable to delete incompletely saved annotations: " + currentVersion, ex);
+            log.error("There was an error while trying to write the CAS to [" + currentVersion
+                    + "] - additional messages follow.");
+            // If this is the first version, there is no old version, so do not restore anything
+            if (!oldVersion.exists()) {
+                log.warn("There is no old version to restore - leaving the current version which "
+                        + "may be corrupt: [{}]", currentVersion);
+                // Now abort anyway
+                throw e;
             }
 
-            // If this is the first version, there is no old version, so do not restore anything
-            if (oldVersion.exists()) {
-                try {
-                    renameFile(oldVersion, currentVersion);
-                }
-                catch (IOException ex) {
-                    log.error("Unable to restore previous annotations: " + oldVersion, ex);
-                }
+            log.error("Restoring previous annotations for user [{}] on document [{}]({}) in " //
+                    + "project [{}]({}) due exception when trying to write new "
+                    + "annotations: [{}]", aUserName, aDocument.getName(), aDocument.getId(),
+                    aDocument.getProject().getName(), aDocument.getProject().getId(), oldVersion);
+            try {
+                move(oldVersion.toPath(), currentVersion.toPath(), REPLACE_EXISTING);
             }
+            catch (Exception ex) {
+                log.error("Unable to restore previous annotations: [{}]", oldVersion, ex);
+            }
+
             // Now abort anyway
             throw e;
         }
 
-        // Manage history
-        if (backupProperties.getInterval() > 0) {
-            // Determine the reference point in time based on the current version
-            long now = currentVersion.lastModified();
+        if (oldVersion.exists() && (currentVersion.length() < oldVersion.length())) {
+            log.debug(
+                    "Annotations truncated for user [{}] on document [{}]({}) in project "
+                            + "[{}]({}): {} -> {} bytes ({} bytes removed)",
+                    aUserName, aDocument.getName(), aDocument.getId(),
+                    aDocument.getProject().getName(), aDocument.getProject().getId(),
+                    oldVersion.length(), currentVersion.length(),
+                    currentVersion.length() - oldVersion.length());
+        }
 
-            // Get all history files for the current user
-            File[] history = annotationFolder.listFiles(new FileFilter()
+        // If the saving was successful, we delete the old version
+        if (oldVersion.exists()) {
+            FileUtils.forceDelete(oldVersion);
+        }
+
+        // Update the timestamp in the CAS in case we attempt to save it a second time. This
+        // happens for example in an annotation replacement operation (change layer of existing
+        // annotation) which is implemented as a delete/create operation with an intermediate
+        // save.
+        CasMetadataUtils.addOrUpdateCasMetadata(aCas, currentVersion, aDocument, aUserName);
+
+        manageHistory(currentVersion, aDocument, aUserName);
+
+        WicketUtil.serverTiming("realWriteCas", currentTimeMillis() - t0);
+    }
+
+    private void manageHistory(File aCurrentVersion, SourceDocument aDocument, String aUserName)
+        throws IOException
+    {
+        if (backupProperties.getInterval() <= 0) {
+            return;
+        }
+
+        File annotationFolder = getAnnotationFolder(aDocument);
+
+        // Determine the reference point in time based on the current version
+        long now = aCurrentVersion.lastModified();
+
+        // Get all history files for the current user
+        File[] history = annotationFolder.listFiles(new FileFilter()
+        {
+            private final Matcher matcher = Pattern
+                    .compile(Pattern.quote(aUserName) + "\\.ser\\.[0-9]+\\.bak").matcher("");
+
+            @Override
+            public boolean accept(File aFile)
             {
-                private final Matcher matcher = Pattern
-                        .compile(Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
+                // Check if the filename matches the pattern given above.
+                return matcher.reset(aFile.getName()).matches();
+            }
+        });
 
-                @Override
-                public boolean accept(File aFile)
-                {
-                    // Check if the filename matches the pattern given above.
-                    return matcher.reset(aFile.getName()).matches();
-                }
-            });
+        // Sort the files (oldest one first)
+        Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
 
-            // Sort the files (oldest one first)
-            Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
-
-            // Check if we need to make a new history file
-            boolean historyFileCreated = false;
-            File historyFile = new File(annotationFolder, username + ".ser." + now + ".bak");
-            if (history.length == 0) {
-                // If there is no history yet but we should keep history, then we create a
-                // history file in any case.
-                FileUtils.copyFile(currentVersion, historyFile);
+        // Check if we need to make a new history file
+        boolean historyFileCreated = false;
+        File historyFile = new File(annotationFolder, aUserName + ".ser." + now + ".bak");
+        if (history.length == 0) {
+            // If there is no history yet but we should keep history, then we create a
+            // history file in any case.
+            FileUtils.copyFile(aCurrentVersion, historyFile);
+            historyFileCreated = true;
+        }
+        else {
+            // Check if the newest history file is significantly older than the current one
+            File latestHistory = history[history.length - 1];
+            if (latestHistory.lastModified() + (backupProperties.getInterval() * 1000) < now) {
+                FileUtils.copyFile(aCurrentVersion, historyFile);
                 historyFileCreated = true;
             }
-            else {
-                // Check if the newest history file is significantly older than the current one
-                File latestHistory = history[history.length - 1];
-                if (latestHistory.lastModified() + (backupProperties.getInterval() * 1000) < now) {
-                    FileUtils.copyFile(currentVersion, historyFile);
-                    historyFileCreated = true;
-                }
+        }
+
+        // No history file created, then we can stop here
+        if (!historyFileCreated) {
+            return;
+        }
+
+        // Prune history based on number of backup
+        // The new version is not in the history, so we keep that in any case. That
+        // means we need to keep one less.
+        int toKeep = Math.max(backupProperties.getKeep().getNumber() - 1, 0);
+        if ((backupProperties.getKeep().getNumber() > 0) && (toKeep < history.length)) {
+            // Copy the oldest files to a new array
+            File[] toRemove = new File[history.length - toKeep];
+            System.arraycopy(history, 0, toRemove, 0, toRemove.length);
+
+            // Restrict the history to what is left
+            File[] newHistory = new File[toKeep];
+            if (toKeep > 0) {
+                System.arraycopy(history, toRemove.length, newHistory, 0, newHistory.length);
             }
+            history = newHistory;
 
-            // Prune history based on number of backup
-            if (historyFileCreated) {
-                // The new version is not in the history, so we keep that in any case. That
-                // means we need to keep one less.
-                int toKeep = Math.max(backupProperties.getKeep().getNumber() - 1, 0);
-                if ((backupProperties.getKeep().getNumber() > 0) && (toKeep < history.length)) {
-                    // Copy the oldest files to a new array
-                    File[] toRemove = new File[history.length - toKeep];
-                    System.arraycopy(history, 0, toRemove, 0, toRemove.length);
+            // Remove these old files
+            for (File file : toRemove) {
+                FileUtils.forceDelete(file);
 
-                    // Restrict the history to what is left
-                    File[] newHistory = new File[toKeep];
-                    if (toKeep > 0) {
-                        System.arraycopy(history, toRemove.length, newHistory, 0,
-                                newHistory.length);
-                    }
-                    history = newHistory;
-
-                    // Remove these old files
-                    for (File file : toRemove) {
-                        FileUtils.forceDelete(file);
-
-                        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                                String.valueOf(aDocument.getProject().getId()))) {
-                            log.debug(
-                                    "Removed surplus history file [{}] of user [{}] for "
-                                            + "document [{}]({}) in project [{}]({})",
-                                    file.getName(), aUserName, aDocument.getName(),
-                                    aDocument.getId(), aDocument.getProject().getName(),
-                                    aDocument.getProject().getId());
-                        }
-                    }
-                }
-
-                // Prune history based on time
-                if (backupProperties.getKeep().getTime() > 0) {
-                    for (File file : history) {
-                        if ((file.lastModified()
-                                + (backupProperties.getKeep().getTime() * 1000)) < now) {
-                            FileUtils.forceDelete(file);
-
-                            try (MDC.MDCCloseable closable = MDC.putCloseable(
-                                    Logging.KEY_PROJECT_ID,
-                                    String.valueOf(aDocument.getProject().getId()))) {
-                                log.debug(
-                                        "Removed outdated history file [{}] of user [{}] for "
-                                                + "document [{}]({}) in project [{}]({})",
-                                        file.getName(), aUserName, aDocument.getName(),
-                                        aDocument.getId(), aDocument.getProject().getName(),
-                                        aDocument.getProject().getId());
-                            }
-                        }
-                    }
+                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                        String.valueOf(aDocument.getProject().getId()))) {
+                    log.debug(
+                            "Removed surplus history file [{}] of user [{}] for "
+                                    + "document [{}]({}) in project [{}]({})",
+                            file.getName(), aUserName, aDocument.getName(), aDocument.getId(),
+                            aDocument.getProject().getName(), aDocument.getProject().getId());
                 }
             }
         }
 
-        WicketUtil.serverTiming("realWriteCas", currentTimeMillis() - t0);
+        // Prune history based on time
+        if (backupProperties.getKeep().getTime() > 0) {
+            for (File file : history) {
+                if ((file.lastModified() + (backupProperties.getKeep().getTime() * 1000)) < now) {
+                    FileUtils.forceDelete(file);
+
+                    try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                            String.valueOf(aDocument.getProject().getId()))) {
+                        log.debug(
+                                "Removed outdated history file [{}] of user [{}] for "
+                                        + "document [{}]({}) in project [{}]({})",
+                                file.getName(), aUserName, aDocument.getName(), aDocument.getId(),
+                                aDocument.getProject().getName(), aDocument.getProject().getId());
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -676,7 +680,7 @@ public class CasStorageServiceImpl
             CasProvider aSupplier, CasUpgradeMode aUpgradeMode)
         throws IOException
     {
-        long start = System.currentTimeMillis();
+        long start = currentTimeMillis();
 
         CAS cas;
         String source;
@@ -709,7 +713,7 @@ public class CasStorageServiceImpl
         // Add/update the CAS metadata
         CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile, aDocument, aUsername);
 
-        long duration = System.currentTimeMillis() - start;
+        long duration = currentTimeMillis() - start;
         log.debug("Loaded CAS [{}] [{},{}] from {} in {}ms", cas.hashCode(), aDocument.getId(),
                 aUsername, source, duration);
 
@@ -1142,24 +1146,6 @@ public class CasStorageServiceImpl
                 + aProjectId + "/" + DOCUMENT_FOLDER + "/" + aDocumentId + "/" + ANNOTATION_FOLDER);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
-    }
-
-    /**
-     * Renames a file.
-     *
-     * @throws IOException
-     *             if the file cannot be renamed.
-     * @return the target file.
-     */
-    private static File renameFile(File aFrom, File aTo) throws IOException
-    {
-        if (!aFrom.renameTo(aTo)) {
-            throw new IOException("Cannot renamed file [" + aFrom + "] to [" + aTo + "]");
-        }
-
-        // We are not sure if File is mutable. This makes sure we get a new file
-        // in any case.
-        return new File(aTo.getPath());
     }
 
     /**

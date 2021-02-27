@@ -59,6 +59,7 @@ public class DefaultDocumentNavigatorActionBarExtension
 
     protected OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
     {
-        return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(), null);
+        return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
+                aPage::listAccessibleDocuments);
     }
 }

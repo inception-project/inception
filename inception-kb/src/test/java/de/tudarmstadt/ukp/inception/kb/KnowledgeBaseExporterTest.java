@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.WIKIDATA_CLASS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,8 +36,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -181,19 +180,19 @@ public class KnowledgeBaseExporterTest
     {
         KnowledgeBase kb1 = buildKnowledgeBase("kb1");
         kb1.setType(RepositoryType.LOCAL);
-        kb1.setClassIri(IriConstants.WIKIDATA_CLASS);
+        kb1.setClassIri(WIKIDATA_CLASS.stringValue());
 
         KnowledgeBase kb2 = buildKnowledgeBase("kb2");
         kb2.setType(RepositoryType.REMOTE);
-        kb2.setClassIri(OWL.CLASS);
+        kb2.setClassIri(OWL.CLASS.stringValue());
 
         KnowledgeBase kb3 = buildKnowledgeBase("kb3");
         kb3.setType(RepositoryType.REMOTE);
-        kb3.setClassIri(RDFS.CLASS);
+        kb3.setClassIri(RDFS.CLASS.stringValue());
 
         KnowledgeBase kb4 = buildKnowledgeBase("kb4");
         kb4.setType(RepositoryType.LOCAL);
-        kb4.setClassIri(RDFS.CLASS);
+        kb4.setClassIri(RDFS.CLASS.stringValue());
 
         return Arrays.asList(kb1, kb2, kb3);
     }
@@ -217,19 +216,17 @@ public class KnowledgeBaseExporterTest
         kb.setRepositoryId("id-" + name);
         kb.setName(name);
         kb.setProject(sourceProject);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setPropertyLabelIri(RDFS.LABEL);
-        kb.setPropertyDescriptionIri(RDFS.COMMENT);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        kb.setTypeIri(RDF.TYPE.stringValue());
+        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
+        kb.setPropertyLabelIri(RDFS.LABEL.stringValue());
+        kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
         kb.setMaxResults(1000);
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setRootConcepts(
-                Arrays.asList(vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"),
-                        vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation")));
+        kb.setRootConcepts(asList("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation",
+                "http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"));
         kb.setDefaultLanguage("en");
         return kb;
     }

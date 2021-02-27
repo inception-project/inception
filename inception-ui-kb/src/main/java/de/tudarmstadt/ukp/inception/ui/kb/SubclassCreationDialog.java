@@ -98,8 +98,7 @@ public class SubclassCreationDialog
         try {
             // get subclassof property
             KnowledgeBase kb = kbModel.getObject();
-            KBProperty property = kbService.readProperty(kb, kb.getSubclassIri().stringValue())
-                    .get();
+            KBProperty property = kbService.readProperty(kb, kb.getSubclassIri()).get();
 
             // check whether the subclass name already exists for this superclass
             List<KBHandle> existingSubclasses = kbService.listChildConcepts(kb,

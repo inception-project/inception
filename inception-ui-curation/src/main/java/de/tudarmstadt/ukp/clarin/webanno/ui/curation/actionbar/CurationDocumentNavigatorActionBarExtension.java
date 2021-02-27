@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static java.lang.Integer.MAX_VALUE;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.DefaultDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 
 @Order(0)
@@ -32,6 +34,15 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 public class CurationDocumentNavigatorActionBarExtension
     extends DefaultDocumentNavigatorActionBarExtension
 {
+    private final CurationDocumentService curationDocumentService;
+
+    @Autowired
+    public CurationDocumentNavigatorActionBarExtension(
+            CurationDocumentService aCurationDocumentService)
+    {
+        curationDocumentService = aCurationDocumentService;
+    }
+
     @Override
     public String getRole()
     {
@@ -53,9 +64,7 @@ public class CurationDocumentNavigatorActionBarExtension
     @Override
     protected OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
     {
-        CurationPage page = (CurationPage) aPage;
-
         return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
-                page::listDocuments);
+                aPage::listAccessibleDocuments);
     }
 }

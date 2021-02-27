@@ -20,9 +20,6 @@ package de.tudarmstadt.ukp.inception.kb.yaml;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -33,15 +30,14 @@ public class KnowledgeBaseAccess
     private String accessUrl;
 
     @JsonProperty("full-text-search")
-    private IRI fullTextSearchIri;
+    private String fullTextSearchIri;
 
     @JsonCreator
     public KnowledgeBaseAccess(@JsonProperty("access-url") String aAccessUrl,
             @JsonProperty("full-text-search") String aFullTestSearchIri)
     {
-        SimpleValueFactory vf = SimpleValueFactory.getInstance();
         accessUrl = aAccessUrl;
-        fullTextSearchIri = vf.createIRI(aFullTestSearchIri);
+        fullTextSearchIri = aFullTestSearchIri;
     }
 
     public KnowledgeBaseAccess()
@@ -59,12 +55,12 @@ public class KnowledgeBaseAccess
         this.accessUrl = accessUrl;
     }
 
-    public IRI getFullTextSearchIri()
+    public String getFullTextSearchIri()
     {
         return fullTextSearchIri;
     }
 
-    public void setFullTextSearchIri(IRI aFullTextSearchIri)
+    public void setFullTextSearchIri(String aFullTextSearchIri)
     {
         fullTextSearchIri = aFullTextSearchIri;
     }

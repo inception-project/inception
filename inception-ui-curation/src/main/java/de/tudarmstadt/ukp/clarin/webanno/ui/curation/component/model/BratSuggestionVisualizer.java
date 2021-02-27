@@ -62,9 +62,9 @@ public abstract class BratSuggestionVisualizer
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
 
-    public BratSuggestionVisualizer(String id, IModel<UserAnnotationSegment> aModel, int aPosition)
+    public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegment> aModel, int aPosition)
     {
-        super(id, aModel);
+        super(aId, aModel);
         String username;
 
         Project project = getModelObject().getAnnotatorState().getProject();
@@ -98,25 +98,25 @@ public abstract class BratSuggestionVisualizer
         add(controller);
     }
 
-    public void setModel(IModel<UserAnnotationSegment> aModel)
+    public void setModel(IModel<AnnotatorSegment> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(UserAnnotationSegment aModel)
+    public void setModelObject(AnnotatorSegment aModel)
     {
         setDefaultModelObject(aModel);
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<UserAnnotationSegment> getModel()
+    public IModel<AnnotatorSegment> getModel()
     {
-        return (IModel<UserAnnotationSegment>) getDefaultModel();
+        return (IModel<AnnotatorSegment>) getDefaultModel();
     }
 
-    public UserAnnotationSegment getModelObject()
+    public AnnotatorSegment getModelObject()
     {
-        return (UserAnnotationSegment) getDefaultModelObject();
+        return (AnnotatorSegment) getDefaultModelObject();
     }
 
     @Override

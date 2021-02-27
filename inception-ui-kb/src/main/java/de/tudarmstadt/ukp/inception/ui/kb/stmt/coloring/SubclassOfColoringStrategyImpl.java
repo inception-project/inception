@@ -61,6 +61,6 @@ public class SubclassOfColoringStrategyImpl
     public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB,
             List<String> aLabelProperties)
     {
-        return aPropertyIdentifier.equals(aKB.getSubclassIri().stringValue());
+        return aPropertyIdentifier.equals(aKB.getSubclassIri());
     }
 }

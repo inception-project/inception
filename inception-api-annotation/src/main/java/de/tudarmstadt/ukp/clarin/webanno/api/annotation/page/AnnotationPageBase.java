@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
@@ -444,6 +445,9 @@ public abstract class AnnotationPageBase
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();
+
+    public abstract List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
+            User aUser);
 
     /**
      * This is a special AJAX target response listener which implements hashCode and equals. It uses
