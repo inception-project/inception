@@ -24,10 +24,10 @@ import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.CUSTOMSCHEMA;
 import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.WIKIDATASCHEMA;
 import static de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators.IRI_VALIDATOR;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -38,13 +38,11 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
@@ -142,21 +140,16 @@ public class KnowledgeBaseIriPanel
         comboBoxWrapper.add(iriSchemaChoice);
     }
 
-    private ComboBox<String> buildComboBox(String id, IModel<IRI> model, List<IRI> iris)
+    private ComboBox<String> buildComboBox(String id, IModel<String> model, List<IRI> iris)
     {
         // Only set model object if it has not been initialized yet
         if (model.getObject() == null) {
-            model.setObject(iris.get(0));
+            model.setObject(iris.get(0).stringValue());
         }
 
-        List<String> choices = iris.stream().map(IRI::stringValue).collect(Collectors.toList());
+        List<String> choices = iris.stream().map(IRI::stringValue).collect(toList());
 
-        IModel<String> adapter = new LambdaModelAdapter<String>(() -> {
-            return model.getObject() != null ? model.getObject().stringValue() : null;
-        }, str -> model
-                .setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null));
-
-        ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
+        ComboBox<String> comboBox = new ComboBox<>(id, model, choices);
         comboBox.add(enabledWhen(() -> CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
