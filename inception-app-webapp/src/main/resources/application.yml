@@ -19,7 +19,7 @@ annotation:
   default-preferences:
     page-size: 5
     auto-scroll: false
-    remember-sayer: true
+    remember-layer: true
 
 ui:
   brat:
@@ -59,7 +59,7 @@ spring:
           sharedCache: 
             # L2 CACHE: enable selective caching mode - only entities with @Cacheable annotation
             # mode: ENABLE_SELECTIVE
-            # mode: NONE
+            mode: NONE
       hibernate:
         dialect: ${database.dialect:${INCEPTION_DB_DIALECT:}}
         # Enable SQL statements formatting.
@@ -71,11 +71,11 @@ spring:
         # javax.cache:
         #   provider: org.ehcache.jsr107.EhcacheCachingProvider
         #  uri: classpath:ehcache.xml
-        # cache:
+        cache:
           # L2 CACHE: turn on L2 cache for individual entities
-          # use_second_level_cache: true
+          use_second_level_cache: false
           # L2 CACHE: turn on L2 cache for collections entities
-          # use_query_cache: true 
+          use_query_cache: false 
           # region:
             # L2 CACHE: classpath to cache region factory.
             # factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
