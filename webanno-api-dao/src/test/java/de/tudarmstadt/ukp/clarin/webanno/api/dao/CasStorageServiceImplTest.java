@@ -17,18 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.getInternalTypeSystem;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.getSourceDocumentName;
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.Before;
@@ -49,68 +59,140 @@ public class CasStorageServiceImplTest
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
-    
+
     @Before
     public void setup() throws Exception
     {
         backupProperties = new BackupProperties();
-        
+
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
-        
+
         sut = new CasStorageServiceImpl(null, null, repositoryProperties, backupProperties);
     }
-    
+
     @Test
     public void testWriteReadExistsDeleteCas() throws Exception
     {
         SourceDocument doc = makeSourceDocument(1l, 1l);
         JCas cas = JCasFactory.createText("This is a test");
         String user = "test";
-        
+
         sut.writeCas(doc, cas.getCas(), user);
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
-        
+
         CAS cas2 = sut.readCas(doc, user);
         assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
-        
+
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
         assertThat(sut.existsCas(doc, user)).isFalse();
     }
-    
+
     @Test
     public void testCasMetadataGetsCreated() throws Exception
     {
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
         typeSystems.add(createTypeSystemDescription());
         typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
-        JCas cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems));
-        
+        CAS cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems)).getCas();
+
         SourceDocument doc = makeSourceDocument(1l, 1l);
         String user = "test";
-        
-        sut.writeCas(doc, cas.getCas(), user);
-        JCas cas2 = sut.readCas(doc, user).getJCas();
-        
-        List<CASMetadata> cmds = new ArrayList<>(select(cas2, CASMetadata.class));
+
+        sut.writeCas(doc, cas, user);
+        CAS cas2 = sut.readCas(doc, user);
+
+        List<AnnotationFS> cmds = new ArrayList<>(
+                CasUtil.select(cas2, CasUtil.getType(cas2, CASMetadata.class)));
         assertThat(cmds).hasSize(1);
-        assertThat(cmds.get(0).getProjectId()).isEqualTo(doc.getProject().getId());
-        assertThat(cmds.get(0).getSourceDocumentId()).isEqualTo(doc.getId());
-        assertThat(cmds.get(0).getLastChangedOnDisk())
+
+        assertThat(getFeature(cmds.get(0), "projectId", Long.class))
+                .isEqualTo(doc.getProject().getId());
+        assertThat(getSourceDocumentName(cas2)).isEqualTo(getSourceDocumentName(cas));
+        assertThat(getFeature(cmds.get(0), "lastChangedOnDisk", Long.class))
                 .isEqualTo(sut.getCasTimestamp(doc, user).get());
     }
-    
+
     @Test
     public void testReadOrCreateCas() throws Exception
     {
         SourceDocument doc = makeSourceDocument(2l, 2l);
         String user = "test";
-        
-        JCas cas = sut.readOrCreateCas(doc, user, () -> {
+
+        JCas cas = createCasFile(doc, user, "This is a test");
+        assertThat(sut.getCasFile(doc, user)).exists();
+        assertThat(sut.existsCas(doc, user)).isTrue();
+
+        JCas cas2 = sut.readCas(doc, user).getJCas();
+        assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
+
+        sut.deleteCas(doc, user);
+        assertThat(sut.getCasFile(doc, user)).doesNotExist();
+        assertThat(sut.existsCas(doc, user)).isFalse();
+    }
+
+    @Test
+    public void testConcurrentAccess() throws Exception
+    {
+        // Setup fixture
+        SourceDocument doc = makeSourceDocument(2l, 2l);
+        String user = "test";
+        File casFile = sut.getCasFile(doc, user);
+
+        JCas mainCas = createCasFile(doc, user, "This is a test");
+        assertThat(casFile).exists();
+
+        long timestamp = System.currentTimeMillis() + 1;
+        casFile.setLastModified(timestamp);
+
+        assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> sut.writeCas(doc, mainCas.getCas(), user))
+                .withMessageContaining("concurrent modification");
+
+        assertThat(casFile).exists();
+        assertThat(casFile.lastModified()).isEqualTo(timestamp);
+    }
+
+    @Test
+    public void testRestorationOfCasWhenSaveFails() throws Exception
+    {
+        // Setup fixture
+        SourceDocument doc = makeSourceDocument(2l, 2l);
+        String user = "test";
+        File casFile = sut.getCasFile(doc, user);
+
+        long casFileSize;
+        long casFileLastModified;
+
+        JCas mainCas = createCasFile(doc, user, "This is a test");
+        assertThat(casFile).exists();
+        casFileSize = casFile.length();
+        casFileLastModified = casFile.lastModified();
+
+        // Wrap the CAS in a proxy so that UIMA cannot serialize it
+        CAS guardedCas = (CAS) Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class[] { CAS.class }, (proxy, method, args) -> method.invoke(mainCas, args));
+
+        assertThatExceptionOfType(IllegalArgumentException.class).as(
+                "Saving fails because UIMA cannot cast the proxied CAS to something serializable")
+                .isThrownBy(() -> sut.writeCas(doc, guardedCas, user));
+
+        assertThat(casFile).exists().hasSize(casFileSize);
+        assertThat(casFile.lastModified()).isEqualTo(casFileLastModified);
+        assertThat(new File(casFile.getParentFile(), user + ".ser.old")).doesNotExist();
+    }
+
+    private JCas createCasFile(SourceDocument doc, String user, String text)
+        throws CASException, IOException
+    {
+        JCas casTemplate = sut.readOrCreateCas(doc, user, () -> {
             try {
-                return JCasFactory.createText("This is a test").getCas();
+                CAS cas = CasFactory.createCas(mergeTypeSystems(
+                        asList(createTypeSystemDescription(), getInternalTypeSystem())));
+                cas.setDocumentText(text);
+                return cas;
             }
             catch (UIMAException e) {
                 throw new IOException(e);
@@ -118,24 +200,19 @@ public class CasStorageServiceImplTest
         }).getJCas();
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
-        
-        JCas cas2 = sut.readCas(doc, user).getJCas();
-        assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
-        
-        sut.deleteCas(doc, user);
-        assertThat(sut.getCasFile(doc, user)).doesNotExist();
-        assertThat(sut.existsCas(doc, user)).isFalse();
+
+        return casTemplate;
     }
-        
+
     private SourceDocument makeSourceDocument(long aProjectId, long aDocumentId)
     {
         Project project = new Project();
         project.setId(aProjectId);
-        
+
         SourceDocument doc = new SourceDocument();
         doc.setProject(project);
         doc.setId(aDocumentId);
-        
+
         return doc;
     }
 }
