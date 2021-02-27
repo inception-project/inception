@@ -48,19 +48,35 @@ public enum SchemaProfile
             RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
 
     private final String uiLabel;
-    private final IRI classIri;
-    private final IRI subclassIri;
-    private final IRI typeIri;
-    private final IRI subPropertyIri;
-    private final IRI descriptionIri;
-    private final IRI labelIri;
-    private final IRI propertyTypeIri;
-    private final IRI propertyLabelIri;
-    private final IRI propertyDescriptionIri;
+    private final String classIri;
+    private final String subclassIri;
+    private final String typeIri;
+    private final String subPropertyIri;
+    private final String descriptionIri;
+    private final String labelIri;
+    private final String propertyTypeIri;
+    private final String propertyLabelIri;
+    private final String propertyDescriptionIri;
 
     private SchemaProfile(String aUiLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
             IRI aSubPropertyIri, IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri,
             IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
+    {
+        uiLabel = aUiLabel;
+        classIri = aClassIri.stringValue();
+        subclassIri = aSubclassIri.stringValue();
+        subPropertyIri = aSubPropertyIri.stringValue();
+        typeIri = aTypeIri.stringValue();
+        descriptionIri = aDescriptionIri.stringValue();
+        labelIri = aLabelIri.stringValue();
+        propertyTypeIri = aPropertyTypeIri.stringValue();
+        propertyLabelIri = aPropertyLabelIri.stringValue();
+        propertyDescriptionIri = aPropertyDescriptionIri.stringValue();
+    }
+
+    private SchemaProfile(String aUiLabel, String aClassIri, String aSubclassIri, String aTypeIri,
+            String aSubPropertyIri, String aDescriptionIri, String aLabelIri,
+            String aPropertyTypeIri, String aPropertyLabelIri, String aPropertyDescriptionIri)
     {
         uiLabel = aUiLabel;
         classIri = aClassIri;
@@ -79,47 +95,47 @@ public enum SchemaProfile
         return uiLabel;
     }
 
-    public IRI getClassIri()
+    public String getClassIri()
     {
         return classIri;
     }
 
-    public IRI getSubclassIri()
+    public String getSubclassIri()
     {
         return subclassIri;
     }
 
-    public IRI getTypeIri()
+    public String getTypeIri()
     {
         return typeIri;
     }
 
-    public IRI getSubPropertyIri()
+    public String getSubPropertyIri()
     {
         return subPropertyIri;
     }
 
-    public IRI getDescriptionIri()
+    public String getDescriptionIri()
     {
         return descriptionIri;
     }
 
-    public IRI getLabelIri()
+    public String getLabelIri()
     {
         return labelIri;
     }
 
-    public IRI getPropertyTypeIri()
+    public String getPropertyTypeIri()
     {
         return propertyTypeIri;
     }
 
-    public IRI getPropertyLabelIri()
+    public String getPropertyLabelIri()
     {
         return propertyLabelIri;
     }
 
-    public IRI getPropertyDescriptionIri()
+    public String getPropertyDescriptionIri()
     {
         return propertyDescriptionIri;
     }
@@ -176,9 +192,10 @@ public enum SchemaProfile
      * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
      * profile
      */
-    private static boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-            IRI typeIri, IRI subPropertyIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri,
-            IRI propertyLabelIri, IRI propertyDescriptionIri)
+    private static boolean equalsSchemaProfile(SchemaProfile profile, String classIri,
+            String subclassIri, String typeIri, String subPropertyIri, String descriptionIri,
+            String labelIri, String propertyTypeIri, String propertyLabelIri,
+            String propertyDescriptionIri)
     {
         return Objects.equals(profile.getClassIri(), classIri)
                 && Objects.equals(profile.getSubclassIri(), subclassIri)

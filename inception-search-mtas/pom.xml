@@ -61,7 +61,7 @@
     </dependency>
 
     <dependency>
-      <groupId>nl.knaw.meertens.mtas</groupId>
+      <groupId>org.textexploration.mtas</groupId>
       <artifactId>mtas</artifactId>
     </dependency>
     <dependency>

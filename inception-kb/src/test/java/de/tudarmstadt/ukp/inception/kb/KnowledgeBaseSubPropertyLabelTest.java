@@ -234,7 +234,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         KBProperty subLabel = testFixtures.buildProperty();
         sut.createProperty(aKB, subLabel);
 
-        KBProperty subPropertyHandle = new KBProperty(aKB.getSubPropertyIri().stringValue());
+        KBProperty subPropertyHandle = new KBProperty(aKB.getSubPropertyIri());
 
         KBStatement subPropertyStmt = new KBStatement(null, subLabel.toKBHandle(),
                 subPropertyHandle, aKB.getLabelIri());

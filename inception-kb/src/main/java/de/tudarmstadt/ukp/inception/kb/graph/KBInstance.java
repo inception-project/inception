@@ -140,7 +140,7 @@ public class KBInstance
 
         originalStatements.clear();
 
-        Statement typeStmt = vf.createStatement(subject, kb.getTypeIri(),
+        Statement typeStmt = vf.createStatement(subject, vf.createIRI(kb.getTypeIri()),
                 vf.createIRI(type.toString()));
         originalStatements.add(typeStmt);
         aConn.add(typeStmt);
@@ -156,7 +156,8 @@ public class KBInstance
             else {
                 nameLiteral = vf.createLiteral(name);
             }
-            Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
+            Statement nameStmt = vf.createStatement(subject, vf.createIRI(kb.getLabelIri()),
+                    nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
@@ -169,7 +170,7 @@ public class KBInstance
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf.createStatement(subject, kb.getDescriptionIri(),
+            Statement descStmt = vf.createStatement(subject, vf.createIRI(kb.getDescriptionIri()),
                     descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);

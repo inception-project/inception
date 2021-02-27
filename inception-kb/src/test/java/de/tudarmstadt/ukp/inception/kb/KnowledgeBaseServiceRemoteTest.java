@@ -402,12 +402,12 @@ public class KnowledgeBaseServiceRemoteTest
 
     public static KnowledgeBase setOWLSchemaMapping(KnowledgeBase kb)
     {
-        kb.setClassIri(OWL.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setClassIri(OWL.CLASS.stringValue());
+        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        kb.setTypeIri(RDF.TYPE.stringValue());
+        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
         return kb;
     }
 

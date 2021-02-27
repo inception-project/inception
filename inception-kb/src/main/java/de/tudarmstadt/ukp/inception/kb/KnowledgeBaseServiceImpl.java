@@ -56,7 +56,8 @@ import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -276,16 +277,22 @@ public class KnowledgeBaseServiceImpl
     {
         // KB will initialize base properties with base IRI schema properties defined by user
         if (akb.getType() == RepositoryType.LOCAL) {
-            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().stringValue(),
-                    akb.getSubclassIri().getLocalName()));
-            createBaseProperty(akb, new KBProperty(akb.getLabelIri().stringValue(),
-                    akb.getLabelIri().getLocalName(), null, XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().stringValue(),
-                    akb.getDescriptionIri().getLocalName(), null, XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getTypeIri().stringValue(),
-                    akb.getTypeIri().getLocalName()));
-            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().stringValue(),
-                    akb.getSubPropertyIri().getLocalName()));
+            ValueFactory vf = SimpleValueFactory.getInstance();
+
+            createBaseProperty(akb, new KBProperty(akb.getSubclassIri(),
+                    vf.createIRI(akb.getSubclassIri()).getLocalName()));
+            createBaseProperty(akb,
+                    new KBProperty(akb.getLabelIri(),
+                            vf.createIRI(akb.getLabelIri()).getLocalName(), null,
+                            XSD.STRING.stringValue()));
+            createBaseProperty(akb,
+                    new KBProperty(akb.getDescriptionIri(),
+                            vf.createIRI(akb.getDescriptionIri()).getLocalName(), null,
+                            XSD.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getTypeIri(),
+                    vf.createIRI(akb.getTypeIri()).getLocalName()));
+            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri(),
+                    vf.createIRI(akb.getSubPropertyIri()).getLocalName()));
         }
     }
 
@@ -1188,10 +1195,10 @@ public class KnowledgeBaseServiceImpl
     @Override
     public boolean isBaseProperty(String propertyIdentifier, KnowledgeBase aKB)
     {
-        return propertyIdentifier.equals(aKB.getLabelIri().stringValue())
-                || propertyIdentifier.equals(aKB.getSubclassIri().stringValue())
-                || propertyIdentifier.equals(aKB.getDescriptionIri().stringValue())
-                || propertyIdentifier.equals(aKB.getTypeIri().stringValue());
+        return propertyIdentifier.equals(aKB.getLabelIri())
+                || propertyIdentifier.equals(aKB.getSubclassIri())
+                || propertyIdentifier.equals(aKB.getDescriptionIri())
+                || propertyIdentifier.equals(aKB.getTypeIri());
     }
 
     private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
