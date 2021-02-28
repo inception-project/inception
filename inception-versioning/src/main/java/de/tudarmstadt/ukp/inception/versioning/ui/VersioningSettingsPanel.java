@@ -59,6 +59,17 @@ public class VersioningSettingsPanel
         super(aId, aProjectModel);
         Project project = aProjectModel.getObject();
 
+        // We create the repository here if it does not exist yet
+        try {
+            if (!versioningService.repoExists(project)) {
+                versioningService.initializeRepo(project);
+            }
+        }
+        catch (GitAPIException e) {
+            LOG.error("Error initializing repository: {}", e.getMessage());
+            error("Error initializing repository: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+
         // RepositoryConfig
         RepositoryConfig repositoryConfig = new RepositoryConfig();
         repositoryConfig.setLocalPath(versioningService.getRepoDir(project).getAbsolutePath());
