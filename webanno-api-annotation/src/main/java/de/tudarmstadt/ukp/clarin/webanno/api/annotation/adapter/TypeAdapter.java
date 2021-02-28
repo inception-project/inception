@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentSpanAnnotation;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -221,4 +223,14 @@ public interface TypeAdapter
     }
 
     <T> Optional<T> getTraits(Class<T> aInterface);
+
+    default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2)
+    {
+        return equivalents(aFs1, aFs2, null);
+    }
+
+    default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2, FeatureFilter aFilter)
+    {
+        return isEquivalentSpanAnnotation(aFs1, aFs2, aFilter);
+    }
 }

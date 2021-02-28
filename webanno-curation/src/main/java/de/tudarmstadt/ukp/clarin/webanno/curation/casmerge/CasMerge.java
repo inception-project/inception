@@ -23,12 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentAnnotation;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBasicFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentSpanAnnotation;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isPrimitiveType;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.shouldIgnoreFeatureOnMerge;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -37,6 +38,7 @@ import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,7 +58,6 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
@@ -404,10 +405,12 @@ public class CasMerge
         }
     }
 
-    private static boolean existsSameAt(CAS aCas, AnnotationFS aFs)
+    private static boolean existsEquivalentAt(CAS aCas, TypeAdapter aAdapter, AnnotationFS aFs)
     {
-        return CasUtil.selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream()
-                .filter(cand -> isEquivalentAnnotation(aFs, cand)).findAny().isPresent();
+        return selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream() //
+                .filter(cand -> aAdapter.equivalents(aFs, cand,
+                        (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f))) //
+                .findAny().isPresent();
     }
 
     private static List<AnnotationFS> selectCandidateRelationsAt(CAS aTargetCas,
@@ -457,10 +460,13 @@ public class CasMerge
         }
     }
 
-    private static List<AnnotationFS> getCandidateAnnotations(CAS aTargetCas, AnnotationFS aSource)
+    private static List<AnnotationFS> getCandidateAnnotations(CAS aTargetCas, TypeAdapter aAdapter,
+            AnnotationFS aSource)
     {
         return selectCovered(aTargetCas, aSource.getType(), aSource.getBegin(), aSource.getEnd())
-                .stream().filter(fs -> isEquivalentAnnotation(fs, aSource))
+                .stream()
+                .filter(fs -> aAdapter.equivalents(fs, aSource,
+                        (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f)))
                 .collect(Collectors.toList());
     }
 
@@ -469,14 +475,14 @@ public class CasMerge
             boolean aAllowStacking)
         throws AnnotationException
     {
-        if (existsSameAt(aTargetCas, aSourceFs)) {
-            throw new AlreadyMergedException(
-                    "The annotation already exists in the target document.");
-        }
-
         SpanAdapter adapter = (SpanAdapter) adapterCache.get(aAnnotationLayer);
         if (silenceEvents) {
             adapter.silenceEvents();
+        }
+
+        if (existsEquivalentAt(aTargetCas, adapter, aSourceFs)) {
+            throw new AlreadyMergedException(
+                    "The annotation already exists in the target document.");
         }
 
         // a) if stacking allowed add this new annotation to the mergeview
@@ -517,19 +523,27 @@ public class CasMerge
             AnnotationFS aSourceFs, boolean aAllowStacking)
         throws AnnotationException
     {
-        RelationAdapter adapter = (RelationAdapter) adapterCache.get(aAnnotationLayer);
+        RelationAdapter relationAdapter = (RelationAdapter) adapterCache.get(aAnnotationLayer);
         if (silenceEvents) {
-            adapter.silenceEvents();
+            relationAdapter.silenceEvents();
         }
 
-        AnnotationFS originFsClicked = FSUtil.getFeature(aSourceFs, adapter.getSourceFeatureName(),
+        if (existsEquivalentAt(aTargetCas, relationAdapter, aSourceFs)) {
+            throw new AlreadyMergedException(
+                    "The annotation already exists in the target document.");
+        }
+
+        AnnotationFS originFsClicked = getFeature(aSourceFs, relationAdapter.getSourceFeatureName(),
                 AnnotationFS.class);
-        AnnotationFS targetFsClicked = FSUtil.getFeature(aSourceFs, adapter.getTargetFeatureName(),
+        AnnotationFS targetFsClicked = getFeature(aSourceFs, relationAdapter.getTargetFeatureName(),
                 AnnotationFS.class);
 
-        List<AnnotationFS> candidateRelations = getCandidateAnnotations(aTargetCas, aSourceFs);
-        List<AnnotationFS> candidateOrigins = getCandidateAnnotations(aTargetCas, originFsClicked);
-        List<AnnotationFS> candidateTargets = getCandidateAnnotations(aTargetCas, targetFsClicked);
+        SpanAdapter spanAdapter = (SpanAdapter) adapterCache.get(aAnnotationLayer.getAttachType());
+
+        List<AnnotationFS> candidateOrigins = getCandidateAnnotations(aTargetCas, spanAdapter,
+                originFsClicked);
+        List<AnnotationFS> candidateTargets = getCandidateAnnotations(aTargetCas, spanAdapter,
+                targetFsClicked);
 
         // check if target/source exists in the mergeview
         if (candidateOrigins.isEmpty() || candidateTargets.isEmpty()) {
@@ -547,19 +561,14 @@ public class CasMerge
                     "Stacked targets exist in the target document. Cannot merge this relation.");
         }
 
-        if (!candidateRelations.isEmpty()) {
-            throw new AlreadyMergedException(
-                    "The annotation already exists in the target document.");
-        }
-
         AnnotationFS originFs = candidateOrigins.get(0);
         AnnotationFS targetFs = candidateTargets.get(0);
 
-        if (adapter.getAttachFeatureName() != null) {
+        if (relationAdapter.getAttachFeatureName() != null) {
             AnnotationFS originAttachAnnotation = FSUtil.getFeature(originFs,
-                    adapter.getAttachFeatureName(), AnnotationFS.class);
+                    relationAdapter.getAttachFeatureName(), AnnotationFS.class);
             AnnotationFS targetAttachAnnotation = FSUtil.getFeature(targetFs,
-                    adapter.getAttachFeatureName(), AnnotationFS.class);
+                    relationAdapter.getAttachFeatureName(), AnnotationFS.class);
 
             if (originAttachAnnotation == null || targetAttachAnnotation == null) {
                 throw new UnfulfilledPrerequisitesException(
@@ -570,22 +579,22 @@ public class CasMerge
         List<AnnotationFS> existingAnnos = selectCandidateRelationsAt(aTargetCas, aSourceFs,
                 originFs, targetFs);
         if (existingAnnos.isEmpty() || aAllowStacking) {
-            AnnotationFS mergedRelation = adapter.add(aDocument, aUsername, originFs, targetFs,
-                    aTargetCas);
+            AnnotationFS mergedRelation = relationAdapter.add(aDocument, aUsername, originFs,
+                    targetFs, aTargetCas);
             try {
-                copyFeatures(aDocument, aUsername, adapter, mergedRelation, aSourceFs);
+                copyFeatures(aDocument, aUsername, relationAdapter, mergedRelation, aSourceFs);
             }
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                adapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedRelation));
+                relationAdapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedRelation));
             }
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
                     getAddr(mergedRelation));
         }
         else {
             AnnotationFS mergeTargetFS = existingAnnos.get(0);
-            copyFeatures(aDocument, aUsername, adapter, mergeTargetFS, aSourceFs);
+            copyFeatures(aDocument, aUsername, relationAdapter, mergeTargetFS, aSourceFs);
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
                     getAddr(mergeTargetFS));
         }
@@ -601,7 +610,7 @@ public class CasMerge
             adapter.silenceEvents();
         }
 
-        List<AnnotationFS> candidateHosts = getCandidateAnnotations(aTargetCas, aSourceFs);
+        List<AnnotationFS> candidateHosts = getCandidateAnnotations(aTargetCas, adapter, aSourceFs);
 
         AnnotationFS targetFs;
         if (candidateHosts.size() == 0) {
@@ -656,7 +665,12 @@ public class CasMerge
     private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTraget)
         throws UnfulfilledPrerequisitesException
     {
-        List<AnnotationFS> targets = getCandidateAnnotations(aCas, aOldTraget);
+        List<AnnotationFS> targets = selectCovered(aCas, aOldTraget.getType(),
+                aOldTraget.getBegin(), aOldTraget.getEnd())
+                        .stream()
+                        .filter(fs -> isEquivalentSpanAnnotation(fs, aOldTraget,
+                                (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f)))
+                        .collect(Collectors.toList());
 
         if (targets.size() == 0) {
             throw new UnfulfilledPrerequisitesException(
@@ -669,5 +683,12 @@ public class CasMerge
                             + " Can not copy this slot annotation.");
         }
         return targets;
+    }
+
+    public static boolean shouldIgnoreFeatureOnMerge(FeatureStructure aFS, Feature aFeature)
+    {
+        return !isPrimitiveType(aFeature.getRange()) || isBasicFeature(aFeature)
+                || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
     }
 }
