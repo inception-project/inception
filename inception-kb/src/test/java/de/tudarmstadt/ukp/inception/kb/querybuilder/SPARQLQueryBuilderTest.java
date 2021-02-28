@@ -49,8 +49,6 @@ import org.apache.jena.query.text.TextIndexLucene;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -70,7 +68,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -463,7 +460,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
         List<KBHandle> results = asHandles(wikidata,
@@ -480,7 +477,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
         List<KBHandle> results = asHandles(wikidata,
@@ -544,8 +541,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setRootConcepts(asList(vf.createIRI("http://example.org/#implicitRoot")));
+        kb.setRootConcepts(asList("http://example.org/#implicitRoot"));
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo,
                 SPARQLQueryBuilder.forClasses(kb).roots());
@@ -561,10 +557,8 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setRootConcepts(asList( //
-                vf.createIRI("http://example.org/#implicitRoot"), //
-                vf.createIRI("http://example.org/#subclass2")));
+        kb.setRootConcepts(
+                asList("http://example.org/#implicitRoot", "http://example.org/#subclass2"));
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo,
                 SPARQLQueryBuilder.forClasses(kb).roots());
@@ -663,7 +657,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
@@ -800,7 +794,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingAnyOf_RDF4J_withLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         __testWithLabelMatchingAnyOf_withLanguage(rdf4jLocalRepo);
     }
@@ -808,7 +802,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingAnyOf_FUSEKI_withLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_FUSEKI);
+        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
 
         __testWithLabelMatchingAnyOf_withLanguage(fusekiLocalRepo);
     }
@@ -842,7 +836,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_RDF4J_withLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
     }
@@ -850,7 +844,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_FUSEKI_withLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_FUSEKI);
+        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
 
         __testWithLabelContainingAnyOf_withLanguage(fusekiLocalRepo);
     }
@@ -880,7 +874,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(ukpVirtuosoRepo);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
         List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
@@ -899,7 +893,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
@@ -920,9 +914,9 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(zbwGnd);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_FUSEKI);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
         List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
@@ -941,7 +935,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(hucit);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
         List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder //
                 .forClasses(kb) //
@@ -964,7 +958,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
     }
@@ -991,8 +985,8 @@ public class SPARQLQueryBuilderTest
     public void testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty_noFTS() throws Exception
     {
         kb.setFullTextSearchIri(null);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        kb.setLabelIri(RDFS.LABEL);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
 
         __testWithLabelMatchingExactlyAnyOf_subproperty(rdf4jLocalRepo);
     }
@@ -1000,9 +994,9 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        kb.setLabelIri(RDFS.LABEL);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
 
         __testWithLabelMatchingExactlyAnyOf_subproperty(rdf4jLocalRepo);
     }
@@ -1011,9 +1005,9 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_FUSEKI_subproperty_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_FUSEKI);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        kb.setLabelIri(RDFS.LABEL);
+        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
 
         __testWithLabelMatchingExactlyAnyOf_subproperty(fusekiLocalRepo);
     }
@@ -1047,7 +1041,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withoutLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         __testWithLabelStartingWith_withoutLanguage(rdf4jLocalRepo);
     }
@@ -1055,7 +1049,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_FUSEKI_withoutLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_FUSEKI);
+        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
 
         __testWithLabelStartingWith_withoutLanguage(fusekiLocalRepo);
     }
@@ -1102,7 +1096,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         // Single word - actually, we add a wildcard here so anything that starts with "Green"
         // would also be matched
@@ -1124,7 +1118,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         // Two words with the second being very short - this is no problem for the LUCENE FTS
         // and we simply add a wildcard to match "Green Go*"
@@ -1147,7 +1141,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         // Two words with the second being very short and a space following - in this case we
         // assume that the user is in fact searching for "Barack Ob" and do either drop the
@@ -1166,7 +1160,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(ukpVirtuosoRepo);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
         // Single word - actually, we add a wildcard here so anything that starts with "Barack"
         // would also be matched
@@ -1187,7 +1181,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(ukpVirtuosoRepo);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
         // Two words with the second being very short - in this case, we drop the very short word
         // so that the user doesn't stop getting suggestions while writing because Virtuoso doesn't
@@ -1209,7 +1203,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(ukpVirtuosoRepo);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
         // Two words with the second being very short and a space following - in this case we
         // assmume that the user is in fact searching for "Barack Ob" and do either drop the
@@ -1231,7 +1225,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(ukpVirtuosoRepo);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
         // Two words with the second being 4+ chars - we add a wildcard here so anything
         // starting with "Barack Obam" should match
@@ -1252,7 +1246,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
@@ -1273,9 +1267,9 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(zbwGnd);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_FUSEKI);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
         List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
@@ -1313,9 +1307,9 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(zbwGnd);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_FUSEKI);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
         // The label "Thomas Henricus" is not assigned directly via rdfs:label but rather via a
         // subproperty of it. Thus, this test also checks if the label sub-property support works.
@@ -1375,7 +1369,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
@@ -1395,7 +1389,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
@@ -1415,7 +1409,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(ukpVirtuosoRepo);
 
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
         List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
@@ -1469,10 +1463,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_OLIA_FTS() throws Exception
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
-        kb.setLabelIri(vf.createIRI("http://purl.org/olia/system.owl#hasTag"));
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
+        kb.setLabelIri("http://purl.org/olia/system.owl#hasTag");
 
         importDataFromFile(rdf4jLocalRepo, "src/test/resources/data/penn.owl");
 
@@ -1676,48 +1668,45 @@ public class SPARQLQueryBuilderTest
 
     private void initRdfsMapping()
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setClassIri(RDFS.CLASS.stringValue());
+        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        kb.setTypeIri(RDF.TYPE.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
+        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
         // We are intentionally not using RDFS.LABEL here to ensure we can test the label
         // and property label separately
-        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL.stringValue());
         // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
         // and property description separately
-        kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setPropertyDescriptionIri("http://schema.org/description");
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
     }
 
     private void initOwlMapping()
     {
-        kb.setClassIri(OWL.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setPropertyLabelIri(RDF.PROPERTY);
-        kb.setPropertyDescriptionIri(RDFS.COMMENT);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setClassIri(OWL.CLASS.stringValue());
+        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        kb.setTypeIri(RDF.TYPE.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
+        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
+        kb.setPropertyLabelIri(RDF.PROPERTY.stringValue());
+        kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
     }
 
     private void initWikidataMapping()
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setClassIri(vf.createIRI("http://www.wikidata.org/entity/Q35120"));
-        kb.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/direct/P279"));
-        kb.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/direct/P31"));
-        kb.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-        kb.setPropertyTypeIri(vf.createIRI("http://www.wikidata.org/entity/Q18616576"));
-        kb.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-        kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-        kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
-        kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
+        kb.setClassIri("http://www.wikidata.org/entity/Q35120");
+        kb.setSubclassIri("http://www.wikidata.org/prop/direct/P279");
+        kb.setTypeIri("http://www.wikidata.org/prop/direct/P31");
+        kb.setLabelIri("http://www.w3.org/2000/01/rdf-schema#label");
+        kb.setPropertyTypeIri("http://www.wikidata.org/entity/Q18616576");
+        kb.setDescriptionIri("http://schema.org/description");
+        kb.setPropertyLabelIri("http://www.w3.org/2000/01/rdf-schema#label");
+        kb.setPropertyDescriptionIri("http://www.w3.org/2000/01/rdf-schema#comment");
+        kb.setSubPropertyIri("http://www.wikidata.org/prop/direct/P1647");
     }
 
     public static void assertIsReachable(Repository aRepository)

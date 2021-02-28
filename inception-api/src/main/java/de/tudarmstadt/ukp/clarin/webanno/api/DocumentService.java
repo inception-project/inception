@@ -532,14 +532,23 @@ public interface DocumentService
     int numberOfExpectedAnnotationDocuments(Project project);
 
     /**
-     * List all annotation Documents in a project that are already closed. used to compute overall
+     * List all annotation documents in a project that are already closed. used to compute overall
      * project progress
      *
      * @param project
-     *            the project.
+     *            a project.
      * @return the annotation documents.
      */
     List<AnnotationDocument> listFinishedAnnotationDocuments(Project project);
+
+    /**
+     * List all annotation documents for a given source document that are already closed.
+     *
+     * @param aDocument
+     *            a source document.
+     * @return the annotation documents.
+     */
+    List<AnnotationDocument> listFinishedAnnotationDocuments(SourceDocument aDocument);
 
     /**
      * List all annotation documents for this source document (including in active and delted user

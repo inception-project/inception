@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.kb;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -44,8 +45,6 @@ import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -233,41 +232,35 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         kb.setName("New name");
-        kb.setClassIri(OWL.CLASS);
-        kb.setSubclassIri(OWL.NOTHING);
-        kb.setTypeIri(OWL.THING);
-        kb.setDescriptionIri(IriConstants.SCHEMA_DESCRIPTION);
-        kb.setLabelIri(RDFS.LITERAL);
-        kb.setPropertyTypeIri(OWL.OBJECTPROPERTY);
+        kb.setClassIri(OWL.CLASS.stringValue());
+        kb.setSubclassIri(OWL.NOTHING.stringValue());
+        kb.setTypeIri(OWL.THING.stringValue());
+        kb.setDescriptionIri(IriConstants.SCHEMA_DESCRIPTION.stringValue());
+        kb.setLabelIri(RDFS.LITERAL.stringValue());
+        kb.setPropertyTypeIri(OWL.OBJECTPROPERTY.stringValue());
         kb.setReadOnly(true);
         kb.setEnabled(false);
         kb.setBasePrefix("MyBasePrefix");
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        IRI rootConcept1 = vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation");
-        IRI rootConcept2 = vf.createIRI(
-                "file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/F10_Person");
-        List<IRI> concepts = new ArrayList<IRI>();
-        concepts.add(rootConcept1);
-        concepts.add(rootConcept2);
-        kb.setRootConcepts(concepts);
+        String rootConcept1 = "http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation";
+        String rootConcept2 = "file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/F10_Person";
+        kb.setRootConcepts(asList(rootConcept1, rootConcept2));
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
         KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
         assertThat(savedKb).as("Check that knowledge base was updated correctly")
                 .hasFieldOrPropertyWithValue("name", "New name")
-                .hasFieldOrPropertyWithValue("classIri", OWL.CLASS)
-                .hasFieldOrPropertyWithValue("subclassIri", OWL.NOTHING)
-                .hasFieldOrPropertyWithValue("typeIri", OWL.THING)
-                .hasFieldOrPropertyWithValue("descriptionIri", IriConstants.SCHEMA_DESCRIPTION)
+                .hasFieldOrPropertyWithValue("classIri", OWL.CLASS.stringValue())
+                .hasFieldOrPropertyWithValue("subclassIri", OWL.NOTHING.stringValue())
+                .hasFieldOrPropertyWithValue("typeIri", OWL.THING.stringValue())
+                .hasFieldOrPropertyWithValue("descriptionIri",
+                        IriConstants.SCHEMA_DESCRIPTION.stringValue())
                 .hasFieldOrPropertyWithValue("name", "New name")
                 .hasFieldOrPropertyWithValue("readOnly", true)
                 .hasFieldOrPropertyWithValue("enabled", false)
-                .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL)
-                .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY)
+                .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL.stringValue())
+                .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY.stringValue())
                 .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix")
-                .hasFieldOrPropertyWithValue("rootConcepts",
-                        Arrays.asList(rootConcept1, rootConcept2));
-
+                .hasFieldOrPropertyWithValue("rootConcepts", asList(rootConcept1, rootConcept2));
     }
 
     @Test
@@ -359,9 +352,8 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         List<KBProperty> listProperties = sut.listProperties(kb, true);
         Stream<String> listIdentifier = listProperties.stream().map(KBObject::getIdentifier);
-        String[] expectedProps = { kb.getSubclassIri().stringValue(),
-                kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
-                kb.getTypeIri().stringValue() };
+        String[] expectedProps = { kb.getSubclassIri(), kb.getLabelIri(), kb.getDescriptionIri(),
+                kb.getTypeIri() };
 
         assertEquals(listProperties.size(), 5);
         assertThat(listIdentifier).as("Check that base properties are created")
@@ -1313,14 +1305,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
         throws Exception
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        IRI rootConcept1 = vf.createIRI("http://purl.org/ontology/wo/AnimalIntelligence");
-        IRI rootConcept2 = vf.createIRI("http://purl.org/ontology/wo/Ecozone");
-        List<IRI> concepts = new ArrayList<IRI>();
-        concepts.add(rootConcept1);
-        concepts.add(rootConcept2);
         kb.setDefaultLanguage("en");
-        kb.setRootConcepts(concepts);
+        kb.setRootConcepts(asList("http://purl.org/ontology/wo/AnimalIntelligence",
+                "http://purl.org/ontology/wo/Ecozone"));
         sut.updateKnowledgeBase(kb);
 
         importKnowledgeBase("data/wildlife_ontology.ttl");
@@ -1699,12 +1686,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
     private void setSchema(KnowledgeBase kb, IRI classIri, IRI subclassIri, IRI typeIri,
             IRI descriptionIri, IRI labelIri, IRI propertyTypeIri)
     {
-        kb.setClassIri(classIri);
-        kb.setSubclassIri(subclassIri);
-        kb.setTypeIri(typeIri);
-        kb.setDescriptionIri(descriptionIri);
-        kb.setLabelIri(labelIri);
-        kb.setPropertyTypeIri(propertyTypeIri);
+        kb.setClassIri(classIri.stringValue());
+        kb.setSubclassIri(subclassIri.stringValue());
+        kb.setTypeIri(typeIri.stringValue());
+        kb.setDescriptionIri(descriptionIri.stringValue());
+        kb.setLabelIri(labelIri.stringValue());
+        kb.setPropertyTypeIri(propertyTypeIri.stringValue());
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
     }
 

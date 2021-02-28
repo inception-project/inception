@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
@@ -131,22 +132,25 @@ public class ActiveLearningServiceImpl
                 // deletes a skip learning record - it will only get unhidden after the next
                 // prediction run (unless the learning-record-deletion code does an explicit
                 // unhiding).
-                if (s.isVisible()) {
-                    records.stream()
-                            .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
-                                    && r.getOffsetCharacterBegin() == s.getBegin()
-                                    && r.getOffsetCharacterEnd() == s.getEnd()
-                                    && s.labelEquals(r.getAnnotation()))
-                            .forEach(record -> {
-                                if (REJECTED.equals(record.getUserAction())) {
-                                    s.hide(FLAG_REJECTED);
-                                }
-                                else if (filterSkippedRecommendation
-                                        && SKIPPED.equals(record.getUserAction())) {
-                                    s.hide(FLAG_SKIPPED);
-                                }
-                            });
+                if (!s.isVisible()) {
+                    continue;
                 }
+
+                records.stream()
+                        .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
+                                && r.getOffsetCharacterBegin() == s.getBegin()
+                                && r.getOffsetCharacterEnd() == s.getEnd()
+                                && s.labelEquals(r.getAnnotation()))
+                        .forEach(record -> {
+                            if (REJECTED.equals(record.getUserAction())) {
+                                s.hide(FLAG_REJECTED);
+                            }
+                            else if (filterSkippedRecommendation
+                                    && SKIPPED.equals(record.getUserAction())) {
+                                s.hide(FLAG_SKIPPED);
+                            }
+                        });
+
             }
         }
     }
@@ -173,7 +177,10 @@ public class ActiveLearningServiceImpl
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         log.trace("Removing rejected or skipped ones costs {} ms.",
                 (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
-        return alState.getStrategy().generateNextSuggestion(suggestions);
+
+        Preferences pref = recommendationService.getPreferences(aUser,
+                alState.getLayer().getProject());
+        return alState.getStrategy().generateNextSuggestion(pref, suggestions);
     }
 
     private static SuggestionGroup removeDuplicateRecommendations(

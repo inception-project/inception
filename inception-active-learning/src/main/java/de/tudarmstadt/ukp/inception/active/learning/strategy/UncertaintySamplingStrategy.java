@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
@@ -31,11 +32,12 @@ public class UncertaintySamplingStrategy
     private static final long serialVersionUID = 5664120040399862552L;
 
     @Override
-    public Optional<Delta> generateNextSuggestion(List<SuggestionGroup> suggestions)
+    public Optional<Delta> generateNextSuggestion(Preferences aPreferences,
+            List<SuggestionGroup> suggestions)
     {
         return suggestions.stream()
                 // Fetch the top deltas per recommender
-                .flatMap(group -> group.getTopDeltas().values().stream())
+                .flatMap(group -> group.getTopDeltas(aPreferences).values().stream())
                 // ... sort them in ascending order (smallest delta first)
                 .sorted(Comparator.comparingDouble(Delta::getDelta))
                 // ... and return the smallest delta (if there is one)

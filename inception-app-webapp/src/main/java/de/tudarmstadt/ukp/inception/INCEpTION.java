@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception;
 
 import static com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED;
+import static de.tudarmstadt.ukp.inception.INCEpTION.INCEPTION_BASE_PACKAGE;
+import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
@@ -75,34 +77,25 @@ import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 // @formatter:off
-@SpringBootApplication(scanBasePackages = {
-    "de.tudarmstadt.ukp.inception",
-    "de.tudarmstadt.ukp.clarin.webanno"})
-@AutoConfigurationPackage(basePackages = {
-    "de.tudarmstadt.ukp.inception",
-    "de.tudarmstadt.ukp.clarin.webanno" })
-@EnableCaching
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-@ComponentScan(
-    basePackages = {  
-        "de.tudarmstadt.ukp.inception",
-        "de.tudarmstadt.ukp.clarin.webanno" },
+@SpringBootApplication
+@AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
+@EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
+@ComponentScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE },
     excludeFilters = {
         @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
         @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
         @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
-@EntityScan(basePackages = {
-    // Include WebAnno entity packages separately so we can skip the automation entities!
-    "de.tudarmstadt.ukp.clarin.webanno.model",
-    "de.tudarmstadt.ukp.clarin.webanno.security", 
-    "de.tudarmstadt.ukp.clarin.webanno.telemetry",
-    "de.tudarmstadt.ukp.inception" })
 @EnableAsync
+@EnableCaching
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@formatter:on
 public class INCEpTION
     extends SpringBootServletInitializer
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    static final String INCEPTION_BASE_PACKAGE = "de.tudarmstadt.ukp.inception";
+    static final String WEBANNO_BASE_PACKAGE = "de.tudarmstadt.ukp.clarin.webanno";
 
     private static final String PROTOCOL = "AJP/1.3";
 

@@ -122,7 +122,7 @@ public class NamedEntityLinkerTest
 
         KnowledgeBaseService kbService = mock(KnowledgeBaseService.class);
         KnowledgeBase kb = new KnowledgeBase();
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO.stringValue());
         when(kbService.getKnowledgeBaseById(any(), anyString())).thenReturn(Optional.of(kb));
         when(kbService.getEnabledKnowledgeBases(any())).thenReturn(Collections.singletonList(kb));
         when(kbService.read(any(), any())).thenReturn(mockResult);

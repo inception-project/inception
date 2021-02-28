@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.util;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.INCEPTION_NAMESPACE;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
@@ -57,7 +58,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -93,19 +93,19 @@ public class TestFixtures
         kb.setName(name);
         kb.setProject(project);
         kb.setType(RepositoryType.LOCAL);
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setClassIri(RDFS.CLASS.stringValue());
+        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        kb.setTypeIri(RDF.TYPE.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
+        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
         // Intentionally using different IRIs for label/description and property-label/description
         // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
         // querying for properties with the class label.
-        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
-        kb.setPropertyDescriptionIri(SKOS.DEFINITION);
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL.stringValue());
+        kb.setPropertyDescriptionIri(SKOS.DEFINITION.stringValue());
         kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);

@@ -23,6 +23,7 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.info;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -73,6 +75,7 @@ public class SelectionTask
     private @Autowired SchedulingService schedulingService;
 
     private final SourceDocument currentDocument;
+    private final List<LogMessage> logMessages = new ArrayList<>();
 
     public SelectionTask(User aUser, Project aProject, String aTrigger,
             SourceDocument aCurrentDocument)
@@ -116,7 +119,7 @@ public class SelectionTask
 
                 seenRecommender = true;
 
-                List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
+                List<EvaluatedRecommender> evaluatedRecommenders = new ArrayList<>();
 
                 for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
@@ -154,6 +157,12 @@ public class SelectionTask
                                     "[{}][{}]: Recommender configured with invalid layer or feature "
                                             + "- skipping recommender",
                                     user.getUsername(), r.getName());
+                            logMessages.add(info(this,
+                                    "Recommender [%s] configured with invalid layer or feature - skipping recommender",
+                                    recommenderName));
+                            evaluatedRecommenders.add(
+                                    EvaluatedRecommender.makeInactiveWithoutEvaluation(recommender,
+                                            "Invalid layer or feature"));
                             continue;
                         }
 
@@ -163,16 +172,22 @@ public class SelectionTask
                             log.debug(
                                     "[{}][{}]: Activating [{}] without evaluating - always selected",
                                     userName, recommenderName, recommenderName);
-                            activeRecommenders.add(new EvaluatedRecommender(recommender,
-                                    EvaluationResult.skipped()));
+                            logMessages.add(info(this,
+                                    "Recommender [%s] activated without evaluating - always selected",
+                                    recommenderName));
+                            evaluatedRecommenders.add(
+                                    EvaluatedRecommender.makeActiveWithoutEvaluation(recommender));
                             continue;
                         }
                         else if (!factory.isEvaluable()) {
                             log.debug(
                                     "[{}][{}]: Activating [{}] without evaluating - not evaluable",
                                     userName, recommenderName, recommenderName);
-                            activeRecommenders.add(new EvaluatedRecommender(recommender,
-                                    EvaluationResult.skipped()));
+                            logMessages.add(info(this,
+                                    "Recommender [%s] activated without evaluating - not evaluable",
+                                    recommenderName));
+                            evaluatedRecommenders.add(
+                                    EvaluatedRecommender.makeActiveWithoutEvaluation(recommender));
                             continue;
                         }
 
@@ -183,9 +198,13 @@ public class SelectionTask
                                 splitter);
 
                         if (result.isEvaluationSkipped()) {
-                            log.info("[{}][{}]: Evaluation could not be performed: {}",
-                                    user.getUsername(), recommenderName,
-                                    result.getErrorMsg().orElse("unknown reason"));
+                            String msg = String.format(
+                                    "Evaluation of recommender [%s] could not be performed: %s",
+                                    recommenderName, result.getErrorMsg().orElse("unknown reason"));
+                            log.info("[{}][{}]: {}", user.getUsername(), recommenderName, msg);
+                            logMessages.add(LogMessage.warn(this, "%s", msg));
+                            evaluatedRecommenders.add(EvaluatedRecommender
+                                    .makeInactiveWithoutEvaluation(recommender, msg));
                             continue;
                         }
 
@@ -195,14 +214,23 @@ public class SelectionTask
                         boolean activated;
                         if (score >= threshold) {
                             activated = true;
-                            activeRecommenders.add(new EvaluatedRecommender(recommender, result));
-                            log.info("[{}][{}]: Activated ({} is above threshold {})",
-                                    user.getUsername(), recommenderName, score, threshold);
+                            evaluatedRecommenders
+                                    .add(EvaluatedRecommender.makeActive(recommender, result));
+                            log.info("[{}][{}]: Activated ({} >= threshold {})", user.getUsername(),
+                                    recommenderName, score, threshold);
+                            logMessages.add(
+                                    info(this, "Recommender [%s] activated (%f >= threshold %f)",
+                                            recommenderName, score, threshold));
                         }
                         else {
                             activated = false;
-                            log.info("[{}][{}]: Not activated ({} is not above threshold {})",
+                            log.info("[{}][{}]: Not activated ({} < threshold {})",
                                     user.getUsername(), recommenderName, score, threshold);
+                            logMessages.add(
+                                    info(this, "Recommender [%s] not activated (%d < threshold %d)",
+                                            recommenderName, score, threshold));
+                            evaluatedRecommenders.add(EvaluatedRecommender.makeInactive(recommender,
+                                    result, String.format("%f >= threshold %f", score, threshold)));
                         }
 
                         appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
@@ -217,7 +245,7 @@ public class SelectionTask
                     }
                 }
 
-                recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
+                recommendationService.setEvaluatedRecommenders(user, layer, evaluatedRecommenders);
             }
 
             if (!seenRecommender) {
@@ -230,8 +258,10 @@ public class SelectionTask
                 return;
             }
 
-            schedulingService.enqueue(new TrainingTask(user, getProject(),
-                    "SelectionTask after activating recommenders", currentDocument));
+            TrainingTask trainingTask = new TrainingTask(user, getProject(),
+                    "SelectionTask after activating recommenders", currentDocument);
+            trainingTask.inheritLog(logMessages);
+            schedulingService.enqueue(trainingTask);
         }
     }
 

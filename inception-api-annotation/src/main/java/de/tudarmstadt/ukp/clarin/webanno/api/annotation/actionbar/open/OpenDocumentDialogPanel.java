@@ -25,8 +25,6 @@ import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
@@ -46,8 +44,6 @@ import org.danekja.java.util.function.serializable.SerializableBiFunction;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -355,40 +351,7 @@ public class OpenDocumentDialogPanel
             return new ArrayList<>();
         }
 
-        if (docListProvider != null) {
-            return docListProvider.apply(project, user);
-        }
-
-        return listDocuments(project, user);
-    }
-
-    private List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
-    {
-        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
-
-        // Remove from the list source documents that are in IGNORE state OR
-        // that do not have at least one annotation document marked as
-        // finished for curation dialog
-        Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
-                aUser);
-
-        for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
-            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
-            if (e.getValue() != null) {
-                AnnotationDocument adoc = e.getValue();
-                AnnotationDocumentState docState = adoc.getState();
-                dsd.setColor(docState.getColor());
-
-                boolean userIsSelected = aUser.equals(userRepository.getCurrentUser());
-                // if current user is opening her own docs, don't let her see locked ones
-                if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
-                    continue;
-                }
-            }
-            allSourceDocuments.add(dsd);
-        }
-
-        return allSourceDocuments;
+        return docListProvider.apply(project, user);
     }
 
     private void actionOpenDocument(AjaxRequestTarget aTarget, Form<?> aForm)
