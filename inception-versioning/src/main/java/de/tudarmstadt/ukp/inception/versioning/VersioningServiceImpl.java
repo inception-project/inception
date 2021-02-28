@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 
@@ -68,7 +67,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration#versioningService(RepositoryProperties, AnnotationSchemaService, DocumentService, ProjectService, CasStorageService, UserDao)}
+ * ()}.
+ * </p>
+ */
 public class VersioningServiceImpl
     implements VersioningService
 {

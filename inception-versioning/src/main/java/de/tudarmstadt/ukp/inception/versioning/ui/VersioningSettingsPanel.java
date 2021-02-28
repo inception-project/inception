@@ -50,7 +50,6 @@ public class VersioningSettingsPanel
 
     private @SpringBean VersioningService versioningService;
 
-    private TextField<String> remoteTextField;
     private IModel<RepositoryConfig> repositoryConfigModel;
     private IModel<PushConfig> pushConfigModel;
 

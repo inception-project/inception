@@ -19,12 +19,17 @@ package de.tudarmstadt.ukp.inception.versioning.ui;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link VersioningServiceAutoConfiguration#versioningSettingsPanelFactory()} ()}.
+ * </p>
+ */
 public class VersioningSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {

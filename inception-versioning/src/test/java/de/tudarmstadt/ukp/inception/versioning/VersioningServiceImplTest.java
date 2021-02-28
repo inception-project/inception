@@ -367,11 +367,11 @@ public class VersioningServiceImplTest
         @Bean
         public VersioningService versioningService(RepositoryProperties aRepositoryProperties,
                 AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
-                ProjectService aProjectservice, CasStorageService aCasStorageService,
+                ProjectService aProjectService, CasStorageService aCasStorageService,
                 UserDao aUserDao)
         {
             return new VersioningServiceImpl(aRepositoryProperties, aAnnotationSchemaService,
-                    aDocumentService, aProjectservice, aCasStorageService, aUserDao);
+                    aDocumentService, aProjectService, aCasStorageService, aUserDao);
         }
 
         @Lazy
