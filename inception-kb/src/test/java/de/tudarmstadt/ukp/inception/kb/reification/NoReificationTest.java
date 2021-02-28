@@ -26,8 +26,6 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
@@ -154,20 +152,18 @@ public class NoReificationTest
 
     private void initRdfsMapping()
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setClassIri(RDFS.CLASS.stringValue());
+        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        kb.setTypeIri(RDF.TYPE.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
+        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
         // We are intentionally not using RDFS.LABEL here to ensure we can test the label
         // and property label separately
-        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL.stringValue());
         // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
         // and property description separately
-        kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setPropertyDescriptionIri("http://schema.org/description");
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
     }
 }

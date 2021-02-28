@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -27,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
  * A Model comprises of document and collection brat responses together with the username that will
  * populate the sentence with {@link AnnotationDocument}s
  */
-public class UserAnnotationSegment
+public class AnnotatorSegment
     implements Serializable
 {
     private static final long serialVersionUID = 1785666148278992450L;
@@ -36,8 +35,6 @@ public class UserAnnotationSegment
     private String collectionData = "{}";
     private String username = "";
     private AnnotatorState state;
-    private AnnotationSelection annotationSelection;
-    private Map<String, Map<Integer, AnnotationSelection>> selectionByUsernameAndAddress;
 
     public String getDocumentResponse()
     {
@@ -79,28 +76,9 @@ public class UserAnnotationSegment
         state = aState;
     }
 
-    public AnnotationSelection getAnnotationSelection()
-    {
-        return annotationSelection;
-    }
-
-    public void setAnnotationSelection(AnnotationSelection aAnnotationSelection)
-    {
-        annotationSelection = aAnnotationSelection;
-    }
-
-    public Map<String, Map<Integer, AnnotationSelection>> getSelectionByUsernameAndAddress()
-    {
-        return selectionByUsernameAndAddress;
-    }
-
-    public void setSelectionByUsernameAndAddress(
-            Map<String, Map<Integer, AnnotationSelection>> aSelectionByUsernameAndAddress)
-    {
-        selectionByUsernameAndAddress = aSelectionByUsernameAndAddress;
-    }
-
-    public boolean equals(UserAnnotationSegment segment)
+    // FIXME: Why do we even need this?
+    @Deprecated
+    public boolean equals(AnnotatorSegment segment)
     {
         return segment.getCollectionData().equals(collectionData)
                 && segment.getDocumentResponse().equals(documentResponse);

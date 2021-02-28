@@ -156,12 +156,12 @@ public class KnowledgeBaseCreationWizard
             switch (kbModel.getObject().getKb().getType()) {
             case LOCAL:
                 // local KBs are always RDF4J + Lucene, so we can set the FTS mode accordingly
-                kbModel.getObject().getKb().setFullTextSearchIri(FTS_LUCENE);
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_LUCENE.stringValue());
                 break;
             case REMOTE:
                 // remote KBs are by default not using FTS but if we apply a remote DB profile,
                 // then it will set the FTS according to the setting in the profile
-                kbModel.getObject().getKb().setFullTextSearchIri(FTS_NONE);
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_NONE.stringValue());
             }
         }
 

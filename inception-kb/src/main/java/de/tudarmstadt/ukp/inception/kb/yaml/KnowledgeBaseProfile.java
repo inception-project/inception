@@ -29,9 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -74,7 +71,7 @@ public class KnowledgeBaseProfile
     private String defaultLanguage;
 
     @JsonProperty("default-dataset")
-    private IRI defaultDataset;
+    private String defaultDataset;
 
     public KnowledgeBaseProfile()
     {
@@ -100,9 +97,8 @@ public class KnowledgeBaseProfile
         reification = aReification;
         defaultLanguage = aDefaultLanguage;
 
-        SimpleValueFactory vf = SimpleValueFactory.getInstance();
         if (aDefaultDataset != null) {
-            defaultDataset = vf.createIRI(aDefaultDataset);
+            defaultDataset = aDefaultDataset;
         }
     }
 
@@ -196,12 +192,12 @@ public class KnowledgeBaseProfile
         defaultLanguage = aDefaultLanguage;
     }
 
-    public IRI getDefaultDataset()
+    public String getDefaultDataset()
     {
         return defaultDataset;
     }
 
-    public void setDefaultDataset(IRI aDefaultDataset)
+    public void setDefaultDataset(String aDefaultDataset)
     {
         defaultDataset = aDefaultDataset;
     }

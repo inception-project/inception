@@ -109,11 +109,13 @@ public class KBProperty
         kb = akb;
     }
 
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String aDescription)
     {
         description = aDescription;
@@ -163,7 +165,8 @@ public class KBProperty
 
         originalStatements.clear();
 
-        Statement typeStmt = vf.createStatement(subject, kb.getTypeIri(), kb.getPropertyTypeIri());
+        Statement typeStmt = vf.createStatement(subject, vf.createIRI(kb.getTypeIri()),
+                vf.createIRI(kb.getPropertyTypeIri()));
         originalStatements.add(typeStmt);
         aConn.add(typeStmt);
 
@@ -178,7 +181,8 @@ public class KBProperty
             else {
                 nameLiteral = vf.createLiteral(name);
             }
-            Statement nameStmt = vf.createStatement(subject, kb.getPropertyLabelIri(), nameLiteral);
+            Statement nameStmt = vf.createStatement(subject, vf.createIRI(kb.getPropertyLabelIri()),
+                    nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
@@ -191,8 +195,8 @@ public class KBProperty
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf.createStatement(subject, kb.getPropertyDescriptionIri(),
-                    descriptionLiteral);
+            Statement descStmt = vf.createStatement(subject,
+                    vf.createIRI(kb.getPropertyDescriptionIri()), descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }

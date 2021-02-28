@@ -29,11 +29,22 @@ public class Preferences
     private static final long serialVersionUID = 979498856625982141L;
 
     private int maxPredictions = 3;
+    private double confidenceThreshold = 0.0d;
     private boolean showAllPredictions = false;
 
     public void setMaxPredictions(int aMaxPredictions)
     {
         maxPredictions = aMaxPredictions;
+    }
+
+    public void setConfidenceThreshold(double aConfidenceThreshold)
+    {
+        confidenceThreshold = aConfidenceThreshold;
+    }
+
+    public double getConfidenceThreshold()
+    {
+        return confidenceThreshold;
     }
 
     public int getMaxPredictions()

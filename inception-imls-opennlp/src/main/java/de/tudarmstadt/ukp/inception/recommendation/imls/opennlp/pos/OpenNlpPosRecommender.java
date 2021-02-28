@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
@@ -27,7 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -38,6 +36,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -202,10 +201,13 @@ public class OpenNlpPosRecommender
         double overallTrainingSize = data.size() - testSetSize;
         double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
-        if (trainingSetSize < 2 || testSetSize < 2) {
+        final int minTrainingSetSize = 2;
+        final int minTestSetSize = 2;
+        if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
             String info = String.format(
-                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
-                    trainingSetSize, testSetSize, data.size());
+                    "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
+                    trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),
+                    (minTrainingSetSize + minTestSetSize));
             LOG.info(info);
 
             EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
@@ -248,16 +250,13 @@ public class OpenNlpPosRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
-                    tokenType);
-            for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
+            for (Annotation sentence : cas.<Annotation> select(sentenceType)) {
                 if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }
 
-                AnnotationFS sentence = e.getKey();
-
-                Collection<AnnotationFS> tokens = e.getValue();
+                List<Annotation> tokens = cas.<Annotation> select(tokenType).coveredBy(sentence)
+                        .asList();
 
                 createPosSample(cas, sentence, tokens).map(posSamples::add);
             }
@@ -269,7 +268,7 @@ public class OpenNlpPosRecommender
     }
 
     private Optional<POSSample> createPosSample(CAS aCas, AnnotationFS aSentence,
-            Collection<AnnotationFS> aTokens)
+            Collection<? extends AnnotationFS> aTokens)
     {
         Type annotationType = getType(aCas, layerName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);

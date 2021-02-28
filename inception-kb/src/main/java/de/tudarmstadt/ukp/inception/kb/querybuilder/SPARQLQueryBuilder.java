@@ -70,6 +70,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -422,10 +423,10 @@ public class SPARQLQueryBuilder
             case CLASS: {
                 List<GraphPattern> rootPatterns = new ArrayList<>();
 
-                List<IRI> rootConcepts = aKb.getRootConcepts();
+                List<String> rootConcepts = aKb.getRootConcepts();
                 if (rootConcepts != null && !rootConcepts.isEmpty()) {
                     rootPatterns.add(new ValuesPattern(VAR_SUBJECT, rootConcepts.stream()
-                            .map(iri -> iri(iri.stringValue())).collect(Collectors.toList())));
+                            .map(iri -> iri(iri)).collect(Collectors.toList())));
                 }
                 else {
                     List<GraphPattern> classPatterns = new ArrayList<>();
@@ -506,7 +507,8 @@ public class SPARQLQueryBuilder
 
         // The Wikidata search service we are using does not return properties, so we have to do
         // this the old-fashioned way...
-        if (Mode.PROPERTY.equals(mode) && FTS_WIKIDATA.equals(aKB.getFullTextSearchIri())) {
+        if (Mode.PROPERTY.equals(mode)
+                && FTS_WIKIDATA.stringValue().equals(aKB.getFullTextSearchIri())) {
             forceDisableFTS = true;
         }
     }
@@ -675,7 +677,7 @@ public class SPARQLQueryBuilder
             return this;
         }
 
-        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        IRI ftsMode = getFtsMode();
 
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(values));
@@ -705,6 +707,15 @@ public class SPARQLQueryBuilder
         labelImplicitlyRetrieved = true;
 
         return this;
+    }
+
+    private IRI getFtsMode()
+    {
+        if (forceDisableFTS || kb.getFullTextSearchIri() == null) {
+            return FTS_NONE;
+        }
+
+        return SimpleValueFactory.getInstance().createIRI(kb.getFullTextSearchIri());
     }
 
     private GraphPattern withLabelMatchingExactlyAnyOf_No_FTS(String[] aValues)
@@ -840,7 +851,7 @@ public class SPARQLQueryBuilder
             return this;
         }
 
-        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        IRI ftsMode = getFtsMode();
 
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_RDF4J_FTS(values));
@@ -990,7 +1001,7 @@ public class SPARQLQueryBuilder
             return this;
         }
 
-        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        IRI ftsMode = getFtsMode();
 
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(values));
@@ -1146,7 +1157,7 @@ public class SPARQLQueryBuilder
             return this;
         }
 
-        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        IRI ftsMode = getFtsMode();
 
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(value));

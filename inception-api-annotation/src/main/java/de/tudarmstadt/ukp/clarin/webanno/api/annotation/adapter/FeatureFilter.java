@@ -15,8 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Model classes for curation/correction related components
- *
- */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
+
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
+
+@FunctionalInterface
+public interface FeatureFilter
+{
+    boolean isAllowed(FeatureStructure aFS, Feature aFeature);
+}

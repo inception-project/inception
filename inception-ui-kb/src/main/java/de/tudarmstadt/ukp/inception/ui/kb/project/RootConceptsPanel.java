@@ -30,14 +30,10 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -46,7 +42,7 @@ public class RootConceptsPanel
 {
     private static final long serialVersionUID = 1161350402387498209L;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-    private final List<IRI> concepts;
+    private final List<String> concepts;
     private final IModel<String> newConceptIRIString = Model.of();
 
     private @SpringBean KnowledgeBaseService kbService;
@@ -59,13 +55,13 @@ public class RootConceptsPanel
         concepts = kbModel.getObject().getKb().getRootConcepts();
         setOutputMarkupId(true);
 
-        ListView<IRI> conceptsListView = new ListView<IRI>("rootConcepts",
+        ListView<String> conceptsListView = new ListView<String>("rootConcepts",
                 kbModel.bind("kb.rootConcepts"))
         {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void populateItem(ListItem<IRI> item)
+            protected void populateItem(ListItem<String> item)
             {
                 Form<Void> conceptForm = new Form<Void>("conceptForm");
                 conceptForm.add(buildTextField("textField", item.getModel()));
@@ -87,13 +83,9 @@ public class RootConceptsPanel
         add(specifyConcept);
     }
 
-    private TextField<String> buildTextField(String id, IModel<IRI> model)
+    private TextField<String> buildTextField(String id, IModel<String> model)
     {
-        IModel<String> adapter = new LambdaModelAdapter<String>(
-                () -> model.getObject().stringValue(),
-                str -> model.setObject(SimpleValueFactory.getInstance().createIRI(str)));
-
-        TextField<String> iriTextfield = new TextField<>(id, adapter);
+        TextField<String> iriTextfield = new TextField<>(id, model);
         iriTextfield.setOutputMarkupId(true);
         iriTextfield.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             // Do nothing just update the model values
@@ -104,8 +96,7 @@ public class RootConceptsPanel
 
     private void actionNewRootConcept(AjaxRequestTarget aTarget)
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        IRI concept = vf.createIRI(newConceptIRIString.getObject());
+        String concept = newConceptIRIString.getObject();
         if (isConceptValid(kbModel.getObject().getKb(), concept, true)) {
             concepts.add(concept);
             newConceptIRIString.setObject(null);
@@ -118,16 +109,16 @@ public class RootConceptsPanel
         aTarget.add(this);
     }
 
-    private void actionRemoveConcept(AjaxRequestTarget aTarget, IRI iri)
+    private void actionRemoveConcept(AjaxRequestTarget aTarget, String iri)
     {
         concepts.remove(iri);
         aTarget.add(this);
     }
 
-    public boolean isConceptValid(KnowledgeBase kb, IRI conceptIRI, boolean aAll)
+    public boolean isConceptValid(KnowledgeBase kb, String conceptIRI, boolean aAll)
         throws QueryEvaluationException
     {
-        return kbService.readConcept(kbModel.getObject().getKb(), conceptIRI.stringValue(), true)
-                .isPresent() && !concepts.contains(conceptIRI);
+        return kbService.readConcept(kbModel.getObject().getKb(), conceptIRI, true).isPresent()
+                && !concepts.contains(conceptIRI);
     }
 }

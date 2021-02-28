@@ -26,6 +26,7 @@ import static org.apache.uima.fit.util.FSUtil.getFeature;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -220,5 +221,31 @@ public class RelationAdapter
         }
 
         aState.getSelection().selectArc(new VID(aAnno), src, tgt);
+    }
+
+    @Override
+    public boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2, FeatureFilter aFilter)
+    {
+        if (!super.equivalents(aFs1, aFs2, aFilter)) {
+            return false;
+        }
+
+        // So if the basic span-oriented comparison returned true, we still must ensure that the
+        // relation endpoints are also equivalent. Here, we only consider the endpoint type and
+        // position but not any other features.
+        AnnotationFS fs1Source = getSourceAnnotation(aFs1);
+        AnnotationFS fs1Target = getTargetAnnotation(aFs1);
+        AnnotationFS fs2Source = getSourceAnnotation(aFs2);
+        AnnotationFS fs2Target = getTargetAnnotation(aFs2);
+
+        return sameBeginEndAndType(fs1Source, fs2Source)
+                && sameBeginEndAndType(fs1Target, fs2Target);
+    }
+
+    private boolean sameBeginEndAndType(AnnotationFS aFs1, AnnotationFS aFs2)
+    {
+        return aFs1.getBegin() == aFs2.getBegin() && //
+                aFs1.getEnd() == aFs2.getEnd() && //
+                Objects.equals(aFs1.getType().getName(), aFs2.getType().getName());
     }
 }

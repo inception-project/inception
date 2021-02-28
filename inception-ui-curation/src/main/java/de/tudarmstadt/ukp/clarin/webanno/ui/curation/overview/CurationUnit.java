@@ -15,39 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * A model comprises of Curation Segments comprising of the begin and end of the sentences,
- * {@link SentenceState} Sentence number
+ * {@link CurationUnitState} Sentence number
  */
-public class SourceListView
+public class CurationUnit
     implements Serializable
 {
     private static final long serialVersionUID = 9219600871129699568L;
-    // begin offset of sentences list, default is the begin of the document
-    private Integer begin;
-    // end offset of sentences list, default is end of the document
-    private Integer end;
+
+    // begin/end offset of sentences list, default is the begin of the document
+    private final Integer begin;
+    private final Integer end;
+    private final Integer sentenceNumber;
 
     // begin of the curation/suggestion sentences list
     private int curationBegin;
     // end of the curation/suggestion sentences list
     private int curationEnd;
 
-    private SentenceState sentenceState;
-    private Integer sentenceNumber;
+    private CurationUnitState sentenceState;
+
     private boolean isCurrentSentence;
 
-    private Map<String, Integer> sentenceAddress = new LinkedHashMap<>();
-
-    public SourceListView()
+    public CurationUnit()
     {
+        begin = null;
+        end = null;
+        sentenceNumber = null;
+    }
 
+    public CurationUnit(int aBegin, int aEnd, int aUnitIndex)
+    {
+        begin = aBegin;
+        end = aEnd;
+        sentenceNumber = aUnitIndex;
     }
 
     public Integer getBegin()
@@ -55,19 +61,9 @@ public class SourceListView
         return begin;
     }
 
-    public void setBegin(Integer begin)
-    {
-        this.begin = begin;
-    }
-
     public Integer getEnd()
     {
         return end;
-    }
-
-    public void setEnd(Integer end)
-    {
-        this.end = end;
     }
 
     public int getCurationBegin()
@@ -90,34 +86,19 @@ public class SourceListView
         this.curationEnd = curationEnd;
     }
 
-    public Map<String, Integer> getSentenceAddress()
-    {
-        return sentenceAddress;
-    }
-
-    public Boolean getHasDiff()
-    {
-        return sentenceState.hasDiff();
-    }
-
-    public SentenceState getSentenceState()
+    public CurationUnitState getSentenceState()
     {
         return sentenceState;
     }
 
-    public void setSentenceState(SentenceState sentenceState)
+    public void setState(CurationUnitState sentenceState)
     {
         this.sentenceState = sentenceState;
     }
 
-    public Integer getSentenceNumber()
+    public Integer getUnitIndex()
     {
         return sentenceNumber;
-    }
-
-    public void setSentenceNumber(Integer sentenceNumber)
-    {
-        this.sentenceNumber = sentenceNumber;
     }
 
     public boolean isCurrentSentence()

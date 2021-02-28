@@ -26,13 +26,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -113,30 +110,26 @@ public class KnowledgeBaseExporter
             exportedKB.setId(kb.getRepositoryId());
             exportedKB.setName(kb.getName());
             exportedKB.setType(kb.getType().toString());
-            exportedKB.setClassIri(kb.getClassIri().stringValue());
-            exportedKB.setSubclassIri(kb.getSubclassIri().stringValue());
-            exportedKB.setTypeIri(kb.getTypeIri().stringValue());
-            exportedKB.setDescriptionIri(kb.getDescriptionIri().stringValue());
-            exportedKB.setLabelIri(kb.getLabelIri().stringValue());
-            exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri().stringValue());
-            exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri().stringValue());
-            exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri().stringValue());
-            exportedKB.setFullTextSearchIri(
-                    kb.getFullTextSearchIri() != null ? kb.getFullTextSearchIri().stringValue()
-                            : null);
+            exportedKB.setClassIri(kb.getClassIri());
+            exportedKB.setSubclassIri(kb.getSubclassIri());
+            exportedKB.setTypeIri(kb.getTypeIri());
+            exportedKB.setDescriptionIri(kb.getDescriptionIri());
+            exportedKB.setLabelIri(kb.getLabelIri());
+            exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri());
+            exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri());
+            exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri());
+            exportedKB.setFullTextSearchIri(kb.getFullTextSearchIri());
             exportedKB.setReadOnly(kb.isReadOnly());
             exportedKB.setEnabled(kb.isEnabled());
             exportedKB.setReification(kb.getReification().toString());
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
-            exportedKB.setRootConcepts(kb.getRootConcepts().stream()
-                    .map(conceptIRI -> conceptIRI.stringValue()).collect(Collectors.toList()));
+            exportedKB.setRootConcepts(kb.getRootConcepts());
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
             exportedKB.setDefaultDatasetIri(
-                    kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri().stringValue()
-                            : null);
+                    kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri() : null);
             exportedKB.setMaxResults(kb.getMaxResults());
-            exportedKB.setSubPropertyIri(kb.getSubPropertyIri().stringValue());
+            exportedKB.setSubPropertyIri(kb.getSubPropertyIri());
             exportedKnowledgeBases.add(exportedKB);
 
             if (kb.getType() == RepositoryType.REMOTE) {
@@ -179,7 +172,7 @@ public class KnowledgeBaseExporter
     {
         ExportedKnowledgeBase[] knowledgeBases = aExProject.getArrayProperty(KEY,
                 ExportedKnowledgeBase.class);
-        ValueFactory vf = SimpleValueFactory.getInstance();
+
         for (ExportedKnowledgeBase exportedKB : knowledgeBases) {
             KnowledgeBase kb = new KnowledgeBase();
             kb.setName(exportedKB.getName());
@@ -187,56 +180,56 @@ public class KnowledgeBaseExporter
             // set default value for IRIs if no value is present in
             // order to support import of older projects
             kb.setClassIri(exportedKB.getClassIri() != null //
-                    ? vf.createIRI(exportedKB.getClassIri())
+                    ? exportedKB.getClassIri() //
                     : DEFAULTPROFILE.getClassIri());
             kb.setSubclassIri(exportedKB.getSubclassIri() != null //
-                    ? vf.createIRI(exportedKB.getSubclassIri())
+                    ? exportedKB.getSubclassIri() //
                     : DEFAULTPROFILE.getSubclassIri());
             kb.setTypeIri(exportedKB.getTypeIri() != null //
-                    ? vf.createIRI(exportedKB.getTypeIri())
+                    ? exportedKB.getTypeIri() //
                     : DEFAULTPROFILE.getTypeIri());
             kb.setDescriptionIri(exportedKB.getDescriptionIri() != null //
-                    ? vf.createIRI(exportedKB.getDescriptionIri())
+                    ? exportedKB.getDescriptionIri() //
                     : DEFAULTPROFILE.getDescriptionIri());
-            kb.setLabelIri(exportedKB.getLabelIri() != null ? vf.createIRI(exportedKB.getLabelIri())
+            kb.setLabelIri(exportedKB.getLabelIri() != null //
+                    ? exportedKB.getLabelIri() //
                     : DEFAULTPROFILE.getLabelIri());
             kb.setPropertyTypeIri(exportedKB.getPropertyTypeIri() != null //
-                    ? vf.createIRI(exportedKB.getPropertyTypeIri())
+                    ? exportedKB.getPropertyTypeIri() //
                     : DEFAULTPROFILE.getPropertyTypeIri());
             kb.setPropertyLabelIri(exportedKB.getPropertyLabelIri() != null //
-                    ? vf.createIRI(exportedKB.getPropertyLabelIri())
+                    ? exportedKB.getPropertyLabelIri() //
                     : DEFAULTPROFILE.getPropertyLabelIri());
             kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null //
-                    ? vf.createIRI(exportedKB.getPropertyDescriptionIri())
+                    ? exportedKB.getPropertyDescriptionIri() //
                     : DEFAULTPROFILE.getPropertyDescriptionIri());
             kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null //
-                    ? vf.createIRI(exportedKB.getSubPropertyIri())
+                    ? exportedKB.getSubPropertyIri() //
                     : DEFAULTPROFILE.getSubPropertyIri());
             // The imported project may date from a time where we did not yet have the FTS IRI.
             // In that case we use concept linking support as an indicator that we dealt with a
             // remote Virtuoso.
             if (exportedKB.isSupportConceptLinking() && exportedKB.getFullTextSearchIri() == null) {
-                kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+                kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO.stringValue());
             }
-            kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null
-                    ? vf.createIRI(exportedKB.getFullTextSearchIri())
-                    : null);
+            kb.setFullTextSearchIri(
+                    exportedKB.getFullTextSearchIri() != null ? exportedKB.getFullTextSearchIri() //
+                            : null);
 
             kb.setEnabled(exportedKB.isEnabled());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
             if (exportedKB.getRootConcepts() != null) {
-                kb.setRootConcepts(exportedKB.getRootConcepts().stream()
-                        .map(conceptId -> vf.createIRI(conceptId)).collect(Collectors.toList()));
+                kb.setRootConcepts(exportedKB.getRootConcepts());
             }
             else {
                 kb.setRootConcepts(new ArrayList<>());
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
-            kb.setDefaultDatasetIri(exportedKB.getDefaultDatasetIri() != null
-                    ? vf.createIRI(exportedKB.getDefaultDatasetIri())
-                    : null);
+            kb.setDefaultDatasetIri(
+                    exportedKB.getDefaultDatasetIri() != null ? exportedKB.getDefaultDatasetIri() //
+                            : null);
             kb.setMaxResults(exportedKB.getMaxResults());
             // If not setting, initialize with default
             if (kb.getMaxResults() == 0) {
