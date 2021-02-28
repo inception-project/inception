@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -221,4 +222,14 @@ public interface TypeAdapter
     }
 
     <T> Optional<T> getTraits(Class<T> aInterface);
+
+    default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2)
+    {
+        return equivalents(aFs1, aFs2, null);
+    }
+
+    default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2, FeatureFilter aFilter)
+    {
+        return WebAnnoCasUtil.isEquivalentSpanAnnotation(aFs1, aFs2, aFilter);
+    }
 }

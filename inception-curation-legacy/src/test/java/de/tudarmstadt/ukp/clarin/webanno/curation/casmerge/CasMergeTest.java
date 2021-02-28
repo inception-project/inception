@@ -26,17 +26,24 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeL
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostMultiSPanFeatureFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult.ResultState.CREATED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
+import static de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS._FeatName_PosValue;
+import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token._FeatName_pos;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -51,6 +58,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
@@ -85,18 +93,20 @@ public class CasMergeTest
     @Test
     public void thatIncompleteAnnotationIsNotMerged() throws Exception
     {
-        JCas user1 = JCasFactory.createText("word");
-        token(user1, 0, 4, "X");
+        CAS user1 = CasFactory.createText("word");
+        createTokenAndOptionalPos(user1, 0, 4, "X");
 
-        JCas user2 = JCasFactory.createText("word");
-        token(user2, 0, 4, null);
+        CAS user2 = CasFactory.createText("word");
+        createTokenAndOptionalPos(user2, 0, 4, null);
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1.getCas()));
-        casByUser.put("user2", asList(user2.getCas()));
+        casByUser.put("user1", asList(user1));
+        casByUser.put("user2", asList(user2));
 
-        JCas curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
-                .findFirst().get().getDocumentText());
+        JCas curatorCas = createText(casByUser.values().stream() //
+                .flatMap(Collection::stream) //
+                .findFirst().get() //
+                .getDocumentText());
 
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
@@ -118,15 +128,15 @@ public class CasMergeTest
     @Test
     public void thatIncompleteAnnotationIsMerged() throws Exception
     {
-        JCas user1 = JCasFactory.createText("word");
-        token(user1, 0, 4, "X");
+        CAS user1 = CasFactory.createText("word");
+        createTokenAndOptionalPos(user1, 0, 4, "X");
 
-        JCas user2 = JCasFactory.createText("word");
-        token(user2, 0, 4, null);
+        CAS user2 = CasFactory.createText("word");
+        createTokenAndOptionalPos(user2, 0, 4, null);
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1.getCas()));
-        casByUser.put("user2", asList(user2.getCas()));
+        casByUser.put("user1", asList(user1));
+        casByUser.put("user2", asList(user2));
 
         JCas curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
@@ -143,20 +153,6 @@ public class CasMergeTest
                         null, null, -1, -1, null, null));
 
         assertThat(select(curatorCas, POS.class)).hasSize(1);
-    }
-
-    private Token token(JCas aJCas, int aBegin, int aEnd, String aPos)
-    {
-        POS pos = null;
-        if (aPos != null) {
-            pos = new POS(aJCas, aBegin, aEnd);
-            pos.setPosValue(aPos);
-            pos.addToIndexes();
-        }
-        Token token = new Token(aJCas, aBegin, aEnd);
-        token.setPos(pos);
-        token.addToIndexes();
-        return token;
     }
 
     @Test
@@ -342,41 +338,12 @@ public class CasMergeTest
         AnnotationFS clickedFs = createNEAnno(jcas, "NN", 0, 0);
 
         CAS curatorCas = createJCas().getCas();
-        createTokenAnno(curatorCas, 0, 0);
+        createToken(curatorCas, 0, 0);
 
         sut.mergeSpanAnnotation(null, null, neLayer, curatorCas, clickedFs, false);
 
         assertThat(selectCovered(curatorCas, getType(curatorCas, NamedEntity.class), 0, 0))
                 .hasSize(1);
-    }
-
-    private AnnotationFS createNEAnno(CAS aCas, String aValue, int aBegin, int aEnd)
-    {
-        Type type = aCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
-        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
-        Feature value = type.getFeatureByBaseName("value");
-        clickedFs.setStringValue(value, aValue);
-        aCas.addFsToIndexes(clickedFs);
-        return clickedFs;
-    }
-
-    private AnnotationFS createPOSAnno(CAS aCas, String aValue, int aBegin, int aEnd)
-    {
-        Type type = aCas.getTypeSystem().getType(POS.class.getTypeName());
-
-        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
-        Feature posValue = type.getFeatureByBaseName("PosValue");
-        clickedFs.setStringValue(posValue, aValue);
-        aCas.addFsToIndexes(clickedFs);
-        return clickedFs;
-    }
-
-    private AnnotationFS createTokenAnno(CAS aCas, int aBegin, int aEnd)
-    {
-        Type type = aCas.getTypeSystem().getType(Token.class.getTypeName());
-        AnnotationFS token = aCas.createAnnotation(type, aBegin, aEnd);
-        aCas.addFsToIndexes(token);
-        return token;
     }
 
     @Test
@@ -425,7 +392,7 @@ public class CasMergeTest
         AnnotationFS clickedFs = createNEAnno(jcas, "NN", 0, 0);
 
         CAS mergeCAs = createJCas().getCas();
-        createTokenAnno(mergeCAs, 0, 0);
+        createToken(mergeCAs, 0, 0);
         AnnotationFS existingFs = mergeCAs.createAnnotation(type, 0, 0);
         Feature posValue = type.getFeatureByBaseName("value");
         existingFs.setStringValue(posValue, "NE");
@@ -517,9 +484,7 @@ public class CasMergeTest
     @Test
     public void copyLinkToExistingButDiffLinkTest() throws Exception
     {
-
-        JCas mergeCas = JCasFactory
-                .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
+        JCas mergeCas = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = mergeCas.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -548,188 +513,168 @@ public class CasMergeTest
     @Test
     public void simpleCopyRelationToEmptyAnnoTest() throws Exception
     {
-        CAS jcas = createJCas().getCas();
-        Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
+        CAS annCas = createCas();
+        AnnotationFS clickedFs = createDependencyWithTokenAndPos(annCas, 0, 0, "NN", 1, 1, "NN");
 
-        AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
-        AnnotationFS targetClickedToken = createTokenAnno(jcas, 1, 1);
+        CAS mergeCas = createCas();
+        createTokenAndOptionalPos(mergeCas, 0, 0, "NN");
+        createTokenAndOptionalPos(mergeCas, 1, 1, "NN");
 
-        AnnotationFS originClicked = createPOSAnno(jcas, "NN", 0, 0);
-        AnnotationFS targetClicked = createPOSAnno(jcas, "NN", 1, 1);
+        sut.mergeRelationAnnotation(null, null, depLayer, mergeCas, clickedFs, false);
 
-        jcas.addFsToIndexes(originClicked);
-        jcas.addFsToIndexes(targetClicked);
-
-        originClickedToken.setFeatureValue(originClickedToken.getType().getFeatureByBaseName("pos"),
-                originClicked);
-        targetClickedToken.setFeatureValue(targetClickedToken.getType().getFeatureByBaseName("pos"),
-                targetClicked);
-
-        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
-
-        AnnotationFS clickedFs = jcas.createAnnotation(type, 0, 1);
-        clickedFs.setFeatureValue(sourceFeature, originClickedToken);
-        clickedFs.setFeatureValue(targetFeature, targetClickedToken);
-        jcas.addFsToIndexes(clickedFs);
-
-        CAS mergeCAs = createJCas().getCas();
-        AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
-        AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
-
-        mergeCAs.addFsToIndexes(origin);
-        mergeCAs.addFsToIndexes(target);
-
-        AnnotationFS originToken = createTokenAnno(mergeCAs, 0, 0);
-        AnnotationFS targetToken = createTokenAnno(mergeCAs, 1, 1);
-        originToken.setFeatureValue(originToken.getType().getFeatureByBaseName("pos"), origin);
-        targetToken.setFeatureValue(targetToken.getType().getFeatureByBaseName("pos"), target);
-
-        mergeCAs.addFsToIndexes(originToken);
-        mergeCAs.addFsToIndexes(targetToken);
-
-        sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, clickedFs, false);
-
-        assertEquals(1, selectCovered(mergeCAs, type, 0, 1).size());
+        assertThat(selectCovered(mergeCas, getType(mergeCas, Dependency.class), 0, 1))
+                .as("Relation was merged") //
+                .hasSize(1);
     }
 
     @Test
     public void simpleCopyRelationToStackedTargetsTest() throws Exception
     {
-        CAS jcas = createJCas().getCas();
-        Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
+        // Create a dependency relation with endpoints in the annotator CAS
+        CAS annCas = createCas();
+        AnnotationFS clickedFs = createDependencyWithTokenAndPos(annCas, 0, 0, "NN", 1, 1, "NN");
 
-        AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
-        AnnotationFS targetClickedToken = createTokenAnno(jcas, 1, 1);
+        // Create stacked endpoint candidates in the merge CAS
+        CAS mergeCas = createCas();
+        createTokenAndOptionalPos(mergeCas, 0, 0, "NN");
+        createTokenAndOptionalPos(mergeCas, 0, 0, "NN");
+        createTokenAndOptionalPos(mergeCas, 1, 1, "NN");
+        createTokenAndOptionalPos(mergeCas, 1, 1, "NN");
 
-        AnnotationFS originClicked = createPOSAnno(jcas, "NN", 0, 0);
-        AnnotationFS targetClicked = createPOSAnno(jcas, "NN", 1, 1);
-
-        jcas.addFsToIndexes(originClicked);
-        jcas.addFsToIndexes(targetClicked);
-
-        originClickedToken.setFeatureValue(originClickedToken.getType().getFeatureByBaseName("pos"),
-                originClicked);
-        targetClickedToken.setFeatureValue(targetClickedToken.getType().getFeatureByBaseName("pos"),
-                targetClicked);
-
-        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
-
-        AnnotationFS clickedFs = jcas.createAnnotation(type, 0, 1);
-        clickedFs.setFeatureValue(sourceFeature, originClickedToken);
-        clickedFs.setFeatureValue(targetFeature, targetClickedToken);
-        jcas.addFsToIndexes(clickedFs);
-
-        CAS mergeCAs = createJCas().getCas();
-        AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
-        AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
-
-        mergeCAs.addFsToIndexes(origin);
-        mergeCAs.addFsToIndexes(target);
-
-        AnnotationFS originToken = createTokenAnno(mergeCAs, 0, 0);
-        AnnotationFS targetToken = createTokenAnno(mergeCAs, 1, 1);
-        originToken.setFeatureValue(originToken.getType().getFeatureByBaseName("pos"), origin);
-        targetToken.setFeatureValue(targetToken.getType().getFeatureByBaseName("pos"), target);
-
-        mergeCAs.addFsToIndexes(originToken);
-        mergeCAs.addFsToIndexes(targetToken);
-
-        AnnotationFS origin2 = createPOSAnno(mergeCAs, "NN", 0, 0);
-        AnnotationFS target2 = createPOSAnno(mergeCAs, "NN", 1, 1);
-
-        mergeCAs.addFsToIndexes(origin2);
-        mergeCAs.addFsToIndexes(target2);
-
-        AnnotationFS originToken2 = createTokenAnno(mergeCAs, 0, 0);
-        AnnotationFS targetToken2 = createTokenAnno(mergeCAs, 1, 1);
-        originToken2.setFeatureValue(originToken.getType().getFeatureByBaseName("pos"), origin2);
-        targetToken2.setFeatureValue(targetToken.getType().getFeatureByBaseName("pos"), target2);
-
-        mergeCAs.addFsToIndexes(originToken2);
-        mergeCAs.addFsToIndexes(targetToken2);
-
-        assertThatExceptionOfType(AnnotationException.class).isThrownBy(
-                () -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, clickedFs, false))
+        assertThatExceptionOfType(AnnotationException.class) //
+                .as("Cannot merge when there are multiple/stacked candidates") //
+                .isThrownBy(() -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCas,
+                        clickedFs, false))
                 .withMessageContaining("Stacked sources exist");
     }
 
     @Test
     public void thatMergingRelationIsRejectedIfAlreadyExists() throws Exception
     {
-        CAS jcas = createJCas().getCas();
-        Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
+        CAS annCas = createJCas().getCas();
+        AnnotationFS clickedFs = createDependencyWithTokenAndPos(annCas, 0, 0, "NN", 1, 1, "NN");
 
-        AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
-        AnnotationFS targetClickedToken = createTokenAnno(jcas, 1, 1);
+        CAS mergeCas = createJCas().getCas();
+        createDependencyWithTokenAndPos(mergeCas, 0, 0, "NN", 1, 1, "NN");
 
-        AnnotationFS originClicked = createPOSAnno(jcas, "NN", 0, 0);
-        AnnotationFS targetClicked = createPOSAnno(jcas, "NN", 1, 1);
-
-        jcas.addFsToIndexes(originClicked);
-        jcas.addFsToIndexes(targetClicked);
-
-        originClickedToken.setFeatureValue(originClickedToken.getType().getFeatureByBaseName("pos"),
-                originClicked);
-        targetClickedToken.setFeatureValue(targetClickedToken.getType().getFeatureByBaseName("pos"),
-                targetClicked);
-
-        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
-
-        AnnotationFS clickedFs = jcas.createAnnotation(type, 0, 1);
-        clickedFs.setFeatureValue(sourceFeature, originClickedToken);
-        clickedFs.setFeatureValue(targetFeature, targetClickedToken);
-        jcas.addFsToIndexes(clickedFs);
-
-        CAS mergeCAs = createJCas().getCas();
-        AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
-        AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
-
-        mergeCAs.addFsToIndexes(origin);
-        mergeCAs.addFsToIndexes(target);
-
-        AnnotationFS originToken = createTokenAnno(mergeCAs, 0, 0);
-        AnnotationFS targetToken = createTokenAnno(mergeCAs, 1, 1);
-        originToken.setFeatureValue(originToken.getType().getFeatureByBaseName("pos"), origin);
-        targetToken.setFeatureValue(targetToken.getType().getFeatureByBaseName("pos"), target);
-
-        mergeCAs.addFsToIndexes(originToken);
-        mergeCAs.addFsToIndexes(targetToken);
-
-        AnnotationFS existing = mergeCAs.createAnnotation(type, 0, 1);
-        existing.setFeatureValue(sourceFeature, originToken);
-        existing.setFeatureValue(targetFeature, targetToken);
-        mergeCAs.addFsToIndexes(existing);
-
-        assertThatExceptionOfType(AnnotationException.class).isThrownBy(
-                () -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, clickedFs, false))
+        assertThatExceptionOfType(AnnotationException.class) //
+                .as("Reject merging relation which already exists").isThrownBy(() -> sut
+                        .mergeRelationAnnotation(null, null, depLayer, mergeCas, clickedFs, false))
                 .withMessageContaining("annotation already exists");
     }
 
-    // private void writeTestSuiteData(Map<String, List<CAS>> casByUser, JCas curatorCas)
-    // throws Exception
-    // {
-    // runPipeline(casByUser.get("user1").get(0),
-    // createEngineDescription(WebannoTsv3XWriter.class,
-    // WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
-    // WebannoTsv3XWriter.PARAM_OVERWRITE, true,
-    // WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
-    // "target/bux/" + testContext.getMethodName() + "/user1.tsv"));
-    // runPipeline(casByUser.get("user2").get(0),
-    // createEngineDescription(WebannoTsv3XWriter.class,
-    // WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
-    // WebannoTsv3XWriter.PARAM_OVERWRITE, true,
-    // WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
-    // "target/bux/" + testContext.getMethodName() + "/user2.tsv"));
-    // runPipeline(curatorCas,
-    // createEngineDescription(WebannoTsv3XWriter.class,
-    // WebannoTsv3XWriter.PARAM_SINGULAR_TARGET, true,
-    // WebannoTsv3XWriter.PARAM_OVERWRITE, true,
-    // WebannoTsv3XWriter.PARAM_TARGET_LOCATION,
-    // "target/bux/" + testContext.getMethodName() + "/curator.tsv"));
-    // }
+    @Test
+    public void thatSecondRelationCanBeMergedWithSameTarget() throws Exception
+    {
+        CAS annCas = createJCas().getCas();
+        AnnotationFS clickedFs = createDependencyWithTokenAndPos(annCas, 2, 2, "NN", 0, 0, "NN");
+
+        CAS mergeCas = createJCas().getCas();
+        createDependencyWithTokenAndPos(mergeCas, 1, 1, "NN", 0, 0, "NN");
+        createTokenAndOptionalPos(mergeCas, 2, 2, "NN");
+
+        CasMergeOperationResult result = sut.mergeRelationAnnotation(null, null, depLayer, mergeCas,
+                clickedFs, false);
+
+        assertThat(result.getState()).isEqualTo(CREATED);
+        assertThat(mergeCas.select(Dependency.class).asList()) //
+                .extracting( //
+                        dep -> getFeature(dep, FEAT_REL_SOURCE, AnnotationFS.class).getBegin(), //
+                        dep -> getFeature(dep, FEAT_REL_SOURCE, AnnotationFS.class).getEnd(), //
+                        dep -> getFeature(dep, FEAT_REL_TARGET, AnnotationFS.class).getBegin(), //
+                        dep -> getFeature(dep, FEAT_REL_TARGET, AnnotationFS.class).getEnd())
+                .containsExactly( //
+                        tuple(1, 1, 0, 0), //
+                        tuple(2, 2, 0, 0));
+    }
+
+    @Test
+    public void thatSecondRelationCanBeMergedWithSameSource() throws Exception
+    {
+        CAS annCas = createJCas().getCas();
+        AnnotationFS clickedFs = createDependencyWithTokenAndPos(annCas, 0, 0, "NN", 2, 2, "NN");
+
+        CAS mergeCas = createJCas().getCas();
+        createDependencyWithTokenAndPos(mergeCas, 0, 0, "NN", 1, 1, "NN");
+        createTokenAndOptionalPos(mergeCas, 2, 2, "NN");
+
+        CasMergeOperationResult result = sut.mergeRelationAnnotation(null, null, depLayer, mergeCas,
+                clickedFs, false);
+
+        assertThat(result.getState()).isEqualTo(CREATED);
+        assertThat(mergeCas.select(Dependency.class).asList()) //
+                .extracting( //
+                        dep -> getFeature(dep, FEAT_REL_SOURCE, AnnotationFS.class).getBegin(), //
+                        dep -> getFeature(dep, FEAT_REL_SOURCE, AnnotationFS.class).getEnd(), //
+                        dep -> getFeature(dep, FEAT_REL_TARGET, AnnotationFS.class).getBegin(), //
+                        dep -> getFeature(dep, FEAT_REL_TARGET, AnnotationFS.class).getEnd())
+                .containsExactly( //
+                        tuple(0, 0, 1, 1), //
+                        tuple(0, 0, 2, 2));
+    }
+
+    private AnnotationFS createTokenAndOptionalPos(CAS aCas, int aBegin, int aEnd, String aPos)
+    {
+        AnnotationFS pos = null;
+
+        if (aPos != null) {
+            pos = buildAnnotation(aCas, POS.class) //
+                    .at(aBegin, aEnd) //
+                    .withFeature(_FeatName_PosValue, aPos) //
+                    .buildAndAddToIndexes();
+        }
+
+        return buildAnnotation(aCas, Token.class) //
+                .at(aBegin, aEnd) //
+                .withFeature(_FeatName_pos, pos) //
+                .buildAndAddToIndexes();
+    }
+
+    private AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
+    {
+        Type type = aCas.getTypeSystem().getType(Token.class.getTypeName());
+        AnnotationFS token = aCas.createAnnotation(type, aBegin, aEnd);
+        aCas.addFsToIndexes(token);
+        return token;
+    }
+
+    private AnnotationFS createDependency(CAS aCas, AnnotationFS aSrcToken, AnnotationFS aTgtToken)
+    {
+        return buildAnnotation(aCas, Dependency.class) //
+                .at(aTgtToken.getBegin(), aTgtToken.getEnd()) //
+                .withFeature(FEAT_REL_SOURCE, aSrcToken) //
+                .withFeature(FEAT_REL_TARGET, aTgtToken) //
+                .buildAndAddToIndexes();
+    }
+
+    private AnnotationFS createDependencyWithTokenAndPos(CAS aCas, int aSrcBegin, int aSrcEnd,
+            String aSrcPos, int aTgtBegin, int aTgtEnd, String aTgtPos)
+    {
+        return createDependency(aCas, //
+                createTokenAndOptionalPos(aCas, aSrcBegin, aSrcEnd, aSrcPos), //
+                createTokenAndOptionalPos(aCas, aTgtBegin, aTgtEnd, aTgtPos));
+    }
+
+    private AnnotationFS createNEAnno(CAS aCas, String aValue, int aBegin, int aEnd)
+    {
+        Type type = aCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
+        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
+        Feature value = type.getFeatureByBaseName("value");
+        clickedFs.setStringValue(value, aValue);
+        aCas.addFsToIndexes(clickedFs);
+        return clickedFs;
+    }
+
+    private AnnotationFS createPOSAnno(CAS aCas, String aValue, int aBegin, int aEnd)
+    {
+        Type type = aCas.getTypeSystem().getType(POS.class.getTypeName());
+
+        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
+        Feature posValue = type.getFeatureByBaseName("PosValue");
+        clickedFs.setStringValue(posValue, aValue);
+        aCas.addFsToIndexes(clickedFs);
+        return clickedFs;
+    }
 
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
