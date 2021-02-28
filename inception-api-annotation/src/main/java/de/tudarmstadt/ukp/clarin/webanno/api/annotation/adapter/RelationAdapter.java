@@ -234,7 +234,7 @@ public class RelationAdapter
         // relation endpoints are also equivalent. Here, we only consider the endpoint type and
         // position but not any other features.
         AnnotationFS fs1Source = getSourceAnnotation(aFs1);
-        AnnotationFS fs1Target = getTargetAnnotation(aFs2);
+        AnnotationFS fs1Target = getTargetAnnotation(aFs1);
         AnnotationFS fs2Source = getSourceAnnotation(aFs2);
         AnnotationFS fs2Target = getTargetAnnotation(aFs2);
 
