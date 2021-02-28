@@ -20,15 +20,19 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static java.util.stream.Collectors.groupingBy;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.TreeMap;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -36,6 +40,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -55,7 +60,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.SuggestionGroupKey;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 
 public class RecommenderInfoPanel
@@ -86,17 +94,38 @@ public class RecommenderInfoPanel
             {
                 User user = userService.getCurrentUser();
                 Recommender recommender = item.getModelObject();
-                List<EvaluatedRecommender> activeRecommenders = recommendationService
-                        .getActiveRecommenders(user, recommender.getLayer());
-                Optional<EvaluationResult> evalResult = activeRecommenders.stream()
-                        .filter(r -> r.getRecommender().equals(recommender))
-                        .map(EvaluatedRecommender::getEvaluationResult).findAny();
+                List<EvaluatedRecommender> recommenders = recommendationService
+                        .getEvaluatedRecommenders(user, recommender.getLayer());
+                Optional<EvaluatedRecommender> evaluatedRecommender = recommenders.stream()
+                        .filter(r -> r.getRecommender().equals(recommender)).findAny();
                 item.add(new Label("name", recommender.getName()));
-                item.add(new Label("state", evalResult.isPresent() ? "active" : "off"));
 
-                item.add(new LambdaAjaxLink("acceptAll",
-                        _target -> actionAcceptAll(_target, recommender)));
+                Label state = new Label("state");
+                if (evaluatedRecommender.isPresent()) {
+                    EvaluatedRecommender evalRec = evaluatedRecommender.get();
+                    if (evalRec.isActive()) {
+                        state.setDefaultModel(Model.of("active"));
+                        state.add(AttributeAppender.append("class", "badge-success"));
+                    }
+                    else {
+                        state.setDefaultModel(Model.of("inactive"));
+                        state.add(new AttributeModifier("title", evalRec.getDeactivationReason()));
+                        state.add(AttributeAppender.append("class", "badge-danger"));
+                    }
+                }
+                else {
+                    state.setDefaultModel(Model.of("pending..."));
+                    state.add(AttributeAppender.append("class", "badge-light"));
+                }
+                item.add(state);
 
+                item.add(new LambdaAjaxLink("acceptBest",
+                        _tgt -> actionAcceptBest(_tgt, recommender))
+                                .setVisible(evaluatedRecommender.map(EvaluatedRecommender::isActive)
+                                        .orElse(false)));
+
+                Optional<EvaluationResult> evalResult = evaluatedRecommender
+                        .map(EvaluatedRecommender::getEvaluationResult);
                 WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
                 // Show results only if the evaluation was not skipped (and of course only if the
                 // result is actually present).
@@ -133,7 +162,7 @@ public class RecommenderInfoPanel
         aEvent.getRequestHandler().add(this);
     }
 
-    private void actionAcceptAll(AjaxRequestTarget aTarget, Recommender aRecommender)
+    private void actionAcceptBest(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
         User user = userService.getCurrentUser();
@@ -145,20 +174,26 @@ public class RecommenderInfoPanel
 
         // SourceDocument document = state.getDocument();
         Predictions predictions = recommendationService.getPredictions(user, state.getProject());
+        Preferences pref = recommendationService.getPreferences(user, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
                 .orElse(getDocumentTitle(cas));
 
         // Extract all predictions for the current document / recommender
-        List<AnnotationSuggestion> suggestions = predictions.getPredictions().entrySet().stream()
-                .filter(f -> f.getKey().getDocumentName().equals(sourceDocumentName))
-                .filter(f -> f.getKey().getRecommenderId() == aRecommender.getId().longValue())
-                .map(Map.Entry::getValue).filter(s -> s.isVisible()).collect(Collectors.toList());
+        Collection<SuggestionGroup> suggestionGroups = predictions
+                .getPredictionsByRecommenderAndDocument(aRecommender, sourceDocumentName).stream()
+                .filter(s -> s.isVisible() && s.getConfidence() >= pref.getConfidenceThreshold())
+                .collect(groupingBy(SuggestionGroupKey::new, TreeMap::new,
+                        SuggestionGroup.collector()))
+                .values();
 
         int accepted = 0;
         int skippedDueToConflict = 0;
-        for (AnnotationSuggestion suggestion : suggestions) {
+        for (SuggestionGroup suggestionGroup : suggestionGroups) {
+            // We only want to accept the best suggestions
+            AnnotationSuggestion suggestion = suggestionGroup.bestSuggestions(pref).get(0);
+
             try {
                 // Upsert an annotation based on the suggestion
                 AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
@@ -200,16 +235,12 @@ public class RecommenderInfoPanel
 
         if (accepted > 0) {
             success(String.format("Accepted %d suggestions", accepted));
-            // we don't add the feedback panel to the AJAX target here because that happens during
-            // the actionRefreshDocument() below anyway and adding it here already would make
-            // the message disappear immediately
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
 
         if (skippedDueToConflict > 0) {
             warn(String.format("Skipped %d suggestions due to conflicts", skippedDueToConflict));
-            // we don't add the feedback panel to the AJAX target here because that happens during
-            // the actionRefreshDocument() below anyway and adding it here already would make
-            // the message disappear immediately
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
 
         page.actionRefreshDocument(aTarget);

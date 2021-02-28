@@ -264,6 +264,13 @@ public class Predictions
         }
     }
 
+    public void inheritLog(List<LogMessage> aLogMessages)
+    {
+        synchronized (log) {
+            log.addAll(0, aLogMessages);
+        }
+    }
+
     public List<LogMessage> getLog()
     {
         synchronized (log) {

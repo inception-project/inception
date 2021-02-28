@@ -28,9 +28,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static java.util.Collections.emptyList;
-import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
@@ -340,10 +338,8 @@ public class RecommendationEditorExtension
             return emptyList();
         }
 
-        List<AnnotationSuggestion> sortedByConfidence = group.get().stream()
-                .sorted(comparing(AnnotationSuggestion::getConfidence)
-                        .thenComparing(AnnotationSuggestion::getRecommenderName))
-                .collect(toList());
+        List<AnnotationSuggestion> sortedByConfidence = group.get()
+                .bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(), aQuery);
 
         List<VLazyDetailResult> details = new ArrayList<>();
         for (AnnotationSuggestion ao : sortedByConfidence) {

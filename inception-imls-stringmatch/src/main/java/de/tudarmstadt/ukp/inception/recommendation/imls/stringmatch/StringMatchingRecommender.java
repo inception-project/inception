@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -250,10 +252,20 @@ public class StringMatchingRecommender
         double overallTrainingSize = data.size() - testSetSize;
         double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
-        if (trainingSetSize < 2 || testSetSize < 2) {
+        // If we have just started and do not have sufficient data to create a test set, we evaluate
+        // against the training set. For the string matcher, this is an ok approach in this
+        // situation.
+        if (!trainingSet.isEmpty() && testSet.isEmpty()) {
+            testSet.addAll(trainingSet);
+        }
+
+        final int minTrainingSetSize = 1;
+        final int minTestSetSize = 1;
+        if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
             String info = String.format(
-                    "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
-                    trainingSetSize, testSetSize, data.size());
+                    "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
+                    trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),
+                    (minTrainingSetSize + minTestSetSize));
             log.info(info);
             EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
                     trainRatio);
@@ -341,8 +353,11 @@ public class StringMatchingRecommender
                     }
                 }
 
-                Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
+                if (spans.isEmpty()) {
+                    continue;
+                }
 
+                Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
                 data.add(new Sample(docNo, cas.getDocumentText(), tokens, spans));
             }
 
@@ -508,6 +523,14 @@ public class StringMatchingRecommender
         public double getScore()
         {
             return score;
+        }
+
+        @Override
+        public String toString()
+        {
+            return new ToStringBuilder(this, ToStringStyle.NO_FIELD_NAMES_STYLE)
+                    .append("begin", begin).append("end", end).append("text", text)
+                    .append("label", label).append("score", score).toString();
         }
     }
 

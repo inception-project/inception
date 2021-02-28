@@ -27,12 +27,17 @@ public class EvaluatedRecommender
 {
     private final Recommender recommender;
     private final EvaluationResult evaluationResult;
+    private final boolean active;
+    private final String deactivationReason;
 
-    public EvaluatedRecommender(Recommender aRecommender, EvaluationResult aEvaluationResult)
+    private EvaluatedRecommender(Recommender aRecommender, EvaluationResult aEvaluationResult,
+            boolean aActive, String aDeactivationReason)
     {
         super();
         recommender = aRecommender;
         evaluationResult = aEvaluationResult;
+        active = aActive;
+        deactivationReason = aDeactivationReason;
     }
 
     public Recommender getRecommender()
@@ -43,5 +48,38 @@ public class EvaluatedRecommender
     public EvaluationResult getEvaluationResult()
     {
         return evaluationResult;
+    }
+
+    public boolean isActive()
+    {
+        return active;
+    }
+
+    public String getDeactivationReason()
+    {
+        return deactivationReason;
+    }
+
+    public static EvaluatedRecommender makeActiveWithoutEvaluation(Recommender aRecommender)
+    {
+        return new EvaluatedRecommender(aRecommender, EvaluationResult.skipped(), true, null);
+    }
+
+    public static EvaluatedRecommender makeActive(Recommender aRecommender,
+            EvaluationResult aEvaluationResult)
+    {
+        return new EvaluatedRecommender(aRecommender, aEvaluationResult, true, null);
+    }
+
+    public static EvaluatedRecommender makeInactive(Recommender aRecommender,
+            EvaluationResult aEvaluationResult, String aReason)
+    {
+        return new EvaluatedRecommender(aRecommender, aEvaluationResult, false, aReason);
+    }
+
+    public static EvaluatedRecommender makeInactiveWithoutEvaluation(Recommender aRecommender,
+            String aReason)
+    {
+        return new EvaluatedRecommender(aRecommender, EvaluationResult.skipped(), false, aReason);
     }
 }

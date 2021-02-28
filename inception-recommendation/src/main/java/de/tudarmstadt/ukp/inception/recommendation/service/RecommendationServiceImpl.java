@@ -262,15 +262,21 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void setActiveRecommenders(User aUser, AnnotationLayer aLayer,
+    public void setEvaluatedRecommenders(User aUser, AnnotationLayer aLayer,
             List<EvaluatedRecommender> aRecommenders)
     {
         RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
-            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> activeRecommenders = state
-                    .getActiveRecommenders();
-            activeRecommenders.remove(aLayer);
-            activeRecommenders.putAll(aLayer, aRecommenders);
+            state.setEvaluatedRecommenders(aLayer, aRecommenders);
+        }
+    }
+
+    @Override
+    public List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
+        synchronized (state) {
+            return new ArrayList<>(state.getEvaluatedRecommenders().get(aLayer));
         }
     }
 
@@ -279,9 +285,7 @@ public class RecommendationServiceImpl
     {
         RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
-            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> activeRecommenders = state
-                    .getActiveRecommenders();
-            return new ArrayList<>(activeRecommenders.get(aLayer));
+            return new ArrayList<>(state.getActiveRecommenders().get(aLayer));
         }
     }
 
@@ -589,6 +593,19 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument)
     {
+        triggerRun(aUser, aProject, aEventName, aCurrentDocument, false);
+    }
+
+    @Override
+    public void triggerSelectionTrainingAndClassification(String aUser, Project aProject,
+            String aEventName, SourceDocument aCurrentDocument)
+    {
+        triggerRun(aUser, aProject, aEventName, aCurrentDocument, true);
+    }
+
+    private void triggerRun(String aUser, Project aProject, String aEventName,
+            SourceDocument aCurrentDocument, boolean aForceSelection)
+    {
         User user = userRepository.get(aUser);
         // do not trigger training during when viewing others' work
         if (user == null || !user.equals(userRepository.getCurrentUser())) {
@@ -606,7 +623,7 @@ public class RecommendationServiceImpl
             count.set(0);
         }
 
-        if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
+        if (aForceSelection || (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0)) {
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
@@ -843,12 +860,18 @@ public class RecommendationServiceImpl
      */
     private static class RecommendationState
     {
-        private Preferences preferences = new Preferences();
-        private MultiValuedMap<AnnotationLayer, EvaluatedRecommender> activeRecommenders = new HashSetValuedHashMap<>();
-        private Map<Recommender, RecommenderContext> contexts = new ConcurrentHashMap<>();
+        private Preferences preferences;
+        private MultiValuedMap<AnnotationLayer, EvaluatedRecommender> evaluatedRecommenders;
+        private Map<Recommender, RecommenderContext> contexts;
         private Predictions activePredictions;
         private Predictions incomingPredictions;
         private boolean predictForAllDocuments;
+
+        {
+            preferences = new Preferences();
+            evaluatedRecommenders = new HashSetValuedHashMap<>();
+            contexts = new ConcurrentHashMap<>();
+        }
 
         public Preferences getPreferences()
         {
@@ -862,13 +885,36 @@ public class RecommendationServiceImpl
 
         public MultiValuedMap<AnnotationLayer, EvaluatedRecommender> getActiveRecommenders()
         {
-            return activeRecommenders;
+            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> active = new HashSetValuedHashMap<>();
+
+            MapIterator<AnnotationLayer, EvaluatedRecommender> i = evaluatedRecommenders
+                    .mapIterator();
+            while (i.hasNext()) {
+                i.next();
+                if (i.getValue().isActive()) {
+                    active.put(i.getKey(), i.getValue());
+                }
+            }
+
+            return active;
         }
 
-        public void setActiveRecommenders(
-                MultiValuedMap<AnnotationLayer, EvaluatedRecommender> aActiveRecommenders)
+        public MultiValuedMap<AnnotationLayer, EvaluatedRecommender> getEvaluatedRecommenders()
         {
-            activeRecommenders = aActiveRecommenders;
+            return evaluatedRecommenders;
+        }
+
+        public void setEvaluatedRecommenders(AnnotationLayer aLayer,
+                Collection<EvaluatedRecommender> aEvaluations)
+        {
+            evaluatedRecommenders.remove(aLayer);
+            evaluatedRecommenders.putAll(aLayer, aEvaluations);
+        }
+
+        public void setEvaluatedRecommenders(
+                MultiValuedMap<AnnotationLayer, EvaluatedRecommender> aEvaluatedRecommenders)
+        {
+            evaluatedRecommenders = aEvaluatedRecommenders;
         }
 
         public Predictions getActivePredictions()
@@ -939,22 +985,23 @@ public class RecommendationServiceImpl
             // Remove trainedModel
             contexts.remove(aRecommender);
 
-            // Remove from activeRecommenders map.
+            // Remove from evaluatedRecommenders map.
             // We have to do this, otherwise training and prediction continues for the
             // recommender when a new task is triggered.
-            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> newActiveRecommenders = new HashSetValuedHashMap<>();
-            MapIterator<AnnotationLayer, EvaluatedRecommender> it = activeRecommenders
+            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> newEvaluatedRecommenders = //
+                    new HashSetValuedHashMap<>();
+            MapIterator<AnnotationLayer, EvaluatedRecommender> it = evaluatedRecommenders
                     .mapIterator();
 
             while (it.hasNext()) {
                 AnnotationLayer layer = it.next();
                 EvaluatedRecommender rec = it.getValue();
                 if (!rec.getRecommender().equals(aRecommender)) {
-                    newActiveRecommenders.put(layer, rec);
+                    newEvaluatedRecommenders.put(layer, rec);
                 }
             }
 
-            setActiveRecommenders(newActiveRecommenders);
+            setEvaluatedRecommenders(newEvaluatedRecommenders);
         }
 
         public boolean isPredictForAllDocuments()

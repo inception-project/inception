@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -51,6 +53,7 @@ public class PredictionTask
     private @Autowired DocumentService documentService;
 
     private final SourceDocument currentDocument;
+    private final List<LogMessage> logMessages = new ArrayList<>();
 
     public PredictionTask(User aUser, Project aProject, String aTrigger,
             SourceDocument aCurrentDocument)
@@ -88,11 +91,17 @@ public class PredictionTask
 
             Predictions predictions = recommendationService.computePredictions(user, project, docs,
                     inherit);
+            predictions.inheritLog(logMessages);
 
             log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
                     (System.currentTimeMillis() - startTime));
 
             recommendationService.putIncomingPredictions(user, project, predictions);
         }
+    }
+
+    public void inheritLog(List<LogMessage> aLogMessages)
+    {
+        logMessages.addAll(aLogMessages);
     }
 }
