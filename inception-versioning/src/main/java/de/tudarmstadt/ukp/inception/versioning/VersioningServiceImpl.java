@@ -70,8 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration#versioningService(RepositoryProperties, AnnotationSchemaService, DocumentService, ProjectService, CasStorageService, UserDao)}
- * ()}.
+ * {@link de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration} ()}.
  * </p>
  */
 public class VersioningServiceImpl
