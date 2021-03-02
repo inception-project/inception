@@ -21,6 +21,8 @@ import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -42,9 +44,9 @@ public class ProjectSettingsPageMenuItem
     }
 
     @Override
-    public String getIcon()
+    public IconType getIcon()
     {
-        return "images/setting_tools.png";
+        return FontAwesome5IconType.cogs_s;
     }
 
     @Override

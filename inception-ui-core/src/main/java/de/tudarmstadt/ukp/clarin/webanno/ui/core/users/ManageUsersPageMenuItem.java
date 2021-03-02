@@ -21,6 +21,8 @@ import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
@@ -37,9 +39,9 @@ public class ManageUsersPageMenuItem
     }
 
     @Override
-    public String getIcon()
+    public IconType getIcon()
     {
-        return "images/user_add.png";
+        return FontAwesome5IconType.users_cog_s;
     }
 
     @Override
