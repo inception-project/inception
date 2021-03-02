@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -63,6 +64,8 @@ public class ProjectSettingsDashboardPageBase
         
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         add(menu);
+        
+        add(new Label("projectName", LoadableDetachableModel.of(() -> getProject().getName())));
     }
 
     private List<MenuItem> getMenuItems()

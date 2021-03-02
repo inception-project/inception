@@ -22,10 +22,17 @@
     <div class="dashboard-sidebar flex-sidebar scrolling collapsed">
       <wicket:container wicket:id="menu" />
     </div>
-    <div class="dashboard-content flex-content flex-v-container scrolling">
-      <wicket:child>
-        [CONTENT]
-      </wicket:child>
+    <div class="flex-content flex-v-container">
+      <div>
+        <h1 class="px-4 m-0 display-4 border-bottom">
+          <wicket:container wicket:id="projectName" />
+        </h1>
+      </div>
+      <div class="dashboard-content flex-content flex-v-container scrolling">
+        <wicket:child>
+          [CONTENT]
+        </wicket:child>
+      </div>
     </div>
   </wicket:extend>
 </body>
