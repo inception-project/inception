@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import java.util.List;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
@@ -90,6 +91,9 @@ public class DashboardMenu
 
         menulink.add(new Icon("icon", item.getIcon()));
         menulink.add(new Label("label", item.getLabel()));
+        menulink.add(AttributeAppender.append("class", () -> 
+            getPage().getClass().equals(pageClass) ? "active" : ""
+        ));
         aItem.add(menulink);
     }
 
