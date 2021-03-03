@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -56,9 +58,9 @@ public class DynamicWorkloadManagementPageMenuItem
     }
 
     @Override
-    public String getIcon()
+    public IconType getIcon()
     {
-        return "images/attribution.png";
+        return FontAwesome5IconType.hard_hat_s;
     }
 
     @Override

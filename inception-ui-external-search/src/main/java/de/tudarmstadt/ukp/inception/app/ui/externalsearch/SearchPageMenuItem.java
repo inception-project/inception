@@ -25,6 +25,8 @@ import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
@@ -50,9 +52,9 @@ public class SearchPageMenuItem
     }
 
     @Override
-    public String getIcon()
+    public IconType getIcon()
     {
-        return "images/magnifier.png";
+        return FontAwesome5IconType.database_s;
     }
 
     @Override
