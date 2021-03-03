@@ -18,22 +18,25 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 
 import org.apache.wicket.Page;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.details.ProjectDetailPage;
 
-@Component
-@Order(8000)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DashboardAutoConfiguration#projectSettingsDashboardMenuItem()}.
+ * </p>
+ */
 public class ProjectSettingsDashboardMenuItem
     extends ProjectSettingsMenuItemBase
 {
     @Override
     public String getPath()
     {
-        return "/settings2";
+        return "/settings";
     }
 
     @Override
@@ -45,7 +48,7 @@ public class ProjectSettingsDashboardMenuItem
     @Override
     public String getLabel()
     {
-        return "Settings*";
+        return "Settings";
     }
 
     @Override
