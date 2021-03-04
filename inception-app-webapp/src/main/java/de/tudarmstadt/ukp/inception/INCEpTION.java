@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception;
 
-import static com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED;
 import static de.tudarmstadt.ukp.inception.INCEpTION.INCEPTION_BASE_PACKAGE;
 import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
@@ -216,8 +215,6 @@ public class INCEpTION
     {
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
-        // add this property in the case of .war deployment
-        builder.properties(REGISTER_SERVER_ENDPOINT_ENABLED + "=false");
         init(builder);
 
         return builder;
