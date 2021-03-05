@@ -36,6 +36,7 @@ public class SessionManagedCas
     private final CAS cas;
     private final CasHolder casHolder;
 
+    private boolean shouldReleaseOnClose = true;
     private int readCount;
     private int writeCount;
 
@@ -50,6 +51,7 @@ public class SessionManagedCas
         mode = aMode;
         cas = aCas;
         casHolder = null;
+        shouldReleaseOnClose = true;
     }
 
     public SessionManagedCas(long aSourceDocumentId, String aUserId, CasAccessMode aMode,
@@ -84,6 +86,16 @@ public class SessionManagedCas
     public CasAccessMode getMode()
     {
         return mode;
+    }
+
+    public void setReleaseOnClose(boolean aReleaseOnClose)
+    {
+        shouldReleaseOnClose = aReleaseOnClose;
+    }
+
+    public boolean isReleaseOnClose()
+    {
+        return shouldReleaseOnClose;
     }
 
     public boolean isCasSet()
@@ -169,8 +181,7 @@ public class SessionManagedCas
             builder.append("purpose", userId);
         }
 
-        return builder.append("cas", cas.hashCode()).append("m", mode).append("r", readCount)
-                .append("w", writeCount).toString();
-
+        return builder.append("cas", cas != null ? cas.hashCode() : "[NULL]").append("m", mode)
+                .append("r", readCount).append("w", writeCount).toString();
     }
 }

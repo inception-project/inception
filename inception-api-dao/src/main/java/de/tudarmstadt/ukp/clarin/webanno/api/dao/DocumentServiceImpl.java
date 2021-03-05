@@ -765,10 +765,27 @@ public class DocumentServiceImpl
     }
 
     @Override
+    public void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername)
+        throws IOException
+    {
+        casStorageService.deleteCas(aSourceDocument, aUsername);
+    }
+
+    @Override
     public void deleteAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
     {
         casStorageService.deleteCas(aAnnotationDocument.getDocument(),
                 aAnnotationDocument.getUser());
+    }
+
+    @Override
+    @Transactional
+    public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
+            boolean aUpdateTimestamp)
+        throws IOException
+    {
+        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
+        writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
     }
 
     @Override
