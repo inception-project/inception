@@ -238,6 +238,10 @@ public interface DocumentService
     void writeAnnotationCas(CAS aCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
 
+    void writeAnnotationCas(CAS aCas, SourceDocument document, String user,
+            boolean aUpdateTimestamp)
+        throws IOException;
+
     /**
      * Resets the annotation document to its initial state by overwriting it with the initial CAS.
      *

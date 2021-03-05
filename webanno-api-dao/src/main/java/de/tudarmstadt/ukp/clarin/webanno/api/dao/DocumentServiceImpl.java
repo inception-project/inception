@@ -753,6 +753,16 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
+            boolean aUpdateTimestamp)
+        throws IOException
+    {
+        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
+        writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
+    }
+
+    @Override
+    @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
             boolean aUpdateTimestamp)
         throws IOException
