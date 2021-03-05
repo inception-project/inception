@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.failOnConcurrentModification;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.writeSerializedCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.move;
@@ -250,6 +249,14 @@ public class CasStorageServiceImpl
         sharedAccessCache.invalidate(new CasKey(aDocument, aUserName));
 
         session.getManagedState(aCas).ifPresent(SessionManagedCas::incrementWriteCount);
+    }
+
+    /*
+     * For testing
+     */
+    void writeSerializedCas(CAS aCas, File aFile) throws IOException
+    {
+        CasPersistenceUtils.writeSerializedCas(aCas, aFile);
     }
 
     private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
@@ -494,7 +501,7 @@ public class CasStorageServiceImpl
             CasKey key = null;
             CasHolder holder = null;
             try {
-                log.trace("CAS storage session [{}]: borrowing CAS [{}]@[{}]({})",
+                log.trace("CAS storage session [{}]: trying to borrow CAS [{}]@[{}]({})",
                         session.hashCode(), aUsername, aDocument.getName(), aDocument.getId());
 
                 key = new CasKey(aDocument, aUsername);
@@ -505,8 +512,22 @@ public class CasStorageServiceImpl
                 if (!holder.isCasSet()) {
                     CasKey finalKey = key;
                     CasHolder finalHolder = holder;
-                    CAS cas = readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
-                            aUpgradeMode);
+
+                    CAS cas;
+                    // Make sure the system knows that the session has legitimate access to the
+                    // CAS being loaded so that it won't lock itself up trying to acquire the
+                    // exclusive lock in CAS in readOrCreateUnmanagedCas
+                    try (CasStorageSession loaderSession = CasStorageSession.openNested(true)) {
+                        SessionManagedCas mLoaderCas = loaderSession.add(aDocument.getId(),
+                                aUsername, EXCLUSIVE_WRITE_ACCESS, holder);
+                        // Do not try to release the CAS when the loader session closes because in
+                        // fact we won't even have set the CAS in the holder by then
+                        mLoaderCas.setReleaseOnClose(false);
+
+                        cas = readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
+                                aUpgradeMode);
+                    }
+
                     holder.setCas(cas);
 
                     // Hook up releasing of the CAS when CAS.release() is called via the
@@ -558,21 +579,35 @@ public class CasStorageServiceImpl
                         + "access mode must be " + AUTO_CAS_UPGRADE);
             }
 
-            // Since we promise to only read the CAS, we don't have to worry about it being
-            // locked to a particular thread...
-            casHolder = sharedAccessCache.get(new CasKey(aDocument, aUsername),
-                    (key) -> CasHolder.of(key, () -> getRealCas(readOrCreateUnmanagedCas(aDocument,
-                            aUsername, aSupplier, aUpgradeMode))));
+            // Ensure that the CAS is not being re-written and temporarily unavailable while we
+            // check for its existence
+            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
+                // Since we promise to only read the CAS, we don't have to worry about it being
+                // locked to a particular thread...
+                casHolder = sharedAccessCache.get(new CasKey(aDocument, aUsername),
+                        (key) -> CasHolder.of(key,
+                                () -> getRealCas(readOrCreateUnmanagedCas(aDocument, aUsername,
+                                        aSupplier, aUpgradeMode))));
+            }
         }
         // else if the special bypass mode is requested, then we fetch directly from disk
         else if (UNMANAGED_ACCESS.equals(aAccessMode)) {
-            casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
-                    () -> readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier, aUpgradeMode));
+            // Ensure that the CAS is not being re-written and temporarily unavailable while we
+            // check for its existence
+            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
+                casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
+                        () -> readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
+                                aUpgradeMode));
+            }
         }
         // else if the special bypass mode is requested, then we fetch directly from disk
         else if (UNMANAGED_NON_INITIALIZING_ACCESS.equals(aAccessMode)) {
-            casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
-                    () -> readUnmanagedCas(aDocument, aUsername));
+            // Ensure that the CAS is not being re-written and temporarily unavailable while we
+            // check for its existence
+            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
+                casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
+                        () -> readUnmanagedCas(aDocument, aUsername));
+            }
         }
         else {
             throw new IllegalArgumentException("Unknown CAS access mode [" + aAccessMode + "]");
@@ -994,9 +1029,14 @@ public class CasStorageServiceImpl
             CasStorageSession session = CasStorageSession.get();
 
             if (!session.hasExclusiveAccess(aDocument, aUser)) {
-                log.trace("CAS storage session [{}]: Borrowing briefly CAS [{}]@[{}]({})",
+                log.trace("CAS storage session [{}]: trying to briefly borrow CAS [{}]@[{}]({})",
                         session.hashCode(), aUser, aDocument.getName(), aDocument.getId());
+
                 holder = borrowCas(key);
+
+                log.trace("CAS storage session [{}]: briefly borrowed CAS [{}]@[{}]({})",
+                        session.hashCode(), aUser, aDocument.getName(), aDocument.getId());
+
                 if (holder.isCasSet()) {
                     transferCasOwnershipToCurrentThread(holder.getCas());
                 }
