@@ -20,9 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession.openNested;
+import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.repeat;
+import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,12 +39,13 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
@@ -80,6 +85,11 @@ public class DocumentServiceImplTest
 
     private AtomicBoolean exception = new AtomicBoolean(false);
     private AtomicBoolean rwTasksCompleted = new AtomicBoolean(false);
+    private AtomicInteger managedReadCounter = new AtomicInteger(0);
+    private AtomicInteger unmanagedReadCounter = new AtomicInteger(0);
+    private AtomicInteger deleteCounter = new AtomicInteger(0);
+    private AtomicInteger deleteInitialCounter = new AtomicInteger(0);
+    private AtomicInteger writeCounter = new AtomicInteger(0);
 
     private DocumentService sut;
 
@@ -92,6 +102,11 @@ public class DocumentServiceImplTest
     {
         exception.set(false);
         rwTasksCompleted.set(false);
+        managedReadCounter.set(0);
+        unmanagedReadCounter.set(0);
+        writeCounter.set(0);
+        deleteCounter.set(0);
+        deleteInitialCounter.set(0);
 
         backupProperties = new BackupProperties();
 
@@ -111,12 +126,7 @@ public class DocumentServiceImplTest
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
         when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
-                any())).then(_invocation -> {
-                    CAS cas = CasFactory.createCas(mergeTypeSystems(
-                            asList(createTypeSystemDescription(), getInternalTypeSystem())));
-                    cas.setDocumentText(StringUtils.repeat("This is a test.\n", 100_000));
-                    return cas;
-                });
+                any())).thenReturn(CasFactory.createText("Test"));
     }
 
     @Test
@@ -152,55 +162,87 @@ public class DocumentServiceImplTest
     @Test
     public void testHighConcurrency() throws Exception
     {
+        when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
+                any())).then(_invocation -> {
+                    CAS cas = createCas(mergeTypeSystems(
+                            asList(createTypeSystemDescription(), getInternalTypeSystem())));
+                    cas.setDocumentText(repeat("This is a test.\n", 100_000));
+                    return cas;
+                });
+
         SourceDocument doc = makeSourceDocument(2l, 2l, "doc");
         String user = "annotator";
 
+        // Primary tasks run for a certain number of iterations
+        // Secondary tasks run as long as any primary task is still running
         List<Thread> tasks = new ArrayList<>();
-        List<Thread> rwTasks = new ArrayList<>();
-        List<Thread> roTasks = new ArrayList<>();
-        for (int n = 0; n < 10; n++) {
-            Thread rw = new ReadWriteTask(n, doc, user);
-            rwTasks.add(rw);
+        List<Thread> primaryTasks = new ArrayList<>();
+        List<Thread> secondaryTasks = new ArrayList<>();
+
+        int threadGroupCount = 4;
+        int iterations = 50;
+        for (int n = 0; n < threadGroupCount; n++) {
+            Thread rw = new ExclusiveReadWriteTask(n, doc, user, iterations);
+            primaryTasks.add(rw);
             tasks.add(rw);
 
-            Thread ro = new ReadOnlyTask(n, doc, user);
-            roTasks.add(ro);
+            Thread ro = new SharedReadOnlyTask(n, doc, user);
+            secondaryTasks.add(ro);
             tasks.add(ro);
+
+            Thread un = new UnmanagedTask(n, doc, user);
+            secondaryTasks.add(un);
+            tasks.add(un);
+
+            DeleterTask xx = new DeleterTask(n, doc, user);
+            secondaryTasks.add(xx);
+            tasks.add(xx);
         }
 
-        log.info("---- Start threads ----");
+        log.info("---- Starting all threads ----");
         tasks.forEach(Thread::start);
 
-        log.info("---- Wait for threads to complete ----");
-        for (Thread thread : rwTasks) {
+        log.info("---- Wait for primary threads to complete ----");
+        boolean done = false;
+        while (!done) {
+            long running = primaryTasks.stream().filter(Thread::isAlive).count();
+            done = running == 0l;
+            sleep(1000);
+            log.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {}", running,
+                    (writeCounter.get() * 100) / (threadGroupCount * iterations), writeCounter,
+                    managedReadCounter, unmanagedReadCounter, deleteCounter, deleteInitialCounter);
+        }
+
+        log.info("---- Wait for threads secondary threads to wrap up ----");
+        rwTasksCompleted.set(true);
+        for (Thread thread : secondaryTasks) {
             thread.join();
         }
 
-        rwTasksCompleted.set(true);
-        for (Thread thread : roTasks) {
-            thread.join();
-        }
+        log.info("---- Test is done ----");
 
         assertThat(exception).isFalse();
     }
 
-    private class ReadWriteTask
+    private class ExclusiveReadWriteTask
         extends Thread
     {
         private SourceDocument doc;
         private String user;
+        private int repeat;
 
-        public ReadWriteTask(int n, SourceDocument aDoc, String aUser)
+        public ExclusiveReadWriteTask(int n, SourceDocument aDoc, String aUser, int aRepeat)
         {
             super("RW" + n);
             doc = aDoc;
             user = aUser;
+            repeat = aRepeat;
         }
 
         @Override
         public void run()
         {
-            for (int n = 0; n < 1000; n++) {
+            for (int n = 0; n < repeat; n++) {
                 if (exception.get()) {
                     return;
                 }
@@ -209,6 +251,7 @@ public class DocumentServiceImplTest
                     CAS cas = sut.readAnnotationCas(doc, user);
                     Thread.sleep(50);
                     sut.writeAnnotationCas(cas, doc, user, false);
+                    writeCounter.incrementAndGet();
                 }
                 catch (Exception e) {
                     exception.set(true);
@@ -218,13 +261,13 @@ public class DocumentServiceImplTest
         }
     };
 
-    private class ReadOnlyTask
+    private class SharedReadOnlyTask
         extends Thread
     {
         private SourceDocument doc;
         private String user;
 
-        public ReadOnlyTask(int n, SourceDocument aDoc, String aUser)
+        public SharedReadOnlyTask(int n, SourceDocument aDoc, String aUser)
         {
             super("RO" + n);
             doc = aDoc;
@@ -237,6 +280,73 @@ public class DocumentServiceImplTest
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     sut.readAnnotationCas(doc, user, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                    managedReadCounter.incrementAndGet();
+                    Thread.sleep(50);
+                }
+                catch (Exception e) {
+                    exception.set(true);
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    };
+
+    private class DeleterTask
+        extends Thread
+    {
+        private SourceDocument doc;
+        private String user;
+        private Random rnd;
+
+        public DeleterTask(int n, SourceDocument aDoc, String aUser)
+        {
+            super("XX" + n);
+            doc = aDoc;
+            user = aUser;
+            rnd = new Random();
+        }
+
+        @Override
+        public void run()
+        {
+            while (!(exception.get() || rwTasksCompleted.get())) {
+                try (CasStorageSession session = openNested()) {
+                    Thread.sleep(2500 + rnd.nextInt(2500));
+                    if (rnd.nextInt(100) >= 75) {
+                        sut.deleteAnnotationCas(doc, INITIAL_CAS_PSEUDO_USER);
+                        deleteInitialCounter.incrementAndGet();
+                    }
+                    sut.deleteAnnotationCas(doc, user);
+                    deleteCounter.incrementAndGet();
+                }
+                catch (Exception e) {
+                    exception.set(true);
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    };
+
+    private class UnmanagedTask
+        extends Thread
+    {
+        private SourceDocument doc;
+        private String user;
+
+        public UnmanagedTask(int n, SourceDocument aDoc, String aUser)
+        {
+            super("UN" + n);
+            doc = aDoc;
+            user = aUser;
+        }
+
+        @Override
+        public void run()
+        {
+            while (!(exception.get() || rwTasksCompleted.get())) {
+                try (CasStorageSession session = openNested()) {
+                    sut.readAnnotationCas(doc, user, AUTO_CAS_UPGRADE, UNMANAGED_ACCESS);
+                    unmanagedReadCounter.incrementAndGet();
                     Thread.sleep(50);
                 }
                 catch (Exception e) {

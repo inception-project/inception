@@ -369,6 +369,8 @@ public interface DocumentService
 
     void deleteAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
+    void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername) throws IOException;
+
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
      * necessary. The state of the source document is not changed.

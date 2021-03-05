@@ -745,6 +745,13 @@ public class DocumentServiceImpl
     }
 
     @Override
+    public void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername)
+        throws IOException
+    {
+        casStorageService.deleteCas(aSourceDocument, aUsername);
+    }
+
+    @Override
     public void deleteAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
     {
         casStorageService.deleteCas(aAnnotationDocument.getDocument(),
