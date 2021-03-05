@@ -31,9 +31,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
-import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageService;
-import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageServiceImpl;
+import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageController;
+import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageControllerImpl;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -52,24 +54,26 @@ public class WebsocketConfig
     @Override
     public void configureMessageBroker(MessageBrokerRegistry aRegistry)
     {
-        aRegistry.enableSimpleBroker("/queue"); // broker will send to destinations with this
+        aRegistry.enableSimpleBroker("/queue", "/topic"); // broker will send to destinations with this
                                                 // prefix,
                                                 // queue is custom for user-specific channels.
                                                 // client will subscribe to /queue/{subtopic} where
                                                 // subtopic is a specific topic that
                                                 // controller or service will address messages to
-//        aRegistry.setApplicationDestinationPrefixes("/app"); // clients should send messages to
-//                                                             // channels pre-fixed with this
+        aRegistry.setApplicationDestinationPrefixes("/app"); // clients should send messages to
+                                                             // channels pre-fixed with this
         aRegistry.setPreservePublishOrder(true); // messages to clients are by default not ordered,
                                                  // need to explicitly set order here
     }
 
-    @Bean
-    @Autowired
-    public LoggedEventMessageService loggedEventMessageService(SimpMessagingTemplate aMsgTemplate, 
-            @Lazy @Autowired List<EventLoggingAdapter<?>> aAdapters, 
-            DocumentService aDocService, ProjectService aProjectService) {
-        return new LoggedEventMessageServiceImpl(aMsgTemplate, aAdapters, aDocService, aProjectService);
-    }
+//    @Bean
+//    @Autowired
+//    public LoggedEventMessageController loggedEventMessageController(SimpMessagingTemplate aMsgTemplate, 
+//            @Lazy @Autowired List<EventLoggingAdapter<?>> aAdapters, 
+//            DocumentService aDocService, ProjectService aProjectService, @Autowired EventRepository aEventRepository,
+//            @Autowired UserDao aUserRepository) {
+//        return new LoggedEventMessageControllerImpl(aMsgTemplate, aAdapters, aDocService,
+//                aProjectService, aEventRepository, aUserRepository);
+//    }
     
 }

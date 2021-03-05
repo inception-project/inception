@@ -36,15 +36,15 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
-import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageService;
+import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageController;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
-@AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
+@AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
 public class LoggedEventFooterPanel extends VueComponent
 {
     private static final long serialVersionUID = -9006607500867612027L;
 
-    private @SpringBean LoggedEventMessageService loggedEventService;
+    private @SpringBean LoggedEventMessageController loggedEventService;
     private @SpringBean ServletContext servletContext;
     
     public LoggedEventFooterPanel(String aId)

@@ -28,6 +28,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.support.AbstractMessageChannel;
@@ -38,8 +41,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
@@ -49,6 +54,8 @@ public class LoggedEventMessageServiceImplTest
 {
     private @Mock DocumentService docService;
     private @Mock ProjectService projectService;
+    private @Mock EventRepository eventRepository;
+    private @Mock UserDao userRepo;
     private List<EventLoggingAdapter<?>> adapters;
     private TestChannel outboundChannel;
     
@@ -56,7 +63,7 @@ public class LoggedEventMessageServiceImplTest
     private SourceDocument testDoc;
     private User testUser;
     
-    private LoggedEventMessageServiceImpl sut;
+    private LoggedEventMessageControllerImpl sut;
     
     @Before
     public void setup() {
@@ -71,8 +78,8 @@ public class LoggedEventMessageServiceImplTest
         when(projectService.getProject(1L)).thenReturn(testProject);
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
 
-        sut = new LoggedEventMessageServiceImpl(new SimpMessagingTemplate(outboundChannel),
-                adapters, docService, projectService);
+        sut = new LoggedEventMessageControllerImpl(new SimpMessagingTemplate(outboundChannel),
+                adapters, docService, projectService, eventRepository, userRepo);
     }
     
     @Test
@@ -87,6 +94,15 @@ public class LoggedEventMessageServiceImplTest
         assertThat(msg.getProjectName()).isEqualTo(testProject.getName());
         assertThat(msg.getActorName()).isEqualTo(testUser.getUsername());
         assertThat(msg.getEventMsg()).isEqualTo(SpanCreatedEvent.class.getSimpleName());
+    }
+    
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { })
+    public static class SpringConfig
+    {
+        // No content
+        // FIXME: seems something wants to be injected but we do not have it configured for this test
     }
     
     public class TestChannel

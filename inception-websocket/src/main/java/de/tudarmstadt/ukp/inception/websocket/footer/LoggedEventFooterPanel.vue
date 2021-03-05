@@ -28,7 +28,7 @@
       <div class="card-body">
       <ul class="list-group list-group-flush">
         <li v-show="!events.length" class="list-group-item">No recent events</li>
-        <li v-for="event in events" :key="event.id" class="list-group-item">{{event.creationDate.format("LLLL")}}: {{event.eventMsg}}</li>
+        <li v-for="event in events" class="list-group-item">{{formatTime(event.timestamp)}}: {{event.eventMsg}}</li>
       </ul>
       </div>
     </div>
@@ -65,9 +65,17 @@ module.exports = {
         function (frame) {
           console.log('Connected: ' + frame);
           that.connected = true;
-          that.stompClient.subscribe('/user' + that.topicChannel, function (msg) {
-            console.log('Received: ' + msg);
-            that.events.push(JSON.parse(msg.body));
+          that.stompClient.subscribe('/user/queue/errors', function (msg) {
+            console.error('Websocket server error: ' + JSON.stringify(msg));
+          });
+          that.stompClient.subscribe('/app' + that.topicChannel, function (msg) {
+            console.log('Received initial data: ' + JSON.stringify(msg));
+              that.events = JSON.parse(msg.body);
+          });
+          that.stompClient.subscribe('/topic' + that.topicChannel, function (msg) {
+            console.log('Received: ' + JSON.stringify(msg));
+            that.events.unshift(JSON.parse(msg.body));
+            that.events.pop();
           });
         },
         function(error){
@@ -82,6 +90,9 @@ module.exports = {
       }
       this.connected = false;
       console.log("Disconnected");
+    },
+    formatTime(timestamp) {
+      return dayjs(timestamp).format("LLLL")
     }
   },
   beforeUnmount(){

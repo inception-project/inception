@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -247,6 +248,23 @@ public class EventRepositoryImplIntegrationTest
                 user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, otherRecommenderId);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+    
+    @Test
+    public void getFilteredRecentLoggedEvents_ShouldReturnEvent()
+    {
+        LoggedEvent evalEvent = buildLoggedEvent(project, user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT,
+                new Date(), -1, DETAIL_JSON);
+        LoggedEvent spanEvent = buildLoggedEvent(project, user.getUsername(), SPAN_CREATED_EVENT,
+                new Date(), -1, "");
+        sut.create(evalEvent);
+        sut.create(spanEvent);
+
+        List<LoggedEvent> loggedEvents = sut.listFilteredRecentActivity(
+                Arrays.asList(EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT), 3);
+
+        assertThat(loggedEvents).hasSize(1);
+        assertThat(loggedEvents).contains(spanEvent);
     }
 
     // Helper

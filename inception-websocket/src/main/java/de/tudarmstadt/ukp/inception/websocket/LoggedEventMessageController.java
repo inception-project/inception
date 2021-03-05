@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.websocket;
 
+import java.security.Principal;
+import java.util.List;
+
 import org.springframework.context.ApplicationEvent;
 
-public interface LoggedEventMessageService
+import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+
+public interface LoggedEventMessageController
 {
     /***
      * Push messages on received application events to named user
@@ -31,5 +36,12 @@ public interface LoggedEventMessageService
      * @return
      */
     public String getTopicChannel();
+    
+    /**
+     * Return the most recent logged events to the subscribing client
+     * @param aPrincipal the subscribing client
+     * @return the most recent events
+     */
+    public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
 
 }

@@ -20,15 +20,16 @@ package de.tudarmstadt.ukp.inception.websocket.model;
 
 import java.util.Date;
 
+import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+
 public class LoggedEventMessage
 {
     private String actorName;
     private String projectName;
     private String documentName;
-    private Date creationDate;
+    private long timestamp;
     
     private String eventMsg;
-    private String errorMsg;
     
     
     public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
@@ -38,56 +39,65 @@ public class LoggedEventMessage
         actorName = aActorName;
         projectName = aProjectName;
         documentName = aDocumentName;
-        creationDate = aCreationDate;
+        timestamp = aCreationDate.getTime();
+    }
+
+    public LoggedEventMessage(LoggedEvent aEvent, String aProjectName, String aDocumentName)
+    {
+        actorName = aEvent.getAnnotator();
+        projectName = aProjectName;
+        documentName = aDocumentName;
+        timestamp = aEvent.getCreated().getTime();
+        eventMsg = aEvent.getEvent();
     }
 
     public String getActorName()
     {
         return actorName;
     }
+
     public void setActorName(String aActorName)
     {
         actorName = aActorName;
     }
+
     public String getProjectName()
     {
         return projectName;
     }
+
     public void setProjectName(String aProjectName)
     {
         projectName = aProjectName;
     }
+
     public String getDocumentName()
     {
         return documentName;
     }
+
     public void setDocumentName(String aDocumentName)
     {
         documentName = aDocumentName;
     }
-    public Date getCreationDate()
+
+    public long getTimestamp()
     {
-        return creationDate;
+        return timestamp;
     }
-    public void setCreationDate(Date aCreationDate)
+
+    public void setTimestamp(long aCreationDate)
     {
-        creationDate = aCreationDate;
+        timestamp = aCreationDate;
     }
+
     public String getEventMsg()
     {
         return eventMsg;
     }
+
     public void setEventMsg(String aEventMsg)
     {
         eventMsg = aEventMsg;
     }
-    public String getErrorMsg()
-    {
-        return errorMsg;
-    }
-    public void setErrorMsg(String aErrorMsg)
-    {
-        errorMsg = aErrorMsg;
-    }
-
 }
