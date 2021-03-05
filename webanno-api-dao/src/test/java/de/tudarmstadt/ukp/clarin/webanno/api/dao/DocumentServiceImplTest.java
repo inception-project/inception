@@ -55,6 +55,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +101,8 @@ public class DocumentServiceImplTest
     @Before
     public void setup() throws Exception
     {
+        Mockito.lenient();
+
         exception.set(false);
         rwTasksCompleted.set(false);
         managedReadCounter.set(0);
