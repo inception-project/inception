@@ -31,7 +31,6 @@ import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTyp
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -44,7 +43,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
@@ -55,7 +53,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,8 +98,6 @@ public class DocumentServiceImplTest
     @Before
     public void setup() throws Exception
     {
-        Mockito.lenient();
-
         exception.set(false);
         rwTasksCompleted.set(false);
         managedReadCounter.set(0);
@@ -152,7 +147,6 @@ public class DocumentServiceImplTest
         try (CasStorageSession session = CasStorageSession.open()) {
             SourceDocument sourceDocument = makeSourceDocument(1l, 1l, "test");
             User user = makeUser();
-            when(entityManager.createQuery(anyString(), any())).thenThrow(NoResultException.class);
 
             JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername()).getJCas();
 
