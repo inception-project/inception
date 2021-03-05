@@ -89,8 +89,6 @@
     <hibernate.version>5.4.15.Final</hibernate.version>
     <hibernate.validator.version>6.1.4.Final</hibernate.validator.version>
 
-    <webanno.version>0.18.1-SNAPSHOT</webanno.version>
-
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
     <wicket-bootstrap.version>5.0.3</wicket-bootstrap.version>
