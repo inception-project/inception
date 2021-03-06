@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -314,7 +315,7 @@ public class CasStorageServiceImplTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 50;
+        int iterations = 100;
         for (int n = 0; n < threadGroupCount; n++) {
             Thread rw = new ExclusiveReadWriteTask(n, doc, user, initializer, iterations);
             primaryTasks.add(rw);
@@ -398,7 +399,7 @@ public class CasStorageServiceImplTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 50;
+        int iterations = 100;
         for (int n = 0; n < threadGroupCount; n++) {
             ExclusiveReadWriteTask rw = new ExclusiveReadWriteTask(n, doc, user, badSeed,
                     iterations);
@@ -473,6 +474,9 @@ public class CasStorageServiceImplTest
                     CAS cas = sut.readOrCreateCas(doc, user, FORCE_CAS_UPGRADE, initializer,
                             EXCLUSIVE_WRITE_ACCESS);
                     Thread.sleep(50);
+                    AnnotationFS fs = cas.createAnnotation(cas.getAnnotationType(), 0, 10);
+                    cas.addFsToIndexes(fs);
+                    log.info("CAS size: {}", cas.getAnnotationIndex().size());
                     sut.writeCas(doc, cas, user);
                     writeCounter.incrementAndGet();
                 }
