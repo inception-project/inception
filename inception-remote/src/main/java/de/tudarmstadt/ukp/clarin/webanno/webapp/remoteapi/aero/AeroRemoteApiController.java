@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMes
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
@@ -69,10 +70,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -115,9 +118,11 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
@@ -130,6 +135,7 @@ public class AeroRemoteApiController
     private static final String CURATION = "curation";
     private static final String IMPORT = "import";
     private static final String EXPORT = "export.zip";
+    private static final String STATE = "state";
 
     private static final String PARAM_FILE = "file";
     private static final String PARAM_CONTENT = "content";
@@ -256,9 +262,8 @@ public class AeroRemoteApiController
         }
     }
 
-    @ApiOperation(value = "List the projects accessible by the authenticated user")
-    @RequestMapping(value = ("/"
-            + PROJECTS), method = RequestMethod.GET, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "List the projects accessible by the authenticated user")
+    @GetMapping(value = ("/" + PROJECTS), produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<List<RProject>>> projectList() throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
@@ -275,12 +280,9 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(projectList));
     }
 
-    @ApiOperation(value = "Create a new project")
-    @ApiImplicitParams({ @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
-            @ApiImplicitParam(name = PARAM_CREATOR, paramType = "form") })
-    @RequestMapping(//
+    @Operation(summary = "Create a new project")
+    @PostMapping(//
             value = ("/" + PROJECTS), //
-            method = RequestMethod.POST, //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RProject>> projectCreate(@RequestParam(PARAM_NAME) String aName,
@@ -329,9 +331,9 @@ public class AeroRemoteApiController
                 .buildAndExpand(project.getId()).toUri()).body(response);
     }
 
-    @ApiOperation(value = "Get information about a project")
-    @RequestMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
-            + "}"), method = RequestMethod.GET, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "Get information about a project")
+    @GetMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
+            + "}"), produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RProject>> projectRead(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
@@ -342,9 +344,9 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(new RProject(project)));
     }
 
-    @ApiOperation(value = "Delete an existing project")
-    @RequestMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
-            + "}"), method = RequestMethod.DELETE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "Delete an existing project")
+    @DeleteMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
+            + "}"), produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<Void>> projectDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
@@ -357,10 +359,9 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(INFO, "Project [" + aProjectId + "] deleted."));
     }
 
-    @ApiOperation(value = "Import a previously exported project")
-    @RequestMapping(//
+    @Operation(summary = "Import a previously exported project")
+    @PostMapping(//
             value = ("/" + PROJECTS + "/" + IMPORT), //
-            method = RequestMethod.POST, //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RProject>> projectImport(
@@ -399,10 +400,9 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(new RProject(importedProject)));
     }
 
-    @ApiOperation(value = "Export a project to a ZIP file")
-    @RequestMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
-            + EXPORT), method = RequestMethod.GET, produces = { "application/zip",
-                    APPLICATION_JSON_UTF8_VALUE })
+    @Operation(summary = "Export a project to a ZIP file")
+    @GetMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + EXPORT), produces = {
+            "application/zip", APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity<InputStreamResource> projectExport(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
@@ -448,9 +448,9 @@ public class AeroRemoteApiController
         return new ResponseEntity<>(result, httpHeaders, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "List documents in a project")
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
-            + DOCUMENTS, method = RequestMethod.GET, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "List documents in a project")
+    @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
+            + DOCUMENTS, produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<List<RDocument>>> documentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
@@ -468,13 +468,9 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(documentList));
     }
 
-    @ApiOperation(value = "Create a new document in a project")
-    @ApiImplicitParams({ @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
-            @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
-            @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true), })
-    @RequestMapping(//
+    @Operation(summary = "Create a new document in a project")
+    @PostMapping(//
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, //
-            method = RequestMethod.POST, //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RDocument>> documentCreate(
@@ -527,8 +523,8 @@ public class AeroRemoteApiController
         RResponse<RDocument> rDocument = new RResponse<>(new RDocument(document));
 
         if (aState.isPresent()) {
-            rDocument.addMessage(INFO,
-                    "State of document [" + document.getId() + "] set to [" + aState.get() + "]");
+            rDocument.addMessage(INFO, "State of document [" + document.getId() + "] set to ["
+                    + sourceDocumentStateToString(document.getState()) + "]");
         }
 
         return ResponseEntity
@@ -537,10 +533,12 @@ public class AeroRemoteApiController
                 .body(rDocument);
     }
 
-    @ApiOperation(value = "Get a document from a project", response = byte[].class)
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}", method = RequestMethod.GET, produces = {
-                    APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
+    @Operation(summary = "Get a document from a project")
+    @ApiResponse(content = @Content(array = @ArraySchema(schema = @Schema(implementation = byte.class))))
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}", //
+            produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity documentRead(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
@@ -618,10 +616,11 @@ public class AeroRemoteApiController
         }
     }
 
-    @ApiOperation(value = "Delete a document from a project")
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID
-            + "}", method = RequestMethod.DELETE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "Delete a document from a project")
+    @DeleteMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}", //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<Void>> documentDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
@@ -637,10 +636,11 @@ public class AeroRemoteApiController
                 "Document [" + aDocumentId + "] deleted from project [" + aProjectId + "]."));
     }
 
-    @ApiOperation(value = "List annotations of a document in a project")
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/"
-            + ANNOTATIONS, method = RequestMethod.GET, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "List annotations of a document in a project")
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<List<RAnnotation>>> annotationsList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
@@ -661,14 +661,38 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(annotationList));
     }
 
-    @ApiOperation(value = "Create annotations for a document in a project")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
-            @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true), })
-    @RequestMapping( //
+    @Operation(summary = "Update annotation state for a document in a project (non-AERO)")
+    @PostMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}/"
+                    + STATE, //
+            consumes = ALL_VALUE, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<RAnnotation>> annotationsUpdateState(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
+            @RequestParam(name = PARAM_STATE) Optional<String> aState)
+        throws Exception
+    {
+        Project project = getProject(aProjectId);
+        SourceDocument document = getDocument(project, aDocumentId);
+
+        AnnotationDocument anno = getAnnotation(document, aAnnotatorId, false);
+        documentService.setAnnotationDocumentState(anno,
+                parseAnnotationDocumentState(aState.get()));
+        documentService.createAnnotationDocument(anno);
+
+        return ResponseEntity.ok(new RResponse<>(INFO,
+                "State of annotations of user [" + aAnnotatorId + "] on document ["
+                        + document.getId() + "] set to ["
+                        + annotationDocumentStateToString(anno.getState()) + "]"));
+    }
+
+    @Operation(summary = "Create or update annotations for a document in a project")
+    @PostMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", //
-            method = RequestMethod.POST, //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RAnnotation>> annotationsCreate(
@@ -699,8 +723,10 @@ public class AeroRemoteApiController
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
 
         if (aState.isPresent()) {
-            response.addMessage(INFO, "State of annotations of user [" + aAnnotatorId
-                    + "] on document [" + document.getId() + "] set to [" + aState.get() + "]");
+            response.addMessage(INFO,
+                    "State of annotations of user [" + aAnnotatorId + "] on document ["
+                            + document.getId() + "] set to ["
+                            + annotationDocumentStateToString(anno.getState()) + "]");
         }
 
         return ResponseEntity.created(aUcb
@@ -710,11 +736,12 @@ public class AeroRemoteApiController
                 .body(response);
     }
 
-    @ApiOperation(value = "Get annotations of a document in a project", response = byte[].class)
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID
-            + "}", method = RequestMethod.GET, produces = { APPLICATION_OCTET_STREAM_VALUE,
-                    APPLICATION_JSON_UTF8_VALUE })
+    @Operation(summary = "Get annotations of a document in a project")
+    @ApiResponse(content = @Content(array = @ArraySchema(schema = @Schema(implementation = byte.class))))
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", //
+            produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity<byte[]> annotationsRead(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
@@ -722,13 +749,13 @@ public class AeroRemoteApiController
         throws Exception
     {
         return readAnnotation(aProjectId, aDocumentId, aAnnotatorId, Mode.ANNOTATION, aFormat);
-
     }
 
-    @ApiOperation(value = "Delete a user's annotations of one document from a project")
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID
-            + "}", method = RequestMethod.DELETE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "Delete a user's annotations of one document from a project")
+    @DeleteMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<Void>> annotationsDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
@@ -748,14 +775,10 @@ public class AeroRemoteApiController
                         + aDocumentId + "] deleted from project [" + aProjectId + "]."));
     }
 
-    @ApiOperation(value = "Create curation for a document in a project")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
-            @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true), })
-    @RequestMapping(//
+    @Operation(summary = "Create curation for a document in a project")
+    @PostMapping(//
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + //
                     "/{" + PARAM_DOCUMENT_ID + "}/" + CURATION, //
-            method = RequestMethod.POST, //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RAnnotation>> curationCreate(
@@ -809,10 +832,12 @@ public class AeroRemoteApiController
                 .body(response);
     }
 
-    @ApiOperation(value = "Get curated annotations of a document in a project", response = byte[].class)
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/" + CURATION, method = RequestMethod.GET, produces = {
-                    APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
+    @Operation(summary = "Get curated annotations of a document in a project")
+    @ApiResponse(content = @Content(array = @ArraySchema(schema = @Schema(implementation = byte.class))))
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + CURATION, //
+            produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity<byte[]> curationRead(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
@@ -822,10 +847,11 @@ public class AeroRemoteApiController
                 aFormat);
     }
 
-    @ApiOperation(value = "Delete a user's annotations of one document from a project")
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/"
-            + CURATION, method = RequestMethod.DELETE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @Operation(summary = "Delete a user's annotations of one document from a project")
+    @DeleteMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + CURATION, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<Void>> curationDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)

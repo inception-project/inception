@@ -73,7 +73,8 @@
     <spring.version>5.3.3</spring.version>
     <spring.boot.version>2.4.2</spring.boot.version>
     <spring.security.version>5.4.2</spring.security.version>
-    <springfox.version>2.9.2</springfox.version>
+    <springdoc.version>1.5.5</springdoc.version>
+    <swagger.version>2.1.7</swagger.version>
 
     <slf4j.version>1.7.30</slf4j.version>
     <log4j.version>2.14.0</log4j.version>
@@ -1100,6 +1101,28 @@
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-web</artifactId>
         <version>${spring.security.version}</version>
+      </dependency>
+      
+      <!-- Springdoc -->
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-ui</artifactId>
+        <version>${springdoc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-common</artifactId>
+        <version>${springdoc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>${swagger.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-models</artifactId>
+        <version>${swagger.version}</version>
       </dependency>
 
       <!-- Tomcat -->
