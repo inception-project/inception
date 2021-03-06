@@ -136,36 +136,14 @@
       <artifactId>spring-security-core</artifactId>
     </dependency>
 
-    <!-- Swagger / Springfox -->
+    <!-- Swagger / Springdoc -->
     <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-core</artifactId>
-      <version>${springfox.version}</version>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-swagger2</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-spi</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-swagger-ui</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-spring-web</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.swagger</groupId>
+      <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-annotations</artifactId>
-      <version>1.5.16</version>
     </dependency>
 
     <dependency>
@@ -285,13 +263,6 @@
               <ignoredDependency>org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
               <ignoredDependency>org.springframework.security:spring-security-config</ignoredDependency>
             </ignoredDependencies>
-            <usedDependencies combine.children="append">
-              <!--
-                - Maven doesn't detect the the springfox swagger ui dependency because there is
-                - no actual code dependency and springfox auto-configures itself
-              -->
-              <usedDependency>io.springfox:springfox-swagger-ui</usedDependency>
-            </usedDependencies>
           </configuration>
         </plugin>
       </plugins>

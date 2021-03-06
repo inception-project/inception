@@ -19,78 +19,57 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiConfig.REMOTE_API_ENABLED_CONDITION;
 
-import java.util.Optional;
-
+import org.springdoc.core.GroupedOpenApi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
-import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.ApiSelectorBuilder;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import io.swagger.v3.oas.models.info.Info;
 
 @Configuration
-@EnableSwagger2 // Loads the spring beans required by the framework
 public class SwaggerConfig
 {
-    /*
-     * Just do avoid Springfox to auto-scan for all APIs
-     */
     @ConditionalOnExpression("!(" + REMOTE_API_ENABLED_CONDITION + ")")
     @Bean
-    public Docket defaultDocket()
+    public GroupedOpenApi defaultDocket()
     {
-        ApiSelectorBuilder builder = new Docket(DocumentationType.SWAGGER_2).select();
-        builder.paths(path -> false);
-        // @formatter:off
-        return builder.build()
-                .groupName("Remote API disbled")
-                .apiInfo(new ApiInfoBuilder()
-                        .title("Remote API disabled")
-                        .description(String.join(" ",
-                                "The remote API is disabled."))
-                        .license("")
-                        .licenseUrl("")
-                .build());
-        // @formatter:on
+        return GroupedOpenApi.builder().group("disabled") //
+                .pathsToExclude("/**") //
+                .addOpenApiCustomiser(openApi -> { //
+                    openApi.info(new Info() //
+                            .title("Remote API disbled") //
+                            .description("The remote API is not enabled."));
+                }).build();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
-    public Docket legacyRemoteApiDocket()
+    public GroupedOpenApi legacyRemoteApiDocket()
     {
-        ApiSelectorBuilder builder = new Docket(DocumentationType.SWAGGER_2).select();
-        builder.paths(path -> path.matches(LegacyRemoteApiController.API_BASE + "/.*"));
-        // @formatter:off
-        return builder.build()
-                .groupName("Legacy API")
-                .genericModelSubstitutes(Optional.class);
-        // @formatter:on
+        return GroupedOpenApi.builder().group("legacy-v1")
+                .pathsToMatch(LegacyRemoteApiController.API_BASE + "/**") //
+                .addOpenApiCustomiser(openApi -> { //
+                    openApi.info(new Info() //
+                            .title("Legacy API") //
+                            .version("1"));
+                }).build();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
-    public Docket areoRemoteApiDocket()
+    public GroupedOpenApi areoRemoteApiDocket()
     {
-        ApiSelectorBuilder builder = new Docket(DocumentationType.SWAGGER_2).select();
-        builder.paths(path -> path.matches(AeroRemoteApiController.API_BASE + "/.*"));
-        // @formatter:off
-        return builder.build()
-                .groupName("AERO API")
-                .apiInfo(new ApiInfoBuilder()
-                        .title("AERO")
-                        .version("1.0.0") 
-                        .description(String.join(" ",
-                                "Annotation Editor Remote Operations API. ",
-                                "https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/"))
-                        .license("Apache License 2.0")
-                        .licenseUrl("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                        .build())
-                .genericModelSubstitutes(Optional.class);
-        // @formatter:on
+        return GroupedOpenApi.builder().group("aero-v1")
+                .pathsToMatch(AeroRemoteApiController.API_BASE + "/**")
+                .addOpenApiCustomiser(openApi -> { //
+                    openApi.info(new Info() //
+                            .title("AERO") //
+                            .version("1.0.0")
+                            .description(String.join(" ",
+                                    "Annotation Editor Remote Operations API. ",
+                                    "https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/")));
+                }).build();
     }
 }
