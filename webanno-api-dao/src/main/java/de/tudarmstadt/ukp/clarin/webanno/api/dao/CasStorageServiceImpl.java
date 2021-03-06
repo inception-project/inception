@@ -824,8 +824,12 @@ public class CasStorageServiceImpl
             // Drop the CAS from the exclusive access pool. This is done my marking it as deleted
             // and then releasing it (returning it to the pool). Upon return, the deleted flag
             // causes the CAS to be invalidated and dropped from the pool.
-            exclusiveAccessHolders.stream().filter(h -> Objects.equals(h.getKey(), key))
-                    .forEach(h -> h.setDeleted(true));
+            exclusiveAccessHolders.forEach(h -> {
+                // Must use the forEach here because stream() is not synchronized!
+                if (Objects.equals(h.getKey(), key)) {
+                    h.setDeleted(true);
+                }
+            });
             access.release();
 
             // Drop the CAS from the current session
@@ -1216,9 +1220,12 @@ public class CasStorageServiceImpl
         // so they can be refreshed when next returned or borrowed
         logExclusiveAccessHolders();
 
-        exclusiveAccessHolders.stream()
-                .filter(h -> Objects.equals(h.getKey().getProjectId(), aEvent.getProject().getId()))
-                .forEach(h -> h.setTypeSystemOutdated(true));
+        exclusiveAccessHolders.forEach(h -> {
+            // Must use the forEach here because stream() is not synchronized!
+            if (Objects.equals(h.getKey().getProjectId(), aEvent.getProject().getId())) {
+                h.setTypeSystemOutdated(true);
+            }
+        });
 
         logExclusiveAccessHolders();
 

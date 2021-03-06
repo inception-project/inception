@@ -315,7 +315,7 @@ public class CasStorageServiceImplTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 50;
+        int iterations = 100;
         for (int n = 0; n < threadGroupCount; n++) {
             Thread rw = new ExclusiveReadWriteTask(n, doc, user, initializer, iterations);
             primaryTasks.add(rw);
@@ -399,7 +399,7 @@ public class CasStorageServiceImplTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 50;
+        int iterations = 100;
         for (int n = 0; n < threadGroupCount; n++) {
             ExclusiveReadWriteTask rw = new ExclusiveReadWriteTask(n, doc, user, badSeed,
                     iterations);

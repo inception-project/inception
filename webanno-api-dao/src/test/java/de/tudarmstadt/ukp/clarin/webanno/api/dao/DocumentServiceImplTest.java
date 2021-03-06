@@ -177,7 +177,7 @@ public class DocumentServiceImplTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 50;
+        int iterations = 100;
         for (int n = 0; n < threadGroupCount; n++) {
             Thread rw = new ExclusiveReadWriteTask(n, doc, user, iterations);
             primaryTasks.add(rw);
@@ -242,7 +242,7 @@ public class DocumentServiceImplTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 50;
+        int iterations = 100;
         int userCount = 4;
         for (int u = 0; u < userCount; u++) {
             for (int n = 0; n < threadGroupCount; n++) {
