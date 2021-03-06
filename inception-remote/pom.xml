@@ -142,8 +142,16 @@
       <artifactId>springdoc-openapi-ui</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-common</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-models</artifactId>
     </dependency>
 
     <dependency>
@@ -248,6 +256,10 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredDependencies>
+              <!--
+               - Need this for auto-configuration 
+               -->
+              <ignoredDependency>org.springdoc:springdoc-openapi-ui</ignoredDependency>
               <!--
                - Test dependencies used via auto-configuration and reflection
                -->
