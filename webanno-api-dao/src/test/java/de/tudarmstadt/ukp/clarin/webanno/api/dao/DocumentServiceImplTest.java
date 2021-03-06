@@ -157,7 +157,7 @@ public class DocumentServiceImplTest
     }
 
     @Test
-    public void testHighConcurrency() throws Exception
+    public void testHighConcurrencySingleUser() throws Exception
     {
         when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
                 any())).then(_invocation -> {
@@ -208,6 +208,75 @@ public class DocumentServiceImplTest
             log.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {}", running,
                     (writeCounter.get() * 100) / (threadGroupCount * iterations), writeCounter,
                     managedReadCounter, unmanagedReadCounter, deleteCounter, deleteInitialCounter);
+        }
+
+        log.info("---- Wait for threads secondary threads to wrap up ----");
+        rwTasksCompleted.set(true);
+        for (Thread thread : secondaryTasks) {
+            thread.join();
+        }
+
+        log.info("---- Test is done ----");
+
+        assertThat(exception).isFalse();
+    }
+
+    @Test
+    public void testHighConcurrencyMultiUser() throws Exception
+    {
+        when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
+                any())).then(_invocation -> {
+                    CAS cas = createCas(mergeTypeSystems(
+                            asList(createTypeSystemDescription(), getInternalTypeSystem())));
+                    cas.setDocumentText(repeat("This is a test.\n", 100_000));
+                    return cas;
+                });
+
+        SourceDocument doc = makeSourceDocument(3l, 3l, "doc");
+        String user = "annotator";
+
+        // Primary tasks run for a certain number of iterations
+        // Secondary tasks run as long as any primary task is still running
+        List<Thread> tasks = new ArrayList<>();
+        List<Thread> primaryTasks = new ArrayList<>();
+        List<Thread> secondaryTasks = new ArrayList<>();
+
+        int threadGroupCount = 4;
+        int iterations = 50;
+        int userCount = 4;
+        for (int u = 0; u < userCount; u++) {
+            for (int n = 0; n < threadGroupCount; n++) {
+                Thread rw = new ExclusiveReadWriteTask(n, doc, user + n, iterations);
+                primaryTasks.add(rw);
+                tasks.add(rw);
+
+                Thread ro = new SharedReadOnlyTask(n, doc, user + n);
+                secondaryTasks.add(ro);
+                tasks.add(ro);
+
+                Thread un = new UnmanagedTask(n, doc, user + n);
+                secondaryTasks.add(un);
+                tasks.add(un);
+
+                DeleterTask xx = new DeleterTask(n, doc, user + n);
+                secondaryTasks.add(xx);
+                tasks.add(xx);
+            }
+        }
+
+        log.info("---- Starting all threads ----");
+        tasks.forEach(Thread::start);
+
+        log.info("---- Wait for primary threads to complete ----");
+        boolean done = false;
+        while (!done) {
+            long running = primaryTasks.stream().filter(Thread::isAlive).count();
+            done = running == 0l;
+            sleep(1000);
+            log.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {}", running,
+                    (writeCounter.get() * 100) / (userCount * threadGroupCount * iterations),
+                    writeCounter, managedReadCounter, unmanagedReadCounter, deleteCounter,
+                    deleteInitialCounter);
         }
 
         log.info("---- Wait for threads secondary threads to wrap up ----");

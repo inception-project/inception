@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -473,6 +474,9 @@ public class CasStorageServiceImplTest
                     CAS cas = sut.readOrCreateCas(doc, user, FORCE_CAS_UPGRADE, initializer,
                             EXCLUSIVE_WRITE_ACCESS);
                     Thread.sleep(50);
+                    AnnotationFS fs = cas.createAnnotation(cas.getAnnotationType(), 0, 10);
+                    cas.addFsToIndexes(fs);
+                    log.info("CAS size: {}", cas.getAnnotationIndex().size());
                     sut.writeCas(doc, cas, user);
                     writeCounter.incrementAndGet();
                 }
