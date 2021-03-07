@@ -43,9 +43,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -69,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
@@ -117,8 +120,10 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = ("/"
-            + PROJECTS), method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create a new project")
+    @PostMapping(//
+            value = ("/" + PROJECTS), //
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> projectCreate(@RequestParam(PARAM_FILE) MultipartFile aFile,
             @RequestParam(PARAM_NAME) String aName, @RequestParam(PARAM_FILETYPE) String aFileType)
         throws Exception
@@ -225,7 +230,8 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = ("/" + PROJECTS), method = RequestMethod.GET)
+    @Operation(summary = "List all the projects for a given user with their roles")
+    @GetMapping(value = ("/" + PROJECTS))
     public ResponseEntity<String> projectList() throws Exception
     {
         // Get current user
@@ -269,8 +275,8 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
-            + "}"), method = RequestMethod.DELETE)
+    @Operation(summary = "Delete a project managed by the given user")
+    @DeleteMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}"))
     public ResponseEntity<String> projectDelete(@PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {
@@ -315,8 +321,8 @@ public class LegacyRemoteApiController
      *            the project ID
      * @return JSON with {@link SourceDocument} : id
      */
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
-            + DOCUMENTS, method = RequestMethod.GET)
+    @Operation(summary = "Show source documents in a project managed by the given user")
+    @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS)
     public ResponseEntity<String> sourceDocumentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
@@ -375,8 +381,9 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}", method = RequestMethod.DELETE)
+    @Operation(summary = "Delete the source document in project managed by the given user")
+    @DeleteMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+            + PARAM_DOCUMENT_ID + "}")
     public ResponseEntity<String> sourceDocumentDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
@@ -446,8 +453,10 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
-            + DOCUMENTS, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload a source document into project managed by the given user")
+    @PostMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, //
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> sourceDocumentCreate(
             @RequestParam(PARAM_FILE) MultipartFile aFile,
             @RequestParam(PARAM_FILETYPE) String aFileType,
@@ -513,8 +522,9 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS, method = RequestMethod.GET)
+    @Operation(summary = "List annotation documents for a source document in a projects managed by the given user")
+    @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS)
     public ResponseEntity<String> annotationDocumentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
@@ -578,7 +588,7 @@ public class LegacyRemoteApiController
     }
 
     /**
-     * Download annotation document with requested parameters
+     * Download annotation document with requested parameters.
      * 
      * Test when running in Eclipse: Open your browser, paste following URL with appropriate values:
      *
@@ -598,9 +608,9 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_USERNAME
-            + "}", method = RequestMethod.GET)
+    @Operation(summary = "Download annotation document from a projects managed by the given user")
+    @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_USERNAME + "}")
     public void annotationDocumentRead(HttpServletResponse response,
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId,
@@ -734,8 +744,9 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + CURATION + "/{"
-            + PARAM_DOCUMENT_ID + "}", method = RequestMethod.GET)
+    @Operation(summary = "Download curated document from a projects managed by the given user")
+    @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + CURATION + "/{"
+            + PARAM_DOCUMENT_ID + "}")
     public void curationDocumentRead(HttpServletResponse response,
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId,
