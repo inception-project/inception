@@ -241,14 +241,14 @@ public class INCEpTION
                 + "optional:${inception.home:${user.home}/.inception}/settings.properties");
     }
 
-    public static void main(String[] args) throws Exception
+    protected static void run(String[] args, Class... aSources)
     {
         Optional<JWindow> splash = LoadingSplashScreen
                 .setupScreen(INCEpTION.class.getResource("splash.png"));
 
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
         // Add the main application as the root Spring context
-        builder.sources(INCEpTION.class).web(SERVLET);
+        builder.sources(aSources).web(SERVLET);
 
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
@@ -260,5 +260,10 @@ public class INCEpTION
             }
         });
         builder.run(args);
+    }
+
+    public static void main(String[] args) throws Exception
+    {
+        run(args, INCEpTION.class);
     }
 }

@@ -26,10 +26,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
-@Order(200)
+@Order(DocumentsProjectSettingsPanelFactory.ORDER)
 public class DocumentsProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 200;
+
     @Override
     public String getPath()
     {

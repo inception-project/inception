@@ -27,11 +27,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 
-@Order(300)
+@Order(ProjectWorkloadSettingsPanelFactory.ORDER)
 @Component
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 260;
+
     private final WorkloadManagerExtensionPoint<Project> workloadManagerExtensionPoint;
 
     @Autowired

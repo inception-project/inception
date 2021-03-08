@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.CAS;
 
 /**
@@ -139,7 +140,7 @@ public class CasHolder
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE).append("key", key)
+        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("key", key)
                 .append("deleted", deleted).append("typeSystemOutdated", typeSystemOutdated)
                 .toString();
     }

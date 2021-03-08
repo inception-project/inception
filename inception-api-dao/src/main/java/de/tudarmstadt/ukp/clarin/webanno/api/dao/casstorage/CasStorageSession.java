@@ -165,8 +165,10 @@ public class CasStorageSession
         LOGGER.trace("CAS storage session [{}]: closing...", hashCode());
 
         managedCases.values().forEach(casByUser -> casByUser.values().forEach(managedCas -> {
-            LOGGER.trace("CAS storage session [{}]: releasing {}", hashCode(), managedCas);
-            managedCas.getCas().release();
+            if (managedCas.isReleaseOnClose()) {
+                LOGGER.trace("CAS storage session [{}]: releasing {}", hashCode(), managedCas);
+                managedCas.getCas().release();
+            }
         }));
 
         LOGGER.trace("CAS storage session [{}]: closed", hashCode());
