@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -29,7 +27,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -169,23 +166,7 @@ public class VersioningServiceImplTest
 
         File repoDir = sut.getRepoDir(testProject);
 
-        // Source documents
-        Path sourceRoot = repoDir.toPath().resolve(SOURCE_FOLDER);
-        assertThat(repoDir).isDirectoryContaining(
-                f -> f.getName().equals(VersioningServiceImpl.LAYERS) && f.isFile());
-        assertThat(sourceRoot.resolve("dinos.txt.xmi")).isRegularFile();
-        assertThat(sourceRoot.resolve("dinos.txt.xmi")).isRegularFile();
-
-        // Annotation documents
-        Path annotationRoot = repoDir.toPath().resolve(ANNOTATION_FOLDER);
-        assertThat(repoDir).isDirectoryContaining(
-                f -> f.getName().equals(VersioningServiceImpl.LAYERS) && f.isFile());
-        assertThat(annotationRoot.resolve("admin").resolve("dinos.txt.xmi")).isRegularFile();
-        assertThat(annotationRoot.resolve("admin").resolve("lorem.txt.xmi")).isRegularFile();
-        assertThat(annotationRoot.resolve("annotator").resolve("dinos.txt.xmi")).isRegularFile();
-        assertThat(annotationRoot.resolve("annotator").resolve("lorem.txt.xmi")).isRegularFile();
-
-        // Check git repo
+        // Check commit
         Git git = Git.open(repoDir);
 
         List<RevCommit> commits = StreamSupport.stream(git.log() //
@@ -197,6 +178,30 @@ public class VersioningServiceImplTest
         assertThat(commit.getShortMessage()).isEqualTo("Test snapshotting");
         assertThat(commit.getAuthorIdent().getName()).isEqualTo("admin");
         assertThat(commit.getAuthorIdent().getEmailAddress()).isEqualTo("admin@inception");
+
+        // Check repo contents
+        TreeWalk treeWalk = new TreeWalk(git.getRepository());
+        treeWalk.addTree(commit.getTree());
+        treeWalk.setRecursive(true);
+
+        List<String> documents = new ArrayList<>();
+        while (treeWalk.next()) {
+            documents.add(treeWalk.getPathString());
+        }
+
+        assertThat(documents).hasSize(9).containsExactlyInAnyOrder( //
+                "layers.json", //
+
+                "document/dinos.txt/source.xmi", //
+                "document/dinos.txt/initial.ser", //
+                "document/dinos.txt/admin.xmi", //
+                "document/dinos.txt/annotator.xmi", //
+
+                "document/lorem.txt/source.xmi", //
+                "document/lorem.txt/initial.ser", //
+                "document/lorem.txt/admin.xmi", //
+                "document/lorem.txt/annotator.xmi" //
+        );
     }
 
     @Test
@@ -235,12 +240,16 @@ public class VersioningServiceImplTest
         while (treeWalk.next()) {
             remoteFiles.add(treeWalk.getPathString());
         }
-        assertThat(remoteFiles).hasSize(5).containsExactlyInAnyOrder( //
+        assertThat(remoteFiles).hasSize(7).containsExactlyInAnyOrder( //
                 "layers.json", //
-                "source/dinos.txt.xmi", //
-                "source/lorem.txt.xmi", //
-                "annotation/admin/dinos.txt.xmi", //
-                "annotation/admin/lorem.txt.xmi" //
+
+                "document/dinos.txt/source.xmi", //
+                "document/dinos.txt/initial.ser", //
+                "document/dinos.txt/admin.xmi", //
+
+                "document/lorem.txt/source.xmi", //
+                "document/lorem.txt/initial.ser", //
+                "document/lorem.txt/admin.xmi" //
         );
     }
 

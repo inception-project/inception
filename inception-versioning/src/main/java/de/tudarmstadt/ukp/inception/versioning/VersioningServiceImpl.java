@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 
 import java.io.File;
 import java.io.IOException;
@@ -120,8 +119,7 @@ public class VersioningServiceImpl
         throws IOException, GitAPIException
     {
         File repoDir = getRepoDir(aProject);
-        Path sourceDir = repoDir.toPath().resolve(SOURCE_FOLDER);
-        Path annotationDir = repoDir.toPath().resolve(ANNOTATION_FOLDER);
+        Path documentDir = repoDir.toPath().resolve(DOCUMENT_FOLDER);
 
         Git git = Git.open(repoDir);
 
@@ -130,38 +128,44 @@ public class VersioningServiceImpl
         dumpLayers(layersJsonFile, aProject);
         git.add().addFilepattern(LAYERS).call();
 
-        // Dump source documents
-        Files.createDirectories(sourceDir);
-
         for (SourceDocument sourceDocument : documentService.listSourceDocuments(aProject)) {
-            Path outputPath = sourceDir.resolve(sourceDocument.getName() + ".xmi");
+            Path sourceDir = documentDir.resolve(sourceDocument.getName());
+
+            Files.createDirectories(sourceDir);
+
+            // Dump source documents
+            Path sourceDocumentPath = sourceDir.resolve("source.xmi");
             try (CasStorageSession session = CasStorageSession.openNested();
-                    OutputStream out = Files.newOutputStream(outputPath)) {
+                    OutputStream out = Files.newOutputStream(sourceDocumentPath)) {
                 CAS cas = documentService.createOrReadInitialCas(sourceDocument);
                 CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
             }
-        }
 
-        // Dump annotation documents
-        for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
-            String userName = user.getUsername();
-            Path userDir = annotationDir.resolve(userName);
+            // Dump initial cas
+            Path initialCasPath = sourceDir.resolve("initial.ser");
+            try (CasStorageSession session = CasStorageSession.openNested();
+                    OutputStream out = Files.newOutputStream(initialCasPath)) {
+                CAS cas = documentService.createOrReadInitialCas(sourceDocument);
+                CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
+            }
 
+            // Dump annotation documents
             for (AnnotationDocument annotationDocument : documentService
-                    .listAnnotationDocuments(aProject, user)) {
-                Files.createDirectories(userDir);
+                    .listAnnotationDocuments(sourceDocument)) {
 
-                Path outputPath = userDir.resolve(annotationDocument.getName() + ".xmi");
+                String userName = annotationDocument.getUser();
+                Path annotationDocumentPath = sourceDir.resolve(userName + ".xmi");
+
                 try (CasStorageSession session = CasStorageSession.openNested();
-                        OutputStream out = Files.newOutputStream(outputPath)) {
+                        OutputStream out = Files.newOutputStream(annotationDocumentPath)) {
                     CAS cas = casStorageService.readCas(annotationDocument.getDocument(), userName);
                     CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
                 }
             }
         }
 
-        git.add().addFilepattern(ANNOTATION_FOLDER).call();
-        git.add().addFilepattern(SOURCE_FOLDER).call();
+        git.add().addFilepattern(DOCUMENT_FOLDER).call();
+        git.add().addFilepattern(LAYERS).call();
 
         commit(git, aCommitMessage);
     }
