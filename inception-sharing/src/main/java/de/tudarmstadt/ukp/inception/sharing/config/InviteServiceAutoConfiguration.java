@@ -28,6 +28,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.InviteServiceImpl;
 import de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.sharing.project.ProjectSharingMenuItem;
 
 @Configuration
 @ConditionalOnProperty(prefix = "sharing.invites", name = "enabled", havingValue = "true")
@@ -41,10 +42,17 @@ public class InviteServiceAutoConfiguration
         return new InviteServiceImpl(entityManager);
     }
 
-    @Order(6000)
+    @Order(InviteProjectSettingsPanelFactory.ORDER)
     @Bean
     public InviteProjectSettingsPanelFactory inviteProjectSettingsPanelFactory()
     {
         return new InviteProjectSettingsPanelFactory();
+    }
+
+    @Order(InviteProjectSettingsPanelFactory.ORDER)
+    @Bean
+    public ProjectSharingMenuItem projectSharingMenuItem()
+    {
+        return new ProjectSharingMenuItem();
     }
 }

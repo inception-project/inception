@@ -35,10 +35,12 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
  * {@link RecommenderServiceAutoConfiguration#recommenderProjectSettingsPanelFactory}.
  * </p>
  */
-@Order(360)
+@Order(RecommenderProjectSettingsPanelFactory.ORDER)
 public class RecommenderProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 360;
+
     @Override
     public String getPath()
     {

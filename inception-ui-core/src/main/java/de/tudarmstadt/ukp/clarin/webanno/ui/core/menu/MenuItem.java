@@ -19,13 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
 import org.apache.wicket.Page;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 
 public interface MenuItem
 {
     String getPath();
 
-    String getIcon();
+    IconType getIcon();
 
     String getLabel();
 

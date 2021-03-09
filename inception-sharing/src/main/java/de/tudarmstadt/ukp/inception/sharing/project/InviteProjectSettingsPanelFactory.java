@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguratio
 public class InviteProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 6000;
 
     @Override
     public String getPath()

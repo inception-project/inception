@@ -36,10 +36,12 @@ import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchU
  * {@link ExternalSearchUIAutoConfiguration#documentRepositoryProjectSettingsPanelFactory()}.
  * </p>
  */
-@Order(450)
+@Order(DocumentRepositoryProjectSettingsPanelFactory.ORDER)
 public class DocumentRepositoryProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 450;
+
     @Override
     public String getPath()
     {

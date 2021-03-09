@@ -35,10 +35,12 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfi
  * {@link KnowledgeBaseServiceUIAutoConfiguration#knowledgeBaseProjectSettingsPanelFactory}.
  * </p>
  */
-@Order(350)
+@Order(KnowledgeBaseProjectSettingsPanelFactory.ORDER)
 public class KnowledgeBaseProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 350;
+
     @Override
     public String getPath()
     {
