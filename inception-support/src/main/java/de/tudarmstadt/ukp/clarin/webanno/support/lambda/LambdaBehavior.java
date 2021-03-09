@@ -100,6 +100,12 @@ public class LambdaBehavior
         };
     }
 
+    public static Behavior visibleWhenModelIsNotNull(Component aComponent)
+    {
+        return visibleWhen(() -> aComponent.getDefaultModel() != null
+                && aComponent.getDefaultModelObject() != null);
+    }
+
     public static Behavior visibleWhen(SerializableBooleanSupplier aPredicate)
     {
         return new Behavior()

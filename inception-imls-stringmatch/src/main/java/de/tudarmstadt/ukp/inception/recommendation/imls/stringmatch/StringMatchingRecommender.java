@@ -227,6 +227,12 @@ public class StringMatchingRecommender
     }
 
     @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return extractData(aCasses, layerName, featureName).size();
+    }
+
+    @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
         List<Sample> data = extractData(aCasses, layerName, featureName);
