@@ -132,7 +132,8 @@ public class VersioningSettingsPanel
             success("Snapshotting successful!");
         }
         catch (IOException | GitAPIException e) {
-            LOG.error("Error snapshotting project: {}", e.getMessage());
+            Project project = getModelObject();
+            LOG.error("Error snapshotting project [{}]({})", project.getName(), project.getId(), e);
             error("Error snapshotting project: " + ExceptionUtils.getRootCauseMessage(e));
         }
 
@@ -149,7 +150,9 @@ public class VersioningSettingsPanel
             success("Pushing successful!");
         }
         catch (IOException | GitAPIException e) {
-            LOG.error("Error pushing to remote repository: {}", e.getMessage());
+            Project project = getModelObject();
+            LOG.error("Error pushing to remote repository in [{}]({})", project.getName(),
+                    project.getId(), e);
             error("Error pushing to remote repository: " + ExceptionUtils.getRootCauseMessage(e));
         }
 

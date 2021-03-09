@@ -109,8 +109,8 @@ public class VersioningServiceImpl
         if (repoExists(project)) {
             File repoPath = getRepoDir(project);
             log.info(
-                    "Removing git repository for project [{}] at [{}] because project is being removed",
-                    project.getId(), repoPath);
+                    "Removing git repository for [{}]({}) at [{}] because project is being removed",
+                    project.getName(), project.getId(), repoPath);
             FileSystemUtils.deleteRecursively(repoPath);
         }
     }
@@ -187,7 +187,8 @@ public class VersioningServiceImpl
     public void initializeRepo(Project aProject) throws GitAPIException
     {
         File repoDir = getRepoDir(aProject);
-        log.info("Creating git repository for project [{}] at [{}]", aProject.getId(), repoDir);
+        log.info("Creating git repository for project [{}]({}) at [{}]", aProject.getName(),
+                aProject.getId(), repoDir);
         Git.init().setDirectory(repoDir).call();
     }
 
