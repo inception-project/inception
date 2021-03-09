@@ -19,15 +19,19 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
+@Order(ExportProjectSettingsPanelFactory.ORDER)
 public class ExportProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 10000;
+
     @Override
     public String getPath()
     {
