@@ -115,7 +115,7 @@ public class VersioningSettingsPanel
             versioningService.setRemote(getModelObject(),
                     repositoryConfigModel.getObject().remotePath);
             aTarget.add(this);
-            info("Setting remote successful!");
+            success("Setting remote successful!");
         }
         catch (IOException | GitAPIException | URISyntaxException e) {
             LOG.error("Error setting remote: {}", e.getMessage());
@@ -129,7 +129,7 @@ public class VersioningSettingsPanel
         try {
             versioningService.snapshotCompleteProject(getModelObject(), "Snapshotting");
             aTarget.add(this);
-            info("Snapshotting successful!");
+            success("Snapshotting successful!");
         }
         catch (IOException | GitAPIException e) {
             LOG.error("Error snapshotting project: {}", e.getMessage());
@@ -146,7 +146,7 @@ public class VersioningSettingsPanel
             versioningService.pushToOrigin(getModelObject(), pushConfig.username,
                     pushConfig.password);
             aTarget.add(this);
-            info("Pushing successful!");
+            success("Pushing successful!");
         }
         catch (IOException | GitAPIException e) {
             LOG.error("Error pushing to remote repository: {}", e.getMessage());
