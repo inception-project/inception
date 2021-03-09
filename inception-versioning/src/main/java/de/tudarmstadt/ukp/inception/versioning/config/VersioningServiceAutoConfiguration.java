@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.versioning.VersioningServiceImpl;
 import de.tudarmstadt.ukp.inception.versioning.ui.VersioningSettingsPanelFactory;
 
 @Configuration
-@ConditionalOnProperty(prefix = "versioning", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "versioning", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class VersioningServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;

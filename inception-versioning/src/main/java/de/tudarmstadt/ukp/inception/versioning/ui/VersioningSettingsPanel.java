@@ -71,9 +71,9 @@ public class VersioningSettingsPanel
 
         // RepositoryConfig
         RepositoryConfig repositoryConfig = new RepositoryConfig();
-        repositoryConfig.setLocalPath(versioningService.getRepoDir(project).getAbsolutePath());
+        repositoryConfig.localPath = versioningService.getRepoDir(project).getAbsolutePath();
         try {
-            repositoryConfig.setRemotePath(versioningService.getRemote(project).orElse(""));
+            repositoryConfig.remotePath = versioningService.getRemote(project).orElse("");
         }
         catch (IOException | GitAPIException e) {
             LOG.error("Error getting remote: {}", e.getMessage());
@@ -143,8 +143,8 @@ public class VersioningSettingsPanel
     {
         try {
             PushConfig pushConfig = pushConfigModel.getObject();
-            versioningService.pushToOrigin(getModelObject(), pushConfig.getUsername(),
-                    pushConfig.getPassword());
+            versioningService.pushToOrigin(getModelObject(), pushConfig.username,
+                    pushConfig.password);
             aTarget.add(this);
             info("Pushing successful!");
         }
@@ -163,26 +163,6 @@ public class VersioningSettingsPanel
 
         private String localPath;
         private String remotePath;
-
-        public String getLocalPath()
-        {
-            return localPath;
-        }
-
-        public void setLocalPath(String aLocalPath)
-        {
-            localPath = aLocalPath;
-        }
-
-        public String getRemotePath()
-        {
-            return remotePath;
-        }
-
-        public void setRemotePath(String aRemotePath)
-        {
-            remotePath = aRemotePath;
-        }
     }
 
     private static class PushConfig
@@ -192,26 +172,6 @@ public class VersioningSettingsPanel
 
         private String username;
         private String password;
-
-        public String getUsername()
-        {
-            return username;
-        }
-
-        public void setUsername(String aUsername)
-        {
-            username = aUsername;
-        }
-
-        public String getPassword()
-        {
-            return password;
-        }
-
-        public void setPassword(String aPassword)
-        {
-            password = aPassword;
-        }
     }
 
 }
