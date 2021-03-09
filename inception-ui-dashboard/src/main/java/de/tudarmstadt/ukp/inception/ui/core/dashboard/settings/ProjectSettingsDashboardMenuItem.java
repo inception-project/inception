@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 
 import org.apache.wicket.Page;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.details.ProjectDetailPage;
 
@@ -33,6 +36,8 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.details.ProjectDe
 public class ProjectSettingsDashboardMenuItem
     extends ProjectSettingsMenuItemBase
 {
+    private @Autowired UserDao userRepo;
+
     @Override
     public String getPath()
     {
@@ -55,5 +60,11 @@ public class ProjectSettingsDashboardMenuItem
     public Class<? extends Page> getPageClass()
     {
         return ProjectDetailPage.class;
+    }
+    
+    @Override
+    public boolean applies(Project aProject)
+    {
+        return super.applies(aProject) || userRepo.isAdministrator(userRepo.getCurrentUser());
     }
 }
