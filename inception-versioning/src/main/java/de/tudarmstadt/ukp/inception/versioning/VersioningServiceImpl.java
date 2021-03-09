@@ -49,11 +49,11 @@ import org.springframework.util.FileSystemUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
@@ -82,19 +82,20 @@ public class VersioningServiceImpl
     private final RepositoryProperties repositoryProperties;
     private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
-    private final ProjectService projectService;
+    private final CurationDocumentService curationDocumentService;
     private final CasStorageService casStorageService;
     private final UserDao userDao;
 
     @Autowired
     public VersioningServiceImpl(RepositoryProperties aRepoProperties,
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
-            ProjectService aProjectService, CasStorageService aCasStorageService, UserDao aUserDao)
+            CurationDocumentService aCurationDocumentService, CasStorageService aCasStorageService,
+            UserDao aUserDao)
     {
         repositoryProperties = aRepoProperties;
         annotationService = aAnnotationService;
         documentService = aDocumentService;
-        projectService = aProjectService;
+        curationDocumentService = aCurationDocumentService;
         casStorageService = aCasStorageService;
         userDao = aUserDao;
     }
@@ -142,11 +143,21 @@ public class VersioningServiceImpl
             }
 
             // Dump initial cas
-            Path initialCasPath = sourceDir.resolve("initial.ser");
+            Path initialCasPath = sourceDir.resolve("initial.xmi");
             try (CasStorageSession session = CasStorageSession.openNested();
                     OutputStream out = Files.newOutputStream(initialCasPath)) {
                 CAS cas = documentService.createOrReadInitialCas(sourceDocument);
                 CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
+            }
+
+            // Dump curation cas
+            Path curationCasPath = sourceDir.resolve("curation.xmi");
+            try (CasStorageSession session = CasStorageSession.openNested();
+                    OutputStream out = Files.newOutputStream(curationCasPath)) {
+                if (curationDocumentService.existsCurationCas(sourceDocument)) {
+                    CAS cas = curationDocumentService.readCurationCas(sourceDocument);
+                    CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
+                }
             }
 
             // Dump annotation documents

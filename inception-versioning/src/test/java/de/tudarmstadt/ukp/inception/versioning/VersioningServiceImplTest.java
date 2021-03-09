@@ -81,6 +81,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -189,16 +191,18 @@ public class VersioningServiceImplTest
             documents.add(treeWalk.getPathString());
         }
 
-        assertThat(documents).hasSize(9).containsExactlyInAnyOrder( //
+        assertThat(documents).containsExactlyInAnyOrder( //
                 "layers.json", //
 
                 "document/dinos.txt/source.xmi", //
-                "document/dinos.txt/initial.ser", //
+                "document/dinos.txt/initial.xmi", //
+                "document/dinos.txt/curation.xmi", //
                 "document/dinos.txt/admin.xmi", //
                 "document/dinos.txt/annotator.xmi", //
 
                 "document/lorem.txt/source.xmi", //
-                "document/lorem.txt/initial.ser", //
+                "document/lorem.txt/initial.xmi", //
+                "document/lorem.txt/curation.xmi", //
                 "document/lorem.txt/admin.xmi", //
                 "document/lorem.txt/annotator.xmi" //
         );
@@ -240,15 +244,17 @@ public class VersioningServiceImplTest
         while (treeWalk.next()) {
             remoteFiles.add(treeWalk.getPathString());
         }
-        assertThat(remoteFiles).hasSize(7).containsExactlyInAnyOrder( //
+        assertThat(remoteFiles).containsExactlyInAnyOrder( //
                 "layers.json", //
 
                 "document/dinos.txt/source.xmi", //
-                "document/dinos.txt/initial.ser", //
+                "document/dinos.txt/initial.xmi", //
+                "document/dinos.txt/curation.xmi", //
                 "document/dinos.txt/admin.xmi", //
 
                 "document/lorem.txt/source.xmi", //
-                "document/lorem.txt/initial.ser", //
+                "document/lorem.txt/initial.xmi", //
+                "document/lorem.txt/curation.xmi", //
                 "document/lorem.txt/admin.xmi" //
         );
     }
@@ -373,13 +379,20 @@ public class VersioningServiceImplTest
         }
 
         @Bean
+        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
+                AnnotationSchemaService aAnnotationService)
+        {
+            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
+        }
+
+        @Bean
         public VersioningService versioningService(RepositoryProperties aRepositoryProperties,
                 AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
-                ProjectService aProjectService, CasStorageService aCasStorageService,
-                UserDao aUserDao)
+                CurationDocumentService aCurationDocumentService,
+                CasStorageService aCasStorageService, UserDao aUserDao)
         {
             return new VersioningServiceImpl(aRepositoryProperties, aAnnotationSchemaService,
-                    aDocumentService, aProjectService, aCasStorageService, aUserDao);
+                    aDocumentService, aCurationDocumentService, aCasStorageService, aUserDao);
         }
 
         @Lazy

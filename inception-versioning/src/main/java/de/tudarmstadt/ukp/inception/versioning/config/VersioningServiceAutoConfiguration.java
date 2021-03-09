@@ -28,8 +28,8 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.versioning.VersioningService;
 import de.tudarmstadt.ukp.inception.versioning.VersioningServiceImpl;
@@ -44,10 +44,11 @@ public class VersioningServiceAutoConfiguration
     @Bean
     public VersioningService versioningService(RepositoryProperties aRepositoryProperties,
             AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
-            ProjectService aProjectService, CasStorageService aCasStorageService, UserDao aUserDao)
+            CurationDocumentService aCurationDocumentService, CasStorageService aCasStorageService,
+            UserDao aUserDao)
     {
         return new VersioningServiceImpl(aRepositoryProperties, aAnnotationSchemaService,
-                aDocumentService, aProjectService, aCasStorageService, aUserDao);
+                aDocumentService, aCurationDocumentService, aCasStorageService, aUserDao);
     }
 
     @Order(8000)
