@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
 import static com.googlecode.wicket.jquery.core.utils.RequestCycleUtils.getQueryParameterValue;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
@@ -131,6 +132,29 @@ class UserSelectionPanel
                 }
 
                 return result;
+            }
+
+            @Override
+            public void convertInput()
+            {
+                if (!config.isHideUsers()) {
+                    super.convertInput();
+                    return;
+                }
+
+                final String[] values = this.getInputAsArray();
+                List<User> result = new ArrayList<>();
+                for (String value : values) {
+                    if (isBlank(value)) {
+                        continue;
+                    }
+
+                    User user = userRepository.get(value);
+                    if (user != null) {
+                        result.add(user);
+                    }
+                }
+                this.setConvertedInput(result);
             }
         };
         usersToAdd.setModel(usersToAddModel);
