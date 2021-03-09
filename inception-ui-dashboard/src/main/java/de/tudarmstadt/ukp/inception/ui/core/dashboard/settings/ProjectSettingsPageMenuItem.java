@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfig
  * {@link DashboardAutoConfiguration#projectSettingsPageMenuItem()}.
  * </p>
  */
+@Deprecated
 public class ProjectSettingsPageMenuItem
     implements ProjectMenuItem
 {
