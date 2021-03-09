@@ -24,14 +24,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum.Accuracy;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
 public class SimulationLearningCurvePanel
@@ -93,13 +92,13 @@ public class SimulationLearningCurvePanel
     private final Project project;
     private final IModel<Recommender> recommender;
     private final IModel<String> user;
+    private final IModel<RecommenderEvaluationScoreMetricEnum> metric;
 
     private final DropDownChoice<RecommenderEvaluationScoreMetricEnum> metricChoice;
     private final DropDownChoice<String> annotatorChoice;
     private final ChartPanel chartPanel;
 
-    private List<EvaluationResult> evaluationResults;
-    private boolean evaluate;
+    private final IModel<List<EvaluationResult>> evaluationResults;
 
     public SimulationLearningCurvePanel(String aId, Project aProject,
             IModel<Recommender> aRecommender)
@@ -108,23 +107,20 @@ public class SimulationLearningCurvePanel
 
         project = aProject;
         recommender = aRecommender;
-        evaluate = true;
+        evaluationResults = new ListModel<EvaluationResult>(emptyList());
+        metric = new Model<RecommenderEvaluationScoreMetricEnum>(Accuracy);
 
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
 
-        chartPanel = new ChartPanel(MID_CHART_CONTAINER,
-                LoadableDetachableModel.of(this::renderChart));
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER, evaluationResults, metric);
         chartPanel.setOutputMarkupPlaceholderTag(true);
-        chartPanel.add(visibleWhen(() -> evaluationResults != null));
+        chartPanel.add(visibleWhen(() -> isNotEmpty(chartPanel.getModelObject())));
         form.add(chartPanel);
 
-        metricChoice = new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>("metric",
-                new Model<RecommenderEvaluationScoreMetricEnum>(Accuracy),
+        metricChoice = new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>("metric", metric,
                 new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
         metricChoice.setOutputMarkupId(true);
-        // metricChoice.add(new LambdaAjaxFormComponentUpdatingBehavior(//
-        // "change", this::actionEvaluate));
         form.add(metricChoice);
 
         IModel<List<String>> annotatorChoiceModel = LoadableDetachableModel
@@ -132,15 +128,14 @@ public class SimulationLearningCurvePanel
         user = Model.of(annotatorChoiceModel.getObject().get(0));
         annotatorChoice = new BootstrapSelect<String>("annotator", user, annotatorChoiceModel);
         annotatorChoice.setOutputMarkupId(true);
-        // annotatorChoice.add(new LambdaAjaxFormComponentUpdatingBehavior(//
-        // "change", this::actionEvaluate));
         form.add(annotatorChoice);
 
         // clicking the start button the annotated documents are evaluated and the learning curve
         // for the selected recommender is plotted in the hCart Panel
         form.add(new LambdaAjaxButton<>(MID_SIMULATION_START_BUTTON, (_target, _form) -> {
-            evaluate = true;
-            actionEvaluate(_target);
+            recommenderChanged();
+            evaluate();
+            _target.add(chartPanel);
         }));
     }
 
@@ -154,59 +149,22 @@ public class SimulationLearningCurvePanel
         return list;
     }
 
-    private void actionEvaluate(AjaxRequestTarget aTarget)
-    {
-        renderChart();
-
-        aTarget.add(chartPanel);
-    }
-
-    private LearningCurve renderChart()
-    {
-        String[] scoresAndTrainingSizes = evaluate();
-
-        if (scoresAndTrainingSizes == null) {
-            // no warning message here because it has already been shown in the method
-            // evaluate(_target). There are different scenarios when the score is returned
-            // null and each one is handled differently in the method evaluate(_target).
-            return null;
-        }
-
-        String scores = scoresAndTrainingSizes[0];
-        String trainingSizes = scoresAndTrainingSizes[1];
-
-        if (scores.isEmpty()) {
-            LOG.warn("There were no evaluation to show");
-            return null;
-        }
-
-        Map<String, String> curveData = new HashMap<String, String>();
-        curveData.put(recommender.getObject().getName(), scores);
-
-        LearningCurve learningCurve = new LearningCurve();
-        learningCurve.setCurveData(curveData);
-        learningCurve.setXaxis(trainingSizes);
-
-        evaluate = false;
-
-        return learningCurve;
-    }
-
     /**
      * evaluates the selected recommender with the help of the annotated documents in the project.
-     * 
-     * @return comma separated string of scores in the first index of the array
      */
-    private String[] evaluate()
+    private void evaluate()
     {
+        if (evaluationResults.getObject() != null) {
+            return;
+        }
+
         Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
 
         // there must be some recommender selected by the user on the UI
         if (recommender.getObject() == null || recommender.getObject().getTool() == null) {
             error("Please select a recommender from the list");
             target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
-
-            return null;
+            return;
         }
 
         List<CAS> casList = new ArrayList<>();
@@ -228,7 +186,7 @@ public class SimulationLearningCurvePanel
             error("Unable to load chart data: " + getRootCauseMessage(e));
             target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
             LOG.error("Unable to render chart", e);
-            return null;
+            return;
         }
 
         @SuppressWarnings("rawtypes")
@@ -239,27 +197,23 @@ public class SimulationLearningCurvePanel
         if (recommenderEngine == null) {
             error("Unknown recommender type selected: [" + recommender.getObject().getTool() + "]");
             target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
-            return null;
-        }
-
-        if (!evaluate) {
-            return getEvaluationScore(evaluationResults);
+            return;
         }
 
         int estimatedDatasetSize = recommenderEngine.estimateSampleCount(casList);
         if (estimatedDatasetSize < 0) {
             error("Evaluation is not supported for the selected recommender.");
             target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
-            return null;
+            return;
         }
 
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE,
-                estimatedDatasetSize / STEPS, LOW_SAMPLE_THRESHOLD);
+        int incrementSize = (int) Math.ceil((estimatedDatasetSize * TRAIN_PERCENTAGE)) / STEPS;
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE, incrementSize,
+                LOW_SAMPLE_THRESHOLD);
 
-        evaluationResults = new ArrayList<EvaluationResult>();
+        evaluationResults.setObject(new ArrayList<>());
 
-        // create a list of comma separated string of scores from every iteration of
-        // evaluation.
+        // Create a list of comma separated string of scores from every iteration of evaluation.
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
 
@@ -268,7 +222,7 @@ public class SimulationLearningCurvePanel
                         splitStrategy);
 
                 if (!evaluationResult.isEvaluationSkipped()) {
-                    evaluationResults.add(evaluationResult);
+                    evaluationResults.getObject().add(evaluationResult);
                 }
             }
             catch (RecommendationException e) {
@@ -278,53 +232,10 @@ public class SimulationLearningCurvePanel
                 continue;
             }
         }
-
-        return getEvaluationScore(evaluationResults);
-    }
-
-    private String[] getEvaluationScore(List<EvaluationResult> aEvaluationResults)
-    {
-        StringBuilder sbScore = new StringBuilder();
-        StringBuilder sbTrainingSize = new StringBuilder();
-
-        // create a list of comma separated string of scores from every iteration of
-        // evaluation.
-        for (EvaluationResult evaluationResult : aEvaluationResults) {
-            double trainingSize;
-            double score;
-
-            if (evaluationResult.isEvaluationSkipped()) {
-                continue;
-            }
-
-            switch (metricChoice.getModelObject()) {
-            case Accuracy:
-                score = evaluationResult.computeAccuracyScore();
-                break;
-            case Precision:
-                score = evaluationResult.computePrecisionScore();
-                break;
-            case Recall:
-                score = evaluationResult.computeRecallScore();
-                break;
-            case F1:
-                score = evaluationResult.computeF1Score();
-                break;
-            default:
-                score = evaluationResult.computeAccuracyScore();
-            }
-
-            trainingSize = evaluationResult.getTrainDataRatio();
-
-            sbScore.append(score).append(",");
-            sbTrainingSize.append(trainingSize).append(",");
-        }
-
-        return new String[] { sbScore.toString(), sbTrainingSize.toString() };
     }
 
     public void recommenderChanged()
     {
-        evaluate = true;
+        evaluationResults.setObject(null);
     }
 }
