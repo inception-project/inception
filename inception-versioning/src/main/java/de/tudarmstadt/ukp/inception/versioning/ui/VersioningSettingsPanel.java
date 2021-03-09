@@ -78,7 +78,6 @@ public class VersioningSettingsPanel
         catch (IOException | GitAPIException e) {
             LOG.error("Error getting remote: {}", e.getMessage());
             error("Error getting remote: " + ExceptionUtils.getRootCauseMessage(e));
-            return;
         }
 
         repositoryConfigModel = new CompoundPropertyModel<>(repositoryConfig);
