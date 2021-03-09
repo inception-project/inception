@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
@@ -103,21 +102,17 @@ public class VersioningServiceImpl
 
     @EventListener
     @Transactional
-    public void onAfterProjectCreated(AfterProjectCreatedEvent aEvent) throws GitAPIException
-    {
-        initializeRepo(aEvent.getProject());
-    }
-
-    @EventListener
-    @Transactional
     public void onBeforeProjectRemovedEvent(BeforeProjectRemovedEvent aEvent)
     {
         Project project = aEvent.getProject();
-        File repoPath = getRepoDir(project);
-        log.info(
-                "Removing git repository for project [{}] at [{}] because project is being removed",
-                project.getId(), repoPath);
-        FileSystemUtils.deleteRecursively(repoPath);
+
+        if (repoExists(project)) {
+            File repoPath = getRepoDir(project);
+            log.info(
+                    "Removing git repository for project [{}] at [{}] because project is being removed",
+                    project.getId(), repoPath);
+            FileSystemUtils.deleteRecursively(repoPath);
+        }
     }
 
     @Override

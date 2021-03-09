@@ -26,7 +26,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -141,9 +140,9 @@ public class VersioningServiceImplTest
     }
 
     @Test
-    public void deletingProject_ShouldRemoveGitRepository() throws IOException
+    public void deletingProject_ShouldRemoveGitRepository() throws Exception
     {
-        projectService.createProject(testProject);
+        createProject(testProject);
         assertThat(sut.getRepoDir(testProject))
                 .isDirectoryContaining(f -> f.getName().equals(".git") && f.isDirectory());
 
@@ -267,7 +266,7 @@ public class VersioningServiceImplTest
     @Test
     public void repoExists_IfRepoExists_ShouldReturnTrue() throws Exception
     {
-        projectService.createProject(testProject);
+        createProject(testProject);
 
         assertThat(sut.repoExists(testProject)).isTrue();
     }
@@ -412,6 +411,7 @@ public class VersioningServiceImplTest
     {
         projectService.createProject(aProject);
         projectService.initializeProject(aProject);
+        sut.initializeRepo(aProject);
     }
 
     private SourceDocument buildSourceDocument(long aDocumentId)
