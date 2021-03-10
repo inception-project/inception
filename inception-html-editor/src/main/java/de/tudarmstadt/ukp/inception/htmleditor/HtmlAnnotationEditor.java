@@ -28,9 +28,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.JCasUtil.selectSingle;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -68,6 +70,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.dkpro.core.api.xml.Cas2SaxEvents;
 import org.dkpro.core.api.xml.type.XmlDocument;
+import org.dkpro.core.api.xml.type.XmlElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -185,8 +188,18 @@ public class HtmlAnnotationEditor
             th.getTransformer().setOutputProperty(INDENT, "no");
             th.setResult(new StreamResult(out));
 
+            // The HtmlDocumentReader only extracts text from the body. So here we need to limit
+            // rendering to the body so that the text and the annotations align properly. Also,
+            // we wouldn't want to render anything outside the body anyway.
+            XmlElement html = selectSingle(aCas.getJCas(), XmlDocument.class).getRoot();
+            XmlElement body = html.getChildren().stream() //
+                    .filter(e -> e instanceof XmlElement) //
+                    .map(e -> (XmlElement) e) //
+                    .filter(e -> equalsIgnoreCase("body", e.getQName())) //
+                    .findFirst().orElseThrow();
+
             Cas2SaxEvents serializer = new Cas2SaxEvents(th);
-            serializer.process(aCas.getJCas());
+            serializer.process(body);
             return out.toString();
         }
     }
@@ -401,9 +414,8 @@ public class HtmlAnnotationEditor
             }
 
             try {
-                // Annotator.js seems to do offsets 1-based (?).
-                int begin = anno.getRanges().get(0).getStartOffset() - 1;
-                int end = anno.getRanges().get(0).getEndOffset() - 1;
+                int begin = anno.getRanges().get(0).getStartOffset();
+                int end = anno.getRanges().get(0).getEndOffset();
 
                 if (!(begin > -1 && end > -1)) {
                     throw new AnnotationException(
@@ -494,8 +506,7 @@ public class HtmlAnnotationEditor
 
         private List<Range> toRanges(List<VRange> aRanges)
         {
-            // Annotator.js seems to do offsets 1-based (?).
-            return aRanges.stream().map(r -> new Range(r.getBegin() + 1, r.getEnd() + 1))
+            return aRanges.stream().map(r -> new Range(r.getBegin(), r.getEnd()))
                     .collect(Collectors.toList());
         }
 
