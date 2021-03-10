@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
+
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.Page;
@@ -57,8 +61,10 @@ public abstract class ProjectPageBase
 
         // Check access to project
         if (!projectService.hasRole(aUser, project, aRoles)) {
-            getSession().error("You require any of the the [" + aRoles + "] roles to access the ["
-                    + getClass().getSimpleName() + "] project [" + project.getName() + "]");
+            getSession().error(format(
+                    "You require any of the [%s] roles to access the [%s] for project [%s]",
+                    asList(aRoles).stream().map(PermissionLevel::getId).collect(joining(", ")),
+                    getClass().getSimpleName(), project.getName()));
 
             backToProjectPage();
         }
