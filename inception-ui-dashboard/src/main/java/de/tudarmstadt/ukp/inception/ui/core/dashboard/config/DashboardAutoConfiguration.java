@@ -29,16 +29,17 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsPa
 public class DashboardAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "new-settings")
     @Order(8000)
+    @ConditionalOnProperty(prefix = "dashboard", name = "new-settings", matchIfMissing = true)
     public ProjectSettingsDashboardMenuItem projectSettingsDashboardMenuItem()
     {
         return new ProjectSettingsDashboardMenuItem();
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "new-settings", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "dashboard", name = "new-settings", havingValue = "false", matchIfMissing = false)
     @Order(8000)
+    @Deprecated
     public ProjectSettingsPageMenuItem projectSettingsPageMenuItem()
     {
         return new ProjectSettingsPageMenuItem();

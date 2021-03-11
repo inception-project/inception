@@ -35,6 +35,8 @@ public interface UserDao
      */
     String getCurrentUsername();
 
+    boolean isCurrentUserAdmin();
+
     /**
      * Create a new {@link User}
      * 
