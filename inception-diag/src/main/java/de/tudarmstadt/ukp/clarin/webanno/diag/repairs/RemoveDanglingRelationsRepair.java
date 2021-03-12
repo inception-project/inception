@@ -116,7 +116,7 @@ public class RemoveDanglingRelationsRepair
         if (!toDelete.isEmpty()) {
             toDelete.forEach(aCas::removeFsFromIndexes);
             aMessages.add(new LogMessage(this, INFO, "Removed [%d] dangling relations.",
-                    nonIndexed.size()));
+                    toDelete.size()));
         }
     }
 }

@@ -90,7 +90,7 @@ public class DanglingRelationsCheck
                 StringBuilder message = new StringBuilder();
 
                 message.append("Relation [" + relationAdapter.getLayer().getName() + "] with id ["
-                        + getAddr(fs) + "] has loose ends - cannot identify attached annotations.");
+                        + getAddr(fs) + "] has loose ends.");
                 if (relationAdapter.getAttachFeatureName() != null) {
                     message.append("\nRelation [" + relationAdapter.getLayer().getName()
                             + "] attached to feature [" + relationAdapter.getAttachFeatureName()
