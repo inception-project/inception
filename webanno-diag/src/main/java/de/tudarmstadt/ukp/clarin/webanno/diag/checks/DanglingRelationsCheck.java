@@ -15,16 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
+package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.getNonIndexedFSes;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel.INFO;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -35,31 +33,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * Removes relations that were not properly cleaned up after deleting a source/target span. Such
- * relations either:
- * <ul>
- * <li>still point to the respective span even through the span is not indexed anymore</li>
- * <li>have a {@code null} source or target span</li>
- * <li>have a {@code null} source or target span after resolving the attach feature</li>
- * </ul>
+ * Checks if there are any relations that do not have a source or target. Note that relations
+ * referring to non-indexed end-points are handled by {@link AllFeatureStructuresIndexedCheck}.
  */
-@Safe(false)
-public class RemoveDanglingRelationsRepair
-    implements Repair
+public class DanglingRelationsCheck
+    implements Check
 {
     private @Autowired AnnotationSchemaService annotationService;
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
-
-        Set<FeatureStructure> toDelete = new LinkedHashSet<>();
+        boolean ok = true;
 
         for (AnnotationFS fs : aCas.getAnnotationIndex()) {
             Type t = fs.getType();
@@ -69,16 +58,6 @@ public class RemoveDanglingRelationsRepair
 
             // Is this a relation?
             if (!(sourceFeat != null && targetFeat != null)) {
-                continue;
-            }
-
-            FeatureStructure source = fs.getFeatureValue(sourceFeat);
-            FeatureStructure target = fs.getFeatureValue(targetFeat);
-
-            // Are there null end-points or does it point to deleted spans?
-            if (source == null || target == null || nonIndexed.contains(source)
-                    || nonIndexed.contains(target)) {
-                toDelete.add(fs);
                 continue;
             }
 
@@ -94,29 +73,37 @@ public class RemoveDanglingRelationsRepair
                         .getFeatureByBaseName(relationAdapter.getAttachFeatureName());
             }
 
+            FeatureStructure source = fs.getFeatureValue(sourceFeat);
+            FeatureStructure target = fs.getFeatureValue(targetFeat);
+
             // Here we get the annotations that the relation is pointing to in the UI
-            if (relationSourceAttachFeature != null) {
+            if (source != null && relationSourceAttachFeature != null) {
                 source = (AnnotationFS) source.getFeatureValue(relationSourceAttachFeature);
             }
 
-            if (relationTargetAttachFeature != null) {
+            if (target != null && relationTargetAttachFeature != null) {
                 target = (AnnotationFS) target.getFeatureValue(relationTargetAttachFeature);
             }
 
-            // Are there null end-points or does it point to deleted spans after resolving to
-            // annotations linked to in the UI?
-            if (source == null || target == null || nonIndexed.contains(source)
-                    || nonIndexed.contains(target)) {
-                toDelete.add(fs);
-                continue;
+            // Does it have null endpoints?
+            if (source == null || target == null) {
+                StringBuilder message = new StringBuilder();
+
+                message.append("Relation [" + relationAdapter.getLayer().getName() + "] with id ["
+                        + getAddr(fs) + "] has loose ends - cannot identify attached annotations.");
+                if (relationAdapter.getAttachFeatureName() != null) {
+                    message.append("\nRelation [" + relationAdapter.getLayer().getName()
+                            + "] attached to feature [" + relationAdapter.getAttachFeatureName()
+                            + "].");
+                }
+                message.append("\nSource: " + source);
+                message.append("\nTarget: " + target);
+
+                aMessages.add(new LogMessage(this, INFO, "%s", message));
+                ok = false;
             }
         }
 
-        // Delete those relations that pointed to deleted spans
-        if (!toDelete.isEmpty()) {
-            toDelete.forEach(aCas::removeFsFromIndexes);
-            aMessages.add(new LogMessage(this, INFO, "Removed [%d] dangling relations.",
-                    toDelete.size()));
-        }
+        return ok;
     }
 }
