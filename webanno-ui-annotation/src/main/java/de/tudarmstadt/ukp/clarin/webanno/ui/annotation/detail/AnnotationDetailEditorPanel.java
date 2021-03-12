@@ -1043,9 +1043,6 @@ public abstract class AnnotationDetailEditorPanel
 
         state.rememberFeatures();
 
-        info(generateMessage(state.getSelectedAnnotationLayer(), null, true));
-        aTarget.addChildren(getPage(), IFeedback.class);
-
         reset(aTarget);
 
         onChange(aTarget);
@@ -1055,19 +1052,21 @@ public abstract class AnnotationDetailEditorPanel
     private void deleteAnnotation(CAS aCas, AnnotatorState state, AnnotationFS fs,
             AnnotationLayer layer, TypeAdapter adapter)
     {
+        RequestCycle.get().find(AjaxRequestTarget.class)
+                .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+
         // == DELETE ATTACHED RELATIONS ==
         // If the deleted FS is a span, we must delete all relations that
         // point to it directly or indirectly via the attachFeature.
-        //
-        // NOTE: It is important that this happens before UNATTACH SPANS since the attach feature
-        // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
             for (AttachedAnnotation rel : annotationService.getAttachedRels(layer, fs)) {
-                aCas.removeFsFromIndexes(rel.getEndpoint());
-                info("The attached annotation for relation type [" + rel.getLayer().getUiName()
-                        + "] has been deleted");
-                RequestCycle.get().find(AjaxRequestTarget.class)
-                        .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+                RelationAdapter relationAdapter = (RelationAdapter) annotationService
+                        .findAdapter(state.getProject(), rel.getRelation());
+
+                relationAdapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
+                        new VID(rel.getRelation()));
+
+                info(generateMessage(relationAdapter.getLayer(), null, true));
             }
         }
 
@@ -1075,23 +1074,6 @@ public abstract class AnnotationDetailEditorPanel
         // This case is currently not implemented because WebAnno currently does not allow to
         // create spans that attach to other spans. The only span type for which this is relevant
         // is the Token type which cannot be deleted.
-
-        // == UNATTACH SPANS ==
-        // If the deleted FS is a span that is attached to another span, the
-        // attachFeature in the other span must be set to null. Typical example: POS is deleted, so
-        // the pos feature of Token must be set to null. This is a quick case, because we only need
-        // to look at span annotations that have the same offsets as the FS to be deleted.
-        if (adapter instanceof SpanAdapter && layer.getAttachType() != null
-                && layer.getAttachFeature() != null) {
-            Type spanType = CasUtil.getType(aCas, layer.getAttachType().getName());
-            Feature attachFeature = spanType
-                    .getFeatureByBaseName(layer.getAttachFeature().getName());
-            for (AnnotationFS attachedFs : getAttachedSpans(annotationService, fs, layer)) {
-                attachedFs.setFeatureValue(attachFeature, null);
-                LOG.debug("Unattached [" + attachFeature.getShortName() + "] on annotation ["
-                        + getAddr(attachedFs) + "]");
-            }
-        }
 
         // == CLEAN UP LINK FEATURES ==
         // If the deleted FS is a span that is the target of a link feature, we must unset that
@@ -1112,6 +1094,9 @@ public abstract class AnnotationDetailEditorPanel
                         LinkWithRoleModel link = i.next();
                         if (link.targetAddr == getAddr(fs)) {
                             i.remove();
+                            info("Cleared slot [" + link.role + "] in feature ["
+                                    + linkFeature.getUiName() + "] on ["
+                                    + linkFeature.getLayer().getUiName() + "]");
                             LOG.debug("Cleared slot [" + link.role + "] in feature ["
                                     + linkFeature.getName() + "] on annotation ["
                                     + getAddr(linkHostFS) + "]");
@@ -1144,6 +1129,8 @@ public abstract class AnnotationDetailEditorPanel
         // Actually delete annotation
         adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
                 state.getSelection().getAnnotation());
+
+        info(generateMessage(state.getSelectedAnnotationLayer(), null, true));
     }
 
     @Override
