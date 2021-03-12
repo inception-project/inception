@@ -159,6 +159,16 @@ Related repairs:: <<repair_UpgradeCasRepair>>
 Checks if the ìnternal type `CASMetadata is defined in the type system of this CAS. If this is
 not the case, then the application may not be able to detect concurrent modifications.
 
+[[check_DanglingRelationsCheck]]
+=== Dangling relations
+[horizontal]
+ID:: `DanglingRelationsCheck`
+Related repairs:: <<repair_RemoveDanglingRelationsRepair>>
+
+Checks if there are any relations that do not have a source or target. Either the source/end are
+not set at all or they refer to an unset attach feature in another layer. Note that relations
+referring to non-indexed end-points are handled by <<check_AllFeatureStructuresIndexedCheck>>.
+
 
 [[sect_repairs]]
 == Repairs
@@ -246,7 +256,14 @@ This repair action removes all relations that point to unindexed spans.
 
 Although this is a destructive repair action, it is likely a safe action in most cases. When
 deleting a span, normally any attached relations are also deleted (unless there is a bug).
-Dangling relations are not visible in the user interface.
+Dangling relations are not visible in the user interface. A dangling relation is one that meets
+any of the following conditions:
+
+* source or target are not set
+* the annotation pointed to by source or target is not indexed
+* the attach-feature in the annotation pointed to by source or target is not set
+* the annotation pointed to by  attach-feature in the annotation pointed to by source or target is
+  not indexed
 
 [[repair_RemoveZeroSizeTokensAndSentencesRepair]]
 === Remove 0-size tokens and sentences
