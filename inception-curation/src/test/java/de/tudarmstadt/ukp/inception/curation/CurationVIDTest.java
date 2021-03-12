@@ -21,50 +21,47 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class CurationVIDTest
 {
-    private CurationEditorExtension extension;
-
-    @Before
-    public void setup()
-    {
-        extension = new CurationEditorExtension();
-    }
-
     @Test
     public void testParse()
     {
-        assertParseVid(VID.parse("ext:10-kevin:10"), "ext", -1, 10, -1, -1, -1, "kevin",
-                "kevin:10");
-        assertParseVid(VID.parse("ext:10-kevin:10.1"), "ext", -1, 10, -1, 1, -1, "kevin",
-                "kevin:10.1");
-        assertParseVid(VID.parse("ext:10-kevin:10.1.2"), "ext", -1, 10, -1, 1, 2, "kevin",
-                "kevin:10.1.2");
-        assertParseVid(VID.parse("ext:10-kevin:10-1.2.3"), "ext", -1, 10, 1, 2, 3, "kevin",
-                "kevin:10-1.2.3");
-        assertParseVid(VID.parse("ext:10-kevin:10-1.2.3@1"), "ext", 1, 10, 1, 2, 3, "kevin",
-                "kevin:10-1.2.3@1");
+        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10"), //
+                "curationEditorExtension", "kevin", "10", -1, 10, -1, -1, -1);
+
+        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10.1"), //
+                "curationEditorExtension", "kevin", "10.1", -1, 10, -1, 1, -1);
+
+        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10.1.2"), //
+                "curationEditorExtension", "kevin", "10.1.2", -1, 10, -1, 1, 2);
+
+        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10-1.2.3"), //
+                "curationEditorExtension", "kevin", "10-1.2.3", -1, 10, 1, 2, 3);
+
+        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10-1.2.3@1"), //
+                "curationEditorExtension", "kevin", "10-1.2.3@1", 1, 10, 1, 2, 3);
     }
 
-    private void assertParseVid(VID aVID, String aExtensionId, int aLayerId, int aAnnotationID,
-            int aSubAnnotationId, int aAttribute, int aSlot, String aUsername,
-            String aExtensionPayload)
+    private void assertParseVid(VID aVID, String aExtensionId, String aUsername, String aPayload,
+            int aLayerId, int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
-        VID a = extension.parse(aVID);
-        assertEquals(aExtensionId, a.getExtensionId());
-        assertEquals(aExtensionPayload, a.getExtensionPayload());
-        assertEquals(aUsername, ((CurationVID) a).getUsername());
-        assertEquals(aLayerId, a.getLayerId());
-        assertEquals(aAnnotationID, a.getId());
-        assertEquals(aSubAnnotationId, a.getSubId());
-        assertEquals(aAttribute, a.getAttribute());
-        assertEquals(aSlot, a.getSlot());
+        CurationVID a = CurationVID.parse(aVID.getExtensionPayload());
+        VID b = VID.parse(a.getExtensionPayload());
+
+        assertThat(a.getExtensionId()).isEqualTo(aExtensionId);
+        assertThat(a.getExtensionPayload()).isEqualTo(aPayload);
+        assertThat(a.getUsername()).isEqualTo(aUsername);
+
+        assertThat(b.getLayerId()).isEqualTo(aLayerId);
+        assertThat(b.getId()).isEqualTo(aAnnotationID);
+        assertThat(b.getSubId()).isEqualTo(aSubAnnotationId);
+        assertThat(b.getAttribute()).isEqualTo(aAttribute);
+        assertThat(b.getSlot()).isEqualTo(aSlot);
     }
 }

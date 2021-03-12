@@ -21,6 +21,15 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
+import static de.tudarmstadt.ukp.inception.curation.CurationEditorExtension.EXTENSION_ID;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class CurationVID
@@ -30,17 +39,9 @@ public class CurationVID
 
     private final String username;
 
-    public CurationVID(String aExtId, String aUsername, VID aVID)
+    public CurationVID(String aUsername, VID aVID)
     {
-        super(aExtId, aVID.getLayerId(), aVID.getId(), aVID.getSubId(), aVID.getAttribute(),
-                aVID.getSlot(), aUsername + ":" + aVID.toString());
-        username = aUsername;
-    }
-
-    public CurationVID(String aExtId, String aUsername, VID aVID, String aExtensionPayload)
-    {
-        super(aExtId, aVID.getLayerId(), aVID.getId(), aVID.getSubId(), aVID.getAttribute(),
-                aVID.getSlot(), aExtensionPayload);
+        super(aVID.getId(), EXTENSION_ID, aUsername + "!" + aVID.toString());
         username = aUsername;
     }
 
@@ -50,15 +51,51 @@ public class CurationVID
     }
 
     @Override
-    public int hashCode()
+    public String getExtensionPayload()
     {
-        return super.hashCode() * 31 + username.hashCode();
+        return StringUtils.substringAfter(super.getExtensionPayload(), "!");
+    }
+
+    /**
+     * Parse extension payload of given VID into CurationVID
+     */
+    public static CurationVID parse(String aParamId)
+    {
+        // format of extension payload is <USER>!<VID> with standard VID format
+        // <ID>-<SUB>.<ATTR>.<SLOT>@<LAYER>
+        Matcher matcher = Pattern.compile("(?:(?<USER>[^!]+)\\!)(?<VID>.+)").matcher(aParamId);
+        if (!matcher.matches()) {
+            return null;
+        }
+
+        if (matcher.group("VID") == null || matcher.group("USER") == null) {
+            return null;
+        }
+
+        String vidStr = matcher.group("VID");
+        String username = matcher.group("USER");
+        return new CurationVID(username, VID.parse(vidStr));
     }
 
     @Override
-    public boolean equals(Object aObj)
+    public boolean equals(final Object other)
     {
-        return super.equals(aObj) && ((CurationVID) aObj).getUsername().equals(username);
+        if (!(other instanceof CurationVID)) {
+            return false;
+        }
+
+        CurationVID castOther = (CurationVID) other;
+        return new EqualsBuilder() //
+                .append(username, castOther.username) //
+                .append(getId(), castOther.getId()) //
+                .append(getExtensionPayload(), castOther.getExtensionPayload()) //
+                .isEquals();
     }
 
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(username).append(getId()).append(getExtensionPayload())
+                .toHashCode();
+    }
 }

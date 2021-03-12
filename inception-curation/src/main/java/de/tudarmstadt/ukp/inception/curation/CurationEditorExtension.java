@@ -26,8 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -97,35 +95,41 @@ public class CurationEditorExtension
         if (!aParamId.getExtensionId().equals(EXTENSION_ID)) {
             return;
         }
-        VID extendedVID = parse(aParamId);
 
         if (!aAction.equals(ACTION_SELECT_ARC) && !aAction.equals(ACTION_SELECT_SPAN)) {
             return;
         }
+
         // Annotation has been selected for gold
-        saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID);
+        CurationVID extendedVID = CurationVID.parse(aParamId.getExtensionPayload());
+        if (extendedVID != null) {
+            saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID);
+        }
     }
 
     /**
      * Save annotation identified by aVID from user CAS to given curator's CAS
      */
     private void saveAnnotation(String aAction, AnnotationActionHandler aPanel,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aTargetCas, VID aVID)
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aTargetCas,
+            CurationVID aCurationVid)
         throws IOException, AnnotationException
     {
-        AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
-
         // get user CAS and annotation (to be merged into curator's)
         SourceDocument doc = aState.getDocument();
-        String srcUser = ((CurationVID) aVID).getUsername();
+        String srcUser = aCurationVid.getUsername();
 
         if (!documentService.existsAnnotationDocument(doc, srcUser)) {
             log.error(String.format("Source CAS of %s for curation not found", srcUser));
             return;
         }
 
+        VID vid = VID.parse(aCurationVid.getExtensionPayload());
+
+        AnnotationLayer layer = annotationService.getLayer(vid.getLayerId());
+
         CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
-        AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, aVID.getId());
+        AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
 
         // merge into curator's CAS depending on annotation type (span or arc)
         CasMerge casMerge = new CasMerge(annotationService);
@@ -133,28 +137,32 @@ public class CurationEditorExtension
         if (ACTION_SELECT_SPAN.equals(aAction.toString())) {
             mergeResult = casMerge.mergeSpanAnnotation(doc, srcUser, layer, aTargetCas,
                     sourceAnnotation, layer.isAllowStacking());
-            // open created/updates FS in annotation detail editorpanel
-            aState.getSelection().selectSpan(new VID(mergeResult.getResultFSAddress()), aTargetCas,
-                    sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
 
+            // open created/updates FS in annotation detail editorpanel
+            AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+                    mergeResult.getResultFSAddress());
+            aState.getSelection().selectSpan(mergedAnno);
         }
         else if (ACTION_SELECT_ARC.equals(aAction.toString())) {
             // this is a slot arc
-            if (aVID.isSlotSet()) {
+            if (vid.isSlotSet()) {
                 TypeAdapter adapter = annotationService.getAdapter(layer);
                 AnnotationFeature feature = adapter.listFeatures().stream().sequential()
-                        .skip(aVID.getAttribute()).findFirst().get();
+                        .skip(vid.getAttribute()).findFirst().get();
 
                 mergeResult = casMerge.mergeSlotFeature(doc, srcUser, layer, aTargetCas,
-                        sourceAnnotation, feature.getName(), aVID.getSlot());
+                        sourceAnnotation, feature.getName(), vid.getSlot());
+
                 // open created/updates FS in annotation detail editorpanel
-                aState.getSelection().selectSpan(new VID(mergeResult.getResultFSAddress()),
-                        aTargetCas, sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
+                AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+                        mergeResult.getResultFSAddress());
+                aState.getSelection().selectSpan(mergedAnno);
             }
             // normal relation annotation arc is clicked
             else {
                 mergeResult = casMerge.mergeRelationAnnotation(doc, srcUser, layer, aTargetCas,
                         sourceAnnotation, layer.isAllowStacking());
+
                 // open created/updates FS in annotation detail editorpanel
                 AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
                         mergeResult.getResultFSAddress());
@@ -163,36 +171,12 @@ public class CurationEditorExtension
                 Feature targetFeat = depType.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
                 AnnotationFS originFS = (AnnotationFS) mergedAnno.getFeatureValue(originFeat);
                 AnnotationFS targetFS = (AnnotationFS) mergedAnno.getFeatureValue(targetFeat);
-                aState.getSelection().selectArc(new VID(mergeResult.getResultFSAddress()), originFS,
-                        targetFS);
+                aState.getSelection().selectArc(new VID(mergedAnno), originFS, targetFS);
             }
         }
 
         aPanel.actionSelect(aTarget);
         aPanel.actionCreateOrUpdate(aTarget, aTargetCas); // should also update timestamps
-    }
-
-    /**
-     * Parse extension payload of given VID into CurationVID
-     */
-    protected VID parse(VID aParamId)
-    {
-        // format of extension payload is <USER>:<VID> with standard VID format
-        // <ID>-<SUB>.<ATTR>.<SLOT>@<LAYER>
-        Matcher matcher = Pattern.compile("(?:(?<USER>\\w+)\\:)" + "(?<VID>.+)")
-                .matcher(aParamId.getExtensionPayload());
-        if (!matcher.matches()) {
-            return aParamId;
-        }
-
-        if (matcher.group("VID") == null || matcher.group("USER") == null) {
-            return aParamId;
-        }
-
-        String vidStr = matcher.group("VID");
-        String username = matcher.group("USER");
-        return new CurationVID(aParamId.getExtensionId(), username, VID.parse(vidStr),
-                aParamId.getExtensionPayload());
     }
 
     @Override
@@ -246,7 +230,7 @@ public class CurationEditorExtension
                 for (VSpan vspan : tmpDoc.spans()) {
                     VID aDepVID = vspan.getVid();
                     VID prevVID = VID.copyVID(aDepVID);
-                    VID newVID = new CurationVID(EXTENSION_ID, username,
+                    VID newVID = new CurationVID(username,
                             new VID(vspan.getLayer().getId(), aDepVID.getId(), aDepVID.getSubId(),
                                     aDepVID.getAttribute(), aDepVID.getSlot()));
                     vspan.setVid(newVID);
@@ -263,9 +247,8 @@ public class CurationEditorExtension
                 for (VArc varc : tmpDoc.arcs()) {
                     // update varc vid
                     VID vid = varc.getVid();
-                    VID extendedVID = new CurationVID(EXTENSION_ID, username,
-                            new VID(varc.getLayer().getId(), vid.getId(), vid.getSubId(),
-                                    vid.getAttribute(), vid.getSlot()));
+                    VID extendedVID = new CurationVID(username, new VID(varc.getLayer().getId(),
+                            vid.getId(), vid.getSubId(), vid.getAttribute(), vid.getSlot()));
                     // set target and src with new vids for arc
                     VSpan targetSpan = newIdSpan.get(varc.getTarget());
                     VSpan srcSpan = newIdSpan.get(varc.getSource());
