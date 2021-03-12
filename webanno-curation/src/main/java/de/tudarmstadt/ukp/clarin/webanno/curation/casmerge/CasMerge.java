@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
@@ -32,6 +34,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
@@ -58,6 +61,7 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
@@ -68,7 +72,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -417,12 +420,14 @@ public class CasMerge
             AnnotationFS aSourceFs, AnnotationFS aSourceOriginFs, AnnotationFS aSourceTargetFs)
     {
         Type type = aSourceFs.getType();
-        Feature sourceFeat = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
-        Feature targetFeat = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
-        return selectCovered(aTargetCas, type, aSourceFs.getBegin(), aSourceFs.getEnd()).stream()
+        Type targetType = CasUtil.getType(aTargetCas, aSourceFs.getType().getName());
+        Feature sourceFeat = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        Feature targetFeat = type.getFeatureByBaseName(FEAT_REL_TARGET);
+        return selectCovered(aTargetCas, targetType, aSourceFs.getBegin(), aSourceFs.getEnd())
+                .stream()
                 .filter(fs -> fs.getFeatureValue(sourceFeat).equals(aSourceOriginFs)
                         && fs.getFeatureValue(targetFeat).equals(aSourceTargetFs))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private void copyFeatures(SourceDocument aDocument, String aUsername, TypeAdapter aAdapter,
@@ -463,11 +468,11 @@ public class CasMerge
     private static List<AnnotationFS> getCandidateAnnotations(CAS aTargetCas, TypeAdapter aAdapter,
             AnnotationFS aSource)
     {
-        return selectCovered(aTargetCas, aSource.getType(), aSource.getBegin(), aSource.getEnd())
-                .stream()
+        Type targetType = CasUtil.getType(aTargetCas, aSource.getType().getName());
+        return selectCovered(aTargetCas, targetType, aSource.getBegin(), aSource.getEnd()).stream()
                 .filter(fs -> aAdapter.equivalents(fs, aSource,
                         (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f)))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     public CasMergeOperationResult mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
@@ -486,8 +491,9 @@ public class CasMerge
         }
 
         // a) if stacking allowed add this new annotation to the mergeview
-        List<AnnotationFS> existingAnnos = selectAt(aTargetCas, aSourceFs.getType(),
-                aSourceFs.getBegin(), aSourceFs.getEnd());
+        Type targetType = CasUtil.getType(aTargetCas, adapter.getAnnotationTypeName());
+        List<AnnotationFS> existingAnnos = selectAt(aTargetCas, targetType, aSourceFs.getBegin(),
+                aSourceFs.getEnd());
         if (existingAnnos.isEmpty() || aAllowStacking) {
             // Create the annotation via the adapter - this also takes care of attaching to an
             // annotation if necessary
@@ -662,13 +668,14 @@ public class CasMerge
                 getAddr(mergeFs));
     }
 
-    private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTraget)
+    private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTarget)
         throws UnfulfilledPrerequisitesException
     {
-        List<AnnotationFS> targets = selectCovered(aCas, aOldTraget.getType(),
-                aOldTraget.getBegin(), aOldTraget.getEnd())
+        Type casType = CasUtil.getType(aCas, aOldTarget.getType().getName());
+        List<AnnotationFS> targets = selectCovered(aCas, casType, aOldTarget.getBegin(),
+                aOldTarget.getEnd())
                         .stream()
-                        .filter(fs -> isEquivalentSpanAnnotation(fs, aOldTraget,
+                        .filter(fs -> isEquivalentSpanAnnotation(fs, aOldTarget,
                                 (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f)))
                         .collect(Collectors.toList());
 
@@ -682,6 +689,7 @@ public class CasMerge
                     "There are multiple targets on the mergeview."
                             + " Can not copy this slot annotation.");
         }
+
         return targets;
     }
 
