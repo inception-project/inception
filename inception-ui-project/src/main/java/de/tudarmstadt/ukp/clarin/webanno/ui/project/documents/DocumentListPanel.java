@@ -92,8 +92,15 @@ public class DocumentListPanel
             return;
         }
 
-        confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
-                .setParameters(selectedDocuments.getObject().size()));
+        if (selectedDocuments.getObject().size() == 1) {
+            confirmationDialog.setContentModel(
+                    new StringResourceModel("DeleteDialog.text.single", this).setParameters(
+                            selectedDocuments.getObject().iterator().next().getName()));
+        }
+        else {
+            confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
+                    .setParameters(selectedDocuments.getObject().size()));
+        }
         confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {
