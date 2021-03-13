@@ -27,8 +27,11 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -95,6 +98,29 @@ public class StringMatchingRecommender
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
 
+    @Override
+    public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException
+    {
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL)
+                .orElseThrow(() -> new IOException("No model trained yet."));
+
+        OutputStreamWriter out = new OutputStreamWriter(aOutput);
+        List<String> sortedKeys = new ArrayList<>(dict.keys());
+        Collections.sort(sortedKeys);
+        for (String key : sortedKeys) {
+            DictEntry value = dict.get(key);
+            for (int i = 0; i < value.labels.length; i++) {
+                out.append(key);
+                out.append("\t");
+                out.append(value.labels[i]);
+                out.append("\t");
+                out.append(Integer.toString(value.counts[i]));
+                out.append("\n");
+            }
+        }
+        out.flush();
+    }
+
     public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
@@ -146,7 +172,8 @@ public class StringMatchingRecommender
 
         aContext.put(KEY_MODEL, dict);
 
-        log.debug("Learned dictionary model with {} entries", dict.size());
+        log.debug("Learned dictionary model with {} entries on {} documents", dict.size(),
+                aCasses.size());
     }
 
     @Override
