@@ -69,7 +69,9 @@ public class ProjectSettingsDashboardPageBase
         super(aParameters);
 
         User user = userRepository.getCurrentUser();
-        requireProjectRole(user, MANAGER);
+        if (!userRepository.isAdministrator(user)) {
+            requireProjectRole(user, MANAGER);
+        }
     }
     
     @Override

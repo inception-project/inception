@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -164,6 +166,19 @@ public class UserDaoImpl
             }
         }
         return roleAdmin;
+    }
+
+    @Override
+    public boolean isCurrentUserAdmin()
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority)
+                .anyMatch(auth -> ROLE_ADMIN.toString().equals(auth));
     }
 
     /**

@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
- * Indiates that the prerequisites to perform a merge operation are not fulfilled. E.g. on an
- * attempt to merge a relation if no suitable endpoints for the relations are present in the target
+ * Indicates that the prerequisites to perform a merge operation are not fulfilled. E.g. on an
+ * attempt to merge a relation if no suitable end-points for the relations are present in the target
  * CAS.
  */
 public class UnfulfilledPrerequisitesException
