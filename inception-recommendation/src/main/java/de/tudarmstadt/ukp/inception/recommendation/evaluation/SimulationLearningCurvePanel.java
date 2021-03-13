@@ -208,6 +208,12 @@ public class SimulationLearningCurvePanel
         }
 
         int incrementSize = (int) Math.ceil((estimatedDatasetSize * TRAIN_PERCENTAGE)) / STEPS;
+        if (incrementSize <= 0) {
+            error("Not enough training data: " + estimatedDatasetSize + " samples");
+            target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            return;
+        }
+
         IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE, incrementSize,
                 LOW_SAMPLE_THRESHOLD);
 
