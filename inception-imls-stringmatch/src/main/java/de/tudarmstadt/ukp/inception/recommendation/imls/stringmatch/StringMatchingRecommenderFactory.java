@@ -100,4 +100,16 @@ public class StringMatchingRecommenderFactory
     {
         return new StringMatchingRecommenderTraits();
     }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.txt";
+    }
 }

@@ -42,6 +42,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.IResourceStream;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -55,6 +56,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -64,6 +67,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.SuggestionGroupKey;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 
 public class RecommenderInfoPanel
@@ -124,6 +130,13 @@ public class RecommenderInfoPanel
                                 .setVisible(evaluatedRecommender.map(EvaluatedRecommender::isActive)
                                         .orElse(false)));
 
+                AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
+                        LoadableDetachableModel.of(() -> exportModelName(recommender)),
+                        LoadableDetachableModel.of(() -> exportModel(user, recommender)));
+                exportModel.add(visibleWhen(() -> recommendationService
+                        .getRecommenderFactory(recommender).isModelExportSupported()));
+                item.add(exportModel);
+
                 Optional<EvaluationResult> evalResult = evaluatedRecommender
                         .map(EvaluatedRecommender::getEvaluationResult);
                 WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
@@ -149,6 +162,28 @@ public class RecommenderInfoPanel
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
         recommenderContainer.add(searchResultGroups);
+    }
+
+    private String exportModelName(Recommender aRecommender)
+    {
+        RecommendationEngineFactory factory = recommendationService
+                .getRecommenderFactory(aRecommender);
+        return factory.getExportModelName(aRecommender);
+    }
+
+    private IResourceStream exportModel(User aUser, Recommender aRecommender)
+    {
+        RecommendationEngine engine = recommendationService.getRecommenderFactory(aRecommender)
+                .build(aRecommender);
+        Optional<RecommenderContext> context = recommendationService.getContext(aUser,
+                aRecommender);
+
+        if (context.isEmpty()) {
+            error("No model trained yet.");
+            return null;
+        }
+
+        return new TempFileResource((os) -> engine.exportModel(context.get(), os));
     }
 
     public AnnotatorState getModelObject()
