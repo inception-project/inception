@@ -50,7 +50,6 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;

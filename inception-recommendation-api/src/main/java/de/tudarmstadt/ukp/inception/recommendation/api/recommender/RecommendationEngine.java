@@ -130,6 +130,12 @@ public abstract class RecommendationEngine
         return new RecommenderContext();
     }
 
+    /**
+     * Estimates the number of data points in the data set. If the returned number is negative, no
+     * estimation could be made.
+     */
+    public abstract int estimateSampleCount(List<CAS> aCasses);
+
     protected Type getPredictedType(CAS aCas)
     {
         return getType(aCas, layerName);

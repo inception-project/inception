@@ -120,6 +120,12 @@ public class LappsGridRecommender
         return result;
     }
 
+    @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return -1;
+    }
+
     private ServiceClient buildClient()
     {
         String url = traits.getUrl();
@@ -138,6 +144,7 @@ public class LappsGridRecommender
         return true;
     }
 
+    @Override
     public RecommendationEngineCapability getTrainingCapability()
     {
         return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;

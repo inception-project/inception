@@ -158,4 +158,10 @@ public class NamedEntityLinker
         result.setErrorMsg("NamedEntityLinker does not support evaluation.");
         return result;
     }
+
+    @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return -1;
+    }
 }
