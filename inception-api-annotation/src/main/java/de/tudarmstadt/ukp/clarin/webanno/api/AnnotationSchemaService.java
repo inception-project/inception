@@ -556,11 +556,7 @@ public interface AnnotationSchemaService
 
     TypeAdapter getAdapter(AnnotationLayer aLayer);
 
-    default TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
-    {
-        AnnotationLayer layer = findLayer(aProject, aFS.getType().getName());
-        return getAdapter(layer);
-    }
+    TypeAdapter findAdapter(Project aProject, FeatureStructure aFS);
 
     /**
      * Performs a CAS upgrade and removes all internal feature structures from the CAS. The

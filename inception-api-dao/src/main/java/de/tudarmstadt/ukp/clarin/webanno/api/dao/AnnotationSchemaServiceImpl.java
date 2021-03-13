@@ -1307,6 +1307,14 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
+    {
+        AnnotationLayer layer = findLayer(aProject, aFS.getType().getName());
+        return getAdapter(layer);
+    }
+
+    @Override
     @Transactional
     public void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
         throws ResourceInitializationException
