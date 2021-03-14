@@ -788,7 +788,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
+              <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-tagsets</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-curation</usedDependency>
