@@ -19,6 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+//The @JsonSerialize annotation avoid the "InvalidDefinitionException: No serializer found"
+//exception without having to set SerializationFeature.FAIL_ON_EMPTY_BEANS
+@JsonSerialize
 public class ChainLayerTraits
     implements Serializable
 {
