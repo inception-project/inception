@@ -17,21 +17,33 @@
  */
 package de.tudarmstadt.ukp.inception.initializers;
 
-import static java.util.Arrays.asList;
-
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
+import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.QuickProjectInitializer;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ProjectInitializersAutoConfiguration#basicProjectInitializer}.
+ * </p>
+ */
 public class BasicProjectInitializer
     implements QuickProjectInitializer
 {
+    private final ApplicationContext context;
+
+    public BasicProjectInitializer(ApplicationContext aContext)
+    {
+        context = aContext;
+    }
+
     @Override
     public String getName()
     {
@@ -47,8 +59,15 @@ public class BasicProjectInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return asList(BasicSpanLayerInitializer.class, BasicRelationLayerInitializer.class,
-                BasicSpanRecommenderInitializer.class);
+        List<Class<? extends ProjectInitializer>> dependencies = new ArrayList<>();
+        dependencies.add(BasicSpanLayerInitializer.class);
+        dependencies.add(BasicRelationLayerInitializer.class);
+
+        if (context.getBeanNamesForType(BasicSpanRecommenderInitializer.class).length > 0) {
+            dependencies.add(BasicSpanRecommenderInitializer.class);
+        }
+
+        return dependencies;
     }
 
     @Override
