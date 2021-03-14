@@ -33,10 +33,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class LoggingFilter
     implements Filter
 {
+    public static final String PARAM_REPOSITORY_PATH = "repoPath";
+
+    private String repoPath;
+
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException
+    public void init(FilterConfig aFilterConfig) throws ServletException
     {
-        // Do nothing
+        repoPath = aFilterConfig.getInitParameter(PARAM_REPOSITORY_PATH);
     }
 
     @Override
@@ -47,12 +51,21 @@ public class LoggingFilter
         if (authentication != null) {
             setLoggingUsername(authentication.getName());
         }
+
+        if (repoPath != null) {
+            setRepositoryPath(repoPath);
+        }
+
         try {
             chain.doFilter(req, resp);
         }
         finally {
             if (authentication != null) {
                 clearLoggingUsername();
+            }
+
+            if (repoPath != null) {
+                clearRepositoryPath();
             }
         }
     }
@@ -73,5 +86,15 @@ public class LoggingFilter
     {
         MDC.remove("_username");
         MDC.remove(Logging.KEY_USERNAME);
+    }
+
+    public static void setRepositoryPath(String aRepositoryPath)
+    {
+        MDC.put(Logging.KEY_REPOSITORY_PATH, aRepositoryPath);
+    }
+
+    public static void clearRepositoryPath()
+    {
+        MDC.remove(Logging.KEY_REPOSITORY_PATH);
     }
 }
