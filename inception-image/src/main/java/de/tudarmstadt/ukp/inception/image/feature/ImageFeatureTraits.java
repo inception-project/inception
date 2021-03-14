@@ -19,9 +19,14 @@ package de.tudarmstadt.ukp.inception.image.feature;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 /**
  * Traits for image features.
  */
+// The @JsonSerialize annotation avoid the "InvalidDefinitionException: No serializer found"
+// exception without having to set SerializationFeature.FAIL_ON_EMPTY_BEANS
+@JsonSerialize
 public class ImageFeatureTraits
     implements Serializable
 {
