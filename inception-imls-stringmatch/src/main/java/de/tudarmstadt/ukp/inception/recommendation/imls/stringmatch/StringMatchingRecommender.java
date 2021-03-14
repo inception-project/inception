@@ -295,6 +295,13 @@ public class StringMatchingRecommender
         final int minTrainingSetSize = 1;
         final int minTestSetSize = 1;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
+            if (!gazeteerService.listGazeteers(recommender).isEmpty()) {
+                // We cannot evaluate, but the user expects to see immediate results from the
+                // gazeteer - so we return with an "unknown" result but without marking it as
+                // skipped so that the selection task allows the recommender to activate.
+                return new EvaluationResult();
+            }
+
             String info = String.format(
                     "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
                     trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),
