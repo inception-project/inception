@@ -150,6 +150,12 @@ public class OpenNlpDoccatRecommender
     }
 
     @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return extractSamples(aCasses).size();
+    }
+
+    @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {

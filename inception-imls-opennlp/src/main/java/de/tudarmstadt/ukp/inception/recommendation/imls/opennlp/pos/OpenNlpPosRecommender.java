@@ -175,6 +175,12 @@ public class OpenNlpPosRecommender
     }
 
     @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return extractPosSamples(aCasses).size();
+    }
+
+    @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {

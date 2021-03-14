@@ -212,6 +212,12 @@ public class WeblichtRecommender
     }
 
     @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return -1;
+    }
+
+    @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {
         return true;

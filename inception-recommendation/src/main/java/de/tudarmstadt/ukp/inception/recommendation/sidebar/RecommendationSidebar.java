@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -189,6 +190,9 @@ public class RecommendationSidebar
         recommendationService.triggerSelectionTrainingAndClassification(
                 state.getUser().getUsername(), state.getProject(), "User request via sidebar",
                 state.getDocument());
+        info("Annotation state cleared - re-training from scratch...");
+        getAnnotationPage().actionRefreshDocument(aTarget);
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private List<String> findMismatchedRecommenders()

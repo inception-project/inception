@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -130,6 +132,12 @@ public abstract class RecommendationEngine
         return new RecommenderContext();
     }
 
+    /**
+     * Estimates the number of data points in the data set. If the returned number is negative, no
+     * estimation could be made.
+     */
+    public abstract int estimateSampleCount(List<CAS> aCasses);
+
     protected Type getPredictedType(CAS aCas)
     {
         return getType(aCas, layerName);
@@ -155,5 +163,10 @@ public abstract class RecommendationEngine
     protected Feature getIsPredictionFeature(CAS aCas)
     {
         return getPredictedType(aCas).getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+    }
+
+    public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException
+    {
+        throw new UnsupportedOperationException("Model export not supported");
     }
 }

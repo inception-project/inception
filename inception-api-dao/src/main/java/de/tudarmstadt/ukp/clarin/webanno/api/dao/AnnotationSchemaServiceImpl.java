@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction
 import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.LOOP;
 import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.OUTGOING;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
@@ -1306,6 +1307,14 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
+    {
+        AnnotationLayer layer = findLayer(aProject, aFS.getType().getName());
+        return getAdapter(layer);
+    }
+
+    @Override
     @Transactional
     public void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
         throws ResourceInitializationException
@@ -1408,6 +1417,23 @@ public class AnnotationSchemaServiceImpl
                 }
                 else {
                     targetFS = (AnnotationFS) relationFS.getFeatureValue(targetFeature);
+                }
+
+                if (sourceFS == null || targetFS == null) {
+                    StringBuilder message = new StringBuilder();
+
+                    message.append("Relation [" + relationAdapter.getLayer().getName()
+                            + "] with id [" + getAddr(relationFS)
+                            + "] has loose ends - cannot identify attached annotations.");
+                    if (relationAdapter.getAttachFeatureName() != null) {
+                        message.append("\nRelation [" + relationAdapter.getLayer().getName()
+                                + "] attached to feature [" + relationAdapter.getAttachFeatureName()
+                                + "].");
+                    }
+                    message.append("\nSource: " + sourceFS);
+                    message.append("\nTarget: " + targetFS);
+                    log.warn("{}", message.toString());
+                    continue;
                 }
 
                 boolean isIncoming = isSame(targetFS, aFs);

@@ -224,6 +224,12 @@ public class DataMajorityNerRecommender
     }
     // end::evaluate[]
 
+    @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return extractAnnotations(aCasses).size();
+    }
+
     // tag::utility[]
     private static class DataMajorityModel
     {

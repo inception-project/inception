@@ -919,7 +919,7 @@
           }
           return _this.publish('annotationViewerTextField', [field, annotation]);
         }
-      }).element.appendTo(this.wrapper).bind({
+      }).element.appendTo(document.body).bind({
         "mouseover": this.clearViewerHideTimer,
         "mouseout": this.startViewerHideTimer
       });
@@ -1283,7 +1283,7 @@
       annotations = $(event.target).parents('.annotator-hl').addBack().map(function() {
         return $(this).data("annotation");
       }).toArray();
-      return this.showViewer(annotations, Util.mousePosition(event, this.wrapper[0]));
+      return this.showViewer(annotations, Util.mousePosition(event, document.body));
     };
 
     Annotator.prototype.onAdderMousedown = function(event) {

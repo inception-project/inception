@@ -782,26 +782,27 @@ public class RecommendationServiceImpl
 
     @Override
     public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aUsername, CAS aCas, AnnotationLayer aLayer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException
     {
         // The feature of the predicted label
-        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(aLayer);
 
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
         AnnotationFS annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
 
         int address;
-        if (annoFS != null) {
-            // ... if yes, then we update the feature on the existing annotation
-            address = getAddr(annoFS);
+        if (annoFS == null || aLayer.isAllowStacking()) {
+            // ... if not or if stacking is allowed, then we create a new annotation - this also
+            // takes care of attaching to an annotation if necessary
+            address = getAddr(adapter.add(aDocument, aUsername, aCas, aBegin, aEnd));
         }
         else {
-            // ... if not, then we create a new annotation - this also takes care of attaching to
-            // an annotation if necessary
-            address = getAddr(adapter.add(aDocument, aUsername, aCas, aBegin, aEnd));
+            // ... if yes and stacking is now allowed, then we update the feature on the existing
+            // annotation
+            address = getAddr(annoFS);
         }
 
         // Update the feature value

@@ -28,13 +28,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.info;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.warn;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
@@ -190,10 +190,11 @@ public class TrainingTask
                             continue;
                         }
 
-                        List<CAS> cassesForTraining = casses.get().stream().filter(
-                                e -> !recommender.getStatesIgnoredForTraining().contains(e.state))
+                        List<CAS> cassesForTraining = casses.get().stream() //
+                                .filter(e -> !recommender.getStatesIgnoredForTraining()
+                                        .contains(e.state))
                                 .filter(e -> containsTargetTypeAndFeature(recommender, e.cas))
-                                .map(e -> e.cas).collect(Collectors.toList());
+                                .map(e -> e.cas).collect(toList());
 
                         // If no data for training is available, but the engine requires training,
                         // do not mark as ready

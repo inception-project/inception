@@ -481,14 +481,20 @@ public class DL4JSequenceRecommender
     }
 
     @Override
-    public EvaluationResult evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return extractData(aCasses, true).size();
+    }
+
+    @Override
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
         // Prepare a map where we store the mapping from labels to numeric label IDs - i.e.
         // which index in the label vector represents which label
         Object2IntMap<String> tagsetCollector = new Object2IntOpenHashMap<>();
 
         // Extract the data from the CASes
-        List<Sample> data = extractData(aCas, true);
+        List<Sample> data = extractData(aCasses, true);
         List<Sample> trainingSet = new ArrayList<>();
         List<Sample> testSet = new ArrayList<>();
 

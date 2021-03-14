@@ -1,7 +1,3 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -23,6 +19,10 @@
 
 The evaluation simulation panel provides a visualization of the performance of the selected recommender with the help of a learning curve diagram. On the bottom right of the panel, the start button performs evaluation on the selected recommender using the annotated documents in the project and plots the evaluation scores against the training data size on the graph. The evaluation score can be one of the four metrics, Accuracy, Precision, Recall and F1. There is a drop down panel to change the metric. The evaluation might take a long time.
 
-For the evaluation, the training and test data is used from all the imported documents of the project. Moreover, the data is split into *80% training data* and *20% test data*. The training data is *incremented by 250* per evaluation.
+The training data use for the evaluation can be selected using the *Annotator* dropdown. Here,
+you can select to train on the annotations of a specific user. Selecting *INITIAL_CAS* trains on
+annotations present in the imported original documents. Selecting *CURATION_USER* trains on curated
+documents. The data is split into *80% training data* and *20% test data*. The system tries to split the training data in 10 blocks of roughly the same size. For each training run, an additonal block
+is added to the training data for that run until in the last run, all training data is used.
 
 image::evaluation.png[align="center"]

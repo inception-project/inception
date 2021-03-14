@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.chart.resources;
+package de.tudarmstadt.ukp.inception.recommendation.chart;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
@@ -41,6 +41,6 @@ public class ChartJsReference
      */
     private ChartJsReference()
     {
-        super(ChartJsReference.class, "chart.js");
+        super(ChartJsReference.class, "Chart.js");
     }
 }

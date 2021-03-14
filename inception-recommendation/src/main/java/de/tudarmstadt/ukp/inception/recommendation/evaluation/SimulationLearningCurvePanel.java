@@ -17,33 +17,41 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum.Accuracy;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -56,7 +64,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
-import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
 public class SimulationLearningCurvePanel
@@ -67,10 +74,9 @@ public class SimulationLearningCurvePanel
     private static final String MID_CHART_CONTAINER = "chart-container";
     private static final String MID_SIMULATION_START_BUTTON = "simulation-start-button";
     private static final String MID_FORM = "form";
-    private static final String OUTPUT_MID_CHART_CONTAINER = "html-chart-container";
 
     private static final double TRAIN_PERCENTAGE = 0.8;
-    private static final int INCREMENT = 250;
+    private static final int STEPS = 10;
     private static final int LOW_SAMPLE_THRESHOLD = 10;
 
     private static final Logger LOG = LoggerFactory.getLogger(SimulationLearningCurvePanel.class);
@@ -79,237 +85,163 @@ public class SimulationLearningCurvePanel
             .asList(RecommenderEvaluationScoreMetricEnum.values());
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userDao;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
 
-    private final Panel emptyPanel;
     private final Project project;
-    private final IModel<Recommender> selectedRecommenderPanel;
+    private final IModel<Recommender> recommender;
+    private final IModel<String> user;
+    private final IModel<RecommenderEvaluationScoreMetricEnum> metric;
 
-    private ChartPanel chartPanel;
-    private RecommenderEvaluationScoreMetricEnum selectedValue;
-    List<EvaluationResult> evaluationResults;
-    private boolean evaluate;
+    private final DropDownChoice<RecommenderEvaluationScoreMetricEnum> metricChoice;
+    private final DropDownChoice<String> annotatorChoice;
+    private final ChartPanel chartPanel;
+
+    private final IModel<List<EvaluationResult>> evaluationResults;
 
     public SimulationLearningCurvePanel(String aId, Project aProject,
-            IModel<Recommender> aSelectedRecommenderPanel)
+            IModel<Recommender> aRecommender)
     {
-        super(aId);
+        super(aId, aRecommender);
+
         project = aProject;
-        selectedRecommenderPanel = aSelectedRecommenderPanel;
-        evaluate = true;
+        recommender = aRecommender;
+        evaluationResults = new ListModel<EvaluationResult>(emptyList());
+        metric = new Model<RecommenderEvaluationScoreMetricEnum>(Accuracy);
 
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
 
-        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = //
-                new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>("select",
-                        new Model<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES.get(0)),
-                        new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
-        dropdown.setOutputMarkupId(true);
-        selectedValue = RecommenderEvaluationScoreMetricEnum.Accuracy;
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER, evaluationResults, metric);
+        chartPanel.setOutputMarkupPlaceholderTag(true);
+        chartPanel.add(visibleWhen(() -> isNotEmpty(chartPanel.getModelObject())));
+        form.add(chartPanel);
 
-        dropdown.add(new AjaxFormComponentUpdatingBehavior("change")
-        {
-            private static final long serialVersionUID = -6744838136235652577L;
+        metricChoice = new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>("metric", metric,
+                new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
+        metricChoice.setOutputMarkupId(true);
+        form.add(metricChoice);
 
-            @Override
-            protected void onUpdate(AjaxRequestTarget _target)
-            {
-                selectedValue = dropdown.getModelObject();
-
-                if (chartPanel == null) {
-                    return;
-                }
-
-                startEvaluation(_target, form);
-            }
-        });
-
-        form.add(dropdown);
-
-        emptyPanel = new EmptyPanel(MID_CHART_CONTAINER);
-        emptyPanel.setOutputMarkupPlaceholderTag(true);
-        emptyPanel.setMarkupId(OUTPUT_MID_CHART_CONTAINER);
-        emptyPanel.setOutputMarkupId(true);
-        form.add(emptyPanel);
+        IModel<List<String>> annotatorChoiceModel = LoadableDetachableModel
+                .of(this::getSelectableAnnotators);
+        user = Model.of(annotatorChoiceModel.getObject().get(0));
+        annotatorChoice = new BootstrapSelect<String>("annotator", user, annotatorChoiceModel);
+        annotatorChoice.setOutputMarkupId(true);
+        form.add(annotatorChoice);
 
         // clicking the start button the annotated documents are evaluated and the learning curve
         // for the selected recommender is plotted in the hCart Panel
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
-                (_target, _form) -> startEvaluation(_target, _form));
-
-        form.add(startButton);
+        form.add(new LambdaAjaxButton<>(MID_SIMULATION_START_BUTTON, (_target, _form) -> {
+            recommenderChanged();
+            evaluate();
+            _target.add(chartPanel);
+        }));
     }
 
-    private void startEvaluation(IPartialPageRequestHandler aTarget, MarkupContainer aForm)
+    private List<String> getSelectableAnnotators()
     {
-        // replace the empty panel with chart panel on click event so the chard renders
-        // with the loadable detachable model.
-        chartPanel = new ChartPanel(MID_CHART_CONTAINER,
-                LoadableDetachableModel.of(this::renderChart));
-        chartPanel.setOutputMarkupPlaceholderTag(true);
-        chartPanel.setOutputMarkupId(true);
-
-        aForm.addOrReplace(chartPanel);
-        aTarget.add(chartPanel);
-    }
-
-    private LearningCurve renderChart()
-    {
-        String[] scoresAndTrainingSizes = evaluate();
-
-        if (scoresAndTrainingSizes == null) {
-            // no warning message here because it has already been shown in the method
-            // evaluate(_target). There are different scenarios when the score is returned
-            // null and each one is handled differently in the method evaluate(_target).
-            return null;
-        }
-
-        String scores = scoresAndTrainingSizes[0];
-        String trainingSizes = scoresAndTrainingSizes[1];
-
-        if (scores.isEmpty()) {
-            LOG.warn("There were no evaluation to show");
-            return null;
-        }
-
-        Map<String, String> curveData = new HashMap<String, String>();
-        curveData.put(selectedRecommenderPanel.getObject().getName(), scores);
-
-        LearningCurve learningCurve = new LearningCurve();
-        learningCurve.setCurveData(curveData);
-        learningCurve.setXaxis(trainingSizes);
-
-        evaluate = false;
-
-        return learningCurve;
+        List<String> list = new ArrayList<>();
+        list.add(INITIAL_CAS_PSEUDO_USER);
+        list.add(CURATION_USER);
+        projectService.listProjectUsersWithPermissions(project, ANNOTATOR)
+                .forEach(u -> list.add(u.getUsername()));
+        return list;
     }
 
     /**
      * evaluates the selected recommender with the help of the annotated documents in the project.
-     * 
-     * @param aTarget
-     *            uses to log errors on the page in case of unwanted behaviour
-     * 
-     * @return comma separated string of scores in the first index of the array
      */
-    private String[] evaluate()
+    private void evaluate()
     {
-        // there must be some recommender selected by the user on the UI
-        if (selectedRecommenderPanel.getObject() == null
-                || selectedRecommenderPanel.getObject().getTool() == null) {
-            LOG.error("Please select a recommender from the list");
-            return null;
+        if (evaluationResults.getObject() != null) {
+            return;
         }
 
-        // get all the source documents related to the project
-        Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
-                .listAllDocuments(project, userDao.getCurrentUser());
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
 
-        // create a list of CAS from the pre-annotated documents of the project
+        // there must be some recommender selected by the user on the UI
+        if (recommender.getObject() == null || recommender.getObject().getTool() == null) {
+            error("Please select a recommender from the list");
+            target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            return;
+        }
+
         List<CAS> casList = new ArrayList<>();
-        listAllDocuments.forEach((source, annotation) -> {
-            try {
-                CAS cas = documentService.createOrReadInitialCas(source);
-                casList.add(cas);
+        try {
+            for (SourceDocument doc : documentService.listSourceDocuments(project)) {
+                if (INITIAL_CAS_PSEUDO_USER.equals(user.getObject())) {
+                    casList.add(documentService.createOrReadInitialCas(doc, AUTO_CAS_UPGRADE,
+                            SHARED_READ_ONLY_ACCESS));
+                }
+                else {
+                    if (documentService.existsAnnotationDocument(doc, user.getObject())) {
+                        casList.add(documentService.readAnnotationCas(doc, user.getObject(),
+                                AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS));
+                    }
+                }
             }
-            catch (IOException e1) {
-                LOG.error("Unable to render chart", e1);
-                return;
-            }
-        });
-
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE, INCREMENT,
-                LOW_SAMPLE_THRESHOLD);
+        }
+        catch (IOException e) {
+            error("Unable to load chart data: " + getRootCauseMessage(e));
+            target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            LOG.error("Unable to render chart", e);
+            return;
+        }
 
         @SuppressWarnings("rawtypes")
         RecommendationEngineFactory factory = recommenderRegistry
-                .getFactory(selectedRecommenderPanel.getObject().getTool());
-        RecommendationEngine recommender = factory.build(selectedRecommenderPanel.getObject());
+                .getFactory(recommender.getObject().getTool());
+        RecommendationEngine recommenderEngine = factory.build(recommender.getObject());
 
-        if (recommender == null) {
-            LOG.warn("Unknown Recommender selected");
-            return null;
+        if (recommenderEngine == null) {
+            error("Unknown recommender type selected: [" + recommender.getObject().getTool() + "]");
+            target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            return;
         }
 
-        if (!evaluate) {
-            return getEvaluationScore(evaluationResults);
+        int estimatedDatasetSize = recommenderEngine.estimateSampleCount(casList);
+        if (estimatedDatasetSize < 0) {
+            error("Evaluation is not supported for the selected recommender.");
+            target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            return;
         }
 
-        evaluationResults = new ArrayList<EvaluationResult>();
+        int incrementSize = (int) Math.ceil((estimatedDatasetSize * TRAIN_PERCENTAGE)) / STEPS;
+        if (incrementSize <= 0) {
+            error("Not enough training data: " + estimatedDatasetSize + " samples");
+            target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            return;
+        }
 
-        // create a list of comma separated string of scores from every iteration of
-        // evaluation.
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE, incrementSize,
+                LOW_SAMPLE_THRESHOLD);
+
+        evaluationResults.setObject(new ArrayList<>());
+
+        // Create a list of comma separated string of scores from every iteration of evaluation.
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
 
             try {
-                EvaluationResult evaluationResult = recommender.evaluate(casList, splitStrategy);
+                EvaluationResult evaluationResult = recommenderEngine.evaluate(casList,
+                        splitStrategy);
 
-                if (evaluationResult.isEvaluationSkipped()) {
-                    LOG.warn("Evaluation skipped. Chart cannot to be shown");
-                    continue;
+                if (!evaluationResult.isEvaluationSkipped()) {
+                    evaluationResults.getObject().add(evaluationResult);
                 }
-
-                evaluationResults.add(evaluationResult);
             }
             catch (RecommendationException e) {
-                LOG.error(e.toString(), e);
+                error("Unable to run simulation: " + getRootCauseMessage(e));
+                target.ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+                LOG.error("Unable to run simulation", e);
                 continue;
             }
         }
-
-        return getEvaluationScore(evaluationResults);
-    }
-
-    private String[] getEvaluationScore(List<EvaluationResult> aEvaluationResults)
-    {
-        StringBuilder sbScore = new StringBuilder();
-        StringBuilder sbTrainingSize = new StringBuilder();
-
-        // create a list of comma separated string of scores from every iteration of
-        // evaluation.
-        for (EvaluationResult evaluationResult : aEvaluationResults) {
-
-            double trainingSize;
-            double score;
-
-            if (evaluationResult.isEvaluationSkipped()) {
-                LOG.warn("Evaluation skipped. Chart cannot to be shown");
-                continue;
-            }
-
-            switch (selectedValue) {
-            case Accuracy:
-                score = evaluationResult.computeAccuracyScore();
-                break;
-            case Precision:
-                score = evaluationResult.computePrecisionScore();
-                break;
-            case Recall:
-                score = evaluationResult.computeRecallScore();
-                break;
-            case F1:
-                score = evaluationResult.computeF1Score();
-                break;
-            default:
-                score = evaluationResult.computeAccuracyScore();
-            }
-
-            trainingSize = evaluationResult.getTrainDataRatio();
-
-            sbScore.append(score).append(",");
-            sbTrainingSize.append(trainingSize).append(",");
-        }
-
-        return new String[] { sbScore.toString(), sbTrainingSize.toString() };
     }
 
     public void recommenderChanged()
     {
-        evaluate = true;
-
+        evaluationResults.setObject(null);
     }
 }
