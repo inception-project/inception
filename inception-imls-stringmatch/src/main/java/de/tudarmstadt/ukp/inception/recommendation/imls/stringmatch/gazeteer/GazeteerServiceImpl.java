@@ -191,7 +191,7 @@ public class GazeteerServiceImpl
             }
 
             String[] fields = line.split("\t");
-            if (fields.length == 2) {
+            if (fields.length >= 2) {
                 String text = trimToNull(fields[0]);
                 String label = trimToNull(fields[1]);
                 if (label != null && text != null) {
