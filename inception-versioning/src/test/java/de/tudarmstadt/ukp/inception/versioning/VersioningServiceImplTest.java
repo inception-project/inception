@@ -25,11 +25,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -447,10 +446,7 @@ public class VersioningServiceImplTest
 
     private File getResource(String aResourceName)
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource(aResourceName);
-        Objects.requireNonNull(resource);
-        return new File(resource.getFile());
+        return Paths.get("src", "test", "resources", aResourceName).toFile();
     }
 
     private User createAdmin()
