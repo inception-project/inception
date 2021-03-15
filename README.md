@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div align="center">
   <a href="https://inception-project.github.io/">
     <img width="471" style="max-width:50%;" src="inception-doc/src/main/resources/META-INF/asciidoc/inception-logo.png"  alt="INCEpTION Logo"/>
   </a>
@@ -103,7 +103,7 @@ INCEpTION is provided as open source under the Apache License v2.0.
 
 ---
 
-<div style="text-align: center;">
+<div align="center">
 <img height="50" style="margin-right: 15px" src="https://inception-project.github.io/images/logos/tud_logo.gif">
 <img height="50" style="margin-right: 15px" src="https://inception-project.github.io/images/logos/ukp-lab.png">
 <img height="50" style="margin-right: 15px" src="https://inception-project.github.io/images/logos/dfg_logo_schriftzug_blau_foerderung.jpg">
