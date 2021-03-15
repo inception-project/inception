@@ -9,7 +9,7 @@
   <p>
     <a href="https://inception-project.github.io/"><strong>Homepage</strong></a> ·
     <a href="https://inception-project.github.io/documentation/latest/user-guide"><strong>Usage</strong></a> ·
-    <a href="https://morbo.ukp.informatik.tu-darmstadt.de/demo"><strong>Demo</strong></a>
+    <a href="https://morbo.ukp.informatik.tu-darmstadt.de/demo"><strong>Demo</strong></a>  ·  
     <a href="https://inception-project.github.io/documentation/latest/user-guide#sect_faq"><strong>FAQ</strong></a>
   </p>
   <p>
@@ -31,7 +31,7 @@ For more information, visit the [INCEpTION website](https://inception-project.gi
 what INCEpTION is, you may want to watch
 our [introduction videos](https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-).
 
-<div style="text-align: center;">
+<div align="center" style="margin: 10px">
     <img src="https://inception-project.github.io/images/screenshot-annotation.png" alt="INCEpTION Screenshot" />
 </div>
 

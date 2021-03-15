@@ -1,0 +1,6 @@
+== Running the standalone behind a reverse proxy
+
+These are *optional* instructions if you want to run {product-name} behind an Apache web-server instead of accessing it directly.
+
+These guides assumes Debian 9.1 (Stretch) as the operating system.
+For the optional SSL configuration, it further assumes that you want to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL certificates.
