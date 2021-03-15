@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
+import static com.googlecode.wicket.jquery.core.utils.RequestCycleUtils.getQueryParameterValue;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +35,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.core.utils.RequestCycleUtils;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
@@ -105,16 +107,17 @@ class UserSelectionPanel
             @Override
             public List<User> getChoices()
             {
-                final String input = RequestCycleUtils
-                        .getQueryParameterValue("filter[filters][0][value]").toString();
+                final String input = getQueryParameterValue("filter[filters][0][value]").toString();
 
                 List<User> result = new ArrayList<>();
 
                 if (config.isHideUsers()) {
                     // only offer the user matching what the input entered into the field
-                    User user = userRepository.get(input);
-                    if (user != null) {
-                        result.add(user);
+                    if (isNotBlank(input)) {
+                        User user = userRepository.get(input);
+                        if (user != null) {
+                            result.add(user);
+                        }
                     }
                 }
                 else {
@@ -129,6 +132,29 @@ class UserSelectionPanel
                 }
 
                 return result;
+            }
+
+            @Override
+            public void convertInput()
+            {
+                if (!config.isHideUsers()) {
+                    super.convertInput();
+                    return;
+                }
+
+                final String[] values = this.getInputAsArray();
+                List<User> result = new ArrayList<>();
+                for (String value : values) {
+                    if (isBlank(value)) {
+                        continue;
+                    }
+
+                    User user = userRepository.get(value);
+                    if (user != null) {
+                        result.add(user);
+                    }
+                }
+                this.setConvertedInput(result);
             }
         };
         usersToAdd.setModel(usersToAddModel);

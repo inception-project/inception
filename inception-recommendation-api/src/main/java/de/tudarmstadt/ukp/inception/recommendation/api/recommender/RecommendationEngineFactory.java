@@ -45,6 +45,16 @@ public interface RecommendationEngineFactory<T>
         return true;
     }
 
+    default boolean isModelExportSupported()
+    {
+        return false;
+    }
+
+    default String getExportModelName(Recommender aRecommender)
+    {
+        throw new UnsupportedOperationException("Model export not supported");
+    }
+
     RecommendationEngine build(Recommender aRecommender);
 
     boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);

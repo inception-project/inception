@@ -42,6 +42,7 @@ public class IncrementalSplitter
     public IncrementalSplitter(double aTrainPercentage, int aIncrement, int aLowSampleThreshold)
     {
         Validate.inclusiveBetween(0, 1, aTrainPercentage, "Percentage has to be in (0,1)");
+        Validate.isTrue(aIncrement > 0, "Increment must be positive");
 
         trainBatchSize = (int) Math.round(10 * aTrainPercentage);
         testBatchSize = 10 - trainBatchSize;
@@ -52,6 +53,10 @@ public class IncrementalSplitter
     public IncrementalSplitter(int aTrainBatchSize, int aTestBatchSize, int aIncrement,
             int aLowSampleThreshold)
     {
+        Validate.isTrue(aTrainBatchSize > 0, "Train size must be positive");
+        Validate.isTrue(aTestBatchSize > 0, "Test size must be positive");
+        Validate.isTrue(aIncrement > 0, "Increment must be positive");
+
         trainBatchSize = aTrainBatchSize;
         testBatchSize = aTestBatchSize;
         increment = aIncrement;
@@ -109,7 +114,7 @@ public class IncrementalSplitter
     @Override
     public boolean hasNext()
     {
-        return hitTheLimit;
+        return increment > 0 && hitTheLimit;
     }
 
     @Override

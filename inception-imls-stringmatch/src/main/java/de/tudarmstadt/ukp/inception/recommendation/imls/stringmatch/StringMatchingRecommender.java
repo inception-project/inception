@@ -27,8 +27,11 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -95,6 +98,29 @@ public class StringMatchingRecommender
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
 
+    @Override
+    public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException
+    {
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL)
+                .orElseThrow(() -> new IOException("No model trained yet."));
+
+        OutputStreamWriter out = new OutputStreamWriter(aOutput);
+        List<String> sortedKeys = new ArrayList<>(dict.keys());
+        Collections.sort(sortedKeys);
+        for (String key : sortedKeys) {
+            DictEntry value = dict.get(key);
+            for (int i = 0; i < value.labels.length; i++) {
+                out.append(key);
+                out.append("\t");
+                out.append(value.labels[i]);
+                out.append("\t");
+                out.append(Integer.toString(value.counts[i]));
+                out.append("\n");
+            }
+        }
+        out.flush();
+    }
+
     public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
@@ -146,7 +172,8 @@ public class StringMatchingRecommender
 
         aContext.put(KEY_MODEL, dict);
 
-        log.debug("Learned dictionary model with {} entries", dict.size());
+        log.debug("Learned dictionary model with {} entries on {} documents", dict.size(),
+                aCasses.size());
     }
 
     @Override
@@ -227,6 +254,12 @@ public class StringMatchingRecommender
     }
 
     @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return extractData(aCasses, layerName, featureName).size();
+    }
+
+    @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
         List<Sample> data = extractData(aCasses, layerName, featureName);
@@ -262,6 +295,13 @@ public class StringMatchingRecommender
         final int minTrainingSetSize = 1;
         final int minTestSetSize = 1;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
+            if (!gazeteerService.listGazeteers(recommender).isEmpty()) {
+                // We cannot evaluate, but the user expects to see immediate results from the
+                // gazeteer - so we return with an "unknown" result but without marking it as
+                // skipped so that the selection task allows the recommender to activate.
+                return new EvaluationResult();
+            }
+
             String info = String.format(
                     "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
                     trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),

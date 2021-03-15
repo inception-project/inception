@@ -40,7 +40,7 @@ public class ProjectCasDoctorMenuItem
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.stethoscope_s;
+        return FontAwesome5IconType.medkit_s;
     }
 
     @Override

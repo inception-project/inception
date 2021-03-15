@@ -23,12 +23,20 @@
       <wicket:message key="simulation" />
     </div>
     <div class="scrolling card-body">
-      <div class="form-group form-row" wicket:enclosure="select">
-        <label wicket:for="select" class="col-sm-3 col-form-label">
+      <div class="form-group form-row" wicket:enclosure="metric">
+        <label wicket:for="metric" class="col-sm-3 col-form-label">
           <wicket:label key="metric" />
         </label>
         <div class="col-sm-9">
-          <select wicket:id="select" class="form-control" data-container="body"></select>
+          <select wicket:id="metric" class="form-control" data-container="body"></select>
+        </div>
+      </div>
+      <div class="form-group form-row" wicket:enclosure="annotator">
+        <label wicket:for="annotator" class="col-sm-3 col-form-label">
+          <wicket:label key="annotator" />
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="annotator" class="form-control" data-container="body"></select>
         </div>
       </div>
       <div wicket:id="chart-container"></div>

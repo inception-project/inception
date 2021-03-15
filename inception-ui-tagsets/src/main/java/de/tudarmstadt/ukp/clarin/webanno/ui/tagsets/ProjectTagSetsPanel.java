@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
@@ -54,34 +56,28 @@ public class ProjectTagSetsPanel
 
         tagSetSelectionPanel = new TagSetSelectionPanel("tagSetSelector", selectedProject,
                 selectedTagSet);
-        tagSetSelectionPanel
-                .onConfigure(_this -> _this.setVisible(selectedProject.getObject() != null));
+        tagSetSelectionPanel.add(visibleWhen(() -> selectedProject.getObject() != null));
         tagSetSelectionPanel.setCreateAction(target -> selectedTagSet.setObject(new TagSet()));
         tagSetSelectionPanel.setChangeAction(target -> {
             selectedTag.setObject(null);
-            target.add(tagSetEditorPanel);
-            target.add(tagSelectionPanel);
-            target.add(tagEditorPanel);
+            target.add(tagSetEditorPanel, tagSelectionPanel, tagEditorPanel);
         });
         add(tagSetSelectionPanel);
 
         tagSelectionPanel = new TagSelectionPanel("tagSelector", selectedTagSet, selectedTag);
-        tagSelectionPanel.onConfigure(_this -> _this.setVisible(
-                selectedTagSet.getObject() != null && selectedTagSet.getObject().getId() != null));
+        tagSelectionPanel.add(visibleWhen(() -> selectedTagSet.getObject() != null
+                && selectedTagSet.getObject().getId() != null));
         tagSelectionPanel.setCreateAction(target -> selectedTag.setObject(new Tag()));
-        tagSelectionPanel.setChangeAction(target -> {
-            target.add(tagEditorPanel);
-        });
+        tagSelectionPanel.setChangeAction(target -> target.add(tagEditorPanel));
         add(tagSelectionPanel);
 
         tagEditorPanel = new TagEditorPanel("tagEditor", selectedTagSet, selectedTag);
-        tagEditorPanel.onConfigure(_this -> _this.setVisible(selectedTag.getObject() != null));
+        tagEditorPanel.add(visibleWhen(() -> selectedTag.getObject() != null));
         add(tagEditorPanel);
 
         tagSetEditorPanel = new TagSetEditorPanel("tagSetEditor", selectedProject, selectedTagSet,
                 selectedTag);
-        tagSetEditorPanel
-                .onConfigure(_this -> _this.setVisible(selectedTagSet.getObject() != null));
+        tagSetEditorPanel.add(visibleWhen(() -> selectedTagSet.getObject() != null));
         add(tagSetEditorPanel);
     }
 

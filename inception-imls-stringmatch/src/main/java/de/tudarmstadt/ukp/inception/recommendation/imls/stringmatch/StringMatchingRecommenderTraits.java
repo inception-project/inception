@@ -17,7 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
-public class StringMatchingRecommenderTraits
-{
+import java.io.Serializable;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+//The @JsonSerialize annotation avoid the "InvalidDefinitionException: No serializer found"
+//exception without having to set SerializationFeature.FAIL_ON_EMPTY_BEANS
+@JsonSerialize
+public class StringMatchingRecommenderTraits
+    implements Serializable
+{
+    private static final long serialVersionUID = -7433406243352691789L;
 }

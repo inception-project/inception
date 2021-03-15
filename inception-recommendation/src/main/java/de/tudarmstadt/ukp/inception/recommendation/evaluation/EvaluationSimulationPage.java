@@ -22,9 +22,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -65,23 +65,19 @@ public class EvaluationSimulationPage
 
         SimulationLearningCurvePanel evaluationSimulationPanel = new SimulationLearningCurvePanel(
                 MID_EVALUATION_SIMULATION_CONTAINER, project, selectedRecommenderModel);
-        evaluationSimulationPanel.setOutputMarkupId(true);
         add(evaluationSimulationPanel);
 
         RecommenderViewPanel recommenderViewPanel = new RecommenderViewPanel(MID_RECOMMENDER_VIEW,
                 selectedRecommenderModel);
+        recommenderViewPanel.setOutputMarkupPlaceholderTag(true);
+        recommenderViewPanel.add(visibleWhenModelIsNotNull(recommenderViewPanel));
         add(recommenderViewPanel);
 
         RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDER_LIST,
                 Model.of(project), selectedRecommenderModel, false);
-        recommenderListPanel.setCreateAction(_target -> {
-            Recommender recommender = new Recommender();
-            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
-            selectedRecommenderModel.setObject(recommender);
-        });
         recommenderListPanel.setChangeAction(_target -> {
-            _target.add(recommenderViewPanel);
             evaluationSimulationPanel.recommenderChanged();
+            _target.add(recommenderViewPanel);
         });
         add(recommenderListPanel);
     }

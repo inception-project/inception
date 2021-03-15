@@ -293,6 +293,12 @@ public class ExternalRecommender
     }
 
     @Override
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
+        return -1;
+    }
+
+    @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
         EvaluationResult result = new EvaluationResult();

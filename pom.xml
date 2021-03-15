@@ -73,7 +73,8 @@
     <spring.version>5.3.3</spring.version>
     <spring.boot.version>2.4.2</spring.boot.version>
     <spring.security.version>5.4.2</spring.security.version>
-    <springfox.version>2.9.2</springfox.version>
+    <springdoc.version>1.5.5</springdoc.version>
+    <swagger.version>2.1.7</swagger.version>
 
     <slf4j.version>1.7.30</slf4j.version>
     <log4j.version>2.14.0</log4j.version>
@@ -88,8 +89,6 @@
     <mysql-driver.version>8.0.20</mysql-driver.version>
     <hibernate.version>5.4.15.Final</hibernate.version>
     <hibernate.validator.version>6.1.4.Final</hibernate.validator.version>
-
-    <webanno.version>0.18.1-SNAPSHOT</webanno.version>
 
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
@@ -831,7 +830,7 @@
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
-        <version>5.11.2</version>
+        <version>5.15.2</version>
       </dependency>
       <dependency>
         <groupId>org.webjars</groupId>
@@ -1107,6 +1106,28 @@
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-web</artifactId>
         <version>${spring.security.version}</version>
+      </dependency>
+      
+      <!-- Springdoc -->
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-ui</artifactId>
+        <version>${springdoc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-common</artifactId>
+        <version>${springdoc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>${swagger.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-models</artifactId>
+        <version>${swagger.version}</version>
       </dependency>
 
       <!-- Tomcat -->

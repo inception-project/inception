@@ -20,15 +20,14 @@ package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.ComponentPropertyModel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -44,59 +43,41 @@ public class RecommenderViewPanel
     private static final String MID_LAYER = "layer";
     private static final String MID_TOOL = "tool";
 
-    private TextField<String> nameField;
-    private TextField<String> tool;
-    private TextField<AnnotationFeature> feature;
-    private TextField<AnnotationLayer> layer;
-
-    private @SpringBean RecommendationService recommendationService;
-    private @SpringBean AnnotationSchemaService annotationSchemaService;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
-
-    private IModel<Recommender> recommenderModel;
 
     public RecommenderViewPanel(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
 
-        setOutputMarkupId(true);
-        setOutputMarkupPlaceholderTag(true);
-
-        recommenderModel = aRecommender;
-
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
 
-        nameField = new TextField<>(MID_NAME, String.class);
-        form.add(nameField);
-
-        tool = new TextField<>(MID_TOOL, String.class);
-        form.add(tool);
-
-        feature = new TextField<AnnotationFeature>(MID_FEATURE);
-        form.add(feature);
-
-        layer = new TextField<AnnotationLayer>(MID_LAYER);
-        form.add(layer);
+        form.add(new TextField<>(MID_NAME, String.class));
+        form.add(new TextField<>(MID_TOOL, LoadableDetachableModel.of(this::getToolName),
+                String.class));
+        form.add(new TextField<AnnotationFeature>(MID_FEATURE,
+                new ComponentPropertyModel<>("feature.uiName")));
+        form.add(new TextField<AnnotationLayer>(MID_LAYER,
+                new ComponentPropertyModel<>("layer.uiName")));
     }
 
-    @Override
-    protected void onConfigure()
+    public Recommender getModelObject()
     {
-        super.onConfigure();
+        return (Recommender) getDefaultModelObject();
+    }
 
-        setVisible(recommenderModel != null && recommenderModel.getObject() != null);
-
-        if (recommenderModel != null && recommenderModel.getObject() != null) {
-            String name = recommenderModel.getObject().getLayer().getUiName();
-            layer.setDefaultModel(Model.of(name));
-
-            name = recommenderModel.getObject().getFeature().getUiName();
-            feature.setDefaultModel(Model.of(name));
-
-            name = recommenderModel.getObject().getTool();
-            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
-            tool.setDefaultModel(Model.of(factory.getName()));
+    private String getToolName()
+    {
+        if (getModelObject() == null) {
+            return null;
         }
+
+        RecommendationEngineFactory<?> factory = recommenderRegistry
+                .getFactory(getModelObject().getTool());
+        if (factory == null) {
+            return "[UNSUPPORTED]";
+        }
+
+        return factory.getName();
     }
 }

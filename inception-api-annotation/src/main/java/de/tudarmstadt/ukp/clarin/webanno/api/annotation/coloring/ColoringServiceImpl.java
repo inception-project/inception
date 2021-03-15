@@ -92,8 +92,7 @@ public class ColoringServiceImpl
     {
         // Decide on coloring strategy for the current layer
         switch (colortype) {
-        case STATIC_PASTELLE: // ignore for the moment and fall through
-        case STATIC:
+        case STATIC_PASTELLE: { // ignore for the moment and fall through
             int threshold;
             if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 threshold = MAX_VALUE; // No filtering
@@ -104,10 +103,40 @@ public class ColoringServiceImpl
                 // the full palette.
                 threshold = LIGHTNESS_FILTER_THRESHOLD;
             }
+
+            // Limit the palette available to the coloring strategy to a single color - this
+            // way we get per-layer coloring instead of per-label coloring.
             String[] aPalette = { nextPaletteEntry(PALETTE_PASTEL, aColorQueues, threshold) };
             return new LabelHashBasedColoringStrategy(aPalette);
-        case DYNAMIC_PASTELLE:
-        case DYNAMIC:
+        }
+        case STATIC: {
+            int threshold;
+            if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+                threshold = MAX_VALUE; // No filtering
+            }
+            else {
+                // Chains and arcs contain relations that are rendered as lines on the light
+                // window background - need to make sure there is some contrast, so we cannot use
+                // the full palette.
+                threshold = LIGHTNESS_FILTER_THRESHOLD;
+            }
+
+            // Limit the palette available to the coloring strategy to a single color - this
+            // way we get per-layer coloring instead of per-label coloring.
+            String[] aPalette = { nextPaletteEntry(PALETTE_NORMAL, aColorQueues, threshold) };
+            return new LabelHashBasedColoringStrategy(aPalette);
+        }
+        case DYNAMIC_PASTELLE: {
+            if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+                return new LabelHashBasedColoringStrategy(PALETTE_PASTEL);
+            }
+
+            // Chains and arcs contain relations that are rendered as lines on the light
+            // window background - need to make sure there is some contrast, so we cannot use
+            // the full palette.
+            return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
+        }
+        case DYNAMIC: {
             if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 return new LabelHashBasedColoringStrategy(PALETTE_NORMAL);
             }
@@ -116,6 +145,7 @@ public class ColoringServiceImpl
             // window background - need to make sure there is some contrast, so we cannot use
             // the full palette.
             return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
+        }
         case GRAY:
         default:
             return new LabelHashBasedColoringStrategy(DISABLED);

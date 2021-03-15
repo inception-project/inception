@@ -35,6 +35,7 @@ public abstract class ProjectSettingsMenuItemBase
     @Override
     public boolean applies(Project aProject)
     {
-        return projectService.hasRole(userRepo.getCurrentUser(), aProject, MANAGER);
+        return userRepo.isCurrentUserAdmin()
+                || projectService.hasRole(userRepo.getCurrentUser(), aProject, MANAGER);
     }
 }
