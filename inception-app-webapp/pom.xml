@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -31,7 +32,7 @@
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-repository-api</artifactId>
     </dependency>
-  
+
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -560,8 +561,8 @@
       <artifactId>inception-workload-dynamic</artifactId>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-sharing</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-sharing</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -679,7 +680,7 @@
             <configuration>
               <target>
                 <delete includeemptydirs="true" failonerror="false">
-                  <fileset dir="src/main/resources/public/doc" includes="**/*" />
+                  <fileset dir="src/main/resources/public/doc" includes="**/*"/>
                 </delete>
               </target>
             </configuration>
@@ -692,7 +693,7 @@
             </goals>
             <configuration>
               <target>
-                <mkdir dir="src/main/resources/public/doc" />
+                <mkdir dir="src/main/resources/public/doc"/>
 
                 <!--
                   It is important that we SYNC here instead of delete/copy, otherwise we may run into
@@ -700,18 +701,23 @@
                 -->
                 <sync todir="src/main/resources/public/doc">
                   <fileset dir="target/generated-docs">
-                    <include name="**/*.html" />
-                    <include name="**/*.png" />
-                    <include name="**/*.jpg" />
+                    <include name="**/*.html"/>
+                    <include name="**/*.png"/>
+                    <include name="**/*.jpg"/>
                   </fileset>
                 </sync>
 
                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
-                  <include name="**/*.html" />
-                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
-                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
-                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
-                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                  <include name="**/*.html"/>
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
+                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js"/>
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js"
+                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js"/>
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js"/>
+                  <replacefilter
+                      token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
+                      value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js"/>
                 </replace>
 
               </target>
@@ -727,7 +733,8 @@
           <artifactId>asciidoctor-maven-plugin</artifactId>
           <version>${asciidoctor.plugin.version}</version>
           <configuration>
-            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
+            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc
+            </sourceDirectory>
             <attributes>
               <doctype>book</doctype>
               <toclevels>8</toclevels>
@@ -768,7 +775,8 @@
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-ui-project</ignoredDependency>
             </ignoredDependencies>
             <ignoredUsedUndeclaredDependencies>
-              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
+              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core
+              </ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
@@ -779,7 +787,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
-			  <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
@@ -801,6 +809,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-monitoring</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
@@ -890,7 +899,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -903,7 +912,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -916,7 +925,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -929,7 +938,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
@@ -965,7 +974,8 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <layoutFactory
+                      implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory"/>
                   <!--
                     We want the original file to be the WAR and the repackaged all-inclusive runnable
                     thing with the embedded Tomcat to be the JAR.
@@ -995,7 +1005,8 @@
                 </goals>
                 <configuration>
                   <target>
-                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war"
+                          tofile="target/${project.artifactId}-${project.version}-standalone.jar"/>
                   </target>
                 </configuration>
               </execution>
