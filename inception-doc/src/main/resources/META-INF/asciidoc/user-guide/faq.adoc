@@ -19,7 +19,7 @@
 
 == What tokenization does INCEpTION use?
 
-WebAnno uses the http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/sun/text/resources/BreakIteratorRules.java[Java BreakIterator] internally.
+INCEpTION uses the http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/sun/text/resources/BreakIteratorRules.java[Java BreakIterator] internally.
 Note that the linked file is part of a specific version of the Java 8 JDK and may change in other Java versions or for other Java vendors.
 
 If you need to provide your own tokenization, then the best choice would be to use a format that supports it, e.g. XMI, WebAnno TSV or CoNLL formats.
@@ -39,9 +39,7 @@ So when you have a discontinuous span, you could annotate the first span with yo
 
 == What is the relation between WebAnno and INCEpTION?
 
-INCEpTION is the predecessor of WebAnno.
-They are both developed by the same Team at UKP Darmstadt.
-The code of INCEpTION is internally based on WebAnno.
+INCEpTION is the successor of WebAnno and evolved from the WebAnno code base. Both INCEpTION and WebAnno are currently developed/maintained by the same team at the UKP Lab at the Technical University of Darmstadt.
 
 INCEpTION has all the flexibility and many more exciting features including a completely new human-in-the-loop annotation assistance support, the ability to search texts and annotations, support for RDF/SPARQL knowledge bases for entity linking, and much more.
 And best: it can import your WebAnno annotation projects (Projects of type _automation_ or _correction_ are not supported).
