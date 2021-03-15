@@ -25,26 +25,32 @@ import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
 @Configuration
 public class InceptionWebInitializer
     implements ServletContextInitializer
 {
+    private @Autowired RepositoryProperties repoProperties;
+
     @Override
     public void onStartup(ServletContext aServletContext) throws ServletException
     {
-        // 2) Make username accessible to logging framework
+        // Make username / repository accessible to logging framework
         FilterRegistration loggingFilter = aServletContext.addFilter("logging",
                 LoggingFilter.class);
         loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
+        loggingFilter.setInitParameter(LoggingFilter.PARAM_REPOSITORY_PATH,
+                repoProperties.getPath().getAbsolutePath().toString());
 
-        // 5) Make sure we have one JPA session/transaction per request. Closes session at the
+        // Make sure we have one JPA session/transaction per request. Closes session at the
         // end, without this, changed data may not be automatically saved to the DB.
         FilterRegistration openSessionInViewFilter = aServletContext.addFilter("opensessioninview",
                 OpenEntityManagerInViewFilter.class);

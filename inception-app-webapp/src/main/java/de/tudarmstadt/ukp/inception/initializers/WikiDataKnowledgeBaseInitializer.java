@@ -23,16 +23,21 @@ import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ProjectInitializersAutoConfiguration#wikiDataKnowledgeBaseInitializer}.
+ * </p>
+ */
 public class WikiDataKnowledgeBaseInitializer
     implements ProjectInitializer
 {
