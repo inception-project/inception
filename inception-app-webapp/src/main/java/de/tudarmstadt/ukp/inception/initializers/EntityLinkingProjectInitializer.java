@@ -17,12 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.initializers;
 
-import static java.util.Arrays.asList;
-
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
+import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
@@ -31,17 +30,26 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.QuickProjectInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ProjectInitializersAutoConfiguration#entityLinkingProjectInitializer}.
+ * </p>
+ */
 public class EntityLinkingProjectInitializer
     implements QuickProjectInitializer
 {
     private final AnnotationSchemaService annotationService;
+    private final ApplicationContext context;
 
-    public EntityLinkingProjectInitializer(AnnotationSchemaService aAnnotationService)
+    public EntityLinkingProjectInitializer(ApplicationContext aContext,
+            AnnotationSchemaService aAnnotationService)
     {
+        context = aContext;
         annotationService = aAnnotationService;
     }
 
@@ -60,9 +68,17 @@ public class EntityLinkingProjectInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return asList(NamedEntityLayerInitializer.class, WikiDataKnowledgeBaseInitializer.class,
-                NamedEntityIdentifierFeatureInitializer.class,
-                NamedEntityIdentifierStringRecommenderInitializer.class);
+        List<Class<? extends ProjectInitializer>> dependencies = new ArrayList<>();
+        dependencies.add(NamedEntityLayerInitializer.class);
+        dependencies.add(NamedEntityIdentifierFeatureInitializer.class);
+        dependencies.add(WikiDataKnowledgeBaseInitializer.class);
+
+        if (context.getBeanNamesForType(
+                NamedEntityIdentifierStringRecommenderInitializer.class).length > 0) {
+            dependencies.add(NamedEntityIdentifierStringRecommenderInitializer.class);
+        }
+
+        return dependencies;
     }
 
     @Override
