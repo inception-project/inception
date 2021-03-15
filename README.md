@@ -44,7 +44,11 @@ tasks like entity linking.
 
 ## Getting started
 
-### Examples
+The best way to get started is to
+watch [our tutorial videos](https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-),
+working through
+the [Getting Started Guide](ttps://inception-project.github.io/documentation/latest/user-guide#sect_core_funct) and
+playing with INCEpTION on the [demo server](https://morbo.ukp.informatik.tu-darmstadt.de/demo).
 
 ## See our documentation for further reading
 
