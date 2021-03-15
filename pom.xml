@@ -29,7 +29,9 @@
   <version>0.19.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
-  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
+  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge
+    Bases
+  </description>
   <url>https://inception-project.github.io</url>
   <inceptionYear>2018</inceptionYear>
   <licenses>
@@ -655,6 +657,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-plugin-manager</artifactId>
+        <version>0.19.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-versioning</artifactId>
         <version>0.19.0-SNAPSHOT</version>
       </dependency>
 
@@ -1472,6 +1479,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.eclipse.jgit</groupId>
+        <artifactId>org.eclipse.jgit</artifactId>
+        <version>5.10.0.202012080955-r</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>c3</artifactId>
         <version>0.6.6</version>
@@ -1656,6 +1669,8 @@
     <module>inception-imls-dl4j</module>
     <!-- Packaging -->
     <module>inception-docker</module>
+    <!-- Versioning -->
+    <module>inception-versioning</module>
   </modules>
 
   <build>
@@ -2115,7 +2130,7 @@
     <profile>
       <id>full-tests</id>
       <properties>
-        <excludedTestCategories />
+        <excludedTestCategories/>
       </properties>
     </profile>
   </profiles>

@@ -1,0 +1,30 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_versioning]]
+= Project Versioning
+
+Project managers can create snapshots of all documents in the project as well as its layer configuration via the versioning panel.
+This is done via a git repository stored in the `+.inception+` folder.
+This git repository can also be used to push to a remote repository, e.g. saving on Github or Gitlab.
+We currently only support pushing via HTTPS.
+
+image::versioning_settings.png[align="center"]
+
+If you want to roll back to an earlier version, then you need to manually check out the old version in the local or remote git repository, load the old layer configuration manually in the layer settings and replace source and annotation documents via the remote API (see the <<admin-guide.adoc#sect_remote_api, Admin Guide>>).
+
+NOTE: This feature is not enabled by default.
+However, you can enable it by adding `versioning.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
