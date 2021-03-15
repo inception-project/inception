@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @RunWith(SpringRunner.class)
@@ -97,12 +98,10 @@ public class LoggedEventMessageServiceImplTest
     }
     
     @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { })
+    @EnableAutoConfiguration(exclude = EventLoggingAutoConfiguration.class)
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.websocket"})
     public static class SpringConfig
     {
-        // No content
-        // FIXME: seems something wants to be injected but we do not have it configured for this test
     }
     
     public class TestChannel

@@ -111,7 +111,11 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
         if (adapter == null) {
             return null;
         }
-        return createLoggedEventMessage(adapter.getUser(aEvent), adapter.getProject(aEvent),
+        String user = adapter.getAnnotator(aEvent);
+        if (user == null) {
+            user = adapter.getUser(aEvent);
+        }
+        return createLoggedEventMessage(user, adapter.getProject(aEvent),
                 adapter.getCreated(aEvent), adapter.getEvent(aEvent), adapter.getDocument(aEvent));
     }
 
