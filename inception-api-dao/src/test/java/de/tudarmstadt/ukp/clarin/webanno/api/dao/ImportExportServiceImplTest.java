@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -29,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,9 +60,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 public class ImportExportServiceImplTest
 {
-    private BackupProperties backupProperties;
-    private RepositoryProperties repositoryProperties;
-    private CasStorageServiceImpl storageService;
     private CasStorageSession casStorageSession;
     private @Spy AnnotationSchemaService schemaService;
 
@@ -74,20 +70,20 @@ public class ImportExportServiceImplTest
     @Before
     public void setup() throws Exception
     {
-        initMocks(this);
+        openMocks(this);
 
         // schemaService = mock(AnnotationSchemaServiceImpl.class);
         schemaService = Mockito.spy(new AnnotationSchemaServiceImpl());
 
-        backupProperties = new BackupProperties();
+        BackupProperties backupProperties = new BackupProperties();
 
-        repositoryProperties = new RepositoryProperties();
+        RepositoryProperties repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
 
-        storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
-                backupProperties);
+        CasStorageServiceImpl storageService = new CasStorageServiceImpl(null, null,
+                repositoryProperties, backupProperties);
 
-        sut = new ImportExportServiceImpl(repositoryProperties, asList(new XmiFormatSupport()),
+        sut = new ImportExportServiceImpl(repositoryProperties, List.of(new XmiFormatSupport()),
                 storageService, schemaService);
         sut.onContextRefreshedEvent();
 
@@ -114,7 +110,7 @@ public class ImportExportServiceImplTest
     @Test
     public void thatExportContainsNoCasMetadata() throws Exception
     {
-        SourceDocument sd = makeSourceDocument(1l, 1l);
+        SourceDocument sd = makeSourceDocument(1L, 1L);
 
         // Create type system with built-in types, internal types, but without any project-specific
         // types.
