@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://inception-project.github.io/">
-    <img width="471" style="max-width:50%;" src="inception-doc/src/main/resources/META-INF/asciidoc/inception-logo.png"  alt="INCEpTION Logo"/>
+    <img width="471" style="max-width:50%;" src="inception/inception-doc/src/main/resources/META-INF/asciidoc/inception-logo.png"  alt="INCEpTION Logo"/>
   </a>
   <p>
     A semantic annotation platform offering intelligent assistance and knowledge management.
