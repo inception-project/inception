@@ -29,7 +29,9 @@
   <version>0.19.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
-  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
+  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge
+    Bases
+  </description>
   <url>https://inception-project.github.io</url>
   <inceptionYear>2018</inceptionYear>
   <licenses>
@@ -111,7 +113,7 @@
     <solr.version>7.7.3</solr.version> <!-- 8.5.1 / 8.7.0 -->
     <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
     <elasticsearch.version>6.8.8</elasticsearch.version> <!-- 7.10.2 -->
-    <rdf4j.version>3.6.0</rdf4j.version>
+    <rdf4j.version>3.6.1</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
     <servlet-api.version>4.0.1</servlet-api.version>
@@ -661,6 +663,11 @@
       	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
       	<artifactId>inception-websocket</artifactId>
       	<version>0.19.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-versioning</artifactId>
+        <version>0.19.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Testing -->
@@ -1477,6 +1484,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.eclipse.jgit</groupId>
+        <artifactId>org.eclipse.jgit</artifactId>
+        <version>5.10.0.202012080955-r</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>c3</artifactId>
         <version>0.6.6</version>
@@ -1661,8 +1674,9 @@
     <module>inception-imls-dl4j</module>
     <!-- Packaging -->
     <module>inception-docker</module>
-    
     <module>inception-websocket</module>
+    <!-- Versioning -->
+    <module>inception-versioning</module>
   </modules>
 
   <build>
@@ -2122,7 +2136,7 @@
     <profile>
       <id>full-tests</id>
       <properties>
-        <excludedTestCategories />
+        <excludedTestCategories/>
       </properties>
     </profile>
   </profiles>

@@ -143,13 +143,13 @@ include::{include-dir}projects_export.adoc[leveloffset=+2]
 
 include::{include-dir}projects_sharing.adoc[leveloffset=+2]
 
+include::{include-dir}projects_versioning.adoc[leveloffset=+2]
+
 <<<
 
 include::{include-dir}users.adoc[leveloffset=+1]
 
 <<<
-
-
 
 = Advanced functionalities
 

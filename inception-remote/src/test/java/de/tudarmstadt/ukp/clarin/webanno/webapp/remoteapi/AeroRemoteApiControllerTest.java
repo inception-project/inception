@@ -351,9 +351,10 @@ public class AeroRemoteApiControllerTest
         }
 
         @Bean
-        public CurationDocumentService curationDocumentService()
+        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
+                AnnotationSchemaService aAnnotationService)
         {
-            return new CurationDocumentServiceImpl();
+            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
         }
 
         @Bean

@@ -10,8 +10,8 @@ backup:
 
 debug:
   casDoctor:
-    checks: 
-    repairs: 
+    checks:
+    repairs:
     fatal: false
     forceReleaseBehavior: false
 
@@ -33,7 +33,7 @@ ui:
 spring:
   application:
     name: INCEpTION
-    
+
   servlet:
     multipart:
       max-file-size: 100MB
@@ -51,19 +51,19 @@ spring:
     driver-class-name: ${database.driver:${INCEPTION_DB_DRIVER:}}
 
   jpa:
-    show-sql: false 
+    show-sql: false
     open-in-view: true
     properties:
       javax:
         persistence:
-          sharedCache: 
+          sharedCache:
             # L2 CACHE: enable selective caching mode - only entities with @Cacheable annotation
             # mode: ENABLE_SELECTIVE
             mode: NONE
       hibernate:
         dialect: ${database.dialect:${INCEPTION_DB_DIALECT:}}
         # Enable SQL statements formatting.
-        # format_sql: true 
+        # format_sql: true
         # L2 CACHE: generate statistics to check if L2/query cache is actually being used.
         # generate_statistics: true
         # jmx:

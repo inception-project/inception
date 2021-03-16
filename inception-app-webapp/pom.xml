@@ -186,6 +186,12 @@
       <artifactId>inception-review-editor</artifactId>
     </dependency>
 
+    <!-- VERSIONING -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-versioning</artifactId>
+    </dependency>
+
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -792,6 +798,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-monitoring</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>

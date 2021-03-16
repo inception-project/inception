@@ -48,7 +48,7 @@ public class GenerateDocumentation
                 .collect(Collectors.toList());
     }
 
-    private static void buildDoc(String type, Path outputDir)
+    private static void buildDoc(String type, Path outputDir) throws IOException
     {
         Attributes attributes = AttributesBuilder.attributes()
                 .attribute("source-dir", getInceptionDir() + "/")
@@ -71,6 +71,7 @@ public class GenerateDocumentation
         Asciidoctor asciidoctor = Asciidoctor.Factory.create();
         asciidoctor.requireLibrary("asciidoctor-diagram");
         File f = new File(outputDir.resolve("asciidoc").resolve(type).toString() + ".adoc");
+        Files.createDirectories(f.getParentFile().toPath());
         asciidoctor.convertFile(f, options);
     }
 
@@ -81,10 +82,7 @@ public class GenerateDocumentation
         Path outputDir = Paths.get(System.getProperty("user.dir")).resolve("target")
                 .resolve("doc-out");
 
-        Files.createDirectories(outputDir);
-
-        List<Path> modules = new ArrayList<>();
-        modules.addAll(getAsciiDocs(inceptionDir));
+        List<Path> modules = new ArrayList<>(getAsciiDocs(inceptionDir));
 
         FileUtils.deleteQuietly(outputDir.toFile());
         Files.createDirectory(outputDir);

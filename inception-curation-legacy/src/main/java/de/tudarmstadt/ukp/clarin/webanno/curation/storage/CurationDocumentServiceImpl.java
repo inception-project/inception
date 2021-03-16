@@ -47,15 +47,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 public class CurationDocumentServiceImpl
     implements CurationDocumentService
 {
-    private @Autowired CasStorageService casStorageService;
-    private @Autowired AnnotationSchemaService annotationService;
+    private final CasStorageService casStorageService;
+    private final AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    public CurationDocumentServiceImpl()
+    @Autowired
+    public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
+            AnnotationSchemaService aAnnotationService)
     {
-        // Nothing to do
+        casStorageService = aCasStorageService;
+        annotationService = aAnnotationService;
     }
 
     @Override
