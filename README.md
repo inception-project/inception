@@ -37,8 +37,8 @@ our [introduction videos](https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz
 
 INCEpTION is a text-annotation environment useful for various kinds of annotation tasks on written text. Annotations are
 usually used for linguistic and/or machine learning concerns. INCEpTION is a web application in which several users can
-work on the same annotation project, and it can contain several annotation projects at a time. It provides a *
-recommender system* to help you create annotations faster and easier. Beyond annotating, you can also *create a corpus*
+work on the same annotation project, and it can contain several annotation projects at a time. It provides a *recommender system* 
+that suggest potential annotations to help you create annotations faster and easier. Beyond annotating, you can also *create a corpus*
 by searching an external document repository and adding documents. Moreover, you can use *knowledge bases*, e.g. for
 tasks like entity linking.
 
@@ -47,14 +47,14 @@ tasks like entity linking.
 The best way to get started is to
 watch [our tutorial videos](https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-),
 working through
-the [Getting Started Guide](ttps://inception-project.github.io/documentation/latest/user-guide#sect_core_funct) and
+the [Getting Started Guide](https://inception-project.github.io/documentation/latest/user-guide#sect_core_funct) and
 playing with INCEpTION on the [demo server](https://morbo.ukp.informatik.tu-darmstadt.de/demo).
 
 ## See our documentation for further reading
 
 - **User Guide:** If you only use INCEpTION and do not develop it,
   the [User Guide](https://inception-project.github.io/documentation/latest/user-guide#sect_core_funct) beginning right
-  after *Getting Started* is the one of your choice. If it does not answer your questions, don’t hesitate to contact
+  after *Getting Started* is the guide of your choice. If it does not answer your questions, don’t hesitate to contact
   us (see *Do you have questions or feedback?*).
 - **Admin Guide:** For information on how to set up INCEpTION for a group of users on a server and more installation
   details, see the [Admin Guide](https://inception-project.github.io/documentation/latest/admin-guide).
@@ -64,16 +64,15 @@ playing with INCEpTION on the [demo server](https://morbo.ukp.informatik.tu-darm
 
 Many more materials like [example projects](https://inception-project.github.io/example-projects/)
 , [use case descriptions](https://inception-project.github.io/use-cases/)
-and [helping scripts](https://inception-project.github.io/example-projects/python/) are available via the INCEpTION
+and [helpful scripts](https://inception-project.github.io/example-projects/python/) are available via the INCEpTION
 homepage.
 
 ## Do you have questions or feedback?
 
 INCEpTION is still in development, so you are welcome to give us feedback and tell us your wishes and requirements.
 
-- For many questions, you find answers in the main documentation: Core Functionalities.
-- Consider our Google group [inception-users](https://groups.google.com/forum/#!forum/inception-users) and mailing list:
-  [inception-users@googlegroups.com](mailto:inception-users@googlegroups.com)
+- For many questions, you find answers in the main documentation: [Core Functionalities](https://inception-project.github.io/documentation/latest/user-guide#sect_core_funct).
+- Consider our Google group [inception-users](https://groups.google.com/forum/#!forum/inception-users)
 - You can also open an issue on [Github](https://github.com/inception-project/inception/issues).
 
 ## How to cite
