@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.TokenWrappingPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -217,6 +218,43 @@ public class BratRendererTest
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
         assertThat(contentOf(new File("src/test/resources/multiline.json"), UTF_8))
+                .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
+    }
+
+    /**
+     * generate brat JSON data for the document
+     */
+    @Test
+    public void thatTokenWrappingStrategyRenderCorrectly() throws Exception
+    {
+        String jsonFilePath = "target/test-output/longlines.json";
+        String file = "src/test/resources/longlines.txt";
+
+        CAS cas = JCasFactory.createJCas().getCas();
+        CollectionReader reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION,
+                file);
+        reader.getNext(cas);
+        AnalysisEngine segmenter = createEngine(BreakIteratorSegmenter.class);
+        segmenter.process(cas);
+        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setPagingStrategy(new TokenWrappingPagingStrategy(80));
+        state.getPreferences().setWindowSize(10);
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
+
+        state.setProject(project);
+
+        VDocument vdoc = new VDocument();
+        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
+                schemaService.listAnnotationLayer(project));
+
+        GetDocumentResponse response = new GetDocumentResponse();
+        BratRenderer renderer = new BratRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        renderer.render(response, state, vdoc, cas);
+
+        JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
+
+        assertThat(contentOf(new File("src/test/resources/longlines.json"), UTF_8))
                 .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 }
