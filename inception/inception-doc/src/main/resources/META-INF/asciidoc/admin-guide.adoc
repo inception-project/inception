@@ -44,7 +44,9 @@ include::{include-dir}installation_ssl_nginx.adoc[leveloffset=+2]
 
 include::{include-dir}installation_docker.adoc[leveloffset=+1]
 
-include::{include-dir}metrics_monitoring.adoc[leveloffset=+1]
+<<<
+
+include::{include-dir}metrics_monitoring.adoc[]
 
 <<<
 
