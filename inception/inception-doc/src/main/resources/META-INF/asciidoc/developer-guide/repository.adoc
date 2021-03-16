@@ -1,0 +1,26 @@
+= Repository
+
+The repository is a folder below the {product-name} home folder which contains most of the 
+applications data that is not stored in the database. This includes in particular the original
+documents imported into the application as well as annotations made by the users.
+
+The source document data is managed by the `DocumentService` while the annotated documents are managed
+by the `CasStorageService`.
+
+====
+`┣ <project ID>.log` - project log file +
+`┗ project` +
+`{nbsp}{nbsp}┗ <project ID>` - data related to the project with the given ID +
+`{nbsp}{nbsp}{nbsp}{nbsp}┣ document` - managed by the `CasStorageService` +
+`{nbsp}{nbsp}{nbsp}{nbsp}┃{nbsp}{nbsp}┗ <document ID>` +
+`{nbsp}{nbsp}{nbsp}{nbsp}┃{nbsp}{nbsp}{nbsp}{nbsp}┗ annotation` +
+`{nbsp}{nbsp}{nbsp}{nbsp}┃{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}┣ INITIAL_CAS.ser` - initial converted version of the source document +
+`{nbsp}{nbsp}{nbsp}{nbsp}┃{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}┣ <user ID>.ser` +
+`{nbsp}{nbsp}{nbsp}{nbsp}┃{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}┗ <user ID>.ser.<timestamp>.bak` - backups of the user's annotations (if enabled) +
+`{nbsp}{nbsp}{nbsp}{nbsp}┣ source` - managed by the `DocumentService` +
+`{nbsp}{nbsp}{nbsp}{nbsp}┃{nbsp}{nbsp}┗ <original file>` - original source file +
+`{nbsp}{nbsp}{nbsp}{nbsp}┗ settings` +
+`{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}┗ <user ID>` - user-specific preferences +
+`{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}┗ annotation.properties` - annotation preferences +
+====
+
