@@ -49,9 +49,9 @@ import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -78,7 +78,7 @@ public class StringMatchingRecommenderTest
     private StringMatchingRecommenderTraits traits;
     private CasStorageSession casStorageSession;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         casStorageSession = CasStorageSession.open();
@@ -87,7 +87,7 @@ public class StringMatchingRecommenderTest
         traits = new StringMatchingRecommenderTraits();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         casStorageSession.close();

@@ -45,9 +45,9 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
@@ -74,13 +74,13 @@ public class LappsGridRecommenderConformityTest
 {
     private CasStorageSession casStorageSession;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         casStorageSession = CasStorageSession.open();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         CasStorageSession.get().close();

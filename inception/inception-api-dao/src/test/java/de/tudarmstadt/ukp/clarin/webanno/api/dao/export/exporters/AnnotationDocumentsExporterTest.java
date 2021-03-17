@@ -31,9 +31,9 @@ import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 
@@ -71,7 +71,7 @@ public class AnnotationDocumentsExporterTest
 
     private AnnotationDocumentExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         initMocks(this);

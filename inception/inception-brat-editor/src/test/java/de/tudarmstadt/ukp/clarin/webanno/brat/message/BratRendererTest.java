@@ -39,8 +39,8 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.tcf.TcfReader;
 import org.dkpro.core.io.text.TextReader;
 import org.dkpro.core.tokit.BreakIteratorSegmenter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -85,7 +85,7 @@ public class BratRendererTest
 
     private PreRenderer preRenderer;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         initMocks(this);

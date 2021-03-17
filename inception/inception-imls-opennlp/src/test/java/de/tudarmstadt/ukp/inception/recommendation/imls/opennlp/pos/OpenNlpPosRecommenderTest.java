@@ -36,8 +36,8 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2006Reader;
 import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -60,7 +60,7 @@ public class OpenNlpPosRecommenderTest
     private Recommender recommender;
     private OpenNlpPosRecommenderTraits traits;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         context = new RecommenderContext();

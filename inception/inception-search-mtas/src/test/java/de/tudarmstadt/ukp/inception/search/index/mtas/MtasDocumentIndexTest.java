@@ -33,10 +33,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
@@ -148,7 +148,7 @@ public class MtasDocumentIndexTest
         };
     };
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         if (!userRepository.exists("admin")) {

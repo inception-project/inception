@@ -47,8 +47,8 @@ import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.resources.CompressionUtils;
 import org.dkpro.core.testing.DkproTestContext;
 import org.dkpro.core.tokit.BreakIteratorSegmenter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -72,7 +72,7 @@ public class OpenNlpDoccatRecommenderTest
     private Recommender recommender;
     private OpenNlpDoccatRecommenderTraits traits;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         context = new RecommenderContext();

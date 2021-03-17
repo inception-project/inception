@@ -54,9 +54,9 @@ import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.xmi.XmiWriter;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runners.MethodSorters;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
@@ -968,7 +968,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
     }
 
-    @Ignore("Relations between different layers not supported in WebAnno TSV 3 atm")
+    @Disabled("Relations between different layers not supported in WebAnno TSV 3 atm")
     @Test
     public void testSingleMixedRelationWithoutFeatureValue() throws Exception
     {

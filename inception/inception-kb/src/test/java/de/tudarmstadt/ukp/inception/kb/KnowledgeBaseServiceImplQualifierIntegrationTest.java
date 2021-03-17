@@ -28,11 +28,11 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -93,7 +93,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
     private KBHandle propertyHandle;
     private KBStatement statement;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
@@ -116,7 +116,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
         sut.upsertStatement(kb, statement);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();

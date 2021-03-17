@@ -65,7 +65,7 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.Assertions;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;

@@ -32,11 +32,11 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.rio.RDFFormat;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,13 +83,13 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     private Project project;
     private KnowledgeBase kb;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpOnce()
     {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         RepositoryProperties repoProps = new RepositoryProperties();
@@ -102,7 +102,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
         kb = buildKnowledgeBase(project, KB_NAME);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();

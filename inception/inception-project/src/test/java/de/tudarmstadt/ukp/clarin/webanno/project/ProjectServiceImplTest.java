@@ -28,9 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -60,7 +60,7 @@ public class ProjectServiceImplTest
     private User beate;
     private User kevin;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         sut = new ProjectServiceImpl(null, null, null, null, testEntityManager.getEntityManager());
@@ -87,7 +87,7 @@ public class ProjectServiceImplTest
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", CURATOR));
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         testEntityManager.clear();

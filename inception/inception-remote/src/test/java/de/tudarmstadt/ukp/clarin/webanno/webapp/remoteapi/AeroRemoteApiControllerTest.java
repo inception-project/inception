@@ -35,9 +35,9 @@ import java.util.Collections;
 
 import javax.persistence.EntityManager;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,7 +111,7 @@ public class AeroRemoteApiControllerTest
     // in the DB and clean the test repository once!
     private static boolean initialized = false;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         // @formatter:off

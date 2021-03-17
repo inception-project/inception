@@ -35,10 +35,10 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -60,7 +60,7 @@ public class LappsRecommenderIntegrationTest
 
     private LappsGridRecommender sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException
     {
         server = new MockWebServer();
@@ -75,14 +75,14 @@ public class LappsRecommenderIntegrationTest
         sut = new LappsGridRecommender(buildRecommender(), traits);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         server.shutdown();
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void thatPredictingPosWorks() throws Exception
     {
         RecommenderContext context = new RecommenderContext();

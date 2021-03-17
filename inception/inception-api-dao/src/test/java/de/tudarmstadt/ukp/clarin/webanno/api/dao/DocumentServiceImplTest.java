@@ -47,9 +47,9 @@ import javax.persistence.EntityManager;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -95,7 +95,7 @@ public class DocumentServiceImplTest
     private RepositoryProperties repositoryProperties;
     private CasStorageService storageService;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         exception.set(false);

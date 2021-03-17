@@ -41,10 +41,10 @@ import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -67,7 +67,7 @@ public class ImportExportServiceImplTest
 
     private ImportExportServiceImpl sut;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         openMocks(this);
@@ -101,7 +101,7 @@ public class ImportExportServiceImplTest
         casStorageSession = CasStorageSession.open();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         CasStorageSession.get().close();

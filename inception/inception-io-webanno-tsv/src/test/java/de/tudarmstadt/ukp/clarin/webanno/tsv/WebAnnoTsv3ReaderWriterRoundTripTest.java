@@ -38,9 +38,9 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.xmi.XmiWriter;
 import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *             that the new code is done, these old tests are not really needed anymore.
  */
 @Deprecated
-@Ignore("Ignoring because these produce WebAnno TSV 3.2 headers and we are now at TSV 3.3")
+@Disabled("Ignoring because these produce WebAnno TSV 3.2 headers and we are now at TSV 3.3")
 @RunWith(value = Parameterized.class)
 public class WebAnnoTsv3ReaderWriterRoundTripTest
 {

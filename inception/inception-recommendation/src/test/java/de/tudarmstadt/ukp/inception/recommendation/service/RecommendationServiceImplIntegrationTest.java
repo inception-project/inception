@@ -38,9 +38,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,7 +92,7 @@ public class RecommendationServiceImplIntegrationTest
     private Recommender rec;
     private AnnotationFeature feature;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         sut = new RecommendationServiceImpl(sessionRegistry, userRepository,
@@ -109,7 +109,7 @@ public class RecommendationServiceImplIntegrationTest
         sut.createOrUpdateRecommender(rec);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();

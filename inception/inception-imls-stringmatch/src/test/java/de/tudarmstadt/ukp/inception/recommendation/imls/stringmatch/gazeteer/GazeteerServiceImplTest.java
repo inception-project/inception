@@ -40,10 +40,10 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +83,7 @@ public class GazeteerServiceImplTest
     private AnnotationFeature spanFeat1;
     private Recommender rec1;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         EntityManager em = testEntityManager.getEntityManager();
@@ -109,7 +109,7 @@ public class GazeteerServiceImplTest
         em.persist(rec1);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();

@@ -34,8 +34,8 @@ import java.util.Set;
 
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -81,7 +81,7 @@ public class SPARQLQueryBuilderGenericTest
         profile = aProfile;
     }
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         // Force POST request instead of GET request

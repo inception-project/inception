@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.abbreviate;
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class LayerNameAbbreviationTest
 {

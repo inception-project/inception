@@ -48,8 +48,8 @@ import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -71,7 +71,7 @@ public class DataMajorityNerRecommenderTest
     private RecommenderContext context;
     private Recommender recommender;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         context = new RecommenderContext();

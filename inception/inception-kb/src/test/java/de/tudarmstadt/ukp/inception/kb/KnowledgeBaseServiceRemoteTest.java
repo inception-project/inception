@@ -33,13 +33,13 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
@@ -107,13 +107,13 @@ public class KnowledgeBaseServiceRemoteTest
     @Rule
     public SpringMethodRule springMethodRule = new SpringMethodRule();
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpOnce() throws Exception
     {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         Assume.assumeTrue("Remote repository at [" + sutConfig.getDataUrl() + "] is not reachable",
@@ -146,7 +146,7 @@ public class KnowledgeBaseServiceRemoteTest
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();

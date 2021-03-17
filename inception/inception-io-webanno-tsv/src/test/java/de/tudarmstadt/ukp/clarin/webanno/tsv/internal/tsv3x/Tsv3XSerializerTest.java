@@ -34,7 +34,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType;

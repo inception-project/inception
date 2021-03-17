@@ -31,11 +31,11 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
@@ -114,7 +114,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
                 .collect(toList());
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
@@ -132,7 +132,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();

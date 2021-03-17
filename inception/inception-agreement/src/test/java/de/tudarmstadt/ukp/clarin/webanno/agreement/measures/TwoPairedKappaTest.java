@@ -36,9 +36,9 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
@@ -62,7 +62,7 @@ public class TwoPairedKappaTest
     private SourceDocument document;
     private CAS kappatestCas, kappaspandiff, kappaarcdiff, kappaspanarcdiff;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception
     {
         user1 = new User();

@@ -61,11 +61,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
@@ -202,7 +202,7 @@ public class SPARQLQueryBuilderTest
 
     private FusekiServer fusekiServer;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
 
@@ -244,7 +244,7 @@ public class SPARQLQueryBuilderTest
         zbwGnd = buildSparqlRepository("http://zbw.eu/beta/sparql/gnd/query");
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         fusekiServer.stop();
@@ -907,7 +907,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Category(SlowTests.class)
-    @Ignore("#1522 - GND tests not running")
+    @Disabled("#1522 - GND tests not running")
     @Test
     public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
     {
@@ -1001,7 +1001,7 @@ public class SPARQLQueryBuilderTest
         __testWithLabelMatchingExactlyAnyOf_subproperty(rdf4jLocalRepo);
     }
 
-    @Ignore("Requires addition Fuseki FTS configuration")
+    @Disabled("Requires addition Fuseki FTS configuration")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_FUSEKI_subproperty_FTS() throws Exception
     {
@@ -1260,7 +1260,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Category(SlowTests.class)
-    @Ignore("#1522 - GND tests not running")
+    @Disabled("#1522 - GND tests not running")
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
@@ -1300,7 +1300,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
-    @Ignore("#1522 - GND tests not running")
+    @Disabled("#1522 - GND tests not running")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {

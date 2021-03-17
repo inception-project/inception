@@ -24,9 +24,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -49,7 +49,7 @@ public class InviteServiceImplTest
 
     private Project testProject;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         sut = new InviteServiceImpl(testEntityManager.getEntityManager());
@@ -57,7 +57,7 @@ public class InviteServiceImplTest
         testEntityManager.persist(testProject);
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         testEntityManager.clear();

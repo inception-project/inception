@@ -43,7 +43,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -72,7 +72,7 @@ public class AgreementMeasureTestSuite_ImplBase
     protected List<AnnotationLayer> layers;
     protected List<AnnotationFeature> features;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         initMocks(this);

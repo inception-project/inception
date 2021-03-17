@@ -26,10 +26,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Ignore("This worked well for hundreds of builds - turning it off now")
+@Disabled("This worked well for hundreds of builds - turning it off now")
 public class SourceDocumentStateStatsTest
 {
     @Test

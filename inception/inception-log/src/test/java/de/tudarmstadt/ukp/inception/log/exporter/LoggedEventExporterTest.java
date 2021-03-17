@@ -35,9 +35,9 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -65,7 +65,7 @@ public class LoggedEventExporterTest
 
     private LoggedEventExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         initMocks(this);

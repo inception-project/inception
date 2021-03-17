@@ -21,9 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -38,7 +38,7 @@ public class PubAnnotationProviderTest
     private DocumentRepository repo;
     private PubAnnotationProviderTraits traits;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         sut = new PubAnnotationProvider();

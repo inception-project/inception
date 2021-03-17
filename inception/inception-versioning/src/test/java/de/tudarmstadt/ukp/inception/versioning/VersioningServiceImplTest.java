@@ -38,10 +38,10 @@ import org.apache.uima.cas.CAS;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,7 +114,7 @@ public class VersioningServiceImplTest
 
     private Project testProject;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         repositoryProperties.setPath(repoDir.getRoot());
@@ -122,7 +122,7 @@ public class VersioningServiceImplTest
 
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         testEntityManager.clear();

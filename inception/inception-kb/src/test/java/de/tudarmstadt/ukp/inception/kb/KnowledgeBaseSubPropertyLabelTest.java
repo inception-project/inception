@@ -30,13 +30,13 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.ClassRule;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -103,13 +103,13 @@ public class KnowledgeBaseSubPropertyLabelTest
                 .collect(Collectors.toList());
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpOnce()
     {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         RepositoryProperties repoProps = new RepositoryProperties();
@@ -121,14 +121,14 @@ public class KnowledgeBaseSubPropertyLabelTest
         project = createProject(PROJECT_NAME);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();
         sut.destroy();
     }
 
-    @Ignore("#1522 - GND tests not running")
+    @Disabled("#1522 - GND tests not running")
     @Test
     public void thatChildConceptsLabel() throws IOException
     {
@@ -151,7 +151,7 @@ public class KnowledgeBaseSubPropertyLabelTest
                 .as("Check that child concept is retreived").contains("Abele, Familie");
     }
 
-    @Ignore("#1522 - GND tests not running")
+    @Disabled("#1522 - GND tests not running")
     @Test
     public void readInstance_ShouldReturnInstanceWithSubPropertyLabel() throws IOException
     {

@@ -26,8 +26,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -40,7 +40,7 @@ public class ConceptFeatureSupportTest
 {
     private @Mock KnowledgeBaseService kbService;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         initMocks(this);

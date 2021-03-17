@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 import org.apache.commons.io.filefilter.SuffixFileFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;

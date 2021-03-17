@@ -50,9 +50,9 @@ import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -89,7 +89,7 @@ public class ExternalRecommenderIntegrationTest
     private List<String> requestBodies;
     private CasStorageSession casStorageSession;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         casStorageSession = CasStorageSession.open();
@@ -111,7 +111,7 @@ public class ExternalRecommenderIntegrationTest
         traits.setRemoteUrl(url);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         casStorageSession.close();

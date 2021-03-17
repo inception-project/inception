@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa.FleissKappaAgreementMeasureSupport;
@@ -38,7 +38,7 @@ public class FleissKappaAgreementMeasureTest
     private DefaultAgreementTraits traits;
 
     @Override
-    @Before
+    @BeforeEach
     public void setup()
     {
         super.setup();

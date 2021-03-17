@@ -27,9 +27,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -48,7 +48,7 @@ public class SchedulingServiceTest
 
     private SchedulingService sut;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         initMocks(this);
@@ -58,7 +58,7 @@ public class SchedulingServiceTest
         sut = new SchedulingService(mockContext, new SchedulingProperties());
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         sut.destroy();

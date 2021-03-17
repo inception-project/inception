@@ -24,8 +24,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 
 public class TypeSystemAnalysisTest
 {
-    @Before
+    @BeforeEach
     public void setup()
     {
         ToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
