@@ -20,11 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.tsv;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.Assume.assumeFalse;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,13 +38,11 @@ import org.apache.uima.fit.pipeline.SimplePipeline;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.xmi.XmiWriter;
-import org.dkpro.core.testing.DkproTestContext;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3XReaderWriterRoundTripTest.DKProCoreConventionsChecker;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
@@ -60,21 +59,20 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 @Deprecated
 @Disabled("Ignoring because these produce WebAnno TSV 3.2 headers and we are now at TSV 3.3")
-@RunWith(value = Parameterized.class)
 public class WebAnnoTsv3ReaderWriterRoundTripTest
 {
-    @Parameters(name = "{index}: running on file {0}")
     public static Iterable<File> tsvFiles()
     {
         return asList(new File("src/test/resources/tsv3-suite/").listFiles(
                 (FilenameFilter) new PrefixFileFilter(asList("test", "issue", "sample"))));
     }
 
-    private File referenceFolder;
-
-    public WebAnnoTsv3ReaderWriterRoundTripTest(File aFolder)
+    @BeforeEach
+    public void testWatcher(TestInfo aTestInfo)
     {
-        referenceFolder = aFolder;
+        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        System.out.printf("\n=== %s === %s=====================\n", methodName,
+                aTestInfo.getDisplayName());
     }
 
     private boolean isKnownToFail(String aMethodName)
@@ -105,14 +103,15 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         return failingTests.contains(aMethodName);
     }
 
-    @Test
-    public void runTest() throws Exception
+    @ParameterizedTest(name = "{index}: running on file {0}")
+    @MethodSource("tsvFiles")
+    public void runTest(File aReferenceFolder) throws Exception
     {
         TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
         TypeSystemDescription local;
-        if (new File(referenceFolder, "typesystem.xml").exists()) {
+        if (new File(aReferenceFolder, "typesystem.xml").exists()) {
             local = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(
-                    new File(referenceFolder, "typesystem.xml").toString());
+                    new File(aReferenceFolder, "typesystem.xml").toString());
         }
         else {
             local = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(
@@ -122,12 +121,12 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
 
         String targetFolder = "target/test-output/WebAnnoTsv3ReaderWriterRoundTripTest/"
-                + referenceFolder.getName();
+                + aReferenceFolder.getName();
 
         // @formatter:off
         CollectionReaderDescription reader = createReaderDescription(WebannoTsv3Reader.class,
                 merged,
-                WebannoTsv3Reader.PARAM_SOURCE_LOCATION, referenceFolder,
+                WebannoTsv3Reader.PARAM_SOURCE_LOCATION, aReferenceFolder,
                 WebannoTsv3Reader.PARAM_PATTERNS, "reference.tsv");
 
         AnalysisEngineDescription checker = createEngineDescription(
@@ -184,11 +183,11 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
             SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
         }
         catch (Throwable e) {
-            assumeFalse("This test is known to fail.", isKnownToFail(referenceFolder.getName()));
+            assumeFalse(isKnownToFail(aReferenceFolder.getName()), "This test is known to fail.");
             throw e;
         }
 
-        String reference = FileUtils.readFileToString(new File(referenceFolder, "reference.tsv"),
+        String reference = FileUtils.readFileToString(new File(aReferenceFolder, "reference.tsv"),
                 "UTF-8");
 
         String actual = FileUtils.readFileToString(new File(targetFolder, "reference.tsv"),
@@ -207,11 +206,9 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         // String actualXmi = FileUtils.readFileToString(new File(targetFolder, "reference.xmi"),
         // "UTF-8");
 
-        assumeFalse("This test is known to fail.", isKnownToFail(referenceFolder.getName()));
-        assertEquals(reference, actual);
+        assumeFalse(isKnownToFail(aReferenceFolder.getName()), "This test is known to fail.");
+        assertThat(reference).isEqualToNormalizingNewlines(actual);
         // assertEquals(referenceXmi, actualXmi);
     }
 
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }
