@@ -31,7 +31,7 @@ import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTyp
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -49,10 +49,10 @@ import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplTest
 {
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -97,6 +97,7 @@ public class DocumentServiceImplTest
     @BeforeEach
     public void setup() throws Exception
     {
+
         exception.set(false);
         rwTasksCompleted.set(false);
         managedReadCounter.set(0);
@@ -116,14 +117,14 @@ public class DocumentServiceImplTest
         sut = spy(new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
                 projectService, applicationEventPublisher, entityManager));
 
-        doAnswer(_invocation -> {
+        lenient().doAnswer(_invocation -> {
             SourceDocument doc = _invocation.getArgument(0, SourceDocument.class);
             String user = _invocation.getArgument(1, String.class);
             return new AnnotationDocument(doc.getName(), doc.getProject(), user, doc);
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
-                any())).thenReturn(CasFactory.createText("Test"));
+        lenient().when(importExportService.importCasFromFile(any(File.class), any(Project.class),
+                any(), any())).thenReturn(CasFactory.createText("Test"));
     }
 
     @Test

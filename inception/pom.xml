@@ -278,6 +278,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
@@ -705,6 +710,12 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.assertj</groupId>
@@ -1800,6 +1811,7 @@
             <dependency>org.junit.vintage:junit-jupiter-params</dependency>
             <dependency>nl.ru:test-categories</dependency>
             <dependency>org.mockito:mockito-core</dependency>
+            <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
             <dependency>com.squareup.okhttp3:mockwebserver</dependency>
             <dependency>org.awaitility:awaitility</dependency>

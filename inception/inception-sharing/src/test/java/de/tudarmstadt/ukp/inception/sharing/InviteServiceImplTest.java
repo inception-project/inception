@@ -27,7 +27,6 @@ import java.util.Date;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,12 +34,10 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
-@RunWith(SpringRunner.class)
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class InviteServiceImplTest
 {
@@ -132,7 +129,7 @@ public class InviteServiceImplTest
 
         assertThat(retrievedId).isNull();
     }
-    
+
     @Test
     public void extendExpirationDate_ShouldReturnDateInAYear()
     {
@@ -140,24 +137,24 @@ public class InviteServiceImplTest
         Date oldDate = sut.getExpirationDate(testProject);
         Calendar oldCalendar = Calendar.getInstance();
         oldCalendar.setTime(oldDate);
-        
+
         sut.extendInviteLinkDate(testProject);
-        
+
         Date newDate = sut.getExpirationDate(testProject);
         Calendar newCalendar = Calendar.getInstance();
         newCalendar.setTime(newDate);
         assertThat(newCalendar.get(Calendar.YEAR) - oldCalendar.get(Calendar.YEAR)).isEqualTo(1);
     }
-    
+
     @Test
     public void generateInviteWithExpirationDate_ShouldReturnSpecificDate() throws ParseException
     {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date expectedDate = dateFormat.parse("2022-01-15");
         sut.generateInviteWithExpirationDate(testProject, expectedDate);
-        
+
         Date generatedDate = sut.getExpirationDate(testProject);
         assertThat(generatedDate).isEqualTo(expectedDate);
-        
+
     }
 }
