@@ -111,7 +111,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
 
     @Disabled("#1522 - GND tests not running")
-    @ParameterizedTest(name = "{index}: reification")
+    @ParameterizedTest(name = "{index}: reification {0}")
     @MethodSource("data")
     public void thatChildConceptsLabel(Reification reification) throws IOException
     {
@@ -135,7 +135,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
 
     @Disabled("#1522 - GND tests not running")
-    @ParameterizedTest(name = "{index}: reification")
+    @ParameterizedTest(name = "{index}: reification {0}")
     @MethodSource("data")
     public void readInstance_ShouldReturnInstanceWithSubPropertyLabel(Reification reification)
         throws IOException
@@ -153,7 +153,7 @@ public class KnowledgeBaseSubPropertyLabelTest
                 .contains("Abingdon, Bettine");
     }
 
-    @ParameterizedTest(name = "{index}: reification")
+    @ParameterizedTest(name = "{index}: reification {0}")
     @MethodSource("data")
     public void readProperty_ShouldReturnPropertyWithSubPropertyLabel(Reification reification)
         throws IOException
