@@ -25,6 +25,7 @@ import static org.awaitility.Awaitility.await;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -34,13 +35,10 @@ import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +51,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,13 +116,12 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
-@RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.inception.search.model", "de.tudarmstadt.ukp.inception.kb.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
@@ -137,16 +133,13 @@ public class MtasDocumentIndexTest
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
 
-    @Rule
-    public TestWatcher watcher = new TestWatcher()
+    @BeforeEach
+    public void testWatcher(TestInfo aTestInfo)
     {
-        @Override
-        protected void starting(org.junit.runner.Description aDescription)
-        {
-            String methodName = aDescription.getMethodName();
-            System.out.printf("\n=== " + methodName + " =====================\n");
-        };
-    };
+        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        System.out.printf("\n=== %s === %s=====================\n", methodName,
+                aTestInfo.getDisplayName());
+    }
 
     @BeforeEach
     public void setUp()
@@ -470,9 +463,6 @@ public class MtasDocumentIndexTest
     {
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
         private @Autowired EntityManager entityManager;
-
-        @Rule
-        TemporaryFolder folder;
 
         @Bean
         public ProjectService projectService(
