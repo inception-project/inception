@@ -50,6 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -64,7 +65,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazete
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 @RunWith(SpringRunner.class)
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception",
         "de.tudarmstadt.ukp.clarin.webanno.model" })
@@ -214,7 +215,7 @@ public class GazeteerServiceImplTest
     }
 
     @Test
-    public void thatInvalidGazeteerGeneratesException() throws Exception
+    public void thatGazeteerWithExtraColumnsCanBeRead() throws Exception
     {
         Gazeteer gaz = new Gazeteer("gaz", rec1);
 
@@ -227,11 +228,9 @@ public class GazeteerServiceImplTest
                 .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer1, UTF_8), data))
                 .withMessageContaining("Unable to parse line 2");
 
-        String gazeteer2 = "Bill\tPER\tDUMMY";
+        String gazeteer2 = "Bill\tPER\t40";
 
-        assertThatExceptionOfType(IOException.class).describedAs("Line without too many fields")
-                .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data))
-                .withMessageContaining("Unable to parse line 1");
+        sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data);
     }
 
     @SpringBootConfiguration
