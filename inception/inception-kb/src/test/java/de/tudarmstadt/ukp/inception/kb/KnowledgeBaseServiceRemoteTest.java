@@ -36,10 +36,10 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -62,9 +62,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
+@Tag("slow")
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceRemoteTest

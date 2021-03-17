@@ -61,7 +61,6 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
-    <excludedTestCategories>nl.ru.test.category.SlowTests</excludedTestCategories>
 
     <junit.version>5.7.1</junit.version>
     <mockito.version>3.7.0</mockito.version>
@@ -267,11 +266,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>nl.ru</groupId>
-      <artifactId>test-categories</artifactId>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
@@ -701,11 +695,6 @@
         <scope>test</scope>
       </dependency>
 
-      <dependency>
-        <groupId>nl.ru</groupId>
-        <artifactId>test-categories</artifactId>
-        <version>1.2.0</version>
-      </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
@@ -1809,7 +1798,6 @@
             <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
             <dependency>org.junit.vintage:junit-vintage-engine</dependency>
             <dependency>org.junit.vintage:junit-jupiter-params</dependency>
-            <dependency>nl.ru:test-categories</dependency>
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
@@ -1867,7 +1855,7 @@
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
             </systemPropertyVariables>
-            <excludedGroups>${excludedTestCategories}</excludedGroups>
+            <excludedGroups>slow</excludedGroups>
           </configuration>
         </plugin>
         <plugin>

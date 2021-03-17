@@ -31,8 +31,8 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -59,9 +59,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
+@Tag("slow")
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceImplWikiDataIntegrationTest

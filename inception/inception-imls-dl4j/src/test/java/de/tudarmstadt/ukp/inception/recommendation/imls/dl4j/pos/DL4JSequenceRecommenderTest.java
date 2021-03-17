@@ -45,8 +45,8 @@ import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.experimental.categories.Category;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -61,9 +61,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
+@Tag("slow")
 public class DL4JSequenceRecommenderTest
 {
     private static File cache = DkproTestContext.getCacheFolder();

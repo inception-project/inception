@@ -44,11 +44,11 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -65,9 +65,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRe
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridService;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
+@Tag("slow")
 public class LappsGridRecommenderConformityTest
 {
     private CasStorageSession casStorageSession;

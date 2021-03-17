@@ -35,16 +35,15 @@ import java.util.Set;
 
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
+@Tag("slow")
 public class SPARQLQueryBuilderGenericTest
 {
     private static final List<String> SKIPPED_PROFILES = asList("babel_net", "zbw-gnd");
