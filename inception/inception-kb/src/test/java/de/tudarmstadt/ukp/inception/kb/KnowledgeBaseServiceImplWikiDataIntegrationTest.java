@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIs
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -31,15 +31,11 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -47,8 +43,6 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
@@ -68,7 +62,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import nl.ru.test.category.SlowTests;
 
 @Category(SlowTests.class)
-@RunWith(Parameterized.class)
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceImplWikiDataIntegrationTest
@@ -81,32 +74,18 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Wikidata (official/direct mapping)";
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    public File tempDir;
 
     @Autowired
     private TestEntityManager testEntityManager;
 
-    @ClassRule
-    public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
-
-    @Rule
-    public final SpringMethodRule springMethodRule = new SpringMethodRule();
-
     private KnowledgeBaseServiceImpl sut;
-    private Project project;
     private KnowledgeBase kb;
-    private Reification reification;
 
     private TestFixtures testFixtures;
     private static Map<String, KnowledgeBaseProfile> PROFILES;
 
-    public KnowledgeBaseServiceImplWikiDataIntegrationTest(Reification aReification)
-    {
-        reification = aReification;
-    }
-
-    @Parameterized.Parameters(name = "Reification = {0}")
     public static Collection<Object[]> data()
     {
         return Arrays.stream(Reification.values()) //
@@ -114,21 +93,20 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
                 .collect(toList());
     }
 
-    @BeforeEach
-    public void setUp() throws Exception
+    private void setUp(Reification reification) throws Exception
     {
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
         assumeEndpointIsAvailable(wikidataAccessUrl);
 
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
+        repoProps.setPath(tempDir);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
-        project = createProject(PROJECT_NAME);
-        kb = buildKnowledgeBase(project, KB_NAME);
+        Project project = createProject();
+        kb = buildKnowledgeBase(project, reification);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
     }
 
@@ -138,30 +116,42 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
         testEntityManager.clear();
 
         if (sut != null) {
-        sut.destroy();
-    }
+            sut.destroy();
+        }
     }
 
-    @Test
-    public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         Optional<KBConcept> savedConcept = sut.readConcept(kb,
                 "https://nonexistent.identifier.test", true);
         assertThat(savedConcept.isPresent()).as("Check that no concept was read").isFalse();
     }
 
-    @Test
-    public void readConcept_WithExistentConcept_ShouldReturnResult()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readConcept_WithExistentConcept_ShouldReturnResult(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644",
                 true);
         assertThat(concept.get().getName()).as("Check that concept has the same UI label")
                 .isIn("12 Hours of Reims");
     }
 
-    @Test
-    public void listChildConcept_WithExistentConcept_ShouldReturnResult()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listChildConcept_WithExistentConcept_ShouldReturnResult(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         List<KBHandle> concept = sut.listChildConcepts(kb, "http://www.wikidata.org/entity/Q171644",
                 true);
 
@@ -170,9 +160,12 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
                 .isIn("12-Stunden-Rennen von Reims 1965", "1965 12 Hours of Reims");
     }
 
-    @Test
-    public void listRootConcepts()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listRootConcepts(Reification reification) throws Exception
     {
+        setUp(reification);
+
         Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getIdentifier);
         String expectedInstances = "http://www.wikidata.org/entity/Q35120";
@@ -181,9 +174,12 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
                 .contains(expectedInstances);
     }
 
-    @Test
-    public void listProperties()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listProperties(Reification reification) throws Exception
     {
+        setUp(reification);
+
         Stream<String> properties = sut.listProperties(kb, true).stream()
                 .map(KBObject::getIdentifier);
 
@@ -191,9 +187,14 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
                 .hasSize(kb.getMaxResults());
     }
 
-    @Test
-    public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         Optional<KBInstance> savedInstance = sut.readInstance(kb,
@@ -202,9 +203,12 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
         assertThat(savedInstance.isPresent()).as("Check that no instance was read").isFalse();
     }
 
-    @Test
-    public void listInstances()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listInstances(Reification reification) throws Exception
     {
+        setUp(reification);
+
         Stream<String> instances = sut
                 .listInstances(kb, "http://www.wikidata.org/entity/Q2897", true).stream()
                 .map(KBHandle::getIdentifier);
@@ -216,9 +220,12 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
 
     }
 
-    @Test
-    public void listStatements()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listStatements(Reification reification) throws Exception
     {
+        setUp(reification);
+
         KBHandle handle = new KBHandle("http://www.wikidata.org/entity/Q50556889");
 
         Stream<String> properties = sut.listStatements(kb, handle, true).stream()
@@ -242,12 +249,12 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
 
     // Helper
 
-    private Project createProject(String name)
+    private Project createProject()
     {
-        return testFixtures.createProject(name);
+        return testFixtures.createProject(PROJECT_NAME);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException
+    private KnowledgeBase buildKnowledgeBase(Project project, Reification reification)
     {
         KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         kb_wikidata_direct.setProject(project);
