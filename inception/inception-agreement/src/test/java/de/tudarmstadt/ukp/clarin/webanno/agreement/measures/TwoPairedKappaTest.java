@@ -24,7 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.Relati
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;

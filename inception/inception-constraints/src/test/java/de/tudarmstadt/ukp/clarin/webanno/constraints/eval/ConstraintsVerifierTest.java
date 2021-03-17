@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.eval;
 
 import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parse;
 import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.LinkedHashMap;

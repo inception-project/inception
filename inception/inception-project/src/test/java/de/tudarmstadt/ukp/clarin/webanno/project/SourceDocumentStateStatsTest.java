@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Random;
 

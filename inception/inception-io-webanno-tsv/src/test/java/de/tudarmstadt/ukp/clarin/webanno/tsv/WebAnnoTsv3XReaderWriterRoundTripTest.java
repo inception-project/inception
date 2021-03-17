@@ -22,7 +22,7 @@ import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDesc
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectSingleAt;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.Assume.assumeFalse;
 
 import java.io.File;

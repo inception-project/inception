@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.abbreviate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 

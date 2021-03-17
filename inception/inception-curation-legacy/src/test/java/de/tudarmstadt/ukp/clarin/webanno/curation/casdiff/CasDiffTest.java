@@ -31,7 +31,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAd
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;

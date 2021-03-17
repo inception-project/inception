@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import static java.lang.Double.NaN;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;

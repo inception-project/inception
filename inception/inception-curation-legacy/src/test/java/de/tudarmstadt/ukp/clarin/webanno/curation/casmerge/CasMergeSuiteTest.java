@@ -24,7 +24,7 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;

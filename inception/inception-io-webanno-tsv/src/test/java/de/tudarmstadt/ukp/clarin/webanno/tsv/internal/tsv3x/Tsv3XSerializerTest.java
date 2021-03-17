@@ -24,7 +24,7 @@ import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTyp
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;

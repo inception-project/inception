@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.tsv;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.Assume.assumeFalse;
 
 import java.io.File;

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.text;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;

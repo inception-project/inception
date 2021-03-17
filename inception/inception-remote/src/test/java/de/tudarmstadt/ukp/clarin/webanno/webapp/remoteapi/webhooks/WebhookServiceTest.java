@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.Webhoo
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.PROJECT_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.X_AERO_NOTIFICATION;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 
 import java.util.ArrayList;

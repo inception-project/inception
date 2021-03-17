@@ -25,7 +25,7 @@ package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
