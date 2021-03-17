@@ -43,9 +43,8 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 
@@ -63,7 +62,7 @@ public class ImportExportServiceImplTest
     private CasStorageSession casStorageSession;
     private @Spy AnnotationSchemaService schemaService;
 
-    public @Rule TemporaryFolder testFolder = new TemporaryFolder();
+    public @TempDir File testFolder;
 
     private ImportExportServiceImpl sut;
 
@@ -78,7 +77,7 @@ public class ImportExportServiceImplTest
         BackupProperties backupProperties = new BackupProperties();
 
         RepositoryProperties repositoryProperties = new RepositoryProperties();
-        repositoryProperties.setPath(testFolder.newFolder());
+        repositoryProperties.setPath(testFolder);
 
         CasStorageServiceImpl storageService = new CasStorageServiceImpl(null, null,
                 repositoryProperties, backupProperties);

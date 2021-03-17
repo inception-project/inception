@@ -30,16 +30,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -54,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 
 public class LayerExporterTest
 {
-    public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
+    public @TempDir File tempFolder;
 
     private @Mock AnnotationSchemaService annotationService;
 
@@ -66,13 +65,13 @@ public class LayerExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
+        openMocks(this);
 
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
 
-        workFolder = tempFolder.newFolder();
+        workFolder = tempFolder;
 
         when(annotationService.listAnnotationLayer(any())).thenReturn(layers());
 

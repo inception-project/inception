@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,9 +42,8 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -71,7 +71,7 @@ public class KnowledgeBaseExporterTest
     private Project sourceProject;
     private Project targetProject;
 
-    public @Rule TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public @TempDir File temporaryFolder;
 
     private KnowledgeBaseExporter sut;
 
@@ -108,7 +108,7 @@ public class KnowledgeBaseExporterTest
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder.getRoot());
+        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 
         // Import the project again
         ArgumentCaptor<KnowledgeBase> exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
@@ -140,7 +140,7 @@ public class KnowledgeBaseExporterTest
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder.getRoot());
+        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 
         // Mock that the KB ID changes during import when registerKnowledgeBase is called
         doAnswer(i -> {

@@ -28,15 +28,14 @@ import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.tcas.DocumentAnnotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 public class CasPersistenceUtilsTest
 {
-    public @Rule TemporaryFolder testFolder = new TemporaryFolder();
+    public @TempDir File testFolder;
 
     {
         System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
@@ -52,7 +51,7 @@ public class CasPersistenceUtilsTest
         DocumentMetaData dmd = DocumentMetaData.create(cas);
         dmd.setLanguage("en");
 
-        File file = testFolder.newFile();
+        File file = testFolder;
 
         CasPersistenceUtils.writeSerializedCas(cas, file);
 

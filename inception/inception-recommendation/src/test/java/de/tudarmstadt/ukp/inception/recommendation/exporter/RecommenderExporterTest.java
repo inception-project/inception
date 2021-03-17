@@ -29,7 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.HashSet;
@@ -66,7 +66,7 @@ public class RecommenderExporterTest
     @BeforeEach
     public void setUp()
     {
-        initMocks(this);
+        openMocks(this);
 
         layer = new AnnotationLayer();
         layer.setName("Layer");

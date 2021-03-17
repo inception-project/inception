@@ -48,9 +48,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -79,7 +78,7 @@ public class DocumentServiceImplTest
     private @Mock ApplicationEventPublisher applicationEventPublisher;
     private @Mock EntityManager entityManager;
 
-    public @Rule TemporaryFolder testFolder = new TemporaryFolder();
+    public @TempDir File testFolder;
 
     private AtomicBoolean exception = new AtomicBoolean(false);
     private AtomicBoolean rwTasksCompleted = new AtomicBoolean(false);
@@ -109,7 +108,7 @@ public class DocumentServiceImplTest
         backupProperties = new BackupProperties();
 
         repositoryProperties = new RepositoryProperties();
-        repositoryProperties.setPath(testFolder.newFolder());
+        repositoryProperties.setPath(testFolder);
 
         storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
                 backupProperties);

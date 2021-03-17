@@ -275,7 +275,7 @@ public class OverlapIteratorTest
 
             // Repeat test with debugging turned on.
             overlapping(a, b, true, true);
-            assertEquals("Overlapping regions do not match", r1, r2);
+            assertEquals(r1, r2, "Overlapping regions do not match");
         }
     }
 
