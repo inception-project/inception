@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.io.File;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -28,12 +29,12 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -70,8 +71,8 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    File temporaryFolder;
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -97,7 +98,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
+        repoProps.setPath(temporaryFolder);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);

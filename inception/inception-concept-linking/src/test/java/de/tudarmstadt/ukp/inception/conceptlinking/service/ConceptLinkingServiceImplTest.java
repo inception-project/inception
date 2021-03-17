@@ -22,16 +22,15 @@ import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.ANY_OBJECT
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -39,7 +38,6 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
@@ -55,7 +53,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class ConceptLinkingServiceImplTest
@@ -68,8 +65,8 @@ public class ConceptLinkingServiceImplTest
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    File temporaryFolder;
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -84,7 +81,7 @@ public class ConceptLinkingServiceImplTest
     {
         RepositoryProperties repoProps = new RepositoryProperties();
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
-        repoProps.setPath(temporaryFolder.getRoot());
+        repoProps.setPath(temporaryFolder);
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
@@ -106,6 +103,8 @@ public class ConceptLinkingServiceImplTest
 
         assertThat(handles.stream().map(KBHandle::getName))
                 .as("Check whether \"Socke\" has been retrieved.").contains("Socke");
+
+        kbService.removeKnowledgeBase(kb);
     }
 
     @Test
@@ -121,6 +120,8 @@ public class ConceptLinkingServiceImplTest
 
         assertThat(handles.stream().map(KBHandle::getName))
                 .as("Check whether \"manatee\" has been retrieved.").contains("manatee");
+
+        kbService.removeKnowledgeBase(kb);
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception

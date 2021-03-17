@@ -35,10 +35,8 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -46,7 +44,6 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
@@ -63,7 +60,6 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@RunWith(SpringRunner.class)
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceImplImportExportIntegrationTest
@@ -72,8 +68,8 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    File temporaryFolder;
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -93,7 +89,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     public void setUp()
     {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
+        repoProps.setPath(temporaryFolder);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
@@ -207,7 +203,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
 
-        File kbFile = temporaryFolder.newFile("exported_kb.ttl");
+        File kbFile = temporaryFolder.toPath().resolve("exported_kb.ttl").toFile();
         try (OutputStream os = new FileOutputStream(kbFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);
         }
@@ -230,7 +226,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     @Test
     public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception
     {
-        File outputFile = temporaryFolder.newFile();
+        File outputFile = temporaryFolder.toPath().resolve("outputfile").toFile();
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile
                 .readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
