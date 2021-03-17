@@ -28,4 +28,16 @@ public class StringMatchingRecommenderTraits
     implements Serializable
 {
     private static final long serialVersionUID = -7433406243352691789L;
+
+    private boolean ignoreCase;
+
+    public boolean isIgnoreCase()
+    {
+        return ignoreCase;
+    }
+
+    public void setIgnoreCase(boolean aIgnoreCase)
+    {
+        ignoreCase = aIgnoreCase;
+    }
 }

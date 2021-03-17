@@ -33,12 +33,16 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -49,6 +53,8 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.Fil
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 
@@ -60,7 +66,12 @@ public class StringMatchingRecommenderTraitsEditor
 
     private static final long serialVersionUID = 1677442652521110324L;
 
+    private static final String MID_FORM = "form";
+
+    private @SpringBean RecommendationEngineFactory<StringMatchingRecommenderTraits> toolFactory;
     private @SpringBean GazeteerService gazeteerService;
+
+    private final StringMatchingRecommenderTraits traits;
 
     private GazeteerList gazeteers;
     private BootstrapFileInput uploadField;
@@ -68,6 +79,26 @@ public class StringMatchingRecommenderTraitsEditor
     public StringMatchingRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
+
+        traits = toolFactory.readTraits(aRecommender.getObject());
+
+        Form<StringMatchingRecommenderTraits> form = new Form<StringMatchingRecommenderTraits>(
+                MID_FORM, CompoundPropertyModel.of(Model.of(traits)))
+        {
+            private static final long serialVersionUID = -3109239605742291123L;
+
+            @Override
+            protected void onSubmit()
+            {
+                super.onSubmit();
+                toolFactory.writeTraits(aRecommender.getObject(), traits);
+            }
+        };
+
+        CheckBox ignoreCase = new CheckBox("ignoreCase");
+        ignoreCase.setOutputMarkupId(true);
+        form.add(ignoreCase);
+        add(form);
 
         gazeteers = new GazeteerList("gazeteers", LoadableDetachableModel.of(this::listGazeteers));
         gazeteers.add(visibleWhen(() -> aRecommender.getObject() != null
