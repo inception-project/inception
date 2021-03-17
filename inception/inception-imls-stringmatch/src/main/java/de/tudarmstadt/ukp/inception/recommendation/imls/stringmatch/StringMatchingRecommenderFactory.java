@@ -64,7 +64,7 @@ public class StringMatchingRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
+        StringMatchingRecommenderTraits traits = readTraits(aRecommender);
         return new StringMatchingRecommender(aRecommender, traits, gazeteerService);
     }
 
