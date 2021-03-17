@@ -256,11 +256,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.junit.vintage</groupId>
-      <artifactId>junit-vintage-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
@@ -683,12 +678,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.junit.vintage</groupId>
-        <artifactId>junit-vintage-engine</artifactId>
-        <version>${junit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-params</artifactId>
         <version>${junit.version}</version>
@@ -715,6 +704,12 @@
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver</artifactId>
         <version>${okhttp.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>
@@ -873,6 +868,19 @@
         <artifactId>jsass</artifactId>
         <version>5.10.3</version>
       </dependency>
+      <dependency>
+        <groupId>org.sharegov</groupId>
+        <artifactId>mjson</artifactId>
+        <version>1.4.1</version>
+        <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
       <dependency>
         <groupId>com.github.rjeschke</groupId>
         <artifactId>txtmark</artifactId>
@@ -1454,6 +1462,10 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
@@ -1796,8 +1808,7 @@
               - Basic test dependencies
             -->
             <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
-            <dependency>org.junit.vintage:junit-vintage-engine</dependency>
-            <dependency>org.junit.vintage:junit-jupiter-params</dependency>
+            <dependency>org.junit.jupiter:junit-jupiter-params</dependency>
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
@@ -1831,6 +1842,11 @@
                 <requireJavaVersion>
                   <version>[1.8.0,)</version>
                 </requireJavaVersion>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>junit:junit</exclude>
+                  </excludes>
+                </bannedDependencies>
               </rules>
             </configuration>
           </execution>
@@ -1851,6 +1867,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0-M5</version>
           <configuration>
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>

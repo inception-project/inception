@@ -51,7 +51,7 @@ public class CasPersistenceUtilsTest
         DocumentMetaData dmd = DocumentMetaData.create(cas);
         dmd.setLanguage("en");
 
-        File file = testFolder;
+        File file = testFolder.toPath().resolve("tempFile").toFile();
 
         CasPersistenceUtils.writeSerializedCas(cas, file);
 
