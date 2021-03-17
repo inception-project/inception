@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +27,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Rule;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -73,7 +69,7 @@ public class AllAnnotationsIndexedCheckTest
 
         messages.forEach(System.out::println);
 
-        assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
@@ -111,9 +107,6 @@ public class AllAnnotationsIndexedCheckTest
 
         messages.forEach(System.out::println);
 
-        assertTrue(result);
+        Assertions.assertTrue(result);
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }

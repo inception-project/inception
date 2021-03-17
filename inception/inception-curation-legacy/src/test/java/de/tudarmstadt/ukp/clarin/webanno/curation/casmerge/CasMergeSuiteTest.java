@@ -39,8 +39,6 @@ import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Rule;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -51,8 +49,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 public class CasMergeSuiteTest
     extends CasMergeTestBase
 {
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 
     public static Iterable<File> tsvFiles()
     {
@@ -66,7 +62,8 @@ public class CasMergeSuiteTest
     {
         Map<String, List<CAS>> casByUser = new HashMap<>();
 
-        File[] inputFiles = aReferenceFolder.listFiles((FilenameFilter) new RegexFileFilter("user.*\\.tsv"));
+        File[] inputFiles = aReferenceFolder
+                .listFiles((FilenameFilter) new RegexFileFilter("user.*\\.tsv"));
 
         for (File inputFile : inputFiles) {
             casByUser.put(inputFile.getName(), List.of(loadWebAnnoTsv3(inputFile).getCas()));
@@ -96,7 +93,7 @@ public class CasMergeSuiteTest
 
     private void writeAndAssertEquals(JCas curatorCas, File aReferenceFolder) throws Exception
     {
-        String targetFolder = "target/test-output/" + testContext.getClassName() + "/"
+        String targetFolder = "target/test-output/" + getClass().getSimpleName() + "/"
                 + aReferenceFolder.getName();
 
         DocumentMetaData dmd = DocumentMetaData.get(curatorCas);
@@ -116,6 +113,5 @@ public class CasMergeSuiteTest
 
         assertThat(reference).isEqualToNormalizingNewlines(actual);
     }
-
 
 }

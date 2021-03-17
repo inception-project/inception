@@ -35,9 +35,7 @@ import java.util.Map.Entry;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.dkpro.core.testing.DkproTestContext;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
@@ -276,7 +274,4 @@ public class TwoPairedKappaTest
         System.out.printf("New agreement 2/3: %s%n", agreement23.toString());
         System.out.printf("New agreement 1/3: %s%n", agreement13.toString());
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }

@@ -63,8 +63,6 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.Assertions;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -675,7 +673,4 @@ public class CasMergeTest
         aCas.addFsToIndexes(clickedFs);
         return clickedFs;
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }
