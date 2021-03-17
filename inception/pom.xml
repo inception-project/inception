@@ -63,6 +63,7 @@
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>nl.ru.test.category.SlowTests</excludedTestCategories>
 
+    <junit.version>5.7.1</junit.version>
     <mockito.version>3.7.0</mockito.version>
     <assertj.version>3.18.1</assertj.version>
 
@@ -251,10 +252,16 @@
 
     <!-- Testing -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>nl.ru</groupId>
       <artifactId>test-categories</artifactId>
@@ -666,10 +673,18 @@
       <!-- Testing -->
 
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.13.1</version>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>org.junit.vintage</groupId>
+        <artifactId>junit-vintage-engine</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
       <dependency>
         <groupId>nl.ru</groupId>
         <artifactId>test-categories</artifactId>
@@ -1769,7 +1784,8 @@
             <!--
               - Basic test dependencies
             -->
-            <dependency>junit:junit</dependency>
+            <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
+            <dependency>org.junit.vintage:junit-vintage-engine</dependency>
             <dependency>nl.ru:test-categories</dependency>
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.assertj:assertj-core</dependency>
