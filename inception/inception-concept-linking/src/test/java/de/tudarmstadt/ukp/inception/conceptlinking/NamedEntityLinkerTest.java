@@ -47,10 +47,10 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
-import org.dkpro.core.testing.DkproTestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -73,8 +73,9 @@ import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestH
 
 public class NamedEntityLinkerTest
 {
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    public @TempDir File cache;
+
+    private DatasetFactory loader;
 
     private RecommenderContext context;
     private Recommender recommender;
@@ -83,6 +84,7 @@ public class NamedEntityLinkerTest
     @BeforeEach
     public void setUp()
     {
+        loader = new DatasetFactory(cache);
         casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
         recommender = buildRecommender();

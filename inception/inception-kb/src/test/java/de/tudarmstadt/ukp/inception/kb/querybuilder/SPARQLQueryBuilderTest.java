@@ -31,6 +31,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -61,7 +62,6 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.Assume;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -1716,8 +1716,8 @@ public class SPARQLQueryBuilderTest
 
         SPARQLRepository sparqlRepository = (SPARQLRepository) aRepository;
 
-        Assume.assumeTrue("Remote repository at [" + sparqlRepository + "] is not reachable",
-                isReachable(sparqlRepository.toString()));
+        assumeTrue(isReachable(sparqlRepository.toString()),
+                "Remote repository at [" + sparqlRepository + "] is not reachable");
     }
 
     /**
