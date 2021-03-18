@@ -51,6 +51,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -61,12 +62,13 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazete
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@Transactional
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception",
         "de.tudarmstadt.ukp.clarin.webanno.model" })
 public class GazeteerServiceImplTest
 {
     @TempDir
-    File temporaryFolder;
+    public File temporaryFolder;
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -209,7 +211,7 @@ public class GazeteerServiceImplTest
     }
 
     @Test
-    public void thatInvalidGazeteerGeneratesException() throws Exception
+    public void thatGazeteerWithExtraColumnsCanBeRead() throws Exception
     {
         Gazeteer gaz = new Gazeteer("gaz", rec1);
 
@@ -222,11 +224,9 @@ public class GazeteerServiceImplTest
                 .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer1, UTF_8), data))
                 .withMessageContaining("Unable to parse line 2");
 
-        String gazeteer2 = "Bill\tPER\tDUMMY";
+        String gazeteer2 = "Bill\tPER\t40";
 
-        assertThatExceptionOfType(IOException.class).describedAs("Line without too many fields")
-                .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data))
-                .withMessageContaining("Unable to parse line 1");
+        sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data);
     }
 
     @SpringBootConfiguration

@@ -169,6 +169,12 @@
     <dependency>
       <groupId>io.bit3</groupId>
       <artifactId>jsass</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     
     <dependency>

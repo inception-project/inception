@@ -256,6 +256,39 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
+    public void thatPredictionWithPretrainigWorks_CaseInsensitve() throws Exception
+    {
+        traits.setIgnoreCase(true);
+
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> casList = loadDevelopmentData();
+
+        CAS cas = casList.get(0);
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
+        gazeteer.add(new GazeteerEntry("deutschland", "LOC"));
+        gazeteer.add(new GazeteerEntry("DEUTSCHLAND", "GPE"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.train(context, emptyList());
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+
+        assertThat(predictions).as("Score is positive")
+                .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0);
+
+        assertThat(predictions).as("Some score is not perfect")
+                .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0);
+    }
+
+    @Test
     public void thatEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
