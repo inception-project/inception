@@ -115,7 +115,7 @@
     <jena.version>3.17.0</jena.version>
 
     <servlet-api.version>4.0.1</servlet-api.version>
-    <okhttp.version>3.14.2</okhttp.version>
+    <okhttp.version>5.0.0-alpha.2</okhttp.version>
 
     <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
     <asciidoctor.version>2.3.0</asciidoctor.version>
@@ -278,7 +278,7 @@
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver</artifactId>
+      <artifactId>mockwebserver3</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -702,8 +702,9 @@
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>mockwebserver</artifactId>
+        <artifactId>mockwebserver3</artifactId>
         <version>${okhttp.version}</version>
+        <scope>test</scope>
         <exclusions>
           <exclusion>
             <groupId>junit</groupId>
@@ -1812,7 +1813,7 @@
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
-            <dependency>com.squareup.okhttp3:mockwebserver</dependency>
+            <dependency>com.squareup.okhttp3:mockwebserver3</dependency>
             <dependency>org.awaitility:awaitility</dependency>
           </ignoredDependencies>
         </configuration>

@@ -25,7 +25,6 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
@@ -49,7 +48,6 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
-import org.dkpro.core.testing.DkproTestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,17 +61,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
-import okhttp3.mockwebserver.Dispatcher;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.Dispatcher;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 
 public class ExternalRecommenderIntegrationTest
 {
     private static final String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    private static final File cache = DkproTestHelper.getCacheFolder();
+    private static final DatasetFactory loader = new DatasetFactory(cache);
 
     private static final String USER_NAME = "test_user";
     private static final long PROJECT_ID = 42L;
