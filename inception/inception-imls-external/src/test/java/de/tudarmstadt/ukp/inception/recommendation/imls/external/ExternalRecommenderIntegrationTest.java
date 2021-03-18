@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -264,7 +265,7 @@ public class ExternalRecommenderIntegrationTest
                     String body = request.getBody().readUtf8();
                     requestBodies.add(body);
 
-                    if (request.getPath().equals("/train")) {
+                    if (Objects.equals(request.getPath(), "/train")) {
                         remoteRecommender.train(body);
                         return new MockResponse().setResponseCode(204);
                     }
