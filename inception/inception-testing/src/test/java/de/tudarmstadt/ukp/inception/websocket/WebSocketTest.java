@@ -21,16 +21,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.wicket.protocol.ws.util.tester.WebSocketTester;
 import org.apache.wicket.util.tester.WicketTester;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
 @Import(SpringConfig.class)
 public class WebSocketTest
 {
@@ -39,7 +36,7 @@ public class WebSocketTest
     private WebSocketTestPage page;
     private TestEnv testVars;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         // set up "server" and test page
@@ -49,7 +46,7 @@ public class WebSocketTest
         tester.startPage(page);
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         tester.destroy();

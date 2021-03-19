@@ -36,10 +36,9 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.cas.CAS;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -71,11 +70,11 @@ public class GazeteerExporterTest
     private AnnotationFeature targetFeature;
     private Recommender targetRecommender;
 
-    public @Rule TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public @TempDir File temporaryFolder;
 
     private GazeteerExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         initMocks(this);
@@ -106,14 +105,14 @@ public class GazeteerExporterTest
 
         when(gazeteerService.getGazeteerFile(Mockito.any())).thenAnswer(invocation -> {
             Gazeteer gaz = invocation.getArgument(0);
-            File gazFile = temporaryFolder.newFile(gaz.getId() + ".txt");
+            File gazFile = temporaryFolder.toPath().resolve(gaz.getId() + ".txt").toFile();
             String data = "John\tVAL" + gaz.getId();
             FileUtils.writeStringToFile(gazFile, data, UTF_8);
             return gazFile;
         });
 
         when(recommendationService.listRecommenders(sourceProject))
-                .thenReturn(asList(sourceRecommender));
+                .thenReturn(List.of(sourceRecommender));
 
         when(recommendationService.getRecommender(any(), any()))
                 .thenReturn(Optional.of(targetRecommender));
@@ -129,7 +128,7 @@ public class GazeteerExporterTest
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder.getRoot());
+        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 
         // Import the project again
         ArgumentCaptor<Gazeteer> gazeteerCaptor = ArgumentCaptor.forClass(Gazeteer.class);

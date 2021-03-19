@@ -23,14 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
@@ -48,17 +48,17 @@ public class SchedulingServiceTest
 
     private SchedulingService sut;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
-        initMocks(this);
+        MockitoAnnotations.openMocks(this);
         when(mockContext.getAutowireCapableBeanFactory())
                 .thenReturn(mock(AutowireCapableBeanFactory.class));
 
         sut = new SchedulingService(mockContext, new SchedulingProperties());
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         sut.destroy();

@@ -23,33 +23,24 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 import org.apache.commons.io.filefilter.SuffixFileFilter;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 
-@RunWith(value = Parameterized.class)
 public class ConstraintsParserTest
 {
-    @Parameters(name = "{index}: running on file {0}")
+
+    @ParameterizedTest(name = "{index}: running on file {0}")
+    @MethodSource("ruleFiles")
+    public void thatRuleFileCanBeParsed(File aRuleFile) throws Exception
+    {
+        ConstraintsParser.parse(aRuleFile);
+    }
+
     public static Iterable<File> ruleFiles()
     {
         return asList(new File("src/test/resources/rules/")
                 .listFiles((FilenameFilter) new SuffixFileFilter(asList(".rules"))));
-    }
-
-    private File ruleFile;
-
-    public ConstraintsParserTest(File aRuleFile)
-    {
-        ruleFile = aRuleFile;
-    }
-
-    @Test
-    public void thatRuleFileCanBeParsed() throws Exception
-    {
-        ConstraintsParser.parse(ruleFile);
     }
 }

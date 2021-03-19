@@ -22,8 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender.DictEntry;
 
@@ -31,7 +31,7 @@ public class TrieTest
 {
     private Trie<DictEntry> sut;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         sut = new Trie<DictEntry>();

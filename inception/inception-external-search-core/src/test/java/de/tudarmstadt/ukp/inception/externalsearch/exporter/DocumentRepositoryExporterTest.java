@@ -28,8 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipFile;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -48,7 +48,7 @@ public class DocumentRepositoryExporterTest
 
     private DocumentRepositoryExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         initMocks(this);

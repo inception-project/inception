@@ -31,7 +31,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAd
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,9 +49,7 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
@@ -353,12 +351,10 @@ public class CasDiffTest
     public void relationLabelTest() throws Exception
     {
         Map<String, List<CAS>> casByUser = new HashMap<>();
-        casByUser.put("user1",
-                asList(loadWebAnnoTsv3("testsuite/" + testContext.getMethodName() + "/user1.tsv")
-                        .getCas()));
-        casByUser.put("user2",
-                asList(loadWebAnnoTsv3("testsuite/" + testContext.getMethodName() + "/user2.tsv")
-                        .getCas()));
+        casByUser.put("user1", asList(
+                loadWebAnnoTsv3("testsuite/" + "relationLabelTest" + "/user1.tsv").getCas()));
+        casByUser.put("user2", asList(
+                loadWebAnnoTsv3("testsuite/" + "relationLabelTest" + "/user2.tsv").getCas()));
 
         List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
                 Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
@@ -656,7 +652,4 @@ public class CasDiffTest
         //
         // assertEquals(0.0, agreement.getAgreement(), 0.00001d);
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }

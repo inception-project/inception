@@ -48,10 +48,9 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -66,19 +65,20 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class StringMatchingRecommenderTest
 {
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    private static final File cache = DkproTestHelper.getCacheFolder();
+    private static final DatasetFactory loader = new DatasetFactory(cache);
 
     private RecommenderContext context;
     private Recommender recommender;
     private StringMatchingRecommenderTraits traits;
     private CasStorageSession casStorageSession;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         casStorageSession = CasStorageSession.open();
@@ -87,7 +87,7 @@ public class StringMatchingRecommenderTest
         traits = new StringMatchingRecommenderTraits();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         casStorageSession.close();

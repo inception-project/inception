@@ -25,12 +25,12 @@ package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
@@ -275,7 +275,7 @@ public class OverlapIteratorTest
 
             // Repeat test with debugging turned on.
             overlapping(a, b, true, true);
-            assertEquals("Overlapping regions do not match", r1, r2);
+            assertEquals(r1, r2, "Overlapping regions do not match");
         }
     }
 

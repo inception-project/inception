@@ -34,11 +34,10 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.ConllUReader;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -46,21 +45,22 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
-import okhttp3.mockwebserver.Dispatcher;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
+import mockwebserver3.Dispatcher;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 
 public class LappsRecommenderIntegrationTest
 {
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    private static final File cache = DkproTestHelper.getCacheFolder();
+    private static final DatasetFactory loader = new DatasetFactory(cache);
 
     private MockWebServer server;
 
     private LappsGridRecommender sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException
     {
         server = new MockWebServer();
@@ -75,14 +75,14 @@ public class LappsRecommenderIntegrationTest
         sut = new LappsGridRecommender(buildRecommender(), traits);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         server.shutdown();
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void thatPredictingPosWorks() throws Exception
     {
         RecommenderContext context = new RecommenderContext();

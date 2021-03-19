@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 import java.io.File;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import com.fasterxml.jackson.databind.JsonNode;
