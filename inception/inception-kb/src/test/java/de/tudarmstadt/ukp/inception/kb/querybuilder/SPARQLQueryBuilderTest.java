@@ -22,6 +22,9 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.sanitizeQueryString_FTS;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.assertThatChildrenOfExplicitRootCanBeRetrieved;
@@ -204,6 +207,7 @@ public class SPARQLQueryBuilderTest
     @BeforeEach
     public void setUp()
     {
+        suspendSslVerification();
 
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
@@ -247,11 +251,14 @@ public class SPARQLQueryBuilderTest
     public void tearDown()
     {
         fusekiServer.stop();
+
+        restoreSslVerification();
     }
 
     private Repository buildSparqlRepository(String aUrl)
     {
         SPARQLRepository repo = new SPARQLRepository(aUrl);
+        repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
         repo.init();
         return repo;
     }

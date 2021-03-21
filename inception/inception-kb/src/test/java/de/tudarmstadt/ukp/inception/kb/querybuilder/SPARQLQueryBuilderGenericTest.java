@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildKnowledgeBase;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildRepository;
@@ -35,6 +37,8 @@ import java.util.Set;
 
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -74,6 +78,18 @@ public class SPARQLQueryBuilderGenericTest
         List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots());
 
         assertThat(roots).isNotEmpty();
+    }
+
+    @BeforeEach
+    public void setup()
+    {
+        suspendSslVerification();
+    }
+
+    @AfterEach
+    public void tearDown()
+    {
+        restoreSslVerification();
     }
 
     @ParameterizedTest(name = "{index}: profile {0}")
