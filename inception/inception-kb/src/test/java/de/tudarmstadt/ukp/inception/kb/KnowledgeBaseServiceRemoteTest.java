@@ -128,8 +128,13 @@ public class KnowledgeBaseServiceRemoteTest
     @AfterEach
     public void tearDown() throws Exception
     {
-        testEntityManager.clear();
-        sut.destroy();
+        if (testEntityManager != null) {
+            testEntityManager.clear();
+        }
+
+        if (sut != null) {
+            sut.destroy();
+        }
     }
 
     @ParameterizedTest(name = "{index}: KB = {0}")
