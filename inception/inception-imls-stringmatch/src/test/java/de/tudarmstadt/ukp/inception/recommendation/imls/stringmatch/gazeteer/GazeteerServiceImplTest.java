@@ -40,19 +40,17 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
@@ -63,15 +61,14 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
-@RunWith(SpringRunner.class)
-@DataJpaTest
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception",
         "de.tudarmstadt.ukp.clarin.webanno.model" })
 public class GazeteerServiceImplTest
 {
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    public File temporaryFolder;
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -83,13 +80,13 @@ public class GazeteerServiceImplTest
     private AnnotationFeature spanFeat1;
     private Recommender rec1;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         EntityManager em = testEntityManager.getEntityManager();
 
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
+        repoProps.setPath(temporaryFolder);
 
         sut = new GazeteerServiceImpl(repoProps, em);
 
@@ -109,7 +106,7 @@ public class GazeteerServiceImplTest
         em.persist(rec1);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();
@@ -214,7 +211,7 @@ public class GazeteerServiceImplTest
     }
 
     @Test
-    public void thatInvalidGazeteerGeneratesException() throws Exception
+    public void thatGazeteerWithExtraColumnsCanBeRead() throws Exception
     {
         Gazeteer gaz = new Gazeteer("gaz", rec1);
 
@@ -227,11 +224,9 @@ public class GazeteerServiceImplTest
                 .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer1, UTF_8), data))
                 .withMessageContaining("Unable to parse line 2");
 
-        String gazeteer2 = "Bill\tPER\tDUMMY";
+        String gazeteer2 = "Bill\tPER\t40";
 
-        assertThatExceptionOfType(IOException.class).describedAs("Line without too many fields")
-                .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data))
-                .withMessageContaining("Unable to parse line 1");
+        sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data);
     }
 
     @SpringBootConfiguration

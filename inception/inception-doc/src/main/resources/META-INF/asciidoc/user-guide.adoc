@@ -240,6 +240,11 @@ include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
 
 <<<
 
+[faq]
+include::{include-dir}faq.adoc[leveloffset=+1]
+
+<<<
+
 [appendix]
 include::{include-dir}webannotsv.adoc[leveloffset=+1]
 

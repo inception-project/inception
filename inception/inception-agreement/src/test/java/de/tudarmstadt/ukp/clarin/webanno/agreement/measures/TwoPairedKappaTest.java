@@ -24,7 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.Relati
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -35,10 +35,8 @@ import java.util.Map.Entry;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
@@ -62,7 +60,7 @@ public class TwoPairedKappaTest
     private SourceDocument document;
     private CAS kappatestCas, kappaspandiff, kappaarcdiff, kappaspanarcdiff;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception
     {
         user1 = new User();
@@ -276,7 +274,4 @@ public class TwoPairedKappaTest
         System.out.printf("New agreement 2/3: %s%n", agreement23.toString());
         System.out.printf("New agreement 1/3: %s%n", agreement13.toString());
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }

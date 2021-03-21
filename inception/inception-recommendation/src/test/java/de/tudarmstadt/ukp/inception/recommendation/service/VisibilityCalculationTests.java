@@ -31,8 +31,8 @@ import javax.persistence.EntityManager;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -69,7 +69,7 @@ public class VisibilityCalculationTests
     private final static String CONFIDENCE_EXPLANATION = "Predictor A: 0.05 | Predictor B: 0.15";
     private final static String COVERED_TEXT = "TestText";
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         initMocks(this);

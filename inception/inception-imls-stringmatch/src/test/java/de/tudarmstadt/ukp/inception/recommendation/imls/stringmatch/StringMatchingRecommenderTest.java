@@ -48,10 +48,9 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -66,19 +65,20 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class StringMatchingRecommenderTest
 {
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    private static final File cache = DkproTestHelper.getCacheFolder();
+    private static final DatasetFactory loader = new DatasetFactory(cache);
 
     private RecommenderContext context;
     private Recommender recommender;
     private StringMatchingRecommenderTraits traits;
     private CasStorageSession casStorageSession;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         casStorageSession = CasStorageSession.open();
@@ -87,7 +87,7 @@ public class StringMatchingRecommenderTest
         traits = new StringMatchingRecommenderTraits();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         casStorageSession.close();
@@ -237,6 +237,39 @@ public class StringMatchingRecommenderTest
         gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
         gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
         gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.train(context, emptyList());
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+
+        assertThat(predictions).as("Score is positive")
+                .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0);
+
+        assertThat(predictions).as("Some score is not perfect")
+                .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0);
+    }
+
+    @Test
+    public void thatPredictionWithPretrainigWorks_CaseInsensitve() throws Exception
+    {
+        traits.setIgnoreCase(true);
+
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> casList = loadDevelopmentData();
+
+        CAS cas = casList.get(0);
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
+        gazeteer.add(new GazeteerEntry("deutschland", "LOC"));
+        gazeteer.add(new GazeteerEntry("DEUTSCHLAND", "GPE"));
 
         sut.pretrain(gazeteer, context);
 

@@ -21,22 +21,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-@Ignore("Server not publicly accessible")
+@Disabled("Server not publicly accessible")
 public class ElasticSearchProviderTest
 {
     private ElasticSearchProvider sut;
     private DocumentRepository repo;
     private ElasticSearchProviderTraits traits;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         sut = new ElasticSearchProvider();

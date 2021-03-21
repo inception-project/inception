@@ -23,7 +23,7 @@ import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,10 +31,9 @@ import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -55,7 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
 public class AnnotationDocumentsExporterTest
 {
-    public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
+    public @TempDir File tempFolder;
 
     private RepositoryProperties repositoryProperties;
     private BackupProperties backupProperties;
@@ -71,12 +70,12 @@ public class AnnotationDocumentsExporterTest
 
     private AnnotationDocumentExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
+        openMocks(this);
 
-        workFolder = tempFolder.newFolder();
+        workFolder = tempFolder;
 
         project = new Project();
         project.setId(1l);

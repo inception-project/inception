@@ -42,11 +42,10 @@ import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2000Reader;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -61,19 +60,19 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import nl.ru.test.category.SlowTests;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 
-@Category(SlowTests.class)
+@Tag("slow")
 public class DL4JSequenceRecommenderTest
 {
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    private static final File cache = DkproTestHelper.getCacheFolder();
+    private static final DatasetFactory loader = new DatasetFactory(cache);
 
     private RecommenderContext context;
     private DL4JSequenceRecommenderTraits traits;
     private CasStorageSession casSession;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         // By default, ND4J will use a value equal to the number of physical CPU cores (not logical
@@ -93,7 +92,7 @@ public class DL4JSequenceRecommenderTest
         casSession = CasStorageSession.open();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         CasStorageSession.get().close();

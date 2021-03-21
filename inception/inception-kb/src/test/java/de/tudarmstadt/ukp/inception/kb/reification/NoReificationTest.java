@@ -35,8 +35,8 @@ import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -76,7 +76,7 @@ public class NoReificationTest
     private Repository rdf4jLocalRepo;
     private ReificationStrategy sut;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         kb = new KnowledgeBase();

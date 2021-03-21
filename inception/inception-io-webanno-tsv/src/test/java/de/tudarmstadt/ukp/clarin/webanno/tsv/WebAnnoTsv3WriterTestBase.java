@@ -22,9 +22,10 @@ import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDesc
 import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.toText;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,12 +53,12 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.xmi.XmiWriter;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -71,7 +72,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import webanno.custom.Span;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public abstract class WebAnnoTsv3WriterTestBase
 {
     protected abstract AnalysisEngineDescription makeWriter()
@@ -80,6 +81,14 @@ public abstract class WebAnnoTsv3WriterTestBase
     protected abstract String getSuiteName() throws ResourceInitializationException;
 
     protected abstract boolean isKnownToFail(String aMethodName);
+
+    private TestInfo testInfo;
+
+    @BeforeEach
+    public void storeTestInfo(TestInfo aTestInfo)
+    {
+        testInfo = aTestInfo;
+    }
 
     @Test
     public void testTokenAttachedAnnotationsWithValues() throws Exception
@@ -968,7 +977,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
     }
 
-    @Ignore("Relations between different layers not supported in WebAnno TSV 3 atm")
+    @Disabled("Relations between different layers not supported in WebAnno TSV 3 atm")
     @Test
     public void testSingleMixedRelationWithoutFeatureValue() throws Exception
     {
@@ -1799,29 +1808,32 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         writeAndAssertEquals(jcas);
     }
-    
+
     @Test
-    public void testSentenceId() throws Exception {
+    public void testSentenceId() throws Exception
+    {
         JCas jcas = makeJCasTwoSentences();
-        
+
         int n = 1;
         for (Sentence s : select(jcas, Sentence.class)) {
             s.setId("sent-" + n);
             n++;
         }
-                        
+
         writeAndAssertEquals(jcas);
     }
 
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {
-        assumeFalse("This test is known to fail.", isKnownToFail(testContext.getMethodName()));
+        String methodName = testInfo.getTestMethod().get().getName();
+        String className = testInfo.getTestClass().get().getSimpleName();
 
-        String targetFolder = "target/test-output/" + testContext.getClassName() + "/"
-                + getSuiteName() + "/" + testContext.getMethodName();
-        String referenceFolder = "src/test/resources/" + getSuiteName() + "/"
-                + testContext.getMethodName();
+        assumeFalse(isKnownToFail(methodName), "This test is known to fail.");
+
+        String targetFolder = "target/test-output/" + className + "/" + getSuiteName() + "/"
+                + methodName;
+        String referenceFolder = "src/test/resources/" + getSuiteName() + "/" + methodName;
 
         List<Object> params = new ArrayList<>();
         params.addAll(asList(aParams));
@@ -1845,14 +1857,14 @@ public abstract class WebAnnoTsv3WriterTestBase
         SimplePipeline.runPipeline(aJCas, tsv, xmi);
 
         File referenceFile = new File(referenceFolder, "reference.tsv");
-        assumeTrue("No reference data available for this test.", referenceFile.exists());
+        assumeTrue(referenceFile.exists(), "No reference data available for this test.");
 
         File actualFile = new File(targetFolder, "doc.tsv");
 
         String reference = FileUtils.readFileToString(referenceFile, "UTF-8");
         String actual = FileUtils.readFileToString(actualFile, "UTF-8");
 
-        assertEquals(reference, actual);
+        assertThat(reference).isEqualToNormalizingNewlines(actual);
     }
 
     private static JCas makeJCas() throws UIMAException
@@ -1967,6 +1979,4 @@ public abstract class WebAnnoTsv3WriterTestBase
         return link;
     }
 
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }

@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.linesOf;
 import java.io.File;
 import java.util.Arrays;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Relation;
@@ -35,7 +35,7 @@ public class PdfAnnoModelTest
 
     private PdfAnnoModel pdfAnnoModel;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");

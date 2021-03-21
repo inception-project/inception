@@ -26,8 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
@@ -53,7 +53,7 @@ public class SpanRendererTest
     private AnnotationLayer neLayer;
     private JCas jcas;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         if (jcas == null) {

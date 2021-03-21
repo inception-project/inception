@@ -22,8 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
@@ -32,7 +32,7 @@ public class EvaluationResultTest
 {
     private List<LabelPair> instances;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         instances = new ArrayList<>();

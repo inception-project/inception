@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -213,6 +214,9 @@ public class StringMatchingRecommender
 
         List<Sample> data = new ArrayList<>();
         String text = aCas.getDocumentText();
+        if (traits != null && traits.isIgnoreCase()) {
+            text = text.toLowerCase(Locale.ROOT);
+        }
 
         for (Annotation sentence : aCas.<Annotation> select(sentenceType)) {
             List<Span> spans = new ArrayList<>();
@@ -241,8 +245,8 @@ public class StringMatchingRecommender
                         if (label == UNKNOWN_LABEL) {
                             label = null;
                         }
-                        spans.add(new Span(begin, end, text.substring(begin, end), label,
-                                lc.getRelFreq()));
+                        spans.add(new Span(begin, end, aCas.getDocumentText().substring(begin, end),
+                                label, lc.getRelFreq()));
                     }
                 }
             }
@@ -295,7 +299,7 @@ public class StringMatchingRecommender
         final int minTrainingSetSize = 1;
         final int minTestSetSize = 1;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
-            if (!gazeteerService.listGazeteers(recommender).isEmpty()) {
+            if (gazeteerService != null && !gazeteerService.listGazeteers(recommender).isEmpty()) {
                 // We cannot evaluate, but the user expects to see immediate results from the
                 // gazeteer - so we return with an "unknown" result but without marking it as
                 // skipped so that the selection task allows the recommender to activate.
@@ -358,10 +362,15 @@ public class StringMatchingRecommender
     {
         String label = isBlank(aLabel) ? UNKNOWN_LABEL : aLabel;
 
-        DictEntry entry = aDict.get(aText);
+        String text = aText;
+        if (traits != null && traits.isIgnoreCase()) {
+            text = text.toLowerCase(Locale.ROOT);
+        }
+
+        DictEntry entry = aDict.get(text);
         if (entry == null) {
-            entry = new DictEntry(aText);
-            aDict.put(aText, entry);
+            entry = new DictEntry(text);
+            aDict.put(text, entry);
         }
 
         entry.put(label);
