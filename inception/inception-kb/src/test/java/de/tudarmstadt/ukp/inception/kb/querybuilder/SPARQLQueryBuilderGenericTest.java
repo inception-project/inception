@@ -25,6 +25,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,74 +35,55 @@ import java.util.Set;
 
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
-@RunWith(Parameterized.class)
+@Tag("slow")
 public class SPARQLQueryBuilderGenericTest
 {
     private static final List<String> SKIPPED_PROFILES = asList("babel_net", "zbw-gnd");
 
-    @Parameterized.Parameters(name = "KB = {0}")
-    public static List<Object[]> data() throws Exception
+    public static List<KnowledgeBaseProfile> data() throws Exception
     {
         Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile
                 .readKnowledgeBaseProfiles();
 
-        List<Object[]> dataList = new ArrayList<>();
+        List<KnowledgeBaseProfile> dataList = new ArrayList<>();
         for (Entry<String, KnowledgeBaseProfile> entry : profiles.entrySet()) {
             if (SKIPPED_PROFILES.contains(entry.getKey())) {
                 continue;
             }
 
-            dataList.add(new Object[] { entry.getKey(), entry.getValue() });
+            dataList.add(entry.getValue());
         }
         return dataList;
     }
 
-    private final String profileName;
-    private final KnowledgeBaseProfile profile;
-
-    private KnowledgeBase kb;
-    private Repository repo;
-
-    public SPARQLQueryBuilderGenericTest(String aProfileName, KnowledgeBaseProfile aProfile)
-        throws Exception
+    @ParameterizedTest(name = "{index}: profile {0}")
+    @MethodSource("data")
+    public void thatRootConceptsCanBeRetrieved(KnowledgeBaseProfile aProfile) throws IOException
     {
-        profileName = aProfileName;
-        profile = aProfile;
-    }
+        KnowledgeBase kb = buildKnowledgeBase(aProfile);
+        Repository repo = buildRepository(aProfile);
 
-    @Before
-    public void setup() throws Exception
-    {
-        // Force POST request instead of GET request
-        // System.setProperty(SPARQLProtocolSession.MAXIMUM_URL_LENGTH_PARAM, "100");
-
-        kb = buildKnowledgeBase(profile);
-        repo = buildRepository(profile);
-    }
-
-    @Test
-    public void thatRootConceptsCanBeRetrieved()
-    {
         List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots());
 
         assertThat(roots).isNotEmpty();
     }
 
-    @Test
-    public void thatChildrenOfRootConceptHaveRootConceptAsParent()
+    @ParameterizedTest(name = "{index}: profile {0}")
+    @MethodSource("data")
+    public void thatChildrenOfRootConceptHaveRootConceptAsParent(KnowledgeBaseProfile aProfile)
+        throws IOException
     {
+        KnowledgeBase kb = buildKnowledgeBase(aProfile);
+        Repository repo = buildRepository(aProfile);
+
         List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots().limit(3));
         Set<String> rootIdentifiers = roots.stream().map(KBHandle::getIdentifier).collect(toSet());
 
@@ -119,14 +101,18 @@ public class SPARQLQueryBuilderGenericTest
                                 // System.out.printf("C: %s%n", v);
                                 // return v;
                                 // })
-                                .anyMatch(iri -> rootIdentifiers.contains(iri)));
+                                .anyMatch(rootIdentifiers::contains));
             }
         });
     }
 
-    @Test
-    public void thatRegexMetaCharactersAreSafe()
+    @ParameterizedTest(name = "{index}: profile: {0}")
+    @MethodSource("data")
+    public void thatRegexMetaCharactersAreSafe(KnowledgeBaseProfile aProfile) throws IOException
     {
+        KnowledgeBase kb = buildKnowledgeBase(aProfile);
+        Repository repo = buildRepository(aProfile);
+
         try (RepositoryConnection conn = repo.getConnection()) {
             SPARQLQueryOptionalElements builder = SPARQLQueryBuilder.forItems(kb)
                     .withLabelMatchingExactlyAnyOf(".[]*+{}()lala").limit(3);
@@ -142,9 +128,14 @@ public class SPARQLQueryBuilderGenericTest
         }
     }
 
-    @Test
-    public void thatLineBreaksAndWhitespaceAreSafe_noFts()
+    @ParameterizedTest(name = "{index}: profile: {0}")
+    @MethodSource("data")
+    public void thatLineBreaksAndWhitespaceAreSafe_noFts(KnowledgeBaseProfile aProfile)
+        throws IOException
     {
+        KnowledgeBase kb = buildKnowledgeBase(aProfile);
+        Repository repo = buildRepository(aProfile);
+
         String originalFtsIri = kb.getFullTextSearchIri();
 
         try (RepositoryConnection conn = repo.getConnection()) {

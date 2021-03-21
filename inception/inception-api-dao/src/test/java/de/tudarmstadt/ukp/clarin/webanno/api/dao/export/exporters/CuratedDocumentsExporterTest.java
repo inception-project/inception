@@ -33,10 +33,9 @@ import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -57,7 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
 public class CuratedDocumentsExporterTest
 {
-    public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
+    public @TempDir File tempFolder;
 
     private RepositoryProperties repositoryProperties;
     private BackupProperties backupProperties;
@@ -73,12 +72,12 @@ public class CuratedDocumentsExporterTest
 
     private CuratedDocumentsExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         initMocks(this);
 
-        workFolder = tempFolder.newFolder();
+        workFolder = tempFolder;
 
         project = new Project();
         project.setId(1l);

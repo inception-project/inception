@@ -55,10 +55,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,10 +87,10 @@ public class CasStorageServiceImplTest
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
 
-    @Rule
-    public TemporaryFolder testFolder = new TemporaryFolder();
+    @TempDir
+    File testFolder;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         exception.set(false);
@@ -106,7 +105,7 @@ public class CasStorageServiceImplTest
         backupProperties = new BackupProperties();
 
         repositoryProperties = new RepositoryProperties();
-        repositoryProperties.setPath(testFolder.newFolder());
+        repositoryProperties.setPath(testFolder);
 
         sut = new CasStorageServiceImpl(null, null, repositoryProperties, backupProperties);
     }

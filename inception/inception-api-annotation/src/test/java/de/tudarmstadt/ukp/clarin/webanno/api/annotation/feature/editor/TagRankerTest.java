@@ -24,8 +24,8 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
@@ -33,7 +33,7 @@ public class TagRankerTest
 {
     private TagRanker sut;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         sut = new TagRanker();

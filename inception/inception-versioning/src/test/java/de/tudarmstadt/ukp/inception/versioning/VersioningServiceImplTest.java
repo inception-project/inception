@@ -38,12 +38,10 @@ import org.apache.uima.cas.CAS;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -55,7 +53,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -96,7 +93,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.PretokenizedTextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
-@RunWith(SpringRunner.class)
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class VersioningServiceImplTest
 {
@@ -109,20 +105,20 @@ public class VersioningServiceImplTest
     private @Autowired ImportExportService importExportService;
     private @Autowired DocumentService documentService;
 
-    @Rule
-    public TemporaryFolder repoDir = new TemporaryFolder();
+    @TempDir
+    File repoDir;
 
     private Project testProject;
 
-    @Before
-    public void setUp() throws Exception
+    @BeforeEach
+    public void setUp()
     {
-        repositoryProperties.setPath(repoDir.getRoot());
+        repositoryProperties.setPath(repoDir);
         testProject = new Project("testProject");
 
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         testEntityManager.clear();

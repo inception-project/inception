@@ -28,17 +28,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -46,8 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-@RunWith(SpringRunner.class)
 @DataJpaTest
+@ExtendWith(SpringExtension.class)
 public class ProjectServiceImplTest
 {
     private ProjectService sut;
@@ -60,7 +60,7 @@ public class ProjectServiceImplTest
     private User beate;
     private User kevin;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         sut = new ProjectServiceImpl(null, null, null, null, testEntityManager.getEntityManager());
@@ -87,7 +87,7 @@ public class ProjectServiceImplTest
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", CURATOR));
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         testEntityManager.clear();

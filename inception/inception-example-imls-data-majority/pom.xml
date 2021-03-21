@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-plugin-parent</artifactId>
-    <version>0.19.1-SNAPSHOT</version>
+    <version>0.20.0-SNAPSHOT</version>
     <relativePath>../inception-plugin-parent</relativePath>
   </parent>
   <artifactId>inception-example-imls-data-majority</artifactId>
@@ -96,8 +96,8 @@
 
     <!-- Testing -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -115,11 +115,7 @@
       <artifactId>inception-testing</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-testing-asl</artifactId>
-      <scope>test</scope>
-    </dependency>
+
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-ner-asl</artifactId>
