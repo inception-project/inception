@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.RecogitoHtmlAnnotationEdito
  * Provides support for an HTML-oriented annotation editor.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html-recogito", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ui.html-recogito", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class RecogitoHtmlAnnotationEditorSupportAutoConfiguration
 {
     @Bean

@@ -179,7 +179,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-html-pelagios-editor</artifactId>
+      <artifactId>inception-html-recogito-editor</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -809,7 +809,7 @@
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-pelagios-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
