@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor;
+package de.tudarmstadt.ukp.inception.recogitojseditor;
 
 import org.apache.wicket.model.IModel;
 
@@ -28,28 +28,28 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recogitojseditor.config.RecogitoHtmlAnnotationEditorSupportAutoConfiguration;
 
 /**
  * Support for HTML-oriented editor component.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlAnnotationEditorFactory()}.
+ * {@link RecogitoHtmlAnnotationEditorSupportAutoConfiguration#recogitoHtmlAnnotationEditorFactory()}.
  * </p>
  */
-public class HtmlAnnotationEditorFactory
+public class RecogitoHtmlAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
     @Override
     public String getDisplayName()
     {
-        return "HTML (AnnotatorJS)";
+        return "HTML (Recogito)";
     }
 
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new HtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new RecogitoHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
 }
