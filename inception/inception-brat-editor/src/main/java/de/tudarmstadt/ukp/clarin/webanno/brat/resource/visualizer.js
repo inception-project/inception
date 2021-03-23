@@ -2793,7 +2793,8 @@ Util.profileStart('arcs');
 
               var arcGroup = svg.group(row.arcs, {
                   'data-from': arc.origin,
-                  'data-to': arc.target
+                  'data-to': arc.target,
+                  'data-id': arc.eventDescId
               });
               var from, to;
 
@@ -4208,9 +4209,18 @@ Util.profileStart('before render');
               originSpanId, originSpanType, role,
               targetSpanId, targetSpanType,
               commentText, commentType]);
-          highlightArcs = $svg.
-              find('g[data-from="' + originSpanId + '"][data-to="' + targetSpanId + '"]').
-              addClass('highlight');
+              
+          if (arcId) {
+            highlightArcs = $svg.
+                find('g[data-id="' + arcId + '"]').
+                addClass('highlight');
+          }
+          else {
+            highlightArcs = $svg.
+                find('g[data-from="' + originSpanId + '"][data-to="' + targetSpanId + '"]').
+                addClass('highlight');
+          }
+          
           highlightSpans = $($svg).
               find('rect[data-span-id="' + originSpanId + '"], rect[data-span-id="' + targetSpanId + '"]').
               parent().
