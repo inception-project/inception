@@ -19,6 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.config;
 
 public interface BratAnnotationEditorProperties
 {
+    /**
+     * NBSP is recognized by Firefox as a proper addressable character in
+     * {@code SVGText.getNumberOfChars()}.
+     */
+    public static String NBSP = "\u00A0";
+    public static String REPLACEMENT_CHARACTER = "\uFFFD";
+
     boolean isSingleClickSelection();
 
     /**
@@ -42,4 +49,21 @@ public interface BratAnnotationEditorProperties
      * Log messages in the browser as part of JS commands
      */
     boolean isClientSideTraceLog();
+
+    /**
+     * Some browsers (e.g. Firefox) do not count invisible chars in some functions
+     * {@code (e.g. SVGText.getNumberOfChars())} and this causes trouble. To avoid this, we replace
+     * the chars with a visible whitespace character before sending the data to the browser.
+     * 
+     * This property indicates which character should be used to replace problematic whitespace
+     * characters during rendering.
+     * 
+     * The default value is {@link #NBSP}
+     * 
+     * @see <a href="https://github.com/inception-project/inception/issues/1849">INCEpTION issue
+     *      #1849</a>
+     * @see <a href="https://github.com/webanno/webanno/issues/307">WebAnno issue #307</a>
+     * @return a single replacement character.
+     */
+    String getWhiteSpaceReplacementCharacter();
 }
