@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.V
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
@@ -128,18 +128,15 @@ public class RecommendationRelationRenderer
                 .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
         for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
-
-            // Sort by confidence
-            List<RelationSuggestion> suggestions = group.stream() //
-                    .sorted(Comparator.comparing(RelationSuggestion::getConfidence).reversed()) //
+            List<String> recommenderNames = group.stream() //
+                    .map(AnnotationSuggestion::getRecommenderName) //
                     .collect(Collectors.toList());
 
-            // Limit number of shown predictions
-            int limit = pref.isShowAllPredictions() ? group.size()
-                    : Math.min(pref.getMaxPredictions(), group.size());
+            List<Double> confidences = group.stream() //
+                    .map(AnnotationSuggestion::getConfidence) //
+                    .collect(Collectors.toList());
 
-            for (int i = 0; i < limit; i++) {
-                RelationSuggestion suggestion = suggestions.get(i);
+            for (RelationSuggestion suggestion : group.bestSuggestions(pref)) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !suggestion.isVisible()) {
@@ -176,8 +173,14 @@ public class RecommendationRelationRenderer
 
                 vdoc.add(
                         new VComment(suggestion.getVID(), INFO, "Value: " + suggestion.getLabel()));
-                vdoc.add(new VComment(suggestion.getVID(), INFO, String
-                        .format("Confidence: %.2f", suggestion.getConfidence()).replace(",", ".")));
+
+                // TODO: Make lazy details usable with relations in BRAT
+                for (int i = 0; i < group.size(); i++) {
+                    String msg = String.format("%s: \nConfidence: %.2f", recommenderNames.get(i),
+                            confidences.get(i));
+
+                    vdoc.add(new VComment(suggestion.getVID(), INFO, msg));
+                }
 
                 vdoc.add(arc);
             }
