@@ -51,7 +51,8 @@ import org.slf4j.LoggerFactory;
 
 public class PerThreadSslCheckingHttpClientUtils
 {
-    private static final Logger LOG = LoggerFactory.getLogger(PerThreadSslCheckingHttpClientUtils.class);
+    private static final Logger LOG = LoggerFactory
+            .getLogger(PerThreadSslCheckingHttpClientUtils.class);
 
     private static final ThreadLocal<Deque<Boolean>> SSL_VERIFICATION_ENABLED = withInitial(
             () -> new LinkedList<Boolean>(asList(true)));
@@ -134,7 +135,7 @@ public class PerThreadSslCheckingHttpClientUtils
             @Override
             public Socket createSocket(HttpContext aContext) throws IOException
             {
-                LOG.info("createSocket (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
+                LOG.trace("createSocket (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
                 if (SSL_VERIFICATION_ENABLED.get().peek()) {
                     return factoryWithChecks.createSocket(aContext);
                 }
@@ -149,7 +150,7 @@ public class PerThreadSslCheckingHttpClientUtils
                     HttpContext aContext)
                 throws IOException
             {
-                LOG.info("connectSocket (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
+                LOG.trace("connectSocket (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
                 if (SSL_VERIFICATION_ENABLED.get().peek()) {
                     return factoryWithChecks.connectSocket(aConnectTimeout, aSock, aHost,
                             aRemoteAddress, aLocalAddress, aContext);
@@ -165,7 +166,7 @@ public class PerThreadSslCheckingHttpClientUtils
                     HttpContext aContext)
                 throws IOException, UnknownHostException
             {
-                LOG.info("createLayeredSocket (SSL checks: {})",
+                LOG.trace("createLayeredSocket (SSL checks: {})",
                         SSL_VERIFICATION_ENABLED.get().peek());
                 if (SSL_VERIFICATION_ENABLED.get().peek()) {
                     return factoryWithChecks.createLayeredSocket(aSocket, aTarget, aPort, aContext);
@@ -185,7 +186,7 @@ public class PerThreadSslCheckingHttpClientUtils
             @Override
             public Object getUserToken(HttpContext aContext)
             {
-                LOG.info("getUserToken (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
+                LOG.trace("getUserToken (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
 
                 if (SSL_VERIFICATION_ENABLED.get().peek()) {
                     return super.getUserToken(aContext);
