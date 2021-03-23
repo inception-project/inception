@@ -65,9 +65,8 @@ public abstract class ProjectPageBase
 
         if (project == null) {
             getSession().error(
-                    format("[%s] required a project to be selected", getClass().getSimpleName()));
-            setResponsePage(getApplication().getHomePage());
-
+                    format("[%s] requires a project to be selected", getClass().getSimpleName()));
+            throw new RestartResponseException(getApplication().getHomePage());
         }
 
         Set<PermissionLevel> roles = aRoles != null ? new LinkedHashSet<>(asList(aRoles))
@@ -89,7 +88,7 @@ public abstract class ProjectPageBase
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
 
-        setResponsePage(projectDashboard,
+        throw new RestartResponseException(projectDashboard,
                 new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
     }
 
