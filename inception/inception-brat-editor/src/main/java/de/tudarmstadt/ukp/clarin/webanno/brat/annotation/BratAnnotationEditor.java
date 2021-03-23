@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +125,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 public class BratAnnotationEditor
     extends AnnotationEditorBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = -1537506294440056609L;
 
     private static final String PARAM_ACTION = "action";
@@ -133,7 +135,9 @@ public class BratAnnotationEditor
     private static final String PARAM_OFFSETS = "offsets";
     private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    private static final String PARAM_SPAN_TYPE = "type";
+    private static final String PARAM_TYPE = "type";
+    private static final String PARAM_LAZY_DETAIL_DATABASE = "database";
+    private static final String PARAM_LAZY_DETAIL_KEY = "key";
 
     private static final String ACTION_CONTEXT_MENU = "contextMenu";
 
@@ -323,13 +327,13 @@ public class BratAnnotationEditor
 
         // We interpret the databaseParam as the feature which we need to look up the feature
         // support
-        StringValue databaseParam = request.getParameterValue("database");
+        StringValue databaseParam = request.getParameterValue(PARAM_LAZY_DETAIL_DATABASE);
 
         // We interpret the key as the feature value or as a kind of query to be handled by the
         // feature support
-        StringValue keyParam = request.getParameterValue("key");
+        StringValue keyParam = request.getParameterValue(PARAM_LAZY_DETAIL_KEY);
 
-        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
 
         if (layerParam.isEmpty() || databaseParam.isEmpty()) {
             return response;
@@ -409,7 +413,7 @@ public class BratAnnotationEditor
             VID paramId)
         throws AnnotationException, IOException
     {
-        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
 
         if (!layerParam.isEmpty()) {
             long layerId = decodeTypeName(layerParam.toString());

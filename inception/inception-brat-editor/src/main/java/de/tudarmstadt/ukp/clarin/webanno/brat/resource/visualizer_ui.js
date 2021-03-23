@@ -341,10 +341,8 @@ var VisualizerUI = (function($, window, undefined) {
                     return Util.cmp(a[2], b[2]);
                 }
 
-// WEBANNO EXTENSION BEGIN - #587 Customize mouse hover text   
             var displaySpanComment = function(
                 evt, target, spanId, spanType, mods, spanText, hoverText, commentText, commentType, normalizations) {
-// WEBANNO EXTENSION END - #587 Customize mouse hover text
 
                     var immediately = false;
                     var comment = ('<div><span class="comment_type_id_wrapper">' + '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, spanType)) + '</span>' + ' ' + '<span class="comment_id">' + 'ID:' + Util.escapeHTML(spanId) + '</span></span>');
@@ -354,13 +352,11 @@ var VisualizerUI = (function($, window, undefined) {
 
                     comment += '</div>';
                     
-// WEBANNO EXTENSION BEGIN - #587 Customize mouse hover text
                     if (hoverText != null) {
                         comment += ('<div class="comment_text">' + Util.escapeHTML(hoverText) + '</div>');
                     } else if (spanText) {
                         comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>');
                     }
-// WEBANNO EXTENSION END - #587 Customize mouse hover text
                     
                     var validArcTypesForDrag = dispatcher.post('getValidArcTypesForDrag', [spanId, spanType]);
                     if (validArcTypesForDrag && validArcTypesForDrag[0]) {
@@ -371,154 +367,20 @@ var VisualizerUI = (function($, window, undefined) {
                         }
                         immediately = true;
                     }
+
                     // process normalizations
                     var normsToQuery = [];
-                    $.each(normalizations != null ? normalizations : [], function(normNo, norm) {
-                        var dbName = norm[0],
-                            dbKey = norm[1];
-// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
-/*
-                        var dbName = norm[0],
-                            dbKey = norm[1];
-                        comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ':' + Util.escapeHTML(dbKey) + '</span>');
-                        if (dbName in normServerDbByNormDbName && normServerDbByNormDbName[dbName] != '<NONE>') {
-                            // DB available, add drop-off point to HTML and store
-                            // query parameters
-                            commentPopupNormInfoSeqId++;
-                            comment += ('<br/><div id="norm_info_drop_point_' + commentPopupNormInfoSeqId + '"/>');
-                            normsToQuery.push([dbName, dbKey, commentPopupNormInfoSeqId]);
-                        } else {
-                            // no DB, just attach "human-readable" text provided
-                            // with the annotation, if any
-                            if (norm[2]) {
-                                comment += ('<br/><span class="norm_info_value">' + Util.escapeHTML(norm[2]) + '</span>');
-                            }
-                        }
-*/
-                        if (norm[2]) {
-                            var cateogory = norm[0],
-                                key = norm[1];
-                                value = norm[2];
-                            // no DB, just attach "human-readable" text provided
-                            // with the annotation, if any
-                            if (cateogory) {
-                              comment += ```
-                                  <hr/>
-                                  <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
-                                  ```;
-                            }
-                            
-                            if (key) {
-                              comment += ```
-                                  <span class="norm_info_label">${Util.escapeHTML(key)}</span>
-                                  ```;
-                            }
-                            
-                            comment += ```
-                                  <span class="norm_info_value">${Util.escapeHTML(value).replace(/\n/g, "<br/>")}</span>
-                                  <br/>
-                                  ```;
-                        } else {
-                            // DB available, add drop-off point to HTML and store
-                            // query parameters
-                            var dbName = norm[0],
-                                dbKey = norm[1];
-                            commentPopupNormInfoSeqId++;
-                            if (dbKey) {
-                              comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ': ' + Util.escapeHTML(dbKey) + '</span><br/>');
-                            }
-                            else {
-                              comment += '<hr/>';
-                            }
-                            comment += ('<div id="norm_info_drop_point_' + commentPopupNormInfoSeqId + '"/>');
-                            normsToQuery.push([dbName, dbKey, commentPopupNormInfoSeqId]);
-                        }
-// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
-                    });
+                    comment += processNormalizations(normalizations, normsToQuery);
 
                     // display initial comment HTML 
                     displayComment(evt, target, comment, commentText, commentType, immediately);
 
                     // initiate AJAX calls for the normalization data to query
-                    $.each(normsToQuery, function(normqNo, normq) {
-                        // TODO: cache some number of most recent norm_get_data results
-                        var dbName = normq[0],
-                            dbKey = normq[1],
-                            infoSeqId = normq[2];
-                        dispatcher.post('ajax', [{
-                            action: 'normData',
-                            database: dbName,
-                            key: dbKey,
-                            collection: coll,
-// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
-                            id: spanId,
-                            type: spanType,
-// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
-                        }, function(response) {
-                            if (response.exception) {; // TODO: response to error
-// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
-/*
-                            } else if (!response.value) {; // TODO: response to missing key
-*/
-                            } else if (!response.results) {; // TODO: response to missing key
-// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
-                            } else {
-                                // extend comment popup with normalization data
-                                norminfo = '';
-                                // flatten outer (name, attr, info) array (idx for sort)
-                                infos = [];
-                                var idx = 0;
-// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
-/*
-                                for (var i = 0; i < response.value.length; i++) {
-                                    for (var j = 0; j < response.value[i].length; j++) {
-                                        var label = response.value[i][j][0];
-                                        var value = response.value[i][j][1];
-                                        infos.push([label, value, idx++]);
-                                    }
-                                }
-*/
-                                for (var j = 0; j < response.results.length; j++) {
-                                    var label = response.results[j][0];
-                                    var value = response.results[j][1];
-                                    infos.push([label, value, idx++]);
-                                }
-// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
-                                // sort, prioritizing images (to get floats right)
-                                infos = infos.sort(normInfoSortFunction);
-                                // generate HTML
-                                for (var i = 0; i < infos.length; i++) {
-                                    var label = infos[i][0];
-                                    var value = infos[i][1];
-                                    if (label && value) {
-                                        // special treatment for some label values
-                                        if (label.toLowerCase() == '<img>') {
-                                            // image
-                                            norminfo += ('<img class="norm_info_img" src="' + value + '"/>');
-                                        } else {
-                                            // normal, as text
-                                            // max length restriction
-                                            if (value.length > 300) {
-                                                value = value.substr(0, 300) + ' ...';
-                                            }
-
-                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ': ' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
-                                        }
-                                    }
-                                }
-                                var drop = $('#norm_info_drop_point_' + infoSeqId);
-                                if (drop) {
-                                    drop.html(norminfo);
-                                } else {
-                                    console.log('norm info drop point not found!'); //TODO XXX
-                                }
-                            }
-                        }]);
-                    });
+                    $.each(normsToQuery, (normNo, norm) => initiateNormalizationAjaxCall(spanId, spanType, norm));
                 };
 
             var displayArcComment = function(
-                evt, target, symmetric, arcId, originSpanId, originSpanType, role, targetSpanId, targetSpanType, commentText, commentType) {
+                evt, target, symmetric, arcId, originSpanId, originSpanType, role, targetSpanId, targetSpanType, commentText, commentType, normalizations) {
                     var arcRole = target.attr('data-arc-role');
                     // in arrowStr, &#8212 == mdash, &#8594 == Unicode right arrow
                     var arrowStr = symmetric ? '&#8212;' : '&#8594;';
@@ -526,8 +388,122 @@ var VisualizerUI = (function($, window, undefined) {
                     var comment = "";
                     comment += ('<span class="comment_type_id_wrapper">' + '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, originSpanType)) + ' ' + arrowStr + ' ' + Util.escapeHTML(arcDisplayForm) + ' ' + arrowStr + ' ' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, targetSpanType)) + '</span>' + '<span class="comment_id">' + (arcId ? 'ID:' + arcId : Util.escapeHTML(originSpanId) + arrowStr + Util.escapeHTML(targetSpanId)) + '</span>' + '</span>');
                     comment += ('<div class="comment_text">' + Util.escapeHTML('"' + data.spans[originSpanId].text + '"') + arrowStr + Util.escapeHTML('"' + data.spans[targetSpanId].text + '"') + '</div>');
+
+                    // process normalizations
+                    var normsToQuery = [];
+                    comment += processNormalizations(normalizations, normsToQuery);
+
                     displayComment(evt, target, comment, commentText, commentType);
+
+                    // initiate AJAX calls for the normalization data to query
+                    $.each(normsToQuery, (normNo, norm) => initiateNormalizationAjaxCall(arcId, arcRole, norm));
                 };
+
+            var processNormalizations = function(normalizations, normsToQuery) {
+              var comment = "";
+              $.each(normalizations != null ? normalizations : [], function(normNo, norm) {
+                var dbName = norm[0],
+                    dbKey = norm[1];
+                if (norm[2]) {
+                    var cateogory = norm[0],
+                        key = norm[1];
+                        value = norm[2];
+                    // no DB, just attach "human-readable" text provided
+                    // with the annotation, if any
+                    if (cateogory) {
+                      comment += ```
+                          <hr/>
+                          <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
+                          ```;
+                    }
+                    
+                    if (key) {
+                      comment += ```
+                          <span class="norm_info_label">${Util.escapeHTML(key)}</span>
+                          ```;
+                    }
+                    
+                    comment += ```
+                          <span class="norm_info_value">${Util.escapeHTML(value).replace(/\n/g, "<br/>")}</span>
+                          <br/>
+                          ```;
+                } else {
+                    // DB available, add drop-off point to HTML and store
+                    // query parameters
+                    var dbName = norm[0],
+                        dbKey = norm[1];
+                    commentPopupNormInfoSeqId++;
+                    if (dbKey) {
+                      comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ': ' + Util.escapeHTML(dbKey) + '</span><br/>');
+                    }
+                    else {
+                      comment += '<hr/>';
+                    }
+                    comment += ('<div id="norm_info_drop_point_' + commentPopupNormInfoSeqId + '"/>');
+                    normsToQuery.push([dbName, dbKey, commentPopupNormInfoSeqId]);
+                }
+              });           
+              return comment; 
+            }
+
+            var initiateNormalizationAjaxCall = function(id, type, normq) {
+              // TODO: cache some number of most recent norm_get_data results
+              var dbName = normq[0],
+                  dbKey = normq[1],
+                  infoSeqId = normq[2];
+              dispatcher.post('ajax', [{
+                  action: 'normData',
+                  database: dbName,
+                  key: dbKey,
+                  collection: coll,
+                  id: id,
+                  type: type,
+              }, function(response) {
+                  if (response.exception) {; // TODO: response to error
+                  } else if (!response.results) {; // TODO: response to missing key
+                  } else {
+                      // extend comment popup with normalization data
+                      norminfo = '';
+                      // flatten outer (name, attr, info) array (idx for sort)
+                      infos = [];
+                      var idx = 0;
+                      for (var j = 0; j < response.results.length; j++) {
+                          var label = response.results[j][0];
+                          var value = response.results[j][1];
+                          infos.push([label, value, idx++]);
+                      }
+
+                      // sort, prioritizing images (to get floats right)
+                      infos = infos.sort(normInfoSortFunction);
+                      // generate HTML
+                      for (var i = 0; i < infos.length; i++) {
+                          var label = infos[i][0];
+                          var value = infos[i][1];
+                          if (label && value) {
+                              // special treatment for some label values
+                              if (label.toLowerCase() == '<img>') {
+                                  // image
+                                  norminfo += ('<img class="norm_info_img" src="' + value + '"/>');
+                              } else {
+                                  // normal, as text
+                                  // max length restriction
+                                  if (value.length > 300) {
+                                      value = value.substr(0, 300) + ' ...';
+                                  }
+
+                                  norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ': ' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
+                              }
+                          }
+                      }
+                      var drop = $('#norm_info_drop_point_' + infoSeqId);
+                      if (drop) {
+                          drop.html(norminfo);
+                      } else {
+                          console.log('norm info drop point not found!'); //TODO XXX
+                      }
+                  }
+              }]);
+            }
 
             var displaySentComment = function(
                 evt, target, commentText, commentType) {
