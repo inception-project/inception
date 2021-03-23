@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,7 +40,6 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.XMLInputSource;
 import org.apache.uima.util.XmlCasDeserializer;
-import org.dkpro.core.api.datasets.DatasetFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,14 +49,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class StringMatchingRelationRecommenderTest
 {
-    private static final File cache = DkproTestHelper.getCacheFolder();
-    private static final DatasetFactory loader = new DatasetFactory(cache);
-
     private static final String RELATION_LAYER = "webanno.custom.MyRelationLayer";
     private static final String RELATION_BASE = "webanno.custom.MyRelationBase";
 
