@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,10 +26,13 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -70,7 +73,7 @@ public class StringMatchingRelationRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        MultiValuedMap<Pair<String, String>, String> model = new HashSetValuedHashMap<>();
+        MultiValuedMap<Pair<String, String>, String> model = new ArrayListValuedHashMap<>();
 
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
@@ -114,6 +117,7 @@ public class StringMatchingRelationRecommender
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Type attachType = getAttachType(aCas);
         Feature attachFeature = getAttachFeature(aCas);
+        Feature scoreFeature = getScoreFeature(aCas);
 
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
             Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sentence);
@@ -127,13 +131,23 @@ public class StringMatchingRelationRecommender
                     String governorLabel = governor.getStringValue(attachFeature);
 
                     Pair<String, String> key = Pair.of(dependentLabel, governorLabel);
-                    for (String relationLabel : model.get(key)) {
+                    Collection<String> occurrences = model.get(key);
+                    Map<String, Long> numberOfOccurencesPerLabel = occurrences.stream() //
+                            .collect(Collectors.groupingBy(Function.identity(),
+                                    Collectors.counting()));
+
+                    double totalNumberOfOccurrences = occurrences.size();
+
+                    for (String relationLabel : occurrences) {
+                        double confidence = numberOfOccurencesPerLabel.get(relationLabel)
+                                / totalNumberOfOccurrences;
                         AnnotationFS prediction = aCas.createAnnotation(predictedType,
                                 governor.getBegin(), governor.getEnd());
                         prediction.setFeatureValue(governorFeature, governor);
                         prediction.setFeatureValue(dependentFeature, dependent);
                         prediction.setStringValue(predictedFeature, relationLabel);
                         prediction.setBooleanValue(isPredictionFeature, true);
+                        prediction.setDoubleValue(scoreFeature, confidence);
                         aCas.addFsToIndexes(prediction);
                     }
                 }

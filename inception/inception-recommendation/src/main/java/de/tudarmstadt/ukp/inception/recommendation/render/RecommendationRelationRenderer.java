@@ -158,7 +158,8 @@ public class RecommendationRelationRenderer
                 featureAnnotation.put(suggestion.getFeature(), annotation);
 
                 VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
-                        new VID(target), suggestion.getUiLabel(), featureAnnotation, COLOR);
+                        new VID(target), "\uD83E\uDD16 " + suggestion.getUiLabel(),
+                        featureAnnotation, COLOR);
 
                 arc.addLazyDetails(featureSupport.getLazyDetails(feature, suggestion.getLabel()));
                 arc.addLazyDetail(new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
