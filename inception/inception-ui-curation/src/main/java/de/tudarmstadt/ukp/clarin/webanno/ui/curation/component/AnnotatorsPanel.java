@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -138,6 +139,7 @@ public class AnnotatorsPanel
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
+    private @SpringBean BratAnnotationEditorProperties bratProperties;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegment>> aModel)
     {
@@ -426,7 +428,7 @@ public class AnnotatorsPanel
                 aBratAnnotatorModel.getWindowEndOffset(), aCas, layersToRender);
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer renderer = new BratRenderer(schemaService, coloringService);
+        BratRenderer renderer = new BratRenderer(schemaService, coloringService, bratProperties);
         renderer.render(response, aBratAnnotatorModel, vdoc, aCas, aCurationColoringStrategy);
         return JSONUtil.toInterpretableJsonString(response);
     }
