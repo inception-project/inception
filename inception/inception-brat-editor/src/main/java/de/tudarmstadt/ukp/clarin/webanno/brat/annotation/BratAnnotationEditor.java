@@ -749,7 +749,8 @@ public class BratAnnotationEditor
     {
         AnnotatorState aState = getModelObject();
         VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-        BratRenderer renderer = new BratRenderer(annotationService, coloringService);
+        BratRenderer renderer = new BratRenderer(annotationService, coloringService,
+                bratProperties);
         renderer.render(response, aState, vdoc, aCas);
     }
 

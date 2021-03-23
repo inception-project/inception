@@ -25,6 +25,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -64,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
@@ -101,11 +103,14 @@ public class BratRenderer
 
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
+    private final BratAnnotationEditorProperties properties;
 
-    public BratRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
+    public BratRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService,
+            BratAnnotationEditorProperties aProperties)
     {
         schemaService = aSchemaService;
         coloringService = aColoringService;
+        properties = aProperties;
     }
 
     public void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
@@ -272,7 +277,7 @@ public class BratRenderer
         return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
     }
 
-    public static void renderText(CAS aCas, GetDocumentResponse aResponse, AnnotatorState aState)
+    public void renderText(CAS aCas, GetDocumentResponse aResponse, AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
         int windowEnd = aState.getWindowEndOffset();
@@ -647,12 +652,14 @@ public class BratRenderer
         }
     }
 
-    private static String sanitizeVisibleText(String aText)
+    private String sanitizeVisibleText(String aText)
     {
         // NBSP is recognized by Firefox as a proper addressable character in
         // SVGText.getNumberOfChars()
-        // char whiteplaceReplacementChar = '\u00A0'; // NBSP
-        char whiteplaceReplacementChar = '\uFFFD'; // NBSP
+        char whiteplaceReplacementChar = '\u00A0'; // NBSP
+        if (isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
+            whiteplaceReplacementChar = properties.getWhiteSpaceReplacementCharacter().charAt(0);
+        }
 
         char[] chars = aText.toCharArray();
         for (int i = 0; i < chars.length; i++) {
