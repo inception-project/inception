@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -96,11 +95,8 @@ public class ExportDocumentDialogContent
         }
         catch (Exception e) {
             LOG.error("Export failed", e);
-            error("Export failed:" + ExceptionUtils.getRootCauseMessage(e));
-            // This will cause the open dialog to pop up again, but at least
-            // the error feedback message will be visible. With the
-            // RestartResponseException the feedback message only flashes.
-            throw new NonResettingRestartException(getPage().getPageClass());
+            getSession().error("Export failed: " + ExceptionUtils.getRootCauseMessage(e));
+            return null;
         }
     }
 

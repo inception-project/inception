@@ -19,7 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -59,12 +63,22 @@ public abstract class ProjectPageBase
     {
         Project project = getProjectModel().getObject();
 
+        if (project == null) {
+            getSession().error(
+                    format("[%s] required a project to be selected", getClass().getSimpleName()));
+            setResponsePage(getApplication().getHomePage());
+
+        }
+
+        Set<PermissionLevel> roles = aRoles != null ? new LinkedHashSet<>(asList(aRoles))
+                : emptySet();
+
         // Check access to project
         if (!projectService.hasRole(aUser, project, aRoles)) {
-            getSession().error(format(
-                    "You require any of the [%s] roles to access the [%s] for project [%s]",
-                    asList(aRoles).stream().map(PermissionLevel::getId).collect(joining(", ")),
-                    getClass().getSimpleName(), project.getName()));
+            getSession().error(
+                    format("You require any of the [%s] roles to access the [%s] for project [%s]",
+                            roles.stream().map(PermissionLevel::getId).collect(joining(", ")),
+                            getClass().getSimpleName(), project.getName()));
 
             backToProjectPage();
         }
