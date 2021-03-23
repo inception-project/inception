@@ -1,0 +1,69 @@
+// Standard 'black' (well, not quite) type
+$line-color:#3f3f3f;
+
+.r6o-drawing {
+  cursor:none;
+}
+
+.r6o-relations-layer.readonly {
+
+  .handle rect {
+    pointer-events:none;
+  }
+  
+}
+
+.r6o-relations-layer {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+
+  circle {
+    stroke:lighten($line-color, 7%);
+    stroke-width:0.4;
+    fill:$line-color;
+  }
+  
+  path {
+    stroke:lighten($line-color, 10%);
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    fill:transparent;
+  }
+
+  path.connection {
+    stroke-width:1.6;
+    stroke-dasharray:2,3;
+  }
+
+  path.r6o-arrow {
+    stroke-width:1.8;
+    fill:lighten($line-color, 25%);
+  }
+
+  .handle {
+
+    rect {
+      stroke-width:1;
+      stroke:lighten($line-color, 10%);
+      fill:#fff;
+      pointer-events:auto;
+      cursor:pointer;
+    }
+
+    text {
+      font-size:10px;
+    }
+
+  }
+
+  .hover {
+    stroke:rgba($line-color, 0.9);
+    stroke-width:1.4;
+    fill:transparent;
+  }
+
+}

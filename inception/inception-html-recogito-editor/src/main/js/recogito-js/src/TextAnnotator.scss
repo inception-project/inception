@@ -1,0 +1,94 @@
+@import '@recogito/recogito-client-core/themes/default/theme.scss';
+
+.r6o-annotation {
+  background-color:rgba(255, 165, 0, 0.2);
+  border-bottom:2px solid orange;
+  cursor:pointer;
+}
+
+.r6o-selection {
+  background-color:rgba(207, 207, 255, 0.63);
+  cursor:pointer;
+}
+
+.r6o-hide-selection::selection, .r6o-hide-selection ::selection {
+  background: transparent;
+}
+
+.r6o-hide-selection::-moz-selection .r6o-hide-selection ::-moz-selection{
+  background: transparent;
+}
+
+.r6o-relation-editor {
+  position:absolute;
+  font-family:'Lato', sans-serif;
+  font-size:17px;
+  line-height:27px;
+  @include box-shadow(0, 1px, 14px, 0.4);
+  @include rounded-corners(3px);
+  transform:translate(-50%, -50%);
+  background-color:#fff;
+
+  svg {
+    vertical-align:middle;
+    shape-rendering: geometricPrecision;
+  }
+
+  * {
+    box-sizing:border-box;
+  }
+
+  .input-wrapper {
+    height:34px;
+    padding:0 6px;
+    margin-right:68px;
+    font-size:14px;
+    background-color:$blueish-white;
+    cursor:text;
+    @include rounded-corners-left(3px);
+    
+    .r6o-autocomplete ul {
+      position:relative;
+      left:-6px;
+    }
+  }
+
+  .buttons {
+    position:absolute;
+    display:inline-flex;
+    top:0;
+    right:0;
+
+    span {
+      height:34px;
+      display:inline-block;
+      width:34px;
+      text-align:center;
+      font-size:14px;
+      cursor:pointer;
+      padding:1px 0;
+    }
+
+    .delete {
+      background-color:#fff;
+      color:$lightblue-type;
+      border-left:1px solid $lightgrey-border;
+    }
+
+    .delete:hover {
+      background-color:#f6f6f6;
+    }
+
+    .ok {
+      background-color:$ocean;
+      color:#fff;
+      @include rounded-corners-right(3px);
+    }
+
+    .ok:hover {
+      background-color:$ocean-hover;
+    }
+
+  }
+
+}
