@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -86,6 +87,7 @@ public class AnnotationPreferencesDialogContent
     private final ModalWindow modalWindow;
     private final Form<Preferences> form;
     private final IModel<AnnotatorState> stateModel;
+    private final List<Pair<String, String>> editorChoices;
 
     public AnnotationPreferencesDialogContent(String aId, final ModalWindow aModalWindow,
             IModel<AnnotatorState> aModel)
@@ -94,6 +96,11 @@ public class AnnotationPreferencesDialogContent
 
         stateModel = aModel;
         modalWindow = aModalWindow;
+
+        editorChoices = annotationEditorRegistry.getEditorFactories().stream()
+                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
+                .collect(Collectors.toList());
+        editorChoices.add(0, Pair.of(null, "Auto (based on document format)"));
 
         form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
@@ -114,9 +121,6 @@ public class AnnotationPreferencesDialogContent
         fontZoomField.setMaximum(AnnotationPreference.FONT_ZOOM_MAX);
         form.add(fontZoomField);
 
-        List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
-                .collect(Collectors.toList());
         DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
@@ -207,12 +211,13 @@ public class AnnotationPreferencesDialogContent
         model.rememberLayer = prefs.isRememberLayer();
         model.collapseArcs = prefs.isCollapseArcs();
 
-        AnnotationEditorFactory editorFactory = annotationEditorRegistry
-                .getEditorFactory(state.getPreferences().getEditor());
-        if (editorFactory == null) {
-            editorFactory = annotationEditorRegistry.getDefaultEditorFactory();
-        }
-        model.editor = Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
+        model.editor = editorChoices.stream().filter(
+                editor -> Objects.equals(editor.getKey(), state.getPreferences().getEditor()))
+                .findFirst().orElseGet(() -> {
+                    AnnotationEditorFactory editorFactory = annotationEditorRegistry
+                            .getDefaultEditorFactory();
+                    return Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
+                });
 
         model.annotationLayers = annotationService.listAnnotationLayer(state.getProject()).stream()
                 // hide disabled Layers
