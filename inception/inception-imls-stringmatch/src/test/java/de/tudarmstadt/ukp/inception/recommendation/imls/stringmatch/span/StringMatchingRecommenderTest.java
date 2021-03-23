@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -32,6 +31,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
@@ -64,8 +64,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
@@ -116,7 +114,7 @@ public class StringMatchingRecommenderTest
         CAS cas = casList.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        sut.train(context, asList(cas));
+        sut.train(context, Collections.singletonList(cas));
 
         sut.predict(context, cas);
 
@@ -141,7 +139,7 @@ public class StringMatchingRecommenderTest
         CAS cas = getTestCasNoLabelLabels();
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        sut.train(context, asList(cas));
+        sut.train(context, Collections.singletonList(cas));
 
         sut.predict(context, cas);
 
@@ -352,13 +350,13 @@ public class StringMatchingRecommenderTest
     {
         JCas jcas = JCasFactory.createText(aText, "de");
 
-        for (int j = 0; j < aSentIndices.length; j++) {
-            Sentence newSent = new Sentence(jcas, aSentIndices[j][0], aSentIndices[j][1]);
+        for (int[] aSentIndex : aSentIndices) {
+            Sentence newSent = new Sentence(jcas, aSentIndex[0], aSentIndex[1]);
             newSent.addToIndexes();
         }
 
-        for (int k = 0; k < aTokenIndices.length; k++) {
-            Token newToken = new Token(jcas, aTokenIndices[k][0], aTokenIndices[k][1]);
+        for (int[] aTokenIndex : aTokenIndices) {
+            Token newToken = new Token(jcas, aTokenIndex[0], aTokenIndex[1]);
             newToken.addToIndexes();
         }
 
@@ -380,7 +378,7 @@ public class StringMatchingRecommenderTest
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
 
-        double score = sut.evaluate(asList(), splitStrategy).computeF1Score();
+        double score = sut.evaluate(emptyList(), splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
 
