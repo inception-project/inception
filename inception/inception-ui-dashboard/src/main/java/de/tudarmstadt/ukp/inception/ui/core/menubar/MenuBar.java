@@ -26,6 +26,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -68,16 +69,12 @@ public class MenuBar
                     .setVisible(false));
         }
 
+        User user = userRepository.getCurrentUser();
+
         add(new BookmarkablePageLink<>(CID_PROJECTS_LINK, ProjectsOverviewPage.class)
-                .add(visibleWhen(() -> userRepository.getCurrentUser() != null)));
+                .add(visibleWhen(() -> user != null)));
 
         add(new BookmarkablePageLink<>(CID_ADMIN_LINK, AdminDashboardPage.class)
-                .add(visibleWhen(this::adminAreaAccessRequired)));
-    }
-
-    private boolean adminAreaAccessRequired()
-    {
-        return userRepository.getCurrentUser() != null
-                && AdminDashboardPage.adminAreaAccessRequired(userRepository, projectService);
+                .add(visibleWhen(() -> user != null && userRepository.isAdministrator(user))));
     }
 }
