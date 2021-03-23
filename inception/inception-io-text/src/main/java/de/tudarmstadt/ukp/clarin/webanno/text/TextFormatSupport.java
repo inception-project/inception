@@ -37,7 +37,7 @@ public class TextFormatSupport
     implements FormatSupport
 {
     public static final String ID = "text";
-    public static final String NAME = "Plain text (Unicode / UTF-8)";
+    public static final String NAME = "Plain text";
 
     @Override
     public String getId()
