@@ -1,0 +1,57 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+  <wicket:panel>
+    <div class="flex-content flex-gutter" style="padding: 4px; margin: 4px">
+      <div class="card-body">
+        <label><wicket:message key="instruction"/></label>
+      </div>
+	  <div wicket:id="invitelinkContainer" class="flex-content flex-v-container">
+	      <div class="flex-h-container flex-centered flex-gutter card-body">
+		  <wicket:message key="invite"/>
+		  <input wicket:id="linkText" class="target flex-content" type="text" readonly/>
+		  <button wicket:id="regen" class="btn btn-primary"><i class="fas fa-sync" wicket:message="title:regen"></i></button>
+		  <button wicket:id="copy" class="btn btn-secondary"><i class="fas fa-paste" wicket:message="title:copy"></i></button>
+		  <span wicket:id="datePickContainer" class="dropdown" aria-haspopup="true" aria-expanded="false">
+		    <button class="btn btn-secondary dropdown-toggle" data-toggle="collapse" data-target="#datePickerCollapse">
+		      <i class="fas fa-clock" wicket:message="title:setDate"></i>
+		    </button>
+		    <div id="datePickerCollapse" class="dropdown-menu dropdown-menu-right" role="menu">
+		    <form wicket:id="datePickForm">
+		       <div class="card-header"><wicket:message key="setDate"></wicket:message></div>
+		       <div class="card-body flex-v-container flex-gutter">
+		         <input wicket:id="datePicker" type="date"/>
+		         <button wicket:id="submitDateLink" type="submit" class="btn btn-secondary"><wicket:message key="save"></wicket:message></button>
+		       </div>
+		    </form>
+		    </div>
+		  </span>
+		  <button wicket:id="remove" class="btn btn-danger"><i class="fas fa-trash" wicket:message="title:remove"></i></button>
+		  </div>
+		  <div class="flex-h-container flex-centered card-body">
+		    <wicket:enclosure child="expirationDate">
+	          <wicket:message key="expires">
+	            <span wicket:id="expirationDate"></span>
+	            <a wicket:id="extendLink"><wicket:message key="here"></wicket:message></a>
+	          </wicket:message>
+	        </wicket:enclosure>
+	      </div>
+	  </div>
+	</div>
+  </wicket:panel>
+</html>

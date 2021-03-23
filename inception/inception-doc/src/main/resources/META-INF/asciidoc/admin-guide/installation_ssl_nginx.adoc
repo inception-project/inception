@@ -1,0 +1,280 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= NGINX as reverse proxy
+
+This section describes using link:https://www.nginx.com/[NGINX] as a web server serving as a reverse proxy for INCEpTION.
+It further assumes that you want to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL certificates.
+
+* You can install NGINX by typing
+
+----
+$ apt-get update
+$ apt-get install nginx
+----
+
+* Verify the installation with
+
+----
+$ systemctl status nginx
+Output:
+● nginx.service - A high-performance web server and a reverse proxy server
+   Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+   Active: active (running) since Mon 2019-01-21 14:42:01 CET; 20h ago
+     Docs: man:nginx(8)
+  Process: 7947 ExecStop=/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid (code=exited, status=0/SUCCESS)
+  Process: 7953 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+  Process: 7950 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+ Main PID: 7955 (nginx)
+    Tasks: 9 (limit: 4915)
+   CGroup: /system.slice/nginx.service
+           ├─7955 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+           ├─7956 nginx: worker process
+----
+
+* You can stop, start or restart NGINX with
+
+----
+$ systemctl stop nginx
+
+$ systemctl start nginx
+
+$ systemctl restart nginx
+----
+
+=== Obtaining a Let's Encrypt certificate
+
+The Certification Authority (CA) _Let's Encrypt_ provides free TLS/SSL certificates.
+These certificates allow for secure HTTPS connections on web servers.
+_Let's Encrypt_ provides the software Certbot which automates the obtaining process for NGINX.
+
+* link:https://backports.debian.org/Instructions/[Enable the Stretch backports repo] if needed
+
+* Install Certbot preconfigured for NGINX
+
+----
+$ apt-get install python-certbot-nginx -t stretch-backports
+----
+
+* Obtain the certificates for your domain `example.com`
+
+----
+$ certbot --nginx certonly -d example.com
+----
+
+* You will be prompted to enter your e-mail address and asked to agree to the terms of service.
+Certificate renewal information will be sent to this e-mail.
+If the certification process is successful it will yield the information where your certificates can be found.
+
+----
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at
+   /etc/letsencrypt/live/example.com/fullchain.pem. Your cert will
+   expire on 2019-04-22. To obtain a new or tweaked version of this
+   certificate in the future, simply run certbot again with the
+   "certonly" option. To non-interactively renew *all* of your
+   certificates, run "certbot renew"
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+----
+
+NOTE: Certificates issued by _Let's Encrypt_ are valid for 90 days.
+You will receive an expiry notification to the e-mail address you provided during the certification process.
+
+* Run Certbot with the command `renew` to renew all certificates that are due.
+You can also create a cron job for this purpose.
+The command for renewal is
+
+----
+$ certbot --nginx renew
+----
+
+* You can simulate the certificate renewal process with the command
+
+----
+$ certbot --nginx renew --dry-run
+----
+
+* The directory `/etc/letsencrypt/live/example.com/` now contains the necessary certificates to proceed
+
+----
+$ ls /etc/letsencrypt/live/example.com
+Output:
+cert.pem  chain.pem  fullchain.pem  privkey.pem
+----
+
+=== Putting it all together
+
+By now you should have
+
+* {product-name} running on port 8080
+* NGINX running with default configurations on port 80
+* your issued SSL certificates
+
+NOTE: If you are running {product-name} on a different port than 8080, please make sure to adjust the configurations below accordingly!
+
+We will now configure NGINX to proxy pass all traffic received at `example.com/inception` to our {product-name} instance.
+
+Create a new virtual host for your domain.
+Inside of `/etc/nginx-sites-available/` create a new file for your domain (e.g. `example.com`).
+Paste the following contents:
+
+----
+# Server block for insecure http connections on port 80. Redirect to https on port 443
+server {
+        listen          80;
+        listen          [::]:80;
+        server_name     example.com;
+        return          301 https://$server_name$request_uri;
+}
+
+# Server block for secure https connections
+server {
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        server_name inception.example.com;
+
+        ssl on;
+
+        # Replace certificate paths
+        ssl_certificate         /etc/letsencrypt/live/example.com/fullchain.pem;
+        ssl_certificate_key     /etc/letsencrypt/live/example.com/privkey.pem;
+        ssl_trusted_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+
+        # Modern SSL Config from
+        # https://mozilla.github.io/server-side-tls/ssl-config-generator/
+        ssl_protocols TLSv1.2;
+        ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';
+        ssl_prefer_server_ciphers on;
+        ssl_session_timeout 1d;
+        ssl_session_tickets off;
+        add_header Strict-Transport-Security max-age=15768000;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+
+        ignore_invalid_headers off; #pass through headers from INCEpTION which are considered invalid by NGINX server.
+
+        # Change body size if needed. This defines the maximum upload size for files.
+        client_max_body_size    10M;
+
+        # Uncommend this for a redirect from example.com to example.com/inception
+        #location / {
+        #    return 301 https://$host/inception;
+        #}
+
+        location ^~ /inception/ {
+            proxy_pass http://127.0.0.1:8080/inception/;
+            proxy_redirect default;
+            proxy_http_version 1.1;
+
+            proxy_set_header   Host             $host;
+            proxy_set_header   X-Real-IP        $remote_addr;
+            proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_max_temp_file_size 0;
+
+            proxy_connect_timeout      180;
+            proxy_send_timeout         180;
+            proxy_read_timeout         180;
+
+            proxy_temp_file_write_size 64k;
+
+            # Required for new HTTP-based CLI
+            proxy_request_buffering off;
+            proxy_buffering off; # Required for HTTP-based CLI to work over SSL
+            proxy_set_header Connection ""; # Clear for keepalive
+    }
+
+    # Deny access to Apache .htaccess files. They have no special meaning for NGINX and might leak sensitive information
+    location ~ /\.ht {
+            deny all;
+    }
+}
+----
+
+Create a symlink for the new configuration file to the folder for accessible websites:
+
+----
+$ ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/example.com
+----
+
+Test if the NGINX configuration file works without restarting (and possibly breaking) the webserver:
+
+----
+$ nginx -t
+Output:
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+----
+
+If the config works restart the webserver to enable the new site
+
+----
+$ service nginx restart
+----
+
+=== Tell {product-name} that it is running behind a proxy
+
+If you are running {product-name} via the JAR file, edit the `settings.properties` file to add these settings:
+
+----
+server.tomcat.internal-proxies=127\.0\.[0-1]\.1
+server.tomcat.remote-ip-header=x-forwarded-for
+server.tomcat.accesslog.request-attributes-enabled=true
+server.tomcat.protocol-header=x-forwarded-proto
+server.tomcat.protocol-header-https-value=https
+----
+
+Restart {product-name}
+
+----
+$ service inception restart
+----
+
+{product-name} now knows how to interpret the proxy header fields from NGINX.
+With this step, everything is now set up to access {product-name} trough a secure https connection.
+
+=== CSRF protection
+
+Depending on your situation, you may get an error message such as this when trying to use
+{product-name}.
+
+[example]
+====
+Whitelabel Error Page This application has no explicit mapping for /error, so you are seeing this as a fallback.
+
+Fri Nov 29 14:01:15 BRT 2019 There was an unexpected error (type=Bad Request, status=400).
+Origin does not correspond to request
+====
+
+If this is the case, then CSRF protection is kicking in.
+What seems to work in this case is to turn off CSRF entirely by adding the following lines to your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>):
+
+----
+wicket.core.csrf.enabled=false
+wicket.core.csrf.no-origin-action=allow
+wicket.core.csrf.conflicting-origin-action=allow
+----
+
+NOTE: **Turning off a security feature is obviously not a great solution.** Better check out the documentation for the link:https://github.com/MarcGiffing/wicket-spring-boot/blob/master/README.adoc#core---prevention-of-csrf-attacks[Wicket Spring Boot CSRF settings] and if you figure out a better solution than the above, please get in touch with use via our
+link:https://github.com/inception-project/inception/issues[issue tracker].

@@ -1,0 +1,123 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Running via embedded Tomcat (JAR)
+
+The {product-name} standalone JAR with an embedded Tomcat server and can be easily set up as a UNIX service.
+This is the recommended way of running {product-name} on a server.
+
+The instructions below expect a Debian Linux system.
+Details may vary on other OSes and Linux distributions.
+
+== Installing as a service
+
+To set it up as a service, you can do the following steps.
+For the following example, we assume that you install {product-name} in `/srv/inception`:
+
+* Copy the standalone JAR file `inception-app-standalone-{revnumber}.jar` to `/srv/inception/inception.jar`.
+Note the change of the filename to `inception.jar`.
+* Create the file `/srv/inception/inception.conf` with the following content
++
+[source,text]
+----
+JAVA_OPTS="-Djava.awt.headless=true -Dinception.home=/srv/inception"
+----
++
+* In the previous step, you have already created the `/srv/inception/settings.properties` file.
+You *may optionally* configure the Tomcat port using the following line
++
+[source,text]
+----
+server.port=18080
+----
++
+If you need to do additional configurations of the embedded Tomcat, best refer to the documentation of Spring Boot itself.
++
+* We will run {product-name} as the user `www-data`.
+Change the owner/group of `/srv/inception/inception.jar` to `www-data`.
+**Do NOT run {product-name} as root.**
++
+[source,bash]
+----
+$ chown www-data:www-data /srv/inception/inception.jar
+----
++
+* Make the JAR file executable:
++
+[source,bash]
+----
+$ chmod +x /srv/inception/inception.jar
+----
++
+* Create a file `/etc/systemd/system/inception.service` with the following content:
++
+[source,bash]
+----
+[Unit]
+Description=INCEpTION
+
+[Service]
+ExecStart=/srv/inception/inception.jar
+User=www-data
+
+[Install]
+WantedBy=multi-user.target
+----
++
+* Enable the {product-name} service using
++
+[source,bash]
+----
+$ systemctl enable inception
+----
++
+* Start {product-name} using
++
+[source,bash]
+----
+$ systemctl start inception
+----
++
+* Check the log output
++
+[source,bash]
+----
+$ journalctl -u inception
+----
++
+* Stop {product-name} using
++
+[source,bash]
+----
+$ systemctl stop inception
+----
+
+NOTE: If you encounter strange errors, e.g. `+{status=203/EXEC}+`  and INCEpTION starts when directly executing the jar but not via systemd, then we recommend to disable SELinux.
+
+== Loading extra Java libraries
+
+When running an application from a fat JAR (i.e. using `java -jar ...`), there is no way that you can specify extra libraries for the application to load (e.g. a database driver).
+Therefore,
+{product-name} offers a special approach that works around this limitation.
+
+In order to have the application load additional JAR files during startup, create a folder `lib` in the application home folder.
+Place any JARs that you want to load into that folder.
+
+To check if the loading works as expected, you can add the parameter `-Dloader.debug=true` when starting up {product-name}.

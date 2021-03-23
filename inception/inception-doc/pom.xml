@@ -1,0 +1,91 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    <artifactId>inception-app</artifactId>
+    <version>0.20.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>inception-doc</artifactId>
+  <packaging>jar</packaging>
+  <name>INCEpTION - Documentation</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj-api</artifactId>
+      <version>${asciidoctor.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj</artifactId>
+      <version>${asciidoctor.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj-diagram</artifactId>
+      <version>${asciidoctor-diagram.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>jquery.tocify.js</artifactId>
+      <version>1.9.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>jquery-migrate</artifactId>
+      <version>3.0.0</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <!--
+                - Maven doesn't detect that we tell asciidoctor to use the diagram module
+              -->
+              <usedDependency>org.asciidoctor:asciidoctorj</usedDependency>
+              <usedDependency>org.asciidoctor:asciidoctorj-diagram</usedDependency>
+              <!--
+                - Maven doesn't detect JS dependencies. We use this in docinfo.html
+              -->
+              <usedDependency>org.webjars:jquery.tocify.js</usedDependency>
+              <usedDependency>org.webjars:jquery-migrate</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
