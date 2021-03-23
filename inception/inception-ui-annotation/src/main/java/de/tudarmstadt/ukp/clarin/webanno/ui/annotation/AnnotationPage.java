@@ -312,7 +312,12 @@ public class AnnotationPage
 
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
-            factory = editorRegistry.getDefaultEditorFactory();
+            if (state.getDocument() != null) {
+                factory = editorRegistry.getPreferredEditorFactory(state.getDocument().getFormat());
+            }
+            else {
+                factory = editorRegistry.getDefaultEditorFactory();
+            }
         }
 
         annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
@@ -681,7 +686,8 @@ public class AnnotationPage
     }
 
     @Override
-    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject, User aUser)
+    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
+            User aUser)
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
 
