@@ -47,6 +47,18 @@ public class HtmlAnnotationEditorFactory
     }
 
     @Override
+    public int accepts(String aFormat)
+    {
+        switch (aFormat) {
+        case LegacyHtmlFormatSupport.ID: // fall-through
+        case HtmlFormatSupport.ID:
+            return PREFERRED;
+        default:
+            return DEFAULT;
+        }
+    }
+
+    @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {

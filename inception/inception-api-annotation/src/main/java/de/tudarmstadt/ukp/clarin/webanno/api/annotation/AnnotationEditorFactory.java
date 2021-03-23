@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import static java.lang.Integer.MIN_VALUE;
+
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -25,12 +27,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
 public interface AnnotationEditorFactory
 {
+    static int NOT_SUITABLE = MIN_VALUE;
+    static int DEFAULT = 1_000;
+    static int PREFERRED = 10_000;
+
     /**
      * @return get the bean name.
      */
     String getBeanName();
 
     String getDisplayName();
+
+    default int accepts(String aFormat)
+    {
+        return DEFAULT;
+    }
 
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
