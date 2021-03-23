@@ -28,9 +28,6 @@ import org.springframework.stereotype.Component;
 public class BratAnnotationEditorPropertiesImpl
     implements BratAnnotationEditorProperties
 {
-    public static String NBSP = "\u00A0";
-    public static String REPLACEMENT_CHARACTER = "\uFFFD";
-
     private boolean singleClickSelection = false;
     private boolean deferredRendering = false;
     private boolean clientSideProfiling = false;
