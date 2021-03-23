@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -175,7 +176,7 @@ public class BratRendererTest
 
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
+                new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
         renderer.render(response, state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
@@ -212,7 +213,7 @@ public class BratRendererTest
 
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
+                new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
         renderer.render(response, state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
@@ -249,7 +250,7 @@ public class BratRendererTest
 
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
+                new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
         renderer.render(response, state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));

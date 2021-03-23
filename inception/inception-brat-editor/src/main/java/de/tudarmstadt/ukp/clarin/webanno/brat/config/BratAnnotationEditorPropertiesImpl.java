@@ -32,6 +32,7 @@ public class BratAnnotationEditorPropertiesImpl
     private boolean deferredRendering = false;
     private boolean clientSideProfiling = false;
     private boolean clientSideTraceLog = false;
+    private String whiteSpaceReplacementCharacter = NBSP;
 
     @ManagedAttribute
     @Override
@@ -83,5 +84,16 @@ public class BratAnnotationEditorPropertiesImpl
     public void setClientSideTraceLog(boolean aClientSideTraceLog)
     {
         clientSideTraceLog = aClientSideTraceLog;
+    }
+
+    @Override
+    public String getWhiteSpaceReplacementCharacter()
+    {
+        return whiteSpaceReplacementCharacter;
+    }
+
+    public void setWhiteSpaceReplacementCharacter(String aWhiteSpaceReplacementCharacter)
+    {
+        whiteSpaceReplacementCharacter = aWhiteSpaceReplacementCharacter;
     }
 }
