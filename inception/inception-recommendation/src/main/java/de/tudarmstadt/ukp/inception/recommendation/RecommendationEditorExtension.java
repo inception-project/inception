@@ -416,15 +416,11 @@ public class RecommendationEditorExtension
             return emptyList();
         }
 
-        Optional<SuggestionGroup<AnnotationSuggestion>> group = Optional.empty();
-
-        if (representative.get() instanceof SpanSuggestion) {
-            SpanSuggestion sao = (SpanSuggestion) representative.get();
-            group = predictions
-                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
-                            aFeature.getLayer(), sao.getBegin(), sao.getEnd())
-                    .stream().filter(g -> g.contains(representative.get())).findFirst();
-        }
+        AnnotationSuggestion sao = representative.get();
+        Optional<SuggestionGroup<AnnotationSuggestion>> group = predictions
+                .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
+                        aFeature.getLayer(), sao.getWindowBegin(), sao.getWindowEnd())
+                .stream().filter(g -> g.contains(representative.get())).findFirst();
 
         if (group.isEmpty()) {
             return emptyList();

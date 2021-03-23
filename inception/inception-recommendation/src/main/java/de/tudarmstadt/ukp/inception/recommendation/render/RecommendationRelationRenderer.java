@@ -17,12 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.INFO;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,14 +38,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
@@ -128,14 +125,6 @@ public class RecommendationRelationRenderer
                 .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
         for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
-            List<String> recommenderNames = group.stream() //
-                    .map(AnnotationSuggestion::getRecommenderName) //
-                    .collect(Collectors.toList());
-
-            List<Double> confidences = group.stream() //
-                    .map(AnnotationSuggestion::getConfidence) //
-                    .collect(Collectors.toList());
-
             for (RelationSuggestion suggestion : group.bestSuggestions(pref)) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
@@ -171,16 +160,8 @@ public class RecommendationRelationRenderer
                 VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
                         new VID(target), suggestion.getUiLabel(), featureAnnotation, COLOR);
 
-                vdoc.add(
-                        new VComment(suggestion.getVID(), INFO, "Value: " + suggestion.getLabel()));
-
-                // TODO: Make lazy details usable with relations in BRAT
-                for (int i = 0; i < group.size(); i++) {
-                    String msg = String.format("%s: \nConfidence: %.2f", recommenderNames.get(i),
-                            confidences.get(i));
-
-                    vdoc.add(new VComment(suggestion.getVID(), INFO, msg));
-                }
+                arc.addLazyDetails(featureSupport.getLazyDetails(feature, suggestion.getLabel()));
+                arc.addLazyDetail(new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
 
                 vdoc.add(arc);
             }
