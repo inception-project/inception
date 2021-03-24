@@ -133,8 +133,10 @@ public class RecommenderInfoPanel
                 AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
                         LoadableDetachableModel.of(() -> exportModelName(recommender)),
                         LoadableDetachableModel.of(() -> exportModel(user, recommender)));
-                exportModel.add(visibleWhen(() -> recommendationService
-                        .getRecommenderFactory(recommender).isModelExportSupported()));
+                exportModel.add(visibleWhen(
+                        () -> recommendationService.getRecommenderFactory(recommender).isPresent()
+                                && recommendationService.getRecommenderFactory(recommender).get()
+                                        .isModelExportSupported()));
                 item.add(exportModel);
 
                 Optional<EvaluationResult> evalResult = evaluatedRecommender
@@ -166,15 +168,22 @@ public class RecommenderInfoPanel
 
     private String exportModelName(Recommender aRecommender)
     {
-        RecommendationEngineFactory factory = recommendationService
-                .getRecommenderFactory(aRecommender);
-        return factory.getExportModelName(aRecommender);
+        return recommendationService.getRecommenderFactory(aRecommender)
+                .map(e -> e.getExportModelName(aRecommender)).orElse(null);
     }
 
     private IResourceStream exportModel(User aUser, Recommender aRecommender)
     {
-        RecommendationEngine engine = recommendationService.getRecommenderFactory(aRecommender)
-                .build(aRecommender);
+        Optional<RecommendationEngineFactory<?>> maybeEngine = recommendationService
+                .getRecommenderFactory(aRecommender);
+
+        if (maybeEngine.isEmpty()) {
+            error("No factory found for " + aRecommender.getName());
+            return null;
+        }
+
+        RecommendationEngine engine = maybeEngine.get().build(aRecommender);
+
         Optional<RecommenderContext> context = recommendationService.getContext(aUser,
                 aRecommender);
 

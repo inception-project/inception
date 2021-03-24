@@ -26,11 +26,13 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerServiceImpl;
@@ -77,5 +79,12 @@ public class StringMatchingRecommenderAutoConfiguration
             GazeteerService aGazeteerService)
     {
         return new StringMatchingRecommenderFactory(aGazeteerService);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "imls.relation.string", name = "enabled", havingValue = "true")
+    public StringMatchingRelationRecommenderFactory stringMatchingRelationRecommenderFactory()
+    {
+        return new StringMatchingRelationRecommenderFactory();
     }
 }

@@ -716,9 +716,9 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender)
+    public Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender)
     {
-        return recommenderFactoryRegistry.getFactory(aRecommender.getTool());
+        return Optional.ofNullable(recommenderFactoryRegistry.getFactory(aRecommender.getTool()));
     }
 
     private RecommendationState getState(String aUsername, Project aProject)
@@ -1198,7 +1198,16 @@ public class RecommendationServiceImpl
                         RecommenderContext ctx = context.get();
                         ctx.setUser(aUser);
 
-                        RecommendationEngineFactory<?> factory = getRecommenderFactory(recommender);
+                        Optional<RecommendationEngineFactory<?>> maybeFactory = getRecommenderFactory(
+                                recommender);
+
+                        if (maybeFactory.isEmpty()) {
+                            log.warn("[{}][{}]: No factory found - skipping recommender", username,
+                                    r.getRecommender().getName());
+                            continue nextRecommender;
+                        }
+
+                        RecommendationEngineFactory<?> factory = maybeFactory.get();
 
                         // Check that configured layer and feature are accepted
                         // by this type of recommender
@@ -1215,7 +1224,7 @@ public class RecommendationServiceImpl
                         // We lazily load the CAS only at this point because that allows us to skip
                         // loading the CAS entirely if there is no enabled layer or recommender.
                         // If the CAS cannot be loaded, then we skip to the next document.
-                        if (!originalCas.isPresent()) {
+                        if (originalCas.isEmpty()) {
                             try {
                                 originalCas = Optional
                                         .of(documentService.readAnnotationCas(document, username,

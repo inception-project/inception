@@ -23,8 +23,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -33,8 +31,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.settings.StringMatchingRelationRecommenderTraitsEditor;
 
-@Component
-@ConditionalOnProperty(prefix = "imls.relation.string", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class StringMatchingRelationRecommenderFactory
     extends RecommendationEngineFactoryImplBase<StringMatchingRelationRecommenderTraits>
 {

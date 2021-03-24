@@ -77,7 +77,11 @@ public interface RecommendationService
      */
     List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
 
-    RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender);
+    /**
+     * This can be empty if e.g. a recommender is only available behind a feature flag that was once
+     * enabled and now is disabled.
+     */
+    Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender);
 
     boolean hasActiveRecommenders(String aUser, Project aProject);
 
