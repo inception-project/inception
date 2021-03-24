@@ -17,19 +17,67 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.settings;
 
-import org.apache.wicket.model.IModel;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderTraits;
 
 public class StringMatchingRelationRecommenderTraitsEditor
-    extends AbstractTraitsEditor
+    extends DefaultTrainableRecommenderTraitsEditor
 {
     private static final long serialVersionUID = 1677442652521110324L;
+
+    private static final String MID_FORM = "form";
+
+    private @SpringBean RecommendationEngineFactory<StringMatchingRelationRecommenderTraits> toolFactory;
+    private @SpringBean AnnotationSchemaService annotationSchemaService;
+
+    private final StringMatchingRelationRecommenderTraits traits;
 
     public StringMatchingRelationRecommenderTraitsEditor(String aId,
             IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
+
+        traits = toolFactory.readTraits(aRecommender.getObject());
+
+        Form<StringMatchingRelationRecommenderTraits> form = new Form<>(MID_FORM,
+                CompoundPropertyModel.of(Model.of(traits)))
+        {
+            private static final long serialVersionUID = -3109239654242291123L;
+
+            @Override
+            protected void onSubmit()
+            {
+                super.onSubmit();
+                toolFactory.writeTraits(aRecommender.getObject(), traits);
+            }
+        };
+
+        DropDownChoice<String> adjunctFeature = new DropDownChoice<>("adjunctFeature");
+        AnnotationLayer baseLayer = aRecommender.getObject().getLayer().getAttachType();
+        List<String> baseFeatures = annotationSchemaService.listAnnotationFeature(baseLayer)
+                .stream() //
+                .map(AnnotationFeature::getName) //
+                .collect(Collectors.toList());
+
+        adjunctFeature.setChoices(baseFeatures);
+        adjunctFeature.setRequired(true);
+        form.add(adjunctFeature);
+
+        add(form);
     }
 }

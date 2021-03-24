@@ -15,10 +15,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-
-  </wicket:panel>
-</body>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:extend>
+  <form wicket:id="form">
+    <div class="form-group form-row" wicket:enclosure="adjunctFeature">
+      <label class="col-sm-3 col-form-label" wicket:for="adjunctFeature">
+        <wicket:message key="adjunctFeature"/>
+      </label>
+      <div class="col-sm-9">
+        <select wicket:id="adjunctFeature" class="form-control"></select>
+      </div>
+    </div>
+  </form>
+</wicket:extend>
 </html>

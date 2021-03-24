@@ -56,9 +56,6 @@ public class StringMatchingRelationRecommender
     public static final Key<MultiValuedMap<Pair<String, String>, String>> KEY_MODEL = new Key<>(
             "model");
 
-    private static final String UNKNOWN_LABEL = "unknown";
-    private static final String NO_LABEL = "O";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final StringMatchingRelationRecommenderTraits traits;
 

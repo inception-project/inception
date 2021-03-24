@@ -17,10 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
+import java.io.Serializable;
+
 public class StringMatchingRelationRecommenderTraits
+    implements Serializable
 {
+    private static final long serialVersionUID = 6677442655321114224L;
+
+    private String adjunctFeature;
+
     public String getAdjunctFeature()
     {
-        return "value";
+        return adjunctFeature;
+    }
+
+    public void setAdjunctFeature(String aAdjunctFeature)
+    {
+        adjunctFeature = aAdjunctFeature;
     }
 }

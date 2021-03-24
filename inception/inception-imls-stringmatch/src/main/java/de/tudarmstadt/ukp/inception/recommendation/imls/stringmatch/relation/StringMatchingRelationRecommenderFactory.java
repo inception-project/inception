@@ -53,7 +53,7 @@ public class StringMatchingRelationRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        StringMatchingRelationRecommenderTraits traits = new StringMatchingRelationRecommenderTraits();
+        StringMatchingRelationRecommenderTraits traits = readTraits(aRecommender);
         StringMatchingRelationRecommender recommender = new StringMatchingRelationRecommender(
                 aRecommender, traits);
 
