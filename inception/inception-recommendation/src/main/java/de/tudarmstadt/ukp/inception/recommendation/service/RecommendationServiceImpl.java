@@ -873,7 +873,8 @@ public class RecommendationServiceImpl
         if (relation == null) {
             // FIXME: We get the first match for the (begin, end) span. With stacking, there can
             // be more than one and we need to get the right one then which does not need to be
-            // the first.
+            // the first. We wait for #2135 to fix this. When stacking is enabled, then also
+            // consider creating a new relation instead of upserting an existing one.
 
             AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream()
                     .findFirst().orElse(null);

@@ -140,7 +140,7 @@ public class RecommendationRelationRenderer
 
                 // FIXME: We get the first match for the (begin, end) span. With stacking, there can
                 // be more than one and we need to get the right one then which does not need to be
-                // the first.
+                // the first. We wait for #2135 for a maybe fix.
                 AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd) //
                         .stream().findFirst().orElse(null);
 
