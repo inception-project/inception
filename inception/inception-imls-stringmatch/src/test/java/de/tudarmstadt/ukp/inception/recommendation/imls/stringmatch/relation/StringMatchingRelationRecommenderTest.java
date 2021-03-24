@@ -68,6 +68,7 @@ public class StringMatchingRelationRecommenderTest
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new StringMatchingRelationRecommenderTraits();
+        traits.setAdjunctFeature("value");
     }
 
     @AfterEach
