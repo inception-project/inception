@@ -1,0 +1,1113 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    <artifactId>inception-app</artifactId>
+    <version>0.20.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+  <artifactId>inception-app-webapp</artifactId>
+  <name>INCEpTION - Web-Application</name>
+  <packaging>war</packaging>
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-api</artifactId>
+    </dependency>
+  
+    <!-- INCEPTION - CORE DEPENDENCIES -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-dashboard</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-doc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-layer-docmetadata</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-image</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-tagsets</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-kb</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - CONCEPT LINKING FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-concept-linking</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.languagetool</groupId>
+          <artifactId>language-ja</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- INCEPTION - ANNOTATION RECOMMENDATION FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation-api</artifactId>
+    </dependency>
+    <!--
+      <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-dl4j</artifactId>
+      </dependency>
+    -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-external</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-lapps</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-opennlp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-stringmatch</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-weblicht</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-active-learning</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - IN-PROJECT SEARCH FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-search</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-search-mtas</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - IN-PROJECT SEARCH FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-external-search</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-elastic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-solr</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-pubannotation</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - EVENT LOG -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log</artifactId>
+    </dependency>
+
+    <!-- INCEPTION - ADDITIONAL EDITORS -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-html-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-html-recogito-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-pdf-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-review-editor</artifactId>
+    </dependency>
+
+    <!-- VERSIONING -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-versioning</artifactId>
+    </dependency>
+    <!-- INCEPTION - SPRING WEBSOCKET -->
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-websocket</artifactId>
+    </dependency>
+
+    <!-- READER/WRITER DEPENDENCIES -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-webanno-tsv</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-text</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-tcf</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-conll</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-xmi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-lif-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-nif-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-tei-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-perseus-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-xml-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-imscwb-asl</artifactId>
+    </dependency>
+
+    <!-- WEBANNO DEPENDENCIES -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-plugin-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-plugin-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-brat-editor</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-formats</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support-standalone</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-agreement</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-monitoring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-remote</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-telemetry</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
+    </dependency>
+
+    <!-- UIMA DEPENDENCIES -->
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+    </dependency>
+
+
+    <!-- WICKET DEPENDENCIES -->
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-htmlcompressor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mozilla</groupId>
+      <artifactId>rhino-runtime</artifactId>
+      <version>1.7.12</version>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.wicket-jquery-ui</groupId>
+      <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.wicket-jquery-ui</groupId>
+      <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
+    </dependency>
+
+    <!-- Spring dependencies -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-expression</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+    </dependency>
+
+    <!-- SPRING SECURITY -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+    </dependency>
+
+    <!-- LOGGING DEPENDENCIES - SLF4J -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+    </dependency>
+
+    <!-- LOGGING DEPENDENCIES - LOG4J -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-layout-template-json</artifactId>
+    </dependency>
+
+    <!-- LOGGING DEPENDENCIES - Avoid Commons Logging -->
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- DATABASE / HIBERNATE -->
+
+    <!-- <dependency> -->
+    <!-- <groupId>org.hibernate</groupId> -->
+    <!-- <artifactId>hibernate-entitymanager</artifactId> -->
+    <!-- </dependency> -->
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-entitymanager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-jcache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+    </dependency>
+
+    <!-- JAXB DEPENDENCIES -->
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>javax.activation-api</artifactId>
+    </dependency>
+
+    <!-- Spring Boot dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+    </dependency>
+    <!--
+      <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-loader</artifactId>
+      </dependency>
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <!--
+      <dependency>
+      <groupId>net.bull.javamelody</groupId>
+      <artifactId>javamelody-spring-boot-starter</artifactId>
+      <version>${javamelody.version}</version>
+      </dependency>
+    -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+      <artifactId>enjoyhint</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>kinetic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>jquery.scrollTo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-matrix</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-dynamic</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-sharing</artifactId>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <!--
+        This module has a slight complex setup to allow making it work in a command line build
+        as well as in an m2e build.
+
+        The general procedure is:
+        1) generate asciidoc HTML (also PDF when on the command line)
+        2) sync generated HTML + images to a proper package under src/main/resources
+        This is the reason why src/main/resources is excluded from version control
+        3) let Maven pick up the stuff from src/main/resources and make it available to m2e
+        workspace builds or package it into a JAR
+
+        When running in m2e, building of PDFs is skipped.
+        Mind that rebuilding of HTML from asciidoc works in Eclipse only on an explicit project clean.
+        There is no incremental build!
+      -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <!-- 
+          - Downgrade version to avoid exception during Eclipse builds:
+          - 
+          - Execution assemble-documentation of goal 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single failed: 
+          - An API incompatibility was encountered while executing 
+          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
+          - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
+          -  .setFilenameComparator(java.util.Comparator)'
+         -->
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <id>assemble-documentation</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <attach>false</attach>
+              <descriptors>
+                <descriptor>src/assembly/documentation.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>user-guide-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceDocumentName>user-guide.adoc</sourceDocumentName>
+              <attributes>
+                <toc>left</toc>
+                <include-dir>./user-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./user-guide/images</imagesDir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>developer-guide-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
+              <attributes>
+                <toc>left</toc>
+                <include-dir>./developer-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./developer-guide/images</imagesDir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>admin-guide-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
+              <attributes>
+                <toc>left</toc>
+                <include-dir>./admin-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
+              </attributes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>clean-copy-online-docs-to-classes</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <delete includeemptydirs="true" failonerror="false">
+                  <fileset dir="src/main/resources/public/doc" includes="**/*" />
+                </delete>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-online-docs-to-classes</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <mkdir dir="src/main/resources/public/doc" />
+
+                <!--
+                  It is important that we SYNC here instead of delete/copy, otherwise we may run into
+                  an endless build loop in Eclipse.
+                -->
+                <sync todir="src/main/resources/public/doc">
+                  <fileset dir="target/generated-docs">
+                    <include name="**/*.html" />
+                    <include name="**/*.png" />
+                    <include name="**/*.jpg" />
+                  </fileset>
+                </sync>
+
+                <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
+                  <include name="**/*.html" />
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                </replace>
+
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.asciidoctor</groupId>
+          <artifactId>asciidoctor-maven-plugin</artifactId>
+          <version>${asciidoctor.plugin.version}</version>
+          <configuration>
+            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
+            <attributes>
+              <doctype>book</doctype>
+              <toclevels>8</toclevels>
+              <sectanchors>true</sectanchors>
+              <docinfo1>true</docinfo1>
+              <project-version>${project.version}</project-version>
+              <revnumber>${project.version}</revnumber>
+              <product-name>INCEpTION</product-name>
+              <product-website-url>https://inception-project.github.io</product-website-url>
+              <icons>font</icons>
+            </attributes>
+            <requires>
+              <require>asciidoctor-diagram</require>
+            </requires>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj</artifactId>
+              <version>${asciidoctor.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj-diagram</artifactId>
+              <version>${asciidoctor-diagram.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <!-- 
+                - Detection of this dependency is flickering. We need it for a menu-item. So
+                - for the moment, completely ignore it in the dependency checking.
+                -->
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-ui-project</ignoredDependency>
+            </ignoredDependencies>
+            <ignoredUsedUndeclaredDependencies>
+              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
+            </ignoredUsedUndeclaredDependencies>
+            <usedDependencies>
+              <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
+			  <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-elastic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-solr</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
+              <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-tagsets</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-monitoring</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
+              <!-- INCEpTION annotation editor modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
+              <!-- INCEpTION IO Modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-json</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-webanno-tsv</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tcf</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-xmi</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-text</usedDependency>
+              <!-- Documentation modules - needed but no Java dependency -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
+              <!-- WebAnno backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
+              <!-- JDBC drivers and database stuff - used via reflection -->
+              <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
+              <usedDependency>org.hibernate:hibernate-jcache</usedDependency>
+              <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
+              <usedDependency>mysql:mysql-connector-java</usedDependency>
+              <usedDependency>org.hsqldb:hsqldb</usedDependency>
+              <usedDependency>org.liquibase:liquibase-core</usedDependency>
+              <usedDependency>org.ehcache:ehcache</usedDependency>
+              <!-- Logging - used via reflection / optional -->
+              <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
+              <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
+
+              <usedDependency>commons-logging:commons-logging</usedDependency>
+              <!-- Themes -->
+              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
+              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <!-- Wicket plugins -->
+              <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
+              <usedDependency>org.mozilla:rhino-runtime</usedDependency>
+              <!-- Spring configuration -->
+              <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
+              <usedDependency>org.springframework:spring-webmvc</usedDependency>
+              <usedDependency>org.springframework:spring-expression</usedDependency>
+              <!-- Tutorial Js dependencies -->
+              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
+              <usedDependency>org.webjars.npm:kinetic</usedDependency>
+              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+  <profiles>
+    <profile>
+      <id>m2e</id>
+      <activation>
+        <property>
+          <name>m2e.version</name>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <!--
+              - This plugin's configuration is used to store Eclipse m2e settings only.
+              - It has no influence on the Maven build itself.
+            -->
+            <plugin>
+              <groupId>org.eclipse.m2e</groupId>
+              <artifactId>lifecycle-mapping</artifactId>
+              <version>1.0.0</version>
+              <configuration>
+                <lifecycleMappingMetadata>
+                  <pluginExecutions>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>single</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>run</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>add-resource</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctor-maven-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>process-asciidoc</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                  </pluginExecutions>
+                </lifecycleMappingMetadata>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>non-m2e</id>
+      <activation>
+        <property>
+          <name>!m2e.version</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <!--
+              This plugin must be declared before the ant-run plugin because during the package
+              phase, it creates a the files which the "copy-war-to-jar" execution of the ant-run
+              plugin running also in the package phase requires.
+            -->
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring.boot.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>repackage</goal>
+                </goals>
+                <configuration>
+                  <executable>true</executable>
+                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <!--
+                    We want the original file to be the WAR and the repackaged all-inclusive runnable
+                    thing with the embedded Tomcat to be the JAR.
+                  -->
+                  <attach>false</attach>
+                  <classifier>standalone</classifier>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+                <artifactId>inception-boot-loader</artifactId>
+                <version>${project.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-war-to-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-artifacts</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>target/${project.artifactId}-${project.version}-standalone.jar</file>
+                      <type>jar</type>
+                      <classifier>standalone</classifier>
+                    </artifact>
+                  </artifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>pdf-documentation</id>
+      <activation>
+        <property>
+          <name>!m2e.version</name>
+        </property>
+        <!--
+          - Build PDFs currently does not work with Java 10 because of a problem parsing the
+          - version string: https://github.com/jruby/jruby-openssl/issues/157
+        -->
+        <jdk>[,10)</jdk>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctor-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>user-guide-pdf</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>process-asciidoc</goal>
+                  </goals>
+                  <configuration>
+                    <backend>pdf</backend>
+                    <sourceDocumentName>user-guide.adoc</sourceDocumentName>
+                    <attributes>
+                      <toc>preamble</toc>
+                      <include-dir>./user-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./user-guide/images</imagesDir>
+                    </attributes>
+                  </configuration>
+                </execution>
+                <execution>
+                  <id>developer-guide-pdf</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>process-asciidoc</goal>
+                  </goals>
+                  <configuration>
+                    <backend>pdf</backend>
+                    <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
+                    <attributes>
+                      <toc>preamble</toc>
+                      <include-dir>./developer-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./developer-guide/images</imagesDir>
+                    </attributes>
+                  </configuration>
+                </execution>
+                <execution>
+                  <id>admin-guide-pdf</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>process-asciidoc</goal>
+                  </goals>
+                  <configuration>
+                    <backend>pdf</backend>
+                    <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
+                    <attributes>
+                      <toc>preamble</toc>
+                      <include-dir>./admin-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
+                    </attributes>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>doc-only</id>
+      <properties>
+        <maven.install.skip>true</maven.install.skip>
+      </properties>
+    </profile>
+  </profiles>
+</project>
