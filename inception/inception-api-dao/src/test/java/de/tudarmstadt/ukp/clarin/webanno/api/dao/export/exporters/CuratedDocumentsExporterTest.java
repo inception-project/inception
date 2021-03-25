@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -60,7 +61,6 @@ public class CuratedDocumentsExporterTest
     public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
 
     private RepositoryProperties repositoryProperties;
-    private BackupProperties backupProperties;
     private ImportExportService importExportSerivce;
     private CasStorageService casStorageService;
 
@@ -84,13 +84,11 @@ public class CuratedDocumentsExporterTest
         project.setId(1l);
         project.setName("Test Project");
 
-        backupProperties = new BackupProperties();
-
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(workFolder);
 
         casStorageService = spy(new CasStorageServiceImpl(null, schemaService, repositoryProperties,
-                backupProperties));
+                new CasStoragePropertiesImpl(), new BackupProperties()));
 
         importExportSerivce = new ImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService);
