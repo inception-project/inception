@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -85,7 +86,6 @@ public class CasStorageServiceImplTest
     private AtomicInteger writeCounter = new AtomicInteger(0);
 
     private CasStorageServiceImpl sut;
-    private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
 
     @Rule
@@ -103,12 +103,11 @@ public class CasStorageServiceImplTest
         deleteCounter.set(0);
         deleteInitialCounter.set(0);
 
-        backupProperties = new BackupProperties();
-
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
 
-        sut = new CasStorageServiceImpl(null, null, repositoryProperties, backupProperties);
+        sut = new CasStorageServiceImpl(null, null, repositoryProperties,
+                new CasStoragePropertiesImpl(), new BackupProperties());
     }
 
     @Test

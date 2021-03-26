@@ -55,7 +55,7 @@ $ systemctl start nginx
 $ systemctl restart nginx
 ----
 
-=== Obtaining a Let's Encrypt certificate
+== Obtaining a Let's Encrypt certificate
 
 The Certification Authority (CA) _Let's Encrypt_ provides free TLS/SSL certificates.
 These certificates allow for secure HTTPS connections on web servers.
@@ -123,7 +123,7 @@ Output:
 cert.pem  chain.pem  fullchain.pem  privkey.pem
 ----
 
-=== Putting it all together
+== Putting it all together
 
 By now you should have
 
@@ -233,7 +233,7 @@ If the config works restart the webserver to enable the new site
 $ service nginx restart
 ----
 
-=== Tell {product-name} that it is running behind a proxy
+== Tell {product-name} that it is running behind a proxy
 
 If you are running {product-name} via the JAR file, edit the `settings.properties` file to add these settings:
 
@@ -254,7 +254,7 @@ $ service inception restart
 {product-name} now knows how to interpret the proxy header fields from NGINX.
 With this step, everything is now set up to access {product-name} trough a secure https connection.
 
-=== CSRF protection
+== CSRF protection
 
 Depending on your situation, you may get an error message such as this when trying to use
 {product-name}.
