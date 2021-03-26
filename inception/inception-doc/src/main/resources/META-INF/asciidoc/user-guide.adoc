@@ -193,6 +193,10 @@ include::{include-dir}workload.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}faq.adoc[]
+
+<<<
+
 = Appendices
 
 [appendix]

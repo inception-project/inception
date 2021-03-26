@@ -51,6 +51,7 @@ import org.mockito.Spy;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -74,13 +75,11 @@ public class ImportExportServiceImplTest
         // schemaService = mock(AnnotationSchemaServiceImpl.class);
         schemaService = Mockito.spy(new AnnotationSchemaServiceImpl());
 
-        BackupProperties backupProperties = new BackupProperties();
-
         RepositoryProperties repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder);
 
         CasStorageServiceImpl storageService = new CasStorageServiceImpl(null, null,
-                repositoryProperties, backupProperties);
+                repositoryProperties, new CasStoragePropertiesImpl(), new BackupProperties());
 
         sut = new ImportExportServiceImpl(repositoryProperties, List.of(new XmiFormatSupport()),
                 storageService, schemaService);
