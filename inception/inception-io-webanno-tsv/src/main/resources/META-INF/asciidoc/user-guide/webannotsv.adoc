@@ -197,6 +197,21 @@ Here `1` indicates the sentence number, `2` indicates the token number (here, th
 in the first sentence) and `4` is the begin offset of the token and `8` is the end offset of the
 token while `Haag` is the token.
 
+The begin offset of the first token in a sentence must coincide with the offset at which the first
+`#Text` line starts in the original document text.
+
+.Example: Valid sentence text header / token offsets
+----
+#Text=Hello
+1-1	0-6	Hello
+----
+
+.Example: Invalid sentence text header / token offsets
+----
+#Text= Hello
+1-1	1-7	Hello
+----
+
 Sub-token representations are affixed with a `.` and a number starts from 1 to N. 
 
 .Example: Sub-token positions

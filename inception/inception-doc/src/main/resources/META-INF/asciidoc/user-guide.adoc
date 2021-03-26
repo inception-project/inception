@@ -191,6 +191,10 @@ include::{include-dir}workload.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}faq.adoc[]
+
+<<<
+
 = Appendices
 
 [appendix]
@@ -237,11 +241,6 @@ include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]
 include::{include-dir}formats-webannotsv2.adoc[leveloffset=+2]
 
 include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
-
-<<<
-
-[faq]
-include::{include-dir}faq.adoc[leveloffset=+1]
 
 <<<
 
