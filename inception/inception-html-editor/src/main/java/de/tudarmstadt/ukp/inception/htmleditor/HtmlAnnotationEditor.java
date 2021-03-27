@@ -21,11 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.htmleditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
@@ -92,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -103,8 +100,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Annotation;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Range;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.resources.AnnotatorJsCssResourceReference;
@@ -119,7 +114,6 @@ public class HtmlAnnotationEditor
     private Label vis;
     private StoreAdapter storeAdapter;
 
-    private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ColoringService coloringService;
@@ -455,8 +449,7 @@ public class HtmlAnnotationEditor
         {
             CAS cas = getCasProvider().get();
 
-            VDocument vdoc = new VDocument();
-            preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas, getLayersToRender());
+            VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
 
             List<Annotation> annotations = new ArrayList<>();
 
@@ -508,23 +501,6 @@ public class HtmlAnnotationEditor
         {
             return aRanges.stream().map(r -> new Range(r.getBegin(), r.getEnd()))
                     .collect(Collectors.toList());
-        }
-
-        private List<AnnotationLayer> getLayersToRender()
-        {
-            AnnotatorState state = getModelObject();
-            List<AnnotationLayer> layersToRender = new ArrayList<>();
-            for (AnnotationLayer layer : state.getAnnotationLayers()) {
-                boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
-                        || layer.getName().equals(Sentence.class.getName());
-                boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                        && CURATION == state.getMode();
-
-                if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
-                    layersToRender.add(layer);
-                }
-            }
-            return layersToRender;
         }
     }
 

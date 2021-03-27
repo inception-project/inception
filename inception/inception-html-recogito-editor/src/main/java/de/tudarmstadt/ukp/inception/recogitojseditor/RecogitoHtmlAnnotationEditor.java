@@ -21,11 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
@@ -39,7 +37,6 @@ import java.io.Writer;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -91,15 +88,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotation;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationTarget;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationTextPositionSelector;
@@ -116,7 +110,6 @@ public class RecogitoHtmlAnnotationEditor
     private Label vis;
     private StoreAdapter storeAdapter;
 
-    private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ColoringService coloringService;
@@ -312,8 +305,7 @@ public class RecogitoHtmlAnnotationEditor
         {
             CAS cas = getCasProvider().get();
 
-            VDocument vdoc = new VDocument();
-            preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas, getLayersToRender());
+            VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
 
             WebAnnotations annotations = new WebAnnotations();
 
@@ -435,23 +427,6 @@ public class RecogitoHtmlAnnotationEditor
             catch (IOException | AnnotationException e) {
                 handleError("Unable to create span annotation", e);
             }
-        }
-
-        private List<AnnotationLayer> getLayersToRender()
-        {
-            AnnotatorState state = getModelObject();
-            List<AnnotationLayer> layersToRender = new ArrayList<>();
-            for (AnnotationLayer layer : state.getAnnotationLayers()) {
-                boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
-                        || layer.getName().equals(Sentence.class.getName());
-                boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                        && CURATION == state.getMode();
-
-                if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
-                    layersToRender.add(layer);
-                }
-            }
-            return layersToRender;
         }
     }
 }
