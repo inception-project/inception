@@ -173,8 +173,14 @@ public class CasStorageSession
             }
         }));
 
-        LOGGER.debug("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
-                hashCode(), maxManagedCases);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
+                    hashCode(), maxManagedCases);
+        }
+        else if (maxManagedCases > 0) {
+            LOGGER.debug("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
+                    hashCode(), maxManagedCases);
+        }
     }
 
     /**
