@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
@@ -677,7 +676,7 @@ public class AnnotationPage
 
         if (state.isUserViewingOthersWork(userRepository.getCurrentUsername())
                 || state.getUser().getUsername().equals(CURATION_USER)) {
-            PreferencesUtil.loadPreferences(userPreferenceService, annotationService, state,
+            userPreferenceService.loadPreferences(state,
                     userRepository.getCurrentUser().getUsername());
         }
         else {

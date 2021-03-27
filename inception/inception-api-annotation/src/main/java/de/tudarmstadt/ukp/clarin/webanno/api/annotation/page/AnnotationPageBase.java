@@ -370,8 +370,7 @@ public abstract class AnnotationPageBase
     protected void loadPreferences() throws BeansException, IOException
     {
         AnnotatorState state = getModelObject();
-        PreferencesUtil.loadPreferences(userPreferenceService, annotationService, state,
-                userRepository.getCurrentUsername());
+        userPreferenceService.loadPreferences(state, userRepository.getCurrentUsername());
     }
 
     public void ensureIsEditable() throws NotEditableException

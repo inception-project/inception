@@ -22,8 +22,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties("annotation.default-preferences")
-public class AnnotationEditorPropertiesImpl
-    implements AnnotationEditorProperties
+public class AnnotationEditorDefaultPreferencesPropertiesImpl
+    implements AnnotationEditorDefaultPreferencesProperties
 {
     private int pageSize = 5;
     private boolean autoScroll = true;

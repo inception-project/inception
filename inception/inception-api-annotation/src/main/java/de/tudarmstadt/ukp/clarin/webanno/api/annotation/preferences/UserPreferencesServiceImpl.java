@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SETTINGS_FOLDER;
+import static java.util.stream.Collectors.toList;
 
 import java.beans.PropertyDescriptor;
 import java.io.File;
@@ -32,15 +33,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +50,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -62,21 +66,58 @@ public class UserPreferencesServiceImpl
      */
     private static final String ANNOTATION_PREFERENCE_PROPERTIES_FILE = "annotation.properties";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private final AnnotationEditorProperties defaultPreferences;
+    private final AnnotationEditorDefaultPreferencesProperties defaultPreferences;
     private final AnnotationSchemaService annotationService;
     private final RepositoryProperties repositoryProperties;
     private final ColoringService coloringService;
+    private final AnnotationEditorProperties annotationEditorProperties;
 
-    public UserPreferencesServiceImpl(AnnotationEditorProperties aDefaultPreferences,
+    public UserPreferencesServiceImpl(
+            AnnotationEditorDefaultPreferencesProperties aDefaultPreferences,
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
-            ColoringService aColoringService)
+            ColoringService aColoringService,
+            AnnotationEditorProperties aAnnotationEditorProperties)
     {
         defaultPreferences = aDefaultPreferences;
         annotationService = aAnnotationService;
         repositoryProperties = aRepositoryProperties;
         coloringService = aColoringService;
+        annotationEditorProperties = aAnnotationEditorProperties;
+    }
+
+    @Override
+    public void loadPreferences(AnnotatorState aState, String aUsername)
+        throws BeansException, IOException
+    {
+        AnnotationPreference preference = loadPreferences(aState.getProject(), aUsername,
+                aState.getMode());
+
+        aState.setPreferences(preference);
+
+        // set layers according to preferences
+        List<AnnotationLayer> allLayers = annotationService
+                .listAnnotationLayer(aState.getProject());
+        aState.setAllAnnotationLayers(allLayers);
+        aState.setAnnotationLayers(allLayers.stream() //
+                .filter(l -> !annotationEditorProperties.isLayerBlocked(l)) //
+                .filter(l -> l.isEnabled()) //
+                .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
+                .collect(toList()));
+
+        // set default layer according to preferences
+        Optional<AnnotationLayer> defaultLayer = aState.getAnnotationLayers().stream()
+                .filter(layer -> Objects.equals(layer.getId(), preference.getDefaultLayer()))
+                .findFirst();
+        if (defaultLayer.isPresent()) {
+            aState.setDefaultAnnotationLayer(defaultLayer.get());
+            aState.setSelectedAnnotationLayer(defaultLayer.get());
+        }
+    }
+
+    @Override
+    public void savePreference(AnnotatorState aState, String aUsername) throws IOException
+    {
+        savePreferences(aState.getProject(), aUsername, aState.getMode(), aState.getPreferences());
     }
 
     @Override

@@ -47,6 +47,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -57,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class LayerSelectionPanel
     extends Panel
@@ -68,6 +68,7 @@ public class LayerSelectionPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean UserDao userDao;
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     private final Label relationHint;
     private final DropDownChoice<AnnotationLayer> layerSelector;
@@ -277,7 +278,7 @@ public class LayerSelectionPanel
 
         for (AnnotationLayer layer : state.getAnnotationLayers()) {
             if (!layer.isEnabled() || layer.isReadonly()
-                    || layer.getName().equals(Token.class.getName())) {
+                    || annotationEditorProperties.isLayerBlocked(layer)) {
                 continue;
             }
 

@@ -19,7 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import java.io.IOException;
 
+import org.springframework.beans.BeansException;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -30,4 +33,24 @@ public interface UserPreferencesService
 
     void savePreferences(Project aProject, String aUsername, Mode aMode, AnnotationPreference aPref)
         throws IOException;
+
+    /**
+     * Set annotation preferences of users for a given project such as window size, annotation
+     * layers,... reading from the file system.
+     * 
+     * @param aState
+     *            The {@link AnnotatorState} that will be populated with preferences from the file
+     * @param aUsername
+     *            The {@link User} for whom we need to read the preference (preferences are stored
+     *            per user)
+     *
+     * @throws BeansException
+     *             hum?
+     * @throws IOException
+     *             hum?
+     */
+    void loadPreferences(AnnotatorState aState, String aUsername)
+        throws BeansException, IOException;
+
+    void savePreference(AnnotatorState aState, String aUsername) throws IOException;
 }

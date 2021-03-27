@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -73,6 +75,7 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -95,6 +98,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -115,6 +119,7 @@ public class ProjectLayersPanel
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     private LayerSelectionPane layerSelectionPane;
     private FeatureSelectionForm featureSelectionForm;
@@ -293,32 +298,53 @@ public class ProjectLayersPanel
         {
             Project project = ProjectLayersPanel.this.getModelObject();
 
-            if (project.getId() != null) {
-                List<AnnotationLayer> _layers = annotationService.listAnnotationLayer(project);
+            if (project.getId() == null) {
+                return new ArrayList<>();
+            }
 
+            List<AnnotationLayer> _layers = annotationService.listAnnotationLayer(project);
+
+            if (!annotationEditorProperties.isTokenLayerEditable()) {
                 try {
                     AnnotationLayer tokenLayer = annotationService.findLayer(project,
                             Token.class.getName());
                     _layers.remove(tokenLayer);
                 }
+                catch (NoResultException e) {
+                    LOG.trace("Project has no Token type!", e);
+                }
                 catch (Exception e) {
-                    LOG.error("Unable to locate layer for the Token type", e);
+                    LOG.error("Unexpected error trying to locate Token type", e);
                 }
-
-                for (AnnotationLayer layer : _layers) {
-                    if (layer.isBuiltIn() && layer.isEnabled()) {
-                        colors.put(layer, "green");
-                    }
-                    else if (layer.isEnabled()) {
-                        colors.put(layer, "blue");
-                    }
-                    else {
-                        colors.put(layer, "red");
-                    }
-                }
-                return _layers;
             }
-            return new ArrayList<>();
+
+            if (!annotationEditorProperties.isSentenceLayerEditable()) {
+                try {
+                    AnnotationLayer sentenceLayer = annotationService.findLayer(project,
+                            Sentence.class.getName());
+                    _layers.remove(sentenceLayer);
+                }
+                catch (NoResultException e) {
+                    LOG.trace("Project has no Sentence type!", e);
+                }
+                catch (Exception e) {
+                    LOG.error("Unexpected error trying to locate Sentence type", e);
+                }
+            }
+
+            for (AnnotationLayer layer : _layers) {
+                if (layer.isBuiltIn() && layer.isEnabled()) {
+                    colors.put(layer, "green");
+                }
+                else if (layer.isEnabled()) {
+                    colors.put(layer, "blue");
+                }
+                else {
+                    colors.put(layer, "red");
+                }
+            }
+
+            return _layers;
         }
     }
 

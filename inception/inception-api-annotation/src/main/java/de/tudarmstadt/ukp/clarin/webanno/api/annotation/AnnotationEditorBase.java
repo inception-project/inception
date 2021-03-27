@@ -35,11 +35,10 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
@@ -54,10 +53,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public abstract class AnnotationEditorBase
     extends Panel
 {
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationEditorBase.class);
-
     private static final long serialVersionUID = 8637373389151630602L;
 
+    private @SpringBean AnnotationEditorProperties properties;
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
@@ -187,14 +185,25 @@ public abstract class AnnotationEditorBase
         AnnotatorState state = getModelObject();
         List<AnnotationLayer> layersToRender = new ArrayList<>();
         for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName());
-            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                    && CURATION == state.getMode();
-
-            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
-                layersToRender.add(layer);
+            if (!layer.isEnabled()) {
+                continue;
             }
+
+            if (!properties.isTokenLayerEditable()
+                    && Token.class.getName().equals(layer.getName())) {
+                continue;
+            }
+
+            if (!properties.isSentenceLayerEditable()
+                    && Sentence.class.getName().equals(layer.getName())) {
+                continue;
+            }
+
+            if (layer.getType().equals(CHAIN_TYPE) && CURATION == state.getMode()) {
+                continue;
+            }
+
+            layersToRender.add(layer);
         }
         return layersToRender;
     }

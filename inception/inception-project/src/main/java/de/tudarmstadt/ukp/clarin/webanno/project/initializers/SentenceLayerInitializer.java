@@ -18,12 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,18 +30,19 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 @Component
-public class TokenLayerInitializer
+public class SentenceLayerInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public TokenLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public SentenceLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -50,34 +50,36 @@ public class TokenLayerInitializer
     @Override
     public String getName()
     {
-        return "Tokens";
+        return "Sentences";
     }
 
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return Collections.emptyList();
+        return asList(
+                // Because locks to token boundaries
+                TokenLayerInitializer.class);
     }
 
     @Override
     public boolean alreadyApplied(Project aProject)
     {
-        return annotationSchemaService.existsLayer(Token.class.getName(), aProject);
+        return annotationSchemaService.existsLayer(Sentence.class.getName(), aProject);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                aProject, true, CHARACTERS, NO_OVERLAP);
+        AnnotationLayer sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence",
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, NO_OVERLAP);
 
-        // Since the user cannot turn off validation for the token layer if there is any kind of
+        // Since the user cannot turn off validation for the sentence layer if there is any kind of
         // problem with the validation functionality we are conservative here and disable validation
         // from the start.
-        tokenLayer.setValidationMode(NEVER);
-        tokenLayer.setReadonly(true);
-        tokenLayer.setCrossSentence(false);
+        sentenceLayer.setValidationMode(NEVER);
+        sentenceLayer.setReadonly(true);
+        sentenceLayer.setCrossSentence(true);
 
-        annotationSchemaService.createOrUpdateLayer(tokenLayer);
+        annotationSchemaService.createOrUpdateLayer(sentenceLayer);
     }
 }
