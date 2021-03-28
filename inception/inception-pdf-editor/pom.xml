@@ -24,9 +24,6 @@
   </parent>
   <name>INCEpTION - Editor - PDF</name>
   <artifactId>inception-pdf-editor</artifactId>
-  <properties>
-    <frontend.install.path>${session.executionRootDirectory}/cache/maven-frontend-plugin</frontend.install.path>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -213,11 +210,12 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <version>1.6</version>
-          <configuration>
-            <workingDirectory>target/js/pdfanno/</workingDirectory>
-            <installDirectory>${frontend.install.path}</installDirectory>
-          </configuration>
+        <configuration>
+          <workingDirectory>target/js/pdfanno/</workingDirectory>
+          <installDirectory>target/frontend-maven-plugin</installDirectory>
+          <nodeVersion>v11.15.0</nodeVersion>
+          <npmVersion>6.7.0</npmVersion>
+        </configuration>
         <executions>
           <execution>
             <id>install node and npm</id>
@@ -225,10 +223,6 @@
               <goal>install-node-and-npm</goal>
             </goals>
             <phase>generate-resources</phase>
-            <configuration>
-              <nodeVersion>v11.0.0</nodeVersion>
-              <npmVersion>6.4.1</npmVersion>
-            </configuration>
           </execution>
           <execution>
             <id>npm install</id>
