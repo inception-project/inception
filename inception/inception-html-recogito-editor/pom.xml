@@ -24,9 +24,6 @@
   </parent>
   <artifactId>inception-html-recogito-editor</artifactId>
   <name>INCEpTION - Editor - HTML + o JS</name>
-  <properties>
-    <frontend.install.path>${session.executionRootDirectory}/cache/maven-frontend-plugin</frontend.install.path>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -44,16 +41,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
-    
+
     <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-xml-asl</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-html-editor</artifactId>
     </dependency>
     
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -62,10 +55,6 @@
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimafit-core</artifactId>
     </dependency>
 
     <dependency>
@@ -92,10 +81,6 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.danekja</groupId>
-      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <dependency>
@@ -128,7 +113,7 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-pdfanno-to-target</id>
+            <id>copy-recogito-to-target</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -149,7 +134,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>add-pdfanno-resources</id>
+            <id>add-recogito-resources</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>add-resource</goal>
@@ -158,7 +143,7 @@
               <resources>
                 <resource>
                   <directory>target/js/recogito-js/dist</directory>
-                  <targetPath>de/tudarmstadt/ukp/inception/htmleditorpelagios/resources</targetPath>
+                  <targetPath>de/tudarmstadt/ukp/inception/recogitojseditor/resources</targetPath>
                 </resource>
               </resources>
             </configuration>
@@ -168,11 +153,12 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <version>1.6</version>
-          <configuration>
-            <workingDirectory>target/js/recogito-js/</workingDirectory>
-            <installDirectory>${frontend.install.path}</installDirectory>
-          </configuration>
+        <configuration>
+          <workingDirectory>target/js/recogito-js/</workingDirectory>
+          <installDirectory>target/frontend-maven-plugin</installDirectory>
+          <nodeVersion>v13.14.0</nodeVersion>
+          <npmVersion>6.14.4</npmVersion>
+        </configuration>
         <executions>
           <execution>
             <id>install node and npm</id>
@@ -180,10 +166,6 @@
               <goal>install-node-and-npm</goal>
             </goals>
             <phase>generate-resources</phase>
-            <configuration>
-              <nodeVersion>v11.0.0</nodeVersion>
-              <npmVersion>6.4.1</npmVersion>
-            </configuration>
           </execution>
           <execution>
             <id>npm install</id>
