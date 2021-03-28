@@ -15,35 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.event;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * Fired when a user right-clicks on a cell in an annotator column.
+ * Fired when a user clicks on a cell in an annotator column.
  */
-public class AnnotatorColumnCellOpenContextMenuEvent
+public class AnnotatorColumnCellClickEvent
     extends AbstractAjaxAwareEvent
 {
-    private final Component cell;
     private final SourceDocument sourceDocument;
-    private final AnnotationDocumentState state;
     private final String username;
 
-    public AnnotatorColumnCellOpenContextMenuEvent(AjaxRequestTarget aTarget, Component aCell,
-            SourceDocument aSourceDocument, String aUsername, AnnotationDocumentState aState)
+    public AnnotatorColumnCellClickEvent(AjaxRequestTarget aTarget, SourceDocument aSourceDocument,
+            String aUsername)
     {
         super(aTarget);
 
-        cell = aCell;
         sourceDocument = aSourceDocument;
         username = aUsername;
-        state = aState;
     }
 
     public SourceDocument getSourceDocument()
@@ -54,15 +48,5 @@ public class AnnotatorColumnCellOpenContextMenuEvent
     public String getUsername()
     {
         return username;
-    }
-
-    public AnnotationDocumentState getState()
-    {
-        return state;
-    }
-
-    public Component getCell()
-    {
-        return cell;
     }
 }

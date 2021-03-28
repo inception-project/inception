@@ -15,20 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.event;
 
-import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.DOCUMENT_NAME;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.model.IModel;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
-import org.apache.wicket.model.Model;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixRow;
 
-public class SourceDocumentNameColumn
-    extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
+/**
+ * Fired when a user selects or de-selects a row.
+ */
+public class DocumentRowSelectionChangedEvent
+    extends AbstractAjaxAwareEvent
 {
-    private static final long serialVersionUID = 8324173231787296215L;
+    private final IModel<DocumentMatrixRow> row;
 
-    public SourceDocumentNameColumn()
+    public DocumentRowSelectionChangedEvent(AjaxRequestTarget aTarget,
+            IModel<DocumentMatrixRow> aRow)
     {
-        super(Model.of("Document"), DOCUMENT_NAME, row -> row.getSourceDocument().getName());
+        super(aTarget);
+
+        row = aRow;
+    }
+
+    public IModel<DocumentMatrixRow> getRow()
+    {
+        return row;
     }
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
+package de.tudarmstadt.ukp.inception.workload.matrix.management;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
@@ -85,21 +85,21 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellClickEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnCellOpenContextMenuEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnSelectionChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellClickEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellOpenContextMenuEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.DocumentRowSelectionChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.AnnotatorColumn;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.CuratorColumn;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixDataProvider;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixRow;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentNameColumn;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentSelectColumn;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.SourceDocumentStateColumn;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.UserSelectToolbar;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnSelectionChangedEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.DocumentRowSelectionChangedEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.AnnotatorColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.CuratorColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixDataProvider;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixRow;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentNameColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentSelectColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentStateColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelectToolbar;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
 public class MonitoringPage

@@ -175,14 +175,6 @@ public interface ProjectService
     void updateProject(Project project);
 
     /**
-     * Update the project state.
-     * 
-     * @param aProject
-     *            The {@link Project} to be updated.
-     */
-    void recalculateProjectState(Project aProject);
-
-    /**
      * A method that check is a project exists with the same name already. getSingleResult() fails
      * if the project is not created, hence existProject returns false.
      *

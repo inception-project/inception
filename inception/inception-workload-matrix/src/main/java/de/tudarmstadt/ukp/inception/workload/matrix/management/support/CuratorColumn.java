@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.CURATION_STATE;
+import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.CURATION_STATE;
 import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -35,8 +35,8 @@ import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellClickEvent;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.CuratorColumnCellOpenContextMenuEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
 
 public class CuratorColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>

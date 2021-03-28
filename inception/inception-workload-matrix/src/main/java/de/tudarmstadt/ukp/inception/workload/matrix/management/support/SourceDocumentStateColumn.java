@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.DOCUMENT_STATE;
+import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.DOCUMENT_STATE;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;

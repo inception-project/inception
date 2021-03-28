@@ -66,8 +66,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
@@ -1056,24 +1054,6 @@ public class DocumentServiceImpl
     {
         return setAnnotationDocumentState(aDocument,
                 AnnotationDocumentStateTransition.transition(aTransition));
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onDocumentStateChangeEvent(DocumentStateChangedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onAfterDocumentCreatedEvent(AfterDocumentCreatedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
     }
 
     @EventListener

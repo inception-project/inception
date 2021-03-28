@@ -15,30 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
+import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.DOCUMENT_NAME;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
+import org.apache.wicket.model.Model;
 
-/**
- * Fired when a user clicks on a cell in the curator column.
- */
-public class CuratorColumnCellClickEvent
-    extends AbstractAjaxAwareEvent
+public class SourceDocumentNameColumn
+    extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
-    private final SourceDocument sourceDocument;
+    private static final long serialVersionUID = 8324173231787296215L;
 
-    public CuratorColumnCellClickEvent(AjaxRequestTarget aTarget, SourceDocument aSourceDocument)
+    public SourceDocumentNameColumn()
     {
-        super(aTarget);
-
-        sourceDocument = aSourceDocument;
-    }
-
-    public SourceDocument getSourceDocument()
-    {
-        return sourceDocument;
+        super(Model.of("Document"), DOCUMENT_NAME, row -> row.getSourceDocument().getName());
     }
 }

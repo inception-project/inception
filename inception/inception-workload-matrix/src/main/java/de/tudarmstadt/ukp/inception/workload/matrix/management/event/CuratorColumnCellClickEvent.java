@@ -15,32 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.model.IModel;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixRow;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * Fired when a user selects or de-selects a row.
+ * Fired when a user clicks on a cell in the curator column.
  */
-public class DocumentRowSelectionChangedEvent
+public class CuratorColumnCellClickEvent
     extends AbstractAjaxAwareEvent
 {
-    private final IModel<DocumentMatrixRow> row;
+    private final SourceDocument sourceDocument;
 
-    public DocumentRowSelectionChangedEvent(AjaxRequestTarget aTarget,
-            IModel<DocumentMatrixRow> aRow)
+    public CuratorColumnCellClickEvent(AjaxRequestTarget aTarget, SourceDocument aSourceDocument)
     {
         super(aTarget);
 
-        row = aRow;
+        sourceDocument = aSourceDocument;
     }
 
-    public IModel<DocumentMatrixRow> getRow()
+    public SourceDocument getSourceDocument()
     {
-        return row;
+        return sourceDocument;
     }
 }

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 /**
- * Provides Utility Classes for the monitoring, such as Kappa measures
+ * Provides Monitoring functionalities to WebAnno
+ *
+ *
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.matrix.management;

@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
-import static de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.DocumentMatrixSortKey.DOCUMENT_NAME;
+import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.DOCUMENT_NAME;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;

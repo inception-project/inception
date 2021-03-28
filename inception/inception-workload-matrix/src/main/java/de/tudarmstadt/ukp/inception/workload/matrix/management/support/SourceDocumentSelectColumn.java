@@ -15,26 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
+
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-public class SourceDocumentActionsColumn
-    extends LambdaColumn<DocumentMatrixRow, Void>
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.DocumentRowSelectionChangedEvent;
+
+public class SourceDocumentSelectColumn
+    extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
-    public SourceDocumentActionsColumn()
+    private boolean visible;
+
+    public SourceDocumentSelectColumn()
     {
-        super(Model.of("Document"), row -> row.getSourceDocument().getName());
+        super(Model.of(""), row -> row.getSourceDocument().getName());
+    }
+
+    public void setVisible(boolean aVisible)
+    {
+        visible = aVisible;
+    }
+
+    public boolean isVisible()
+    {
+        return visible;
     }
 
     @Override
@@ -43,6 +62,13 @@ public class SourceDocumentActionsColumn
     {
         MarkupContainer page = IPageRequestHandler
                 .getPage(RequestCycle.get().getActiveRequestHandler());
-        aItem.add(new Fragment(aComponentId, "actions-column", page, aRowModel));
+        Fragment frag = new Fragment(aComponentId, "select-column", page, aRowModel);
+        IModel<Boolean> selectedModel = CompoundPropertyModel.of(aRowModel).bind("selected");
+        CheckBox checkbox = new CheckBox("selected", selectedModel);
+        checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> checkbox
+                .send(checkbox, BUBBLE, new DocumentRowSelectionChangedEvent(_target, aRowModel))));
+        frag.add(checkbox);
+        frag.setVisible(visible);
+        aItem.add(frag);
     }
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -36,7 +36,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.event.AnnotatorColumnSelectionChangedEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnSelectionChangedEvent;
 
 public class UserSelectToolbar
     extends AbstractToolbar
