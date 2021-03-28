@@ -216,6 +216,8 @@
         <configuration>
           <workingDirectory>target/js/pdfanno/</workingDirectory>
           <installDirectory>${frontend.install.path}</installDirectory>
+          <nodeVersion>v11.15.0</nodeVersion>
+          <npmVersion>6.7.0</npmVersion>
         </configuration>
         <executions>
           <execution>
