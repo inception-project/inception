@@ -28,12 +28,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface UserPreferencesService
 {
-    AnnotationPreference loadPreferences(Project aProject, String aUsername, Mode aMode)
-        throws IOException;
-
-    void savePreferences(Project aProject, String aUsername, Mode aMode, AnnotationPreference aPref)
-        throws IOException;
-
     /**
      * Set annotation preferences of users for a given project such as window size, annotation
      * layers,... reading from the file system.
@@ -41,8 +35,7 @@ public interface UserPreferencesService
      * @param aState
      *            The {@link AnnotatorState} that will be populated with preferences from the file
      * @param aUsername
-     *            The {@link User} for whom we need to read the preference (preferences are stored
-     *            per user)
+     *            The user for whom we need to read the preference (preferences are stored per user)
      *
      * @throws BeansException
      *             hum?
@@ -52,5 +45,11 @@ public interface UserPreferencesService
     void loadPreferences(AnnotatorState aState, String aUsername)
         throws BeansException, IOException;
 
+    AnnotationPreference loadPreferences(Project aProject, String aUsername, Mode aMode)
+        throws IOException;
+
     void savePreference(AnnotatorState aState, String aUsername) throws IOException;
+
+    void savePreferences(Project aProject, String aUsername, Mode aMode, AnnotationPreference aPref)
+        throws IOException;
 }
