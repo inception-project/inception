@@ -44,6 +44,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-html-editor</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -132,7 +136,7 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-pdfanno-to-target</id>
+            <id>copy-recogito-to-target</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -153,7 +157,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>add-pdfanno-resources</id>
+            <id>add-recogito-resources</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>add-resource</goal>
@@ -162,7 +166,7 @@
               <resources>
                 <resource>
                   <directory>target/js/recogito-js/dist</directory>
-                  <targetPath>de/tudarmstadt/ukp/inception/htmleditorpelagios/resources</targetPath>
+                  <targetPath>de/tudarmstadt/ukp/inception/recogitojseditor/resources</targetPath>
                 </resource>
               </resources>
             </configuration>
@@ -172,7 +176,6 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <version>1.6</version>
           <configuration>
             <workingDirectory>target/js/recogito-js/</workingDirectory>
             <installDirectory>${frontend.install.path}</installDirectory>
@@ -184,10 +187,6 @@
               <goal>install-node-and-npm</goal>
             </goals>
             <phase>generate-resources</phase>
-            <configuration>
-              <nodeVersion>v11.0.0</nodeVersion>
-              <npmVersion>6.4.1</npmVersion>
-            </configuration>
           </execution>
           <execution>
             <id>npm install</id>
