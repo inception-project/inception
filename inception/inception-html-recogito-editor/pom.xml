@@ -24,9 +24,6 @@
   </parent>
   <artifactId>inception-html-recogito-editor</artifactId>
   <name>INCEpTION - Editor - HTML + o JS</name>
-  <properties>
-    <frontend.install.path>${session.executionRootDirectory}/cache/maven-frontend-plugin</frontend.install.path>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -50,19 +47,6 @@
     </dependency>
     
     <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-xml-asl</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
     </dependency>
@@ -70,10 +54,6 @@
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimafit-core</artifactId>
     </dependency>
 
     <dependency>
@@ -100,10 +80,6 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.danekja</groupId>
-      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <dependency>
@@ -176,10 +152,12 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-          <configuration>
-            <workingDirectory>target/js/recogito-js/</workingDirectory>
-            <installDirectory>${frontend.install.path}</installDirectory>
-          </configuration>
+        <configuration>
+          <workingDirectory>target/js/recogito-js/</workingDirectory>
+          <installDirectory>target/frontend-maven-plugin</installDirectory>
+          <nodeVersion>v13.14.0</nodeVersion>
+          <npmVersion>6.14.4</npmVersion>
+        </configuration>
         <executions>
           <execution>
             <id>install node and npm</id>
