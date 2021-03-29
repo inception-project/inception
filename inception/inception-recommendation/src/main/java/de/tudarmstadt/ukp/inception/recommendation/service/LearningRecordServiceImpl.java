@@ -86,16 +86,16 @@ public class LearningRecordServiceImpl
         String query = String.join("\n", //
                 "DELETE FROM LearningRecord WHERE", "user = :user AND", //
                 "sourceDocument = :sourceDocument AND", //
-                "offsetCharacterBegin = :offsetCharacterBegin AND", //
-                "offsetCharacterEnd = :offsetCharacterEnd AND", //
+                "offsetBegin = :offsetBegin AND", //
+                "offsetEnd = :offsetEnd AND", //
                 "layer = :layer AND", //
                 "annotationFeature = :annotationFeature AND", //
                 "annotation = :annotation");
         entityManager.createQuery(query) //
                 .setParameter("user", aUsername) //
                 .setParameter("sourceDocument", aDocument) //
-                .setParameter("offsetCharacterBegin", aSuggestion.getBegin()) //
-                .setParameter("offsetCharacterEnd", aSuggestion.getEnd()) //
+                .setParameter("offsetBegin", aSuggestion.getBegin()) //
+                .setParameter("offsetEnd", aSuggestion.getEnd()) //
                 .setParameter("layer", aLayer) //
                 .setParameter("annotationFeature", aFeature) //
                 .setParameter("annotation", aAlternativeLabel).executeUpdate();

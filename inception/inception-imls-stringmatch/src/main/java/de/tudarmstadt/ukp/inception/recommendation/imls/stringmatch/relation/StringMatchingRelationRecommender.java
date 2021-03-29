@@ -24,6 +24,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -70,33 +72,18 @@ public class StringMatchingRelationRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
+        aContext.put(KEY_MODEL, trainModel(getTrainingData(aCasses)));
+    }
+
+    private MultiValuedMap<Pair<String, String>, String> trainModel(List<Triple> aData)
+    {
         MultiValuedMap<Pair<String, String>, String> model = new ArrayListValuedHashMap<>();
 
-        for (CAS cas : aCasses) {
-            Type predictedType = getPredictedType(cas);
-            Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-            Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-            Feature predictedFeature = getPredictedFeature(cas);
-            Feature attachFeature = getAttachFeature(cas);
-
-            for (AnnotationFS relation : select(cas, predictedType)) {
-                AnnotationFS dependent = (AnnotationFS) relation.getFeatureValue(dependentFeature);
-                AnnotationFS governor = (AnnotationFS) relation.getFeatureValue(governorFeature);
-
-                String relationLabel = relation.getStringValue(predictedFeature);
-                String dependentLabel = dependent.getStringValue(attachFeature);
-                String governorLabel = governor.getStringValue(attachFeature);
-
-                if (isBlank(relationLabel) || isBlank(dependentLabel) || isBlank(governorLabel)) {
-                    continue;
-                }
-
-                Pair<String, String> key = Pair.of(dependentLabel, governorLabel);
-                model.put(key, relationLabel);
-            }
+        for (Triple t : aData) {
+            Pair<String, String> key = Pair.of(t.governor, t.dependent);
+            model.put(key, t.label);
         }
-
-        aContext.put(KEY_MODEL, model);
+        return model;
     }
 
     @Override
@@ -108,8 +95,8 @@ public class StringMatchingRelationRecommender
         Type sentenceType = getType(aCas, Sentence.class);
 
         Type predictedType = getPredictedType(aCas);
-        Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
         Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
+        Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Type attachType = getAttachType(aCas);
@@ -118,25 +105,26 @@ public class StringMatchingRelationRecommender
 
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
             Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sentence);
-            for (AnnotationFS dependent : baseAnnotations) {
-                for (AnnotationFS governor : baseAnnotations) {
-                    if (dependent.equals(governor)) {
+            for (AnnotationFS governor : baseAnnotations) {
+                for (AnnotationFS dependent : baseAnnotations) {
+
+                    if (governor.equals(dependent)) {
                         continue;
                     }
 
-                    String dependentLabel = dependent.getStringValue(attachFeature);
                     String governorLabel = governor.getStringValue(attachFeature);
+                    String dependentLabel = dependent.getStringValue(attachFeature);
 
-                    Pair<String, String> key = Pair.of(dependentLabel, governorLabel);
+                    Pair<String, String> key = Pair.of(governorLabel, dependentLabel);
                     Collection<String> occurrences = model.get(key);
-                    Map<String, Long> numberOfOccurencesPerLabel = occurrences.stream() //
+                    Map<String, Long> numberOfOccurrencesPerLabel = occurrences.stream() //
                             .collect(Collectors.groupingBy(Function.identity(),
                                     Collectors.counting()));
 
                     double totalNumberOfOccurrences = occurrences.size();
 
                     for (String relationLabel : occurrences) {
-                        double confidence = numberOfOccurencesPerLabel.get(relationLabel)
+                        double confidence = numberOfOccurrencesPerLabel.get(relationLabel)
                                 / totalNumberOfOccurrences;
                         AnnotationFS prediction = aCas.createAnnotation(predictedType,
                                 governor.getBegin(), governor.getEnd());
@@ -155,14 +143,95 @@ public class StringMatchingRelationRecommender
     @Override
     public int estimateSampleCount(List<CAS> aCasses)
     {
-        return -1;
+        return getTrainingData(aCasses).size();
     }
 
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
-        return null;
+        List<Triple> data = getTrainingData(aCasses);
+        List<Triple> trainingData = new ArrayList<>();
+        List<Triple> testData = new ArrayList<>();
+
+        for (Triple t : data) {
+            switch (aDataSplitter.getTargetSet(t)) {
+            case TRAIN:
+                trainingData.add(t);
+                break;
+            case TEST:
+                testData.add(t);
+                break;
+            case IGNORE:
+                break;
+            }
+        }
+
+        int trainingSetSize = trainingData.size();
+        int testSetSize = testData.size();
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
+
+        if (trainingData.size() < 1 || testData.size() < 1) {
+            log.info("Not enough data to evaluate, skipping!");
+            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+                    trainRatio);
+            result.setEvaluationSkipped(true);
+            return result;
+        }
+
+        MultiValuedMap<Pair<String, String>, String> model = trainModel(trainingData);
+
+        // evaluation: collect predicted and gold labels for evaluation
+        // The inner map is needed, because we predict a list of things
+        return testData.stream()
+                .flatMap(t -> model.get(Pair.of(t.governor, t.label)).stream()
+                        .map(prediction -> new LabelPair(t.label, prediction)))
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
+    }
+
+    private List<Triple> getTrainingData(List<CAS> aCasses)
+    {
+        List<Triple> data = new ArrayList<>();
+
+        for (CAS cas : aCasses) {
+            Type predictedType = getPredictedType(cas);
+            Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
+            Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+            Feature predictedFeature = getPredictedFeature(cas);
+            Feature attachFeature = getAttachFeature(cas);
+
+            for (AnnotationFS relation : select(cas, predictedType)) {
+                AnnotationFS governor = (AnnotationFS) relation.getFeatureValue(governorFeature);
+                AnnotationFS dependent = (AnnotationFS) relation.getFeatureValue(dependentFeature);
+
+                String relationLabel = relation.getStringValue(predictedFeature);
+                String governorLabel = governor.getStringValue(attachFeature);
+                String dependentLabel = dependent.getStringValue(attachFeature);
+
+                if (isBlank(governorLabel) || isBlank(dependentLabel) || isBlank(relationLabel)) {
+                    continue;
+                }
+
+                data.add(new Triple(governorLabel, dependentLabel, relationLabel));
+            }
+        }
+
+        return data;
+    }
+
+    private static class Triple
+    {
+        private final String governor;
+        private final String dependent;
+        private final String label;
+
+        private Triple(String aGovernor, String aDependent, String aLabel)
+        {
+            governor = aGovernor;
+            dependent = aDependent;
+            label = aLabel;
+        }
     }
 
     private Type getAttachType(CAS aCas)
