@@ -16,7 +16,19 @@
 
 == String Matcher for Relations
 
-The string matching relation recommender can be used to predict relations. You need a base layer with a feature on it in addition to a relation layer on top configured for it to work. As an example, we define a base layer called `Locations`. We add a String feature named `value` on it. Then, we define a relation layer on top of it called `Located`, with a String feature named `relation`. We create a String matcher for relations, choose the relation layer to be `Located` and the base layer feature as `value`. This recommender now saves tuples of `(source:value, target:value, relation)`. If it encounters a sentence that contains locations with the same source and target value, it predicts a relation between the label it saw before.
+The string matching relation recommender can be used to predict relations, i.e. it predicts if there is a connection between
+two annotations and what the relation's feature value might be. You need a base layer with a feature on it in addition
+to a relation layer on top configured for it to work.
+
+As an example, we define a base layer called `Locations`. We add a
+String feature named `value` on it. Then, we define a relation layer on top of it called `Located`, with a String feature
+named `relation`.
+
+During configuration, we first need to select the feature of the relation that should be predicted.
+We create a String matcher for relations, choose the relation layer to be `Located` and the base layer
+feature as `value`. This recommender now saves tuples of `(source:value, target:value, relation)`. If it encounters a
+sentence that contains locations with the same source and target value, it predicts a relation between them with the label
+it saw before.
 
 For instance, given the following text
 
