@@ -84,7 +84,7 @@ NOTE: The `secret` option is supported e.g. in https://httpd.apache.org/docs/tru
 If you are using a reverse proxy which does not support passing along a secret, you may set `server.ajp.secret-required=false` in the
 `settings.properties` file.
 
-=== Obtaining a Let's Encrypt certificate
+== Obtaining a Let's Encrypt certificate
 
 The Certification Authority (CA) _Let's Encrypt_ provides free TLS/SSL certificates.
 These certificates allow for secure HTTPS connections on web servers.

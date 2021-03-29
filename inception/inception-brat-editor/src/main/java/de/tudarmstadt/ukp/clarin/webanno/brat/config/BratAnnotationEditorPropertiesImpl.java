@@ -32,7 +32,7 @@ public class BratAnnotationEditorPropertiesImpl
     private boolean deferredRendering = false;
     private boolean clientSideProfiling = false;
     private boolean clientSideTraceLog = false;
-    private String whiteSpaceReplacementCharacter = NBSP;
+    private String whiteSpaceReplacementCharacter = REPLACEMENT_CHARACTER;
 
     @ManagedAttribute
     @Override

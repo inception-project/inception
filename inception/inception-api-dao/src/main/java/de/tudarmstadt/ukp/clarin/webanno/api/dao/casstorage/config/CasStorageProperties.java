@@ -15,7 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Provides Classes that compute brat specific operations.
- */
-package de.tudarmstadt.ukp.clarin.webanno.brat.render;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config;
+
+import java.time.Duration;
+
+public interface CasStorageProperties
+{
+    /**
+     * @return maximum time to wait when trying to perform an exclusive action on a CAS for another
+     *         exclusive action to finish.
+     */
+    Duration getCasBorrowWaitTimeout();
+
+    /**
+     * @return time that exclusive-access CAS instances as well as shared CAS instances are kept in
+     *         memory after the last access to them.
+     */
+    Duration getIdleCasEvictionDelay();
+
+    /**
+     * @return number of CAS instances that should be kept in memory for shared-read-only access.
+     */
+    long getSharedCasCacheSize();
+}

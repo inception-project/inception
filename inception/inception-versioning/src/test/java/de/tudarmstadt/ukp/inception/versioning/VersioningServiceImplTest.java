@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -360,7 +361,7 @@ public class VersioningServiceImplTest
                 RepositoryProperties aRepositoryProperties)
         {
             return new CasStorageServiceImpl(new CasDoctor(), aAnnotationSchemaService,
-                    aRepositoryProperties, new BackupProperties());
+                    aRepositoryProperties, new CasStoragePropertiesImpl(), new BackupProperties());
         }
 
         @Bean
