@@ -15,16 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.matrix.event;
+package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
-import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -43,29 +41,34 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * Watches the state of annotation documents.
  * 
- * <b>Note:</b> This is separate from the {@link MatrixWorkloadDocumentStateWatcher} because we
+ * <b>Note:</b> This is separate from the {@link DynamicWorkloadDocumentStateWatcher} because we
  * observed that otherwise a trigger of a {@liink DocumentStateChangedEvent} by
  * {@link #recalculateDocumentState} was unable to be caught by the
- * {@link MatrixWorkloadDocumentStateWatcher#onDocumentStateChangeEvent}
+ * {@link DynamicWorkloadDocumentStateWatcher#onDocumentStateChangeEvent}
  */
-public class MatrixWorkloadAnnotationStateWatcher
+public class DynamicWorkloadAnnotationStateWatcher
 {
     private @PersistenceContext EntityManager entityManager;
     private final ProjectService projectService;
     private final DocumentService documentService;
     private final WorkloadManagementService workloadManagementService;
+    private final DynamicWorkloadExtension dynamicWorkloadExtension;
 
-    public MatrixWorkloadAnnotationStateWatcher(ProjectService aProjectService,
-            DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService)
+    public DynamicWorkloadAnnotationStateWatcher(ProjectService aProjectService,
+            DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
+            DynamicWorkloadExtension aDynamicWorkloadExtension)
     {
         projectService = aProjectService;
         documentService = aDocumentService;
         workloadManagementService = aWorkloadManagementService;
+        dynamicWorkloadExtension = aDynamicWorkloadExtension;
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
@@ -88,7 +91,7 @@ public class MatrixWorkloadAnnotationStateWatcher
             return;
         }
 
-        if (!MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
+        if (!DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project).getType())) {
         }
 
@@ -100,23 +103,21 @@ public class MatrixWorkloadAnnotationStateWatcher
             return;
         }
 
-        List<AnnotationDocument> annDocs = documentService
-                .listAnnotationDocuments(aAnnotationDocument.getDocument());
+        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(
+                workloadManagementService.loadOrCreateWorkloadManagerConfiguration(project));
+        int requiredAnnotatorCount = traits.getDefaultNumberOfAnnotations();
 
-        long ignoreCount = annDocs.stream().filter(adoc -> adoc.getState() == IGNORE).count();
-        long finishedCount = annDocs.stream().filter(adoc -> adoc.getState() == FINISHED).count();
+        Map<AnnotationDocumentState, Long> stats = documentService
+                .getAnnotationDocumentStats(aAnnotationDocument.getDocument());
+        long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
 
-        long newCount = annDocs.stream()
-                .filter(adoc -> adoc.getState() == AnnotationDocumentState.NEW) //
-                .count();
-
-        // If all documents are ignored or finished, we set the source document to finished
-        if ((finishedCount + ignoreCount) == annDocs.size()) {
+        // If enough documents are finished, mark as finished
+        if (finishedCount >= requiredAnnotatorCount) {
             documentService.setSourceDocumentState(aAnnotationDocument.getDocument(),
                     ANNOTATION_FINISHED);
         }
-        // ... or we set it to new if there is at least one new document and the others are ignored
-        else if ((newCount + ignoreCount) == annDocs.size()) {
+        // ... or if nobody has started yet, mark as new
+        else if (finishedCount == 0) {
             documentService.setSourceDocumentState(aAnnotationDocument.getDocument(),
                     SourceDocumentState.NEW);
         }

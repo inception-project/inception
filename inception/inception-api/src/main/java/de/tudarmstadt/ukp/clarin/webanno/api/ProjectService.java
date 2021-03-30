@@ -162,7 +162,6 @@ public interface ProjectService
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
     void createProject(Project project) throws IOException;
 
     /**
@@ -171,7 +170,6 @@ public interface ProjectService
      * @param project
      *            The {@link Project} object to be updated.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
     void updateProject(Project project);
 
     /**

@@ -42,12 +42,16 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -985,6 +989,33 @@ public class DocumentServiceImpl
             }
         }
         return listSourceDocuments(aProject).size() * users.size() - ignored;
+    }
+
+    @Override
+    public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
+    {
+        Set<String> users = projectService.listProjectUsersWithPermissions(aDocument.getProject())
+                .stream().map(User::getUsername).collect(Collectors.toSet());
+
+        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
+        for (AnnotationDocument aDoc : listAnnotationDocuments(aDocument)) {
+            AtomicLong count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
+            count.incrementAndGet();
+            users.remove(aDoc.getUser());
+        }
+
+        counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
+                .addAndGet(users.size());
+
+        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
+        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
+            finalCounts.put(state, 0l);
+        }
+        for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
+            finalCounts.put(e.getKey(), e.getValue().get());
+        }
+
+        return finalCounts;
     }
 
     @Override

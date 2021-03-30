@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.matrix.event;
+package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
-import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -52,14 +52,14 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 /**
  * Watches the document state in of projects using matrix workload.
  */
-public class MatrixWorkloadDocumentStateWatcher
+public class DynamicWorkloadDocumentStateWatcher
 {
     private @PersistenceContext EntityManager entityManager;
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final WorkloadManagementService workloadManagementService;
 
-    public MatrixWorkloadDocumentStateWatcher(ProjectService aProjectService,
+    public DynamicWorkloadDocumentStateWatcher(ProjectService aProjectService,
             ApplicationEventPublisher aApplicationEventPublisher,
             WorkloadManagementService aWorkloadManagementService)
     {
@@ -102,7 +102,7 @@ public class MatrixWorkloadDocumentStateWatcher
             return;
         }
 
-        if (!MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
+        if (!DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project).getType())) {
         }
 

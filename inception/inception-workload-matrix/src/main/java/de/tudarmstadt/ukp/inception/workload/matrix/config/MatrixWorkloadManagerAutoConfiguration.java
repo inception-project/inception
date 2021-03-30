@@ -18,16 +18,12 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadAnnotationStateWatcher;
-import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadDocumentStateWatcher;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadStateWatcher;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.matrix", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -40,20 +36,9 @@ public class MatrixWorkloadManagerAutoConfiguration
     }
 
     @Bean
-    public MatrixWorkloadDocumentStateWatcher matrixWorkloadDocumentStateWatcher(
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
-            WorkloadManagementService aWorkloadManagementService)
+    public MatrixWorkloadStateWatcher matrixWorkloadStateWatcher(
+            SchedulingService aSchedulingService)
     {
-        return new MatrixWorkloadDocumentStateWatcher(aProjectService, aApplicationEventPublisher,
-                aWorkloadManagementService);
-    }
-
-    @Bean
-    public MatrixWorkloadAnnotationStateWatcher matrixWorkloadAnnotationStateWatcher(
-            ProjectService aProjectService, DocumentService aDocumentService,
-            WorkloadManagementService aWorkloadManagementService)
-    {
-        return new MatrixWorkloadAnnotationStateWatcher(aProjectService, aDocumentService,
-                aWorkloadManagementService);
+        return new MatrixWorkloadStateWatcher(aSchedulingService);
     }
 }
