@@ -58,8 +58,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -74,7 +74,7 @@ public class DocumentServiceImplTest
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Mock ImportExportService importExportService;
+    private @Mock DocumentImportExportService importExportService;
     private @Mock ProjectService projectService;
     private @Mock ApplicationEventPublisher applicationEventPublisher;
     private @Mock EntityManager entityManager;

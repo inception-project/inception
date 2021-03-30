@@ -78,8 +78,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
@@ -112,14 +112,14 @@ public class DocumentServiceImpl
     private EntityManager entityManager;
 
     private final CasStorageService casStorageService;
-    private final ImportExportService importExportService;
+    private final DocumentImportExportService importExportService;
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RepositoryProperties repositoryProperties;
 
     @Autowired
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
-            CasStorageService aCasStorageService, ImportExportService aImportExportService,
+            CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
     {
         repositoryProperties = aRepositoryProperties;
@@ -132,7 +132,7 @@ public class DocumentServiceImpl
     }
 
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
-            CasStorageService aCasStorageService, ImportExportService aImportExportService,
+            CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
             EntityManager aEntityManager)
     {

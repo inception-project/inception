@@ -54,8 +54,8 @@ import org.wicketstuff.progressbar.ProgressionModel;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -85,7 +85,7 @@ public class ProjectExportPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ProjectExportService exportService;
-    private @SpringBean ImportExportService importExportService;
+    private @SpringBean DocumentImportExportService importExportService;
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean UserDao userRepository;
 
