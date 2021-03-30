@@ -18,10 +18,16 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadAnnotationStateWatcher;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadDocumentStateWatcher;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.matrix", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -31,5 +37,23 @@ public class MatrixWorkloadManagerAutoConfiguration
     public MatrixWorkloadExtension matrixWorkloadExtension()
     {
         return new MatrixWorkloadExtension();
+    }
+
+    @Bean
+    public MatrixWorkloadDocumentStateWatcher matrixWorkloadDocumentStateWatcher(
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
+            WorkloadManagementService aWorkloadManagementService)
+    {
+        return new MatrixWorkloadDocumentStateWatcher(aProjectService, aApplicationEventPublisher,
+                aWorkloadManagementService);
+    }
+
+    @Bean
+    public MatrixWorkloadAnnotationStateWatcher matrixWorkloadAnnotationStateWatcher(
+            ProjectService aProjectService, DocumentService aDocumentService,
+            WorkloadManagementService aWorkloadManagementService)
+    {
+        return new MatrixWorkloadAnnotationStateWatcher(aProjectService, aDocumentService,
+                aWorkloadManagementService);
     }
 }

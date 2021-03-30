@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -46,40 +47,49 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.SourceDocumentStateStats;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-public class MatrixWorkloadProjectStateWatcher
+/**
+ * Watches the document state in of projects using matrix workload.
+ */
+public class MatrixWorkloadDocumentStateWatcher
 {
     private @PersistenceContext EntityManager entityManager;
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final WorkloadManagementService workloadManagementService;
 
-    public MatrixWorkloadProjectStateWatcher(ProjectService aProjectService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+    public MatrixWorkloadDocumentStateWatcher(ProjectService aProjectService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            WorkloadManagementService aWorkloadManagementService)
     {
         projectService = aProjectService;
         applicationEventPublisher = aApplicationEventPublisher;
+        workloadManagementService = aWorkloadManagementService;
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
     public void onDocumentStateChangeEvent(DocumentStateChangedEvent aEvent)
     {
         recalculateProjectState(aEvent.getDocument().getProject());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
     public void onAfterDocumentCreatedEvent(AfterDocumentCreatedEvent aEvent)
     {
         recalculateProjectState(aEvent.getDocument().getProject());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
     public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
     {
         recalculateProjectState(aEvent.getDocument().getProject());
     }
 
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
-    public void recalculateProjectState(Project aProject)
+    private void recalculateProjectState(Project aProject)
     {
         Project project;
         try {
@@ -90,6 +100,10 @@ public class MatrixWorkloadProjectStateWatcher
             // In such a case, the project may no longer be available, so there is no point in
             // updating its state. So then we do nothing here.
             return;
+        }
+
+        if (!MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(project).getType())) {
         }
 
         // This query is better because we do not inject strings into the query string, but it
