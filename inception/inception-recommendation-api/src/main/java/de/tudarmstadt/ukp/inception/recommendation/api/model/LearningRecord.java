@@ -209,6 +209,16 @@ public class LearningRecord
         return tokenText;
     }
 
+    public SuggestionType getSuggestionType()
+    {
+        return suggestionType;
+    }
+
+    public void setSuggestionType(SuggestionType aSuggestionType)
+    {
+        suggestionType = aSuggestionType;
+    }
+
     public void setTokenText(String tokenText)
     {
         // Truncate the token text if it is too long

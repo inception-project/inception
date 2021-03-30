@@ -189,7 +189,7 @@ public class RecommendationEditorExtension
                 .getPredictionByVID(document, recommendationVid)
                 .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
 
-        if (!prediction.isPresent()) {
+        if (prediction.isEmpty()) {
             log.error("Could not find annotation in [{}] with id [{}]", document,
                     recommendationVid);
             aTarget.getPage().error("Could not find annotation");
@@ -265,7 +265,10 @@ public class RecommendationEditorExtension
         aActionHandler.actionSelect(aTarget);
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
-        // TODO: Log the action to the learning record
+        // Log the action to the learning record
+        learningRecordService.logRecord(document, aState.getUser().getUsername(), suggestion, layer,
+                feature, ACCEPTED, MAIN_EDITOR);
+
         acceptRecommendation(suggestion, aState, aTarget, aCas, aVID, address);
     }
 
