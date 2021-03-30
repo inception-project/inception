@@ -80,6 +80,7 @@ public class AnnotationQueueItem
                 && finishedCount >= aRequiredAnnotations) {
             state = ANNOTATION_FINISHED;
         }
+        System.out.printf("%s - %s%n", sourceDocument.getName(), state);
     }
 
     public SourceDocumentState getState()
