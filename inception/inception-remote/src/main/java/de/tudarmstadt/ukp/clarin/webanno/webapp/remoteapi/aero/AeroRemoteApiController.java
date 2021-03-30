@@ -82,8 +82,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
@@ -162,7 +162,7 @@ public class AeroRemoteApiController
     private @Autowired DocumentService documentService;
     private @Autowired CurationDocumentService curationService;
     private @Autowired ProjectService projectService;
-    private @Autowired ImportExportService importExportService;
+    private @Autowired DocumentImportExportService importExportService;
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired UserDao userRepository;
     private @Autowired ProjectExportService exportService;

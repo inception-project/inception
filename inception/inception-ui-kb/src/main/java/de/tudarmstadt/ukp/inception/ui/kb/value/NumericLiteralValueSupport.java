@@ -18,20 +18,20 @@
 package de.tudarmstadt.ukp.inception.ui.kb.value;
 
 import static java.util.Arrays.asList;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.DECIMAL;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.DOUBLE;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.FLOAT;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.INT;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.INTEGER;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.LONG;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.NEGATIVE_INTEGER;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.NON_NEGATIVE_INTEGER;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.NON_POSITIVE_INTEGER;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.POSITIVE_INTEGER;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.SHORT;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.UNSIGNED_INT;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.UNSIGNED_LONG;
-import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.UNSIGNED_SHORT;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.DECIMAL;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.DOUBLE;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.FLOAT;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.INT;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.LONG;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.NEGATIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.NON_NEGATIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.NON_POSITIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.POSITIVE_INTEGER;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.SHORT;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.UNSIGNED_INT;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.UNSIGNED_LONG;
+import static org.eclipse.rdf4j.model.vocabulary.XSD.UNSIGNED_SHORT;
 
 import java.util.List;
 import java.util.Optional;

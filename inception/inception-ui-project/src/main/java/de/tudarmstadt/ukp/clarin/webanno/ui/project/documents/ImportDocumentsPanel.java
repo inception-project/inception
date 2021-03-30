@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -61,7 +61,7 @@ public class ImportDocumentsPanel
     private final static Logger LOG = LoggerFactory.getLogger(ImportDocumentsPanel.class);
 
     private @SpringBean DocumentService documentService;
-    private @SpringBean ImportExportService importExportService;
+    private @SpringBean DocumentImportExportService importExportService;
     private @SpringBean AnnotationSchemaService annotationService;
 
     private BootstrapFileInputField fileUpload;
