@@ -102,7 +102,7 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDoc
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelectToolbar;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
-public class MonitoringPage
+public class MatrixWorkloadManagementPage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -2102136855109258306L;
@@ -123,7 +123,7 @@ public class MonitoringPage
     private boolean bulkChangeMode = false;
     private IModel<Set<String>> selectedUsers = new SetModel<>(new HashSet<>());
 
-    public MonitoringPage(final PageParameters aPageParameters)
+    public MatrixWorkloadManagementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
     }

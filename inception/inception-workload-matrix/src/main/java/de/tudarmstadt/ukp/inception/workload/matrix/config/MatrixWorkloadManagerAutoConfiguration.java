@@ -24,9 +24,9 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadAnnotationStateWatcher;
-import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadDocumentStateWatcher;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadAnnotationStateWatcher;
+import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadDocumentStateWatcher;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration

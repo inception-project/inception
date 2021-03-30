@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Component
 @Order(300)
-public class MonitoringPageMenuItem
+public class MatrixWorkloadManagementPageMenuItem
     implements ProjectMenuItem
 {
     private final UserDao userRepo;
@@ -43,7 +43,7 @@ public class MonitoringPageMenuItem
     private final WorkloadManagementService workloadManagementService;
 
     @Autowired
-    public MonitoringPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+    public MatrixWorkloadManagementPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
             WorkloadManagementService aWorkloadManagementService)
     {
         userRepo = aUserRepo;
@@ -87,6 +87,6 @@ public class MonitoringPageMenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return MonitoringPage.class;
+        return MatrixWorkloadManagementPage.class;
     }
 }
