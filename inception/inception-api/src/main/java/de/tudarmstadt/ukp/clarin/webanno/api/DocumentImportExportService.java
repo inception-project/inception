@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public interface ImportExportService
+public interface DocumentImportExportService
 {
     String SERVICE_NAME = "importExportService";
 
