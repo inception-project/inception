@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project;
+package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
@@ -28,6 +28,8 @@ import java.util.Random;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 
 @Disabled("This worked well for hundreds of builds - turning it off now")
 public class SourceDocumentStateStatsTest

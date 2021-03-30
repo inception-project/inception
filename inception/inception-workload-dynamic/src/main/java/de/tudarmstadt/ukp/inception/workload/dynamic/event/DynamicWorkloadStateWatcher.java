@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.matrix.event;
+package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
 import org.springframework.context.event.EventListener;
 
@@ -24,13 +24,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 /**
- * Watches the state of the annotations and documents.
+ * Watches the document state in of projects using matrix workload.
  */
-public class MatrixWorkloadStateWatcher
+public class DynamicWorkloadStateWatcher
 {
     private final SchedulingService schedulingService;
 
-    public MatrixWorkloadStateWatcher(SchedulingService aSchedulingService)
+    public DynamicWorkloadStateWatcher(SchedulingService aSchedulingService)
     {
         schedulingService = aSchedulingService;
     }
@@ -43,7 +43,7 @@ public class MatrixWorkloadStateWatcher
 
     private void recalculateDocumentState(AnnotationDocument aAnnotationDocument)
     {
-        schedulingService.enqueue(new MatrixWorkloadUpdateDocumentStateTask(
+        schedulingService.enqueue(new DynamicWorkloadUpdateDocumentStateTask(
                 aAnnotationDocument.getDocument(), getClass().getSimpleName()));
     }
 }

@@ -18,71 +18,54 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.util.Map;
+import java.util.Objects;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-/**
- * Watches the state of annotation documents.
- * 
- * <b>Note:</b> This is separate from the {@link DynamicWorkloadDocumentStateWatcher} because we
- * observed that otherwise a trigger of a {@liink DocumentStateChangedEvent} by
- * {@link #recalculateDocumentState} was unable to be caught by the
- * {@link DynamicWorkloadDocumentStateWatcher#onDocumentStateChangeEvent}
- */
-public class DynamicWorkloadAnnotationStateWatcher
+public class DynamicWorkloadUpdateDocumentStateTask
+    extends DebouncingTask
 {
     private @PersistenceContext EntityManager entityManager;
-    private final ProjectService projectService;
-    private final DocumentService documentService;
-    private final WorkloadManagementService workloadManagementService;
-    private final DynamicWorkloadExtension dynamicWorkloadExtension;
+    private @Autowired ProjectService projectService;
+    private @Autowired DocumentService documentService;
+    private @Autowired WorkloadManagementService workloadManagementService;
+    private @Autowired DynamicWorkloadExtension dynamicWorkloadExtension;
 
-    public DynamicWorkloadAnnotationStateWatcher(ProjectService aProjectService,
-            DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadExtension aDynamicWorkloadExtension)
+    private final SourceDocument document;
+
+    public DynamicWorkloadUpdateDocumentStateTask(SourceDocument aDocument, String aTrigger)
     {
-        projectService = aProjectService;
-        documentService = aDocumentService;
-        workloadManagementService = aWorkloadManagementService;
-        dynamicWorkloadExtension = aDynamicWorkloadExtension;
+        super(aDocument.getProject(), aTrigger, 15_000l);
+        document = aDocument;
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
-    public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
-    {
-        recalculateDocumentState(aEvent.getAnnotationDocument());
-    }
-
-    private void recalculateDocumentState(AnnotationDocument aAnnotationDocument)
+    @Override
+    public void run()
     {
         Project project;
         try {
-            project = projectService.getProject(aAnnotationDocument.getProject().getId());
+            project = projectService.getProject(document.getProject().getId());
         }
         catch (NoResultException e) {
             // This happens when this method is called as part of deleting an entire project.
@@ -91,12 +74,14 @@ public class DynamicWorkloadAnnotationStateWatcher
             return;
         }
 
+        // We check this here instead of checking at task submission to avoid hammering the
+        // DB if there is a high event frequency
         if (!DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project).getType())) {
         }
 
-        SourceDocument doc = documentService.getSourceDocument(project.getId(),
-                aAnnotationDocument.getDocument().getId());
+        // Get the latest state
+        SourceDocument doc = documentService.getSourceDocument(project.getId(), document.getId());
 
         // If the source document is already in curation, we do not touch the state anymore
         if (doc.getState() == CURATION_FINISHED || doc.getState() == CURATION_IN_PROGRESS) {
@@ -108,22 +93,38 @@ public class DynamicWorkloadAnnotationStateWatcher
         int requiredAnnotatorCount = traits.getDefaultNumberOfAnnotations();
 
         Map<AnnotationDocumentState, Long> stats = documentService
-                .getAnnotationDocumentStats(aAnnotationDocument.getDocument());
+                .getAnnotationDocumentStats(document);
         long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
 
         // If enough documents are finished, mark as finished
         if (finishedCount >= requiredAnnotatorCount) {
-            documentService.setSourceDocumentState(aAnnotationDocument.getDocument(),
-                    ANNOTATION_FINISHED);
+            documentService.setSourceDocumentState(document, ANNOTATION_FINISHED);
         }
         // ... or if nobody has started yet, mark as new
         else if (finishedCount == 0) {
-            documentService.setSourceDocumentState(aAnnotationDocument.getDocument(),
-                    SourceDocumentState.NEW);
+            documentService.setSourceDocumentState(document, SourceDocumentState.NEW);
         }
         else {
-            documentService.setSourceDocumentState(aAnnotationDocument.getDocument(),
-                    SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            documentService.setSourceDocumentState(document, ANNOTATION_IN_PROGRESS);
         }
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DynamicWorkloadUpdateDocumentStateTask task = (DynamicWorkloadUpdateDocumentStateTask) o;
+        return document.equals(task.document) && getProject().equals(task.getProject());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(document, getProject());
     }
 }

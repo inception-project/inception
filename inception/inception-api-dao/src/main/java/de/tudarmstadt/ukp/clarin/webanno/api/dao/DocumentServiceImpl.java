@@ -29,6 +29,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -77,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
@@ -1016,6 +1022,54 @@ public class DocumentServiceImpl
         }
 
         return finalCounts;
+    }
+
+    @Override
+    public SourceDocumentStateStats getSourceDocumentStats(Project aProject)
+    {
+        // This query is better because we do not inject strings into the query string, but it
+        // does not work on HSQLDB (on MySQL it seems to work).
+        // See: https://github.com/webanno/webanno/issues/1011
+        // String query =
+        // "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+        // "COUNT(*) AS num, " +
+        // "SUM(CASE WHEN state = :an THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :af THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :cf THEN 1 ELSE 0 END)) " +
+        // "FROM SourceDocument " +
+        // "WHERE project = :project";
+        //
+        // SourceDocumentStateStats stats = entityManager.createQuery(
+        // query, SourceDocumentStateStats.class)
+        // .setParameter("project", aProject)
+        // .setParameter("an", SourceDocumentState.NEW)
+        // .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
+        // .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
+        // .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
+        // .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
+        // .getSingleResult();
+
+        // @formatter:off
+        String query = 
+                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+                "COUNT(*), " +
+                "SUM(CASE WHEN state = '" + NEW.getId() + "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN (state = '" + ANNOTATION_IN_PROGRESS.getId() + 
+                        "' OR state is NULL) THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + ANNOTATION_FINISHED.getId() + 
+                        "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_IN_PROGRESS.getId() + 
+                        "' THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_FINISHED.getId() + "'  THEN 1 ELSE 0 END)) " +
+                "FROM SourceDocument " + 
+                "WHERE project = :project";
+        // @formatter:on
+
+        return entityManager.createQuery(query, SourceDocumentStateStats.class) //
+                .setParameter("project", aProject) //
+                .getSingleResult();
     }
 
     @Override
