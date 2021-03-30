@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import java.time.Duration;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -25,9 +27,14 @@ public abstract class DebouncingTask
 {
     private final long runnableAfter;
 
-    public DebouncingTask(Project aProject, String aTrigger, long aDebouncePeriod)
+    public DebouncingTask(Project aProject, String aTrigger, Duration aDebounceDelay)
     {
-        this(null, aProject, aTrigger, aDebouncePeriod);
+        this(null, aProject, aTrigger, aDebounceDelay.toMillis());
+    }
+
+    public DebouncingTask(Project aProject, String aTrigger, long aDebounceMillis)
+    {
+        this(null, aProject, aTrigger, aDebounceMillis);
     }
 
     public DebouncingTask(User aUser, Project aProject, String aTrigger, long aDebouncePeriod)
@@ -41,11 +48,5 @@ public abstract class DebouncingTask
     public boolean isReadyToStart()
     {
         return System.currentTimeMillis() > runnableAfter;
-    }
-
-    @Override
-    public boolean isAlwaysEneuqued()
-    {
-        return true;
     }
 }
