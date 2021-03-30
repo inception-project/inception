@@ -53,20 +53,22 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
-public class ImportExportServiceImplTest
+public class DocumentImportExportServiceImplTest
 {
     private CasStorageSession casStorageSession;
     private @Spy AnnotationSchemaService schemaService;
 
     public @Rule TemporaryFolder testFolder = new TemporaryFolder();
 
-    private ImportExportServiceImpl sut;
+    private DocumentImportExportServiceImpl sut;
 
     @Before
     public void setup() throws Exception
@@ -76,14 +78,16 @@ public class ImportExportServiceImplTest
         // schemaService = mock(AnnotationSchemaServiceImpl.class);
         schemaService = Mockito.spy(new AnnotationSchemaServiceImpl());
 
+        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+
         RepositoryProperties repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
 
         CasStorageServiceImpl storageService = new CasStorageServiceImpl(null, null,
                 repositoryProperties, new CasStoragePropertiesImpl(), new BackupProperties());
 
-        sut = new ImportExportServiceImpl(repositoryProperties, List.of(new XmiFormatSupport()),
-                storageService, schemaService);
+        sut = new DocumentImportExportServiceImpl(repositoryProperties,
+                List.of(new XmiFormatSupport()), storageService, schemaService, properties);
         sut.onContextRefreshedEvent();
 
         doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
