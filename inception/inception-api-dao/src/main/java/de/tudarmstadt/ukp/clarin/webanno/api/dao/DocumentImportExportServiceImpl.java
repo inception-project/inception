@@ -82,11 +82,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -99,9 +100,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-@Component(ImportExportService.SERVICE_NAME)
-public class ImportExportServiceImpl
-    implements ImportExportService
+@Component(DocumentImportExportService.SERVICE_NAME)
+public class DocumentImportExportServiceImpl
+    implements DocumentImportExportService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -110,19 +111,22 @@ public class ImportExportServiceImpl
     private final RepositoryProperties repositoryProperties;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
+    private final DocumentImportExportServiceProperties properties;
 
     private final List<FormatSupport> formatsProxy;
     private Map<String, FormatSupport> formats;
 
-    public ImportExportServiceImpl(@Autowired RepositoryProperties aRepositoryProperties,
+    public DocumentImportExportServiceImpl(@Autowired RepositoryProperties aRepositoryProperties,
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             @Autowired CasStorageService aCasStorageService,
-            @Autowired AnnotationSchemaService aAnnotationService)
+            @Autowired AnnotationSchemaService aAnnotationService,
+            @Autowired DocumentImportExportServiceProperties aServiceProperties)
     {
         repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         formatsProxy = aFormats;
+        properties = aServiceProperties;
     }
 
     @EventListener(ContextRefreshedEvent.class)
@@ -300,32 +304,66 @@ public class ImportExportServiceImpl
         }
         reader.getNext(cas);
 
-        // Create sentence / token annotations if they are missing
-        boolean hasTokens = exists(cas, getType(cas, Token.class));
-        boolean hasSentences = exists(cas, getType(cas, Sentence.class));
+        // Create sentence / token annotations if they are missing - sentences first because
+        // tokens are then generated inside the sentences
+        splitSenencesIfNecssaryAndCheckQuota(cas, format);
+        splitTokensIfNecssaryAndCheckQuota(cas, format);
 
-        // if (!hasTokens || !hasSentences) {
-        // AnalysisEngine pipeline = createEngine(createEngineDescription(
-        // BreakIteratorSegmenter.class,
-        // BreakIteratorSegmenter.PARAM_WRITE_TOKEN, !hasTokens,
-        // BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
-        // pipeline.process(jCas);
-        // }
+        log.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
+                cas.getAnnotationIndex(getType(cas, Token.class)).size(),
+                cas.getAnnotationIndex(getType(cas, Sentence.class)).size(), aFile, aFile.length());
 
-        if (!hasSentences) {
-            splitSentences(cas);
-        }
+        return cas;
+    }
 
-        if (!hasTokens) {
+    private void splitTokensIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
+        throws IOException
+    {
+        Type tokenType = getType(cas, Token.class);
+
+        if (!exists(cas, tokenType)) {
             tokenize(cas);
         }
 
-        if (!exists(cas, getType(cas, Token.class)) || !exists(cas, getType(cas, Sentence.class))) {
-            throw new IOException("The document appears to be empty. Unable to detect any "
-                    + "tokens or sentences. Empty documents cannot be imported.");
+        if (properties.getMaxTokens() > 0) {
+            int tokenCount = cas.getAnnotationIndex(tokenType).size();
+            if (tokenCount > properties.getMaxTokens()) {
+                throw new IOException("Number of tokens [" + tokenCount + "] exceeds limit ["
+                        + properties.getMaxTokens()
+                        + "]. Maybe file does not conform to the format [" + aFormat.getName()
+                        + "]? Otherwise, increase the global token limit in the settings file.");
+            }
         }
 
-        return cas;
+        if (!exists(cas, tokenType)) {
+            throw new IOException("The document appears to be empty. Unable to detect any "
+                    + "tokens. Empty documents cannot be imported.");
+        }
+    }
+
+    private void splitSenencesIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
+        throws IOException
+    {
+        Type sentenceType = getType(cas, Sentence.class);
+
+        if (!exists(cas, sentenceType)) {
+            splitSentences(cas);
+        }
+
+        if (properties.getMaxSentences() > 0) {
+            int sentenceCount = cas.getAnnotationIndex(sentenceType).size();
+            if (sentenceCount > properties.getMaxSentences()) {
+                throw new IOException("Number of sentences [" + sentenceCount + "] exceeds limit ["
+                        + properties.getMaxSentences()
+                        + "]. Maybe file does not conform to the format [" + aFormat.getName()
+                        + "]? Otherwise, increase the global sentence limit in the settings file.");
+            }
+        }
+
+        if (!exists(cas, sentenceType)) {
+            throw new IOException("The document appears to be empty. Unable to detect any "
+                    + "sentences. Empty documents cannot be imported.");
+        }
     }
 
     public static void splitSentences(CAS aCas)
