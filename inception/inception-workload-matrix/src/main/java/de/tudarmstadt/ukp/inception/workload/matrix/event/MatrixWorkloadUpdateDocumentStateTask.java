@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
+import static java.time.Duration.ofSeconds;
 
 import java.util.Map;
 import java.util.Objects;
@@ -52,7 +53,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
 
     public MatrixWorkloadUpdateDocumentStateTask(SourceDocument aDocument, String aTrigger)
     {
-        super(aDocument.getProject(), aTrigger, 15_000l);
+        super(aDocument.getProject(), aTrigger, ofSeconds(2));
         document = aDocument;
     }
 

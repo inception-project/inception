@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
+import static java.time.Duration.ofSeconds;
 
 import java.util.Map;
 import java.util.Objects;
@@ -56,7 +57,7 @@ public class DynamicWorkloadUpdateDocumentStateTask
 
     public DynamicWorkloadUpdateDocumentStateTask(SourceDocument aDocument, String aTrigger)
     {
-        super(aDocument.getProject(), aTrigger, 15_000l);
+        super(aDocument.getProject(), aTrigger, ofSeconds(2));
         document = aDocument;
     }
 
@@ -95,13 +96,14 @@ public class DynamicWorkloadUpdateDocumentStateTask
         Map<AnnotationDocumentState, Long> stats = documentService
                 .getAnnotationDocumentStats(document);
         long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
+        long inProgressCount = stats.get(AnnotationDocumentState.IN_PROGRESS);
 
         // If enough documents are finished, mark as finished
         if (finishedCount >= requiredAnnotatorCount) {
             documentService.setSourceDocumentState(document, ANNOTATION_FINISHED);
         }
         // ... or if nobody has started yet, mark as new
-        else if (finishedCount == 0) {
+        else if (finishedCount + inProgressCount == 0) {
             documentService.setSourceDocumentState(document, SourceDocumentState.NEW);
         }
         else {

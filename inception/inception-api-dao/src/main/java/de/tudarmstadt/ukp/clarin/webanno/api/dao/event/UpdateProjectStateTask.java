@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.event;
 
+import static java.time.Duration.ofSeconds;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -47,7 +49,7 @@ public class UpdateProjectStateTask
 
     public UpdateProjectStateTask(Project aProject, String aTrigger)
     {
-        super(aProject, aTrigger, 30_000l);
+        super(aProject, aTrigger, ofSeconds(3));
     }
 
     @Override
