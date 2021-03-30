@@ -54,8 +54,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -100,7 +100,7 @@ public class LegacyRemoteApiController
 
     private @Autowired ProjectService projectRepository;
     private @Autowired DocumentService documentRepository;
-    private @Autowired ImportExportService importExportService;
+    private @Autowired DocumentImportExportService importExportService;
     private @Autowired UserDao userRepository;
 
     /**

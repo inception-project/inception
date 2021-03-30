@@ -39,13 +39,15 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -59,7 +61,7 @@ public class AnnotationDocumentsExporterTest
     public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
 
     private RepositoryProperties repositoryProperties;
-    private ImportExportService importExportSerivce;
+    private DocumentImportExportService importExportSerivce;
     private CasStorageService casStorageService;
 
     private @Mock DocumentService documentService;
@@ -82,14 +84,16 @@ public class AnnotationDocumentsExporterTest
         project.setId(1l);
         project.setName("Test Project");
 
+        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(workFolder);
 
         casStorageService = new CasStorageServiceImpl(null, schemaService, repositoryProperties,
                 new CasStoragePropertiesImpl(), new BackupProperties());
 
-        importExportSerivce = new ImportExportServiceImpl(repositoryProperties,
-                asList(new XmiFormatSupport()), casStorageService, schemaService);
+        importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
+                asList(new XmiFormatSupport()), casStorageService, schemaService, properties);
 
         sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce,
                 repositoryProperties);

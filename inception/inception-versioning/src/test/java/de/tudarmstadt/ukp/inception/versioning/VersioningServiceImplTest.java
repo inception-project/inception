@@ -59,8 +59,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
@@ -76,10 +76,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -107,7 +109,7 @@ public class VersioningServiceImplTest
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userDao;
-    private @Autowired ImportExportService importExportService;
+    private @Autowired DocumentImportExportService importExportService;
     private @Autowired DocumentService documentService;
 
     @Rule
@@ -352,8 +354,8 @@ public class VersioningServiceImplTest
 
         @Bean
         public DocumentService documentService(RepositoryProperties aRepositoryProperties,
-                CasStorageService aCasStorageService, ImportExportService aImportExportService,
-                ProjectService aProjectService,
+                CasStorageService aCasStorageService,
+                DocumentImportExportService aImportExportService, ProjectService aProjectService,
                 ApplicationEventPublisher aApplicationEventPublisher)
         {
             return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
@@ -369,13 +371,15 @@ public class VersioningServiceImplTest
         }
 
         @Bean
-        public ImportExportService importExportService(RepositoryProperties aRepositoryProperties,
+        public DocumentImportExportService importExportService(
+                RepositoryProperties aRepositoryProperties,
                 AnnotationSchemaService aAnnotationSchemaService,
                 CasStorageService aCasStorageService)
         {
-            return new ImportExportServiceImpl(aRepositoryProperties,
+            DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+            return new DocumentImportExportServiceImpl(aRepositoryProperties,
                     List.of(new XmiFormatSupport(), new PretokenizedTextFormatSupport()),
-                    aCasStorageService, aAnnotationSchemaService);
+                    aCasStorageService, aAnnotationSchemaService, properties);
         }
 
         @Bean
