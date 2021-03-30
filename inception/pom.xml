@@ -1644,7 +1644,6 @@
     <module>inception-ui-agreement</module>
     <module>inception-ui-dashboard</module>
     <module>inception-ui-project</module>
-    <module>inception-ui-monitoring</module>
     <module>inception-ui-annotation</module>
     <module>inception-ui-tagsets</module>
     <module>inception-sharing</module>
