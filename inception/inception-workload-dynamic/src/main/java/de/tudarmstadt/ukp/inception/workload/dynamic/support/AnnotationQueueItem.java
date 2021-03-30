@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.concurrent.TimeUnit.DAYS;
@@ -76,11 +77,17 @@ public class AnnotationQueueItem
         }
 
         state = sourceDocument.getState();
-        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)
-                && finishedCount >= aRequiredAnnotations) {
-            state = ANNOTATION_FINISHED;
+        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
+            if (finishedCount >= aRequiredAnnotations) {
+                state = ANNOTATION_FINISHED;
+            }
+            else if (finishedCount + inProgressCount == 0) {
+                state = SourceDocumentState.NEW;
+            }
+            else {
+                state = ANNOTATION_IN_PROGRESS;
+            }
         }
-        System.out.printf("%s - %s%n", sourceDocument.getName(), state);
     }
 
     public SourceDocumentState getState()
