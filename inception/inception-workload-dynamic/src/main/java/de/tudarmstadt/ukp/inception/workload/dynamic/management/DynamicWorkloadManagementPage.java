@@ -19,19 +19,20 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ANNOTATORS;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ASSIGNED;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.FINISHED;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.STATE;
 import static java.lang.Integer.parseInt;
-import static java.lang.String.join;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 
@@ -79,6 +80,7 @@ import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
@@ -106,6 +108,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
@@ -222,8 +226,7 @@ public class DynamicWorkloadManagementPage
                 AnnotationQueueItem::getInProgressCount));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"), FINISHED,
                 AnnotationQueueItem::getFinishedCount));
-        columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), ANNOTATORS,
-                item -> join(", ", item.getAnnotators())));
+        columns.add(new AnnotatorColumn(new ResourceModel("Annotators")));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
                 AnnotationQueueItem::getLastUpdated));
 
@@ -841,5 +844,40 @@ public class DynamicWorkloadManagementPage
     private AnnotationQueueOverviewDataProvider makeAnnotationQueueOverviewDataProvider()
     {
         return new AnnotationQueueOverviewDataProvider(getQueue());
+    }
+
+    @OnEvent
+    public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
+    {
+        User user = userRepository.get(aEvent.getUsername());
+        AnnotationDocument annotationDocument = documentService
+                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), user);
+
+        AnnotationDocumentStateTransition transition;
+        switch (annotationDocument.getState()) {
+        case NEW:
+            transition = NEW_TO_IGNORE;
+            break;
+        case IGNORE:
+            transition = IGNORE_TO_NEW;
+            break;
+        case IN_PROGRESS:
+            transition = ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+            break;
+        case FINISHED:
+            transition = ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+            break;
+        default:
+            return;
+        }
+
+        documentService.transitionAnnotationDocumentState(annotationDocument, transition);
+
+        success(format("The state of document [%s] for user [%s] has been set to [%s]",
+                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                annotationDocument.getState()));
+        aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+
+        updateTable(aEvent.getTarget());
     }
 }

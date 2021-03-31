@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,9 +35,13 @@ public abstract class Task
     private final String trigger;
     private final int id;
 
+    public Task(Project aProject, String aTrigger)
+    {
+        this(null, aProject, aTrigger);
+    }
+
     public Task(User aUser, Project aProject, String aTrigger)
     {
-        notNull(aUser);
         notNull(aProject);
         notNull(aTrigger);
 
@@ -76,12 +76,17 @@ public abstract class Task
         return id;
     }
 
+    public boolean isReadyToStart()
+    {
+        return true;
+    }
+
     @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder(getName());
         sb.append('{');
-        sb.append("user=").append(user.getUsername());
+        sb.append("user=").append(user != null ? user.getUsername() : "<SYSTEM>");
         sb.append(", project=").append(project.getName());
         sb.append(", trigger=\"").append(trigger);
         sb.append("\"}");
@@ -98,7 +103,7 @@ public abstract class Task
             return false;
         }
         Task task = (Task) o;
-        return user.equals(task.user) && project.equals(task.project);
+        return Objects.equals(user, task.user) && project.equals(task.project);
     }
 
     @Override
