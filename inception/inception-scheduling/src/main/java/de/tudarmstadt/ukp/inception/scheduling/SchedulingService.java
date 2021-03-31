@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
@@ -41,6 +45,7 @@ public class SchedulingService
 
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
+    private final ScheduledExecutorService watchdog;
 
     private final List<Task> runningTasks;
     private final List<Task> enqueuedTasks;
@@ -53,6 +58,8 @@ public class SchedulingService
                 aConfig.getQueueSize(), this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
         enqueuedTasks = Collections.synchronizedList(new ArrayList<>());
+        watchdog = Executors.newScheduledThreadPool(1);
+        watchdog.scheduleAtFixedRate(this::scheduleEligibleTasks, 5, 5, SECONDS);
     }
 
     private void beforeExecute(Thread aThread, Runnable aRunnable)
@@ -141,6 +148,12 @@ public class SchedulingService
             return;
         }
 
+        if (!aTask.isReadyToStart()) {
+            log.debug("Task not yet ready to start - adding to queue: [{}]", aTask);
+            enqueuedTasks.add(aTask);
+            return;
+        }
+
         schedule(aTask);
 
         logState();
@@ -167,9 +180,10 @@ public class SchedulingService
     private synchronized void scheduleEligibleTasks()
     {
         Iterator<Task> i = enqueuedTasks.iterator();
+
         while (i.hasNext()) {
             Task t = i.next();
-            if (!getScheduledAndRunningTasks().contains(t)) {
+            if (!getScheduledAndRunningTasks().contains(t) && t.isReadyToStart()) {
                 i.remove();
                 schedule(t);
             }
@@ -201,6 +215,9 @@ public class SchedulingService
     public void destroy()
     {
         log.info("Shutting down scheduling service!");
+        enqueuedTasks.clear();
+        executor.getQueue().clear();
+        watchdog.shutdownNow();
         executor.shutdownNow();
     }
 

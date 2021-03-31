@@ -37,12 +37,6 @@ public enum SourceDocumentState
 
     /**
      * All annotations have marked their annotation document as finished
-     * 
-     * @deprecated This is not used and should not be used. Will be removed in future versions. If
-     *             you want to tell whether all annotators have marked a document as finished, you
-     *             have to manually check if all annotators assigned to annotate this document have
-     *             marked their annotation documents as done. This is nothing we can record
-     *             statically in the source document.
      */
     ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
 

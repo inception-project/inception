@@ -21,7 +21,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadStateWatcher;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.matrix", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -31,5 +33,12 @@ public class MatrixWorkloadManagerAutoConfiguration
     public MatrixWorkloadExtension matrixWorkloadExtension()
     {
         return new MatrixWorkloadExtension();
+    }
+
+    @Bean
+    public MatrixWorkloadStateWatcher matrixWorkloadStateWatcher(
+            SchedulingService aSchedulingService)
+    {
+        return new MatrixWorkloadStateWatcher(aSchedulingService);
     }
 }
