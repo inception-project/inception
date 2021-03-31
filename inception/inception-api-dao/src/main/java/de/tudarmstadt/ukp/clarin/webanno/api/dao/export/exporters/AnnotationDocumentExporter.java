@@ -62,8 +62,8 @@ import org.springframework.stereotype.Component;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
@@ -94,12 +94,12 @@ public class AnnotationDocumentExporter
 
     private final DocumentService documentService;
     private final UserDao userRepository;
-    private final ImportExportService importExportService;
+    private final DocumentImportExportService importExportService;
     private final RepositoryProperties repositoryProperties;
 
     @Autowired
     public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
-            ImportExportService aImportExportService, RepositoryProperties aRepositoryProperties)
+            DocumentImportExportService aImportExportService, RepositoryProperties aRepositoryProperties)
     {
         documentService = aDocumentService;
         userRepository = aUserRepository;

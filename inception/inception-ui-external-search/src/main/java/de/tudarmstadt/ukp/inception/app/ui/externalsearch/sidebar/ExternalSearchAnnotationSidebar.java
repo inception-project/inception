@@ -55,8 +55,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -98,7 +98,7 @@ public class ExternalSearchAnnotationSidebar
     private @SpringBean ProjectService projectService;
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean ImportExportService importExportService;
+    private @SpringBean DocumentImportExportService importExportService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean DocumentImporter documentImporter;
 

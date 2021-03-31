@@ -37,7 +37,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -49,7 +49,7 @@ public class ImportGuidelinesPanel
     private static final long serialVersionUID = 3503932088128261675L;
 
     private @SpringBean ProjectService projectRepository;
-    private @SpringBean ImportExportService importExportService;
+    private @SpringBean DocumentImportExportService importExportService;
 
     private BootstrapFileInputField fileUpload;
 

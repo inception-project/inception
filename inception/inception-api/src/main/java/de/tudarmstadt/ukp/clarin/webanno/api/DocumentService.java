@@ -688,4 +688,8 @@ public interface DocumentService
     long countAnnotationDocuments();
 
     void upgradeAllAnnotationDocuments(Project aProject) throws IOException;
+
+    Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument);
+
+    SourceDocumentStateStats getSourceDocumentStats(Project aProject);
 }

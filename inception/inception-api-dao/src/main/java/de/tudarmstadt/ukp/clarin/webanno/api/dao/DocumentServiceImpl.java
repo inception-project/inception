@@ -29,6 +29,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -42,12 +47,16 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -66,15 +75,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
@@ -104,14 +112,14 @@ public class DocumentServiceImpl
     private EntityManager entityManager;
 
     private final CasStorageService casStorageService;
-    private final ImportExportService importExportService;
+    private final DocumentImportExportService importExportService;
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RepositoryProperties repositoryProperties;
 
     @Autowired
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
-            CasStorageService aCasStorageService, ImportExportService aImportExportService,
+            CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
     {
         repositoryProperties = aRepositoryProperties;
@@ -124,7 +132,7 @@ public class DocumentServiceImpl
     }
 
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
-            CasStorageService aCasStorageService, ImportExportService aImportExportService,
+            CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
             EntityManager aEntityManager)
     {
@@ -990,6 +998,81 @@ public class DocumentServiceImpl
     }
 
     @Override
+    public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
+    {
+        Set<String> users = projectService.listProjectUsersWithPermissions(aDocument.getProject())
+                .stream().map(User::getUsername).collect(Collectors.toSet());
+
+        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
+        for (AnnotationDocument aDoc : listAnnotationDocuments(aDocument)) {
+            AtomicLong count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
+            count.incrementAndGet();
+            users.remove(aDoc.getUser());
+        }
+
+        counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
+                .addAndGet(users.size());
+
+        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
+        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
+            finalCounts.put(state, 0l);
+        }
+        for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
+            finalCounts.put(e.getKey(), e.getValue().get());
+        }
+
+        return finalCounts;
+    }
+
+    @Override
+    public SourceDocumentStateStats getSourceDocumentStats(Project aProject)
+    {
+        // This query is better because we do not inject strings into the query string, but it
+        // does not work on HSQLDB (on MySQL it seems to work).
+        // See: https://github.com/webanno/webanno/issues/1011
+        // String query =
+        // "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+        // "COUNT(*) AS num, " +
+        // "SUM(CASE WHEN state = :an THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :af THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :cf THEN 1 ELSE 0 END)) " +
+        // "FROM SourceDocument " +
+        // "WHERE project = :project";
+        //
+        // SourceDocumentStateStats stats = entityManager.createQuery(
+        // query, SourceDocumentStateStats.class)
+        // .setParameter("project", aProject)
+        // .setParameter("an", SourceDocumentState.NEW)
+        // .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
+        // .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
+        // .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
+        // .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
+        // .getSingleResult();
+
+        // @formatter:off
+        String query = 
+                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+                "COUNT(*), " +
+                "SUM(CASE WHEN state = '" + NEW.getId() + "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN (state = '" + ANNOTATION_IN_PROGRESS.getId() + 
+                        "' OR state is NULL) THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + ANNOTATION_FINISHED.getId() + 
+                        "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_IN_PROGRESS.getId() + 
+                        "' THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_FINISHED.getId() + "'  THEN 1 ELSE 0 END)) " +
+                "FROM SourceDocument " + 
+                "WHERE project = :project";
+        // @formatter:on
+
+        return entityManager.createQuery(query, SourceDocumentStateStats.class) //
+                .setParameter("project", aProject) //
+                .getSingleResult();
+    }
+
+    @Override
     public boolean existsCurationDocument(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -1056,24 +1139,6 @@ public class DocumentServiceImpl
     {
         return setAnnotationDocumentState(aDocument,
                 AnnotationDocumentStateTransition.transition(aTransition));
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onDocumentStateChangeEvent(DocumentStateChangedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onAfterDocumentCreatedEvent(AfterDocumentCreatedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
     }
 
     @EventListener

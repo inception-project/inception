@@ -182,7 +182,7 @@ public abstract class AnnotationEditorBase
         return vdoc;
     }
 
-    private List<AnnotationLayer> getLayersToRender()
+    public List<AnnotationLayer> getLayersToRender()
     {
         AnnotatorState state = getModelObject();
         List<AnnotationLayer> layersToRender = new ArrayList<>();

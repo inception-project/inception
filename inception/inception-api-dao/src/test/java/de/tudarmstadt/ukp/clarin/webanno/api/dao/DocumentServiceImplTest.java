@@ -58,11 +58,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -73,7 +74,7 @@ public class DocumentServiceImplTest
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Mock ImportExportService importExportService;
+    private @Mock DocumentImportExportService importExportService;
     private @Mock ProjectService projectService;
     private @Mock ApplicationEventPublisher applicationEventPublisher;
     private @Mock EntityManager entityManager;
@@ -90,7 +91,6 @@ public class DocumentServiceImplTest
 
     private DocumentService sut;
 
-    private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
     private CasStorageService storageService;
 
@@ -106,13 +106,11 @@ public class DocumentServiceImplTest
         deleteCounter.set(0);
         deleteInitialCounter.set(0);
 
-        backupProperties = new BackupProperties();
-
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder);
 
         storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
-                backupProperties);
+                new CasStoragePropertiesImpl(), new BackupProperties());
 
         sut = spy(new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
                 projectService, applicationEventPublisher, entityManager));

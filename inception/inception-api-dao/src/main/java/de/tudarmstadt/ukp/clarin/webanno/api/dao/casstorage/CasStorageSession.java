@@ -56,6 +56,8 @@ public class CasStorageSession
 
     private final Map<Long, Map<String, SessionManagedCas>> managedCases = new LinkedHashMap<>();
 
+    private int maxManagedCases = 0;
+
     /**
      * Open a new session. If a session already exists, this method throws an exception.
      * 
@@ -171,7 +173,14 @@ public class CasStorageSession
             }
         }));
 
-        LOGGER.trace("CAS storage session [{}]: closed", hashCode());
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
+                    hashCode(), maxManagedCases);
+        }
+        else if (maxManagedCases > 0) {
+            LOGGER.debug("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
+                    hashCode(), maxManagedCases);
+        }
     }
 
     /**
@@ -205,6 +214,8 @@ public class CasStorageSession
         Map<String, SessionManagedCas> casByUser = managedCases.computeIfAbsent(SPECIAL_PURPOSE,
                 key -> new LinkedHashMap<>());
         casByUser.put(aSpecialPurpose, managedCas);
+
+        maxManagedCases = Math.max(maxManagedCases, managedCases.size());
 
         LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), managedCas);
 

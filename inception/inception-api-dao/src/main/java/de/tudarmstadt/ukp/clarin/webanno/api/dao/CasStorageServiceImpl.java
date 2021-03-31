@@ -36,7 +36,6 @@ import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 
 import java.io.File;
@@ -72,6 +71,7 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -88,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasKey;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.PooledCasHolderFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.SessionManagedCas;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -102,14 +103,11 @@ public class CasStorageServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final long EVICT_IDLE_CASES_AFTER_MINUTES = 5;
-    private final long SHARED_CAS_CACHE_SIZE = 10_000;
-    private final long CAS_BORROW_WAIT_TIMEOUT_MINUTES = 3;
-
     private final CasDoctor casDoctor;
     private final AnnotationSchemaService schemaService;
     private final RepositoryProperties repositoryProperties;
     private final BackupProperties backupProperties;
+    private final CasStorageProperties casStorageProperties;
 
     private final GenericKeyedObjectPool<CasKey, CasHolder> exclusiveAccessPool;
     private final Set<CasHolder> exclusiveAccessHolders = synchronizedSet(
@@ -134,23 +132,28 @@ public class CasStorageServiceImpl
     public CasStorageServiceImpl(@Autowired(required = false) CasDoctor aCasDoctor,
             @Autowired(required = false) AnnotationSchemaService aSchemaService,
             @Autowired RepositoryProperties aRepositoryProperties,
+            @Autowired CasStorageProperties aCasStorageProperties,
             @Autowired BackupProperties aBackupProperties)
     {
         casDoctor = aCasDoctor;
         schemaService = aSchemaService;
         repositoryProperties = aRepositoryProperties;
         backupProperties = aBackupProperties;
+        casStorageProperties = aCasStorageProperties;
 
         GenericKeyedObjectPoolConfig<CasHolder> config = new GenericKeyedObjectPoolConfig<>();
         // Since we want the pool to control exclusive access to a particular CAS, we only ever
         // must have one instance per key (the key uniquely identifies the CAS)
         config.setMaxTotalPerKey(1);
+        config.setMaxIdlePerKey(1);
         // Setting this to 0 because we do not want any CAS to stick around in memory indefinitely
         config.setMinIdlePerKey(0);
         // Run an evictor thread every 5 minutes
-        config.setTimeBetweenEvictionRunsMillis(MINUTES.toMillis(EVICT_IDLE_CASES_AFTER_MINUTES));
+        config.setTimeBetweenEvictionRunsMillis(
+                casStorageProperties.getIdleCasEvictionDelay().toMillis());
         // Allow the evictor to drop idle CASes from the pool after 5 minutes (i.e. on each run)
-        config.setMinEvictableIdleTimeMillis(MINUTES.toMillis(EVICT_IDLE_CASES_AFTER_MINUTES));
+        config.setMinEvictableIdleTimeMillis(
+                casStorageProperties.getIdleCasEvictionDelay().toMillis());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX
@@ -162,13 +165,15 @@ public class CasStorageServiceImpl
         // is returned
         config.setTestOnReturn(true);
         config.setTestOnBorrow(true);
-        config.setMaxWaitMillis(MINUTES.toMillis(CAS_BORROW_WAIT_TIMEOUT_MINUTES));
+        config.setMaxWaitMillis(casStorageProperties.getCasBorrowWaitTimeout().toMillis());
         // We do not have to set maxTotal because the default is already to have no limit (-1)
         exclusiveAccessPool = new GenericKeyedObjectPool<>(new PooledCasHolderFactory(), config);
 
-        sharedAccessCache = Caffeine.newBuilder()
-                .expireAfterAccess(EVICT_IDLE_CASES_AFTER_MINUTES, MINUTES)
-                .maximumSize(SHARED_CAS_CACHE_SIZE).recordStats().build();
+        sharedAccessCache = Caffeine.newBuilder() //
+                .expireAfterAccess(casStorageProperties.getIdleCasEvictionDelay()) //
+                .maximumSize(casStorageProperties.getSharedCasCacheSize()) //
+                .recordStats() //
+                .build();
 
         if (casDoctor == null) {
             log.info("CAS doctor not available - unable to check/repair CASes");
@@ -182,6 +187,18 @@ public class CasStorageServiceImpl
         else {
             log.info("CAS backups disabled");
         }
+
+        log.info("CAS cache size: {} instances", casStorageProperties.getSharedCasCacheSize());
+    }
+
+    public long getSharedAccessCacheSize()
+    {
+        return sharedAccessCache.estimatedSize();
+    }
+
+    public CacheStats getSharedAccessCacheStats()
+    {
+        return sharedAccessCache.stats();
     }
 
     @Override

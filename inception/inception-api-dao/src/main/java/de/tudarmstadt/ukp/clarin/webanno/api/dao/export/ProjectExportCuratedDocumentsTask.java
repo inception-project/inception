@@ -26,8 +26,8 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
@@ -50,7 +50,7 @@ public class ProjectExportCuratedDocumentsTask
 
     private @Autowired ProjectExportService exportService;
     private @Autowired DocumentService documentService;
-    private @Autowired ImportExportService importExportService;
+    private @Autowired DocumentImportExportService importExportService;
 
     public ProjectExportCuratedDocumentsTask(ProjectExportTaskHandle aHandle,
             ProjectExportTaskMonitor aMonitor, ProjectExportRequest aRequest, String aUsername)
