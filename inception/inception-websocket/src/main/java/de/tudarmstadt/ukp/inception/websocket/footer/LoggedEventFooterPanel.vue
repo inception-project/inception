@@ -17,19 +17,21 @@
 -->
 
 <template>
-  <div class="float-left dropup" style="position: static; margin-right: 4px; margin-left: 4px">
-    <a role="button" data-toggle="dropdown" id="eventsPanelDropupLink" aria-haspopup="true" aria-expanded="false" @click="toggleConnection">
-      <i class="fas fa-rss"></i>
-    </a>
-    <div class="dropdown-menu" aria-labelledby="eventsPanelDropupLink">
-      <div class="card-header">
-      Recent logged events
-      </div>
-      <div class="card-body">
-      <ul class="list-group list-group-flush">
-        <li v-show="!events.length" class="list-group-item">No recent events</li>
-        <li v-for="event in events" class="list-group-item">{{formatTime(event.timestamp)}}: {{event.eventMsg}}</li>
-      </ul>
+  <div class="float-left">
+    <div class="btn-group dropup">
+      <a role="button" class="p-0 m-0 btn btn-secondary dropdown-toggle" data-boundary="viewport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" @click="toggleConnection">
+        <i class="fas fa-rss"></i>
+      </a>
+      <div class="dropdown-menu">
+        <div class="card-header">
+        Recent logged events
+        </div>
+        <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li v-show="!events.length" class="list-group-item">No recent events</li>
+          <li v-for="event in events" class="list-group-item">{{formatTime(event.timestamp)}}: {{event.eventMsg}}</li>
+        </ul>
+        </div>
       </div>
     </div>
   </div>
