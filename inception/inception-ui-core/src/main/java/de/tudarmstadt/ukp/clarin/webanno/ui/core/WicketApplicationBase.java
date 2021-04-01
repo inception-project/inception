@@ -45,7 +45,6 @@ import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
-import org.apache.wicket.settings.ExceptionSettings;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
@@ -116,9 +115,6 @@ public abstract class WicketApplicationBase
         initWebFrameworks();
 
         initLogoReference();
-
-        // Display stack trace instead of internal error
-        initShowExceptionPage();
 
         initMDCLifecycle();
 
@@ -247,15 +243,6 @@ public abstract class WicketApplicationBase
                 MDC.remove(Logging.KEY_REPOSITORY_PATH);
             }
         });
-    }
-
-    protected void initShowExceptionPage()
-    {
-        Properties settings = SettingsUtil.getSettings();
-        if ("true".equalsIgnoreCase(settings.getProperty("debug.showExceptionPage"))) {
-            getExceptionSettings()
-                    .setUnexpectedExceptionDisplay(ExceptionSettings.SHOW_EXCEPTION_PAGE);
-        }
     }
 
     protected void initLogoReference()
