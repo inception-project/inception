@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.bootloader;
 
+import static java.lang.String.format;
+import static java.lang.System.getProperty;
+
+import java.awt.GraphicsEnvironment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,9 +58,10 @@ public class ExtensibleClasspathEnabledWarLauncher
             throw new IllegalStateException(ex);
         }
     }
-    
+
     @Override
-    protected Iterator<Archive> getClassPathArchivesIterator() throws Exception {
+    protected Iterator<Archive> getClassPathArchivesIterator() throws Exception
+    {
         return getClassPathArchives().iterator();
     }
 
@@ -67,21 +72,22 @@ public class ExtensibleClasspathEnabledWarLauncher
         List<Archive> archives = new ArrayList<>();
         archive.getNestedArchives(this::isNestedArchive, candidateArchive -> true)
                 .forEachRemaining(archives::add);
-        
+
         Path extraLibPath = Paths.get(getApplicationHome() + EXTRA_LIB);
-        
+
         if (Files.exists(extraLibPath)) {
             debug("Scanning for additional JARs in [" + extraLibPath + "]");
-            
+
             for (Path jar : Files.newDirectoryStream(extraLibPath, "*.jar")) {
                 debug("Registering JAR: [" + jar + "]");
                 archives.add(new JarFileArchive(jar.toFile()));
             }
         }
         else {
-            debug("Not scanning for additional JARs in [" + extraLibPath + "] - path does not exist");
+            debug("Not scanning for additional JARs in [" + extraLibPath
+                    + "] - path does not exist");
         }
-        
+
         return archives;
     }
 
@@ -120,9 +126,62 @@ public class ExtensibleClasspathEnabledWarLauncher
             return userHome + "/" + ".inception";
         }
     }
-    
+
+    public static int getJavaVersion()
+    {
+        String verString = getProperty("java.specification.version");
+        int ver = 99;
+
+        try {
+            if (verString.contains(".")) {
+                final String[] toParse = verString.split("\\.");
+                if (toParse.length >= 1) {
+                    ver = Integer.valueOf(toParse[0]);
+                }
+            }
+            else {
+                ver = Integer.valueOf(verString);
+            }
+        }
+        catch (Exception e) {
+            System.err.printf(
+                    "Unable to determine your Java version from the version string [%s]. Let's "
+                            + "assume it is compatible with Java 11 and start.%n",
+                    verString);
+        }
+
+        return ver;
+    }
+
+    public static boolean checkSystemRequirements(int ver)
+    {
+        if (ver < 11) {
+            StringBuilder message = new StringBuilder();
+            message.append(
+                    format("INCEpTION requires at least Java 11, but you are running Java %s.%n%n",
+                            getProperty("java.specification.version")));
+            message.append(format("Installation: %s%n", getProperty("java.home")));
+            message.append(format("Vendor: %s%n", getProperty("java.vendor")));
+            message.append(format("Version: %s%n", getProperty("java.version")));
+            if (!GraphicsEnvironment.isHeadless()) {
+                UIMessage.displayMessage(message.toString());
+            }
+            else {
+                System.err.print(message);
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
     public static void main(String[] args) throws Exception
     {
-        new ExtensibleClasspathEnabledWarLauncher().launch(args);
+        boolean okToLaunch = checkSystemRequirements(getJavaVersion());
+
+        if (okToLaunch) {
+            new ExtensibleClasspathEnabledWarLauncher().launch(args);
+        }
     }
 }
