@@ -32,8 +32,9 @@ public class UIMessage
 
     public static final void displayMessage(String aMessage)
     {
-        final JOptionPane optionPane = new JOptionPane(new JLabel(aMessage), INFORMATION_MESSAGE,
-                OK_OPTION, null, new String[] { ACTION_SHUTDOWN });
+        String formattedMessage = "<html>" + aMessage.replace("\n", "<br>") + "</html>";
+        final JOptionPane optionPane = new JOptionPane(new JLabel(formattedMessage),
+                INFORMATION_MESSAGE, OK_OPTION, null, new String[] { ACTION_SHUTDOWN });
         optionPane.addPropertyChangeListener(UIMessage::handleCloseEvent);
 
         JFrame frame = new JFrame("INCEpTION System Requirements Check");

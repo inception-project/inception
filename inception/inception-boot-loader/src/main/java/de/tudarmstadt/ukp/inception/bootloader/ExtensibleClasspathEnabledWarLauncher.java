@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.bootloader;
 
+import static java.lang.String.format;
+import static java.lang.System.getProperty;
+
 import java.awt.GraphicsEnvironment;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -124,9 +127,9 @@ public class ExtensibleClasspathEnabledWarLauncher
         }
     }
 
-    public static boolean checkSystemRequirements()
+    public static int getJavaVersion()
     {
-        String verString = System.getProperty("java.specification.version");
+        String verString = getProperty("java.specification.version");
         int ver = 99;
 
         try {
@@ -147,14 +150,24 @@ public class ExtensibleClasspathEnabledWarLauncher
                     verString);
         }
 
+        return ver;
+    }
+
+    public static boolean checkSystemRequirements(int ver)
+    {
         if (ver < 11) {
-            String message = String.format(
-                    "INCEpTION requires at least Java 11, but you are running Java %s.", verString);
+            StringBuilder message = new StringBuilder();
+            message.append(
+                    format("INCEpTION requires at least Java 11, but you are running Java %s.%n%n",
+                            getProperty("java.specification.version")));
+            message.append(format("Installation: %s%n", getProperty("java.home")));
+            message.append(format("Vendor: %s%n", getProperty("java.vendor")));
+            message.append(format("Version: %s%n", getProperty("java.version")));
             if (!GraphicsEnvironment.isHeadless()) {
-                UIMessage.displayMessage(message);
+                UIMessage.displayMessage(message.toString());
             }
             else {
-                System.err.println(message);
+                System.err.print(message);
             }
 
             return false;
@@ -165,7 +178,7 @@ public class ExtensibleClasspathEnabledWarLauncher
 
     public static void main(String[] args) throws Exception
     {
-        boolean okToLaunch = checkSystemRequirements();
+        boolean okToLaunch = checkSystemRequirements(getJavaVersion());
 
         if (okToLaunch) {
             new ExtensibleClasspathEnabledWarLauncher().launch(args);
