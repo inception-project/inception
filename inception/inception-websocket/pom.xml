@@ -55,11 +55,16 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-log</artifactId>
     </dependency>  
-   
+
     <dependency>
       <groupId>org.webjars.npm</groupId>
       <artifactId>webstomp-client</artifactId>
       <version>1.2.6</version>
+    </dependency>
+   
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
     </dependency>
     
     <dependency>
@@ -90,6 +95,10 @@
 
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
     </dependency>
     <dependency>
@@ -102,11 +111,29 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-websocket</artifactId>
+      <artifactId>spring-web</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-core</artifactId>
+      <artifactId>spring-websocket</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     
     <dependency>
@@ -138,6 +165,10 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredDependencies>
+              <ignoredDependency>org.springframework.boot:spring-boot-starter-web</ignoredDependency>
+              <ignoredDependency>org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
+            </ignoredDependencies>
             <usedDependencies>
               <!--
                 - Maven doesn't detect the the webjar dependencies because there is
