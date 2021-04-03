@@ -24,9 +24,9 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -34,7 +34,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.support.AbstractMessageChannel;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class LoggedEventMessageServiceImplTest
 {
     private @Mock DocumentService docService;
@@ -66,7 +66,7 @@ public class LoggedEventMessageServiceImplTest
     
     private LoggedEventMessageControllerImpl sut;
     
-    @Before
+    @BeforeEach
     public void setup() {
         outboundChannel = new TestChannel();
         adapters = asList(new SpanEventAdapter());
