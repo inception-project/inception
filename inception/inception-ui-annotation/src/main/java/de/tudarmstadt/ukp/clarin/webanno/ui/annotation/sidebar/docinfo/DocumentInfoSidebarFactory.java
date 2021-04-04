@@ -23,6 +23,8 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.request.resource.UrlResourceReference;
 import org.springframework.stereotype.Component;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -44,9 +46,9 @@ public class DocumentInfoSidebarFactory
     }
 
     @Override
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
-        return ICON;
+        return FontAwesome5IconType.info_s;
     }
 
     @Override

@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -38,9 +38,6 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 public class RecommendationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
-    private static final ResourceReference ICON = new PackageResourceReference(
-            RecommendationSidebarFactory.class, "speech_bubble.png");
-
     @Override
     public String getDisplayName()
     {
@@ -48,9 +45,9 @@ public class RecommendationSidebarFactory
     }
 
     @Override
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
-        return ICON;
+        return FontAwesome5IconType.chart_line_s;
     }
 
     @Override

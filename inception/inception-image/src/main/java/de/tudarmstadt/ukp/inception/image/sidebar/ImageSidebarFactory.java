@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.inception.image.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.stereotype.Component;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -33,9 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 public class ImageSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
-    private static final ResourceReference ICON = new PackageResourceReference(
-            ImageSidebarFactory.class, "images.png");
-
     @Override
     public String getDisplayName()
     {
@@ -43,9 +40,9 @@ public class ImageSidebarFactory
     }
 
     @Override
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
-        return ICON;
+        return FontAwesome5IconType.images_s;
     }
 
     @Override
