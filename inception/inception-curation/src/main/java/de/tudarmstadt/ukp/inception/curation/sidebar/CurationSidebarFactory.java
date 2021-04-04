@@ -18,12 +18,12 @@
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -38,9 +38,6 @@ public class CurationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
 
-    private static final ResourceReference ICON = new PackageResourceReference(
-            CurationSidebarFactory.class, "data_table.png");
-
     private @Autowired ProjectService projectService;
 
     @Override
@@ -50,9 +47,9 @@ public class CurationSidebarFactory
     }
 
     @Override
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
-        return ICON;
+        return FontAwesome5IconType.clipboard_s;
     }
 
     @Override

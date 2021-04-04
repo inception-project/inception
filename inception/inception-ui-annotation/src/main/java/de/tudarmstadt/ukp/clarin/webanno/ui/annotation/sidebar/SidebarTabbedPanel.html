@@ -18,17 +18,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <div wicket:id="tabs-container" class="tab-row">
-    <ul>
-      <li>
-        <a href="#" wicket:id="showHideLink"><img wicket:id="showHideIcon"></img></a>
-      </li>
-      <li wicket:id="tabs">
-        <a href="#" wicket:id="link"><img wicket:id="image"></img></a>
-       </li>
-    </ul>
-  </div>
-  <div wicket:id="panel" class="tab-panel">
+  <ul wicket:id="tabs-container">
+    <li class="d-flex sidebar-item">
+      <a wicket:id="showHideLink" class="flex-content pr-1 icon" style="width: unset;" href="#">
+        <span wicket:id="showHideIcon"/>
+      </a>
+    </li>
+    <li wicket:id="tabs" class="d-flex sidebar-item">
+      <a wicket:id="link" class="flex-content pr-1 m-1 icon" style="width: unset;" href="#">
+        <span wicket:id="icon"/>
+      </a>
+     </li>
+  </ul>
+  <div wicket:id="panel" class="flex-content flex-v-container">
     <!-- no panel -->
   </div>
 </wicket:panel>

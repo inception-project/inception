@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.bootloader;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 public class ExtensibleClasspathEnabledWarLauncherTest
 {
-    @Ignore("Actually, this is only for manual testing ;)")
+    @Disabled("Actually, this is only for manual testing ;)")
     @Test
     public void checkJavaVersion()
     {
