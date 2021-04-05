@@ -19,13 +19,18 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#projectRecommendersMenuItem}.
+ * </p>
+ */
 @Order(RecommenderProjectSettingsPanelFactory.ORDER)
 public class ProjectRecommendersMenuItem
     extends ProjectSettingsMenuItemBase
