@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
  * Sidebar to access the external search on the annotation page.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExternalSearchUIAutoConfiguration#externalSearchAnnotationSidebarFactory()}.
+ * {@link ExternalSearchUIAutoConfiguration#externalSearchAnnotationSidebarFactory}.
  * </p>
  */
 public class ExternalSearchAnnotationSidebarFactory

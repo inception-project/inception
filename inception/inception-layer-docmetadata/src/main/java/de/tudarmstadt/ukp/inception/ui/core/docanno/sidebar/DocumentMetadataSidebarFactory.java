@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
  * Support for document-level annotations through a sidebar.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataSidebarFactory()}.
+ * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataSidebarFactory}.
  * </p>
  */
 public class DocumentMetadataSidebarFactory
