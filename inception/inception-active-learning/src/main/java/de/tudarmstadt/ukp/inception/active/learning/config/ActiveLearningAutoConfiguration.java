@@ -66,8 +66,9 @@ public class ActiveLearningAutoConfiguration
     }
 
     @Bean
-    public ActiveLearningSidebarFactory activeLearningSidebarFactory()
+    public ActiveLearningSidebarFactory activeLearningSidebarFactory(
+            RecommendationService aRecommendationService)
     {
-        return new ActiveLearningSidebarFactory();
+        return new ActiveLearningSidebarFactory(aRecommendationService);
     }
 }

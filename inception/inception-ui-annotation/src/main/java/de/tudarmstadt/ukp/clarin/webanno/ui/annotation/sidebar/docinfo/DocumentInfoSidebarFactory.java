@@ -18,9 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.resource.ResourceReference;
-import org.apache.wicket.request.resource.UrlResourceReference;
 import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -36,9 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 public class DocumentInfoSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
-    private static final ResourceReference ICON = new UrlResourceReference(
-            Url.parse("images/information.png")).setContextRelative(true);
-
     @Override
     public String getDisplayName()
     {
@@ -49,6 +43,12 @@ public class DocumentInfoSidebarFactory
     public IconType getIcon()
     {
         return FontAwesome5IconType.info_s;
+    }
+
+    @Override
+    public boolean applies(AnnotatorState aState)
+    {
+        return false;
     }
 
     @Override
