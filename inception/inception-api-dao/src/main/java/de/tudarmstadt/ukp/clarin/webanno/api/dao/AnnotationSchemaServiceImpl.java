@@ -389,16 +389,25 @@ public class AnnotationSchemaServiceImpl
     public boolean existsEnabledLayerOfType(Project aProject, String aType)
     {
         String query = String.join("\n", //
-                "SELECT COUNT(*)", //
                 "FROM AnnotationLayer", //
                 "WHERE project = :project ", //
                 "AND type = :type", //
                 "AND enabled = true");
 
-        return entityManager.createQuery(query, Long.class) //
+        List<AnnotationLayer> layers = entityManager.createQuery(query, AnnotationLayer.class) //
                 .setParameter("project", aProject) //
                 .setParameter("type", aType) //
-                .getSingleResult() > 0;
+                .getResultList();
+
+        return layers.stream().anyMatch(layer -> {
+            try {
+                layerSupportRegistry.getLayerSupport(layer);
+                return true;
+            }
+            catch (IllegalArgumentException e) {
+                return false;
+            }
+        });
     }
 
     @Override
@@ -424,17 +433,26 @@ public class AnnotationSchemaServiceImpl
     public boolean existsEnabledFeatureOfType(Project aProject, String aType)
     {
         String query = String.join("\n", //
-                "SELECT COUNT(*)", //
                 "FROM AnnotationFeature", //
                 "WHERE project = :project ", //
                 "AND type = :type", //
                 "AND enabled = true", //
                 "AND layer.enabled = true");
 
-        return entityManager.createQuery(query, Long.class) //
+        List<AnnotationFeature> features = entityManager.createQuery(query, AnnotationFeature.class) //
                 .setParameter("project", aProject) //
                 .setParameter("type", aType) //
-                .getSingleResult() > 0;
+                .getResultList();
+
+        return features.stream().anyMatch(feature -> {
+            try {
+                featureSupportRegistry.findExtension(feature);
+                return true;
+            }
+            catch (IllegalArgumentException e) {
+                return false;
+            }
+        });
     }
 
     @Override

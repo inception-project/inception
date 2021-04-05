@@ -1691,30 +1691,35 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public boolean hasEnabledRecommenders(Project aProject)
+    public boolean existsEnabledRecommender(Project aProject)
     {
         String query = String.join("\n", //
-                "SELECT COUNT(*)", //
                 "FROM Recommender WHERE", //
                 "enabled = :enabled AND", //
                 "project = :project");
 
-        return entityManager.createQuery(query, Long.class) //
+        List<Recommender> recommenders = entityManager.createQuery(query, Recommender.class) //
                 .setParameter("enabled", true) //
                 .setParameter("project", aProject) //
-                .getSingleResult() > 0;
+                .getResultList();
+
+        return recommenders.stream() //
+                .anyMatch(rec -> getRecommenderFactory(rec) != null);
     }
 
     @Override
     public long countEnabledRecommenders()
     {
         String query = String.join("\n", //
-                "SELECT COUNT(*)", //
                 "FROM Recommender WHERE", //
                 "enabled = :enabled");
 
-        return entityManager.createQuery(query, Long.class) //
+        List<Recommender> recommenders = entityManager.createQuery(query, Recommender.class) //
                 .setParameter("enabled", true) //
-                .getSingleResult();
+                .getResultList();
+
+        return recommenders.stream() //
+                .filter(rec -> getRecommenderFactory(rec) != null) //
+                .count();
     }
 }

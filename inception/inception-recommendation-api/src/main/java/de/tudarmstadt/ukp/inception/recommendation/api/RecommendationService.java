@@ -68,7 +68,7 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(Project aProject);
 
-    boolean hasEnabledRecommenders(Project aProject);
+    boolean existsEnabledRecommender(Project aProject);
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
 

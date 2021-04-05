@@ -63,7 +63,7 @@ public class ActiveLearningSidebarFactory
     @Override
     public boolean applies(AnnotatorState aState)
     {
-        return recommendationService.hasEnabledRecommenders(aState.getProject());
+        return recommendationService.existsEnabledRecommender(aState.getProject());
     }
 
     @Override
