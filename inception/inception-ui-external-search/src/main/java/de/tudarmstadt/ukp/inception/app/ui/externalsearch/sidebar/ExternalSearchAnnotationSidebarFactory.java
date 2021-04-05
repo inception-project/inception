@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -30,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 
 /**
  * Sidebar to access the external search on the annotation page.
@@ -41,8 +40,12 @@ import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchU
 public class ExternalSearchAnnotationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
-    private static final ResourceReference ICON = new PackageResourceReference(
-            ExternalSearchAnnotationSidebarFactory.class, "world_go.png");
+    private final ExternalSearchService externalSearchService;
+
+    public ExternalSearchAnnotationSidebarFactory(ExternalSearchService aExternalSearchService)
+    {
+        externalSearchService = aExternalSearchService;
+    }
 
     @Override
     public String getDisplayName()
@@ -54,6 +57,12 @@ public class ExternalSearchAnnotationSidebarFactory
     public IconType getIcon()
     {
         return FontAwesome5IconType.database_s;
+    }
+
+    @Override
+    public boolean applies(AnnotatorState aState)
+    {
+        return externalSearchService.existsEnabledDocumentRepository(aState.getProject());
     }
 
     @Override

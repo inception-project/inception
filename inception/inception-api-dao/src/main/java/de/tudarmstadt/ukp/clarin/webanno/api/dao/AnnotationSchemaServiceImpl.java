@@ -385,6 +385,24 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
+    public boolean existsEnabledLayerOfType(Project aProject, String aType)
+    {
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM AnnotationLayer", //
+                "WHERE project = :project ", //
+                "AND type = :type", //
+                "AND enabled = true");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("type", aType) //
+                .getSingleResult() > 0;
+    }
+
+    @Override
+    @Transactional
     public boolean existsFeature(String aName, AnnotationLayer aLayer)
     {
         try {
@@ -399,6 +417,24 @@ public class AnnotationSchemaServiceImpl
         catch (NoResultException e) {
             return false;
         }
+    }
+
+    @Override
+    @Transactional
+    public boolean existsEnabledFeatureOfType(Project aProject, String aType)
+    {
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM AnnotationFeature", //
+                "WHERE project = :project ", //
+                "AND type = :type", //
+                "AND enabled = true", //
+                "AND layer.enabled = true");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("type", aType) //
+                .getSingleResult() > 0;
     }
 
     @Override

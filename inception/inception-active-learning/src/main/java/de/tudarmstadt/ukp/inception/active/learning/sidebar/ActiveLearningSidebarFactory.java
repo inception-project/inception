@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import org.apache.wicket.model.IModel;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -28,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
 /**
  * <p>
@@ -38,6 +40,14 @@ import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoCon
 public class ActiveLearningSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
+    private final RecommendationService recommendationService;
+
+    @Autowired
+    public ActiveLearningSidebarFactory(RecommendationService aRecommendationService)
+    {
+        recommendationService = aRecommendationService;
+    }
+
     @Override
     public String getDisplayName()
     {
@@ -48,6 +58,12 @@ public class ActiveLearningSidebarFactory
     public IconType getIcon()
     {
         return FontAwesome5IconType.robot_s;
+    }
+
+    @Override
+    public boolean applies(AnnotatorState aState)
+    {
+        return recommendationService.hasEnabledRecommenders(aState.getProject());
     }
 
     @Override

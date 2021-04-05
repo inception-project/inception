@@ -1691,12 +1691,30 @@ public class RecommendationServiceImpl
     }
 
     @Override
+    public boolean hasEnabledRecommenders(Project aProject)
+    {
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM Recommender WHERE", //
+                "enabled = :enabled AND", //
+                "project = :project");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("enabled", true) //
+                .setParameter("project", aProject) //
+                .getSingleResult() > 0;
+    }
+
+    @Override
     public long countEnabledRecommenders()
     {
-        String query = String.join("\n", "SELECT COUNT(*)", "FROM Recommender WHERE",
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM Recommender WHERE", //
                 "enabled = :enabled");
 
-        return entityManager.createQuery(query, Long.class).setParameter("enabled", true)
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("enabled", true) //
                 .getSingleResult();
     }
 }
