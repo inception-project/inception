@@ -26,7 +26,9 @@ import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescripti
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,24 +48,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 @ContextConfiguration(classes = SpringConfig.class)
 @Transactional
@@ -75,31 +72,25 @@ public class RecommendationServiceImplIntegrationTest
     private @Autowired TestEntityManager testEntityManager;
 
     private RecommendationServiceImpl sut;
-    private SessionRegistry sessionRegistry;
-    private UserDao userRepository;
-    private RecommenderFactoryRegistry recommenderFactoryRegistry;
-    private SchedulingService schedulingService;
+    private @Mock RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Mock AnnotationSchemaServiceImpl annoService;
-    private DocumentService documentService;
-    private LearningRecordService learningRecordService;
 
     private Project project;
     private AnnotationLayer layer;
-    private User user;
     private Recommender rec;
     private AnnotationFeature feature;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new RecommendationServiceImpl(sessionRegistry, userRepository,
-                recommenderFactoryRegistry, schedulingService, annoService, documentService,
-                learningRecordService, testEntityManager.getEntityManager());
+        openMocks(this);
+
+        sut = new RecommendationServiceImpl(null, null, recommenderFactoryRegistry, null,
+                annoService, null, null, testEntityManager.getEntityManager());
 
         project = createProject(PROJECT_NAME);
         layer = createAnnotationLayer();
         layer.setProject(project);
-        user = createUser();
         feature = createAnnotationFeature(layer, "value");
 
         rec = buildRecommender(project, feature);
@@ -131,6 +122,13 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getNumOfEnabledRecommenders_WithOneEnabledRecommender()
     {
+        RecommendationEngineFactory recFactory = mock(RecommendationEngineFactory.class);
+        when(recommenderFactoryRegistry.getFactory(any(String.class))).thenReturn(recFactory);
+        when(recFactory.accepts(any(AnnotationLayer.class), any(AnnotationFeature.class)))
+                .thenReturn(true);
+
+        assertThat(recommenderFactoryRegistry.getFactory("nummy")).isNotNull();
+
         sut.createOrUpdateRecommender(rec);
 
         long numOfRecommenders = sut.countEnabledRecommenders();
@@ -226,13 +224,6 @@ public class RecommendationServiceImplIntegrationTest
         return testEntityManager.persist(layer);
     }
 
-    private User createUser()
-    {
-        User user = new User();
-
-        return user;
-    }
-
     private Recommender buildRecommender(Project aProject, AnnotationFeature aFeature)
     {
         Recommender recommender = new Recommender();
@@ -242,6 +233,7 @@ public class RecommendationServiceImplIntegrationTest
         recommender.setAlwaysSelected(true);
         recommender.setSkipEvaluation(false);
         recommender.setMaxRecommendations(3);
+        recommender.setTool("dummyRecommenderTool");
 
         return recommender;
     }

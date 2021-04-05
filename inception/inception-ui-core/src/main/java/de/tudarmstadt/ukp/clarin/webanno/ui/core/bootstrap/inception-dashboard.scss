@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 .dashboard-sidebar {
-  background-color: var(--gray-dark);
   overflow-x: hidden;
+  background-color: var(--gray-dark);
   
   &.collapsed {
     max-width: 4rem;
@@ -36,7 +36,9 @@
       -ms-overflow-style: none;  /* IE and Edge */
       scrollbar-width: none;  /* Firefox */
     }
+  }
     
+  &.expand-on-hover {
     &:hover {
       max-width: unset;
       
@@ -46,34 +48,68 @@
     }
   }
 
-  .icon {
-    font-size: 160%;
-    width: 4rem;
-    text-align: center;
-    transition: color .1s ease-in;
-  }
-
-  .label {
-    justify-content: center;
-    color: var(--light) !important;
-  }
-
-  .active {
-    background-color: var(--gray-dark) !important;
-    border-left-color: var(--light);
-
-    .icon {
-      color: var(--light);
-    }
-  }
-
-  a {
+  .sidebar-item {
     font-size: 18px;
     color: var(--gray);
     border-left: solid 0.2rem var(--gray-dark);
+
+    .icon {
+      font-size: 160%;
+      width: 4rem;
+      text-align: center;
+      transition: color .1s ease-in;
+    }
+  
+    .active {
+      .icon {
+        color: var(--light) !important;
+      }
+    }
+  
+    .label {
+      justify-content: center;
+      color: var(--light) !important;
+    }
     
     &:hover {
       color: var(--light);
+    }
+  
+    &.active {
+      background-color: var(--gray-dark) !important;
+      border-left-color: var(--light);
+    }
+    
+    a {
+      color: inherit;
+    }
+  }
+
+  &.dashboard-sidebar-light { 
+    background-color: var(--light);
+    
+    .sidebar-item {
+      color: var(--gray);
+      border-left-color:  var(--light);
+  
+      .active {
+        .icon {
+          color: var(--dark) !important;
+        }
+      }
+    
+      .label {
+        color: var(--dark) !important;
+      }
+      
+      &:hover {
+        color: var(--dark);
+      }
+    
+      &.active {
+        background-color: var(--light) !important;
+        border-left-color: var(--dark);
+      }
     }
   }
 

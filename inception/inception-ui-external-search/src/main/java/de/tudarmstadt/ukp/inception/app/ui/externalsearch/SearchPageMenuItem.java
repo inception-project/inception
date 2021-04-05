@@ -66,7 +66,7 @@ public class SearchPageMenuItem
     @Override
     public boolean applies(Project aProject)
     {
-        return !externalSearchService.listDocumentRepositories(aProject).isEmpty();
+        return externalSearchService.existsEnabledDocumentRepository(aProject);
     }
 
     @Override

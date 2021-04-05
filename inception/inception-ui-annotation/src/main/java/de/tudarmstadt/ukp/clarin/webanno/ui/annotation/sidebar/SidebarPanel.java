@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.context.ApplicationContext;
@@ -67,7 +71,16 @@ public class SidebarPanel
         tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs());
         add(tabsPanel);
 
-        add(new AttributeAppender("class", () -> tabsPanel.isExpanded() ? "" : "collapsed", " "));
+        add(new AttributeAppender("class",
+                LoadableDetachableModel.of(() -> tabsPanel.isExpanded() ? "" : "collapsed"), " "));
+
+        // Override sidebar width from preferences
+        add(new AttributeModifier("style",
+                LoadableDetachableModel
+                        .of(() -> tabsPanel.isExpanded()
+                                ? format("flex-basis: %d%%;",
+                                        stateModel.getObject().getPreferences().getSidebarSize())
+                                : "")));
     }
 
     @Override
