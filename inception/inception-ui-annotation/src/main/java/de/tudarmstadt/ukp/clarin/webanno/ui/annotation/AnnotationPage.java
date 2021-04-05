@@ -50,6 +50,7 @@ import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -89,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -203,7 +203,7 @@ public class AnnotationPage
     @Override
     public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
-        return LambdaModel.of(() -> {
+        return LoadableDetachableModel.of(() -> {
             User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
@@ -348,12 +348,8 @@ public class AnnotationPage
 
     private SidebarPanel createLeftSidebar()
     {
-        SidebarPanel leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor,
-                () -> getEditorCas(), AnnotationPage.this);
-        // Override sidebar width from preferences
-        leftSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
-                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
-        return leftSidebar;
+        return new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> getEditorCas(),
+                AnnotationPage.this);
     }
 
     private WebMarkupContainer createRightSidebar()
@@ -361,7 +357,7 @@ public class AnnotationPage
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupId(true);
         // Override sidebar width from preferences
-        rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
+        rightSidebar.add(new AttributeModifier("style", LoadableDetachableModel.of(() -> String
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);

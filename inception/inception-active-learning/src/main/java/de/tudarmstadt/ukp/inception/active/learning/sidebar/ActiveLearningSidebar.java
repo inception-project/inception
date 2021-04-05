@@ -211,7 +211,6 @@ public class ActiveLearningSidebar
             ActiveLearningUserState alState = new ActiveLearningUserState();
             alState.setStrategy(new UncertaintySamplingStrategy());
             alStateModel.setObject(alState);
-            ;
         }
 
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
@@ -249,11 +248,12 @@ public class ActiveLearningSidebar
                 alStateModel.getObject().setDoExistRecommenders(false);
             }
         }
+
         Label noRecommendersMessage = new Label(CID_NO_RECOMMENDERS, "None of the layers have any "
                 + "recommenders configured. Please set the recommenders first in the Project "
                 + "Settings.");
-        noRecommendersMessage.add(LambdaBehavior.onConfigure(component -> component
-                .setVisible(!alStateModel.getObject().isDoExistRecommenders())));
+        noRecommendersMessage
+                .add(visibleWhen(() -> !alStateModel.getObject().isDoExistRecommenders()));
         return noRecommendersMessage;
     }
 
@@ -471,11 +471,11 @@ public class ActiveLearningSidebar
         LambdaAjaxLink link = new LambdaAjaxLink(CID_RECOMMENDATION_COVERED_TEXT_LINK,
                 this::actionJumpToSuggestion);
         link.add(new Label("leftContext",
-                LoadableDetachableModel.of(() -> alStateModel.getObject().getLeftContext())));
+                alStateModel.map(ActiveLearningUserState::getLeftContext)));
         link.add(new Label("text", LoadableDetachableModel.of(() -> alStateModel.getObject()
                 .getSuggestion().map(SpanSuggestion::getCoveredText).orElse(""))));
         link.add(new Label("rightContext",
-                LoadableDetachableModel.of(() -> alStateModel.getObject().getRightContext())));
+                alStateModel.map(ActiveLearningUserState::getRightContext)));
         return link;
     }
 

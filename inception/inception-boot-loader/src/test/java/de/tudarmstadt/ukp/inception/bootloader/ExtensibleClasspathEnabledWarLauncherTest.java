@@ -15,28 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
+package de.tudarmstadt.ukp.inception.bootloader;
 
-import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
-import org.apache.wicket.model.IModel;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-
-public abstract class SidebarTab
-    extends AbstractTab
+public class ExtensibleClasspathEnabledWarLauncherTest
 {
-    private static final long serialVersionUID = -3205381571000021331L;
-
-    private IconType icon;
-
-    public SidebarTab(IModel<String> aTitle, IconType aIcon)
+    @Disabled("Actually, this is only for manual testing ;)")
+    @Test
+    public void checkJavaVersion()
     {
-        super(aTitle);
-        icon = aIcon;
-    }
-
-    public IconType getIcon()
-    {
-        return icon;
+        ExtensibleClasspathEnabledWarLauncher.checkSystemRequirements(8);
     }
 }

@@ -53,9 +53,10 @@ public class ExternalSearchUIAutoConfiguration
     }
 
     @Bean
-    public ExternalSearchAnnotationSidebarFactory externalSearchAnnotationSidebarFactory()
+    public ExternalSearchAnnotationSidebarFactory externalSearchAnnotationSidebarFactory(
+            ExternalSearchService aExternalSearchService)
     {
-        return new ExternalSearchAnnotationSidebarFactory();
+        return new ExternalSearchAnnotationSidebarFactory(aExternalSearchService);
     }
 
     @Bean

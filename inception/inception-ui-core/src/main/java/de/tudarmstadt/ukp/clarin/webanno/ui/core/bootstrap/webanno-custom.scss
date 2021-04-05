@@ -165,13 +165,6 @@ span.form-control {
 .v-scrolling { overflow-y: auto; }
 .h-scrolling { overflow-x: auto; }
 
-/* Annotation editor pages - general layout */
-.annotation-editor-container {
-  .collapsed {
-    flex-basis: 39px !important;
-  }
-}
-
 /* Helpers for content which has a hard adjusting to its parents dimensions or which tries to
    control its parents dimensions but shouldn't, e.g SVG or multi-select*/
 .fit-child-snug { position: relative; min-height: 6em; }

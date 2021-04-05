@@ -23,6 +23,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -37,9 +38,10 @@ public class DocumentMetadataLayerSupportAutoConfiguration
 {
     @Bean
     @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public DocumentMetadataSidebarFactory documentMetadataSidebarFactory()
+    public DocumentMetadataSidebarFactory documentMetadataSidebarFactory(
+            AnnotationSchemaService aSchemaService)
     {
-        return new DocumentMetadataSidebarFactory();
+        return new DocumentMetadataSidebarFactory(aSchemaService);
     }
 
     /**

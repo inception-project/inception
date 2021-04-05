@@ -129,9 +129,10 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RecommendationSidebarFactory recommendationSidebarFactory()
+    public RecommendationSidebarFactory recommendationSidebarFactory(
+            RecommendationService aRecommendationService)
     {
-        return new RecommendationSidebarFactory();
+        return new RecommendationSidebarFactory(aRecommendationService);
     }
 
     @Bean(name = RecommendationEditorExtension.BEAN_NAME)

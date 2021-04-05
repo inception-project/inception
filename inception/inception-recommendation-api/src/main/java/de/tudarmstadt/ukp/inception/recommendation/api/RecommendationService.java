@@ -66,11 +66,15 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(Project aProject);
 
+    boolean existsEnabledRecommender(Project aProject);
+
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
 
     Optional<Recommender> getEnabledRecommender(long aRecommenderId);
 
     List<Recommender> listEnabledRecommenders(Project aProject);
+
+    List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 
     /**
      * Returns all annotation layers in the given project which have any enabled recommenders.
@@ -166,8 +170,6 @@ public interface RecommendationService
     void calculateRelationSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd);
-
-    List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 
     void clearState(String aUsername);
 
