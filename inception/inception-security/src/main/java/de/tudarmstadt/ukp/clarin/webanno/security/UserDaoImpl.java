@@ -61,7 +61,7 @@ public class UserDaoImpl
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
-        if (securityProperties.getDefaultAdminPassword() == null) {
+        if (securityProperties == null || securityProperties.getDefaultAdminPassword() == null) {
             return;
         }
 
