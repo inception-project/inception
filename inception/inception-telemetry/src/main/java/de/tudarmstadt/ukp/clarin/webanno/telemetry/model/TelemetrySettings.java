@@ -116,18 +116,18 @@ public class TelemetrySettings
     }
 
     @PrePersist
-    protected void onCreate()
+    public void onCreate()
     {
         // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
-        if (created != null) {
+        if (created == null) {
             created = new Date();
             updated = created;
         }
     }
 
     @PreUpdate
-    protected void onUpdate()
+    public void onUpdate()
     {
         updated = new Date();
     }
