@@ -177,6 +177,11 @@ public class User
         password = encodePassword(aPassword);
     }
 
+    public void setEncodedPassword(String aPassword)
+    {
+        password = aPassword;
+    }
+
     public boolean isEnabled()
     {
         return enabled;
