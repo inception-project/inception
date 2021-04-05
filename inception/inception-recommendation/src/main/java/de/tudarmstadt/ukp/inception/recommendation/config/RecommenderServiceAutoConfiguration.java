@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEve
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
+import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
@@ -126,6 +127,12 @@ public class RecommenderServiceAutoConfiguration
     public RecommenderProjectSettingsPanelFactory recommenderProjectSettingsPanelFactory()
     {
         return new RecommenderProjectSettingsPanelFactory();
+    }
+
+    @Bean
+    public ProjectRecommendersMenuItem projectRecommendersMenuItem()
+    {
+        return new ProjectRecommendersMenuItem();
     }
 
     @Bean
