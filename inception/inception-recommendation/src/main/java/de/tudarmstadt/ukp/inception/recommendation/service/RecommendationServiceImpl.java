@@ -1996,7 +1996,7 @@ public class RecommendationServiceImpl
                 .getResultList();
 
         return recommenders.stream() //
-                .anyMatch(rec -> getRecommenderFactory(rec) != null);
+                .anyMatch(rec -> getRecommenderFactory(rec).isPresent());
     }
 
     @Override
@@ -2011,7 +2011,7 @@ public class RecommendationServiceImpl
                 .getResultList();
 
         return recommenders.stream() //
-                .filter(rec -> getRecommenderFactory(rec) != null) //
+                .filter(rec -> getRecommenderFactory(rec).isPresent()) //
                 .count();
     }
 }
