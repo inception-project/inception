@@ -28,6 +28,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  */
 public interface UserDao
 {
+    static final String ADMIN_DEFAULT_USERNAME = "admin";
+    static final String ADMIN_DEFAULT_PASSWORD = "admin";
+
     User getCurrentUser();
 
     /**

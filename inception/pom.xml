@@ -64,8 +64,8 @@
     <excludedTestCategories>slow</excludedTestCategories>
     
     <junit.version>5.7.1</junit.version>
-    <mockito.version>3.7.0</mockito.version>
-    <assertj.version>3.18.1</assertj.version>
+    <mockito.version>3.8.0</mockito.version>
+    <assertj.version>3.19.0</assertj.version>
 
     <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
@@ -74,7 +74,7 @@
     <spring.version>5.3.3</spring.version>
     <spring.boot.version>2.4.2</spring.boot.version>
     <spring.security.version>5.4.2</spring.security.version>
-    <springdoc.version>1.5.5</springdoc.version>
+    <springdoc.version>1.5.6</springdoc.version>
     <swagger.version>2.1.7</swagger.version>
 
     <slf4j.version>1.7.30</slf4j.version>
@@ -91,14 +91,14 @@
     <hibernate.version>5.4.15.Final</hibernate.version>
     <hibernate.validator.version>6.1.4.Final</hibernate.validator.version>
 
-    <wicket.version>9.2.0</wicket.version>
-    <wicketstuff.version>9.2.0</wicketstuff.version>
-    <wicket-bootstrap.version>5.0.3</wicket-bootstrap.version>
-    <wicket-jquery-ui.version>9.2.0</wicket-jquery-ui.version>
-    <wicket-jquery-selectors.version>3.0.2</wicket-jquery-selectors.version>
-    <wicket-webjars.version>3.0.2</wicket-webjars.version>
+    <wicket.version>9.3.0</wicket.version>
+    <wicketstuff.version>9.3.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.3.1</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>5.0.4</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
+    <wicket-webjars.version>3.0.3</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
-    <bootstrap.version>4.5.3</bootstrap.version>
+    <bootstrap.version>4.6.0-1</bootstrap.version>
     <hover.version>2.0.2</hover.version>
 
     <!--
@@ -122,7 +122,6 @@
     <asciidoctor.version>2.3.0</asciidoctor.version>
     <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
 
-    <batik.version>1.12</batik.version>
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.12.1</jackson.version>

@@ -15,20 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.telemetry.ui;
+package de.tudarmstadt.ukp.clarin.webanno.telemetry.config;
 
-import org.apache.wicket.Component;
-import org.springframework.core.annotation.Order;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
-
-@Order(FooterItem.ORDER_LEFT)
-public class TelemetryFooterItem
-    implements FooterItem
+@ConfigurationProperties("telemetry")
+public class TelemetryServicePropertiesImpl
+    implements TelemetryServiceProperties
 {
+    private AutoResponse autoRespond;
+
     @Override
-    public Component create(String aId)
+    public AutoResponse getAutoRespond()
     {
-        return new TelemetryFooterPanel(aId);
+        return autoRespond;
+    }
+
+    public void setAutoRespond(AutoResponse aAutoRespond)
+    {
+        autoRespond = aAutoRespond;
+    }
+
+    public static enum AutoResponse
+    {
+        ACCEPT, REJECT
     }
 }

@@ -15,20 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.telemetry.ui;
+package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
-import org.apache.wicket.Component;
-import org.springframework.core.annotation.Order;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
-
-@Order(FooterItem.ORDER_LEFT)
-public class TelemetryFooterItem
-    implements FooterItem
+public interface SecurityProperties
 {
-    @Override
-    public Component create(String aId)
-    {
-        return new TelemetryFooterPanel(aId);
-    }
+    /**
+     * @return encoded default password for the admin user. If this is set, the system will create
+     *         the admin user with the given encoded password on startup unless the user already
+     *         exists.
+     */
+    String getDefaultAdminPassword();
+
+    /**
+     * @return whether to create the default admin user with {@link Role#ROLE_REMOTE}. Has no effect
+     *         if the user already exists and is ignored if {@link #getDefaultAdminPassword} is not
+     *         also set.
+     */
+    boolean isDefaultAdminRemoteAccess();
 }

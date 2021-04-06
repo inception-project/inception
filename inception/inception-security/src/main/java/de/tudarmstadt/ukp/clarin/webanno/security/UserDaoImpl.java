@@ -18,7 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,12 +31,18 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -45,8 +54,37 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public class UserDaoImpl
     implements UserDao
 {
-    @PersistenceContext
-    private EntityManager entityManager;
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired(required = false) SecurityProperties securityProperties;
+    private @Autowired(required = false) PlatformTransactionManager transactionManager;
+
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        if (securityProperties == null || securityProperties.getDefaultAdminPassword() == null) {
+            return;
+        }
+
+        if (transactionManager == null) {
+            return;
+        }
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
+            if (list().isEmpty()) {
+                User admin = new User();
+                admin.setUsername(ADMIN_DEFAULT_USERNAME);
+                admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
+                admin.setEnabled(true);
+                if (securityProperties.isDefaultAdminRemoteAccess()) {
+                    admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER, ROLE_REMOTE));
+                }
+                else {
+                    admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER));
+                }
+                create(admin);
+            }
+        });
+    }
 
     @Override
     @Transactional
