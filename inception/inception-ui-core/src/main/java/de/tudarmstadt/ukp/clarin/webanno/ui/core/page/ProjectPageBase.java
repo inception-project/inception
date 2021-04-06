@@ -57,17 +57,17 @@ public abstract class ProjectPageBase
     public ProjectPageBase(final PageParameters aParameters)
     {
         super(aParameters);
+
+        if (getProjectModel().getObject() == null) {
+            getSession().error(
+                    format("[%s] requires a project to be selected", getClass().getSimpleName()));
+            throw new RestartResponseException(getApplication().getHomePage());
+        }
     }
 
     protected final void requireProjectRole(User aUser, PermissionLevel... aRoles)
     {
         Project project = getProjectModel().getObject();
-
-        if (project == null) {
-            getSession().error(
-                    format("[%s] requires a project to be selected", getClass().getSimpleName()));
-            throw new RestartResponseException(getApplication().getHomePage());
-        }
 
         Set<PermissionLevel> roles = aRoles != null ? new LinkedHashSet<>(asList(aRoles))
                 : emptySet();
