@@ -305,19 +305,26 @@ public class ProjectSettingsPage
 
     private void actionCancel(AjaxRequestTarget aTarget)
     {
-        if (preSelectedModelMode) {
-            Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
-                    "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
-
-            setResponsePage(projectDashboard,
-                    new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
-        }
-        else {
+        // Project not in pre-select mode, so we are on the admin page
+        if (!preSelectedModelMode) {
             selectedProject.setObject(null);
 
             // Reload whole page because master panel also needs to be reloaded.
             aTarget.add(getPage());
+            return;
         }
+
+        // Project still in creation and has not been saved yet
+        if (getProject().getId() == null) {
+            setResponsePage(getApplication().getHomePage());
+            return;
+        }
+
+        Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
+                "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
+
+        setResponsePage(projectDashboard,
+                new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)
