@@ -48,11 +48,11 @@ public class WorkloadManagementServiceImpl
     private static final long serialVersionUID = 4019275726336545144L;
 
     private final EntityManager entityManager;
-    private final WorkloadManagerExtensionPoint<Project> workloadManagerExtensionPoint;
+    private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
 
     @Autowired
     public WorkloadManagementServiceImpl(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         entityManager = aEntityManager;
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
