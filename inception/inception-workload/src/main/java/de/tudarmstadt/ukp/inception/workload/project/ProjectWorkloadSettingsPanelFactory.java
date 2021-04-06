@@ -34,11 +34,11 @@ public class ProjectWorkloadSettingsPanelFactory
 {
     public static final int ORDER = 260;
 
-    private final WorkloadManagerExtensionPoint<Project> workloadManagerExtensionPoint;
+    private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
 
     @Autowired
     public ProjectWorkloadSettingsPanelFactory(
-            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
     }

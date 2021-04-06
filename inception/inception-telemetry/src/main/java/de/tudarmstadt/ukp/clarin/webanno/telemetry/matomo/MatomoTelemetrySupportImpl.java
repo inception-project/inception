@@ -54,7 +54,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.session.HttpSessionCreatedEvent;
-import org.springframework.stereotype.Component;
 
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
@@ -68,11 +67,17 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryDetail;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 import okhttp3.OkHttpClient;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link TelemetryServiceAutoConfiguration#matomoTelemetrySupport}.
+ * </p>
+ */
 public class MatomoTelemetrySupportImpl
     implements MatomoTelemetrySupport, DisposableBean
 {
@@ -211,8 +216,9 @@ public class MatomoTelemetrySupportImpl
         // is generated from the settings page itself when the settings are updated - thus they
         // must have the latest version.
 
-        return aSettings.stream().filter(settings -> settings.getSupport().equals(getId()))
-                .findFirst().map(this::readTraits)
+        return aSettings.stream() //
+                .filter(settings -> settings.getSupport().equals(getId())).findFirst()
+                .map(this::readTraits)
                 .map(traits -> traits.isEnabled() != null && traits.isEnabled() == true)
                 .orElse(false);
     }
@@ -451,5 +457,17 @@ public class MatomoTelemetrySupportImpl
         catch (IOException e) {
             log.error("Unable to write traits", e);
         }
+    }
+
+    @Override
+    public void acceptAll(MatomoTelemetryTraits aTraits)
+    {
+        aTraits.setEnabled(true);
+    }
+
+    @Override
+    public void rejectAll(MatomoTelemetryTraits aTraits)
+    {
+        aTraits.setEnabled(false);
     }
 }
