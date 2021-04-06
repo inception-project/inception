@@ -130,18 +130,13 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-<<<<<<< HEAD
-    public RecommendationSidebarFactory recommendationSidebarFactory()
-=======
     public ProjectRecommendersMenuItem projectRecommendersMenuItem()
     {
         return new ProjectRecommendersMenuItem();
     }
 
     @Bean
-    public RecommendationSidebarFactory recommendationSidebarFactory(
-            RecommendationService aRecommendationService)
->>>>>>> 2daaebb43d (#2167 - Project setting items not disappearing for disabled modules)
+    public RecommendationSidebarFactory recommendationSidebarFactory()
     {
         return new RecommendationSidebarFactory();
     }
