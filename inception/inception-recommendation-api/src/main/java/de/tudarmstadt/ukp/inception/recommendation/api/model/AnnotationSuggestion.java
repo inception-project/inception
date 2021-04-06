@@ -17,78 +17,68 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class AnnotationSuggestion
-    implements Serializable
+public abstract class AnnotationSuggestion
 {
     public static final String EXTENSION_ID = "rec";
-
-    private static final long serialVersionUID = -1904645143661843249L;
 
     /**
      * Suggestion is overlapping with an existing annotation
      */
     public static final int FLAG_OVERLAP = 1 << 0;
+
     /**
      * Suggestion has been skipped (from learning history)
      */
     public static final int FLAG_SKIPPED = 1 << 1;
+
     /**
      * Suggestion has been rejected (from learning history)
      */
     public static final int FLAG_REJECTED = 1 << 2;
+
     /**
      * User has accepted the suggestion and prediction has not re-run yet (which would reinitialize
-     * the visbility state)
+     * the visibility state)
      */
     public static final int FLAG_TRANSIENT_ACCEPTED = 1 << 3;
+
     /**
      * User has rejected the suggestion and prediction has not re-run yet (which would reinitialize
-     * the visbility state)
+     * the visibility state)
      */
     public static final int FLAG_TRANSIENT_REJECTED = 1 << 4;
+
     /**
      * User has corrected the suggestion and prediction has not re-run yet (which would reinitialize
-     * the visbility state)
+     * the visibility state)
      */
     public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
 
     public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
             | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
 
-    private final int id;
-
-    private final long recommenderId;
-    private final String recommenderName;
-    private final long layerId;
-    private final String feature;
-
-    private final String documentName;
-
-    private final int begin;
-    private final int end;
-    private final String coveredText;
-
-    private final String label;
-    private final String uiLabel;
-    private final double confidence;
-    private final String confidenceExplanation;
-
+    protected final int id;
+    protected final long recommenderId;
+    protected final String recommenderName;
+    protected final long layerId;
+    protected final String feature;
+    protected final String documentName;
+    protected final String label;
+    protected final String uiLabel;
+    protected final double confidence;
+    protected final String confidenceExplanation;
     private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-            long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
-            String aCoveredText, String aLabel, String aUiLabel, double aConfidence,
-            String aConfidenceExplanation)
+            long aLayerId, String aFeature, String aDocumentName, String aLabel, String aUiLabel,
+            double aConfidence, String aConfidenceExplanation)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -99,18 +89,9 @@ public class AnnotationSuggestion
         confidence = aConfidence;
         confidenceExplanation = aConfidenceExplanation;
         recommenderId = aRecommenderId;
-        begin = aBegin;
-        end = aEnd;
-        coveredText = aCoveredText;
         documentName = aDocumentName;
     }
 
-    /**
-     * Copy constructor.
-     *
-     * @param aObject
-     *            The annotationObject to copy
-     */
     public AnnotationSuggestion(AnnotationSuggestion aObject)
     {
         label = aObject.label;
@@ -122,27 +103,7 @@ public class AnnotationSuggestion
         confidence = aObject.confidence;
         confidenceExplanation = aObject.confidenceExplanation;
         recommenderId = aObject.recommenderId;
-        begin = aObject.begin;
-        end = aObject.end;
-        coveredText = aObject.coveredText;
         documentName = aObject.documentName;
-    }
-
-    // Getter and setter
-
-    public String getCoveredText()
-    {
-        return coveredText;
-    }
-
-    public int getBegin()
-    {
-        return begin;
-    }
-
-    public int getEnd()
-    {
-        return end;
     }
 
     public int getId()
@@ -200,15 +161,6 @@ public class AnnotationSuggestion
     public String getDocumentName()
     {
         return documentName;
-    }
-
-    /**
-     * @deprecated Better use {@link #getBegin()} and {@link #getEnd()}
-     */
-    @Deprecated
-    public Offset getOffset()
-    {
-        return new Offset(begin, end);
     }
 
     public void hide(int aFlags)
@@ -277,19 +229,6 @@ public class AnnotationSuggestion
                 && documentName.equals(that.documentName);
     }
 
-    @Override
-    public String toString()
-    {
-        return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
-                .append("recommenderName", recommenderName).append("layerId", layerId)
-                .append("feature", feature).append("documentName", documentName)
-                .append("begin", begin).append("end", end).append("coveredText", coveredText)
-                .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
-                .append("confindenceExplanation", confidenceExplanation)
-                .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())
-                .toString();
-    }
-
     /**
      * Determine if the given label is equal to this object's label or if they are both null
      * 
@@ -298,6 +237,12 @@ public class AnnotationSuggestion
     public boolean labelEquals(String aLabel)
     {
         return (aLabel == null && label == null) || (label != null && label.equals(aLabel));
-
     }
+
+    public abstract Position getPosition();
+
+    public abstract int getWindowBegin();
+
+    public abstract int getWindowEnd();
+
 }

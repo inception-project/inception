@@ -109,7 +109,7 @@ public class GenerateDocumentation
     private static Path getInceptionDir()
     {
         Path userDir = Paths.get(System.getProperty("user.dir"));
-        return runningFromIntelliJ() ? userDir : userDir.getParent();
+        return runningFromIntelliJ() ? userDir.resolve("inception") : userDir.getParent();
     }
 
     private static boolean runningFromIntelliJ()

@@ -31,10 +31,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
 /**
@@ -64,8 +67,29 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
+    public void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
+            AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation)
+    {
+        logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer, aFeature,
+                aUserAction, aLocation);
+    }
+
+    @Transactional
+    @Override
+    public void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
+            String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+    {
+        logRecord(aDocument, aUsername, aSuggestion.getBegin(), aSuggestion.getEnd(), -1, -1,
+                SuggestionType.SPAN, aSuggestion.getLabel(), aUserAction, aLayer, aFeature,
+                aSuggestion.getCoveredText(), aAlternativeLabel, aLocation);
+    }
+
+    @Transactional
+    @Override
     public void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            RelationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
         logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer, aFeature,
@@ -75,8 +99,21 @@ public class LearningRecordServiceImpl
     @Transactional
     @Override
     public void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            RelationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation)
+    {
+        RelationPosition pos = aSuggestion.getPosition();
+        logRecord(aDocument, aUsername, pos.getSourceBegin(), pos.getSourceEnd(),
+                pos.getTargetBegin(), pos.getTargetEnd(), SuggestionType.RELATION,
+                aSuggestion.getLabel(), aUserAction, aLayer, aFeature, "", aAlternativeLabel,
+                aLocation);
+    }
+
+    private void logRecord(SourceDocument aSourceDocument, String aUsername, int aOffsetBegin,
+            int aOffsetEnd, int aOffset2Begin, int aOffset2End, SuggestionType aSuggestionType,
+            String aLabel, LearningRecordType aUserAction, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, String aCoveredText, String aAlternativeLabel,
             LearningRecordChangeLocation aLocation)
     {
         // It doesn't make any sense at all to have duplicate entries in the learning history,
@@ -85,35 +122,41 @@ public class LearningRecordServiceImpl
         // matter since there should basically be only one action in the log for any suggestion,
         // irrespective of what that action is.
         String query = String.join("\n", //
-                "DELETE FROM LearningRecord WHERE", //
-                "user = :user AND", //
+                "DELETE FROM LearningRecord WHERE", "user = :user AND", //
                 "sourceDocument = :sourceDocument AND", //
-                "offsetCharacterBegin = :offsetCharacterBegin AND", //
-                "offsetCharacterEnd = :offsetCharacterEnd AND", //
+                "offsetBegin = :offsetBegin AND", //
+                "offsetEnd = :offsetEnd AND", //
+                "offsetBegin2 = :offsetBegin2 AND", //
+                "offsetEnd2 = :offsetEnd2 AND", //
                 "layer = :layer AND", //
                 "annotationFeature = :annotationFeature AND", //
+                "suggestionType = :suggestionType AND", //
                 "annotation = :annotation");
         entityManager.createQuery(query) //
                 .setParameter("user", aUsername) //
-                .setParameter("sourceDocument", aDocument) //
-                .setParameter("offsetCharacterBegin", aSuggestion.getBegin()) //
-                .setParameter("offsetCharacterEnd", aSuggestion.getEnd()) //
+                .setParameter("sourceDocument", aSourceDocument) //
+                .setParameter("offsetBegin", aOffsetBegin) //
+                .setParameter("offsetEnd", aOffsetEnd) //
+                .setParameter("offsetBegin2", aOffset2Begin) //
+                .setParameter("offsetEnd2", aOffset2End) //
                 .setParameter("layer", aLayer) //
                 .setParameter("annotationFeature", aFeature) //
-                .setParameter("annotation", aAlternativeLabel) //
+                .setParameter("suggestionType", aSuggestionType) //
+                .setParameter("annotation", aLabel) //
                 .executeUpdate();
 
         LearningRecord record = new LearningRecord();
         record.setUser(aUsername);
-        record.setSourceDocument(aDocument);
+        record.setSourceDocument(aSourceDocument);
         record.setUserAction(aUserAction);
-        record.setOffsetCharacterBegin(aSuggestion.getBegin());
-        record.setOffsetCharacterEnd(aSuggestion.getEnd());
-        record.setOffsetTokenBegin(-1);
-        record.setOffsetTokenEnd(-1);
-        record.setTokenText(aSuggestion.getCoveredText());
+        record.setOffsetBegin(aOffsetBegin);
+        record.setOffsetEnd(aOffsetEnd);
+        record.setOffsetBegin2(aOffset2Begin);
+        record.setOffsetEnd2(aOffset2End);
+        record.setTokenText(aCoveredText);
         record.setAnnotation(aAlternativeLabel);
         record.setLayer(aLayer);
+        record.setSuggestionType(aSuggestionType);
         record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
 
@@ -152,7 +195,7 @@ public class LearningRecordServiceImpl
     public LearningRecord getRecordById(long recordId)
     {
         String sql = "FROM LearningRecord l where l.id = :id";
-        LearningRecord learningRecord = entityManager.createQuery(sql, LearningRecord.class) //
+        LearningRecord learningRecord = entityManager.createQuery(sql, LearningRecord.class)
                 .setParameter("id", recordId) //
                 .getSingleResult();
         return learningRecord;
@@ -164,9 +207,7 @@ public class LearningRecordServiceImpl
     {
         String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user "
                 + "= :user";
-        entityManager.createQuery(sql) //
-                .setParameter("document", document) //
-                .setParameter("user", user) //
+        entityManager.createQuery(sql).setParameter("document", document).setParameter("user", user)
                 .executeUpdate();
     }
 

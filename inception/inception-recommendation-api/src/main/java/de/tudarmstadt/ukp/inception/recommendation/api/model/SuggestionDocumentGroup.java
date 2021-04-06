@@ -1,8 +1,4 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 
@@ -35,10 +32,10 @@ import org.apache.commons.lang3.Validate;
  * Container for {@link SuggestionGroup suggestion groups} all coming from a single document. No
  * guarantees about layers and features though.
  */
-public class SuggestionDocumentGroup
-    extends AbstractCollection<SuggestionGroup>
+public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
+    extends AbstractCollection<SuggestionGroup<T>>
 {
-    private Collection<SuggestionGroup> groups;
+    private Collection<SuggestionGroup<T>> groups;
     private String documentName;
 
     public SuggestionDocumentGroup()
@@ -46,14 +43,26 @@ public class SuggestionDocumentGroup
         groups = new ArrayList<>();
     }
 
-    public SuggestionDocumentGroup(List<AnnotationSuggestion> aSuggestions)
+    public SuggestionDocumentGroup(List<T> aSuggestions)
     {
         this();
-        SuggestionGroup.group(aSuggestions).stream().forEachOrdered(this::add);
+        addAll(SuggestionGroup.group(aSuggestions));
+    }
+
+    @SuppressWarnings("unchecked")
+    /*
+     * Returns a SuggestionDocumentGroup where only suggestions of type V are added
+     */
+    public static <V extends AnnotationSuggestion> SuggestionDocumentGroup<V> filter(Class<V> type,
+            List<AnnotationSuggestion> aSuggestions)
+    {
+        List<AnnotationSuggestion> filteredSuggestions = aSuggestions.stream()
+                .filter(type::isInstance).collect(Collectors.toList());
+        return new SuggestionDocumentGroup<V>((List<V>) filteredSuggestions);
     }
 
     @Override
-    public boolean add(SuggestionGroup aGroup)
+    public boolean add(SuggestionGroup<T> aGroup)
     {
         boolean empty = isEmpty();
 
@@ -72,7 +81,7 @@ public class SuggestionDocumentGroup
     }
 
     @Override
-    public Iterator<SuggestionGroup> iterator()
+    public Iterator<SuggestionGroup<T>> iterator()
     {
         return unmodifiableIterator(groups.iterator());
     }
