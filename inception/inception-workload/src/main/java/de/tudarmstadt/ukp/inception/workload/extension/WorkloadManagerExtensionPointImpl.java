@@ -29,29 +29,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 
-public class WorkloadManagerExtensionPointImpl<T>
-    extends ExtensionPoint_ImplBase<Project, WorkloadManagerExtension<T>>
-    implements WorkloadManagerExtensionPoint<T>
+public class WorkloadManagerExtensionPointImpl
+    extends ExtensionPoint_ImplBase<Project, WorkloadManagerExtension<?>>
+    implements WorkloadManagerExtensionPoint
 {
 
     @Autowired
-    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension<T>> aExtensions)
+    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension<?>> aExtensions)
     {
         super(aExtensions);
     }
 
     @Override
-    public List<WorkloadManagerExtension<T>> getExtensions(Project aContext)
+    public List<WorkloadManagerExtension<?>> getExtensions(Project aContext)
     {
-        Map<String, WorkloadManagerExtension<T>> byRole = new LinkedHashMap<>();
-        for (WorkloadManagerExtension<T> extension : super.getExtensions(aContext)) {
+        Map<String, WorkloadManagerExtension<?>> byRole = new LinkedHashMap<>();
+        for (WorkloadManagerExtension<?> extension : super.getExtensions(aContext)) {
             byRole.put(extension.getId(), extension);
         }
         return new ArrayList<>(byRole.values());
     }
 
     @Override
-    public WorkloadManagerExtension<T> getDefault()
+    public WorkloadManagerExtension<?> getDefault()
     {
         return getExtensions().get(0);
     }

@@ -189,7 +189,7 @@ public class AnnotationDocument
     {
         // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
-        if (created != null) {
+        if (created == null) {
             created = new Date();
             updated = created;
         }

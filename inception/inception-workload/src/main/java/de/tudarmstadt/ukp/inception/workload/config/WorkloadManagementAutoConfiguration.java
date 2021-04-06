@@ -24,7 +24,6 @@ import javax.persistence.EntityManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
@@ -36,15 +35,15 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 public class WorkloadManagementAutoConfiguration<T>
 {
     @Bean
-    public WorkloadManagerExtensionPoint<T> workloadExtensionPoint(
-            List<WorkloadManagerExtension<T>> aWorkloadExtensions)
+    public WorkloadManagerExtensionPoint workloadExtensionPoint(
+            List<WorkloadManagerExtension<?>> aWorkloadExtensions)
     {
-        return new WorkloadManagerExtensionPointImpl<>(aWorkloadExtensions);
+        return new WorkloadManagerExtensionPointImpl(aWorkloadExtensions);
     }
 
     @Bean
     public WorkloadManagementService workloadManagementService(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         return new WorkloadManagementServiceImpl(aEntityManager, aWorkloadManagerExtensionPoint);
     }

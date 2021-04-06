@@ -64,12 +64,4 @@ public class ManageUsersPageMenuItem
     {
         return ManageUsersPage.class;
     }
-
-    @Override
-    public boolean isDirectAccessAllowed()
-    {
-        // Users should not see the menu item for the user management page, but they may access this
-        // page directly in order to edit their own profile via the link in the menu bar.
-        return true;
-    }
 }

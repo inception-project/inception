@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEve
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
+import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
@@ -129,9 +130,16 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RecommendationSidebarFactory recommendationSidebarFactory()
+    public ProjectRecommendersMenuItem projectRecommendersMenuItem()
     {
-        return new RecommendationSidebarFactory();
+        return new ProjectRecommendersMenuItem();
+    }
+
+    @Bean
+    public RecommendationSidebarFactory recommendationSidebarFactory(
+            RecommendationService aRecommendationService)
+    {
+        return new RecommendationSidebarFactory(aRecommendationService);
     }
 
     @Bean(name = RecommendationEditorExtension.BEAN_NAME)

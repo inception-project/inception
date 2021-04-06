@@ -19,22 +19,23 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.ResourceReference;
+
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 
 public abstract class SidebarTab
     extends AbstractTab
 {
     private static final long serialVersionUID = -3205381571000021331L;
 
-    private ResourceReference icon;
+    private IconType icon;
 
-    public SidebarTab(IModel<String> aTitle, ResourceReference aIcon)
+    public SidebarTab(IModel<String> aTitle, IconType aIcon)
     {
         super(aTitle);
         icon = aIcon;
     }
 
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
         return icon;
     }

@@ -29,11 +29,6 @@
 | true
 | false
 
-| debug.showExceptionPage
-| Show a page with a stack trace instead of an "Internal error" page. Do not use in production!
-| false
-| true
-
 | login.message
 | Custom message to appear on the login page, such as project web-site, annotation guideline link, ... The message can be an HTML content.
 | _unset_

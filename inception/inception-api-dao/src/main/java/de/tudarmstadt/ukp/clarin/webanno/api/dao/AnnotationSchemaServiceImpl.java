@@ -385,6 +385,33 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
+    public boolean existsEnabledLayerOfType(Project aProject, String aType)
+    {
+        String query = String.join("\n", //
+                "FROM AnnotationLayer", //
+                "WHERE project = :project ", //
+                "AND type = :type", //
+                "AND enabled = true");
+
+        List<AnnotationLayer> layers = entityManager.createQuery(query, AnnotationLayer.class) //
+                .setParameter("project", aProject) //
+                .setParameter("type", aType) //
+                .getResultList();
+
+        return layers.stream().anyMatch(layer -> {
+            try {
+                layerSupportRegistry.getLayerSupport(layer);
+                return true;
+            }
+            catch (IllegalArgumentException e) {
+                return false;
+            }
+        });
+    }
+
+    @Override
+    @Transactional
     public boolean existsFeature(String aName, AnnotationLayer aLayer)
     {
         try {
@@ -399,6 +426,33 @@ public class AnnotationSchemaServiceImpl
         catch (NoResultException e) {
             return false;
         }
+    }
+
+    @Override
+    @Transactional
+    public boolean existsEnabledFeatureOfType(Project aProject, String aType)
+    {
+        String query = String.join("\n", //
+                "FROM AnnotationFeature", //
+                "WHERE project = :project ", //
+                "AND type = :type", //
+                "AND enabled = true", //
+                "AND layer.enabled = true");
+
+        List<AnnotationFeature> features = entityManager.createQuery(query, AnnotationFeature.class) //
+                .setParameter("project", aProject) //
+                .setParameter("type", aType) //
+                .getResultList();
+
+        return features.stream().anyMatch(feature -> {
+            try {
+                featureSupportRegistry.findExtension(feature);
+                return true;
+            }
+            catch (IllegalArgumentException e) {
+                return false;
+            }
+        });
     }
 
     @Override
