@@ -53,7 +53,7 @@ public class RecogitoJsRenderer
         coloringService = aColoringService;
         annotationService = aAnnotationService;
     }
-    
+
     public WebAnnotations render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
             ColoringStrategy aColoringStrategy)
     {
@@ -83,15 +83,14 @@ public class RecogitoJsRenderer
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 WebAnnotation anno = new WebAnnotation();
-                anno.setId(vspan.getVid().toString());
+                anno.setId("#" + vspan.getVid().toString());
                 anno.setType("Annotation");
                 anno.setTarget(new ArrayList<>());
-                anno.getTarget()
-                        .add(new WebAnnotationTarget(vspan.getRanges().get(0).getBegin(),
-                                vspan.getRanges().get(0).getEnd(), null));
+                anno.getTarget().add(new WebAnnotationTarget(vspan.getRanges().get(0).getBegin(),
+                        vspan.getRanges().get(0).getEnd(), null));
                 annotations.add(anno);
             }
-            
+
             for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String labelText = getUiLabelText(typeAdapter, varc);
                 String color = coloringStrategy.getColor(varc, labelText, coloringRules);
@@ -99,10 +98,10 @@ public class RecogitoJsRenderer
                 WebAnnotation anno = new WebAnnotation();
                 anno.setMotivation("linking");
                 anno.setType("Annotation");
-                anno.setId(varc.getVid().toString());
+                anno.setId("#" + varc.getVid().toString());
                 anno.setTarget(new ArrayList<>());
-                anno.getTarget().add(new WebAnnotationTarget(varc.getSource().toString()));
-                anno.getTarget().add(new WebAnnotationTarget(varc.getTarget().toString()));
+                anno.getTarget().add(new WebAnnotationTarget("#" + varc.getSource().toString()));
+                anno.getTarget().add(new WebAnnotationTarget("#" + varc.getTarget().toString()));
                 anno.setBody(new ArrayList<>());
                 WebAnnotationBodyItem body = new WebAnnotationBodyItem();
                 body.setType("TextualBody");
@@ -112,7 +111,7 @@ public class RecogitoJsRenderer
                 annotations.add(anno);
             }
         }
-        
+
         return annotations;
     }
 }

@@ -27,6 +27,7 @@ import java.time.Duration;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.tools.ant.util.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -214,8 +215,9 @@ public class RecogitoHtmlAnnotationEditor
         private void select(AjaxRequestTarget aTarget)
             throws JsonParseException, JsonMappingException, IOException
         {
-            VID paramId = VID
-                    .parse(getRequest().getRequestParameters().getParameterValue("id").toString());
+            String id = getRequest().getRequestParameters().getParameterValue("id").toString();
+            id = StringUtils.removePrefix(id, "#");
+            VID paramId = VID.parse(id);
 
             try {
                 CAS cas = getCasProvider().get();
