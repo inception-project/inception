@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -554,8 +555,7 @@ public class DocumentServiceImpl
 
         // Import the actual content
         File targetFile = getSourceDocumentFile(aDocument);
-        CAS cas;
-        try {
+        try (CasStorageSession session = CasStorageSession.openNested()) {
             FileUtils.forceMkdir(targetFile.getParentFile());
 
             try (OutputStream os = new FileOutputStream(targetFile)) {
@@ -564,7 +564,18 @@ public class DocumentServiceImpl
 
             // Check if the file has a valid format / can be converted without error
             // This requires that the document ID has already been assigned
-            cas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, aFullProjectTypeSystem);
+            CAS cas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, aFullProjectTypeSystem);
+
+            log.trace("Sending AfterDocumentCreatedEvent for {}", aDocument);
+            applicationEventPublisher
+                    .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, cas));
+
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aDocument.getProject().getId()))) {
+                Project project = aDocument.getProject();
+                log.info("Imported source document [{}]({}) to project [{}]({})",
+                        aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+            }
         }
         catch (IOException e) {
             FileUtils.forceDelete(targetFile);
@@ -575,16 +586,6 @@ public class DocumentServiceImpl
             FileUtils.forceDelete(targetFile);
             removeSourceDocument(aDocument);
             throw new IOException(e.getMessage(), e);
-        }
-
-        log.trace("Sending AfterDocumentCreatedEvent for {}", aDocument);
-        applicationEventPublisher.publishEvent(new AfterDocumentCreatedEvent(this, aDocument, cas));
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aDocument.getProject().getId()))) {
-            Project project = aDocument.getProject();
-            log.info("Imported source document [{}]({}) to project [{}]({})", aDocument.getName(),
-                    aDocument.getId(), project.getName(), project.getId());
         }
     }
 
