@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
@@ -69,12 +67,6 @@ public class ProjectDashboardPage
 
         if (!userRepository.isAdministrator(currentUser)) {
             requireProjectRole(currentUser);
-        }
-
-        // if not either a curator or annotator, display warning message
-        if (!annotationEnabeled(projectService, currentUser)
-                && !curationEnabeled(projectService, currentUser)) {
-            info("You are not member of any projects to annotate or curate");
         }
 
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
