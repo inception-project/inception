@@ -30,7 +30,6 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
@@ -71,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 import io.bit3.jsass.Options;
 
 /**
@@ -315,10 +313,5 @@ public abstract class WicketApplicationBase
     protected Class<? extends ApplicationSession> getWebSessionClass()
     {
         return ApplicationSession.class;
-    }
-
-    public Class<? extends Component> getMenubarClass()
-    {
-        return MenuBar.class;
     }
 }
