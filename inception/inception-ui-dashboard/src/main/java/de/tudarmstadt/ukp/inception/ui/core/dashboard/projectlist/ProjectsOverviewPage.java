@@ -293,7 +293,7 @@ public class ProjectsOverviewPage
                 .listProjectPermissionLevel(user, currentProject).isEmpty();
 
         leaveProjectLink.add(LambdaBehavior.visibleWhen(
-                () -> hasProjectPermissions && !projectService.isAdmin(currentProject, user)));
+                () -> hasProjectPermissions && !projectService.isManager(currentProject, user)));
 
         container.add(leaveProjectLink);
 
@@ -469,8 +469,8 @@ public class ProjectsOverviewPage
         if (!projects.isEmpty()) {
             Project project = projects.get(0);
             getSession().success("Project [" + project.getName() + "] successfully imported");
-            setResponsePage(ProjectDashboardPage.class,
-                    new PageParameters().set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId()));
+            setResponsePage(ProjectDashboardPage.class, new PageParameters()
+                    .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId()));
         }
     }
 }

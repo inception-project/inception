@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -55,7 +58,6 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -79,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
@@ -275,14 +276,6 @@ public class ProjectServiceImpl
                 + "/" + aProject.getId() + "/" + META_INF_FOLDER + "/");
     }
 
-    @Deprecated
-    @Override
-    @Transactional(noRollbackFor = NoResultException.class)
-    public List<Authority> listAuthorities(User aUser)
-    {
-        return userRepository.listAuthorities(aUser);
-    }
-
     @Override
     public File getGuideline(Project aProject, String aFilename)
     {
@@ -291,7 +284,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional
     public List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject)
     {
         String query = String.join("\n", //
@@ -715,72 +708,19 @@ public class ProjectServiceImpl
     @Override
     public boolean isManager(Project aProject, User aUser)
     {
-        boolean projectAdmin = false;
-        try {
-            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
-            for (ProjectPermission permissionLevel : permissionLevels) {
-                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.MANAGER.getName())) {
-                    projectAdmin = true;
-                    break;
-                }
-            }
-        }
-        catch (NoResultException ex) {
-            log.info("No permision is given to this user " + ex);
-        }
-
-        return projectAdmin;
-    }
-
-    @Override
-    @Deprecated
-    public boolean isAdmin(Project aProject, User aUser)
-    {
-        return isManager(aProject, aUser);
+        return hasRole(aUser, aProject, MANAGER);
     }
 
     @Override
     public boolean isCurator(Project aProject, User aUser)
     {
-        boolean curator = false;
-        try {
-            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
-            for (ProjectPermission permissionLevel : permissionLevels) {
-                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.CURATOR.getName())) {
-                    curator = true;
-                    break;
-                }
-            }
-        }
-        catch (NoResultException ex) {
-            log.info("No permision is given to this user " + ex);
-        }
-
-        return curator;
+        return hasRole(aUser, aProject, CURATOR);
     }
 
     @Override
     public boolean isAnnotator(Project aProject, User aUser)
     {
-        boolean user = false;
-        try {
-            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
-            for (ProjectPermission permissionLevel : permissionLevels) {
-                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.ANNOTATOR.getName())) {
-                    user = true;
-                    break;
-                }
-            }
-        }
-
-        catch (NoResultException ex) {
-            log.info("No permision is given to this user " + ex);
-        }
-
-        return user;
+        return hasRole(aUser, aProject, ANNOTATOR);
     }
 
     @EventListener

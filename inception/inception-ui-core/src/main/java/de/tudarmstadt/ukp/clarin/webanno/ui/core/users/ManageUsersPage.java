@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.isProfileSelfServiceAllowed;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -45,7 +46,6 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -184,7 +184,7 @@ public class ManageUsersPage
 
         // If the user is not an admin, then pre-load the current user to allow self-service
         // editing of the profile
-        if (!isAdmin() && SecurityUtil.isProfileSelfServiceAllowed()) {
+        if (!isAdmin() && isProfileSelfServiceAllowed()) {
             selectedUser.setObject(userRepository.getCurrentUser());
         }
     }
@@ -204,7 +204,7 @@ public class ManageUsersPage
             if (isAdmin()) {
                 selectedUser.setObject(user);
             }
-            else if (SecurityUtil.isProfileSelfServiceAllowed()
+            else if (isProfileSelfServiceAllowed()
                     && userRepository.getCurrentUsername().equals(user.getUsername())) {
                 selectedUser.setObject(userRepository.getCurrentUser());
             }
@@ -219,7 +219,7 @@ public class ManageUsersPage
     private void commonInit()
     {
         // If the user is not an admin and self-service is not allowed, go back to the main page
-        if (!isAdmin() && !SecurityUtil.isProfileSelfServiceAllowed()) {
+        if (!isAdmin() && !isProfileSelfServiceAllowed()) {
             setResponsePage(getApplication().getHomePage());
         }
 
