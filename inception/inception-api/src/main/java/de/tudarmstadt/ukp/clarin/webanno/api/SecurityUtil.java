@@ -21,10 +21,8 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -45,94 +43,14 @@ public class SecurityUtil
                 && "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
     }
 
-    /**
-     * @deprecated Use {@link UserDao#getRoles(User)}
-     */
-    @Deprecated
-    public static Set<String> getRoles(UserDao aUserRepository, User aUser)
+    public static boolean curationEnabeled(ProjectService repository, User aUser)
     {
-        return aUserRepository.getRoles(aUser);
-    }
+        if (aUser == null) {
+            return false;
+        }
 
-    /**
-     * @deprecated Use {@link UserDao#isAdministrator(User)}
-     */
-    @Deprecated
-    public static boolean isSuperAdmin(UserDao aUserRepository, User aUser)
-    {
-        return aUserRepository.isAdministrator(aUser);
-    }
-
-    /**
-     * @deprecated Use {@link UserDao#isAdministrator(User)}
-     */
-    @Deprecated
-    public static boolean isSuperAdmin(ProjectService aProjectRepository, User aUser)
-    {
-        return ApplicationContextProvider.getApplicationContext().getBean(UserDao.class)
-                .isAdministrator(aUser);
-    }
-
-    /**
-     * @deprecated Use {@link UserDao#isProjectCreator(User)}
-     */
-    @Deprecated
-    public static boolean isProjectCreator(UserDao aUserRepository, User aUser)
-    {
-        return aUserRepository.isProjectCreator(aUser);
-    }
-
-    /**
-     * @deprecated Use {@link ProjectService#isManager(Project, User)}
-     */
-    @Deprecated
-    public static boolean isProjectAdmin(Project aProject, ProjectService aProjectRepository,
-            User aUser)
-    {
-        return aProjectRepository.isManager(aProject, aUser);
-    }
-
-    /**
-     * @deprecated Use {@link ProjectService#isCurator(Project, User)}
-     */
-    @Deprecated
-    public static boolean isCurator(Project aProject, ProjectService aProjectRepository, User aUser)
-    {
-        return aProjectRepository.isCurator(aProject, aUser);
-    }
-
-    /**
-     * @deprecated Use {@link ProjectService#isAnnotator(Project, User)}
-     */
-    @Deprecated
-    public static boolean isAnnotator(Project aProject, ProjectService aProjectRepository,
-            User aUser)
-    {
-        return aProjectRepository.isAnnotator(aProject, aUser);
-    }
-
-    /**
-     * @deprecated Use {@link ProjectService#isAdmin(Project, User)}
-     */
-    @Deprecated
-    public static boolean isAdmin(Project aProject, ProjectService aProjectRepository, User aUser)
-    {
-        return aProjectRepository.isAdmin(aProject, aUser);
-    }
-
-    /**
-     * @deprecated Use {@link ProjectService#managesAnyProject(User)}
-     */
-    @Deprecated
-    public static boolean projectSettingsEnabeled(ProjectService repository, User user)
-    {
-        return repository.managesAnyProject(user);
-    }
-
-    public static boolean curationEnabeled(ProjectService repository, User user)
-    {
         for (Project project : repository.listProjects()) {
-            if (repository.isCurator(project, user)) {
+            if (repository.isCurator(project, aUser)) {
                 return true;
             }
         }
@@ -142,6 +60,10 @@ public class SecurityUtil
 
     public static boolean annotationEnabeled(ProjectService aRepository, User aUser)
     {
+        if (aUser == null) {
+            return false;
+        }
+
         for (Project project : aRepository.listProjects()) {
             if (aRepository.isAnnotator(project, aUser)) {
                 return true;
@@ -150,16 +72,4 @@ public class SecurityUtil
 
         return false;
     }
-
-    public static boolean monitoringEnabeled(ProjectService repository, User user)
-    {
-        for (Project project : repository.listProjects()) {
-            if (repository.isCurator(project, user) || repository.isManager(project, user)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
 }

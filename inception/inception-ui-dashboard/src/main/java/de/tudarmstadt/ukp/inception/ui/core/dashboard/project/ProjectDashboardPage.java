@@ -36,7 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -58,30 +57,23 @@ public class ProjectDashboardPage
     private @SpringBean MenuItemRegistry menuItemService;
 
     private DashboardMenu menu;
-    
+
     public ProjectDashboardPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
-        User currentUser = userRepository.getCurrentUser();
-        
-        if (!userRepository.isAdministrator(currentUser)) {
-            requireProjectRole(currentUser);
-        }
-                
         setStatelessHint(true);
         setVersioned(false);
 
-        // In case we restore a saved session, make sure the user actually still exists in the DB.
-        // redirect to login page (if no usr is found, admin/admin will be created)
-        User user = userRepository.getCurrentUser();
-        if (user == null) {
-            setResponsePage(LoginPage.class);
+        User currentUser = userRepository.getCurrentUser();
+
+        if (!userRepository.isAdministrator(currentUser)) {
+            requireProjectRole(currentUser);
         }
 
         // if not either a curator or annotator, display warning message
-        if (!annotationEnabeled(projectService, user)
-                && !curationEnabeled(projectService, user)) {
+        if (!annotationEnabeled(projectService, currentUser)
+                && !curationEnabeled(projectService, currentUser)) {
             info("You are not member of any projects to annotate or curate");
         }
 
@@ -92,10 +84,11 @@ public class ProjectDashboardPage
         add(new ActivitiesDashlet("activitiesDashlet", Model.of(getProject())));
     }
 
-    public void setModel(IModel<Project> aModel) {
+    public void setModel(IModel<Project> aModel)
+    {
         setDefaultModel(aModel);
     }
-    
+
     private List<MenuItem> getMenuItems()
     {
         return menuItemService.getMenuItems().stream()
