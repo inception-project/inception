@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -54,8 +55,6 @@ public class ProjectDashboardPage
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
 
-    private DashboardMenu menu;
-
     public ProjectDashboardPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -69,11 +68,17 @@ public class ProjectDashboardPage
             requireProjectRole(currentUser);
         }
 
-        menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
-        add(menu);
-
+        add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
         add(new CurrentProjectDashlet("currentProjectDashlet", Model.of(getProject())));
         add(new ActivitiesDashlet("activitiesDashlet", Model.of(getProject())));
+    }
+
+    @Override
+    public void backToProjectPage()
+    {
+        // If accessing the project dashboard is not possible, we need to jump back up to the
+        // project overview page. This is called e.g. by requireProjectRole()
+        throw new RestartResponseException(getApplication().getHomePage());
     }
 
     public void setModel(IModel<Project> aModel)

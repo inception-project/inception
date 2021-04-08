@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -158,6 +160,7 @@ public class InceptionSecurity
                     .antMatchers("/images/**").permitAll()
                     .antMatchers("/resources/**").permitAll()
                     .antMatchers("/wicket/resource/**").permitAll()
+                    .antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll()
                     .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')")
                     .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
                     .antMatchers("/v3/**").access("hasAnyRole('ROLE_REMOTE')")
