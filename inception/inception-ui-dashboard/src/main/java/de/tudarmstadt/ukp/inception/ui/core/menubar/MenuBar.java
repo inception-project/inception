@@ -116,8 +116,10 @@ public class MenuBar
 
         add(new BookmarkablePageLink<>(CID_HOME_LINK, getApplication().getHomePage()));
 
+        User user = userRepository.getCurrentUser();
+
         ProjectContext projectContext = findParent(ProjectContext.class);
-        if (projectContext != null && projectContext.getProject() != null
+        if (user != null && projectContext != null && projectContext.getProject() != null
                 && projectContext.getProject().getId() != null) {
             long projectId = projectContext.getProject().getId();
             add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class,
@@ -127,8 +129,6 @@ public class MenuBar
             add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class)
                     .setVisible(false));
         }
-
-        User user = userRepository.getCurrentUser();
 
         add(new BookmarkablePageLink<>(CID_PROJECTS_LINK, ProjectsOverviewPage.class)
                 .add(visibleWhen(() -> user != null && (userRepository.isAdministrator(user)
