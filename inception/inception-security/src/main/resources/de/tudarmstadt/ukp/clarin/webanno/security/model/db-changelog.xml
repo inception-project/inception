@@ -142,4 +142,50 @@
       tableName="authorities"
       indexName="FK_baahryprcge2u172egph1qwur" />
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210409-01">
+    <preConditions>
+      <tableExists tableName="users" />
+    </preConditions>
+    <addColumn tableName="users">
+      <column name="realm" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+      <column name="uiName" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210410-01" failOnError="false">
+    <addUniqueConstraint 
+      tableName="users" 
+      constraintName="UK_realm_uiName"
+      columnNames="realm, uiName" />
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210410-02">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists 
+        foreignKeyTableName="authorities" 
+        foreignKeyName="FKhjuy9y4fd8v5m3klig05ktofg" />
+    </preConditions>
+    <dropForeignKeyConstraint 
+      baseTableName="authorities" 
+      constraintName="FKhjuy9y4fd8v5m3klig05ktofg" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210410-03">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists 
+          foreignKeyTableName="authorities" 
+          foreignKeyName="FK_username_authorities" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="username" baseTableName="authorities"
+      constraintName="FK_username_authorities" deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="username"
+      referencedTableName="users" />
+  </changeSet>
 </databaseChangeLog>

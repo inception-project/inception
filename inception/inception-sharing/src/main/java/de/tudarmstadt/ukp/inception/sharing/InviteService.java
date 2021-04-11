@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.sharing;
 import java.util.Date;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
 public interface InviteService
 {
@@ -59,7 +61,9 @@ public interface InviteService
 
     /**
      * Get the expiration date of the invite link belonging to the given project
-     * @param aProject the corresponding project
+     * 
+     * @param aProject
+     *            the corresponding project
      */
     Date getExpirationDate(Project aProject);
 
@@ -69,11 +73,20 @@ public interface InviteService
     void extendInviteLinkDate(Project aProject);
 
     /**
-     * Set expiration date of the invite link of the given project or 
-     * generate new invite link with the given date
-     * @param aProject the project
-     * @param aExpirationDate the new expiration date
+     * Set expiration date of the invite link of the given project or generate new invite link with
+     * the given date
+     * 
+     * @param aProject
+     *            the project
+     * @param aExpirationDate
+     *            the new expiration date
      * @return if invite was generated or date was updated
      */
     boolean generateInviteWithExpirationDate(Project aProject, Date aExpirationDate);
+
+    ProjectInvite readProjectInvite(Project aProject);
+
+    void writeProjectInvite(ProjectInvite aInvite);
+
+    User getOrCreateProjectUser(Project aProject, String aUsername);
 }

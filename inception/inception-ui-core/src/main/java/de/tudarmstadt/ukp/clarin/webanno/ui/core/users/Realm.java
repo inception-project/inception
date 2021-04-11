@@ -15,38 +15,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import java.io.Serializable;
+import java.util.Objects;
 
-@Component
-@ConfigurationProperties("login")
-public class LoginPropertiesImpl
-    implements LoginProperties
+public class Realm
+    implements Serializable
 {
-    private long maxConcurrentSessions;
-    private String message;
+    private static final long serialVersionUID = 8305079363870301352L;
+
+    public static final String REALM_GLOBAL_ID = null;
+
+    private final String id;
+    private final String name;
+
+    public Realm(String aId, String aName)
+    {
+        id = aId;
+        name = aName;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
 
     @Override
-    public long getMaxConcurrentSessions()
+    public boolean equals(final Object other)
     {
-        return maxConcurrentSessions;
-    }
-
-    public void setMaxConcurrentSessions(long aMaxConcurrentSessions)
-    {
-        maxConcurrentSessions = aMaxConcurrentSessions;
+        if (!(other instanceof Realm)) {
+            return false;
+        }
+        Realm castOther = (Realm) other;
+        return Objects.equals(id, castOther.id);
     }
 
     @Override
-    public String getMessage()
+    public int hashCode()
     {
-        return message;
-    }
-
-    public void setMessage(String aMessage)
-    {
-        message = aMessage;
+        return Objects.hash(id);
     }
 }

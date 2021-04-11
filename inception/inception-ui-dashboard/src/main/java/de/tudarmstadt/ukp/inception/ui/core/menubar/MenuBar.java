@@ -28,6 +28,8 @@ import org.apache.wicket.markup.html.link.PopupSettings;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.Url;
@@ -36,6 +38,7 @@ import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
@@ -61,6 +64,7 @@ public class MenuBar
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
 
+    private IModel<User> user;
     private ExternalLink helpLink;
     private ListView<ImageLinkDecl> links;
 
@@ -74,31 +78,17 @@ public class MenuBar
     {
         super.onInitialize();
 
-        add(new LogoutPanel("logoutPanel"));
+        user = LoadableDetachableModel.of(userRepository::getCurrentUser);
+        IModel<Long> projectId = LoadableDetachableModel.of(() -> findParent(ProjectContext.class)) //
+                .map(ProjectContext::getProject).map(Project::getId);
 
-        add(helpLink = new ExternalLink(CID_HELP_LINK, new ResourceModel("page.help.link", ""))
-        {
-            private static final long serialVersionUID = -2510064191732926764L;
+        add(new LogoutPanel("logoutPanel", user));
 
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-
-                try {
-                    // Trying to access the resources - if we can, then we show the link, but if
-                    // we fail, then we hide the link
-                    getString("page.help.link");
-                    getString("page.help");
-                    helpLink.setVisible(true);
-                }
-                catch (MissingResourceException e) {
-                    helpLink.setVisible(false);
-                }
-            }
-        });
+        helpLink = new ExternalLink(CID_HELP_LINK, new ResourceModel("page.help.link", ""));
+        helpLink.add(visibleWhen(this::isPageHelpAvailable));
         helpLink.setContextRelative(true);
         helpLink.setPopupSettings(new PopupSettings("_blank"));
+        add(helpLink);
 
         links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
         {
@@ -116,26 +106,34 @@ public class MenuBar
 
         add(new BookmarkablePageLink<>(CID_HOME_LINK, getApplication().getHomePage()));
 
-        User user = userRepository.getCurrentUser();
-
-        ProjectContext projectContext = findParent(ProjectContext.class);
-        if (user != null && projectContext != null && projectContext.getProject() != null
-                && projectContext.getProject().getId() != null) {
-            long projectId = projectContext.getProject().getId();
-            add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class,
-                    new PageParameters().set(PAGE_PARAM_PROJECT, projectId)));
-        }
-        else {
-            add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class)
-                    .setVisible(false));
-        }
+        add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class,
+                new PageParameters().set(PAGE_PARAM_PROJECT, projectId.orElse(-1l).getObject()))
+                        .add(visibleWhen(projectId.isPresent())));
 
         add(new BookmarkablePageLink<>(CID_PROJECTS_LINK, ProjectsOverviewPage.class)
-                .add(visibleWhen(() -> user != null && (userRepository.isAdministrator(user)
-                        || userRepository.isProjectCreator(user)
-                        || projectService.listAccessibleProjects(user).size() > 1))));
+                .add(visibleWhen(user.map(this::requiresProjectsOverview).orElse(false))));
 
         add(new BookmarkablePageLink<>(CID_ADMIN_LINK, AdminDashboardPage.class)
-                .add(visibleWhen(() -> user != null && userRepository.isAdministrator(user))));
+                .add(visibleWhen(user.map(userRepository::isAdministrator).orElse(false))));
+    }
+
+    private boolean isPageHelpAvailable()
+    {
+        try {
+            // Trying to access the resources - if we can, then we show the link, but if
+            // we fail, then we hide the link
+            getString("page.help.link");
+            getString("page.help");
+            return true;
+        }
+        catch (MissingResourceException e) {
+            return false;
+        }
+    }
+
+    private boolean requiresProjectsOverview(User aUser)
+    {
+        return userRepository.isAdministrator(aUser) || userRepository.isProjectCreator(aUser)
+                || projectService.listAccessibleProjects(aUser).size() > 1;
     }
 }

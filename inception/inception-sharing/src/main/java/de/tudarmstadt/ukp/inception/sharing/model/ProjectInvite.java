@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.sharing.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,7 +27,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -55,17 +59,32 @@ public class ProjectInvite
     @Column(nullable = false)
     private Date expirationDate;
 
+    @Lob
+    @Column(length = 64000, nullable = true)
+    private String invitationText;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date created;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date updated;
+
+    @Column(nullable = false)
+    private boolean guestAccessible = false;
+
+    public ProjectInvite()
+    {
+        // constructor for JPA
+    }
+
     public ProjectInvite(Project aProject, String aInviteId, Date aExpirationDate)
     {
         super();
         project = aProject;
         inviteId = aInviteId;
         expirationDate = aExpirationDate;
-    }
-
-    protected ProjectInvite()
-    {
-        // constructor for JPA
     }
 
     public Project getProject()
@@ -108,46 +127,77 @@ public class ProjectInvite
         id = aId;
     }
 
+    public String getInvitationText()
+    {
+        return invitationText;
+    }
+
+    public void setInvitationText(String aInvitationText)
+    {
+        invitationText = aInvitationText;
+    }
+
+    public boolean isGuestAccessible()
+    {
+        return guestAccessible;
+    }
+
+    public void setGuestAccessible(boolean aGuestAccessible)
+    {
+        guestAccessible = aGuestAccessible;
+    }
+
+    @PrePersist
+    protected void onCreate()
+    {
+        // When we import data, we set the fields via setters and don't want these to be
+        // overwritten by this event handler.
+        if (created == null) {
+            created = new Date();
+            updated = created;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate()
+    {
+        updated = new Date();
+    }
+
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof ProjectInvite)) {
+            return false;
+        }
+        ProjectInvite castOther = (ProjectInvite) other;
+        return Objects.equals(project, castOther.project)
+                && Objects.equals(inviteId, castOther.inviteId);
+    }
+
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((inviteId == null) ? 0 : inviteId.hashCode());
-        result = prime * result + ((project == null) ? 0 : project.hashCode());
-        return result;
+        return Objects.hash(project, inviteId);
     }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        ProjectInvite other = (ProjectInvite) obj;
-        if (inviteId == null) {
-            if (other.inviteId != null) {
-                return false;
-            }
-        }
-        else if (!inviteId.equals(other.inviteId)) {
-            return false;
-        }
-        if (project == null) {
-            if (other.project != null) {
-                return false;
-            }
-        }
-        else if (!project.equals(other.project)) {
-            return false;
-        }
-        return true;
-    }
-
 }

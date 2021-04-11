@@ -25,7 +25,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 
-public class WebAnnoDaoAuthenticationProvider
+public class InceptionDaoAuthenticationProvider
     extends DaoAuthenticationProvider
 {
     @Override

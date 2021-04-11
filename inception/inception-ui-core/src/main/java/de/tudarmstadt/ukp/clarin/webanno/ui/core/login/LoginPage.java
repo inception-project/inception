@@ -27,7 +27,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.Properties;
 
 import javax.servlet.http.HttpSession;
 
@@ -67,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 /**
@@ -183,30 +181,33 @@ public class LoginPage
         {
             super(id);
             setModel(new CompoundPropertyModel<>(this));
+
             add(new RequiredTextField<String>("username"));
             add(new PasswordTextField("password"));
             add(new HiddenField<>("urlfragment"));
-            Button signInBtn = new Button("signInBtn");
-            signInBtn.add(enabledWhen(() -> !isTooManyUsers()));
-            add(signInBtn);
-            Properties settings = SettingsUtil.getSettings();
-            String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
-            add(new Label("loginMessage", loginMessage).setEscapeModelStrings(false)
-                    .add(visibleWhen(() -> isNotBlank(loginMessage))));
+            add(new Button("signInBtn").add(enabledWhen(() -> !isTooManyUsers())));
+            add(new Label("loginMessage", loginProperties.getMessage()).setEscapeModelStrings(false)
+                    .add(visibleWhen(() -> isNotBlank(loginProperties.getMessage()))));
         }
 
         @Override
         protected void onSubmit()
         {
-            String redirectUrl = getRedirectUrl();
-            AuthenticatedWebSession session = AuthenticatedWebSession.get();
-            if (session.signIn(username, password)) {
-                log.debug("Login successful");
-                setDefaultResponsePageIfNecessary(redirectUrl);
-            }
-            else {
+            // We only accept users that are not bound to a particular realm (e.g. to a project)
+            User user = userRepository.get(username);
+            if (user == null || user.getRealm() != null) {
                 error("Login failed");
+                return;
             }
+
+            AuthenticatedWebSession session = AuthenticatedWebSession.get();
+            if (!session.signIn(username, password)) {
+                error("Login failed");
+                return;
+            }
+
+            log.debug("Login successful");
+            setDefaultResponsePageIfNecessary(getRedirectUrl());
         }
 
         private void setDefaultResponsePageIfNecessary(String aRedirectUrl)
