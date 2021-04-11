@@ -50,7 +50,7 @@
                 This invitation has expired.
               </h5>
             </div>
-            <div wicket:id="acceptInvitationPanel">
+            <form wicket:id="acceptInvitationForm">
               <h5 class="card-title mb-3 text-center">
                 Welcome!
               </h5>
@@ -64,10 +64,16 @@
                   Would you like to join?
                 </p>
               </div>
+              <div class="form-group form-row mb-3">
+                <input wicket:id="username" type="text" class="form-control" placeholder="User ID"/>
+              </div>
+              <div class="form-group form-row mb-3">
+                <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+              </div>
               <div class="form-group form-row justify-content-md-center">
                 <button wicket:id="join" type="submit" class="btn btn-login btn-primary w-100">Join project</button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.IModel;
@@ -71,6 +72,8 @@ public class RecommenderListPanel
 
     private List<Recommender> listRecommenders()
     {
-        return recommendationService.listRecommenders(projectModel.getObject());
+        return recommendationService.listRecommenders(projectModel.getObject()).stream()
+                .filter(e -> recommendationService.getRecommenderFactory(e).isPresent())
+                .collect(Collectors.toList());
     }
 }

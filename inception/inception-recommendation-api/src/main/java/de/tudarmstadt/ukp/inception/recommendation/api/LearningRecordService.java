@@ -23,10 +23,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
 public interface LearningRecordService
 {
@@ -52,7 +53,11 @@ public interface LearningRecordService
 
     void deleteById(long id);
 
-    void logRecord(SourceDocument aDocument, String aUsername, AnnotationSuggestion aPrediction,
+    void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aPrediction,
+            AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation);
+
+    void logRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aPrediction,
             AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 
@@ -61,7 +66,16 @@ public interface LearningRecordService
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
      */
-    void logRecord(SourceDocument aDocument, String aUsername, AnnotationSuggestion aSuggestion,
+    void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
+            String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
+
+    /**
+     * Updates the learning log with an entry for the given suggestion. Any entries which are
+     * duplicates of the new action are removed as part of this action. Note that the actual action
+     * the user performed is not taken into account to determine duplicateness.
+     */
+    void logRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aSuggestion,
             String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 

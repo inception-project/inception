@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_P
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_USERNAME;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -67,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 /**
@@ -84,13 +84,12 @@ public class LoginPage
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean(required = false) SessionRegistry sessionRegistry;
     private @SpringBean LoginProperties loginProperties;
     private @SpringBean SecurityProperties securityProperties;
+    private @SpringBean SessionRegistry sessionRegistry;
 
     private LoginForm form;
     private final WebMarkupContainer tooManyUsersLabel;
-    private final Button signInBtn;
 
     public LoginPage()
     {
@@ -98,13 +97,11 @@ public class LoginPage
         setVersioned(false);
 
         add(form = new LoginForm("loginForm"));
-        signInBtn = new Button("signInBtn");
-        signInBtn.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
+        form.add(enabledWhen(() -> !isTooManyUsers()));
+
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
-        tooManyUsersLabel.add(LambdaBehavior.visibleWhen(this::isTooManyUsers));
-        form.add(signInBtn);
+        tooManyUsersLabel.add(visibleWhen(this::isTooManyUsers));
         form.add(tooManyUsersLabel);
-        form.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
 
         redirectIfAlreadyLoggedIn();
 
@@ -177,6 +174,7 @@ public class LoginPage
         extends StatelessForm<LoginForm>
     {
         private static final long serialVersionUID = 1L;
+
         private String username;
         private String password;
         private String urlfragment;
@@ -188,6 +186,9 @@ public class LoginPage
             add(new RequiredTextField<String>("username"));
             add(new PasswordTextField("password"));
             add(new HiddenField<>("urlfragment"));
+            Button signInBtn = new Button("signInBtn");
+            signInBtn.add(enabledWhen(() -> !isTooManyUsers()));
+            add(signInBtn);
             Properties settings = SettingsUtil.getSettings();
             String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
             add(new Label("loginMessage", loginMessage).setEscapeModelStrings(false)
@@ -201,13 +202,6 @@ public class LoginPage
             AuthenticatedWebSession session = AuthenticatedWebSession.get();
             if (session.signIn(username, password)) {
                 log.debug("Login successful");
-                if (sessionRegistry != null) {
-                    // Form-based login isn't detected by SessionManagementFilter. Thus handling
-                    // session registration manually here.
-                    HttpSession containerSession = ((ServletWebRequest) RequestCycle.get()
-                            .getRequest()).getContainerRequest().getSession(false);
-                    sessionRegistry.registerNewSession(containerSession.getId(), username);
-                }
                 setDefaultResponsePageIfNecessary(redirectUrl);
             }
             else {

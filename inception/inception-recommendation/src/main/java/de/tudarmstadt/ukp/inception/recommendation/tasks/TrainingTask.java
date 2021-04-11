@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -155,8 +156,16 @@ public class TrainingTask
                     long startTime = System.currentTimeMillis();
 
                     try {
-                        RecommendationEngineFactory factory = recommendationService
+                        Optional<RecommendationEngineFactory<?>> maybeFactory = recommendationService
                                 .getRecommenderFactory(recommender);
+
+                        if (maybeFactory.isEmpty()) {
+                            log.warn("[{}][{}]: No factory found - skipping recommender",
+                                    user.getUsername(), r.getRecommender().getName());
+                            continue;
+                        }
+
+                        RecommendationEngineFactory<?> factory = maybeFactory.get();
 
                         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                             log.debug(

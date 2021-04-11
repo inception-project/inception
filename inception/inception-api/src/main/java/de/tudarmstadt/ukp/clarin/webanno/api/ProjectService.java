@@ -33,8 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface ProjectService
@@ -390,17 +388,6 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
-     *
-     * @param user
-     *            the {@link User} object
-     * @return the roles.
-     * @deprecated use {@link UserDao#listAuthorities(User)}
-     */
-    @Deprecated
-    List<Authority> listAuthorities(User user);
-
-    /**
      * Can the given user access the project setting of <b>some</b> project.
      */
     public boolean managesAnyProject(User user);
@@ -415,21 +402,6 @@ public interface ProjectService
      * @return if the user may update a project.
      */
     boolean isManager(Project aProject, User aUser);
-
-    /**
-     * @deprecated Use {@link #isManager(Project, User)}
-     */
-    @Deprecated
-    default boolean isProjectAdmin(Project aProject, User aUser)
-    {
-        return isManager(aProject, aUser);
-    }
-
-    /**
-     * @deprecated Use {@link #isManager(Project, User)}
-     */
-    @Deprecated
-    boolean isAdmin(Project aProject, User aUser);
 
     /**
      * Determine if the user is a curator or not.
