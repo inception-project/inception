@@ -42,7 +42,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 
@@ -78,7 +77,7 @@ public class LogoutPanel
         BookmarkablePageLink<Void> profileLink = new BookmarkablePageLink<>("profile",
                 ManageUsersPage.class,
                 new PageParameters().add(ManageUsersPage.PARAM_USER, username));
-        profileLink.add(enabledWhen(SecurityUtil::isProfileSelfServiceAllowed));
+        profileLink.add(enabledWhen(UserDao::isProfileSelfServiceAllowed));
         profileLink.add(visibleWhen(() -> isNotBlank(username)));
         profileLink.add(new Label("username", username));
         add(profileLink);

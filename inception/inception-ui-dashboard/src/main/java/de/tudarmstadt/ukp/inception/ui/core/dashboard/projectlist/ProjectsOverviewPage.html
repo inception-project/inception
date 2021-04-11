@@ -19,8 +19,8 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div class="flex-content flex-v-container flex-gutter">
-      <div class="flex-h-container flex-gutter">
+    <div class="flex-content flex-v-container">
+      <div class="flex-h-container flex-gutter mt-3 mb-3">
         <div>
           <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="btn-group" role="group">
@@ -51,7 +51,7 @@
           </button>
         </div>
         <div class="flex-content"></div>
-      <div class="flex-h-container flex-gutter justify-content-end">
+      <div class="flex-h-container flex-gutter justify-content-end flex-only-internal-gutter">
         <div>
           <div wicket:id="roleFilters" class="input-group">
             <div class="input-group-prepend">
@@ -70,9 +70,9 @@
         </div>
       </div>
       </div>
-      <div class="scrolling flex-content flex-h-container flex-gutter">
+      <div class="scrolling flex-content flex-h-container">
         <div wicket:id="projects" class="flex-content list-group">
-        <div wicket:id="emptyListLabel"  style="position: absolute; top: 50%; left: 30%; right: 30%; color:#aaa; font-size: x-large;  transform: translate(0, -50%)"></div>
+          <div wicket:id="emptyListLabel" class="no-data-notice flex-content"></div>
           <div wicket:id="project" class="list-group-item">
             <div class="flex-h-container flex-gutter flex-only-internal-gutter">
               <div class="flex-content">

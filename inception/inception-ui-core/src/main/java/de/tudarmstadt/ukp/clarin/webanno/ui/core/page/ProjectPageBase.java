@@ -73,11 +73,17 @@ public abstract class ProjectPageBase
                 : emptySet();
 
         // Check access to project
-        if (!projectService.hasRole(aUser, project, aRoles)) {
-            getSession().error(
-                    format("You require any of the [%s] roles to access the [%s] for project [%s]",
-                            roles.stream().map(PermissionLevel::getId).collect(joining(", ")),
-                            getClass().getSimpleName(), project.getName()));
+        if (aUser == null || !projectService.hasRole(aUser, project, aRoles)) {
+            if (roles.isEmpty()) {
+                getSession()
+                        .error(format("To access the [%s] you need to be a member of the project",
+                                getClass().getSimpleName()));
+            }
+            else {
+                getSession().error(format("To access the [%s] you require any of these roles: [%s]",
+                        getClass().getSimpleName(),
+                        roles.stream().map(PermissionLevel::getId).collect(joining(", "))));
+            }
 
             backToProjectPage();
         }

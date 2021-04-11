@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
@@ -35,6 +36,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
@@ -52,6 +54,7 @@ public class SpringAuthenticatedWebSession
 
     @SpringBean(name = "org.springframework.security.authenticationManager")
     private AuthenticationManager authenticationManager;
+    private @SpringBean(required = false) SessionRegistry sessionRegistry;
 
     public SpringAuthenticatedWebSession(Request request)
     {
@@ -89,9 +92,11 @@ public class SpringAuthenticatedWebSession
         // signOut();
 
         try {
+            ServletWebRequest request = (ServletWebRequest) RequestCycle.get().getRequest();
+            HttpServletRequest containerRequest = request.getContainerRequest();
+
             // Kill current session and create a new one as part of the authentication
-            ((ServletWebRequest) RequestCycle.get().getRequest()).getContainerRequest().getSession()
-                    .invalidate();
+            containerRequest.getSession().invalidate();
 
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
@@ -102,11 +107,17 @@ public class SpringAuthenticatedWebSession
             log.debug("Stored authentication for user [{}] in security context",
                     authentication.getName());
 
-            HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                    .getContainerRequest().getSession();
+            HttpSession session = containerRequest.getSession();
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
             log.debug("Stored security context in session");
+
+            if (sessionRegistry != null) {
+                // Form-based login isn't detected by SessionManagementFilter. Thus handling
+                // session registration manually here.
+                HttpSession containerSession = containerRequest.getSession(false);
+                sessionRegistry.registerNewSession(containerSession.getId(), username);
+            }
 
             return true;
         }

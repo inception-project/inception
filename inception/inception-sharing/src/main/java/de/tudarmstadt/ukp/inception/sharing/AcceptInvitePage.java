@@ -23,9 +23,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage.PAGE_PARAM_INVITE_ID;
 
+import java.io.Serializable;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.PasswordTextField;
+import org.apache.wicket.markup.html.form.RequiredTextField;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
@@ -34,11 +42,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
@@ -55,56 +62,86 @@ public class AcceptInvitePage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
 
-    private Project project;
-    private String token;
+    private IModel<FormData> formModel;
 
     public AcceptInvitePage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
-        project = getProject();
-
-        // Compare invite param to invite id in db, if correct add user to project
-        token = aPageParameters.get(PAGE_PARAM_INVITE_ID).toOptionalString();
-
         IModel<Boolean> invitationIsValid = LoadableDetachableModel.of(this::checkInvitation);
 
-        WebMarkupContainer expirationNotice = new WebMarkupContainer("expirationNotice");
-        expirationNotice.add(visibleWhen(() -> !invitationIsValid.orElse(false).getObject()));
-        add(expirationNotice);
+        User user = userRepository.getCurrentUser();
 
-        WebMarkupContainer acceptInvitationPanel = new WebMarkupContainer("acceptInvitationPanel");
+        // If the current user has already accepted the invitation, directly forward to the project
+        if (user != null && invitationIsValid.getObject()) {
+            if (projectService.existsProjectPermissionLevel(user, getProject(), ANNOTATOR)) {
+                backToProjectPage();
+            }
+        }
+
+        add(new WebMarkupContainer("expirationNotice")
+                .add(visibleWhen(() -> !invitationIsValid.orElse(false).getObject())));
+
+        formModel = new CompoundPropertyModel<>(new FormData());
+        Form<FormData> acceptInvitationPanel = new Form<>("acceptInvitationForm", formModel);
+        acceptInvitationPanel.add(new Label("project", PropertyModel.of(getProject(), "name")));
+        acceptInvitationPanel.add(new RequiredTextField<String>("username") //
+                .add(visibleWhen(() -> user == null)));
+        acceptInvitationPanel.add(new PasswordTextField("password") //
+                .add(visibleWhen(() -> user == null)));
+        acceptInvitationPanel.add(new LambdaAjaxButton<>("join", this::actionJoinProject));
+
         acceptInvitationPanel.add(visibleWhen(() -> invitationIsValid.orElse(false).getObject()));
-        acceptInvitationPanel.add(new LambdaAjaxLink("join", this::actionJoinProject));
-        acceptInvitationPanel.add(new Label("project", PropertyModel.of(project, "name")));
         add(acceptInvitationPanel);
+    }
+
+    private String getInviteId()
+    {
+        return getPageParameters().get(PAGE_PARAM_INVITE_ID).toOptionalString();
     }
 
     private boolean checkInvitation()
     {
-        return project != null && inviteService.isValidInviteLink(project, token);
+        return getProject() != null && inviteService.isValidInviteLink(getProject(), getInviteId());
     }
 
-    private void actionJoinProject(AjaxRequestTarget aTarget)
+    private void actionJoinProject(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        if (!inviteService.isValidInviteLink(project, token)) {
+        if (!checkInvitation()) {
             error("Invitation has expired.");
             return;
         }
 
+        if (userRepository.getCurrentUser() == null) {
+            FormData data = formModel.getObject();
+            if (!AuthenticatedWebSession.get().signIn(data.username, data.password)) {
+                error("Login failed");
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return;
+            }
+        }
+
         User currentUser = userRepository.getCurrentUser();
 
-        if (!projectService.existsProjectPermissionLevel(currentUser, project, ANNOTATOR)) {
+        if (!projectService.existsProjectPermissionLevel(currentUser, getProject(), ANNOTATOR)) {
             projectService.createProjectPermission(
-                    new ProjectPermission(project, currentUser.getUsername(), ANNOTATOR));
+                    new ProjectPermission(getProject(), currentUser.getUsername(), ANNOTATOR));
             getSession().success("You have successfully joined the project.");
         }
         else {
             getSession().info("You were already an annotator on this project.");
         }
 
-        PageParameters parameters = new PageParameters();
-        parameters.set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
-        getRequestCycle().setResponsePage(ProjectDashboardPage.class, parameters);
+        setResponsePage(ProjectDashboardPage.class, new PageParameters()
+                .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, getProject().getId()));
+    }
+
+    private static class FormData
+        implements Serializable
+    {
+        private static final long serialVersionUID = -2338711546557816393L;
+
+        String username;
+        String password;
     }
 }
