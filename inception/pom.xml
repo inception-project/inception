@@ -88,8 +88,8 @@
 
     <mariadb.driver.version>2.7.1</mariadb.driver.version>
     <mysql-driver.version>8.0.20</mysql-driver.version>
-    <hibernate.version>5.4.15.Final</hibernate.version>
-    <hibernate.validator.version>6.1.4.Final</hibernate.validator.version>
+    <hibernate.version>5.4.30.Final</hibernate.version>
+    <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
     <wicket.version>9.3.0</wicket.version>
     <wicketstuff.version>9.3.0</wicketstuff.version>
@@ -1041,12 +1041,12 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.26.0-GA</version>
+        <version>3.27.0-GA</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.10.2</version>
+        <version>1.10.22</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
