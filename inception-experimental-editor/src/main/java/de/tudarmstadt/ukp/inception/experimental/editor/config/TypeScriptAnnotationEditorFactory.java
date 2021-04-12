@@ -15,25 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.api.editor.config;
+package de.tudarmstadt.ukp.inception.experimental.editor.config;
+
+import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
-import de.tudarmstadt.ukp.inception.api.editor.AnnotationEditor;
-import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
+import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalAnnotationEditor;
 
-@Component("Experimental Editor")
-public class EditorFactory extends AnnotationEditorFactoryImplBase
+/**
+ * Support for experimental editor component.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link TypeScriptAnnotationEditorSupportAutoConfiguration#typescriptAnnotationEditorFactory}
+ * </p>
+ */
+public class TypeScriptAnnotationEditorFactory
+    extends AnnotationEditorFactoryImplBase
 {
-    @Override
-    public String getBeanName() {
-        return "experimental editor";
-    }
 
     @Override
     public String getDisplayName()
@@ -42,13 +44,9 @@ public class EditorFactory extends AnnotationEditorFactoryImplBase
     }
 
     @Override
-    public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel, AnnotationActionHandler aActionHandler, CasProvider aCasProvider) {
-        return new AnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
-    }
-
-    @Override
-    public void initState(AnnotatorState aModelObject)
+    public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        aModelObject.setPagingStrategy(new LineOrientedPagingStrategy());
+        return new ExperimentalAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
 }
