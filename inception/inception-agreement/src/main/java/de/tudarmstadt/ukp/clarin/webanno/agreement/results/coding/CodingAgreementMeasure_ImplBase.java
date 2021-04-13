@@ -18,12 +18,17 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
+import org.dkpro.statistics.agreement.IAnnotationUnit;
+import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
+import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_ImplBase;
@@ -58,6 +63,21 @@ public abstract class CodingAgreementMeasure_ImplBase<T extends DefaultAgreement
             }
         }
         return result;
+    }
+
+    protected Set<Object> getObservedCategories(CodingAgreementResult aResult)
+    {
+        Set<Object> observedCategories = new HashSet<>();
+        ICodingAnnotationStudy study = aResult.getStudy();
+        for (ICodingAnnotationItem item : study.getItems()) {
+            for (IAnnotationUnit unit : item.getUnits()) {
+                Object category = unit.getCategory();
+                if (category != null) {
+                    observedCategories.add(category);
+                }
+            }
+        }
+        return observedCategories;
     }
 
     public abstract CodingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap);

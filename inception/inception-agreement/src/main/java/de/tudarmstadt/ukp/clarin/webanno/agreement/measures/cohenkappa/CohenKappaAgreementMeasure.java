@@ -21,9 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCod
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toCollection;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.statistics.agreement.IAgreementMeasure;
@@ -36,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
 public class CohenKappaAgreementMeasure
     extends CodingAgreementMeasure_ImplBase<DefaultAgreementTraits>
@@ -59,16 +63,22 @@ public class CohenKappaAgreementMeasure
 
         CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
+        Set<String> tagset = annotationService.listTags(feature.getTagset()).stream()
+                .map(Tag::getName).collect(toCollection(LinkedHashSet::new));
+
         CodingAgreementResult agreementResult = makeCodingStudy(diff, feature.getLayer().getName(),
-                feature.getName(), true, aCasMap);
+                feature.getName(), tagset, true, aCasMap);
 
         IAgreementMeasure agreement = new CohenKappaAgreement(agreementResult.getStudy());
 
-        if (agreementResult.getStudy().getItemCount() > 0) {
-            agreementResult.setAgreement(agreement.calculateAgreement());
+        if (agreementResult.getStudy().getItemCount() == 0) {
+            agreementResult.setAgreement(Double.NaN);
+        }
+        else if (getObservedCategories(agreementResult).size() == 1) {
+            agreementResult.setAgreement(1.0d);
         }
         else {
-            agreementResult.setAgreement(Double.NaN);
+            agreementResult.setAgreement(agreement.calculateAgreement());
         }
 
         return agreementResult;
