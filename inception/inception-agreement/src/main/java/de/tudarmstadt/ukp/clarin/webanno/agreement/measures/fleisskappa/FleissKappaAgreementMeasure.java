@@ -75,7 +75,7 @@ public class FleissKappaAgreementMeasure
         if (agreementResult.getStudy().getItemCount() == 0) {
             agreementResult.setAgreement(Double.NaN);
         }
-        else if (getObservedCategories(agreementResult).size() == 1) {
+        else if (agreementResult.getObservedCategories().size() == 1) {
             agreementResult.setAgreement(1.0d);
         }
         else {
