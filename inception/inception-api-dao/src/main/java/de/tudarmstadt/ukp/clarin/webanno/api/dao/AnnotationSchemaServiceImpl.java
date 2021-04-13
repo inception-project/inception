@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
@@ -741,6 +742,10 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<Tag> listTags(TagSet aTagSet)
     {
+        if (aTagSet == null) {
+            return emptyList();
+        }
+
         return entityManager
                 .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
                 .setParameter("tagSet", aTagSet) //

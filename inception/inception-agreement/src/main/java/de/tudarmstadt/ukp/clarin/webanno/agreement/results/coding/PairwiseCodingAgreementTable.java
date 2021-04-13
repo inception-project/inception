@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toCollection;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,8 +31,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -76,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
@@ -411,13 +415,16 @@ public class PairwiseCodingAgreementTable
 
                 CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
 
+                Set<String> tagset = annotationService.listTags(feature.getTagset()).stream()
+                        .map(Tag::getName).collect(toCollection(LinkedHashSet::new));
+
                 // AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
                 // feature.getLayer().getName(), feature.getName(),
                 // pref.excludeIncomplete, casMap);
                 // TODO: for the moment, we always include incomplete annotations during this
                 // export.
                 CodingAgreementResult agreementResult = makeCodingStudy(diff,
-                        feature.getLayer().getName(), feature.getName(), false, casMap);
+                        feature.getLayer().getName(), feature.getName(), tagset, false, casMap);
 
                 try {
                     return AgreementUtils.generateCsvReport(agreementResult);
