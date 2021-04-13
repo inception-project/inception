@@ -284,7 +284,7 @@ public class PairwiseCodingAgreementTable
                 + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(1),
                         getNonNullCount(result, result.getCasGroupIds().get(1)),
                         result.getStudy().getItemCount())
-                + String.format("Distinct labels used: %d%n", result.getStudy().getCategoryCount());
+                + String.format("Distinct labels: %d%n", result.getStudy().getCategoryCount());
 
         Label l = new Label("label", Model.of(label));
         l.add(makeDownloadBehavior(aRater1, aRater2));
