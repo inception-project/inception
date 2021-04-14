@@ -20,17 +20,20 @@ export class Annotation {
     end : number;
     text : string;
     type : string;
+    value : string;
 
-    constructor(aBegin: number, aEnd: number, aText: string, aType: string)
+    constructor(aBegin: number, aEnd: number, aText: string, aType: string, aValue: string)
     {
         this.begin = aBegin;
         this.end = aEnd;
         this.text = aText;
         this.type = aType;
+        this.value = aValue;
     }
 
     _changeType(aType: string)
     {
         this.type = aType;
+        this.value = null;
     }
 }

@@ -3,8 +3,6 @@
 import {Annotation} from "../../main/ts/annotation/Annotation";
 import {Experimental} from "../../main/ts";
 
-var experimental = new Experimental();
-
 /*
 var assert = require('chai').assert
     , annotation = new Annotation(0,3,"Test", "POS")
@@ -14,21 +12,23 @@ assert.lengthOf(annotation.end - annotation.begin, 4);
  */
 
 const tests = {
-    assert : require('chai').assert,
+    chai : require('chai'),
+    annotations: Array(Annotation),
+    experimental : new Experimental(),
 
     runAllTests : function()
     {
-        this.createAnnotationTest(new Annotation(0,1,"Test", "NER"));
-        this.deleteAnnotationTest();
+        this.createAnnotationTest(new Annotation(0,1,"Test", "POS", "Noun"));
+        this.deleteAnnotationTest(this.annotations.get(0));
     },
 
-    createAnnotationTest : function(annotation : Annotation)
+    createAnnotationTest : function(aAnnotation : Annotation)
     {
-
+        this.annotations.push(aAnnotation)
     },
 
-    deleteAnnotationTest : function(annotation : Annotation)
+    deleteAnnotationTest : function(aAnnotation : Annotation)
     {
-
+        this.annotations.filter(annotation => annotation !== aAnnotation)
     }
 }

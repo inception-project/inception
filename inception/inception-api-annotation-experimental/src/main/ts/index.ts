@@ -16,45 +16,82 @@
  * limitations under the License.
  */
 import {Annotation} from "./annotation/Annotation";
-import {Eventhandler} from "./events/Eventhandler";
 import * as ConfigFile from "./config.json";
+import {TinyEmitter} from "tiny-emitter";
 
 /**
  * Typescript API
  */
-export class Experimental {
-    annotations: Annotation[];
-    layers: string[];
-    event: Eventhandler;
-    document : File;
+export class Experimental
+{
+    annotations: Annotation[]
+    layers: string[]
+    document : File
+    emitter : TinyEmitter
 
-    constructor() {
+    constructor()
+    {
         //TODO define what is needed to be configurable
-        ConfigFile.EditorColors.forEach(color => {
+        ConfigFile.EditorColors.forEach(color =>
+        {
             console.log(color)
         })
 
-        ConfigFile.Layers.forEach(layer => {
+        ConfigFile.Layers.forEach(layer =>
+        {
             this.layers.push(layer.name)
             console.log(layer)
         })
 
-        //Init eventhandler
-        this.event = new Eventhandler(this);
+        //Init eventhandler and emitter
+        this.emitter = new TinyEmitter()
     }
 
-    _initAnnotations = (aAnnotations: Annotation[]) => {
+    _initAnnotations = (aAnnotations: Annotation[]) =>
+    {
         this._setAnnotations(aAnnotations)
     }
 
-    _loadDocument = (aDocument : File) => {
-        this.document = aDocument;
+    _loadDocument = (aDocument : File) =>
+    {
+        this.document = aDocument
+    }
+
+    // ----------------- Events ----------------- //
+
+    _eventSelectAnnotation = (aAnnotation : Annotation) =>
+    {
+        this.emitter.emit('_select_annotation', this._selectAnnotation(aAnnotation.begin, aAnnotation.type))
+    }
+
+    _eventCreateAnnotation = (aAnnotation : Annotation) =>
+    {
+        this.emitter.emit('_create_annotation', this._createAnnotation(aAnnotation))
+    }
+
+    _eventDeleteAnnotation = (aAnnotation : Annotation) =>
+    {
+        this.emitter.emit('_delete_annotation', this._deleteAnnotation(aAnnotation))
+    }
+
+    _eventUpdateAnnotation = (aAnnotation : Annotation, aNewType : string) =>
+    {
+        this.emitter.emit('_update_Annotation', this._updateAnnotation(aAnnotation.begin, aAnnotation.type, aNewType));
+    }
+
+    //Will be needed for websocket, JSON Object with required updates
+    _eventUpdateEditor = (aUpdate : JSON) =>
+    {
+        //Do the work
     }
 
 
-    _createAnnotation = (aAnnotation: { begin: number; end: number; text: string; type: string; }) => {
+    // ------------------------------------------- //
+
+    _createAnnotation = (aAnnotation: { begin: number; end: number; text: string; type: string; }) =>
+    {
         try {
-            const annotation = new Annotation(aAnnotation.begin, aAnnotation.end, aAnnotation.text, aAnnotation.type);
+            const annotation = new Annotation(aAnnotation.begin, aAnnotation.end, aAnnotation.text, aAnnotation.type, null);
             this.annotations.push(annotation)
 
         } catch (exception) {
@@ -64,7 +101,8 @@ export class Experimental {
         }
     }
 
-    _deleteAnnotation = (aAnnotation: Annotation) => {
+    _deleteAnnotation = (aAnnotation: Annotation) =>
+    {
         try {
             this.annotations.filter(annotation => annotation !== aAnnotation)
         } catch (exception) {
@@ -73,28 +111,33 @@ export class Experimental {
     }
 
 
-    // --------------------------------------------------- //
 
-
-    // ---------------- Getter and Setter ---------------- //
-
-
-    _selectAnnotation = (aBegin: number, aType: string) => {
+    _selectAnnotation = (aBegin: number, aType: string) =>
+    {
         return this.annotations.filter(annotation => ((annotation.begin == aBegin) && (annotation.type == aType)))
     }
 
-    _updateAnnotation = (aBegin: number, aType: string, aNewType: string) => {
+    _updateAnnotation = (aBegin: number, aType: string, aNewType: string) =>
+    {
         const annotation = this.annotations.find(anno =>
             (anno.begin == aBegin) && (anno.type = aType))
 
         annotation._changeType(aNewType)
     }
 
-    _getAnnotations = () => {
+
+    // --------------------------------------------------- //
+
+
+    // ---------------- Getter and Setter ---------------- //
+
+    _getAnnotations = () =>
+    {
         return this.annotations
     }
 
-    _setAnnotations = (aAnnotations: Annotation[]) => {
+    _setAnnotations = (aAnnotations: Annotation[]) =>
+    {
         this.annotations = aAnnotations;
     }
     // --------------------------------------------------- //
