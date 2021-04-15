@@ -235,7 +235,7 @@ public class PairwiseUnitizingAgreementTable
                         getNonNullCount(result, 0), result.getStudy().getUnitCount(0))
                 + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(1),
                         getNonNullCount(result, 1), result.getStudy().getUnitCount(1))
-                + String.format("Distinct labels used: %d%n", result.getStudy().getCategoryCount());
+                + String.format("Distinct labels: %d%n", result.getStudy().getCategoryCount());
 
         Label l = new Label("label", Model.of(label));
         DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(tooltipTitle,

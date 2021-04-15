@@ -20,8 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 import static java.util.Collections.unmodifiableList;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.dkpro.statistics.agreement.IAnnotationUnit;
+import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
@@ -132,6 +136,20 @@ public class CodingAgreementResult
     public DiffResult getDiff()
     {
         return diff;
+    }
+
+    public Set<Object> getObservedCategories()
+    {
+        Set<Object> observedCategories = new HashSet<>();
+        for (ICodingAnnotationItem item : getStudy().getItems()) {
+            for (IAnnotationUnit unit : item.getUnits()) {
+                Object category = unit.getCategory();
+                if (category != null) {
+                    observedCategories.add(category);
+                }
+            }
+        }
+        return observedCategories;
     }
 
     @Override
