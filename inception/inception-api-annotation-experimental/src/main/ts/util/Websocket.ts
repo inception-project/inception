@@ -34,9 +34,24 @@
  */
 import {WebsocketBuilder} from 'websocket-ts';
 
-const aWebsocket = new WebsocketBuilder('ws://localhost:8080')
-    .onOpen((aWebsocket, e) => { console.log("opened") })
-    .onClose((aWebsocket, e) => { console.log("closed") })
-    .onError((aWebsocket, e) => { console.log("error") })
-    .onMessage((aWebsocket, e) => { aWebsocket.send(e.data) })
-    .build();
+export class Websocket
+{
+    websocket : WebsocketBuilder;
+
+    constructor()
+    {
+
+    }
+
+    _createWebsocket = function(url : string)
+    {
+
+        this.websocket = new WebsocketBuilder(url)
+        .onOpen((aWebsocket, e) => { console.log("opened") })
+        .onClose((aWebsocket, e) => { console.log("closed") })
+        .onError((aWebsocket, e) => { console.log("error") })
+        .onMessage((aWebsocket, e) => { aWebsocket.send(e.data) })
+        .build();
+    }
+}
+

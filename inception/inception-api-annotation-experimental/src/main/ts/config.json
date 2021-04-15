@@ -1,5 +1,10 @@
 {
-  "Layers": [
+  "Config" : [
+    {
+      "url" : "ws://localhost:8080"
+    }
+  ],
+  "Layers" : [
     {
       "name" : "POS",
       "identifier" : [

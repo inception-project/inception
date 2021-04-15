@@ -18,16 +18,28 @@
 import {Annotation} from "./annotation/Annotation";
 import * as ConfigFile from "./config.json";
 import {TinyEmitter} from "tiny-emitter";
+import {Websocket} from "./util/Websocket";
 
 /**
  * Typescript API
  */
 export class Experimental
 {
+    //Annotations of the document
     annotations: Annotation[]
+
+    //Layers from config file
     layers: string[]
+
+    //Loaded document
     document : File
+
+    //Eventhandler
     emitter : TinyEmitter
+
+    //URL for websocket
+    url : string
+
 
     constructor()
     {
@@ -43,8 +55,13 @@ export class Experimental
             console.log(layer)
         })
 
-        //Init eventhandler and emitter
+        this.url = ConfigFile.Config.url;
+
+        //init eventhandler and emitter
         this.emitter = new TinyEmitter()
+
+        //init websocket
+        Websocket.prototype._createWebsocket('ws://localhost:8080');
     }
 
     _initAnnotations = (aAnnotations: Annotation[]) =>
