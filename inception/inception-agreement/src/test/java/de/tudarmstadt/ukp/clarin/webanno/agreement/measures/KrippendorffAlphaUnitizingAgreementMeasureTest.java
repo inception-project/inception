@@ -88,7 +88,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
 
         UnitizingAgreementResult result = agreement.getStudy("user1", "user2");
 
-        assertEquals(0.4, result.getAgreement(), 0.01);
+        assertEquals(0.0, result.getAgreement(), 0.01);
     }
 
     @Test
