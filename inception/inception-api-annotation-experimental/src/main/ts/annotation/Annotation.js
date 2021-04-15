@@ -15,32 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
-
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-public class ExperimentalAPIResourceReference
-    extends JavaScriptResourceReference
-{
-    private static final long serialVersionUID = 1L;
-
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static ExperimentalAPIResourceReference get()
-    {
-        return INSTANCE;
+export class Annotation {
+    constructor(aBegin, aEnd, aText, aType, aValue) {
+        this.begin = aBegin;
+        this.end = aEnd;
+        this.text = aText;
+        this.type = aType;
+        this.value = aValue;
     }
-
-    /**
-     * Private constructor
-     */
-    private ExperimentalAPIResourceReference()
-    {
-        super(ExperimentalAPIResourceReference.class, "../ts/dist/Editor.js.map");
+    _changeType(aType) {
+        this.type = aType;
+        this.value = null;
     }
 }
+//# sourceMappingURL=Annotation.js.map

@@ -5,7 +5,6 @@
     "target": "ES6",
     "moduleResolution": "node",
     "sourceMap": true,
-    "outDir": "dist",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   }

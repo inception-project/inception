@@ -19,12 +19,9 @@ import {Annotation} from "../../../../../inception-api-annotation-experimental/s
 
 export class Draw
 {
-    window : Window;
 
-
-    constructor(aWindow : Window)
+    constructor()
     {
-        this.window = aWindow;
     }
 
     _drawAnnotation = (aAnnotation: Annotation) =>
@@ -36,9 +33,6 @@ export class Draw
     {
 
     }
-
-
-
 
     // --------------------- Refresh -------------------- //
 
