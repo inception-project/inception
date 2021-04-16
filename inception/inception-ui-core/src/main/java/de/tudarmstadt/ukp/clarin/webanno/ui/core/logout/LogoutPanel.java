@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_GLOBAL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -61,17 +62,21 @@ public class LogoutPanel
         BookmarkablePageLink<Void> profileLink = new BookmarkablePageLink<>("profile",
                 ManageUsersPage.class, new PageParameters().add(ManageUsersPage.PARAM_USER,
                         getModel().map(User::getUsername).orElse("").getObject()));
-        profileLink.add(enabledWhen(UserDao::isProfileSelfServiceAllowed));
+        profileLink.add(enabledWhen(this::isProfileSelfServiceAllowed));
         profileLink.add(visibleWhen(getModel().isPresent()));
         profileLink.add(new Label("username", getModel().map(User::getUiName)));
         add(profileLink);
 
-        WebMarkupContainer logoutTimer = new WebMarkupContainer("logoutTimer");
-        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0));
-        add(logoutTimer);
+        add(new WebMarkupContainer("logoutTimer").add(visibleWhen(() -> getAutoLogoutTime() > 0)));
 
         add(visibleWhen(
                 () -> ApplicationSession.exists() && ApplicationSession.get().isSignedIn()));
+    }
+
+    private boolean isProfileSelfServiceAllowed()
+    {
+        return UserDao.isProfileSelfServiceAllowed()
+                && getModel().map(u -> u.getRealm() == REALM_GLOBAL).orElse(false).getObject();
     }
 
     @SuppressWarnings("unchecked")

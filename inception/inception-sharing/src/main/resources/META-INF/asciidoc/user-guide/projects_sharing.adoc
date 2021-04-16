@@ -17,10 +17,16 @@
 [[sect_projects_sharing]]
 = Invite Links
 
-Project managers can generate invite links to their projects which allow users to easily join their project. For this, visit the *Project Settings* and click on *Share Project*. Clicking on *New Link* will generate the invite link that can then be copied and given to users (e.g. via email). These users need to already have a {product-name} account to be able to use the link.
+Project managers can generate invite links to their projects which allow users to easily join their project. For this, visit the *Project Settings* and click on *Share Project*. Clicking on *Allow joining the project via a link* will generate the invite link that can then be copied and given to users (e.g. via email).
 
 image::sharing_settings.png[align="center"]
 
 The user can now follow the invite link by entering it into a browser. She might be prompted to log into {product-name} and is then automatically added to the project with annotator rights and directed to the project dashboard page. She can now start annotating.
+
+By default, users need to already have a {product-name} account to be able to use the link. However,
+by activating the option *Allow guest annotators*, a person accessing the invite link can simply
+enter any user ID they like and access the project using that ID. This ID is then valid only via the
+invite link and only for the particular project. The ID is not protected by a password. When the
+manager removes the project, the internal accounts backing the ID are automatically removed as well.
 
 NOTE: This feature is not enabled by default. However, you can enable it by adding `sharing.invites.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).

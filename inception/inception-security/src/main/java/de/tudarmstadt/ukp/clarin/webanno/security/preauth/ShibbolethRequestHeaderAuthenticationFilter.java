@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.preauth;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -40,7 +42,6 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String REALM_PREAUTH = "preauth";
-    public static final String EMPTY_PASSWORD = "";
 
     private UserDao userRepository;
 

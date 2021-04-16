@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.sharing;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 
 import java.io.IOException;
@@ -50,9 +52,6 @@ import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 public class InviteServiceImpl
     implements InviteService
 {
-    public static final String REALM_PROJECT_PREFIX = "project:";
-    public static final String EMPTY_PASSWORD = "";
-
     public static final int INVITE_ID_BYTE_LENGTH = 16;
     public static final int RANDOM_USERNAME_BYTE_LENGTH = 16;
 

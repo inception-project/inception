@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter.EMPTY_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

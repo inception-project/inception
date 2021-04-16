@@ -36,6 +36,11 @@ public interface UserDao
     static final String ADMIN_DEFAULT_USERNAME = "admin";
     static final String ADMIN_DEFAULT_PASSWORD = "admin";
 
+    static final String EMPTY_PASSWORD = "";
+
+    static final String REALM_GLOBAL = null;
+    static final String REALM_PROJECT_PREFIX = "project:";
+
     User getCurrentUser();
 
     /**
