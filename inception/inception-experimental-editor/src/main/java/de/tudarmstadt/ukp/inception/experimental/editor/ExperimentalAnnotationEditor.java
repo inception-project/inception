@@ -61,7 +61,6 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
 
         aResponse.render(forReference(ExperimentalAPIResourceReference.get()));
 
-
     }
 
 

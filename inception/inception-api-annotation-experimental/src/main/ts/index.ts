@@ -55,7 +55,7 @@ export class Experimental
             console.log(layer)
         })
 
-        this.url = ConfigFile.Config.url;
+
 
         //init eventhandler and emitter
         this.emitter = new TinyEmitter()
