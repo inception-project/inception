@@ -67,4 +67,15 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210416-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210409-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="userIdPlaceholder" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

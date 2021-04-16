@@ -55,6 +55,9 @@ public class ProjectInvite
     @Column(nullable = false)
     private String inviteId;
 
+    @Column(nullable = true)
+    private String userIdPlaceholder;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date expirationDate;
@@ -135,6 +138,16 @@ public class ProjectInvite
     public void setInvitationText(String aInvitationText)
     {
         invitationText = aInvitationText;
+    }
+
+    public String getUserIdPlaceholder()
+    {
+        return userIdPlaceholder;
+    }
+
+    public void setUserIdPlaceholder(String aUserIdPlaceholder)
+    {
+        userIdPlaceholder = aUserIdPlaceholder;
     }
 
     public boolean isGuestAccessible()

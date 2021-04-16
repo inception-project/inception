@@ -87,6 +87,7 @@ public class InviteProjectSettingsPanel
                 .add(new ClipboardJsBehavior().setTarget(linkField)));
         detailsForm.add(new DatePicker("expirationDate", "yyyy-MM-dd"));
         detailsForm.add(new TextArea<>("invitationText"));
+        detailsForm.add(new TextField<>("userIdPlaceholder"));
         detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true));
         detailsForm.add(new LambdaAjaxLink("extendLink", this::actionExtendInviteDate));
         detailsForm.add(new LambdaAjaxButton<>("save", this::actionSave));

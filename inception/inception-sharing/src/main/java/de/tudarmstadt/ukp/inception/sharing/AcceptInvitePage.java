@@ -18,17 +18,19 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage.PAGE_PARAM_INVITE_ID;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -49,6 +51,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.session.SessionRegistry;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import com.github.rjeschke.txtmark.Processor;
@@ -60,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -78,10 +82,13 @@ public class AcceptInvitePage
     private @SpringBean InviteService inviteService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean LoginProperties loginProperties;
+    private @SpringBean SessionRegistry sessionRegistry;
 
-    private IModel<FormData> formModel;
-    private IModel<ProjectInvite> invite;
-    private IModel<Boolean> invitationIsValid;
+    private final IModel<FormData> formModel;
+    private final IModel<ProjectInvite> invite;
+    private final IModel<Boolean> invitationIsValid;
+    private final WebMarkupContainer tooManyUsersNotice;
 
     public AcceptInvitePage(final PageParameters aPageParameters)
     {
@@ -108,6 +115,9 @@ public class AcceptInvitePage
         Form<FormData> form = new Form<>("acceptInvitationForm", formModel);
         form.add(new Label("project", PropertyModel.of(getProject(), "name")));
         form.add(new RequiredTextField<String>("username") //
+                .add(AttributeModifier.replace("placeholder",
+                        LoadableDetachableModel.of(
+                                () -> getUserIdPlaceholder(formModel.getObject().registeredLogin))))
                 .add(visibleWhen(() -> user == null)));
         form.add(new PasswordTextField("password") //
                 .add(visibleWhen(() -> user == null && formModel.getObject().registeredLogin)));
@@ -120,8 +130,23 @@ public class AcceptInvitePage
         form.add(new Label("invitationText", LoadableDetachableModel.of(this::getInvitationText))
                 .setEscapeModelStrings(false));
 
+        tooManyUsersNotice = new WebMarkupContainer("tooManyUsersNotice");
+        tooManyUsersNotice.add(visibleWhen(this::isTooManyUsers));
+        form.add(tooManyUsersNotice);
+
         form.add(visibleWhen(() -> invitationIsValid.orElse(false).getObject()));
+        form.add(enabledWhen(() -> !isTooManyUsers()));
         add(form);
+    }
+
+    private String getUserIdPlaceholder(boolean aRegisteredLogin)
+    {
+        if (aRegisteredLogin || invite.getObject() == null
+                || isBlank(invite.getObject().getUserIdPlaceholder())) {
+            return "User ID";
+        }
+
+        return invite.getObject().getUserIdPlaceholder();
     }
 
     private String getInvitationText()
@@ -130,11 +155,22 @@ public class AcceptInvitePage
             return "Invitation does not exist.";
         }
 
-        if (StringUtils.isBlank(invite.getObject().getInvitationText())) {
-            return "Would you like to join?";
+        String invitationText;
+        if (isBlank(invite.getObject().getInvitationText())) {
+            invitationText = String.join("\n", //
+                    "## Welcome!", //
+                    "", //
+                    "You have been invited to join the project", //
+                    "**" + getProject().getName() + "**", //
+                    "as an annotator.", //
+                    "", //
+                    "Would you like to join?");
+        }
+        else {
+            invitationText = invite.getObject().getInvitationText();
         }
 
-        return Processor.process(invite.getObject().getInvitationText(), true);
+        return Processor.process(invitationText, true);
     }
 
     private String getInviteId()
@@ -219,6 +255,16 @@ public class AcceptInvitePage
         else {
             getSession().info("You were already an annotator on this project.");
         }
+    }
+
+    /**
+     * Check if settings property is set and there will be more users logged in (with current one)
+     * than max users allowed.
+     */
+    private boolean isTooManyUsers()
+    {
+        long maxUsers = loginProperties.getMaxConcurrentSessions();
+        return maxUsers > 0 && sessionRegistry.getAllPrincipals().size() >= maxUsers;
     }
 
     private static class FormData

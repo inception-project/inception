@@ -51,19 +51,16 @@
               </h5>
             </div>
             <form wicket:id="acceptInvitationForm">
-              <h5 class="card-title mb-3 text-center">
-                Welcome!
-              </h5>
               <div class="mb-3 text-center">
-                <p>
-                  You have been invited to join the project<br/> 
-                  <b wicket:id="project"/><br/>
-                  as an annotator.
-                </p>
                 <div wicket:id="invitationText"/>
               </div>
+              <div class="form-group form-row mb-3 text-center" wicket:id="tooManyUsersNotice">
+                <div class="alert alert-warning" role="alert">
+                  <wicket:message key="tooManyUsers"/>
+                </div>
+              </div>
               <div class="form-group form-row mb-3"  wicket:enclosure="username">
-                <input wicket:id="username" type="text" class="form-control" placeholder="User ID"/>
+                <input wicket:id="username" type="text" class="form-control"/>
               </div>
               <div class="form-group form-row mb-3" wicket:enclosure="password">
                 <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
