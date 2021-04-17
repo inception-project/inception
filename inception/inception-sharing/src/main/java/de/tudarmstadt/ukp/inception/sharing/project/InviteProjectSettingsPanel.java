@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
 public class InviteProjectSettingsPanel
@@ -60,6 +61,7 @@ public class InviteProjectSettingsPanel
 
     private @SpringBean InviteService inviteService;
     private @SpringBean ServletContext servletContext;
+    private @SpringBean InviteServiceProperties inviteServiceProperties;
 
     private IModel<ProjectInvite> invite;
 
@@ -94,6 +96,7 @@ public class InviteProjectSettingsPanel
         detailsForm.add(new TextArea<>("invitationText").add(AttributeModifier
                 .replace("placeholder", new ResourceModel("invitationText.placeholder"))));
         detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true)
+                .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()))
                 .add(new LambdaAjaxFormSubmittingBehavior("change", _target -> _target.add(this))));
         detailsForm.add(new TextField<>("userIdPlaceholder")
                 .add(visibleWhen(invite.map(ProjectInvite::isGuestAccessible))));

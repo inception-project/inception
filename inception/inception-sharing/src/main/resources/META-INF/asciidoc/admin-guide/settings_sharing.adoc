@@ -42,5 +42,10 @@ instances.
 | enable/disable invite links
 | false
 | true
+
+| sharing.invites.guests-enabled
+| enable/disable guest annotators
+| false
+| true
 |===
 

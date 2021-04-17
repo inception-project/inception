@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import java.io.File;
@@ -125,33 +126,39 @@ public class ProjectPermissionsExporter
         ExportedUser[] projectUsers = aExProject.getArrayProperty(KEY_USERS, ExportedUser.class);
         Set<String> projectUserNames = new HashSet<>();
         for (ExportedUser importedUser : projectUsers) {
-            if (!userService.exists(importedUser.getUsername())) {
-                User u = new User();
-                u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
-                u.setEmail(importedUser.getEmail());
-                u.setUiName(importedUser.getUiName());
-                u.setUsername(importedUser.getUsername());
-                u.setCreated(importedUser.getCreated());
-                u.setLastLogin(importedUser.getLastLogin());
-                u.setUpdated(importedUser.getUpdated());
-                u.setEnabled(importedUser.isEnabled());
-                u.setRoles(Set.of(ROLE_USER));
-                userService.create(u);
-
-                // Ok, this is a bug... if we export a project and then import it again into the
-                // same instance, then the users are not created (because they exist already)
-                // and thus the clone of the project does not have any project-bound users.
-                // ... but ...
-                // if we instead add users that pre-existed to this set, then we can end up adding
-                // project-bound users from another project (i.e. from the original one which we
-                // are cloning). That means if the original project is deleted, then the users
-                // will be deleted and this our clone project gets its users removed. Also not good.
-                //
-                // So we currently stick with not importing permissions for project-bound users
-                // from the original project... this can be fixed when/if at some point we allow
-                // re-mapping users during import - or if we have some smart idea...
-                projectUserNames.add(importedUser.getUsername());
+            if (userService.exists(importedUser.getUsername())) {
+                aRequest.addMessage(format("Unable to create project-bound user [%s] with ID "
+                        + "[%s] because a user with this ID already exists in the system. "
+                        + "Annotations of this user are not accessible in the imported project.",
+                        importedUser.getUiName(), importedUser.getUsername()));
+                continue;
             }
+
+            User u = new User();
+            u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
+            u.setEmail(importedUser.getEmail());
+            u.setUiName(importedUser.getUiName());
+            u.setUsername(importedUser.getUsername());
+            u.setCreated(importedUser.getCreated());
+            u.setLastLogin(importedUser.getLastLogin());
+            u.setUpdated(importedUser.getUpdated());
+            u.setEnabled(importedUser.isEnabled());
+            u.setRoles(Set.of(ROLE_USER));
+            userService.create(u);
+
+            // Ok, this is a bug... if we export a project and then import it again into the
+            // same instance, then the users are not created (because they exist already)
+            // and thus the clone of the project does not have any project-bound users.
+            // ... but ...
+            // if we instead add users that pre-existed to this set, then we can end up adding
+            // project-bound users from another project (i.e. from the original one which we
+            // are cloning). That means if the original project is deleted, then the users
+            // will be deleted and this our clone project gets its users removed. Also not good.
+            //
+            // So we currently stick with not importing permissions for project-bound users
+            // from the original project... this can be fixed when/if at some point we allow
+            // re-mapping users during import - or if we have some smart idea...
+            projectUserNames.add(importedUser.getUsername());
         }
 
         // Import permissions - always import permissions for the importing user and for

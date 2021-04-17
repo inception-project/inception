@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -32,6 +33,7 @@ import de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanelFa
 import de.tudarmstadt.ukp.inception.sharing.project.ProjectSharingMenuItem;
 
 @Configuration
+@EnableConfigurationProperties(InviteServicePropertiesImpl.class)
 @ConditionalOnProperty(prefix = "sharing.invites", name = "enabled", havingValue = "true")
 public class InviteServiceAutoConfiguration
 {

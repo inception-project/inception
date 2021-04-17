@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
@@ -84,6 +85,7 @@ public class AcceptInvitePage
     private @SpringBean UserDao userRepository;
     private @SpringBean LoginProperties loginProperties;
     private @SpringBean SessionRegistry sessionRegistry;
+    private @SpringBean InviteServiceProperties inviteServiceProperties;
 
     private final IModel<FormData> formModel;
     private final IModel<ProjectInvite> invite;
@@ -110,7 +112,8 @@ public class AcceptInvitePage
                 .add(visibleWhen(() -> !invitationIsValid.orElse(false).getObject())));
 
         formModel = new CompoundPropertyModel<>(new FormData());
-        formModel.getObject().registeredLogin = !invite.getObject().isGuestAccessible();
+        formModel.getObject().registeredLogin = !invite.getObject().isGuestAccessible()
+                || !inviteServiceProperties.isGuestsEnabled();
 
         Form<FormData> form = new Form<>("acceptInvitationForm", formModel);
         form.add(new Label("project", PropertyModel.of(getProject(), "name")));
@@ -124,7 +127,8 @@ public class AcceptInvitePage
         form.add(new LambdaAjaxButton<>("join", this::actionJoinProject));
         form.add(new CheckBox("registeredLogin") //
                 .setOutputMarkupPlaceholderTag(true) //
-                .add(visibleWhen(() -> invite.getObject().isGuestAccessible() && user == null))
+                .add(visibleWhen(() -> invite.getObject().isGuestAccessible()
+                        && inviteServiceProperties.isGuestsEnabled() && user == null))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                         _target -> _target.add(form))));
         form.add(new Label("invitationText", LoadableDetachableModel.of(this::getInvitationText))
