@@ -81,7 +81,12 @@ public class KrippendorffAlphaAgreementMeasure
                 double D_O = calculateObservedDisagreement();
                 double D_E = calculateExpectedDisagreement();
                 if (D_O == 0.0 && D_E == 0.0) {
-                    return 1.0;
+                    if (study.getItemCount() == 0) {
+                        return Double.NaN;
+                    }
+                    else {
+                        return 1.0;
+                    }
                 }
                 return 1.0 - (D_O / D_E);
             }
