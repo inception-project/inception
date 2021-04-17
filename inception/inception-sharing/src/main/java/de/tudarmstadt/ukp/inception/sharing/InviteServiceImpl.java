@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link InviteServiceAutoConfiguration#inviteService()}.
+ * {@link InviteServiceAutoConfiguration#inviteService}.
  * </p>
  */
 public class InviteServiceImpl
