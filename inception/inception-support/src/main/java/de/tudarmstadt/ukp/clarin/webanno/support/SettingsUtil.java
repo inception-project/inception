@@ -50,7 +50,6 @@ public class SettingsUtil
 
     public static final String CFG_LOCALE = "locale";
     public static final String CFG_STYLE_LOGO = "style.logo";
-    public static final String CFG_LOGIN_MESSAGE = "login.message";
     public static final String CFG_AUTH_MODE = "auth.mode";
     public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
     public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
