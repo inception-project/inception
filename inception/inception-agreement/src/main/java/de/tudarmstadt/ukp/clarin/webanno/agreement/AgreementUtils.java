@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -60,10 +61,11 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosit
 public class AgreementUtils
 {
     public static CodingAgreementResult makeCodingStudy(CasDiff aDiff, String aType,
-            String aFeature, boolean aExcludeIncomplete, Map<String, List<CAS>> aCasMap)
+            String aFeature, Set<String> aTagSet, boolean aExcludeIncomplete,
+            Map<String, List<CAS>> aCasMap)
     {
-        return makeCodingStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, true,
-                aCasMap);
+        return makeCodingStudy(aDiff, aCasMap.keySet(), aType, aFeature, aTagSet,
+                aExcludeIncomplete, true, aCasMap);
     }
 
     private static CAS findSomeCas(Map<String, List<CAS>> aCasMap)
@@ -82,8 +84,8 @@ public class AgreementUtils
     }
 
     private static CodingAgreementResult makeCodingStudy(CasDiff aDiff, Collection<String> aUsers,
-            String aType, String aFeature, boolean aExcludeIncomplete, boolean aNullLabelsAsEmpty,
-            Map<String, List<CAS>> aCasMap)
+            String aType, String aFeature, Set<String> aTagSet, boolean aExcludeIncomplete,
+            boolean aNullLabelsAsEmpty, Map<String, List<CAS>> aCasMap)
     {
         List<String> users = new ArrayList<>(aUsers);
         Collections.sort(users);
@@ -95,6 +97,10 @@ public class AgreementUtils
         List<ConfigurationSet> pluralitySets = new ArrayList<>();
         List<ConfigurationSet> irrelevantSets = new ArrayList<>();
         CodingAnnotationStudy study = new CodingAnnotationStudy(users.size());
+
+        if (aTagSet != null) {
+            aTagSet.forEach(study::addCategory);
+        }
 
         // Check if the feature we are looking at is a primitive feature or a link feature
         // We do this by looking it up in the first available CAS. Mind that at this point all
