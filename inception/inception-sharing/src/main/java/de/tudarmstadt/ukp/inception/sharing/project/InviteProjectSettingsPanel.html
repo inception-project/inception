@@ -42,6 +42,21 @@
             </div>
           </div>
         </div>
+        <div class="form-group form-row" wicket:enclosure="expirationDate">
+          <label class="col-sm-2 col-form-label"> 
+            <wicket:message key="expirationDate" />
+          </label>
+          <div class="col-sm-10">
+            <input wicket:id="expirationDate" type="date" />
+            <button wicket:id="extendLink" class="btn btn-secondary">
+              <i class="fas fa-forward" wicket:message="title:extend"></i>
+            </button>
+            <span wicket:id="expirationAlert" class="alert alert-warning p-2" role="alert">
+              <i class="fas fa-exclamation-triangle"></i>
+              Expiration date is in the past.
+            </span>
+          </div>
+        </div>
         <div class="form-group form-row" wicket:enclosure="invitationText">
           <label wicket:for="invitationText" class="col-sm-2 col-form-label"> 
             <wicket:label key="invitationText" />
@@ -53,25 +68,6 @@
             </div>
           </div>
         </div>
-        <div class="form-group form-row" wicket:enclosure="userIdPlaceholder">
-          <label wicket:for="userIdPlaceholder" class="col-sm-2 col-form-label"> 
-            <wicket:label key="userIdPlaceholder" />
-          </label>
-          <div class="col-sm-10">
-            <input wicket:id="userIdPlaceholder" class="form-control" type="text"/>
-          </div>
-        </div>
-        <div class="form-group form-row" wicket:enclosure="expirationDate">
-          <label class="col-sm-2 col-form-label"> 
-            <wicket:message key="expirationDate" />
-          </label>
-          <div class="col-sm-10">
-            <input wicket:id="expirationDate" type="date" />
-            <button wicket:id="extendLink" class="btn btn-secondary">
-              <i class="fas fa-forward" wicket:message="title:extend"></i>
-            </button>
-          </div>
-        </div>
         <div class="form-group form-row" wicket:enclosure="guestAccessible">
           <div class="offset-md-2 col-sm-10">
             <div class="form-check">
@@ -80,6 +76,14 @@
                 <wicket:label key="guestAccessible"/>
               </label>
             </div>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="userIdPlaceholder">
+          <label wicket:for="userIdPlaceholder" class="col-sm-2 col-form-label"> 
+            <wicket:label key="userIdPlaceholder" />
+          </label>
+          <div class="col-sm-10">
+            <input wicket:id="userIdPlaceholder" class="form-control" type="text" placeholder="User ID"/>
           </div>
         </div>
       </div>

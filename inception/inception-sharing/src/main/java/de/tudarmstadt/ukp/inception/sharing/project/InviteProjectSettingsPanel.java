@@ -20,8 +20,11 @@ package de.tudarmstadt.ukp.inception.sharing.project;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
 
+import java.util.Date;
+
 import javax.servlet.ServletContext;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
@@ -32,7 +35,7 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -43,6 +46,7 @@ import com.googlecode.wicket.kendo.ui.form.datetime.DatePicker;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage;
@@ -70,8 +74,9 @@ public class InviteProjectSettingsPanel
                 .add(visibleWhenNot(invite.isPresent())));
 
         Form<ProjectInvite> detailsForm = new Form<>("form", invite);
-        TextField<String> linkField = new TextField<>("linkText",
-                LoadableDetachableModel.of(this::getInviteLink))
+        detailsForm.add(visibleWhen(invite.isPresent()));
+        detailsForm.setOutputMarkupId(true);
+        TextField<String> linkField = new TextField<>("linkText", getInviteLink())
         {
             private static final long serialVersionUID = -4045558203619280212L;
 
@@ -86,19 +91,25 @@ public class InviteProjectSettingsPanel
         detailsForm.add(new WebMarkupContainer("copyLink")
                 .add(new ClipboardJsBehavior().setTarget(linkField)));
         detailsForm.add(new DatePicker("expirationDate", "yyyy-MM-dd"));
-        detailsForm.add(new TextArea<>("invitationText"));
-        detailsForm.add(new TextField<>("userIdPlaceholder"));
-        detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true));
+        detailsForm.add(new TextArea<>("invitationText").add(AttributeModifier
+                .replace("placeholder", new ResourceModel("invitationText.placeholder"))));
+        detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true)
+                .add(new LambdaAjaxFormSubmittingBehavior("change", _target -> _target.add(this))));
+        detailsForm.add(new TextField<>("userIdPlaceholder")
+                .add(visibleWhen(invite.map(ProjectInvite::isGuestAccessible))));
         detailsForm.add(new LambdaAjaxLink("extendLink", this::actionExtendInviteDate));
         detailsForm.add(new LambdaAjaxButton<>("save", this::actionSave));
         detailsForm.add(new LambdaAjaxLink("remove", this::actionRemoveInviteLink));
-        detailsForm.add(visibleWhen(invite.isPresent()));
+        detailsForm.add(new WebMarkupContainer("expirationAlert").add(visibleWhen(invite
+                .map(ProjectInvite::getExpirationDate).map(date -> date.before(new Date())))));
         add(detailsForm);
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<ProjectInvite> aForm)
     {
         inviteService.writeProjectInvite(aForm.getModelObject());
+        aTarget.add(this);
+
         success("Settings saved.");
         aTarget.addChildren(getPage(), IFeedback.class);
     }
@@ -109,6 +120,7 @@ public class InviteProjectSettingsPanel
         invite.setObject(inviteService.readProjectInvite(getModelObject()));
 
         aTarget.add(this);
+
         success("The validity period has been extended.");
         aTarget.addChildren(getPage(), IFeedback.class);
     }
@@ -127,19 +139,15 @@ public class InviteProjectSettingsPanel
         aTarget.add(this);
     }
 
-    private String getInviteLink()
+    private IModel<String> getInviteLink()
     {
-        String inviteId = inviteService.getValidInviteID(getModelObject());
+        return invite.map(ProjectInvite::getInviteId).map(inviteId -> {
+            CharSequence url = urlFor(AcceptInvitePage.class,
+                    new PageParameters()
+                            .set(AcceptInvitePage.PAGE_PARAM_PROJECT, getModelObject().getId())
+                            .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, inviteId));
 
-        if (inviteId == null) {
-            return null;
-        }
-
-        CharSequence url = urlFor(AcceptInvitePage.class,
-                new PageParameters()
-                        .set(AcceptInvitePage.PAGE_PARAM_PROJECT, getModelObject().getId())
-                        .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, inviteId));
-
-        return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
+            return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
+        });
     }
 }
