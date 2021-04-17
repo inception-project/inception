@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
@@ -99,10 +100,17 @@ public class InviteServiceImpl
 
     private String generateRandomUsername()
     {
-        while (true) {
+        nextName: while (true) {
             byte[] bytes = new byte[RANDOM_USERNAME_BYTE_LENGTH];
             random.nextBytes(bytes);
             String randomUserId = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+
+            // Do not accept base64 values which contain characters that are not safe for file
+            // names / not valid as usernames
+            if (!NameUtil.isNameValid(randomUserId)) {
+                continue nextName;
+            }
+
             if (!userRepository.exists(randomUserId)) {
                 return randomUserId;
             }
