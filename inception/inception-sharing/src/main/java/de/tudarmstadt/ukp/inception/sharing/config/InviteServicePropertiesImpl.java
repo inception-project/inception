@@ -19,12 +19,13 @@ package de.tudarmstadt.ukp.inception.sharing.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("sharing")
+@ConfigurationProperties("sharing.invites")
 public class InviteServicePropertiesImpl
     implements InviteServiceProperties
 {
     private boolean guestsEnabled;
 
+    @Override
     public boolean isGuestsEnabled()
     {
         return guestsEnabled;
