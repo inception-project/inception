@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.ConcreteAgree
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 
 import java.io.File;
@@ -342,7 +343,7 @@ public class AgreementTestUtils
             throw new IllegalArgumentException("CAS map must contain exactly two CASes");
         }
 
-        CodingAgreementResult agreementResult = makeCodingStudy(aDiff, aType, aFeature,
+        CodingAgreementResult agreementResult = makeCodingStudy(aDiff, aType, aFeature, emptySet(),
                 aExcludeIncomplete, aCasMap);
         try {
             IAgreementMeasure agreement = aMeasure.make(agreementResult.getStudy());

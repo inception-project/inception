@@ -22,9 +22,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static java.lang.Double.NaN;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toCollection;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.statistics.agreement.IAgreementMeasure;
@@ -38,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
 public class KrippendorffAlphaAgreementMeasure
     extends CodingAgreementMeasure_ImplBase<KrippendorffAlphaAgreementTraits>
@@ -61,11 +65,27 @@ public class KrippendorffAlphaAgreementMeasure
 
         CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
+        Set<String> tagset = annotationService.listTags(feature.getTagset()).stream()
+                .map(Tag::getName).collect(toCollection(LinkedHashSet::new));
+
         CodingAgreementResult agreementResult = makeCodingStudy(diff, feature.getLayer().getName(),
-                feature.getName(), traits.isExcludeIncomplete(), aCasMap);
+                feature.getName(), tagset, traits.isExcludeIncomplete(), aCasMap);
 
         IAgreementMeasure agreement = new KrippendorffAlphaAgreement(agreementResult.getStudy(),
-                new NominalDistanceFunction());
+                new NominalDistanceFunction())
+        {
+            @Override
+            public double calculateAgreement()
+            {
+                // See https://github.com/dkpro/dkpro-statistics/issues/35
+                double D_O = calculateObservedDisagreement();
+                double D_E = calculateExpectedDisagreement();
+                if (D_O == 0.0 && D_E == 0.0) {
+                    return 1.0;
+                }
+                return 1.0 - (D_O / D_E);
+            }
+        };
 
         if (agreementResult.getStudy().getItemCount() > 0) {
             try {
