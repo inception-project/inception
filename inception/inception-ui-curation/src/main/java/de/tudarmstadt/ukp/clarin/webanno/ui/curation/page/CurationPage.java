@@ -73,6 +73,10 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterAdapter;
+import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -150,6 +154,7 @@ public class CurationPage
     private AnnotationDetailEditorPanel detailPanel;
 
     private WebMarkupContainer centerArea;
+    private WebMarkupContainer splitter;
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
@@ -191,11 +196,19 @@ public class CurationPage
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
-        centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
-        centerArea.add(new ActionBar("actionBar"));
         add(centerArea);
 
-        centerArea.add(getModelObject().getPagingStrategy()
+        splitter = new WebMarkupContainer("splitter");
+        splitter.setOutputMarkupId(true);
+        centerArea.add(splitter);
+
+        splitter.add(new DocumentNamePanel("documentNamePanel", getModel()));
+        splitter.add(new ActionBar("actionBar"));
+
+        splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
+                new Options("orientation", Options.asString("vertical")), new SplitterAdapter()));
+
+        splitter.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
@@ -213,7 +226,7 @@ public class CurationPage
         annotatorsPanel.setOutputMarkupPlaceholderTag(true);
         annotatorsPanel.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getDocument() != null));
-        centerArea.add(annotatorsPanel);
+        splitter.add(annotatorsPanel);
 
         rightSidebar = makeRightSidebar("rightSidebar");
         rightSidebar
@@ -226,7 +239,7 @@ public class CurationPage
         annotationEditor.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getDocument() != null));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
-        centerArea.add(annotationEditor);
+        splitter.add(annotationEditor);
 
         curationUnitOverview = new WebMarkupContainer("unitOverview");
         curationUnitOverview.setOutputMarkupPlaceholderTag(true);
@@ -559,7 +572,7 @@ public class CurationPage
             annotationEditor.requestRender(aTarget);
             annotatorsPanel.requestRender(aTarget, getModelObject(), focussedUnit);
             aTarget.add(curationUnitOverview);
-            aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
+            aTarget.add(splitter.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);
