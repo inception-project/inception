@@ -42,7 +42,7 @@ public class AnnotationPreference
     public static final int FONT_ZOOM_MAX = 1000;
     public static final int FONT_ZOOM_DEFAULT = 100;
 
-    public static final int SIDEBAR_SIZE_MIN = 10;
+    public static final int SIDEBAR_SIZE_MIN = 5;
     public static final int SIDEBAR_SIZE_MAX = 50;
     public static final int SIDEBAR_SIZE_DEFAULT = 20;
 
@@ -72,7 +72,10 @@ public class AnnotationPreference
 
     private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = ReadonlyColoringBehaviour.LEGACY;
 
+    @Deprecated
     private int sidebarSize;
+    private int sidebarSizeLeft;
+    private int sidebarSizeRight;
     private int fontZoom;
 
     private String editor;
@@ -180,6 +183,7 @@ public class AnnotationPreference
         return staticColor;
     }
 
+    @Deprecated
     public int getSidebarSize()
     {
         if (sidebarSize < SIDEBAR_SIZE_MIN || sidebarSize > SIDEBAR_SIZE_MAX) {
@@ -190,6 +194,7 @@ public class AnnotationPreference
         }
     }
 
+    @Deprecated
     public void setSidebarSize(int aSidebarSize)
     {
         if (aSidebarSize > SIDEBAR_SIZE_MAX) {
@@ -200,6 +205,52 @@ public class AnnotationPreference
         }
         else {
             sidebarSize = aSidebarSize;
+        }
+    }
+
+    public int getSidebarSizeLeft()
+    {
+        if (sidebarSizeLeft < SIDEBAR_SIZE_MIN || sidebarSizeLeft > SIDEBAR_SIZE_MAX) {
+            return SIDEBAR_SIZE_DEFAULT;
+        }
+        else {
+            return sidebarSizeLeft;
+        }
+    }
+
+    public void setSidebarSizeLeft(int aSidebarSize)
+    {
+        if (aSidebarSize > SIDEBAR_SIZE_MAX) {
+            sidebarSizeLeft = SIDEBAR_SIZE_MAX;
+        }
+        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
+            sidebarSizeLeft = SIDEBAR_SIZE_MIN;
+        }
+        else {
+            sidebarSizeLeft = aSidebarSize;
+        }
+    }
+
+    public int getSidebarSizeRight()
+    {
+        if (sidebarSizeRight < SIDEBAR_SIZE_MIN || sidebarSizeRight > SIDEBAR_SIZE_MAX) {
+            return SIDEBAR_SIZE_DEFAULT;
+        }
+        else {
+            return sidebarSizeRight;
+        }
+    }
+
+    public void setSidebarSizeRight(int aSidebarSize)
+    {
+        if (aSidebarSize > SIDEBAR_SIZE_MAX) {
+            sidebarSizeRight = SIDEBAR_SIZE_MAX;
+        }
+        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
+            sidebarSizeRight = SIDEBAR_SIZE_MIN;
+        }
+        else {
+            sidebarSizeRight = aSidebarSize;
         }
     }
 
