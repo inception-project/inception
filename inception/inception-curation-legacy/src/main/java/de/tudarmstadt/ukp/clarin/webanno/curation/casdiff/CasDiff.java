@@ -253,6 +253,11 @@ public class CasDiff
         return typeAdapters;
     }
 
+    public Map<String, List<CAS>> getCasMap()
+    {
+        return cases;
+    }
+
     /**
      * CASes are added to the diff one after another, building the diff iteratively. A CAS can be
      * added multiple times for different types. Make sure a CAS is not added twice with the same

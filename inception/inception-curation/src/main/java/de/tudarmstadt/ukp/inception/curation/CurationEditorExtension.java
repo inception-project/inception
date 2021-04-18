@@ -18,8 +18,14 @@
 package de.tudarmstadt.ukp.inception.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.curation.CurationMetadata.CURATION_USER_PROJECT;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -28,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
@@ -42,14 +49,22 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -76,6 +91,7 @@ public class CurationEditorExtension
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired DocumentService documentService;
     private @Autowired UserDao userRepository;
+    private @Autowired LayerSupportRegistry layerSupportRegistry;
 
     @Override
     public String getBeanName()
@@ -171,6 +187,78 @@ public class CurationEditorExtension
         aPanel.actionCreateOrUpdate(aTarget, aTargetCas); // should also update timestamps
     }
 
+    public void render2(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
+            int aWindowEndOffset)
+    {
+        List<DiffAdapter> adapters = getDiffAdapters(annotationService,
+                aState.getAnnotationLayers());
+
+        String currentUsername = userRepository.getCurrentUsername();
+        List<User> selectedUsers = curationService.listUsersReadyForCuration(currentUsername,
+                aState.getProject(), aState.getDocument());
+
+        if (selectedUsers.isEmpty()) {
+            return;
+        }
+
+        Map<String, CAS> casses = new HashMap<>();
+
+        // This is the CAS that the user can actively edit
+        casses.put(aState.getUser().getUsername(), aCas);
+
+        for (User user : selectedUsers) {
+            try {
+                CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
+                        user.getUsername());
+                casses.put(user.getUsername(), userCas);
+            }
+            catch (IOException e) {
+                log.error("Could not retrieve CAS for user [{}] and project [{}]({})",
+                        user.getUsername(), aState.getProject().getName(),
+                        aState.getProject().getId(), e);
+            }
+        }
+
+        CasDiff casDiff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, aWindowBeginOffset,
+                aWindowEndOffset);
+        DiffResult diff = casDiff.toResult();
+
+        // Listing the features once is faster than repeatedly hitting the DB to list features for
+        // every layer.
+        List<AnnotationFeature> supportedFeatures = annotationService
+                .listSupportedFeatures(aState.getProject());
+        List<AnnotationFeature> allFeatures = annotationService
+                .listAnnotationFeature(aState.getProject());
+
+        // Set up a cache for resolving type to layer to avoid hammering the DB as we process each
+        // position
+        Map<String, AnnotationLayer> type2layer = diff.getPositions().stream()
+                .map(Position::getType).distinct()
+                .map(type -> annotationService.findLayer(aState.getProject(), type))
+                .collect(toMap(AnnotationLayer::getName, identity()));
+
+        for (ConfigurationSet cfgSet : diff.getConfigurationSets()) {
+            AnnotationLayer layer = type2layer.get(cfgSet.getPosition().getType());
+
+            List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream() //
+                    .filter(feature -> feature.getLayer().equals(layer)) //
+                    .collect(toList());
+            List<AnnotationFeature> layerAllFeatures = allFeatures.stream() //
+                    .filter(feature -> feature.getLayer().equals(layer)) //
+                    .collect(toList());
+
+            for (Configuration cfg : cfgSet.getConfigurations()) {
+                FeatureStructure fs = cfg.getRepresentative(casDiff.getCasMap());
+
+                // We need to pass in *all* the annotation features here because we also to that in
+                // other places where we create renderers - and the set of features must always be
+                // the same because otherwise the IDs of armed slots would be inconsistent
+                Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
+                        .createRenderer(layer, () -> layerAllFeatures);
+            }
+        }
+    }
+
     @Override
     public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
             int aWindowEndOffset)
@@ -202,11 +290,7 @@ public class CurationEditorExtension
             try {
                 CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
                         user.getUsername());
-                if (userCas == null) {
-                    log.error(String.format("Could not retrieve CAS for user %s and project %d",
-                            user.getUsername(), projectId));
-                    continue;
-                }
+
                 VDocument tmpDoc = new VDocument();
                 preRenderer.render(tmpDoc, aWindowBeginOffset, aWindowEndOffset, userCas,
                         aState.getAnnotationLayers());
@@ -251,15 +335,12 @@ public class CurationEditorExtension
                     aVdoc.add(new VComment(extendedVID, VCommentType.INFO, username));
                     aVdoc.add(newVarc);
                 }
-
             }
             catch (IOException e) {
-                log.error(String.format("Could not retrieve CAS for user %s and project %d",
-                        user.getUsername(), projectId));
-                e.printStackTrace();
+                log.error("Could not retrieve CAS for user [{}] and project [{}]({})",
+                        user.getUsername(), aState.getProject().getName(),
+                        aState.getProject().getId(), e);
             }
-
         }
     }
-
 }
