@@ -15,3 +15,4 @@ idea/
 *.eml
 */*.eml
 .gradle
+log4j2-dev.xml
