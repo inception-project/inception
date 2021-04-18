@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class UimaInlineXmlTeiFormatSupport
+public class UimaInlineXmlFormatSupport
     implements FormatSupport
 {
     public static final String ID = "dkpro-core-uima-inline-xml";

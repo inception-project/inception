@@ -49,7 +49,7 @@ public class InviteServiceImplTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new InviteServiceImpl(testEntityManager.getEntityManager());
+        sut = new InviteServiceImpl(null, testEntityManager.getEntityManager());
         testProject = new Project("testProject");
         testEntityManager.persist(testProject);
     }

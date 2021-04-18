@@ -84,7 +84,27 @@ class UserSelectionPanel
         IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
         Form<Collection<User>> form = new Form<>("form", usersToAddModel);
         add(form);
-        usersToAdd = new MultiSelect<User>("usersToAdd", new ChoiceRenderer<>("username"))
+
+        ChoiceRenderer<User> userRenderer = new ChoiceRenderer<User>("username")
+        {
+            private static final long serialVersionUID = -2386864570904752307L;
+
+            @Override
+            public String getText(User aUser, String expression)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.append(aUser.getUiName());
+                if (!aUser.getUsername().equals(aUser.getUiName())) {
+                    builder.append(" (");
+                    builder.append(aUser.getUsername());
+                    builder.append(")");
+                }
+
+                return builder.toString();
+            };
+        };
+
+        usersToAdd = new MultiSelect<User>("usersToAdd", userRenderer)
         {
             private static final long serialVersionUID = 8231304829756188352L;
 
@@ -123,7 +143,8 @@ class UserSelectionPanel
                 else {
                     // offer all enabled users matching the input
                     userRepository.listEnabledUsers().stream()
-                            .filter(user -> input == null || user.getUsername().contains(input))
+                            .filter(user -> input == null || user.getUsername().contains(input)
+                                    || user.getUiName().contains(input))
                             .forEach(result::add);
                 }
 
@@ -171,12 +192,24 @@ class UserSelectionPanel
             @Override
             public Object getDisplayValue(User aUser)
             {
-                String permissionLevels = projectRepository
-                        .getProjectPermissionLevels(aUser, projectModel.getObject()).stream()
-                        .map(PermissionLevel::getName).collect(joining(", ", "[", "]"));
+                StringBuilder builder = new StringBuilder();
+                builder.append(aUser.getUiName());
+                if (!aUser.getUsername().equals(aUser.getUiName())) {
+                    builder.append(" (");
+                    builder.append(aUser.getUsername());
+                    builder.append(")");
+                }
 
-                return aUser.getUsername() + " " + permissionLevels
-                        + (aUser.isEnabled() ? "" : " (login disabled)");
+                builder.append(" ");
+                builder.append(projectRepository
+                        .getProjectPermissionLevels(aUser, projectModel.getObject()).stream()
+                        .map(PermissionLevel::getName).collect(joining(", ", "[", "]")));
+
+                if (!aUser.isEnabled()) {
+                    builder.append(" (disabled)");
+                }
+
+                return builder.toString();
             }
         };
     }

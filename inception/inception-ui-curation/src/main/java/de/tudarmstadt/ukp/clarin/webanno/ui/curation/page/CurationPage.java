@@ -242,12 +242,24 @@ public class CurationPage
             }
         });
 
-        leftSidebar = new WebMarkupContainer("leftSidebar");
-        leftSidebar.setOutputMarkupPlaceholderTag(true);
-        leftSidebar.add(visibleWhen(
-                () -> getModelObject() != null && getModelObject().getDocument() != null));
+        leftSidebar = makeLeftSidebar("leftSidebar");
         leftSidebar.add(curationUnitOverview);
         add(leftSidebar);
+    }
+
+    private WebMarkupContainer makeLeftSidebar(String aId)
+    {
+        WebMarkupContainer sidebar = new WebMarkupContainer("leftSidebar");
+        sidebar.setOutputMarkupPlaceholderTag(true);
+        sidebar.add(visibleWhen(
+                () -> getModelObject() != null && getModelObject().getDocument() != null));
+        // Override sidebar width from preferences
+        sidebar.add(new AttributeModifier("style",
+                () -> format("flex-basis: %d%%;",
+                        getModelObject() != null
+                                ? getModelObject().getPreferences().getSidebarSizeLeft()
+                                : 10)));
+        return sidebar;
     }
 
     private WebMarkupContainer makeRightSidebar(String aId)
@@ -258,7 +270,7 @@ public class CurationPage
         sidebar.add(new AttributeModifier("style",
                 () -> format("flex-basis: %d%%;",
                         getModelObject() != null
-                                ? getModelObject().getPreferences().getSidebarSize()
+                                ? getModelObject().getPreferences().getSidebarSizeRight()
                                 : 10)));
         return sidebar;
     }
