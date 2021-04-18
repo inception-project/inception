@@ -22,8 +22,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.htmleditor.HtmlAnnotationEditorFactory;
-import de.tudarmstadt.ukp.inception.htmleditor.HtmlFormatSupport;
-import de.tudarmstadt.ukp.inception.htmleditor.LegacyHtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 
 /**
  * Provides support for an HTML-oriented annotation editor.

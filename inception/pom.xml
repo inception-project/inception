@@ -582,6 +582,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-html</artifactId>
+        <version>0.19.3-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-webanno-tsv</artifactId>
         <version>0.19.3-SNAPSHOT</version>
       </dependency>
@@ -1607,11 +1612,12 @@
     <module>inception-ui-tagsets</module>
     <module>inception-sharing</module>
     <!-- IO -->
+    <module>inception-io-conll</module>
     <module>inception-io-json</module>
+    <module>inception-io-html</module>
     <module>inception-io-tcf</module>
     <module>inception-io-text</module>
     <module>inception-io-webanno-tsv</module>
-    <module>inception-io-conll</module>
     <module>inception-io-xmi</module>
     <!-- Curation -->
     <module>inception-curation</module>
@@ -1799,7 +1805,7 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>[1.8.0,)</version>
+                  <version>[11,)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
