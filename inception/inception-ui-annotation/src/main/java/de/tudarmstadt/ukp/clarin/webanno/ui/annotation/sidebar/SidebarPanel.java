@@ -52,7 +52,7 @@ public class SidebarPanel
     private IModel<AnnotatorState> stateModel;
     private SidebarTabbedPanel<SidebarTab> tabsPanel;
 
-    public SidebarPanel(String aId, IModel<AnnotatorState> aModel,
+    public SidebarPanel(String aId, IModel<AnnotatorState> aModel, IModel<Integer> aWidthModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
@@ -76,11 +76,9 @@ public class SidebarPanel
 
         // Override sidebar width from preferences
         add(new AttributeModifier("style",
-                LoadableDetachableModel
-                        .of(() -> tabsPanel.isExpanded()
-                                ? format("flex-basis: %d%%;",
-                                        stateModel.getObject().getPreferences().getSidebarSize())
-                                : "")));
+                LoadableDetachableModel.of(() -> tabsPanel.isExpanded()
+                        ? format("flex-basis: %d%%;", aWidthModel.orElse(20).getObject())
+                        : "")));
     }
 
     @Override
