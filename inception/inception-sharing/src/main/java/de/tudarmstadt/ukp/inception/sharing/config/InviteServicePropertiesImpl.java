@@ -15,38 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
+package de.tudarmstadt.ukp.inception.sharing.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties("login")
-public class LoginPropertiesImpl
-    implements LoginProperties
+@ConfigurationProperties("sharing.invites")
+public class InviteServicePropertiesImpl
+    implements InviteServiceProperties
 {
-    private long maxConcurrentSessions;
-    private String message;
+    private boolean guestsEnabled;
 
     @Override
-    public long getMaxConcurrentSessions()
+    public boolean isGuestsEnabled()
     {
-        return maxConcurrentSessions;
+        return guestsEnabled;
     }
 
-    public void setMaxConcurrentSessions(long aMaxConcurrentSessions)
+    public void setGuestsEnabled(boolean aGuestsEnabled)
     {
-        maxConcurrentSessions = aMaxConcurrentSessions;
-    }
-
-    @Override
-    public String getMessage()
-    {
-        return message;
-    }
-
-    public void setMessage(String aMessage)
-    {
-        message = aMessage;
+        guestsEnabled = aGuestsEnabled;
     }
 }

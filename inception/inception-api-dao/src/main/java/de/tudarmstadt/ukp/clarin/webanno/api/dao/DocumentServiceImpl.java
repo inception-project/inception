@@ -1161,15 +1161,19 @@ public class DocumentServiceImpl
 
         // There should be a cascade-on-delete for annotation documents when the respective
         // source document is deleted, but that is not there at the moment...
-        String deleteAnnotationDocumentsQuery = String.join("\n", "DELETE FROM AnnotationDocument",
+        String deleteAnnotationDocumentsQuery = String.join("\n", //
+                "DELETE FROM AnnotationDocument", //
                 "WHERE project = :project");
-        entityManager.createQuery(deleteAnnotationDocumentsQuery).setParameter("project", project)
+        entityManager.createQuery(deleteAnnotationDocumentsQuery) //
+                .setParameter("project", project) //
                 .executeUpdate();
 
         // Delete all the source documents for the given project
-        String deleteSourceDocumentsQuery = String.join("\n", "DELETE FROM SourceDocument",
+        String deleteSourceDocumentsQuery = String.join("\n", //
+                "DELETE FROM SourceDocument", //
                 "WHERE project = :project");
-        entityManager.createQuery(deleteSourceDocumentsQuery).setParameter("project", project)
+        entityManager.createQuery(deleteSourceDocumentsQuery) //
+                .setParameter("project", project) //
                 .executeUpdate();
 
         // Delete all the source documents files for the given project

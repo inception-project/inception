@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference.SIDEBAR_SIZE_MAX;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference.SIDEBAR_SIZE_MIN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -109,11 +111,17 @@ public class AnnotationPreferencesDialogContent
         windowSizeField.setMinimum(1);
         form.add(windowSizeField);
 
-        NumberTextField<Integer> sidebarSizeField = new NumberTextField<>("sidebarSize");
-        sidebarSizeField.setType(Integer.class);
-        sidebarSizeField.setMinimum(AnnotationPreference.SIDEBAR_SIZE_MIN);
-        sidebarSizeField.setMaximum(AnnotationPreference.SIDEBAR_SIZE_MAX);
-        form.add(sidebarSizeField);
+        NumberTextField<Integer> sidebarSizeLeftField = new NumberTextField<>("sidebarSizeLeft");
+        sidebarSizeLeftField.setType(Integer.class);
+        sidebarSizeLeftField.setMinimum(SIDEBAR_SIZE_MIN);
+        sidebarSizeLeftField.setMaximum(SIDEBAR_SIZE_MAX);
+        form.add(sidebarSizeLeftField);
+
+        NumberTextField<Integer> sidebarSizeRightField = new NumberTextField<>("sidebarSizeRight");
+        sidebarSizeRightField.setType(Integer.class);
+        sidebarSizeRightField.setMinimum(SIDEBAR_SIZE_MIN);
+        sidebarSizeRightField.setMaximum(SIDEBAR_SIZE_MAX);
+        form.add(sidebarSizeRightField);
 
         NumberTextField<Integer> fontZoomField = new NumberTextField<>("fontZoom");
         fontZoomField.setType(Integer.class);
@@ -168,7 +176,8 @@ public class AnnotationPreferencesDialogContent
             prefs.setScrollPage(model.scrollPage);
             prefs.setRememberLayer(model.rememberLayer);
             prefs.setWindowSize(model.windowSize);
-            prefs.setSidebarSize(model.sidebarSize);
+            prefs.setSidebarSizeLeft(model.sidebarSizeLeft);
+            prefs.setSidebarSizeRight(model.sidebarSizeRight);
             prefs.setFontZoom(model.fontZoom);
             prefs.setColorPerLayer(model.colorPerLayer);
             prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
@@ -202,7 +211,8 @@ public class AnnotationPreferencesDialogContent
         // Import current settings from the annotator
         Preferences model = new Preferences();
         model.windowSize = Math.max(prefs.getWindowSize(), 1);
-        model.sidebarSize = prefs.getSidebarSize();
+        model.sidebarSizeLeft = prefs.getSidebarSizeLeft();
+        model.sidebarSizeRight = prefs.getSidebarSizeRight();
         model.fontZoom = prefs.getFontZoom();
         model.scrollPage = prefs.isScrollPage();
         model.colorPerLayer = prefs.getColorPerLayer();
@@ -286,7 +296,8 @@ public class AnnotationPreferencesDialogContent
 
         private Pair<String, String> editor;
         private int windowSize;
-        private int sidebarSize;
+        private int sidebarSizeLeft;
+        private int sidebarSizeRight;
         private int fontZoom;
         private boolean scrollPage;
         private boolean rememberLayer;

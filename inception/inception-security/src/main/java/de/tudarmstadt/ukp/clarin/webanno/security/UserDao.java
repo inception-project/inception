@@ -36,6 +36,11 @@ public interface UserDao
     static final String ADMIN_DEFAULT_USERNAME = "admin";
     static final String ADMIN_DEFAULT_PASSWORD = "admin";
 
+    static final String EMPTY_PASSWORD = "";
+
+    static final String REALM_GLOBAL = null;
+    static final String REALM_PROJECT_PREFIX = "project:";
+
     User getCurrentUser();
 
     /**
@@ -88,6 +93,10 @@ public interface UserDao
      */
     void delete(User aUser);
 
+    int deleteAllUsersFromRealm(String aString);
+
+    List<User> listAllUsersFromRealm(String aString);
+
     /**
      * get a {@link User} using a username
      * 
@@ -96,6 +105,8 @@ public interface UserDao
      * @return the user.
      */
     User get(String aUsername);
+
+    User getUserByRealmAndUiName(String aRealm, String aUiName);
 
     /**
      * get all users in the system
@@ -133,6 +144,8 @@ public interface UserDao
      * Retrieve the number of enabled users
      */
     long countEnabledUsers();
+
+    List<String> listRealms();
 
     public static boolean isProfileSelfServiceAllowed()
     {
