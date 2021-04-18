@@ -34,11 +34,22 @@
                     data-size="10" data-container=".w_content_container"></select>
               </div>
             </div>
-            <div class="form-group form-row" wicket:enclosure="sidebarSize">
-              <label wicket:for="sidebarSize" class="col-sm-4 col-form-label"><wicket:label key="sidebarSize"/></label>
+            <div class="form-group form-row" wicket:enclosure="sidebarSizeLeft">
+              <label wicket:for="sidebarSizeLeft" class="col-sm-4 col-form-label"><wicket:label key="sidebarSizeLeft"/></label>
               <div class="col-sm-8">
                 <div class="input-group">
-                  <input wicket:id="sidebarSize" type="number" class="form-control text-right"></input>
+                  <input wicket:id="sidebarSizeLeft" type="number" class="form-control text-right"></input>
+                  <div class="input-group-append">
+                    <span class="input-group-text">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group form-row" wicket:enclosure="sidebarSizeRight">
+              <label wicket:for="sidebarSizeRight" class="col-sm-4 col-form-label"><wicket:label key="sidebarSizeRight"/></label>
+              <div class="col-sm-8">
+                <div class="input-group">
+                  <input wicket:id="sidebarSizeRight" type="number" class="form-control text-right"></input>
                   <div class="input-group-append">
                     <span class="input-group-text">%</span>
                   </div>
