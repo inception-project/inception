@@ -34,7 +34,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -46,10 +45,9 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.CssContentHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -72,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -343,12 +342,10 @@ public class AnnotationPage
 
     private SidebarPanel createLeftSidebar()
     {
-        SidebarPanel leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor,
-                () -> getEditorCas(), AnnotationPage.this);
-        // Override sidebar width from preferences
-        leftSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
-                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
-        return leftSidebar;
+        return new SidebarPanel("leftSidebar", getModel(),
+                getModel().map(AnnotatorState::getPreferences)
+                        .map(AnnotationPreference::getSidebarSizeLeft),
+                detailEditor, () -> getEditorCas(), AnnotationPage.this);
     }
 
     private WebMarkupContainer createRightSidebar()
@@ -356,8 +353,9 @@ public class AnnotationPage
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupId(true);
         // Override sidebar width from preferences
-        rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
-                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
+        rightSidebar.add(new AttributeModifier("style",
+                LoadableDetachableModel.of(() -> String.format("flex-basis: %d%%;",
+                        getModelObject().getPreferences().getSidebarSizeRight()))));
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
         return rightSidebar;
@@ -369,21 +367,6 @@ public class AnnotationPage
         AnnotatorState state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
-    }
-
-    /**
-     * for the first time, open the <b>open document dialog</b>
-     */
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        aResponse
-                .render(CssContentHeaderItem.forCSS(
-                        String.format(Locale.US, ".sidebarCell { flex-basis: %d%%; }",
-                                getModelObject().getPreferences().getSidebarSize()),
-                        "sidebar-width"));
     }
 
     @Override
@@ -681,7 +664,8 @@ public class AnnotationPage
     }
 
     @Override
-    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject, User aUser)
+    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
+            User aUser)
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
 
