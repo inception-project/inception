@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.newSetFromMap;
-import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
@@ -32,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,8 +63,7 @@ public class Predictions
     private final User user;
     private final List<LogMessage> log = new ArrayList<>();
 
-    public Predictions(Project aProject, User aUser,
-            Map<ExtendedId, AnnotationSuggestion> aPredictions)
+    public Predictions(Project aProject, User aUser, Map<ExtendedId, SpanSuggestion> aPredictions)
     {
         Validate.notNull(aProject, "Project must be specified");
         Validate.notNull(aUser, "User must be specified");
@@ -77,7 +72,7 @@ public class Predictions
         user = aUser;
 
         if (aPredictions != null) {
-            predictions = new ConcurrentHashMap<ExtendedId, AnnotationSuggestion>(aPredictions);
+            predictions = new ConcurrentHashMap<>(aPredictions);
         }
     }
 
@@ -91,16 +86,17 @@ public class Predictions
      * tokens and the inner list is a list of predictions for a token. The method filters all tokens
      * which already have an annotation and don't need further recommendation.
      */
-    public Map<String, SuggestionDocumentGroup> getPredictionsForWholeProject(
-            AnnotationLayer aLayer, DocumentService aDocumentService)
+    public <T extends AnnotationSuggestion> Map<String, SuggestionDocumentGroup<T>> getPredictionsForWholeProject(
+            Class<T> type, AnnotationLayer aLayer, DocumentService aDocumentService)
     {
-        Map<String, SuggestionDocumentGroup> result = new HashMap<>();
+        Map<String, SuggestionDocumentGroup<T>> result = new HashMap<>();
 
         List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
 
         for (AnnotationDocument doc : docs) {
             // TODO #176 use the document Id once it it available in the CAS
-            SuggestionDocumentGroup p = getPredictions(doc.getName(), aLayer, -1, -1);
+            SuggestionDocumentGroup<T> p = getGroupedPredictions(type, doc.getName(), aLayer, -1,
+                    -1);
             result.put(doc.getName(), p);
         }
 
@@ -113,11 +109,12 @@ public class Predictions
      * Get the predictions of a given window, where the outer list is a list of tokens and the inner
      * list is a list of predictions for a token
      */
-    public SuggestionDocumentGroup getPredictions(String aDocumentName, AnnotationLayer aLayer,
-            int aWindowBegin, int aWindowEnd)
+    public <T extends AnnotationSuggestion> SuggestionDocumentGroup<T> getGroupedPredictions(
+            Class<T> type, String aDocumentName, AnnotationLayer aLayer, int aWindowBegin,
+            int aWindowEnd)
     {
         return new SuggestionDocumentGroup(
-                getFlattenedPredictions(aDocumentName, aLayer, aWindowBegin, aWindowEnd));
+                getFlattenedPredictions(type, aDocumentName, aLayer, aWindowBegin, aWindowEnd));
     }
 
     /**
@@ -127,15 +124,16 @@ public class Predictions
      * {@code aWindowBegin} and {@code aWindowEnd} are {@code -1}, then they are ignored
      * respectively. This is useful when all suggestions should be fetched.
      */
-    private List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
-            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
+            String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        return predictions.entrySet().stream()
+        return predictions.entrySet().stream().filter(f -> type.isInstance(f.getValue()))
+                .map(f -> (Entry<ExtendedId, T>) (Entry) f)
                 .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
                 .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-                .filter(f -> aWindowBegin == -1 || (f.getKey().getBegin() >= aWindowBegin))
-                .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
-                .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
+                .filter(f -> aWindowBegin == -1 || (f.getValue().getWindowBegin() >= aWindowBegin))
+                .filter(f -> aWindowEnd == -1 || (f.getValue().getWindowEnd() <= aWindowEnd))
+                .sorted(Comparator.comparingInt(e2 -> e2.getValue().getWindowBegin()))
                 .map(Map.Entry::getValue).collect(toList());
     }
 
@@ -152,19 +150,6 @@ public class Predictions
     }
 
     /**
-     * Returns the prediction used to generate the VID
-     */
-    public Optional<AnnotationSuggestion> getPrediction(SourceDocument aDocument, int aBegin,
-            int aEnd, String aLabel)
-    {
-        return predictions.values().stream()
-                .filter(f -> f.getDocumentName().equals(aDocument.getName()))
-                .filter(f -> f.getBegin() == aBegin && f.getEnd() == aEnd)
-                .filter(f -> f.getLabel().equals(aLabel))
-                .max(comparingInt(AnnotationSuggestion::getId));
-    }
-
-    /**
      * @param aPredictions
      *            - list of sentences containing recommendations
      */
@@ -172,7 +157,7 @@ public class Predictions
     {
         aPredictions.forEach(prediction -> predictions.put(new ExtendedId(user.getUsername(),
                 project.getId(), prediction.getDocumentName(), prediction.getLayerId(),
-                prediction.getOffset(), prediction.getRecommenderId(), prediction.getId(), -1),
+                prediction.getPosition(), prediction.getRecommenderId(), prediction.getId(), -1),
                 prediction));
     }
 
@@ -186,7 +171,7 @@ public class Predictions
         return !predictions.isEmpty();
     }
 
-    public Map<ExtendedId, AnnotationSuggestion> getPredictions()
+    public Map<ExtendedId, AnnotationSuggestion> getGroupedPredictions()
     {
         return predictions;
     }
@@ -219,14 +204,15 @@ public class Predictions
      *            the given annotation feature name
      * @return the annotation suggestions
      */
-    public List<AnnotationSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
+    public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {
-        return predictions.entrySet().stream()
+        return predictions.entrySet().stream().filter(f -> f.getValue() instanceof SpanSuggestion)
+                .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f)
                 .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
                 .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-                .filter(f -> f.getKey().getOffset().getBeginCharacter() == aBegin)
-                .filter(f -> f.getKey().getOffset().getEndCharacter() == aEnd)
+                .filter(f -> f.getValue().getBegin() == aBegin)
+                .filter(f -> f.getValue().getEnd() == aEnd)
                 .filter(f -> f.getValue().getFeature().equals(aFeature)).map(Map.Entry::getValue)
                 .collect(Collectors.toList());
     }

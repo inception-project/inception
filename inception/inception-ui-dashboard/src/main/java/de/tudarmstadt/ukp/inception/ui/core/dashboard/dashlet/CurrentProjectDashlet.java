@@ -60,7 +60,9 @@ public class CurrentProjectDashlet
                 onCancel(aTarget);
             }
         };
-        boolean isManager = projectService.isManager(getModelObject(), userRepository.getCurrentUser());
+
+        boolean isManager = projectService.isManager(getModelObject(),
+                userRepository.getCurrentUser());
         name.setEnabled(isManager);
         add(name);
 

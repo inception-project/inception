@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
@@ -119,6 +120,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChang
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
@@ -280,8 +282,12 @@ public class ActiveLearningSidebar
 
     private List<AnnotationLayer> listLayersWithRecommenders()
     {
-        return recommendationService
-                .listLayersWithEnabledRecommenders(getModelObject().getProject());
+        // We right now only support active learning with span recommenders.
+        return recommendationService.listLayersWithEnabledRecommenders(getModelObject() //
+                .getProject()) //
+                .stream() //
+                .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                .collect(toList());
     }
 
     private void actionStartSession(AjaxRequestTarget target, Form<?> form)
@@ -320,7 +326,7 @@ public class ActiveLearningSidebar
                 .publishEvent(new ActiveLearningSessionCompletedEvent(this, project, userName));
     }
 
-    private void setHighlight(AnnotationSuggestion aSuggestion)
+    private void setHighlight(SpanSuggestion aSuggestion)
     {
         if (protectHighlight) {
             LOG.trace("Active learning sidebar not updating protected highlights");
@@ -338,8 +344,7 @@ public class ActiveLearningSidebar
     {
         LOG.trace("Active learning sidebar set highlight history record: {}", aRecord);
         highlightVID = null;
-        highlightSpan = new Offset(aRecord.getOffsetCharacterBegin(),
-                aRecord.getOffsetCharacterEnd());
+        highlightSpan = new Offset(aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
         highlightDocumentName = aRecord.getSourceDocument().getName();
         // This is a bit of hack. Consider the following case:
         // - use removes an ACCEPT history item
@@ -437,7 +442,7 @@ public class ActiveLearningSidebar
                 new Label(CID_RECOMMENDED_PREDITION, LoadableDetachableModel.of(() -> alStateModel
                         .getObject().getSuggestion().map(this::formatLabel).orElse(null))));
         recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, () -> alStateModel.getObject()
-                .getSuggestion().map(AnnotationSuggestion::getConfidence).orElse(null)));
+                .getSuggestion().map(SpanSuggestion::getConfidence).orElse(null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, () -> alStateModel.getObject()
                 .getCurrentDifference().map(Delta::getDelta).orElse(null)));
         recommendationForm.add((alStateModel.getObject().getLayer() != null
@@ -468,7 +473,7 @@ public class ActiveLearningSidebar
         link.add(new Label("leftContext",
                 alStateModel.map(ActiveLearningUserState::getLeftContext)));
         link.add(new Label("text", LoadableDetachableModel.of(() -> alStateModel.getObject()
-                .getSuggestion().map(AnnotationSuggestion::getCoveredText).orElse(""))));
+                .getSuggestion().map(SpanSuggestion::getCoveredText).orElse(""))));
         link.add(new Label("rightContext",
                 alStateModel.map(ActiveLearningUserState::getRightContext)));
         return link;
@@ -478,14 +483,13 @@ public class ActiveLearningSidebar
     {
         ActiveLearningUserState alState = alStateModel.getObject();
 
-        AnnotationSuggestion suggestion = alState.getSuggestion().get();
+        SpanSuggestion suggestion = alState.getSuggestion().get();
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Active suggestion: {}", suggestion);
-            Optional<AnnotationSuggestion> updatedSuggestion = getMatchingSuggestion(
-                    activeLearningService.getSuggestions(getModelObject().getUser(),
-                            alState.getLayer()),
-                    suggestion).stream().findFirst();
+            Optional<SpanSuggestion> updatedSuggestion = getMatchingSuggestion(activeLearningService
+                    .getSuggestions(getModelObject().getUser(), alState.getLayer()), suggestion)
+                            .stream().findFirst();
             updatedSuggestion.ifPresent(s -> LOG.debug("Update suggestion: {}", s));
         }
 
@@ -504,14 +508,14 @@ public class ActiveLearningSidebar
     }
 
     private void refreshFeatureEditor(IPartialPageRequestHandler aTarget,
-            AnnotationSuggestion aCurrentRecommendation)
+            SpanSuggestion aCurrentRecommendation)
     {
         editor = createFeatureEditor(aCurrentRecommendation);
         recommendationForm.addOrReplace(editor);
         aTarget.add(mainContainer);
     }
 
-    private FeatureEditor createFeatureEditor(AnnotationSuggestion aCurrentRecommendation)
+    private FeatureEditor createFeatureEditor(SpanSuggestion aCurrentRecommendation)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
@@ -535,10 +539,10 @@ public class ActiveLearningSidebar
             Predictions predictions = recommendationService.getPredictions(state.getUser(),
                     state.getProject());
             // get all the predictions
-            List<AnnotationSuggestion> allRecommendations = predictions
-                    .getPredictionsByTokenAndFeature(aCurrentRecommendation.getDocumentName(),
-                            alState.getLayer(), aCurrentRecommendation.getBegin(),
-                            aCurrentRecommendation.getEnd(), aCurrentRecommendation.getFeature());
+            List<SpanSuggestion> allRecommendations = predictions.getPredictionsByTokenAndFeature(
+                    aCurrentRecommendation.getDocumentName(), alState.getLayer(),
+                    aCurrentRecommendation.getBegin(), aCurrentRecommendation.getEnd(),
+                    aCurrentRecommendation.getFeature());
             // get all the label of the predictions (e.g. "NN")
             List<String> allRecommendationLabels = allRecommendations.stream()
                     .map(ao -> ao.getLabel()).collect(Collectors.toList());
@@ -568,14 +572,14 @@ public class ActiveLearningSidebar
         return featureEditor;
     }
 
-    private void writeLearningRecordInDatabaseAndEventLog(
-            AnnotationSuggestion aCurrentRecommendation, LearningRecordType aUserAction)
+    private void writeLearningRecordInDatabaseAndEventLog(SpanSuggestion aCurrentRecommendation,
+            LearningRecordType aUserAction)
     {
         writeLearningRecordInDatabaseAndEventLog(aCurrentRecommendation, aUserAction,
                 aCurrentRecommendation.getLabel());
     }
 
-    private void writeLearningRecordInDatabaseAndEventLog(AnnotationSuggestion aSuggestion,
+    private void writeLearningRecordInDatabaseAndEventLog(SpanSuggestion aSuggestion,
             LearningRecordType aUserAction, String aAnnotationValue)
     {
         AnnotatorState state = ActiveLearningSidebar.this.getModelObject();
@@ -592,7 +596,7 @@ public class ActiveLearningSidebar
                 LearningRecordChangeLocation.AL_SIDEBAR);
 
         // Send an application event that the suggestion has been rejected
-        List<AnnotationSuggestion> alternativeSuggestions = recommendationService
+        List<SpanSuggestion> alternativeSuggestions = recommendationService
                 .getPredictions(state.getUser(), state.getProject())
                 .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), alState.getLayer(),
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
@@ -623,7 +627,7 @@ public class ActiveLearningSidebar
 
         // There is always a current recommendation when we get here because if there is none, the
         // button to accept the recommendation is not visible.
-        AnnotationSuggestion suggestion = alState.getSuggestion().get();
+        SpanSuggestion suggestion = alState.getSuggestion().get();
 
         // Create AnnotationFeature and FeatureSupport
         AnnotationFeature feat = annotationService.getFeature(suggestion.getFeature(),
@@ -646,7 +650,7 @@ public class ActiveLearningSidebar
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No such layer: [" + suggestion.getLayerId() + "]"));
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        recommendationService.upsertFeature(annotationService, sourceDoc, username, cas, layer,
+        recommendationService.upsertSpanFeature(annotationService, sourceDoc, username, cas, layer,
                 feature, selectedValue, suggestion.getBegin(), suggestion.getEnd());
 
         // Save CAS after annotation has been created
@@ -710,9 +714,9 @@ public class ActiveLearningSidebar
         User user = state.getUser();
         Project project = state.getProject();
 
-        Optional<Delta> recommendationDifference = activeLearningService
+        Optional<Delta<SpanSuggestion>> recommendationDifference = activeLearningService
                 .generateNextSuggestion(user, alState);
-        Optional<AnnotationSuggestion> prevSuggestion = alState.getSuggestion();
+        Optional<SpanSuggestion> prevSuggestion = alState.getSuggestion();
         alState.setCurrentDifference(recommendationDifference);
 
         // If the active suggestion has changed, inform the user
@@ -749,7 +753,7 @@ public class ActiveLearningSidebar
 
         // If there is one, open it in the sidebar and take the main editor to its location
         try {
-            AnnotationSuggestion suggestion = alState.getSuggestion().get();
+            SpanSuggestion suggestion = alState.getSuggestion().get();
             SourceDocument sourceDocument = documentService.getSourceDocument(project,
                     suggestion.getDocumentName());
 
@@ -792,7 +796,7 @@ public class ActiveLearningSidebar
                     Math.min(suggestion.getEnd() + 20, text.length())));
 
             // Send an application event that the suggestion has been rejected
-            List<AnnotationSuggestion> alternativeSuggestions = recommendationService
+            List<SpanSuggestion> alternativeSuggestions = recommendationService
                     .getPredictions(user, project).getPredictionsByTokenAndFeature(
                             suggestion.getDocumentName(), alState.getLayer(), suggestion.getBegin(),
                             suggestion.getEnd(), suggestion.getFeature());
@@ -875,8 +879,8 @@ public class ActiveLearningSidebar
     private void actionSelectHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
-                aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+        actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(), aRecord.getOffsetBegin(),
+                aRecord.getOffsetEnd());
 
         // Since we have switched documents above (if it was necessary), the editor CAS should
         // now point to the correct one
@@ -901,39 +905,37 @@ public class ActiveLearningSidebar
     {
         Type type = CasUtil.getType(aCas, alStateModel.getObject().getLayer().getName());
         Feature feature = type.getFeatureByBaseName(aRecord.getAnnotationFeature().getName());
-        return selectAt(aCas, type, aRecord.getOffsetCharacterBegin(),
-                aRecord.getOffsetCharacterEnd()).stream().filter(
-                        fs -> aRecord.getAnnotation().equals(fs.getFeatureValueAsString(feature)))
-                        .findFirst();
+        return selectAt(aCas, type, aRecord.getOffsetBegin(), aRecord.getOffsetEnd()).stream()
+                .filter(fs -> aRecord.getAnnotation().equals(fs.getFeatureValueAsString(feature)))
+                .findFirst();
     }
 
-    private List<AnnotationSuggestion> getMatchingSuggestion(List<SuggestionGroup> aSuggestions,
-            LearningRecord aRecord)
+    private List<SpanSuggestion> getMatchingSuggestion(
+            List<SuggestionGroup<SpanSuggestion>> aSuggestions, LearningRecord aRecord)
     {
         return getMatchingSuggestion(aSuggestions, aRecord.getSourceDocument().getName(),
                 aRecord.getLayer().getId(), aRecord.getAnnotationFeature().getName(),
-                aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd(),
-                aRecord.getAnnotation());
+                aRecord.getOffsetBegin(), aRecord.getOffsetEnd(), aRecord.getAnnotation());
     }
 
-    private List<AnnotationSuggestion> getMatchingSuggestion(List<SuggestionGroup> aSuggestions,
-            AnnotationSuggestion aSuggestion)
+    private List<SpanSuggestion> getMatchingSuggestion(
+            List<SuggestionGroup<SpanSuggestion>> aSuggestions, SpanSuggestion aSuggestion)
     {
         return getMatchingSuggestion(aSuggestions, aSuggestion.getDocumentName(),
                 aSuggestion.getLayerId(), aSuggestion.getFeature(), aSuggestion.getBegin(),
                 aSuggestion.getEnd(), aSuggestion.getLabel());
     }
 
-    private List<AnnotationSuggestion> getMatchingSuggestion(List<SuggestionGroup> aSuggestions,
-            String aDocumentName, long aLayerId, String aFeature, int aBegin, int aEnd,
-            String aLabel)
+    private List<SpanSuggestion> getMatchingSuggestion(
+            List<SuggestionGroup<SpanSuggestion>> aSuggestions, String aDocumentName, long aLayerId,
+            String aFeature, int aBegin, int aEnd, String aLabel)
     {
-        return aSuggestions.stream()
+        return aSuggestions.stream().filter(group -> group.getPosition() instanceof Offset)
                 .filter(group -> aDocumentName.equals(group.getDocumentName())
                         && aLayerId == group.getLayerId()
                         && (aFeature == null || aFeature == group.getFeature())
-                        && (aBegin == -1 || aBegin == group.getOffset().getBegin())
-                        && (aEnd == -1 || aEnd == group.getOffset().getEnd()))
+                        && (aBegin == -1 || aBegin == ((Offset) group.getPosition()).getBegin())
+                        && (aEnd == -1 || aEnd == ((Offset) group.getPosition()).getEnd()))
                 .flatMap(group -> group.stream())
                 .filter(suggestion -> aLabel == null || aLabel.equals(suggestion.getLabel()))
                 .collect(toList());
@@ -974,7 +976,7 @@ public class ActiveLearningSidebar
                     aRecord.getUser());
             if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
-                        aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+                        aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
                 confirmationDialog.setTitleModel(new StringResourceModel(
                         "alSidebar.history.delete.confirmation.title", this));
                 confirmationDialog.setContentModel(new StringResourceModel(
@@ -1001,8 +1003,8 @@ public class ActiveLearningSidebar
         CAS cas = this.getCasProvider().get();
         Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(new VID(anno.get()), cas,
-                    aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+            state.getSelection().selectSpan(new VID(anno.get()), cas, aRecord.getOffsetBegin(),
+                    aRecord.getOffsetEnd());
             getActionHandler().actionDelete(aTarget);
         }
     }
@@ -1062,9 +1064,10 @@ public class ActiveLearningSidebar
 
             // Update visibility in case the annotation where the feature was set overlaps with
             // any suggestions that need to be hidden now.
-            recommendationService.calculateVisibility(getAnnotationPage().getEditorCas(),
-                    state.getUser().getUsername(), aLayer, alState.getSuggestions(),
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
+            recommendationService.calculateSpanSuggestionVisibility(
+                    getAnnotationPage().getEditorCas(), state.getUser().getUsername(), aLayer,
+                    (List) alState.getSuggestions(), state.getWindowBeginOffset(),
+                    state.getWindowEndOffset());
 
             // Update the suggestion in the AL sidebar, but do not jump or touch the right
             // sidebar such that the user can happily continue to edit the annotation
@@ -1091,7 +1094,8 @@ public class ActiveLearningSidebar
                 && eventState.getProject().equals(annotatorState.getProject())) {
             SourceDocument doc = eventState.getDocument();
             VID vid = aEvent.getVid();
-            Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(doc, vid);
+            Optional<SpanSuggestion> prediction = predictions.getPredictionByVID(doc, vid)
+                    .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
 
             if (!prediction.isPresent()) {
                 LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
@@ -1099,7 +1103,7 @@ public class ActiveLearningSidebar
                 return;
             }
 
-            AnnotationSuggestion rejectedRecommendation = prediction.get();
+            SpanSuggestion rejectedRecommendation = prediction.get();
             applicationEventPublisherHolder.get().publishEvent(
                     new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                             rejectedRecommendation, annotatorState.getUser().getUsername(),
@@ -1134,7 +1138,8 @@ public class ActiveLearningSidebar
         SourceDocument doc = state.getDocument();
         VID vid = aEvent.getVid();
 
-        Optional<AnnotationSuggestion> oRecommendation = predictions.getPredictionByVID(doc, vid);
+        Optional<SpanSuggestion> oRecommendation = predictions.getPredictionByVID(doc, vid)
+                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
         if (!oRecommendation.isPresent()) {
             LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
             error("Could not find prediction");
@@ -1142,7 +1147,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        AnnotationSuggestion acceptedSuggestion = oRecommendation.get();
+        SpanSuggestion acceptedSuggestion = oRecommendation.get();
 
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningRecommendationEvent(
                 this, eventState.getDocument(), acceptedSuggestion, state.getUser().getUsername(),
@@ -1157,8 +1162,8 @@ public class ActiveLearningSidebar
         if (alState.isSessionActive() && alState.getSuggestion().isPresent()
                 && eventState.getUser().equals(state.getUser())
                 && eventState.getProject().equals(state.getProject())) {
-            AnnotationSuggestion suggestion = alState.getSuggestion().get();
-            if (acceptedSuggestion.getOffset().equals(suggestion.getOffset())
+            SpanSuggestion suggestion = alState.getSuggestion().get();
+            if (acceptedSuggestion.getPosition().equals(suggestion.getPosition())
                     && vid.getLayerId() == suggestion.getLayerId()
                     && acceptedSuggestion.getFeature().equals(suggestion.getFeature())) {
                 moveToNextRecommendation(aEvent.getTarget(), false);
@@ -1261,9 +1266,9 @@ public class ActiveLearningSidebar
         // if no counterpart exists in the current suggestions, then we need to load a
         // suggestion from the current list.
         if (alState.getSuggestion().isPresent()) {
-            AnnotationSuggestion activeSuggestion = alState.getSuggestion().get();
+            SpanSuggestion activeSuggestion = alState.getSuggestion().get();
             // Find the groups which matches the active recommendation
-            Optional<AnnotationSuggestion> updatedSuggestion = getMatchingSuggestion(
+            Optional<SpanSuggestion> updatedSuggestion = getMatchingSuggestion(
                     alState.getSuggestions(), activeSuggestion).stream().findFirst();
 
             if (updatedSuggestion.isPresent()) {

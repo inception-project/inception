@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><xmi:XMI xmlns:pos="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos.ecore" xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:cas="http:///uima/cas.ecore" xmlns:tweet="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos/tweet.ecore" xmlns:morph="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/morph.ecore" xmlns:dependency="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/dependency.ecore" xmlns:type5="http:///de/tudarmstadt/ukp/dkpro/core/api/semantics/type.ecore" xmlns:type8="http:///de/tudarmstadt/ukp/dkpro/core/api/transform/type.ecore" xmlns:type7="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type.ecore" xmlns:type2="http:///de/tudarmstadt/ukp/dkpro/core/api/metadata/type.ecore" xmlns:type9="http:///org/dkpro/core/api/xml/type.ecore" xmlns:type3="http:///de/tudarmstadt/ukp/dkpro/core/api/ner/type.ecore" xmlns:type4="http:///de/tudarmstadt/ukp/dkpro/core/api/segmentation/type.ecore" xmlns:type="http:///de/tudarmstadt/ukp/dkpro/core/api/coref/type.ecore" xmlns:type6="http:///de/tudarmstadt/ukp/dkpro/core/api/structure/type.ecore" xmlns:constituent="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/constituent.ecore" xmlns:chunk="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/chunk.ecore" xmlns:custom="http:///webanno/custom.ecore" xmi:version="2.0">
+    <cas:NULL xmi:id="0"/>
+    <type2:DocumentMetaData xmi:id="8" sofa="1" begin="0" end="53" language="x-unspecified" documentTitle="relation_test.txt" documentId="relation_test.txt" documentUri="file:/C:/Users/klie/.inception/repository/project/0/document/532/source/relation_test.txt" collectionId="file:/C:/Users/klie/.inception/repository/project/0/document/532/source/" documentBaseUri="file:/C:/Users/klie/.inception/repository/project/0/document/532/source/" isLastSegment="false"/>
+    <type4:Sentence xmi:id="19" sofa="1" begin="0" end="23"/>
+    <type4:Sentence xmi:id="24" sofa="1" begin="25" end="53"/>
+    <type4:Token xmi:id="29" sofa="1" begin="0" end="9" order="0"/>
+    <type4:Token xmi:id="42" sofa="1" begin="10" end="12" order="0"/>
+    <type4:Token xmi:id="55" sofa="1" begin="13" end="15" order="0"/>
+    <type4:Token xmi:id="68" sofa="1" begin="16" end="22" order="0"/>
+    <type4:Token xmi:id="81" sofa="1" begin="22" end="23" order="0"/>
+    <type4:Token xmi:id="94" sofa="1" begin="25" end="33" order="0"/>
+    <type4:Token xmi:id="107" sofa="1" begin="34" end="36" order="0"/>
+    <type4:Token xmi:id="120" sofa="1" begin="37" end="39" order="0"/>
+    <type4:Token xmi:id="133" sofa="1" begin="40" end="45" order="0"/>
+    <type4:Token xmi:id="146" sofa="1" begin="46" end="52" order="0"/>
+    <type4:Token xmi:id="159" sofa="1" begin="52" end="53" order="0"/>
+    <custom:MyRelationBase xmi:id="172" sofa="1" begin="0" end="9" value="city"/>
+    <custom:MyRelationBase xmi:id="177" sofa="1" begin="16" end="22" value="state"/>
+    <custom:MyRelationBase xmi:id="189" sofa="1" begin="25" end="33" value="city"/>
+    <custom:MyRelationBase xmi:id="194" sofa="1" begin="40" end="52" value="state"/>
+    <custom:MyRelationLayer xmi:id="182" sofa="1" begin="16" end="22" Dependent="177" Governor="172" value="located in"/>
+    <type2:TagsetDescription xmi:id="199" sofa="1" begin="0" end="0" layer="de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency" name="UD Universal Dependencies (v2)" input="false"/>
+    <type2:TagsetDescription xmi:id="212" sofa="1" begin="0" end="0" layer="de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity" name="Named Entity tags" input="false"/>
+    <type2:TagsetDescription xmi:id="225" sofa="1" begin="0" end="0" layer="de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation" name="Operation" input="false"/>
+    <type2:TagsetDescription xmi:id="238" sofa="1" begin="0" end="0" layer="de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS" name="UD Universal POS tags (v2)" input="false"/>
+    <cas:Sofa xmi:id="1" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString="Darmstadt is in Hessen.&#13;&#10;Hannover is in Lower Saxony."/>
+    <cas:View sofa="1" members="8 19 24 29 42 55 68 81 94 107 120 133 146 159 172 177 189 194 182 199 212 225 238"/>
+</xmi:XMI>

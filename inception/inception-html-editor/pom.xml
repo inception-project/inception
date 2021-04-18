@@ -140,4 +140,17 @@
       </plugins>
     </pluginManagement>
   </build>
+  <profiles>
+    <profile>
+      <id>jenkins</id>
+      <activation>
+        <property>
+          <name>JENKINS_HOME</name>
+        </property>
+      </activation>
+      <properties>
+        <frontend.install.path>${WORKSPACE}/cache/maven-frontend-plugin</frontend.install.path>
+      </properties>
+    </profile>
+  </profiles>
 </project>

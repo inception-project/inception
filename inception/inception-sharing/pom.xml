@@ -50,6 +50,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-dashboard</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-model-export</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -90,17 +94,31 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-request</artifactId>
+      <groupId>com.github.rjeschke</groupId>
+      <artifactId>txtmark</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-request</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>
@@ -125,6 +143,10 @@
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-extensions</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.wicket-jquery-ui</groupId>
+      <artifactId>wicket-kendo-ui</artifactId>
     </dependency>
 
     <dependency>
@@ -151,10 +173,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>com.googlecode.wicket-jquery-ui</groupId>
-    	<artifactId>wicket-kendo-ui</artifactId>
     </dependency>
   </dependencies>
 </project>

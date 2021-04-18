@@ -123,6 +123,10 @@ public class TelemetryServiceImpl
 
     private void autoAcceptOrReject()
     {
+        if (properties.getAutoRespond() == null) {
+            return;
+        }
+
         transactionTemplate.executeWithoutResult(transactionStatus -> {
             List<TelemetrySettings> settingsToSave = new ArrayList<>();
 

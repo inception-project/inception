@@ -205,7 +205,7 @@ public class RecommendationSidebar
             }
             for (Recommender recommender : recommendationService.listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
-                        .getRecommenderFactory(recommender);
+                        .getRecommenderFactory(recommender).orElse(null);
 
                 // E.g. if the module providing a configured recommender has been disabled but the
                 // recommender is still configured.

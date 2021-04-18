@@ -94,4 +94,13 @@ public class RecommenderTestHelper
                 .filter(fs -> fs.getBooleanValue(feature)).collect(Collectors.toList());
     }
 
+    public static List<AnnotationFS> getPredictions(CAS aCas, String aTypeName) throws Exception
+    {
+        Type type = CasUtil.getType(aCas, aTypeName);
+        Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+
+        return CasUtil.select(aCas, type).stream().filter(fs -> fs.getBooleanValue(feature))
+                .collect(Collectors.toList());
+    }
+
 }

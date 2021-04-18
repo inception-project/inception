@@ -34,6 +34,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
  */
 public interface RecommendationTypeRenderer
 {
+    String COLOR = "#cccccc";
+
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the intermediate
      * rendering representation {@link VDocument}.

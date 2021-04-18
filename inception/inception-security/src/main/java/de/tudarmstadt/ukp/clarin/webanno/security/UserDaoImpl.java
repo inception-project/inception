@@ -31,12 +31,15 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,9 +57,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public class UserDaoImpl
     implements UserDao
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private @PersistenceContext EntityManager entityManager;
     private @Autowired(required = false) SecurityProperties securityProperties;
     private @Autowired(required = false) PlatformTransactionManager transactionManager;
+    private @Autowired(required = false) SessionRegistry sessionRegistry;
 
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
@@ -101,6 +107,7 @@ public class UserDaoImpl
     {
         entityManager.persist(aUser);
         entityManager.flush();
+        log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
     }
 
     @Override
@@ -114,6 +121,11 @@ public class UserDaoImpl
     @Transactional
     public int delete(String aUsername)
     {
+        if (sessionRegistry != null) {
+            sessionRegistry.getAllSessions(aUsername, false)
+                    .forEach(_session -> _session.expireNow());
+        }
+
         User toDelete = get(aUsername);
         if (toDelete == null) {
             return 0;
@@ -128,7 +140,50 @@ public class UserDaoImpl
     @Transactional
     public void delete(User aUser)
     {
+        if (sessionRegistry != null) {
+            sessionRegistry.getAllSessions(aUser, false).forEach(_session -> _session.expireNow());
+        }
+
         entityManager.remove(entityManager.merge(aUser));
+    }
+
+    @Override
+    @Transactional
+    public List<User> listAllUsersFromRealm(String aRealm)
+    {
+        String query = String.join("\n", //
+                "FROM " + User.class.getName(), //
+                "WHERE realm = :realm");
+
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("realm", aRealm) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public int deleteAllUsersFromRealm(String aRealm)
+    {
+        if (sessionRegistry != null) {
+            List<User> usersInRealm = listAllUsersFromRealm(aRealm);
+
+            for (User user : usersInRealm) {
+                sessionRegistry.getAllSessions(user.getUsername(), false)
+                        .forEach(_session -> _session.expireNow());
+                entityManager.remove(user);
+            }
+
+            return usersInRealm.size();
+        }
+        else {
+            String query = String.join("\n", //
+                    "DELETE FROM " + User.class.getName(), //
+                    "WHERE realm = :realm");
+
+            return entityManager.createQuery(query) //
+                    .setParameter("realm", aRealm) //
+                    .executeUpdate();
+        }
     }
 
     @Override
@@ -138,6 +193,33 @@ public class UserDaoImpl
         Validate.notBlank(aUsername, "User must be specified");
 
         return entityManager.find(User.class, aUsername);
+    }
+
+    @Override
+    @Transactional
+    public User getUserByRealmAndUiName(String aRealm, String aUiName)
+    {
+        Validate.notBlank(aUiName, "User must be specified");
+
+        String query = String.join("\n", //
+                "FROM " + User.class.getName(), //
+                "WHERE ((:realm is null and realm is null) or realm = :realm)", //
+                "AND   uiName = :uiName");
+
+        List<User> users = entityManager.createQuery(query, User.class) //
+                .setParameter("realm", aRealm) //
+                .setParameter("uiName", aUiName) //
+                .getResultList();
+
+        switch (users.size()) {
+        case 0:
+            return null;
+        case 1:
+            return users.get(0);
+        default:
+            throw new IllegalStateException(
+                    "UI name [" + aUiName + "] is not unique within realm [" + aRealm + "]");
+        }
     }
 
     @Override
@@ -154,7 +236,8 @@ public class UserDaoImpl
     {
         String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
-        return entityManager.createQuery(query, User.class).setParameter("enabled", true)
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("enabled", true) //
                 .getResultList();
     }
 
@@ -164,7 +247,18 @@ public class UserDaoImpl
     {
         String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
-        return entityManager.createQuery(query, User.class).setParameter("enabled", false)
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("enabled", false) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<String> listRealms()
+    {
+        String query = "SELECT DISTINCT realm FROM " + User.class.getName();
+
+        return entityManager.createQuery(query, String.class) //
                 .getResultList();
     }
 
@@ -196,14 +290,17 @@ public class UserDaoImpl
     @Transactional
     public boolean isAdministrator(User aUser)
     {
-        boolean roleAdmin = false;
+        if (aUser == null) {
+            return false;
+        }
+
         for (String role : getRoles(aUser)) {
             if (Role.ROLE_ADMIN.name().equals(role)) {
-                roleAdmin = true;
-                break;
+                return true;
             }
         }
-        return roleAdmin;
+
+        return false;
     }
 
     @Override
