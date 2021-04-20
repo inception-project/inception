@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -31,12 +30,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
@@ -66,6 +65,12 @@ public class RelationRenderer
 
     private final List<RelationLayerBehavior> behaviors;
 
+    private Type type;
+    private Type spanType;
+    private Feature dependentFeature;
+    private Feature governorFeature;
+    private Feature arcSpanFeature;
+
     public RelationRenderer(RelationAdapter aTypeAdapter,
             LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry, List<RelationLayerBehavior> aBehaviors)
@@ -83,35 +88,36 @@ public class RelationRenderer
     }
 
     @Override
-    public void render(final CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int aWindowBegin, int aWindowEnd)
+    protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
         RelationAdapter typeAdapter = getTypeAdapter();
-        Type type;
-        Type spanType;
         try {
-            type = getType(aCas, typeAdapter.getAnnotationTypeName());
-            spanType = getType(aCas, typeAdapter.getAttachTypeName());
+            type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
+            spanType = aTypeSystem.getType(typeAdapter.getAttachTypeName());
         }
         catch (IllegalArgumentException e) {
             // If the types are not defined, then we do not need to try and render them because the
             // CAS does not contain any instances of them
+            return false;
+        }
+
+        dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
+        governorFeature = type.getFeatureByBaseName(typeAdapter.getSourceFeatureName());
+        arcSpanFeature = spanType.getFeatureByBaseName(typeAdapter.getAttachFeatureName());
+
+        return true;
+    }
+
+    @Override
+    public void render(final CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+            int aWindowBegin, int aWindowEnd)
+    {
+        if (!checkTypeSystem(aCas)) {
             return;
         }
 
-        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
-
-        Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
-        Feature governorFeature = type.getFeatureByBaseName(typeAdapter.getSourceFeatureName());
-
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(typeAdapter.getAttachFeatureName());
-
-        FeatureStructure dependentFs;
-        FeatureStructure governorFs;
-
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin, aWindowEnd,
-                type, dependentFeature, governorFeature, arcSpanFeature);
+        RelationAdapter typeAdapter = getTypeAdapter();
+        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin, aWindowEnd);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
         List<Integer> yieldDeps = new ArrayList<>();
@@ -120,69 +126,75 @@ public class RelationRenderer
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            if (typeAdapter.getAttachFeatureName() != null) {
-                dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
-                governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
-            }
-            else {
-                dependentFs = fs.getFeatureValue(dependentFeature);
-                governorFs = fs.getFeatureValue(governorFeature);
-            }
-
-            String bratTypeName = typeAdapter.getEncodedTypeName();
-            Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs,
-                    visibleFeatures);
-
-            if (dependentFs == null || governorFs == null) {
-                StringBuilder message = new StringBuilder();
-
-                message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                        + getAddr(fs) + "] has loose ends - cannot render.");
-                if (typeAdapter.getAttachFeatureName() != null) {
-                    message.append("\nRelation [" + typeAdapter.getLayer().getName()
-                            + "] attached to feature [" + typeAdapter.getAttachFeatureName()
-                            + "].");
-                }
-                message.append("\nDependent: " + dependentFs);
-                message.append("\nGovernor: " + governorFs);
-
-                RequestCycle requestCycle = RequestCycle.get();
-                IPageRequestHandler handler = PageRequestHandlerTracker
-                        .getLastHandler(requestCycle);
-                Page page = (Page) handler.getPage();
-                page.warn(message.toString());
-
+            VArc arc = render(fs, aFeatures, aWindowBegin);
+            if (arc == null) {
                 continue;
             }
 
-            VArc arc = new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs, dependentFs,
-                    features);
-            arc.addLazyDetails(getLazyDetails(fs, aFeatures));
-
+            aResponse.add(arc);
             annoToArcIdx.put(fs, arc);
 
-            aResponse.add(arc);
+            renderYield(aResponse, fs, relationLinks, yieldDeps);
 
-            // Render errors if required features are missing
-            renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
-
-            if (relationLinks.keySet().contains(getAddr(governorFs))
-                    && !yieldDeps.contains(getAddr(governorFs))) {
-                yieldDeps.add(getAddr(governorFs));
-
-                // sort the annotations (begin, end)
-                List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
-                sortedDepFs
-                        .sort(comparingInt(arg0 -> selectAnnotationByAddr(aCas, arg0).getBegin()));
-
-                String cm = getYieldMessage(aCas, sortedDepFs);
-                aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
-            }
+            renderLazyDetails(fs, arc, aFeatures);
+            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
         }
 
         for (RelationLayerBehavior behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToArcIdx);
         }
+    }
+
+    private void renderYield(VDocument aResponse, AnnotationFS fs,
+            Map<Integer, Set<Integer>> relationLinks, List<Integer> yieldDeps)
+    {
+        FeatureStructure governorFs = getDependentFs(fs);
+
+        if (relationLinks.keySet().contains(getAddr(governorFs))
+                && !yieldDeps.contains(getAddr(governorFs))) {
+            yieldDeps.add(getAddr(governorFs));
+
+            // sort the annotations (begin, end)
+            List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
+            sortedDepFs.sort(
+                    comparingInt(arg0 -> selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
+
+            String cm = getYieldMessage(fs.getCAS(), sortedDepFs);
+            aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
+        }
+    }
+
+    private VArc render(AnnotationFS fs, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    {
+        RelationAdapter typeAdapter = getTypeAdapter();
+        FeatureStructure dependentFs = getGovernorFs(fs);
+        FeatureStructure governorFs = getDependentFs(fs);
+
+        if (dependentFs == null || governorFs == null) {
+            StringBuilder message = new StringBuilder();
+
+            message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
+                    + getAddr(fs) + "] has loose ends - cannot render.");
+            if (typeAdapter.getAttachFeatureName() != null) {
+                message.append("\nRelation [" + typeAdapter.getLayer().getName()
+                        + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
+            }
+            message.append("\nDependent: " + dependentFs);
+            message.append("\nGovernor: " + governorFs);
+
+            RequestCycle requestCycle = RequestCycle.get();
+            IPageRequestHandler handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
+            Page page = (Page) handler.getPage();
+            page.warn(message.toString());
+
+            return null;
+        }
+
+        String bratTypeName = typeAdapter.getEncodedTypeName();
+        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
+
+        return new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs, dependentFs,
+                labelFeatures);
     }
 
     /**
@@ -218,28 +230,21 @@ public class RelationRenderer
     /**
      * Get relation links to display in relation yield
      */
-    private Map<Integer, Set<Integer>> getRelationLinks(CAS aCas, int aWindowBegin, int aWindowEnd,
-            Type type, Feature dependentFeature, Feature governorFeature, Feature arcSpanFeature)
+    private Map<Integer, Set<Integer>> getRelationLinks(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
         RelationAdapter typeAdapter = getTypeAdapter();
-        FeatureStructure dependentFs;
-        FeatureStructure governorFs;
         Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();
 
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            if (typeAdapter.getAttachFeatureName() != null) {
-                dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
-                governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
-            }
-            else {
-                dependentFs = fs.getFeatureValue(dependentFeature);
-                governorFs = fs.getFeatureValue(governorFeature);
-            }
+            FeatureStructure dependentFs = getGovernorFs(fs);
+            FeatureStructure governorFs = getDependentFs(fs);
+
             if (dependentFs == null || governorFs == null) {
                 log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
                         + getAddr(fs) + "] has loose ends - cannot render.");
                 continue;
             }
+
             Set<Integer> links = relations.get(getAddr(governorFs));
             if (links == null) {
                 links = new ConcurrentSkipListSet<>();
@@ -271,5 +276,31 @@ public class RelationRenderer
                 updateLinks(aRelLinks, dep);
             }
         }
+    }
+
+    private FeatureStructure getGovernorFs(FeatureStructure fs)
+    {
+        RelationAdapter typeAdapter = getTypeAdapter();
+        FeatureStructure governorFs;
+        if (typeAdapter.getAttachFeatureName() != null) {
+            governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
+        }
+        else {
+            governorFs = fs.getFeatureValue(governorFeature);
+        }
+        return governorFs;
+    }
+
+    private FeatureStructure getDependentFs(FeatureStructure fs)
+    {
+        RelationAdapter typeAdapter = getTypeAdapter();
+        FeatureStructure dependentFs;
+        if (typeAdapter.getAttachFeatureName() != null) {
+            dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
+        }
+        else {
+            dependentFs = fs.getFeatureValue(dependentFeature);
+        }
+        return dependentFs;
     }
 }

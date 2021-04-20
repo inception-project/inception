@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.TypeSystem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -34,6 +35,12 @@ public class NopRenderer
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
+    }
+
+    @Override
+    protected boolean typeSystemInit(TypeSystem aTypeSystem)
+    {
+        return false;
     }
 
     @Override
