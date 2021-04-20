@@ -47,4 +47,35 @@
     <addUniqueConstraint constraintName="UK_project_invite_project" 
       tableName="project_invite" columnNames="project" />
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210409-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210128-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="created" type="datetime(6)">
+        <constraints nullable="true" />
+      </column>
+      <column name="updated" type="datetime(6)">
+        <constraints nullable="true" />
+      </column>
+      <column name="invitationText" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+      <column name="guestAccessible" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210416-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210409-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="userIdPlaceholder" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

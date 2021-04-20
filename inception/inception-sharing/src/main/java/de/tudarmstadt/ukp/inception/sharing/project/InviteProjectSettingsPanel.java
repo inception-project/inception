@@ -18,35 +18,41 @@
 package de.tudarmstadt.ukp.inception.sharing.project;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.servlet.ServletContext;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
 
-import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
+import com.googlecode.wicket.kendo.ui.form.datetime.DatePicker;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
+import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
 public class InviteProjectSettingsPanel
     extends ProjectSettingsPanelBase
@@ -55,115 +61,96 @@ public class InviteProjectSettingsPanel
 
     private @SpringBean InviteService inviteService;
     private @SpringBean ServletContext servletContext;
+    private @SpringBean InviteServiceProperties inviteServiceProperties;
 
-    private final WebMarkupContainer inviteLinkContainer;
-    private final AjaxDatePicker datePicker;
-    private TextField<String> linkField;
+    private IModel<ProjectInvite> invite;
 
     public InviteProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
+        setOutputMarkupPlaceholderTag(true);
 
-        inviteLinkContainer = createInviteLinkContainer();
-        inviteLinkContainer.setOutputMarkupId(true);
-        add(inviteLinkContainer);
-        
-        // add set date dropdown
-        WebMarkupContainer datePickContainer = new WebMarkupContainer("datePickContainer");
-        datePickContainer.setOutputMarkupId(true);
-        inviteLinkContainer.add(datePickContainer);
-        datePicker = new AjaxDatePicker("datePicker",
-                Model.of(inviteService.getExpirationDate(getModelObject())), "yyyy-MM-dd");
-        Form<Project> datePickForm = new Form<Project>("datePickForm", getModel());
-        datePickForm.add(new LambdaAjaxLink("submitDateLink", this::actionSetDate));
-        datePickForm.add(datePicker);
-        datePickContainer.add(datePickForm);
+        invite = CompoundPropertyModel.of(inviteService.readProjectInvite(getModelObject()));
 
-        // add expiration infos
-        Label expirationLabel = new Label("expirationDate", LoadableDetachableModel.of(this::getExpirationDate));
-        expirationLabel.setOutputMarkupId(true);
-        expirationLabel.add(visibleWhen(() -> linkField.getModelObject() != null));
-        inviteLinkContainer.add(expirationLabel);
-        LambdaAjaxLink extendBtn = new LambdaAjaxLink("extendLink", this::actionExtendInviteDate);
-        inviteLinkContainer.add(extendBtn);
-    }
-    
-    private void actionSetDate(AjaxRequestTarget aTarget) {
-        if (inviteService.generateInviteWithExpirationDate(getModelObject(),
-                datePicker.getModelObject())) {
-            success("Invite link has been generated/updated.");
-        }
-        else {
-            error("Pick a valid date.");
-        }
+        add(new LambdaAjaxLink("regen", this::actionShareProject)
+                .add(visibleWhenNot(invite.isPresent())));
 
-        aTarget.add(inviteLinkContainer);
-        aTarget.addChildren(getPage(), IFeedback.class);
-    }
-    
-    private void actionExtendInviteDate(AjaxRequestTarget aTarget) {
-        inviteService.extendInviteLinkDate(getModelObject());
-        success("The validity period has been extended.");
-        aTarget.add(inviteLinkContainer);
-        aTarget.addChildren(getPage(), IFeedback.class);
-    }
-    
-    private String getExpirationDate() {
-        Date expirationDate = inviteService.getExpirationDate(getModelObject());
-        if (expirationDate == null)
+        Form<ProjectInvite> detailsForm = new Form<>("form", invite);
+        detailsForm.add(visibleWhen(invite.isPresent()));
+        detailsForm.setOutputMarkupId(true);
+        TextField<String> linkField = new TextField<>("linkText", getInviteLink())
         {
-            return null;
-        }
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        return dateFormatter.format(expirationDate);
+            private static final long serialVersionUID = -4045558203619280212L;
+
+            protected void onDisabled(ComponentTag tag)
+            {
+                // Override the default "disabled" because ClipboardJsBehavior does not like it
+                tag.put("readonly", "readonly");
+            };
+        };
+        linkField.setEnabled(false);
+        detailsForm.add(linkField);
+        detailsForm.add(new WebMarkupContainer("copyLink")
+                .add(new ClipboardJsBehavior().setTarget(linkField)));
+        detailsForm.add(new DatePicker("expirationDate", "yyyy-MM-dd"));
+        detailsForm.add(new TextArea<>("invitationText").add(AttributeModifier
+                .replace("placeholder", new ResourceModel("invitationText.placeholder"))));
+        detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true)
+                .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()))
+                .add(new LambdaAjaxFormSubmittingBehavior("change", _target -> _target.add(this))));
+        detailsForm.add(new TextField<>("userIdPlaceholder")
+                .add(visibleWhen(invite.map(ProjectInvite::isGuestAccessible))));
+        detailsForm.add(new LambdaAjaxLink("extendLink", this::actionExtendInviteDate));
+        detailsForm.add(new LambdaAjaxButton<>("save", this::actionSave));
+        detailsForm.add(new LambdaAjaxLink("remove", this::actionRemoveInviteLink));
+        detailsForm.add(new WebMarkupContainer("expirationAlert").add(visibleWhen(invite
+                .map(ProjectInvite::getExpirationDate).map(date -> date.before(new Date())))));
+        add(detailsForm);
     }
 
-    private WebMarkupContainer createInviteLinkContainer()
+    private void actionSave(AjaxRequestTarget aTarget, Form<ProjectInvite> aForm)
     {
-        WebMarkupContainer linkContainer = new WebMarkupContainer("invitelinkContainer");
-        linkContainer.setOutputMarkupId(true);
+        inviteService.writeProjectInvite(aForm.getModelObject());
+        aTarget.add(this);
 
-        linkField = new TextField<>("linkText", LoadableDetachableModel.of(this::getInviteLink));
-        linkContainer.add(linkField);
+        success("Settings saved.");
+        aTarget.addChildren(getPage(), IFeedback.class);
+    }
 
-        Button copyBtn = new Button("copy");
-        ClipboardJsBehavior clipboardBehavior = new ClipboardJsBehavior();
-        clipboardBehavior.setTarget(linkField);
-        copyBtn.add(clipboardBehavior);
-        linkContainer.add(copyBtn);
-        LambdaAjaxLink regenBtn = new LambdaAjaxLink("regen", this::actionShareProject);
-        linkContainer.add(regenBtn);
-        LambdaAjaxLink removeBtn = new LambdaAjaxLink("remove", this::actionRemoveInviteLink);
-        linkContainer.add(removeBtn);
-        return linkContainer;
+    private void actionExtendInviteDate(AjaxRequestTarget aTarget)
+    {
+        inviteService.extendInviteLinkDate(getModelObject());
+        invite.setObject(inviteService.readProjectInvite(getModelObject()));
+
+        aTarget.add(this);
+
+        success("The validity period has been extended.");
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private void actionShareProject(AjaxRequestTarget aTarget)
     {
         inviteService.generateInviteID(getModelObject());
-        aTarget.add(inviteLinkContainer);
+        invite.setObject(inviteService.readProjectInvite(getModelObject()));
+        aTarget.add(this);
     }
 
     private void actionRemoveInviteLink(AjaxRequestTarget aTarget)
     {
         inviteService.removeInviteID(getModelObject());
-        aTarget.add(inviteLinkContainer);
+        invite.setObject(null);
+        aTarget.add(this);
     }
 
-    private String getInviteLink()
+    private IModel<String> getInviteLink()
     {
-        String inviteId = inviteService.getValidInviteID(getModelObject());
+        return invite.map(ProjectInvite::getInviteId).map(inviteId -> {
+            CharSequence url = urlFor(AcceptInvitePage.class,
+                    new PageParameters()
+                            .set(AcceptInvitePage.PAGE_PARAM_PROJECT, getModelObject().getId())
+                            .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, inviteId));
 
-        if (inviteId == null) {
-            return null;
-        }
-
-        CharSequence url = urlFor(AcceptInvitePage.class,
-                new PageParameters()
-                        .set(AcceptInvitePage.PAGE_PARAM_PROJECT, getModelObject().getId())
-                        .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, inviteId));
-
-        return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
+            return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
+        });
     }
-
 }

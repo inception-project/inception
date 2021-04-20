@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.preauth;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -26,7 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -39,9 +41,8 @@ public class ShibbolethRequestHeaderAuthenticationFilter
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String EMPTY_PASSWORD = "";
+    public static final String REALM_PREAUTH = "preauth";
 
-    private UserDetailsManager userDetailsManager;
     private UserDao userRepository;
 
     private void newUserLogin(String aID, HttpServletRequest aRequest)
@@ -49,6 +50,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         User u = new User();
         u.setUsername((String) super.getPreAuthenticatedPrincipal(aRequest));
         u.setPassword(EMPTY_PASSWORD);
+        u.setRealm(REALM_PREAUTH);
         u.setEnabled(true);
 
         Set<Role> s = new HashSet<>();
@@ -70,17 +72,6 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         u.setRoles(s);
 
         userRepository.create(u);
-        log.debug("Created new user [" + u.getUsername() + "] with roles " + u.getRoles());
-    }
-
-    private void existingUserLogin(String aID, HttpServletRequest aRequest)
-    {
-        // Nothing to do
-    }
-
-    public void setUserDetailsManager(UserDetailsManager aUserDetailsManager)
-    {
-        userDetailsManager = aUserDetailsManager;
     }
 
     public void setUserRepository(UserDao aUserRepository)
@@ -91,16 +82,16 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     @Override
     protected Object getPreAuthenticatedPrincipal(HttpServletRequest aRequest)
     {
-        String o = (String) super.getPreAuthenticatedPrincipal(aRequest);
+        String username = (String) super.getPreAuthenticatedPrincipal(aRequest);
 
-        if (o != null && !o.equals("")) {
-            if (!userDetailsManager.userExists(o)) {
-                newUserLogin(o, aRequest);
-            }
-            else {
-                existingUserLogin(o, aRequest);
-            }
+        if (StringUtils.isBlank(username)) {
+            throw new BadCredentialsException("Username cannot be empty");
         }
-        return o;
+
+        if (!userRepository.exists(username)) {
+            newUserLogin(username, aRequest);
+        }
+
+        return username;
     }
 }

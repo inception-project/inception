@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.authroles.authorization.strategies.role.Roles;
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,6 +41,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 
 /**
  * An {@link AuthenticatedWebSession} based on {@link Authentication}
@@ -54,6 +55,7 @@ public class SpringAuthenticatedWebSession
 
     @SpringBean(name = "org.springframework.security.authenticationManager")
     private AuthenticationManager authenticationManager;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean(required = false) SessionRegistry sessionRegistry;
 
     public SpringAuthenticatedWebSession(Request request)
@@ -88,36 +90,20 @@ public class SpringAuthenticatedWebSession
     @Override
     public boolean authenticate(String username, String password)
     {
-        // If already signed in (in Spring Security), then sign out there first
-        // signOut();
-
         try {
-            ServletWebRequest request = (ServletWebRequest) RequestCycle.get().getRequest();
-            HttpServletRequest containerRequest = request.getContainerRequest();
+            Request request = RequestCycle.get().getRequest();
+            if (request instanceof ServletWebRequest) {
+                HttpServletRequest containerRequest = ((ServletWebRequest) request)
+                        .getContainerRequest();
 
-            // Kill current session and create a new one as part of the authentication
-            containerRequest.getSession().invalidate();
+                // Kill current session and create a new one as part of the authentication
+                containerRequest.getSession().invalidate();
+            }
 
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
-            MDC.put(Logging.KEY_USERNAME, username);
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Stored authentication for user [{}] in security context",
-                    authentication.getName());
-
-            HttpSession session = containerRequest.getSession();
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    SecurityContextHolder.getContext());
-            log.debug("Stored security context in session");
-
-            if (sessionRegistry != null) {
-                // Form-based login isn't detected by SessionManagementFilter. Thus handling
-                // session registration manually here.
-                HttpSession containerSession = containerRequest.getSession(false);
-                sessionRegistry.registerNewSession(containerSession.getId(), username);
-            }
+            springSecuritySignIn(authentication);
 
             return true;
         }
@@ -125,6 +111,47 @@ public class SpringAuthenticatedWebSession
             log.warn("User [{}] failed to login. Reason: {}", username, e.getMessage());
             return false;
         }
+    }
+
+    private void springSecuritySignIn(Authentication aAuthentication)
+    {
+        MDC.put(Logging.KEY_USERNAME, aAuthentication.getName());
+
+        SecurityContextHolder.getContext().setAuthentication(aAuthentication);
+        log.debug("Stored authentication for user [{}] in security context",
+                aAuthentication.getName());
+
+        setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                SecurityContextHolder.getContext());
+        log.debug("Stored security context in session");
+
+        bind();
+
+        if (sessionRegistry != null) {
+            // Form-based login isn't detected by SessionManagementFilter. Thus handling
+            // session registration manually here.
+            sessionRegistry.registerNewSession(getId(), aAuthentication.getName());
+        }
+    }
+
+    public void signIn(Authentication aAuthentication)
+    {
+        Request request = RequestCycle.get().getRequest();
+        if (request instanceof ServletWebRequest) {
+            HttpServletRequest containerRequest = ((ServletWebRequest) request)
+                    .getContainerRequest();
+
+            // Kill current session and create a new one as part of the authentication
+            containerRequest.getSession().invalidate();
+        }
+
+        springSecuritySignIn(aAuthentication);
+        signIn(true);
+
+        // If this is called, the authentication object has been created artificially and not via
+        // the authenticationManager, so we need to send the login even manually
+        applicationEventPublisherHolder.get()
+                .publishEvent(new AuthenticationSuccessEvent(aAuthentication));
     }
 
     @Override

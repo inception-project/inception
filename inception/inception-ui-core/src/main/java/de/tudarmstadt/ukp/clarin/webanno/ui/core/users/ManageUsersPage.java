@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
@@ -90,8 +91,14 @@ public class ManageUsersPage
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
-            add(new TextField<String>("username").setRequired(true).add(this::validateUsername)
-                    .add(enabledWhen(() -> isCreate)));
+            TextField<String> username = new TextField<String>("username");
+            username.setRequired(true);
+            username.add(this::validateUsername);
+            username.add(enabledWhen(() -> isCreate));
+            add(username);
+            add(new TextField<String>("uiName") //
+                    .add(this::validateUiName)
+                    .add(AttributeModifier.replace("placeholder", username.getModel())));
             add(new Label("lastLogin"));
             add(new EmailTextField("email"));
 
@@ -107,11 +114,13 @@ public class ManageUsersPage
 
             add(new EqualPasswordInputValidator(passwordField, repeatPasswordField));
 
-            add(new ListMultipleChoice<>("roles", getRoles()).add(this::validateRoles)
+            add(new ListMultipleChoice<>("roles", getRoles()) //
+                    .add(this::validateRoles) //
                     .add(visibleWhen(ManageUsersPage.this::isAdmin)));
 
-            add(new CheckBox("enabled").add(this::validateEnabled)
-                    .add(visibleWhen(ManageUsersPage.this::isAdmin))
+            add(new CheckBox("enabled") //
+                    .add(this::validateEnabled) //
+                    .add(visibleWhen(ManageUsersPage.this::isAdmin)) //
                     .setOutputMarkupPlaceholderTag(true));
 
             add(new LambdaAjaxButton<>("save", ManageUsersPage.this::actionSave));
@@ -130,6 +139,16 @@ public class ManageUsersPage
             }
             else if (!NameUtil.isNameValid(aValidatable.getValue())) {
                 aValidatable.error(new ValidationError().addKey("username.invalidCharactersError"));
+            }
+        }
+
+        private void validateUiName(IValidatable<String> aValidatable)
+        {
+            User other = userRepository.getUserByRealmAndUiName(getModelObject().getRealm(),
+                    aValidatable.getValue());
+            if (other != null && !other.getUsername().equals(getModelObject().getUsername())) {
+                aValidatable.error(new ValidationError().addKey("uiName.alreadyExistsError")
+                        .setVariable("name", aValidatable.getValue()));
             }
         }
 
