@@ -15,147 +15,121 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Annotation} from "./annotation/Annotation";
 import * as ConfigFile from "./config.json";
 import {TinyEmitter} from "tiny-emitter";
 import {Websocket} from "./util/Websocket";
+import {Draw} from "./drawer/Draw";
 
 /**
  * Typescript API
  */
 export class Experimental
 {
-    //Annotations of the document
-    annotations: Annotation[]
-
-    //Layers from config file
-    layers: string[]
-
-    //Loaded document
-    document : File
-
     //Eventhandler
     emitter : TinyEmitter
 
     //URL for websocket
     url : string
 
+    //Drawer
+    drawer : Draw
+
 
     constructor()
     {
-        //TODO define what is needed to be configurable
-        ConfigFile.EditorColors.forEach(color =>
-        {
-            console.log(color)
-        })
+        //TODO define what is needed to be configurable in config.json
 
-        ConfigFile.Layers.forEach(layer =>
-        {
-            this.layers.push(layer.name)
-            console.log(layer)
-        })
-
-
+        //Drawer
+        this.drawer = new Draw();
 
         //init eventhandler and emitter
         this.emitter = new TinyEmitter()
 
         //init websocket
-        Websocket.prototype._createWebsocket('ws://localhost:8080');
-    }
-
-    _initAnnotations = (aAnnotations: Annotation[]) =>
-    {
-        this._setAnnotations(aAnnotations)
-    }
-
-    _loadDocument = (aDocument : File) =>
-    {
-        this.document = aDocument
+        const websocket = new Websocket();
+        websocket._createWebsocket("ws://localhost:8080");
     }
 
     // ----------------- Events ----------------- //
 
-    _eventSelectAnnotation = (aAnnotation : Annotation) =>
+    _eventSelectAnnotation = () =>
     {
-        this.emitter.emit('_select_annotation', this._selectAnnotation(aAnnotation.begin, aAnnotation.type))
+        this.emitter.emit('_send_select_annotation', this._selectAnnotation())
     }
 
-    _eventCreateAnnotation = (aAnnotation : Annotation) =>
+    _eventSendCreateAnnotation = () =>
     {
-        this.emitter.emit('_create_annotation', this._createAnnotation(aAnnotation))
+        this.emitter.emit('_send_create_annotation', this._sendCreateAnnotation())
     }
 
-    _eventDeleteAnnotation = (aAnnotation : Annotation) =>
+    _eventReceiveCreatedAnnotation = () =>
     {
-        this.emitter.emit('_delete_annotation', this._deleteAnnotation(aAnnotation))
+        this.emitter.emit('_receive_create_annotation', this._receiveCreatedAnnotation())
     }
 
-    _eventUpdateAnnotation = (aAnnotation : Annotation, aNewType : string) =>
+    _eventSendDeleteAnnotation = () =>
     {
-        this.emitter.emit('_update_Annotation', this._updateAnnotation(aAnnotation.begin, aAnnotation.type, aNewType));
+        this.emitter.emit('_send_delete_annotation', this._sendDeleteAnnotation())
     }
 
-    //Will be needed for websocket, JSON Object with required updates
-    _eventUpdateEditor = (aUpdate : JSON) =>
+    _eventReceiveDeleteAnnotation = () =>
     {
-        //Do the work
+        this.emitter.emit('_receive_delete_annotation', this._receiveDeleteAnnotation())
+    }
+
+    _eventSendUpdateAnnotation = () =>
+    {
+        this.emitter.emit('_send_update_Annotation', this._sendUpdateAnnotation());
+    }
+
+    _eventReceiveUpdateAnnotation = () =>
+    {
+        this.emitter.emit('_receive_update_Annotation', this._receiveUpdateAnnotation());
     }
 
 
     // ------------------------------------------- //
 
-    _createAnnotation = (aAnnotation: { begin: number; end: number; text: string; type: string; }) =>
+    _sendCreateAnnotation = () =>
     {
-        try {
-            const annotation = new Annotation(aAnnotation.begin, aAnnotation.end, aAnnotation.text, aAnnotation.type, null);
-            this.annotations.push(annotation)
-
-        } catch (exception) {
-            console.warn('Could not add the new annotation. Begin: ' +  aAnnotation.begin +
-                ', End: ' + aAnnotation.end +
-                '. Exception: ' + exception)
-        }
+        //Send to server that new Annotation has been craeted
+        //Draw highlight
     }
 
-    _deleteAnnotation = (aAnnotation: Annotation) =>
+    _receiveCreatedAnnotation = () =>
     {
-        try {
-            this.annotations.filter(annotation => annotation !== aAnnotation)
-        } catch (exception) {
-            console.warn('Could not remove the annotaion at: ' + aAnnotation.begin + '. Exception: ' + exception)
-        }
+        //Update from server that annotation was created
+        //Draw highlight
     }
 
-
-
-    _selectAnnotation = (aBegin: number, aType: string) =>
+    _sendDeleteAnnotation = () =>
     {
-        return this.annotations.filter(annotation => ((annotation.begin == aBegin) && (annotation.type == aType)))
+        //Send to server
+        //Remove highlighting
     }
 
-    _updateAnnotation = (aBegin: number, aType: string, aNewType: string) =>
+    _receiveDeleteAnnotation = () =>
     {
-        const annotation = this.annotations.find(anno =>
-            (anno.begin == aBegin) && (anno.type = aType))
-
-        annotation._changeType(aNewType)
+        //Update from server that annotation was deleted
+        //Remove highlighting
     }
 
+    _selectAnnotation = () =>
+    {
+        //Tell server where Client has clicked
+        //Draw highlighting
+    }
+
+    _sendUpdateAnnotation = () =>
+    {
+        //Send update to server -> Redraw
+    }
+
+    _receiveUpdateAnnotation = () =>
+    {
+        //Update received from server to update annotation -> Redraw
+    }
 
     // --------------------------------------------------- //
 
-
-    // ---------------- Getter and Setter ---------------- //
-
-    _getAnnotations = () =>
-    {
-        return this.annotations
-    }
-
-    _setAnnotations = (aAnnotations: Annotation[]) =>
-    {
-        this.annotations = aAnnotations;
-    }
-    // --------------------------------------------------- //
 }

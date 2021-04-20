@@ -3,47 +3,5 @@
     {
       "url" : "ws://localhost:8080"
     }
-  ],
-  "Layers" : [
-    {
-      "name" : "POS",
-      "identifier" : [
-        "ADJ",
-        "ADP",
-        "ADV"
-      ],
-      "color" : "Gray"
-    },
-    {
-      "name" : "NER",
-      "identifier" : [
-        "LOC",
-        "PER",
-        "PERderiv"
-      ],
-      "color" : "Red"
-    },
-    {
-      "name" : "Lemma",
-      "identifier" : [
-      ],
-      "color" : "Green"
-    },
-    {
-      "name" : "Chunk",
-      "identifier" : [
-      ],
-      "color" : "Black"
-    }
-  ],
-  "EditorColors" : [
-    {
-      "Object" : "lines",
-      "color" : "Green"
-    },
-    {
-      "Object" : "Boxes",
-      "Color" : "Yellow"
-    }
   ]
 }

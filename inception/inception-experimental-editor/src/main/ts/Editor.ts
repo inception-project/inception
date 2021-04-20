@@ -16,17 +16,13 @@
  * limitations under the License.
  */
 import {Experimental} from "../../../../inception-api-annotation-experimental/src/main/ts"
-import {Draw} from "./util/Draw";
 
 class Editor
 {
+    API : Experimental
     constructor()
     {
-        const API = new Experimental()
-        API._initAnnotations( null)
-
-        //Drawer
-        const drawer = new Draw()
-
+        console.log("init -- Experimental Annotation API")
+        this.API = new Experimental()
     }
 }

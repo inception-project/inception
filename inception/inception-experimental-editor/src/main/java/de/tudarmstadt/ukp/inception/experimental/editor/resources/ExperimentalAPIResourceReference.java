@@ -41,6 +41,6 @@ public class ExperimentalAPIResourceReference
      */
     private ExperimentalAPIResourceReference()
     {
-        super(ExperimentalAPIResourceReference.class, "../ts/dist/Editor.js");
+        super(ExperimentalAPIResourceReference.class, "index.js");
     }
 }

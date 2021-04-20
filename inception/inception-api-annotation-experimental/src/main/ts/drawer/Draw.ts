@@ -15,15 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+export class Draw
 {
-  "compilerOptions": {
-    "module": "ES6",
-    "esModuleInterop": true,
-    "target": "ES6",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "outDir": "dist",
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
-  }
+
+    constructor()
+    {
+    }
+
+    _drawAnnotation = (aPosition : number, aType : string) =>
+    {
+
+    }
+
+    _removeAnnotation = (aPosition : number, aType : string) =>
+    {
+
+    }
+
+    _highlightAnnotation = (aPosition : number, aType : string) =>
+    {
+
+    }
+
 }
