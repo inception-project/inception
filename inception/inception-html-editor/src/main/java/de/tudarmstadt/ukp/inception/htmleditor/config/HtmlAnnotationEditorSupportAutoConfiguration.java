@@ -21,9 +21,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.htmleditor.HtmlFormatSupport;
-import de.tudarmstadt.ukp.inception.htmleditor.LegacyHtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
+import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 
 /**
  * Provides support for an HTML-oriented annotation editor.
