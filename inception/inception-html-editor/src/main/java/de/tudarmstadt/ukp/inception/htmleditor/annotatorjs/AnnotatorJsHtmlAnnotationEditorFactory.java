@@ -24,9 +24,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.htmleditor.HtmlFormatSupport;
-import de.tudarmstadt.ukp.inception.htmleditor.LegacyHtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 
 /**
  * Support for HTML-oriented editor component.
