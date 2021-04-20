@@ -1,0 +1,96 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+  <changeSet author="INCEpTION Team" id="20210420-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="user_preference" />
+      </not>
+    </preConditions>
+
+    <createTable tableName="user_preference">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="user" type="BIGINT">
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="expirationDate" type="datetime(6)">
+        <constraints nullable="false" />
+      </column>
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint constraintName="FK_user_preference_user"
+                             baseTableName="user_preference" baseColumnNames="user"
+                             referencedTableName="user" referencedColumnNames="id"
+                             deferrable="false" initiallyDeferred="false"
+                             onDelete="CASCADE" onUpdate="CASCADE"/>
+    <addUniqueConstraint constraintName="UK_user_preference_user_name"
+                         tableName="user_preference" columnNames="user, name" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210420-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="user_project_preference" />
+      </not>
+    </preConditions>
+
+    <createTable tableName="user_project_preference">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="user" type="BIGINT">
+      </column>
+      <column name="project" type="BIGINT">
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="expirationDate" type="datetime(6)">
+        <constraints nullable="false" />
+      </column>
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint constraintName="FK_user_project_preference_user"
+                             baseTableName="user_project_preference" baseColumnNames="user"
+                             referencedTableName="user" referencedColumnNames="id"
+                             deferrable="false" initiallyDeferred="false"
+                             onDelete="CASCADE" onUpdate="CASCADE"/>
+    <addForeignKeyConstraint constraintName="FK_user_project_preference_project"
+                             baseTableName="user_project_preference" baseColumnNames="project"
+                             referencedTableName="project" referencedColumnNames="id"
+                             deferrable="false" initiallyDeferred="false"
+                             onDelete="CASCADE" onUpdate="CASCADE"/>
+    <addUniqueConstraint constraintName="UK_user_project_preference_user_name_project"
+                         tableName="user_project_preference" columnNames="user, project, name" />
+  </changeSet>
+
+</databaseChangeLog>
