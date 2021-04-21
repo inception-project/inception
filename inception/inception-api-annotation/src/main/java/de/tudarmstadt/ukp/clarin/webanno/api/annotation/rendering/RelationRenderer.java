@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
@@ -117,6 +118,13 @@ public class RelationRenderer
         }
 
         RelationAdapter typeAdapter = getTypeAdapter();
+        RelationLayerTraits traits = typeAdapter.getTraits(RelationLayerTraits.class)
+                .orElseGet(RelationLayerTraits::new);
+
+        if (!traits.getRenderArcs()) {
+            return;
+        }
+
         Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin, aWindowEnd);
 
         // if this is a governor for more than one dependent, avoid duplicate yield

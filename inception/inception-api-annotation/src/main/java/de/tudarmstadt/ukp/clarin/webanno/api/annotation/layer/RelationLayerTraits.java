@@ -28,6 +28,7 @@ public class RelationLayerTraits
     private static final long serialVersionUID = 3461537626173105320L;
 
     private ColoringRules coloringRules = new ColoringRules();
+    private boolean renderArcs = true;
 
     public RelationLayerTraits()
     {
@@ -44,5 +45,15 @@ public class RelationLayerTraits
     public void setColoringRules(ColoringRules aColoringRules)
     {
         coloringRules = aColoringRules;
+    }
+
+    public boolean getRenderArcs()
+    {
+        return renderArcs;
+    }
+
+    public void setRenderArcs(boolean aRenderArcs)
+    {
+        renderArcs = aRenderArcs;
     }
 }
