@@ -35,6 +35,7 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 
 /**
  * Render spans.
@@ -127,6 +129,15 @@ public class SpanRenderer
 
         VRange range = new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin);
         VSpan span = new VSpan(typeAdapter.getLayer(), aFS, uiTypeName, range, labelFeatures);
+
+        // Put this span into a equiv group of a relation only if no overlap is allowed (because
+        // otherwise it would be in several equiv groups)
+        if (OverlapMode.NO_OVERLAP.equals(typeAdapter.getLayer().getOverlapMode())) {
+            List<AttachedAnnotation> attachedRels = typeAdapter.getAttachedRels(aFS);
+            if (attachedRels.size() == 1) {
+                span.setEquivalenceSet(attachedRels.get(0).getRelation().getAddress());
+            }
+        }
 
         return span;
     }

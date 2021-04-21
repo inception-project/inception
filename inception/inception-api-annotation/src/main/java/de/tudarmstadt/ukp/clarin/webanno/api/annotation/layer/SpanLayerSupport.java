@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
@@ -53,6 +54,7 @@ public class SpanLayerSupport
 
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
+    private final AnnotationSchemaService annotationSchemaService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -60,11 +62,13 @@ public class SpanLayerSupport
     @Autowired
     public SpanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry,
+            AnnotationSchemaService aAnnotationSchemaService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
+        annotationSchemaService = aAnnotationSchemaService;
     }
 
     @Override
@@ -104,6 +108,7 @@ public class SpanLayerSupport
         SpanAdapter adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
                 eventPublisher, aLayer, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+        adapter.initialize(annotationSchemaService);
 
         return adapter;
     }

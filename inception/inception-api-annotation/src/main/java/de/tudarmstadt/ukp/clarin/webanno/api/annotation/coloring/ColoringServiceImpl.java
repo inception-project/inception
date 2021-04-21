@@ -146,6 +146,16 @@ public class ColoringServiceImpl
             // the full palette.
             return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
         }
+        case LONG_RELATIONS: {
+            if (SPAN_TYPE.equals(aLayer.getType())) {
+                return new LongRelationColoringStrategy(PALETTE_NORMAL_FILTERED);
+            }
+
+            // Chains and arcs contain relations that are rendered as lines on the light
+            // window background - need to make sure there is some contrast, so we cannot use
+            // the full palette.
+            return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
+        }
         case GRAY:
         default:
             return new LabelHashBasedColoringStrategy(DISABLED);

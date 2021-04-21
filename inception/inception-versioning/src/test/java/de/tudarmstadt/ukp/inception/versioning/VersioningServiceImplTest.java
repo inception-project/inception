@@ -321,7 +321,7 @@ public class VersioningServiceImplTest
                 FeatureSupportRegistry aFeatureSupportRegistry)
         {
             return new LayerSupportRegistryImpl(
-                    asList(new SpanLayerSupport(aFeatureSupportRegistry, null, null),
+                    asList(new SpanLayerSupport(aFeatureSupportRegistry, null, null, null),
                             new RelationLayerSupport(aFeatureSupportRegistry, null, null),
                             new ChainLayerSupport(aFeatureSupportRegistry, null, null)));
         }

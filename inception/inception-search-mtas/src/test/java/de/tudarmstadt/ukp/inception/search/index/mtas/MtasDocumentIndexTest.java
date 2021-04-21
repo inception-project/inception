@@ -658,7 +658,7 @@ public class MtasDocumentIndexTest
         {
             FeatureSupportRegistry fsr = featureSupportRegistry();
 
-            return new LayerSupportRegistryImpl(asList(new SpanLayerSupport(fsr, null, null),
+            return new LayerSupportRegistryImpl(asList(new SpanLayerSupport(fsr, null, null, null),
                     new RelationLayerSupport(fsr, null, null),
                     new ChainLayerSupport(fsr, null, null)));
         }

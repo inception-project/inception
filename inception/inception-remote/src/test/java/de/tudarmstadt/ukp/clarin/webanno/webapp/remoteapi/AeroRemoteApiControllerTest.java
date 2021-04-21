@@ -388,7 +388,7 @@ public class AeroRemoteApiControllerTest
         public LayerSupportRegistry layerSupportRegistry()
         {
             return new LayerSupportRegistryImpl(
-                    asList(new SpanLayerSupport(featureSupportRegistry(), null, null),
+                    asList(new SpanLayerSupport(featureSupportRegistry(), null, null, null),
                             new RelationLayerSupport(featureSupportRegistry(), null, null),
                             new ChainLayerSupport(featureSupportRegistry(), null, null)));
         }

@@ -94,7 +94,7 @@ public class AgreementMeasureTestSuite_ImplBase
         layerBehaviorRegistry.init();
 
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry, null),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
