@@ -149,8 +149,12 @@ public class OpenNlpNerRecommender
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
                 AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
                 annotation.setStringValue(predictedFeature, label);
-                annotation.setDoubleValue(scoreFeature, prediction.getProb());
-                annotation.setBooleanValue(isPredictionFeature, true);
+                if (scoreFeature != null) {
+                    annotation.setDoubleValue(scoreFeature, prediction.getProb());
+                }
+                if (isPredictionFeature != null) {
+                    annotation.setBooleanValue(isPredictionFeature, true);
+                }
 
                 aCas.addFsToIndexes(annotation);
             }
@@ -328,12 +332,13 @@ public class OpenNlpNerRecommender
             Collection<AnnotationFS> aTokens)
     {
         // Convert character offsets to token indices
-        Int2ObjectMap<AnnotationFS> idxTokenOffset = new Int2ObjectOpenHashMap<>();
+        Int2ObjectMap<AnnotationFS> idxTokenBeginOffset = new Int2ObjectOpenHashMap<>();
+        Int2ObjectMap<AnnotationFS> idxTokenEndOffset = new Int2ObjectOpenHashMap<>();
         Object2IntMap<AnnotationFS> idxToken = new Object2IntOpenHashMap<>();
         int idx = 0;
         for (AnnotationFS t : aTokens) {
-            idxTokenOffset.put(t.getBegin(), t);
-            idxTokenOffset.put(t.getEnd(), t);
+            idxTokenBeginOffset.put(t.getBegin(), t);
+            idxTokenEndOffset.put(t.getEnd(), t);
             idxToken.put(t, idx);
             idx++;
         }
@@ -350,16 +355,16 @@ public class OpenNlpNerRecommender
             AnnotationFS annotation = annotations.get(i);
             String label = annotation.getFeatureValueAsString(feature);
 
-            AnnotationFS beginToken = idxTokenOffset.get(annotation.getBegin());
-            AnnotationFS endToken = idxTokenOffset.get(annotation.getEnd());
+            AnnotationFS beginToken = idxTokenBeginOffset.get(annotation.getBegin());
+            AnnotationFS endToken = idxTokenEndOffset.get(annotation.getEnd());
             if (beginToken == null || endToken == null) {
                 LOG.warn("Skipping annotation not starting/ending at token boundaries: [{}-{}, {}]",
                         annotation.getBegin(), annotation.getEnd(), label);
                 continue;
             }
 
-            int begin = idxToken.get(beginToken);
-            int end = idxToken.get(endToken);
+            int begin = idxToken.getInt(beginToken);
+            int end = idxToken.getInt(endToken);
 
             // If the begin offset of the current annotation is lower than the highest offset so far
             // observed, then it is overlapping with some annotation that we have seen before.
