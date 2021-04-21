@@ -119,8 +119,13 @@ public class SpanRenderer
         }
     }
 
-    private VSpan render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    @Override
+    public VSpan render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
     {
+        if (!checkTypeSystem(aFS.getCAS())) {
+            return null;
+        }
+
         SpanAdapter typeAdapter = getTypeAdapter();
         String uiTypeName = typeAdapter.getEncodedTypeName();
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);

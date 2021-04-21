@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -194,5 +195,12 @@ public class ChainRenderer
         for (SpanLayerBehavior behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aPageBegin, aPageEnd);
         }
+    }
+
+    @Override
+    public VObject render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    {
+        // Not supported
+        return null;
     }
 }

@@ -21,11 +21,13 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class NopRenderer
@@ -48,5 +50,12 @@ public class NopRenderer
             int windowBeginOffset, int windowEndOffset)
     {
         // Nothing to do
+    }
+
+    @Override
+    public VObject render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    {
+        // Nothing to do
+        return null;
     }
 }

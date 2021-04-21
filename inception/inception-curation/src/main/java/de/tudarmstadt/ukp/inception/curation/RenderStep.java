@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
+import org.apache.uima.cas.CAS;
 
-public final class CurationMetadata
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+
+public interface RenderStep
 {
-    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
-            new AnnotatorStateMetaDataKey<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
+            int aWindowEndOffset);
 }

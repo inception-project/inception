@@ -164,17 +164,22 @@ public class RelationRenderer
         }
     }
 
-    private VArc render(AnnotationFS fs, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    @Override
+    public VArc render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
     {
+        if (!checkTypeSystem(aFS.getCAS())) {
+            return null;
+        }
+
         RelationAdapter typeAdapter = getTypeAdapter();
-        FeatureStructure dependentFs = getGovernorFs(fs);
-        FeatureStructure governorFs = getDependentFs(fs);
+        FeatureStructure dependentFs = getGovernorFs(aFS);
+        FeatureStructure governorFs = getDependentFs(aFS);
 
         if (dependentFs == null || governorFs == null) {
             StringBuilder message = new StringBuilder();
 
             message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                    + getAddr(fs) + "] has loose ends - cannot render.");
+                    + getAddr(aFS) + "] has loose ends - cannot render.");
             if (typeAdapter.getAttachFeatureName() != null) {
                 message.append("\nRelation [" + typeAdapter.getLayer().getName()
                         + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
@@ -191,9 +196,9 @@ public class RelationRenderer
         }
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
-        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
+        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        return new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs, dependentFs,
+        return new VArc(typeAdapter.getLayer(), aFS, bratTypeName, governorFs, dependentFs,
                 labelFeatures);
     }
 
