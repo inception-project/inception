@@ -35,7 +35,7 @@ export class Draw
 
     _highlightAnnotation = (aPosition : number, aType : string) =>
     {
-
+        console.log("Would highlight now")
     }
 
 }

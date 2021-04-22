@@ -118,6 +118,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIResourceReference;
 
 /**
  * Brat annotator component.
@@ -642,7 +643,7 @@ public class BratAnnotationEditor
         // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
         //Experimental Editor
-        //aResponse.render(forReference(ExperimentalAPIResourceReference.get()));
+        aResponse.render(forReference(ExperimentalAPIResourceReference.get()));
 
         // When the page is re-loaded or when the component is added to the page, we need to
         // initialize the brat stuff.

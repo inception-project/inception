@@ -34,6 +34,7 @@ export class Experimental
     //Drawer
     drawer : Draw
 
+    websocket : Websocket
 
     constructor()
     {
@@ -46,15 +47,20 @@ export class Experimental
         this.emitter = new TinyEmitter()
 
         //init websocket
-        const websocket = new Websocket();
-        websocket._createWebsocket("ws://localhost:8080");
+        this.websocket = new Websocket();
+        //this.websocket._createWebsocket("ws://localhost:8080/p/20/annotate");
+
+        //Create event handlers
+        this.on(onmouseup,this._eventSelectAnnotation)
+
+        console.log("API Created")
     }
 
     // ----------------- Events ----------------- //
 
-    _eventSelectAnnotation = () =>
+    _eventSelectAnnotation = (event : Event) =>
     {
-        this.emitter.emit('_send_select_annotation', this._selectAnnotation())
+        this.emitter.emit('_send_select_annotation', this._selectAnnotation(event))
     }
 
     _eventSendCreateAnnotation = () =>
@@ -87,6 +93,12 @@ export class Experimental
         this.emitter.emit('_receive_update_Annotation', this._receiveUpdateAnnotation());
     }
 
+    // ----------- Add event handler ------------- //
+    on = (event, handler) =>
+    {
+        this.emitter.on(event, handler)
+    }
+
 
     // ------------------------------------------- //
 
@@ -114,8 +126,11 @@ export class Experimental
         //Remove highlighting
     }
 
-    _selectAnnotation = () =>
+    _selectAnnotation = (event : Event) =>
     {
+        console.log(event)
+        console.log(event.currentTarget)
+        this.drawer._highlightAnnotation(null, null)
         //Tell server where Client has clicked
         //Draw highlighting
     }
@@ -133,3 +148,6 @@ export class Experimental
     // --------------------------------------------------- //
 
 }
+
+console.log("init -- Experimental - Annotation - API")
+var API = new Experimental()
