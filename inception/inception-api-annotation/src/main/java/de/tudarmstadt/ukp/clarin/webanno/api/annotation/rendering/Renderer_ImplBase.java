@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,18 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -43,9 +37,6 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     private Map<AnnotationFeature, Object> featureTraitsCache;
     private Map<AnnotationLayer, Object> layerTraitsCache;
 
-    private TypeSystem typeSystem;
-    private boolean allTypesPresent;
-
     public Renderer_ImplBase(T aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
@@ -54,35 +45,12 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         typeAdapter = aTypeAdapter;
     }
 
-    /**
-     * Checks if the type system has changed compared to the last call. If this is the case, then
-     * {@link #typeSystemInit} is called to give the renderer the opportunity to obtain new type and
-     * feature information from the type system.
-     * 
-     * @param aCas
-     *            a CAS.
-     * @return returns {@code true} if all types are present and rendering can commence and
-     *         {@code false} if any types are missing and rendering should be skipped.
-     */
-    protected boolean checkTypeSystem(CAS aCas)
-    {
-        if (typeSystem != aCas.getTypeSystem()) {
-            typeSystem = aCas.getTypeSystem();
-            allTypesPresent = typeSystemInit(typeSystem);
-        }
-
-        return allTypesPresent;
-    }
-
-    protected abstract boolean typeSystemInit(TypeSystem aTypeSystem);
-
     @Override
     public FeatureSupportRegistry getFeatureSupportRegistry()
     {
         return featureSupportRegistry;
     }
 
-    @Override
     public T getTypeAdapter()
     {
         return typeAdapter;
@@ -128,11 +96,5 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         }
 
         return Optional.empty();
-    }
-
-    public void renderLazyDetails(AnnotationFS fs, VObject aVObject,
-            List<AnnotationFeature> aFeatures)
-    {
-        aVObject.addLazyDetails(getLazyDetails(fs, aFeatures));
     }
 }

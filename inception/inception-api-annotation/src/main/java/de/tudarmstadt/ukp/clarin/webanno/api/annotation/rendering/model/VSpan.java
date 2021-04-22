@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,14 +41,6 @@ public class VSpan
             Map<String, String> aFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures, null);
-    }
-
-    public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
-            int aEquivalenceClass, String aLabelHint)
-    {
-        super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, null);
-        setLabelHint(aLabelHint);
-        ranges = asList(aOffsets);
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
