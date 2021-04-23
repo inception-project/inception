@@ -17,10 +17,8 @@
  */
 //Tests with chai
 //As preparation only
-import {Experimental} from "../../main/ts";
 
 const tests = {
-    experimental : new Experimental(),
 
     runAllTests : function()
     {

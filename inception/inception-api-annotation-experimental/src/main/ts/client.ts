@@ -15,32 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
+/*
+ *  Typescript Annotation API
+ */
 
-public class ExperimentalAPIResourceReference
-    extends JavaScriptResourceReference
-{
-    private static final long serialVersionUID = 1L;
 
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
+import io, {Socket} from "socket.io-client"
+//import {initEventHandlers} from "./util/websocket/events/ClientEventHandler";
 
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static ExperimentalAPIResourceReference get()
-    {
-        return INSTANCE;
-    }
+console.log("init -- Experimental - Annotation - API")
 
-    /**
-     * Private constructor
-     */
-    private ExperimentalAPIResourceReference()
-    {
-        super(ExperimentalAPIResourceReference.class, "Server.js");
+declare global {
+    interface Window {
+        SOCKET : Socket
     }
 }
+
+const socket = io()
+
+
+//Used to send messages, treated as global reference and immutable, do not override
+window.SOCKET = socket
+
+onmouseup = function(event)
+{
+    //Currently only get the position
+    //Later on, filter specific events
+    console.log("mouse location:", event.clientX, event.clientY)
+
+}
+
+//initEventHandlers()
+
+

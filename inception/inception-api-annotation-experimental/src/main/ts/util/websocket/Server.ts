@@ -15,32 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
+import * as http from "http"
+import socket from "socket.io"
+import {DataService} from "./services/DataService";
+import {initEventHandlers} from "./events/ServerEventHandler";
 
-public class ExperimentalAPIResourceReference
-    extends JavaScriptResourceReference
+const server = http.createServer(this)
+
+const io = new socket.Server(server)
+
+server.listen(8080)
+
+io.on("connection", socket =>
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static ExperimentalAPIResourceReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private ExperimentalAPIResourceReference()
-    {
-        super(ExperimentalAPIResourceReference.class, "Server.js");
-    }
-}
+    initEventHandlers(socket, new DataService(""))
+})

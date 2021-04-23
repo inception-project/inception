@@ -23,19 +23,4 @@ export class Draw
     {
     }
 
-    _drawAnnotation = (aPosition : number, aType : string) =>
-    {
-
-    }
-
-    _removeAnnotation = (aPosition : number, aType : string) =>
-    {
-
-    }
-
-    _highlightAnnotation = (aPosition : number, aType : string) =>
-    {
-        console.log("Would highlight now")
-    }
-
 }

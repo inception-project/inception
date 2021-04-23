@@ -15,32 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-public class ExperimentalAPIResourceReference
-    extends JavaScriptResourceReference
+export enum SocketType
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static ExperimentalAPIResourceReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private ExperimentalAPIResourceReference()
-    {
-        super(ExperimentalAPIResourceReference.class, "Server.js");
-    }
+    SEND_CREATE_ANNOTATION = "SEND CREATE ANNOTATION",
+    RECEIVE_CREATE_ANNOTATION = "RECEIVE CREATE ANNOTATION",
+    SEND_DELETE_ANNOTATION = "SEND DELETE ANNOTATION",
+    RECEIVE_DELETE_ANNOTATION = "RECEIVE DELETE ANNOTATION",
+    SEND_SELECT_ANNOTATION = "SEND SELECT ANNOTATION",
+    RECEIVE_SELECT_ANNOTATION = "RECEIVE SELECT ANNOTATION"
 }

@@ -21,15 +21,6 @@ var API = new Experimental()
 
 
 ### API endpoints
-Several API endpoints (that are also customizable in the index.ts file) can be called.
-The event library used by the API is "tiny-emitter" 
-- https://www.npmjs.com/package/tiny-emitter)
-
-Sending and receiving updates for annotations are created by
-- send_*_annotation (where the * denotes "create" / "select" / "delete" ), or by
-- receive_*_annotation
-
-events.
 
 
 ### Additional information

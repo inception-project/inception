@@ -15,32 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
+import {Socket} from "socket.io";
+import {SocketType} from "../libs/SocketType";
+import {DataService} from "../services/DataService";
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-public class ExperimentalAPIResourceReference
-    extends JavaScriptResourceReference
+export const initEventHandlers = (
+    socket: Socket, dataService : DataService) =>
 {
-    private static final long serialVersionUID = 1L;
+    socket.on(SocketType.SEND_CREATE_ANNOTATION, async () => {
+        socket.emit(SocketType.SEND_CREATE_ANNOTATION)
+    })
+    socket.on(SocketType.SEND_SELECT_ANNOTATION, async () => {
+        const data = dataService.getData();
+        console.log(data)
+        socket.emit(SocketType.SEND_SELECT_ANNOTATION)
+    })
 
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static ExperimentalAPIResourceReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private ExperimentalAPIResourceReference()
-    {
-        super(ExperimentalAPIResourceReference.class, "Server.js");
-    }
 }

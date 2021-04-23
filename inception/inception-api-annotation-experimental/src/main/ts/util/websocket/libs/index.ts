@@ -15,32 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
+import {SocketType} from "./SocketType";
+import {Annotation} from "../../../annotation/Annotation";
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class ExperimentalAPIResourceReference
-    extends JavaScriptResourceReference
+export interface IMessage<T>
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static ExperimentalAPIResourceReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private ExperimentalAPIResourceReference()
-    {
-        super(ExperimentalAPIResourceReference.class, "Server.js");
-    }
+    type : SocketType
+    data : T
 }
+
+const sendMessage = <T>(type : SocketType) =>
+    (value: T): IMessage<T> =>
+    {
+        console.log("Sending now Message: " + type + ", " + "value")
+        return {
+            type,
+            data: value
+        }
+    }
+
+export const send_create_annotation = sendMessage<Annotation>(SocketType.SEND_CREATE_ANNOTATION)
+export const send_select_annotation = sendMessage<Annotation>(SocketType.SEND_SELECT_ANNOTATION)

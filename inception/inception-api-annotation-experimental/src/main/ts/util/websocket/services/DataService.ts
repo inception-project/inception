@@ -15,32 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-public class ExperimentalAPIResourceReference
-    extends JavaScriptResourceReference
+export class DataService
 {
-    private static final long serialVersionUID = 1L;
+    data : string
 
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static ExperimentalAPIResourceReference get()
+    constructor(aData: string)
     {
-        return INSTANCE;
+        this.data = aData
     }
 
-    /**
-     * Private constructor
-     */
-    private ExperimentalAPIResourceReference()
+    getData = () =>
     {
-        super(ExperimentalAPIResourceReference.class, "Server.js");
+        console.log("GETTING DATA " + this.data )
     }
 }

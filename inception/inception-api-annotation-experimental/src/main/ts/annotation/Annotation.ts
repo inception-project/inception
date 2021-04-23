@@ -15,26 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {WebsocketBuilder} from 'websocket-ts';
 
-export class Websocket
+export class Annotation
 {
-    websocket : WebsocketBuilder;
+    id : string
+    quote : string
+    text : string
+    color : string
+    ranges : Array<Range>
 
-    constructor()
+    constructor(aId : string, aQuote : string, aText : string, aColor : string, aRanges : Array<Range>)
     {
-
+        this.id = aId
+        this.quote = aQuote
+        this.text = aText
+        this.color = aColor
+        this.ranges = aRanges
     }
 
-    _createWebsocket = function(url : string)
-    {
 
-        this.websocket = new WebsocketBuilder(url)
-        .onOpen((aWebsocket, e) => { console.log("opened") })
-        .onClose((aWebsocket, e) => { console.log("closed") })
-        .onError((aWebsocket, e) => { console.log("error") })
-        .onMessage((aWebsocket, e) => { aWebsocket.send(e.data) })
-        .build();
-    }
 }
-
