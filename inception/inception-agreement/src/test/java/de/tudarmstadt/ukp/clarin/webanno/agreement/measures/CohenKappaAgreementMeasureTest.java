@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import static java.lang.Double.NaN;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
@@ -147,5 +148,16 @@ public class CohenKappaAgreementMeasureTest
         assertEquals(0, result.getSetsWithDifferences().size());
         assertEquals(1, result.getRelevantSetCount());
         assertEquals(1.0, result.getAgreement(), 0.01);
+    }
+
+    @Test
+    public void twoDocumentsNoOverlapTest() throws Exception
+    {
+        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoDocumentsNoOverlap(sut,
+                traits);
+
+        CodingAgreementResult result = agreement.getStudy("user1", "user2");
+
+        assertThat(result.getAgreement()).isNaN();
     }
 }
