@@ -289,4 +289,42 @@ public class AgreementMeasureTestSuite_ImplBase
                 "user1", asList(user1), //
                 "user2", asList(user2)));
     }
+
+    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    R twoDocumentsNoOverlap(AgreementMeasureSupport<T, R, S> aSupport, T aTraits) throws Exception
+    {
+        TagSet tagset = new TagSet(project, "tagset");
+        Tag tag1 = new Tag(tagset, "+");
+        Tag tag2 = new Tag(tagset, "-");
+        when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
+
+        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
+                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        layer.setId(1l);
+        layers.add(layer);
+
+        AnnotationFeature feature = new AnnotationFeature(project, layer, "PosValue", "PosValue",
+                CAS.TYPE_NAME_STRING);
+        feature.setId(1l);
+        feature.setTagset(tagset);
+        features.add(feature);
+
+        CAS user1a = CasFactory.createText("test");
+        CAS user1b = CasFactory.createText("test");
+
+        buildAnnotation(user1a, POS.class).at(0, 1) //
+                .withFeature(POS._FeatName_PosValue, "+") //
+                .buildAndAddToIndexes();
+
+        CAS user2a = CasFactory.createText("test");
+        CAS user2b = CasFactory.createText("test");
+
+        buildAnnotation(user2b, POS.class).at(0, 1) //
+                .withFeature(POS._FeatName_PosValue, "+") //
+                .buildAndAddToIndexes();
+
+        return aSupport.createMeasure(feature, aTraits).getAgreement(Map.of( //
+                "user1", asList(user1a, user1b), //
+                "user2", asList(user2a, user2b)));
+    }
 }
