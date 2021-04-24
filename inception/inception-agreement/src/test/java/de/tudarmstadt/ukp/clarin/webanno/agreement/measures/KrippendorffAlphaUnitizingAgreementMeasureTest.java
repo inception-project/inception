@@ -101,4 +101,15 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
 
         assertEquals(1.0, result.getAgreement(), 0.01);
     }
+
+    @Test
+    public void twoDocumentsNoOverlapTest() throws Exception
+    {
+        PairwiseAnnotationResult<UnitizingAgreementResult> agreement = twoDocumentsNoOverlap(sut,
+                traits);
+
+        UnitizingAgreementResult result = agreement.getStudy("user1", "user2");
+
+        assertEquals(-0.0714, result.getAgreement(), 0.001);
+    }
 }
