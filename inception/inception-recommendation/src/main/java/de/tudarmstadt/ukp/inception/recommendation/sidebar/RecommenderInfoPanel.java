@@ -60,13 +60,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.SuggestionGroupKey;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.GroupKey;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -133,8 +133,10 @@ public class RecommenderInfoPanel
                 AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
                         LoadableDetachableModel.of(() -> exportModelName(recommender)),
                         LoadableDetachableModel.of(() -> exportModel(user, recommender)));
-                exportModel.add(visibleWhen(() -> recommendationService
-                        .getRecommenderFactory(recommender).isModelExportSupported()));
+                exportModel.add(visibleWhen(
+                        () -> recommendationService.getRecommenderFactory(recommender).isPresent()
+                                && recommendationService.getRecommenderFactory(recommender).get()
+                                        .isModelExportSupported()));
                 item.add(exportModel);
 
                 Optional<EvaluationResult> evalResult = evaluatedRecommender
@@ -166,15 +168,22 @@ public class RecommenderInfoPanel
 
     private String exportModelName(Recommender aRecommender)
     {
-        RecommendationEngineFactory factory = recommendationService
-                .getRecommenderFactory(aRecommender);
-        return factory.getExportModelName(aRecommender);
+        return recommendationService.getRecommenderFactory(aRecommender)
+                .map(e -> e.getExportModelName(aRecommender)).orElse(null);
     }
 
     private IResourceStream exportModel(User aUser, Recommender aRecommender)
     {
-        RecommendationEngine engine = recommendationService.getRecommenderFactory(aRecommender)
-                .build(aRecommender);
+        Optional<RecommendationEngineFactory<?>> maybeEngine = recommendationService
+                .getRecommenderFactory(aRecommender);
+
+        if (maybeEngine.isEmpty()) {
+            error("No factory found for " + aRecommender.getName());
+            return null;
+        }
+
+        RecommendationEngine engine = maybeEngine.get().build(aRecommender);
+
         Optional<RecommenderContext> context = recommendationService.getContext(aUser,
                 aRecommender);
 
@@ -216,25 +225,25 @@ public class RecommenderInfoPanel
                 .orElse(getDocumentTitle(cas));
 
         // Extract all predictions for the current document / recommender
-        Collection<SuggestionGroup> suggestionGroups = predictions
+        Collection<SuggestionGroup<SpanSuggestion>> suggestionGroups = predictions
                 .getPredictionsByRecommenderAndDocument(aRecommender, sourceDocumentName).stream()
+                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f)
                 .filter(s -> s.isVisible() && s.getConfidence() >= pref.getConfidenceThreshold())
-                .collect(groupingBy(SuggestionGroupKey::new, TreeMap::new,
-                        SuggestionGroup.collector()))
+                .collect(groupingBy(GroupKey::new, TreeMap::new, SuggestionGroup.collector()))
                 .values();
 
         int accepted = 0;
         int skippedDueToConflict = 0;
-        for (SuggestionGroup suggestionGroup : suggestionGroups) {
+        for (SuggestionGroup<SpanSuggestion> suggestionGroup : suggestionGroups) {
             // We only want to accept the best suggestions
-            AnnotationSuggestion suggestion = suggestionGroup.bestSuggestions(pref).get(0);
+            SpanSuggestion suggestion = suggestionGroup.bestSuggestions(pref).get(0);
 
             try {
                 // Upsert an annotation based on the suggestion
                 AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
                 AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
                         layer);
-                int address = recommendationService.upsertFeature(annotationService,
+                int address = recommendationService.upsertSpanFeature(annotationService,
                         state.getDocument(), state.getUser().getUsername(), cas, layer, feature,
                         suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
 

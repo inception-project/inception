@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,14 +31,13 @@ public class ExtendedId
     private final long projectId;
     private final String documentName;
     private final long layerId;
-    private final int begin;
-    private final int end;
+    private final Position position;
     private final int annotationId;
     private final int sentenceId;
     private final long recommenderId;
 
     public ExtendedId(String userName, long projectId, String documentName, long layerId,
-            Offset offset, long recommenderId, int annotationId, int sentenceId)
+            Position aPosition, long recommenderId, int annotationId, int sentenceId)
     {
         super();
         this.userName = userName;
@@ -52,8 +47,7 @@ public class ExtendedId
         this.annotationId = annotationId;
         this.sentenceId = sentenceId;
         this.recommenderId = recommenderId;
-        this.begin = offset.getBeginCharacter();
-        this.end = offset.getEndCharacter();
+        this.position = aPosition;
     }
 
     public String getDocumentName()
@@ -76,20 +70,9 @@ public class ExtendedId
         return projectId;
     }
 
-    @Deprecated
-    public Offset getOffset()
+    public Position getPosition()
     {
-        return new Offset(begin, end);
-    }
-
-    public int getBegin()
-    {
-        return begin;
-    }
-
-    public int getEnd()
-    {
-        return end;
+        return position;
     }
 
     public int getAnnotationId()
@@ -116,8 +99,8 @@ public class ExtendedId
         ExtendedId castOther = (ExtendedId) other;
         return new EqualsBuilder().append(userName, castOther.userName)
                 .append(projectId, castOther.projectId).append(documentName, castOther.documentName)
-                .append(layerId, castOther.layerId).append(begin, castOther.begin)
-                .append(end, castOther.end).append(annotationId, castOther.annotationId)
+                .append(layerId, castOther.layerId).append(position, castOther.position)
+                .append(annotationId, castOther.annotationId)
                 .append(sentenceId, castOther.sentenceId)
                 .append(recommenderId, castOther.recommenderId).isEquals();
     }
@@ -126,7 +109,7 @@ public class ExtendedId
     public int hashCode()
     {
         return new HashCodeBuilder().append(userName).append(projectId).append(documentName)
-                .append(layerId).append(begin).append(end).append(annotationId).append(sentenceId)
+                .append(layerId).append(position).append(annotationId).append(sentenceId)
                 .append(recommenderId).toHashCode();
     }
 }

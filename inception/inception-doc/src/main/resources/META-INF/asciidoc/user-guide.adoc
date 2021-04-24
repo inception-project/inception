@@ -127,6 +127,8 @@ include::{include-dir}projects_recommendation.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_string.adoc[leveloffset=+2]
 
+include::{include-dir}projects_recommendation_string_relation.adoc[leveloffset=+2]
+
 include::{include-dir}projects_recommendation_opennlp.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
@@ -241,6 +243,8 @@ include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]
 include::{include-dir}formats-webannotsv2.adoc[leveloffset=+2]
 
 include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
+
+include::{include-dir}faq.adoc[leveloffset=+1]
 
 <<<
 

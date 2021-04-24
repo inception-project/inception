@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import static java.util.Arrays.asList;
+
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 /**
  * Provide methods for user management such as create, update, list users
@@ -30,6 +35,11 @@ public interface UserDao
 {
     static final String ADMIN_DEFAULT_USERNAME = "admin";
     static final String ADMIN_DEFAULT_PASSWORD = "admin";
+
+    static final String EMPTY_PASSWORD = "";
+
+    static final String REALM_GLOBAL = null;
+    static final String REALM_PROJECT_PREFIX = "project:";
 
     User getCurrentUser();
 
@@ -83,6 +93,10 @@ public interface UserDao
      */
     void delete(User aUser);
 
+    int deleteAllUsersFromRealm(String aString);
+
+    List<User> listAllUsersFromRealm(String aString);
+
     /**
      * get a {@link User} using a username
      * 
@@ -91,6 +105,8 @@ public interface UserDao
      * @return the user.
      */
     User get(String aUsername);
+
+    User getUserByRealmAndUiName(String aRealm, String aUiName);
 
     /**
      * get all users in the system
@@ -128,4 +144,17 @@ public interface UserDao
      * Retrieve the number of enabled users
      */
     long countEnabledUsers();
+
+    List<String> listRealms();
+
+    public static boolean isProfileSelfServiceAllowed()
+    {
+        // If users are allowed to access their profile information, the also need to access the
+        // admin area. Note: access to the users own profile should be handled differently.
+        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
+                .getEnvironment().getActiveProfiles());
+        Properties settings = SettingsUtil.getSettings();
+        return !activeProfiles.contains("auto-mode-preauth")
+                && "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
+    }
 }

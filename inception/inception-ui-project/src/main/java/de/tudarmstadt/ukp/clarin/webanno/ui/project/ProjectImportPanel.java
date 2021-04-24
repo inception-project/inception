@@ -158,9 +158,12 @@ public class ProjectImportPanel
 
         List<Project> importedProjects = new ArrayList<>();
         for (FileUpload exportedProject : exportedProjects) {
+            ProjectImportRequest request = new ProjectImportRequest(createMissingUsers,
+                    importPermissions, manager);
+
             try {
                 // Workaround for WICKET-6425
-                File tempFile = File.createTempFile("webanno-training", null);
+                File tempFile = File.createTempFile("project-import", null);
                 try (InputStream is = new BufferedInputStream(exportedProject.getInputStream());
                         OutputStream os = new FileOutputStream(tempFile);) {
                     if (!ZipUtils.isZipStream(is)) {
@@ -172,21 +175,22 @@ public class ProjectImportPanel
                         throw new IOException("ZIP file is not a WebAnno project archive");
                     }
 
-                    ProjectImportRequest request = new ProjectImportRequest(createMissingUsers,
-                            importPermissions, manager);
                     importedProjects
                             .add(exportService.importProject(request, new ZipFile(tempFile)));
                 }
                 finally {
                     tempFile.delete();
+
+                    request.getMessages().forEach(m -> getSession().warn(m));
                 }
             }
             catch (Exception e) {
-                aTarget.addChildren(getPage(), IFeedback.class);
                 error("Error importing project: " + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error importing project", e);
             }
         }
+
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         if (!importedProjects.isEmpty() && selectedModel != null) {
             selectedModel.setObject(importedProjects.get(importedProjects.size() - 1));

@@ -20,26 +20,31 @@ package de.tudarmstadt.ukp.inception.sharing.config;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.InviteServiceImpl;
 import de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.sharing.project.ProjectSharingMenuItem;
+import de.tudarmstadt.ukp.inception.sharing.project.exporters.ProjectInviteExporter;
 
 @Configuration
+@EnableConfigurationProperties(InviteServicePropertiesImpl.class)
 @ConditionalOnProperty(prefix = "sharing.invites", name = "enabled", havingValue = "true")
 public class InviteServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
-    public InviteService inviteService()
+    public InviteService inviteService(UserDao aUserRepository)
     {
-        return new InviteServiceImpl(entityManager);
+        return new InviteServiceImpl(aUserRepository, entityManager);
     }
 
     @Order(InviteProjectSettingsPanelFactory.ORDER)
@@ -54,5 +59,12 @@ public class InviteServiceAutoConfiguration
     public ProjectSharingMenuItem projectSharingMenuItem()
     {
         return new ProjectSharingMenuItem();
+    }
+
+    @Bean
+    @Autowired
+    public ProjectInviteExporter projectInviteExporter(InviteService aInviteService)
+    {
+        return new ProjectInviteExporter(aInviteService);
     }
 }

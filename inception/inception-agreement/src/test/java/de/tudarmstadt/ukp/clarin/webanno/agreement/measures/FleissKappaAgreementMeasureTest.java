@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import static java.lang.Double.NaN;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
@@ -98,6 +99,10 @@ public class FleissKappaAgreementMeasureTest
         assertEquals(1, result2.getTotalSetCount());
         assertEquals(0, result2.getIrrelevantSets().size());
         assertEquals(1, result2.getRelevantSetCount());
+
+        assertEquals(NaN, agreement.getStudy("user1", "user2").getAgreement(), 0.01);
+        assertEquals(NaN, agreement.getStudy("user1", "user3").getAgreement(), 0.01);
+        assertEquals(NaN, agreement.getStudy("user2", "user3").getAgreement(), 0.01);
     }
 
     @Test
@@ -121,5 +126,36 @@ public class FleissKappaAgreementMeasureTest
         assertEquals(1, result.getSetsWithDifferences().size());
         assertEquals(4, result.getRelevantSetCount());
         assertEquals(0.2, result.getAgreement(), 0.01);
+    }
+
+    @Test
+    public void fullSingleCategoryAgreementWithTagsetTest() throws Exception
+    {
+        PairwiseAnnotationResult<CodingAgreementResult> agreement = fullSingleCategoryAgreementWithTagset(
+                sut, traits);
+
+        CodingAgreementResult result = agreement.getStudy("user1", "user2");
+
+        ICodingAnnotationItem item1 = result.getStudy().getItem(0);
+        assertEquals("+", item1.getUnit(0).getCategory());
+
+        assertEquals(1, result.getTotalSetCount());
+        assertEquals(0, result.getIrrelevantSets().size());
+        assertEquals(0, result.getIncompleteSetsByPosition().size());
+        assertEquals(0, result.getIncompleteSetsByLabel().size());
+        assertEquals(0, result.getSetsWithDifferences().size());
+        assertEquals(1, result.getRelevantSetCount());
+        assertEquals(1.0, result.getAgreement(), 0.01);
+    }
+
+    @Test
+    public void twoDocumentsNoOverlapTest() throws Exception
+    {
+        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoDocumentsNoOverlap(sut,
+                traits);
+
+        CodingAgreementResult result = agreement.getStudy("user1", "user2");
+
+        assertThat(result.getAgreement()).isNaN();
     }
 }

@@ -220,6 +220,12 @@ public class UserPreferencesServiceImpl
             }
         }
 
+        // Upgrade from single sidebar width setting to split setting
+        if (preference.getSidebarSizeLeft() == 0 && preference.getSidebarSizeRight() == 0) {
+            preference.setSidebarSizeLeft(preference.getSidebarSize());
+            preference.setSidebarSizeRight(preference.getSidebarSize());
+        }
+
         return preference;
     }
 

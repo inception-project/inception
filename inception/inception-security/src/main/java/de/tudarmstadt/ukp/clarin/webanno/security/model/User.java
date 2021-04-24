@@ -41,6 +41,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,10 +69,15 @@ public class User
 
     private @Autowired @Transient transient PasswordEncoder passwordEncoder;
 
-    @Id
-    private String username;
+    private @Id String username;
 
     private String password;
+
+    @Column(nullable = true)
+    private String realm;
+
+    @Column(nullable = true)
+    private String uiName;
 
     private boolean enabled;
 
@@ -109,6 +115,7 @@ public class User
     public User(String aName, Role... aRoles)
     {
         username = aName;
+        uiName = aName;
         enabled = true;
         if (aRoles != null) {
             roles = new HashSet<>(asList(aRoles));
@@ -182,6 +189,30 @@ public class User
         password = aPassword;
     }
 
+    public String getRealm()
+    {
+        return realm;
+    }
+
+    public void setRealm(String aRealm)
+    {
+        realm = aRealm;
+    }
+
+    public String getUiName()
+    {
+        if (StringUtils.isBlank(uiName)) {
+            return username;
+        }
+
+        return uiName;
+    }
+
+    public void setUiName(String aUiName)
+    {
+        uiName = aUiName;
+    }
+
     public boolean isEnabled()
     {
         return enabled;
@@ -197,9 +228,9 @@ public class User
         return email;
     }
 
-    public void setEmail(String email)
+    public void setEmail(String aEMail)
     {
-        this.email = email;
+        email = aEMail;
     }
 
     public Set<Role> getRoles()
@@ -207,9 +238,14 @@ public class User
         return roles;
     }
 
-    public void setRoles(Set<Role> roles)
+    public void setRoles(Set<Role> aRoles)
     {
-        this.roles = roles;
+        if (aRoles != null) {
+            roles = new HashSet<>(aRoles);
+        }
+        else {
+            roles = new HashSet<>();
+        }
     }
 
     public Date getLastLogin()
