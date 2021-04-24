@@ -120,14 +120,19 @@ public abstract class AnnotationEditorBase
      */
     public final void requestRender(AjaxRequestTarget aTarget)
     {
-        aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
-            // Is a document loaded?
-            if (getModelObject().getDocument() == null) {
-                return;
-            }
+        try {
+            aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
+                // Is a document loaded?
+                if (getModelObject().getDocument() == null) {
+                    return;
+                }
 
-            render(_target);
-        }));
+                render(_target);
+            }));
+        }
+        catch (IllegalStateException e) {
+            LOG.warn("Cannot request editor rendering anymore - request is already frozen");
+        }
     }
 
     /**

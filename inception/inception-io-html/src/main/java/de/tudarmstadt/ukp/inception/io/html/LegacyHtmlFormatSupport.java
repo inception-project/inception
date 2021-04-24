@@ -15,30 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor;
+package de.tudarmstadt.ukp.inception.io.html;
 
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.html.HtmlDocumentReader;
+import org.dkpro.core.io.html.HtmlReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
 
 /**
  * Support for HTML format.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlFormatSupport()}.
+ * {@code HtmlAnnotationEditorSupportAutoConfiguration#htmlFormatSupport()}.
  * </p>
  */
-public class HtmlFormatSupport
+public class LegacyHtmlFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "htmldoc";
-    public static final String NAME = "HTML";
+    public static final String ID = "html";
+    public static final String NAME = "HTML (legacy)";
 
     @Override
     public String getId()
@@ -62,6 +61,6 @@ public class HtmlFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(HtmlDocumentReader.class, aTSD);
+        return createReaderDescription(HtmlReader.class, aTSD);
     }
 }
