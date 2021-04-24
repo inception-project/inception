@@ -65,6 +65,7 @@ public class MenuBar
     private @SpringBean ProjectService projectService;
 
     private IModel<User> user;
+    private IModel<Project> project;
     private ExternalLink helpLink;
     private ListView<ImageLinkDecl> links;
 
@@ -79,8 +80,8 @@ public class MenuBar
         super.onInitialize();
 
         user = LoadableDetachableModel.of(userRepository::getCurrentUser);
-        IModel<Long> projectId = LoadableDetachableModel.of(() -> findParent(ProjectContext.class)) //
-                .map(ProjectContext::getProject).map(Project::getId);
+        project = LoadableDetachableModel.of(() -> findParent(ProjectContext.class)) //
+                .map(ProjectContext::getProject);
 
         add(new LogoutPanel("logoutPanel", user));
 
@@ -106,9 +107,10 @@ public class MenuBar
 
         add(new BookmarkablePageLink<>(CID_HOME_LINK, getApplication().getHomePage()));
 
-        add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class,
-                new PageParameters().set(PAGE_PARAM_PROJECT, projectId.orElse(-1l).getObject()))
-                        .add(visibleWhen(projectId.isPresent())));
+        PageParameters dbParams = new PageParameters().set(PAGE_PARAM_PROJECT,
+                project.map(Project::getId).orElse(-1l).getObject());
+        add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class, dbParams)
+                .add(visibleWhen(user.map(this::userCanAccessProject).orElse(false))));
 
         add(new BookmarkablePageLink<>(CID_PROJECTS_LINK, ProjectsOverviewPage.class)
                 .add(visibleWhen(user.map(this::requiresProjectsOverview).orElse(false))));
@@ -129,6 +131,15 @@ public class MenuBar
         catch (MissingResourceException e) {
             return false;
         }
+    }
+
+    private boolean userCanAccessProject(User aUser)
+    {
+        if (!project.isPresent().getObject() || !user.isPresent().getObject()) {
+            return false;
+        }
+
+        return projectService.hasRole(aUser, project.getObject());
     }
 
     private boolean requiresProjectsOverview(User aUser)

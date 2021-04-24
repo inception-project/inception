@@ -44,6 +44,14 @@ public class VSpan
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
+            int aEquivalenceClass, String aLabelHint)
+    {
+        super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, null);
+        setLabelHint(aLabelHint);
+        ranges = asList(aOffsets);
+    }
+
+    public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             int aEquivalenceClass, Map<String, String> aFeatures)
     {
         super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, aFeatures);
