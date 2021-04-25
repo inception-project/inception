@@ -673,7 +673,9 @@ public class SearchServiceImpl
         }
     }
 
-    private void enqueueReindexTask(Project aProject, String aTrigger)
+    @Override
+    @Transactional
+    public void enqueueReindexTask(Project aProject, String aTrigger)
     {
         enqueue(new ReindexTask(aProject, aTrigger));
     }
