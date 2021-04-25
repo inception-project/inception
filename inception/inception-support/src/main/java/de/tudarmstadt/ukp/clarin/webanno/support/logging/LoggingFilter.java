@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -40,12 +39,6 @@ public class LoggingFilter
     public LoggingFilter(String aRepoPath)
     {
         repoPath = aRepoPath;
-    }
-
-    @Override
-    public void init(FilterConfig aFilterConfig) throws ServletException
-    {
-        repoPath = aFilterConfig.getInitParameter(PARAM_REPOSITORY_PATH);
     }
 
     @Override

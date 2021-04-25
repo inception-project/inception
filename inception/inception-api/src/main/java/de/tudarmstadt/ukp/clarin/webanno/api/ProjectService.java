@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.MDCContext;
 
 public interface ProjectService
 {
@@ -452,13 +453,12 @@ public interface ProjectService
 
     List<ProjectInitializer> listProjectInitializers();
 
-    static MDC.MDCCloseable withProjectLogger(Project aProject)
+    static MDCContext withProjectLogger(Project aProject)
     {
         Validate.notNull(aProject, "Project must be given");
         Validate.notNull(aProject.getId(), "Project must have been saved already");
-        Validate.notNull(MDC.get(KEY_REPOSITORY_PATH), "Repositry path must be set in MDC");
+        Validate.notNull(MDC.get(KEY_REPOSITORY_PATH), "Repository path must be set in MDC");
 
-        return MDC.putCloseable(KEY_PROJECT_ID, String.valueOf(aProject.getId()));
+        return MDCContext.open().with(KEY_PROJECT_ID, String.valueOf(aProject.getId()));
     }
-
 }
