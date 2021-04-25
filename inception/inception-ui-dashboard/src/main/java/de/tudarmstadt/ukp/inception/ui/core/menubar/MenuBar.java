@@ -131,6 +131,20 @@ public class MenuBar
         }
     }
 
+    private boolean userCanAccessProject(User aUser)
+    {
+        if (!project.isPresent().getObject() || !user.isPresent().getObject()) {
+            return false;
+        }
+
+        // Project has not been saved yet (happens when creating a project)
+        if (project.getObject().getId() == null) {
+            return false;
+        }
+
+        return projectService.hasRole(aUser, project.getObject());
+    }
+
     private boolean requiresProjectsOverview(User aUser)
     {
         return userRepository.isAdministrator(aUser) || userRepository.isProjectCreator(aUser)
