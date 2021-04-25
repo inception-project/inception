@@ -64,12 +64,15 @@ public class SpanAdapter
 
     private AnnotationSchemaService annotationSchemaService;
 
-    public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
+    public SpanAdapter(AnnotationSchemaService aAnnotationSchemaService,
+            LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+
+        annotationSchemaService = aAnnotationSchemaService;
 
         if (aBehaviors == null) {
             behaviors = emptyList();
@@ -79,13 +82,6 @@ public class SpanAdapter
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
-    }
-
-    @Override
-    public void initialize(AnnotationSchemaService aSchemaService)
-    {
-        super.initialize(aSchemaService);
-        annotationSchemaService = aSchemaService;
     }
 
     /**

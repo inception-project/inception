@@ -105,10 +105,9 @@ public class SpanLayerSupport
     public SpanAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        SpanAdapter adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
-                eventPublisher, aLayer, aFeatures,
+        SpanAdapter adapter = new SpanAdapter(annotationSchemaService, getLayerSupportRegistry(),
+                featureSupportRegistry, eventPublisher, aLayer, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
-        adapter.initialize(annotationSchemaService);
 
         return adapter;
     }

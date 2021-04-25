@@ -164,7 +164,7 @@ public abstract class TypeAdapter_ImplBase
     }
 
     @Override
-    public void initialize(AnnotationSchemaService aSchemaService)
+    public void initializeLayerConfiguration(AnnotationSchemaService aSchemaService)
     {
         // Nothing to do
     }

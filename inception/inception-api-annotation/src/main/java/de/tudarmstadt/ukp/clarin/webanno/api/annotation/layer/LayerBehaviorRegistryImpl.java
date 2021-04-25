@@ -40,12 +40,12 @@ public class LayerBehaviorRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<LayerBehavior> layerBehaviorsProxy;
+    private final List<? extends LayerBehavior> layerBehaviorsProxy;
 
     private List<LayerBehavior> layerBehaviors;
 
     public LayerBehaviorRegistryImpl(
-            @Lazy @Autowired(required = false) List<LayerBehavior> aLayerSupports)
+            @Lazy @Autowired(required = false) List<? extends LayerBehavior> aLayerSupports)
     {
         layerBehaviorsProxy = aLayerSupports;
     }
