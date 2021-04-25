@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -289,15 +290,12 @@ public class CurationSidebar
 
     private Form<List<User>> createUserSelection()
     {
-        Form<List<User>> usersForm = new Form<List<User>>("usersForm",
+        Form<List<User>> form = new Form<List<User>>("usersForm",
                 LoadableDetachableModel.of(this::listSelectedUsers));
-        LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clear", this::clearUsers);
-        LambdaAjaxButton<Void> mergeButton = new LambdaAjaxButton<>("merge", this::merge);
-        LambdaAjaxButton<Void> showButton = new LambdaAjaxButton<>("show", this::selectAndShow);
-        usersForm.add(clearButton);
-        usersForm.add(showButton);
-        usersForm.add(mergeButton);
-        selectedUsers = new CheckGroup<User>("selectedUsers", usersForm.getModelObject());
+        form.add(new LambdaAjaxButton<>("clear", this::clearUsers));
+        form.add(new LambdaAjaxButton<>("show", this::selectAndShow));
+        form.add(new LambdaAjaxButton<>("merge", this::merge));
+        selectedUsers = new CheckGroup<User>("selectedUsers", form.getModelObject());
         users = new ListView<User>("users", LoadableDetachableModel.of(this::listUsers))
         {
             private static final long serialVersionUID = 1L;
@@ -306,14 +304,25 @@ public class CurationSidebar
             protected void populateItem(ListItem<User> aItem)
             {
                 aItem.add(new Check<User>("user", aItem.getModel()));
-                aItem.add(new Label("name", aItem.getModelObject().getUsername()));
+                aItem.add(new Label("name", maybeAnonymizeUsername(aItem)));
 
             }
         };
         selectedUsers.add(users);
-        usersForm.add(selectedUsers);
-        usersForm.add(visibleWhen(() -> !noDocsLabel.isVisible() && !finishedLabel.isVisible()));
-        return usersForm;
+        form.add(selectedUsers);
+        form.add(visibleWhen(() -> !noDocsLabel.isVisible() && !finishedLabel.isVisible()));
+        return form;
+    }
+
+    private IModel<String> maybeAnonymizeUsername(ListItem<User> aUserListItem)
+    {
+        Project project = getModelObject().getProject();
+        if (project.isAnonymousCuration()
+                && !projectService.isManager(project, userRepository.getCurrentUser())) {
+            return Model.of("Anonymized annotator " + (aUserListItem.getIndex() + 1));
+        }
+
+        return aUserListItem.getModel().map(User::getUiName);
     }
 
     private List<User> listSelectedUsers()
