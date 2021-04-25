@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -53,9 +54,9 @@ public class NopRenderer
     }
 
     @Override
-    public VObject render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin)
     {
-        // Nothing to do
-        return null;
+        return Collections.emptyList();
     }
 }

@@ -25,10 +25,12 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -124,6 +126,7 @@ public class CurationRenderer2
                 .map(type -> annotationService.findLayer(aState.getProject(), type))
                 .collect(toMap(AnnotationLayer::getName, identity()));
 
+        Set<VID> generatedCurationVids = new HashSet<>();
         for (ConfigurationSet cfgSet : diff.getConfigurationSets()) {
             if (cfgSet.getCasGroupIds().contains(currentUsername)) {
                 // Hide configuration sets where the curator has already curated (likely)
@@ -141,6 +144,7 @@ public class CurationRenderer2
 
             for (Configuration cfg : cfgSet.getConfigurations()) {
                 FeatureStructure fs = cfg.getRepresentative(casDiff.getCasMap());
+                String user = cfg.getRepresentativeCasGroupId();
 
                 // We need to pass in *all* the annotation features here because we also to that in
                 // other places where we create renderers - and the set of features must always be
@@ -148,30 +152,37 @@ public class CurationRenderer2
                 Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
                         .createRenderer(layer, () -> layerAllFeatures);
 
-                VObject object = renderer.render((AnnotationFS) fs, layerSupportedFeatures,
+                List<VObject> objects = renderer.render((AnnotationFS) fs, layerSupportedFeatures,
                         aWindowBeginOffset);
 
-                if (object == null) {
-                    continue;
+                for (VObject object : objects) {
+                    VID curationVid = new CurationVID(user, object.getVid());
+                    if (generatedCurationVids.contains(curationVid)) {
+                        continue;
+                    }
+
+                    generatedCurationVids.add(curationVid);
+
+                    object.setVid(curationVid);
+                    object.setColorHint("#ccccff");
+                    aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
+                            "Users with this annotation:\n" + cfg.getCasGroupIds().stream()
+                                    .collect(Collectors.joining(", "))));
+
+                    if (object instanceof VArc) {
+                        VArc arc = (VArc) object;
+                        // Currently works for relations but not for slots
+                        arc.setSource(getCurationVid(aState, diff, cfg, arc.getSource()));
+                        arc.setTarget(getCurationVid(aState, diff, cfg, arc.getTarget()));
+                        log.trace("Rendering curation vid: {} source: {} target: {}", arc.getVid(),
+                                arc.getSource(), arc.getTarget());
+                    }
+                    else {
+                        log.trace("Rendering curation vid: {}", object.getVid());
+                    }
+
+                    aVdoc.add(object);
                 }
-
-                String user = cfg.getRepresentativeCasGroupId();
-                object.setVid(new CurationVID(user, object.getVid()));
-                object.setColorHint("#ccccff");
-                aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
-                        "Users with this annotation:\n"
-                                + cfg.getCasGroupIds().stream().collect(Collectors.joining(", "))));
-
-                if (object instanceof VArc) {
-                    VArc arc = (VArc) object;
-                    // Currently works for relations but not for slots
-                    arc.setSource(getCurationVid(aState, diff, cfg, arc.getSource()));
-                    arc.setTarget(getCurationVid(aState, diff, cfg, arc.getTarget()));
-                    // log.trace("Rendering vid: {} source: {} target: {}", arc.getVid(),
-                    // arc.getSource(), arc.getTarget());
-                }
-
-                aVdoc.add(object);
             }
         }
     }

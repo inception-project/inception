@@ -25,6 +25,7 @@ import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -198,9 +199,9 @@ public class ChainRenderer
     }
 
     @Override
-    public VObject render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin)
     {
-        // Not supported
-        return null;
+        return Collections.emptyList();
     }
 }
