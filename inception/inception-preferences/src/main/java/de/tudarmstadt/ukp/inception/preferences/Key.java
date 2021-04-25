@@ -37,5 +37,4 @@ public class Key<T>
     {
         return name;
     }
-
 }
