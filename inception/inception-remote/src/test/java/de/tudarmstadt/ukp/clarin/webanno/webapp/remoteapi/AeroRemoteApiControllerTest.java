@@ -94,8 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 @EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
-@SpringBootTest(webEnvironment = WebEnvironment.MOCK, properties = {
-        "repository.path=target/AeroRemoteApiControllerTest/repository" })
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
 @EnableWebSecurity
 @EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
