@@ -39,6 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -88,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
@@ -100,8 +102,11 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiCont
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class AeroRemoteApiControllerTest
 {
+    static @TempDir File repositoryDir;
+
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     private MockMvc mvc;
 
@@ -114,11 +119,14 @@ public class AeroRemoteApiControllerTest
     @BeforeEach
     public void setup()
     {
+        repositoryProperties.setPath(repositoryDir);
+
         // @formatter:off
         mvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .alwaysDo(print())
                 .apply(SecurityMockMvcConfigurers.springSecurity())
+                .addFilters(new LoggingFilter(repositoryProperties.getPath().toString()))
                 .addFilters(new OpenCasStorageSessionForRequestFilter())
                 .build();
         // @formatter:on

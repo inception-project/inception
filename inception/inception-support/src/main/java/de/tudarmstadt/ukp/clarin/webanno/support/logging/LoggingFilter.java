@@ -37,6 +37,11 @@ public class LoggingFilter
 
     private String repoPath;
 
+    public LoggingFilter(String aRepoPath)
+    {
+        repoPath = aRepoPath;
+    }
+
     @Override
     public void init(FilterConfig aFilterConfig) throws ServletException
     {
