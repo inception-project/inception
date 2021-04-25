@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.scheduling.MatchableTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
@@ -36,6 +37,7 @@ import de.tudarmstadt.ukp.inception.scheduling.Task;
  */
 public abstract class IndexingTask_ImplBase
     extends Task
+    implements MatchableTask
 {
     private final SourceDocument sourceDocument;
     private final AnnotationDocument annotationDocument;
@@ -110,16 +112,6 @@ public abstract class IndexingTask_ImplBase
         builder.append("]");
         return builder.toString();
     }
-
-    /**
-     * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
-     * the given task.
-     * 
-     * @param aTask
-     *            the given scheduling task
-     * @return whether the given task matches this one
-     */
-    public abstract boolean matches(IndexingTask_ImplBase aTask);
 
     @Override
     public boolean equals(final Object other)

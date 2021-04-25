@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
@@ -57,12 +58,13 @@ public class IndexSourceDocumentTask
     }
 
     @Override
-    public boolean matches(IndexingTask_ImplBase aTask)
+    public boolean matches(Task aTask)
     {
         if (!(aTask instanceof IndexSourceDocumentTask)) {
             return false;
         }
 
-        return getSourceDocument().getId() == aTask.getSourceDocument().getId();
+        return getSourceDocument().getId() == ((IndexSourceDocumentTask) aTask).getSourceDocument()
+                .getId();
     }
 }

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
@@ -58,7 +59,7 @@ public class ReindexTask
     }
 
     @Override
-    public boolean matches(IndexingTask_ImplBase aTask)
+    public boolean matches(Task aTask)
     {
         if (!(aTask instanceof ReindexTask)) {
             return false;
