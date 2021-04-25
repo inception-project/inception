@@ -31,17 +31,18 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
  * (Re)indexes the annotation document for a specific user.
  */
 public class IndexAnnotationDocumentTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
 
-    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
+    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aAnnotationDocument, aBinaryCas);
+        super(aAnnotationDocument, aTrigger, aBinaryCas);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
@@ -49,7 +50,7 @@ public class IndexAnnotationDocumentTask
     }
 
     @Override
-    public boolean matches(Task aTask)
+    public boolean matches(IndexingTask_ImplBase aTask)
     {
         if (!(aTask instanceof IndexAnnotationDocumentTask)) {
             return false;

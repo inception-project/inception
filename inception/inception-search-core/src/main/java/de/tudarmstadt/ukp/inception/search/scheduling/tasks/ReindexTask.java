@@ -34,19 +34,19 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
  * Search indexer task. Runs the re-indexing process for a given project
  */
 public class ReindexTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired SearchService searchService;
 
-    public ReindexTask(Project aProject)
+    public ReindexTask(Project aProject, String aTrigger)
     {
-        super(aProject, null);
+        super(aProject, null, aTrigger);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try {
             searchService.reindex(super.getProject());
@@ -58,7 +58,7 @@ public class ReindexTask
     }
 
     @Override
-    public boolean matches(Task aTask)
+    public boolean matches(IndexingTask_ImplBase aTask)
     {
         if (!(aTask instanceof ReindexTask)) {
             return false;

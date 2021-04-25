@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.Validate;
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -57,12 +59,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
 
 /**
  * <p>
@@ -81,9 +87,9 @@ public class SearchServiceImpl
     private final DocumentService documentService;
     private final ProjectService projectService;
     private final PhysicalIndexRegistry physicalIndexRegistry;
-    private final IndexScheduler indexScheduler;
+    private final SchedulingService schedulingService;
     private final SearchServiceProperties properties;
-    private final ScheduledExecutorService schedulerService;
+    private final ScheduledExecutorService indexClosingScheduler;
 
     // In fact - the only factory we have at the moment...
     private final String DEFAULT_PHSYICAL_INDEX_FACTORY = "mtasDocumentIndexFactory";
@@ -92,19 +98,19 @@ public class SearchServiceImpl
 
     @Autowired
     public SearchServiceImpl(DocumentService aDocumentService, ProjectService aProjectService,
-            PhysicalIndexRegistry aPhysicalIndexRegistry, IndexScheduler aIndexScheduler,
+            PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
             SearchServiceProperties aProperties)
     {
         documentService = aDocumentService;
         projectService = aProjectService;
         physicalIndexRegistry = aPhysicalIndexRegistry;
-        indexScheduler = aIndexScheduler;
+        schedulingService = aSchedulingService;
 
         properties = aProperties;
         log.info("Index keep-open time: {}", properties.getIndexKeepOpenTime());
 
-        schedulerService = new ScheduledThreadPoolExecutor(0);
-        schedulerService.scheduleWithFixedDelay(this::closeIdleIndexes, 10, 10, SECONDS);
+        indexClosingScheduler = new ScheduledThreadPoolExecutor(0);
+        indexClosingScheduler.scheduleWithFixedDelay(this::closeIdleIndexes, 10, 10, SECONDS);
     }
 
     private void closeIdleIndexes()
@@ -132,12 +138,13 @@ public class SearchServiceImpl
 
         shutdown = true;
 
-        schedulerService.shutdown();
+        indexClosingScheduler.shutdown();
 
         // We'll just wait a bit for any running indexing tasks to finish up before we close
         // all the indexes
+        schedulingService.stopAllTasksMatching(task -> task instanceof IndexingTask_ImplBase);
         long t0 = currentTimeMillis();
-        while (indexScheduler.isBusy() && currentTimeMillis() - t0 < 10_000) {
+        while (isBusy() && currentTimeMillis() - t0 < 10_000) {
             try {
                 Thread.sleep(500);
             }
@@ -342,7 +349,7 @@ public class SearchServiceImpl
         log.trace("Starting afterDocumentCreate");
 
         // Schedule new document index process
-        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getCas());
+        enqueueIndexDocument(aEvent.getDocument(), "afterDocumentCreate", aEvent.getCas());
     }
 
     @TransactionalEventListener(fallbackExecution = true)
@@ -352,7 +359,7 @@ public class SearchServiceImpl
         log.trace("Starting afterAnnotationUpdate");
 
         // Schedule new document index process
-        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getCas());
+        enqueueIndexDocument(aEvent.getDocument(), "afterAnnotationUpdate", aEvent.getCas());
     }
 
     @TransactionalEventListener(fallbackExecution = true)
@@ -371,7 +378,7 @@ public class SearchServiceImpl
         }
 
         // Schedule re-indexing of the physical index
-        indexScheduler.enqueueReindexTask(aEvent.getProject());
+        enqueueReindexTask(aEvent.getProject(), "beforeLayerConfigurationChanged");
     }
 
     @Override
@@ -400,7 +407,7 @@ public class SearchServiceImpl
                     project.getName(), project.getId());
             index.setInvalid(true);
             entityManager.merge(index);
-            indexScheduler.enqueueReindexTask(project);
+            enqueueReindexTask(project, "indexDocument");
             return;
         }
 
@@ -423,7 +430,7 @@ public class SearchServiceImpl
         Project project = aAnnotationDocument.getProject();
 
         try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
-            indexDocument(pooledIndex, aAnnotationDocument, aBinaryCas);
+            indexDocument(pooledIndex, aAnnotationDocument, "indexDocument", aBinaryCas);
         }
     }
 
@@ -436,7 +443,7 @@ public class SearchServiceImpl
     }
 
     private void indexDocument(PooledIndex aPooledIndex, AnnotationDocument aAnnotationDocument,
-            byte[] aBinaryCas)
+            String aTrigger, byte[] aBinaryCas)
     {
         Project project = aAnnotationDocument.getProject();
 
@@ -457,7 +464,7 @@ public class SearchServiceImpl
                     project.getName(), project.getId());
             index.setInvalid(true);
             entityManager.merge(index);
-            indexScheduler.enqueueReindexTask(project);
+            enqueueReindexTask(project, aTrigger);
             return;
         }
 
@@ -558,7 +565,7 @@ public class SearchServiceImpl
                     try (CasStorageSession session = CasStorageSession.openNested()) {
                         casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
                     }
-                    indexDocument(pooledIndex, doc, casAsByteArray);
+                    indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
                 }
             }
 
@@ -606,7 +613,12 @@ public class SearchServiceImpl
     @Override
     public boolean isIndexInProgress(Project aProject)
     {
-        return indexScheduler.isIndexInProgress(aProject);
+        Validate.notNull(aProject, "Project cannot be null");
+
+        return schedulingService.getAllTasks().stream() //
+                .filter(task -> task instanceof IndexingTask_ImplBase)
+                .map(task -> (IndexingTask_ImplBase) task)
+                .anyMatch(task -> aProject.equals(task.getProject()));
     }
 
     @Override
@@ -643,7 +655,7 @@ public class SearchServiceImpl
             entityManager.merge(aIndex);
 
             // Schedule new re-indexing process
-            indexScheduler.enqueueReindexTask(aProject);
+            enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
 
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Index still building. Try again later."));
@@ -651,14 +663,65 @@ public class SearchServiceImpl
 
         // Is the index valid?
         if (aIndex.getInvalid()) {
-            if (!indexScheduler.isIndexInProgress(aProject)) {
+            if (!isIndexInProgress(aProject)) {
                 // Index is invalid, schedule a new index rebuild
-                indexScheduler.enqueueReindexTask(aProject);
+                enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[invalid]");
             }
 
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Index still building. Try again later."));
         }
+    }
+
+    private void enqueueReindexTask(Project aProject, String aTrigger)
+    {
+        enqueue(new ReindexTask(aProject, aTrigger));
+    }
+
+    private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger, CAS aCas)
+    {
+        try {
+            enqueue(new IndexSourceDocumentTask(aSourceDocument, aTrigger, casToByteArray(aCas)));
+        }
+        catch (IOException e) {
+            log.error("Unable to enqueue document [{}]({}) for indexing", aSourceDocument.getName(),
+                    aSourceDocument.getId(), e);
+        }
+    }
+
+    private void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, String aTrigger,
+            CAS aCas)
+    {
+        try {
+            enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aTrigger,
+                    casToByteArray(aCas)));
+        }
+        catch (IOException e) {
+            log.error("Unable to enqueue document [{}]({}) for indexing",
+                    aAnnotationDocument.getName(), aAnnotationDocument.getId(), e);
+        }
+    }
+
+    /**
+     * Put a new indexing task in the queue. Indexing tasks can be of three types:
+     * <ul>
+     * <li>Indexing of a whole project</li>
+     * <li>Indexing of a source document</li>
+     * <li>Indexing of an annotation document for a given user</li>
+     * </ul>
+     * 
+     * @param aRunnable
+     *            The indexing task
+     */
+    public synchronized void enqueue(IndexingTask_ImplBase aRunnable)
+    {
+        schedulingService.enqueue(aRunnable);
+    }
+
+    private boolean isBusy()
+    {
+        return schedulingService.getScheduledAndRunningTasks().stream()
+                .anyMatch(task -> task instanceof IndexingTask_ImplBase);
     }
 
     private class PooledIndex

@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
@@ -40,12 +41,10 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
@@ -91,28 +90,20 @@ public class GazeteerServiceImpl
     @Transactional
     public void createOrUpdateGazeteer(Gazeteer aGazeteer)
     {
-        if (aGazeteer.getId() == null) {
-            entityManager.persist(aGazeteer);
+        try (var logCtx = withProjectLogger(aGazeteer.getRecommender().getProject())) {
+            if (aGazeteer.getId() == null) {
+                entityManager.persist(aGazeteer);
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
-                log.info("Created gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
-                        aGazeteer.getName(), aGazeteer.getRecommender().getName(),
-                        aGazeteer.getRecommender().getId(),
-                        aGazeteer.getRecommender().getProject().getName(),
-                        aGazeteer.getRecommender().getProject().getId());
+                log.info("Created gazeteer [{}] for recommender {} in project {}",
+                        aGazeteer.getName(), aGazeteer.getRecommender(),
+                        aGazeteer.getRecommender().getProject());
             }
-        }
-        else {
-            entityManager.merge(aGazeteer);
+            else {
+                entityManager.merge(aGazeteer);
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
-                log.info("Updated gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
-                        aGazeteer.getName(), aGazeteer.getRecommender().getName(),
-                        aGazeteer.getRecommender().getId(),
-                        aGazeteer.getRecommender().getProject().getName(),
-                        aGazeteer.getRecommender().getProject().getId());
+                log.info("Updated gazeteer [{}] for recommender {} in project {}",
+                        aGazeteer.getName(), aGazeteer.getRecommender(),
+                        aGazeteer.getRecommender().getProject());
             }
         }
     }
@@ -144,21 +135,17 @@ public class GazeteerServiceImpl
     @Transactional
     public void deleteGazeteers(Gazeteer aGazeteer) throws IOException
     {
-        entityManager.remove(
-                entityManager.contains(aGazeteer) ? aGazeteer : entityManager.merge(aGazeteer));
+        try (var logCtx = withProjectLogger(aGazeteer.getRecommender().getProject())) {
+            entityManager.remove(
+                    entityManager.contains(aGazeteer) ? aGazeteer : entityManager.merge(aGazeteer));
 
-        File gaz = getGazeteerFile(aGazeteer);
-        if (gaz.exists()) {
-            gaz.delete();
-        }
+            File gaz = getGazeteerFile(aGazeteer);
+            if (gaz.exists()) {
+                gaz.delete();
+            }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
-            log.info("Removed gazeteer [{}] from recommender [{}]({}) in project [{}]({})",
-                    aGazeteer.getName(), aGazeteer.getRecommender().getName(),
-                    aGazeteer.getRecommender().getId(),
-                    aGazeteer.getRecommender().getProject().getName(),
-                    aGazeteer.getRecommender().getProject().getId());
+            log.info("Removed gazeteer [{}] for recommender {} in project {}", aGazeteer.getName(),
+                    aGazeteer.getRecommender(), aGazeteer.getRecommender().getProject());
         }
     }
 

@@ -32,22 +32,24 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
  * Document indexer task. Indexes the given document in a project
  */
 public class IndexSourceDocumentTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
 
-    public IndexSourceDocumentTask(SourceDocument aSourceDocument, byte[] aBinaryCas)
+    public IndexSourceDocumentTask(SourceDocument aSourceDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aSourceDocument, aBinaryCas);
+        super(aSourceDocument, aTrigger, aBinaryCas);
     }
 
-    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
+    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aAnnotationDocument, aBinaryCas);
+        super(aAnnotationDocument, aTrigger, aBinaryCas);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getSourceDocument(), super.getBinaryCas());
@@ -55,7 +57,7 @@ public class IndexSourceDocumentTask
     }
 
     @Override
-    public boolean matches(Task aTask)
+    public boolean matches(IndexingTask_ImplBase aTask)
     {
         if (!(aTask instanceof IndexSourceDocumentTask)) {
             return false;

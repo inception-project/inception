@@ -23,66 +23,55 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+import java.util.Objects;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * Abstract search task
  */
-public abstract class Task
-    implements Runnable
+public abstract class IndexingTask_ImplBase
+    extends Task
 {
-    private final Project project;
-    private final String user;
     private final SourceDocument sourceDocument;
     private final AnnotationDocument annotationDocument;
 
     private byte[] binaryCas;
 
-    public Task(Project aProject, String aUser)
+    public IndexingTask_ImplBase(Project aProject, String aUser, String aTrigger)
     {
-        // notNull(aUser);
-        notNull(aProject);
+        super(new User(aUser), aProject, aTrigger);
 
-        user = aUser;
-        project = aProject;
         sourceDocument = null;
         annotationDocument = null;
         binaryCas = null;
     }
 
-    public Task(SourceDocument aSourceDocument, byte[] aBinaryCas)
+    public IndexingTask_ImplBase(SourceDocument aSourceDocument, String aTrigger, byte[] aBinaryCas)
     {
-        notNull(aSourceDocument);
+        super(aSourceDocument.getProject(), aTrigger);
 
-        user = null;
-        project = aSourceDocument.getProject();
+        notNull(aBinaryCas);
+
         sourceDocument = aSourceDocument;
         annotationDocument = null;
         binaryCas = aBinaryCas;
     }
 
-    public Task(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
+    public IndexingTask_ImplBase(AnnotationDocument aAnnotationDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        notNull(aAnnotationDocument);
+        super(new User(aAnnotationDocument.getUser()), aAnnotationDocument.getProject(), aTrigger);
+
         notNull(aBinaryCas);
 
-        user = aAnnotationDocument.getUser();
-        project = aAnnotationDocument.getProject();
         sourceDocument = null;
         annotationDocument = aAnnotationDocument;
         binaryCas = aBinaryCas;
-    }
-
-    public String getUser()
-    {
-        return user;
-    }
-
-    public Project getProject()
-    {
-        return project;
     }
 
     public SourceDocument getSourceDocument()
@@ -111,9 +100,9 @@ public abstract class Task
         StringBuilder builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(" [project=");
-        builder.append(project.getName());
+        builder.append(getProject().getName());
         builder.append(", user=");
-        builder.append((user == null) ? " " : user);
+        builder.append((getUser() == null) ? " " : getUser());
         builder.append(", sourceDocument=");
         builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
         builder.append(", annotationDocument=");
@@ -130,66 +119,25 @@ public abstract class Task
      *            the given scheduling task
      * @return whether the given task matches this one
      */
-    public abstract boolean matches(Task aTask);
+    public abstract boolean matches(IndexingTask_ImplBase aTask);
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof IndexingTask_ImplBase)) {
+            return false;
+        }
+        if (!super.equals(other)) {
+            return false;
+        }
+        IndexingTask_ImplBase castOther = (IndexingTask_ImplBase) other;
+        return Objects.equals(sourceDocument, castOther.sourceDocument)
+                && Objects.equals(annotationDocument, castOther.annotationDocument);
+    }
 
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((project == null) ? 0 : project.hashCode());
-        result = prime * result + ((user == null) ? 0 : user.hashCode());
-        result = prime * result + ((sourceDocument == null) ? 0 : sourceDocument.hashCode());
-        result = prime * result
-                + ((annotationDocument == null) ? 0 : annotationDocument.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        Task other = (Task) obj;
-        if (project == null) {
-            if (other.project != null) {
-                return false;
-            }
-        }
-        else if (!project.equals(other.project)) {
-            return false;
-        }
-        if (user == null) {
-            if (other.user != null) {
-                return false;
-            }
-        }
-        else if (!user.equals(other.user)) {
-            return false;
-        }
-        else if (sourceDocument == null) {
-            if (other.sourceDocument != null) {
-                return false;
-            }
-        }
-        else if (!sourceDocument.equals(other.sourceDocument)) {
-            return false;
-        }
-        else if (annotationDocument == null) {
-            if (other.annotationDocument != null) {
-                return false;
-            }
-        }
-        else if (!annotationDocument.equals(other.annotationDocument)) {
-            return false;
-        }
-        return true;
+        return Objects.hash(super.hashCode(), sourceDocument, annotationDocument);
     }
 }
