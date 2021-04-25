@@ -139,6 +139,11 @@ public class MenuBar
             return false;
         }
 
+        // Project has not been saved yet (happens when creating a project)
+        if (project.getObject().getId() == null) {
+            return false;
+        }
+
         return projectService.hasRole(aUser, project.getObject());
     }
 
