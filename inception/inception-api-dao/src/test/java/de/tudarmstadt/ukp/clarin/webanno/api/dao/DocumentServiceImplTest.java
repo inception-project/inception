@@ -55,6 +55,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -68,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplTest
@@ -108,6 +110,7 @@ public class DocumentServiceImplTest
 
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder);
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
                 new CasStoragePropertiesImpl(), new BackupProperties());
@@ -306,6 +309,8 @@ public class DocumentServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             for (int n = 0; n < repeat; n++) {
                 if (exception.get()) {
                     return;
@@ -341,6 +346,8 @@ public class DocumentServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     sut.readAnnotationCas(doc, user, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
@@ -373,6 +380,8 @@ public class DocumentServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     Thread.sleep(2500 + rnd.nextInt(2500));
@@ -407,6 +416,8 @@ public class DocumentServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     sut.readAnnotationCas(doc, user, AUTO_CAS_UPGRADE, UNMANAGED_ACCESS);

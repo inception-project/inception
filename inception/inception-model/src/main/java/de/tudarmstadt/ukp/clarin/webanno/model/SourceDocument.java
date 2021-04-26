@@ -228,13 +228,7 @@ public class SourceDocument
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("[");
-        builder.append(name);
-        builder.append("](");
-        builder.append(id);
-        builder.append(")");
-        return builder.toString();
+        return "[" + name + "](" + id + ")";
     }
 
     public static final Comparator<SourceDocument> NAME_COMPARATOR = Comparator

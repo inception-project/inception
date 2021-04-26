@@ -15,16 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.logging;
+package de.tudarmstadt.ukp.inception.scheduling;
 
-public final class Logging
+public interface MatchableTask
 {
-    public static final String KEY_PROJECT_ID = "projectId";
-    public static final String KEY_USERNAME = "username";
-    public static final String KEY_REPOSITORY_PATH = "repositoryPath";
-
-    private Logging()
-    {
-        // No instances
-    }
+    /**
+     * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
+     * the given task.
+     * 
+     * @param aTask
+     *            the given scheduling task
+     * @return whether the given task matches this one
+     */
+    boolean matches(Task aTask);
 }

@@ -28,25 +28,26 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * Search indexer task. Runs the re-indexing process for a given project
  */
 public class ReindexTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired SearchService searchService;
 
-    public ReindexTask(Project aProject)
+    public ReindexTask(Project aProject, String aTrigger)
     {
-        super(aProject, null);
+        super(aProject, null, aTrigger);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try {
             searchService.reindex(super.getProject());

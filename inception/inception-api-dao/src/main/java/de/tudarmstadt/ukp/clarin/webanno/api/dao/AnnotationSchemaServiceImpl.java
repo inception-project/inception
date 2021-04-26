@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.INCOMING;
 import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.LOOP;
 import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.OUTGOING;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
@@ -71,7 +72,6 @@ import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -108,7 +108,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -169,13 +168,9 @@ public class AnnotationSchemaServiceImpl
 
         flushImmutableTagCache(aTag.getTagSet());
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aTag.getTagSet().getProject().getId()))) {
-            TagSet tagset = aTag.getTagSet();
-            Project project = tagset.getProject();
-            log.info("{} tag [{}]({}) in tagset [{}]({}) in project [{}]({})",
-                    created ? "Created" : "Updated", aTag.getName(), aTag.getId(), tagset.getName(),
-                    tagset.getId(), project.getName(), project.getId());
+        try (var logCtx = withProjectLogger(aTag.getTagSet().getProject())) {
+            log.info("{} tag [{}]({}) in tagset {} in project {}", created ? "Created" : "Updated",
+                    aTag.getName(), aTag.getId(), aTag.getTagSet(), aTag.getTagSet().getProject());
         }
     }
 
@@ -202,11 +197,9 @@ public class AnnotationSchemaServiceImpl
             }
         }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(project.getId()))) {
-            log.info("Created {} tags and updated {} tags in tagset [{}]({}) in project [{}]({})",
-                    createdCount, updatedCount, tagset.getName(), tagset.getId(), project.getName(),
-                    project.getId());
+        try (var logCtx = withProjectLogger(project)) {
+            log.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
+                    updatedCount, tagset, project);
         }
     }
 
@@ -236,18 +229,15 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTagSet(TagSet aTagSet)
     {
-        if (isNull(aTagSet.getId())) {
-            entityManager.persist(aTagSet);
-        }
-        else {
-            entityManager.merge(aTagSet);
-        }
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aTagSet.getProject().getId()))) {
-            Project project = aTagSet.getProject();
-            log.info("Created tagset [{}]({}) in project [{}]({})", aTagSet.getName(),
-                    aTagSet.getId(), project.getName(), project.getId());
+        try (var logCtx = withProjectLogger(aTagSet.getProject())) {
+            if (isNull(aTagSet.getId())) {
+                entityManager.persist(aTagSet);
+                log.info("Created tagset {} in project {}", aTagSet, aTagSet.getProject());
+            }
+            else {
+                entityManager.merge(aTagSet);
+                log.info("Updated tagset {} in project {}", aTagSet, aTagSet.getProject());
+            }
         }
     }
 
@@ -255,18 +245,15 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createOrUpdateLayer(AnnotationLayer aLayer)
     {
-        if (isNull(aLayer.getId())) {
-            entityManager.persist(aLayer);
-        }
-        else {
-            entityManager.merge(aLayer);
-        }
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aLayer.getProject().getId()))) {
-            Project project = aLayer.getProject();
-            log.info("Created layer [{}]({}) in project [{}]({})", aLayer.getName(), aLayer.getId(),
-                    project.getName(), project.getId());
+        try (var logCtx = withProjectLogger(aLayer.getProject())) {
+            if (isNull(aLayer.getId())) {
+                entityManager.persist(aLayer);
+                log.info("Created layer {} in project {}", aLayer, aLayer.getProject());
+            }
+            else {
+                entityManager.merge(aLayer);
+                log.info("Updated layer {} in project {}", aLayer, aLayer.getProject());
+            }
         }
     }
 
@@ -274,18 +261,15 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createFeature(AnnotationFeature aFeature)
     {
-        if (isNull(aFeature.getId())) {
-            entityManager.persist(aFeature);
-        }
-        else {
-            entityManager.merge(aFeature);
-        }
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aFeature.getProject().getId()))) {
-            Project project = aFeature.getProject();
-            log.info("Created feature [{}]({}) in project [{}]({})", aFeature.getName(),
-                    aFeature.getId(), project.getName(), project.getId());
+        try (var logCtx = withProjectLogger(aFeature.getProject())) {
+            if (isNull(aFeature.getId())) {
+                entityManager.persist(aFeature);
+                log.info("Created feature {} in project {}", aFeature, aFeature.getProject());
+            }
+            else {
+                entityManager.merge(aFeature);
+                log.info("Updated feature {} in project {}", aFeature, aFeature.getProject());
+            }
         }
     }
 
@@ -657,11 +641,9 @@ public class AnnotationSchemaServiceImpl
             i++;
         }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aProject.getId()))) {
-            log.info("Created {} tags and updated {} tags in tagset [{}]({}) in project [{}]({})",
-                    createdCount, updatedCount, tagSet.getName(), tagSet.getId(),
-                    aProject.getName(), aProject.getId());
+        try (var logCtx = withProjectLogger(aProject)) {
+            log.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
+                    updatedCount, tagSet, aProject);
         }
 
         return tagSet;
@@ -883,14 +865,11 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeFeature(AnnotationFeature aFeature)
     {
-        entityManager.remove(
-                entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
+        try (var logCtx = withProjectLogger(aFeature.getProject())) {
+            entityManager.remove(
+                    entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aFeature.getProject().getId()))) {
-            Project project = aFeature.getProject();
-            log.info("Removed feature [{}]({}) from project [{}]({})", aFeature.getName(),
-                    aFeature.getId(), project.getName(), project.getId());
+            log.info("Removed feature {} from project {}", aFeature, aFeature.getProject());
         }
     }
 
@@ -898,29 +877,29 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeLayer(AnnotationLayer aLayer)
     {
-        AnnotationLayer layer = entityManager.contains(aLayer) ? aLayer
-                : entityManager.merge(aLayer);
+        try (var logCtx = withProjectLogger(aLayer.getProject())) {
+            AnnotationLayer layer = entityManager.contains(aLayer) ? aLayer
+                    : entityManager.merge(aLayer);
 
-        // We must not rely on the DB-level CASCADE ON DELETE if Hibernate 2nd-level caching is
-        // enabled because if we do, then Hibernate will not know that entries have gone from the
-        // DB, will still try to re-hydrate them from the cache and will fail filling in gaps
-        // from the DB. So we delete explicitly through Hibernate
-        listAnnotationFeature(aLayer).forEach(this::removeFeature);
+            // We must not rely on the DB-level CASCADE ON DELETE if Hibernate 2nd-level caching is
+            // enabled because if we do, then Hibernate will not know that entries have gone from
+            // the
+            // DB, will still try to re-hydrate them from the cache and will fail filling in gaps
+            // from the DB. So we delete explicitly through Hibernate
+            listAnnotationFeature(aLayer).forEach(this::removeFeature);
 
-        // Remove all features in other layers that connect to the layer to be removed. This is
-        // necessary so Hibernate cache knows they are gone and also because the relation is
-        // modeled by name, so we couldn't use a DB-level CASCADE ON DELETE anyway.
-        // It is also necessary to that e.g. the "pos" feature in the built-in "Token" layer gets
-        // cleaned up - which the user could never do manually.
-        listAttachingFeatures(aLayer).forEach(this::removeFeature);
+            // Remove all features in other layers that connect to the layer to be removed. This is
+            // necessary so Hibernate cache knows they are gone and also because the relation is
+            // modeled by name, so we couldn't use a DB-level CASCADE ON DELETE anyway.
+            // It is also necessary to that e.g. the "pos" feature in the built-in "Token" layer
+            // gets
+            // cleaned up - which the user could never do manually.
+            listAttachingFeatures(aLayer).forEach(this::removeFeature);
 
-        entityManager.remove(layer);
+            entityManager.remove(layer);
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aLayer.getProject().getId()))) {
             Project project = aLayer.getProject();
-            log.info("Removed layer [{}]({}) from project [{}]({})", aLayer.getName(),
-                    aLayer.getId(), project.getName(), project.getId());
+            log.info("Removed layer {} from project {}", aLayer, project);
         }
     }
 
@@ -1144,14 +1123,11 @@ public class AnnotationSchemaServiceImpl
         case AUTO_CAS_UPGRADE: {
             boolean upgraded = upgradeCasIfRequired(aCas, aSourceDocument);
             if (!upgraded) {
-                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                        String.valueOf(aSourceDocument.getProject().getId()))) {
+                try (var logCtx = withProjectLogger(aSourceDocument.getProject())) {
                     log.debug(
-                            "CAS of user [{}] for document [{}]({}) in project [{}]({}) is already "
+                            "CAS of user [{}] for document {} in project {} is already "
                                     + "compatible with project type system - skipping upgrade",
-                            aUser, aSourceDocument.getName(), aSourceDocument.getId(),
-                            aSourceDocument.getProject().getName(),
-                            aSourceDocument.getProject().getId());
+                            aUser, aSourceDocument, aSourceDocument.getProject());
                 }
             }
             return;
@@ -1166,14 +1142,11 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
-        upgradeCas(aCas, aSourceDocument.getProject());
+        try (var logCtx = withProjectLogger(aSourceDocument.getProject())) {
+            upgradeCas(aCas, aSourceDocument.getProject());
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aSourceDocument.getProject().getId()))) {
-            Project project = aSourceDocument.getProject();
-            log.info("Upgraded CAS of user [{}] for " + "document [{}]({}) in project [{}]({})",
-                    aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
-                    project.getId());
+            log.info("Upgraded CAS of user [{}] for document {} in project {}", aUser,
+                    aSourceDocument, aSourceDocument.getProject());
         }
     }
 
