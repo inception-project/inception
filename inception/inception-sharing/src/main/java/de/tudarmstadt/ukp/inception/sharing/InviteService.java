@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import java.util.Date;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -87,6 +88,8 @@ public interface InviteService
     ProjectInvite readProjectInvite(Project aProject);
 
     void writeProjectInvite(ProjectInvite aInvite);
+
+    Optional<User> getProjectUser(Project aProject, String aUsername);
 
     User getOrCreateProjectUser(Project aProject, String aUsername);
 }

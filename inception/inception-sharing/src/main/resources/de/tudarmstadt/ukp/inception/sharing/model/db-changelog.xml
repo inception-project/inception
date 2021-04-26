@@ -78,4 +78,15 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210427-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210416-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="askForEMail" type="VARCHAR(255)" defaultValue="not-allowed">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>
