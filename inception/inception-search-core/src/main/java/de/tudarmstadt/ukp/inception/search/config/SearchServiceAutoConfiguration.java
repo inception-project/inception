@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
@@ -39,8 +40,6 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.log.SearchQueryEventAdapter;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @Configuration
 @EnableConfigurationProperties(SearchServicePropertiesImpl.class)
@@ -50,10 +49,10 @@ public class SearchServiceAutoConfiguration
     @Bean
     public SearchService searchService(DocumentService aDocumentService,
             ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
-            IndexScheduler aIndexScheduler, SearchServiceProperties aProperties)
+            SchedulingService aSchedulingService, SearchServiceProperties aProperties)
     {
         return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
-                aIndexScheduler, aProperties);
+                aSchedulingService, aProperties);
     }
 
     @Bean
@@ -74,12 +73,6 @@ public class SearchServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<FeatureIndexingSupport> aIndexingSupports)
     {
         return new FeatureIndexingSupportRegistryImpl(aIndexingSupports);
-    }
-
-    @Bean
-    public IndexScheduler indexScheduler()
-    {
-        return new IndexSchedulerImpl();
     }
 
     @Bean
