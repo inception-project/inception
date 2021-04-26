@@ -60,9 +60,7 @@ public class CurationEditorExtension
 
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired DocumentService documentService;
-
     private @Autowired CurationRenderer curationRenderer;
-    private @Autowired CurationRenderer2 curationRenderer2;
 
     @Override
     public String getBeanName()
@@ -157,20 +155,10 @@ public class CurationEditorExtension
         aPanel.actionCreateOrUpdate(aTarget, aTargetCas); // should also update timestamps
     }
 
-    public void render2(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
-    {
-    }
-
     @Override
     public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
             int aWindowEndOffset)
     {
-        if (false) {
-            curationRenderer.render(aCas, aState, aVdoc, aWindowBeginOffset, aWindowEndOffset);
-        }
-        else {
-            curationRenderer2.render(aCas, aState, aVdoc, aWindowBeginOffset, aWindowEndOffset);
-        }
+        curationRenderer.render(aCas, aState, aVdoc, aWindowBeginOffset, aWindowEndOffset);
     }
 }
