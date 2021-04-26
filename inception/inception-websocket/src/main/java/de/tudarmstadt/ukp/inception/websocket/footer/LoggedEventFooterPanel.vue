@@ -19,15 +19,15 @@
 <template>
   <div class="float-left">
     <div class="btn-group dropup">
-      <a role="button" class="p-0 m-0 btn btn-secondary dropdown-toggle" data-boundary="viewport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" @click="toggleConnection">
+      <a role="button" class="ml-1 mr-1" data-boundary="viewport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <i class="fas fa-rss"></i>
       </a>
       <div class="dropdown-menu">
         <div class="card-header">
         Recent logged events
         </div>
-        <div class="card-body">
-        <ul class="list-group list-group-flush">
+        <div class="scrolling card-body">
+        <ul class="list-group list-group-flush" style="min-height:15em">
           <li v-show="!events.length" class="list-group-item">No recent events</li>
           <li v-for="event in events" class="list-group-item">{{formatTime(event.timestamp)}}: {{event.eventMsg}}</li>
         </ul>
@@ -52,14 +52,10 @@ module.exports = {
     }
   },
   methods: {
-    toggleConnection(){
+    connect(){
       if (this.connected){
-        this.disconnect();
         return;
       }
-      this.connect();
-    },
-    connect(){
       this.socket = new WebSocket(this.wsEndpoint);
       this.stompClient = webstomp.over(this.socket);
       var that = this;
@@ -97,8 +93,11 @@ module.exports = {
       return dayjs(timestamp).format("LLLL")
     }
   },
+  mounted(){
+    this.connect();
+  },
   beforeUnmount(){
-    disconnect();
+    this.disconnect();
   }
 }
 </script>
