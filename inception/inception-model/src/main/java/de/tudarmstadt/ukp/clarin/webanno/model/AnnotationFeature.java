@@ -33,7 +33,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NotFound;
@@ -511,7 +510,7 @@ public class AnnotationFeature
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("name", name).build();
+        return "[" + name + "](" + id + ")";
     }
 
     @Override

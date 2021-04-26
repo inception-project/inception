@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
@@ -126,18 +129,19 @@ public class RelationRenderer
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            VArc arc = render(fs, aFeatures, aWindowBegin);
-            if (arc == null) {
-                continue;
+            for (VObject arc : render(fs, aFeatures, aWindowBegin)) {
+                if (!(arc instanceof VArc)) {
+                    continue;
+                }
+
+                aResponse.add(arc);
+                annoToArcIdx.put(fs, (VArc) arc);
+
+                renderYield(aResponse, fs, relationLinks, yieldDeps);
+
+                renderLazyDetails(fs, arc, aFeatures);
+                renderRequiredFeatureErrors(aFeatures, fs, aResponse);
             }
-
-            aResponse.add(arc);
-            annoToArcIdx.put(fs, arc);
-
-            renderYield(aResponse, fs, relationLinks, yieldDeps);
-
-            renderLazyDetails(fs, arc, aFeatures);
-            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
         }
 
         for (RelationLayerBehavior behavior : behaviors) {
@@ -164,17 +168,23 @@ public class RelationRenderer
         }
     }
 
-    private VArc render(AnnotationFS fs, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    @Override
+    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin)
     {
+        if (!checkTypeSystem(aFS.getCAS())) {
+            return Collections.emptyList();
+        }
+
         RelationAdapter typeAdapter = getTypeAdapter();
-        FeatureStructure dependentFs = getGovernorFs(fs);
-        FeatureStructure governorFs = getDependentFs(fs);
+        FeatureStructure dependentFs = getGovernorFs(aFS);
+        FeatureStructure governorFs = getDependentFs(aFS);
 
         if (dependentFs == null || governorFs == null) {
             StringBuilder message = new StringBuilder();
 
             message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                    + getAddr(fs) + "] has loose ends - cannot render.");
+                    + getAddr(aFS) + "] has loose ends - cannot render.");
             if (typeAdapter.getAttachFeatureName() != null) {
                 message.append("\nRelation [" + typeAdapter.getLayer().getName()
                         + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
@@ -187,14 +197,14 @@ public class RelationRenderer
             Page page = (Page) handler.getPage();
             page.warn(message.toString());
 
-            return null;
+            return Collections.emptyList();
         }
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
-        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
+        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        return new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs, dependentFs,
-                labelFeatures);
+        return asList(new VArc(typeAdapter.getLayer(), aFS, bratTypeName, governorFs, dependentFs,
+                labelFeatures));
     }
 
     /**

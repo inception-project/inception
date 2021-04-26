@@ -26,28 +26,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * Document indexer task. Indexes the given document in a project
  */
 public class IndexSourceDocumentTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
 
-    public IndexSourceDocumentTask(SourceDocument aSourceDocument, byte[] aBinaryCas)
+    public IndexSourceDocumentTask(SourceDocument aSourceDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aSourceDocument, aBinaryCas);
+        super(aSourceDocument, aTrigger, aBinaryCas);
     }
 
-    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
+    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aAnnotationDocument, aBinaryCas);
+        super(aAnnotationDocument, aTrigger, aBinaryCas);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getSourceDocument(), super.getBinaryCas());
@@ -61,6 +64,7 @@ public class IndexSourceDocumentTask
             return false;
         }
 
-        return getSourceDocument().getId() == aTask.getSourceDocument().getId();
+        return getSourceDocument().getId() == ((IndexSourceDocumentTask) aTask).getSourceDocument()
+                .getId();
     }
 }
