@@ -46,7 +46,7 @@ public class SchedulingServiceTest
 
     private List<Task> executedTasks;
 
-    private SchedulingService sut;
+    private SchedulingServiceImpl sut;
 
     @BeforeEach
     public void setUp()
@@ -55,7 +55,7 @@ public class SchedulingServiceTest
         when(mockContext.getAutowireCapableBeanFactory())
                 .thenReturn(mock(AutowireCapableBeanFactory.class));
 
-        sut = new SchedulingService(mockContext, new SchedulingProperties());
+        sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties());
     }
 
     @AfterEach
@@ -139,7 +139,7 @@ public class SchedulingServiceTest
         }
 
         @Override
-        public void run()
+        public void execute()
         {
             while (!Thread.currentThread().isInterrupted()) {
                 try {

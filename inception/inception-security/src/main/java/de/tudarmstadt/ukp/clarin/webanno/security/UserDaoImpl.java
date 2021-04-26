@@ -290,12 +290,19 @@ public class UserDaoImpl
     @Transactional
     public boolean isAdministrator(User aUser)
     {
+        return hasRole(aUser, Role.ROLE_ADMIN);
+    }
+
+    @Override
+    @Transactional
+    public boolean hasRole(User aUser, Role aRole)
+    {
         if (aUser == null) {
             return false;
         }
 
         for (String role : getRoles(aUser)) {
-            if (Role.ROLE_ADMIN.name().equals(role)) {
+            if (aRole.name().equals(role)) {
                 return true;
             }
         }

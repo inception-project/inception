@@ -189,6 +189,7 @@ public class CurationServiceImpl
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
         private MergeStrategy selectedStrategy;
+        private boolean showAll;
 
         public CurationState(String aUser)
         {
@@ -231,6 +232,16 @@ public class CurationServiceImpl
         public MergeStrategy getMergeStrategy()
         {
             return selectedStrategy;
+        }
+
+        public boolean isShowAll()
+        {
+            return showAll;
+        }
+
+        public void setShowAll(boolean aShowAll)
+        {
+            showAll = aShowAll;
         }
     }
 
@@ -332,7 +343,6 @@ public class CurationServiceImpl
     {
         synchronized (curationStates) {
             getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);
-            ;
         }
     }
 
@@ -341,7 +351,6 @@ public class CurationServiceImpl
     {
         synchronized (curationStates) {
             getCurationState(aCurrentUser, aProjectId).setMergeStrategy(aStrategy);
-            ;
         }
     }
 
@@ -427,6 +436,22 @@ public class CurationServiceImpl
     {
         synchronized (curationStates) {
             getCurationState(aUsername, aProjectId).setSelectedUsers(new ArrayList<>());
+        }
+    }
+
+    @Override
+    public boolean isShowAll(String aUsername, Long aProjectId)
+    {
+        synchronized (curationStates) {
+            return getCurationState(aUsername, aProjectId).isShowAll();
+        }
+    }
+
+    @Override
+    public void setShowAll(String aUsername, Long aProjectId, boolean aValue)
+    {
+        synchronized (curationStates) {
+            getCurationState(aUsername, aProjectId).setShowAll(aValue);
         }
     }
 

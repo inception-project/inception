@@ -57,10 +57,14 @@ public class PreRendererImpl
         layerSupportRegistry = aLayerSupportRegistry;
         annotationService = aAnnotationService;
 
-        supportedFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(annotationService::listSupportedFeatures);
-        allFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(annotationService::listAnnotationFeature);
+        supportedFeaturesCache = Caffeine.newBuilder() //
+                .expireAfterAccess(5, MINUTES) //
+                .maximumSize(10 * 1024) //
+                .build(annotationService::listSupportedFeatures);
+        allFeaturesCache = Caffeine.newBuilder() //
+                .expireAfterAccess(5, MINUTES) //
+                .maximumSize(10 * 1024) //
+                .build(annotationService::listAnnotationFeature);
     }
 
     @Override
@@ -103,6 +107,8 @@ public class PreRendererImpl
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         supportedFeaturesCache.asMap().keySet()
+                .removeIf(key -> Objects.equals(key.getId(), aEvent.getProject().getId()));
+        allFeaturesCache.asMap().keySet()
                 .removeIf(key -> Objects.equals(key.getId(), aEvent.getProject().getId()));
     }
 }

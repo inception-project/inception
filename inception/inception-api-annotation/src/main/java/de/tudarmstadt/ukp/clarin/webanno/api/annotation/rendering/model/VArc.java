@@ -30,8 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class VArc
     extends VObject
 {
-    private final VID source;
-    private final VID target;
+    private VID source;
+    private VID target;
 
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, String aLabelHint)
@@ -94,9 +94,19 @@ public class VArc
         target = aTarget;
     }
 
+    public void setSource(VID aSource)
+    {
+        source = aSource;
+    }
+
     public VID getSource()
     {
         return source;
+    }
+
+    public void setTarget(VID aTarget)
+    {
+        target = aTarget;
     }
 
     public VID getTarget()

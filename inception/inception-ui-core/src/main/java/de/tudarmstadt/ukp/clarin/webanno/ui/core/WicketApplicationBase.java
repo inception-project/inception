@@ -44,9 +44,6 @@ import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
-import org.slf4j.MDC;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.context.ApplicationContext;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
@@ -57,11 +54,8 @@ import de.agilecoders.wicket.sass.BootstrapSass;
 import de.agilecoders.wicket.sass.SassCacheManager;
 import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
@@ -113,8 +107,6 @@ public abstract class WicketApplicationBase
         initWebFrameworks();
 
         initLogoReference();
-
-        initMDCLifecycle();
 
         // Allow fetching the current page from non-Wicket code
         initPageRequestTracker();
@@ -213,32 +205,6 @@ public abstract class WicketApplicationBase
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
                 component.add(new JQueryJavascriptBehavior());
-            }
-        });
-    }
-
-    protected void initMDCLifecycle()
-    {
-        getRequestCycleListeners().add(new IRequestCycleListener()
-        {
-            @Override
-            public void onBeginRequest(RequestCycle cycle)
-            {
-                ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-                try {
-                    DocumentService repo = ctx.getBean(DocumentService.class);
-                    MDC.put(Logging.KEY_REPOSITORY_PATH, repo.getDir().getAbsolutePath());
-                }
-                catch (NoSuchBeanDefinitionException e) {
-                    // Well, if the document service is not there, then we don't need to
-                    // configure the logging placeholder
-                }
-            }
-
-            @Override
-            public void onEndRequest(RequestCycle cycle)
-            {
-                MDC.remove(Logging.KEY_REPOSITORY_PATH);
             }
         });
     }
