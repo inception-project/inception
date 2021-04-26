@@ -25,6 +25,7 @@ import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -194,5 +196,12 @@ public class ChainRenderer
         for (SpanLayerBehavior behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aPageBegin, aPageEnd);
         }
+    }
+
+    @Override
+    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin)
+    {
+        return Collections.emptyList();
     }
 }

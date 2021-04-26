@@ -115,7 +115,9 @@ public class RecommenderInfoPanel
                     }
                     else {
                         state.setDefaultModel(Model.of("inactive"));
-                        state.add(new AttributeModifier("title", evalRec.getDeactivationReason()));
+                        state.add(AttributeModifier.replace("title",
+                                evalRec.getDeactivationReason()));
+                        state.add(AttributeModifier.append("style", "; cursor: help"));
                         state.add(AttributeAppender.append("class", "badge-danger"));
                     }
                 }

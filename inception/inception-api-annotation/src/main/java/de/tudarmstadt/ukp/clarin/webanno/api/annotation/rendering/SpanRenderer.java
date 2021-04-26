@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -103,15 +104,16 @@ public class SpanRenderer
 
         List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
+            for (VObject vobj : render(fs, aFeatures, aWindowBegin)) {
+                aResponse.add(vobj);
 
-            VSpan span = render(fs, aFeatures, aWindowBegin);
-            aResponse.add(span);
-            annoToSpanIdx.put(fs, span);
+                if (vobj instanceof VSpan) {
+                    annoToSpanIdx.put(fs, (VSpan) vobj);
 
-            renderSlots(fs, aResponse);
-
-            renderLazyDetails(fs, span, aFeatures);
-            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+                    renderLazyDetails(fs, vobj, aFeatures);
+                    renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+                }
+            }
         }
 
         for (SpanLayerBehavior behavior : behaviors) {
@@ -119,19 +121,30 @@ public class SpanRenderer
         }
     }
 
-    private VSpan render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin)
+    @Override
+    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin)
     {
+        if (!checkTypeSystem(aFS.getCAS())) {
+            return null;
+        }
+
+        List<VObject> spansAndSlots = new ArrayList<>();
+
         SpanAdapter typeAdapter = getTypeAdapter();
         String uiTypeName = typeAdapter.getEncodedTypeName();
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
         VRange range = new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin);
         VSpan span = new VSpan(typeAdapter.getLayer(), aFS, uiTypeName, range, labelFeatures);
+        spansAndSlots.add(span);
 
-        return span;
+        renderSlots(aFS, spansAndSlots);
+
+        return spansAndSlots;
     }
 
-    private void renderSlots(AnnotationFS aFS, VDocument aResponse)
+    private void renderSlots(AnnotationFS aFS, List<VObject> aSpansAndSlots)
     {
         SpanAdapter typeAdapter = getTypeAdapter();
         String uiTypeName = typeAdapter.getEncodedTypeName();
@@ -147,8 +160,8 @@ public class SpanRenderer
                 for (int li = 0; li < links.size(); li++) {
                     LinkWithRoleModel link = links.get(li);
                     FeatureStructure targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
-                    aResponse.add(new VArc(typeAdapter.getLayer(), new VID(aFS, fi, li), uiTypeName,
-                            aFS, targetFS, link.role));
+                    aSpansAndSlots.add(new VArc(typeAdapter.getLayer(), new VID(aFS, fi, li),
+                            uiTypeName, aFS, targetFS, link.role));
                 }
             }
             fi++;

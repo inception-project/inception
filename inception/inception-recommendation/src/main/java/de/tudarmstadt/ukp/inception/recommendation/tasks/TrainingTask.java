@@ -91,13 +91,13 @@ public class TrainingTask
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
             User user = getUser();
 
-            log.debug("[{}][{}]: Starting training for project [{}] triggered by [{}]...", getId(),
+            log.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
                     user.getUsername(), project, getTrigger());
             logMessages.add(info(this, "Starting training triggered by [%s]...", getTrigger()));
 
