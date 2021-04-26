@@ -62,7 +62,7 @@ public class DynamicWorkloadUpdateDocumentStateTask
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         Project project;
         try {

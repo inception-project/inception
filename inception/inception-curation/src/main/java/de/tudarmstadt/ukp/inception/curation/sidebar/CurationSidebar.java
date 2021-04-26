@@ -20,10 +20,11 @@ package de.tudarmstadt.ukp.inception.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -97,6 +99,8 @@ public class CurationSidebar
     private BootstrapRadioChoice<String> curationTargetChoice;
     private WebMarkupContainer mainContainer;
     private ListView<User> users;
+    private CheckBox showAll;
+
     private final Label noDocsLabel;
     private final Label finishedLabel;
 
@@ -112,17 +116,17 @@ public class CurationSidebar
 
         // init. state with stored curation user
         AnnotatorState state = aModel.getObject();
-        long projectid = state.getProject().getId();
         String currentUsername = userRepository.getCurrentUsername();
-        User curationUser = curationService.retrieveCurationUser(currentUsername, projectid);
-        User initUser = state.getUser();
-        state.setUser(curationUser);
+        User curationUser = curationService.retrieveCurationUser(currentUsername,
+                state.getProject().getId());
 
         // if curation user changed we have to reload the document
-        if (!initUser.equals(curationUser)) {
+        if (!state.getUser().equals(curationUser)) {
             Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
             annoPage.actionLoadDocument(target.orElseGet(null));
         }
+
+        state.setUser(curationUser);
 
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
@@ -150,6 +154,7 @@ public class CurationSidebar
         settingsForm.setOutputMarkupId(true);
         settingsForm.setVisible(false);
         mainContainer.add(settingsForm);
+
         // confirmation dialog when using automatic merging (might change user's annos)
         IModel<String> documentNameModel = PropertyModel.of(annoPage.getModel(), "document.name");
         add(mergeConfirm = new MergeDialog("mergeConfirmDialog",
@@ -180,14 +185,13 @@ public class CurationSidebar
 
     private Form<Void> createSettingsForm(String aId)
     {
-        Form<Void> settingsForm = new Form<Void>(aId);
+        Form<Void> form = new Form<Void>(aId);
         LambdaAjaxButton<Void> applyBtn = new LambdaAjaxButton<>("apply",
                 this::updateForNewCurator);
-        settingsForm.add(applyBtn);
+        form.add(applyBtn);
 
         // set up curation target selection as radio button
-        List<String> curationTargets = Arrays
-                .asList(new String[] { CURATION_USER, userRepository.getCurrentUsername() });
+        List<String> curationTargets = asList(CURATION_USER, userRepository.getCurrentUsername());
         ChoiceRenderer<String> choiceRenderer = new ChoiceRenderer<String>()
         {
             private static final long serialVersionUID = -8165699251116827372L;
@@ -223,9 +227,15 @@ public class CurationSidebar
                 return attrValMap;
             }
         };
-        settingsForm.add(curationTargetChoice);
+        form.add(curationTargetChoice);
 
-        return settingsForm;
+        showAll = new CheckBox("showAll",
+                Model.of(curationService.isShowAll(userRepository.getCurrentUsername(),
+                        getModelObject().getProject().getId())));
+        showAll.setOutputMarkupPlaceholderTag(true);
+        form.add(showAll);
+
+        return form;
     }
 
     private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)
@@ -236,11 +246,11 @@ public class CurationSidebar
         // update selected users
         updateUsers(state);
         long projectId = state.getProject().getId();
-        Collection<User> users = selectedUsers.getModelObject();
         curationService.updateMergeStrategy(currentUser.getUsername(), projectId, autoMergeStrat);
         mergeConfirm.setConfirmAction((target, form) -> {
             boolean mergeIncomplete = form.getModelObject().isMergeIncompleteAnnotations();
-            doMerge(state, state.getUser().getUsername(), users, mergeIncomplete);
+            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject(),
+                    mergeIncomplete);
             target.add(annoPage);
         });
         mergeConfirm.show(aTarget);
@@ -289,15 +299,15 @@ public class CurationSidebar
 
     private Form<List<User>> createUserSelection()
     {
-        Form<List<User>> usersForm = new Form<List<User>>("usersForm",
+        Form<List<User>> form = new Form<List<User>>("usersForm",
                 LoadableDetachableModel.of(this::listSelectedUsers));
         LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clear", this::clearUsers);
         LambdaAjaxButton<Void> mergeButton = new LambdaAjaxButton<>("merge", this::merge);
         LambdaAjaxButton<Void> showButton = new LambdaAjaxButton<>("show", this::selectAndShow);
-        usersForm.add(clearButton);
-        usersForm.add(showButton);
-        usersForm.add(mergeButton);
-        selectedUsers = new CheckGroup<User>("selectedUsers", usersForm.getModelObject());
+        form.add(clearButton);
+        form.add(showButton);
+        form.add(mergeButton);
+        selectedUsers = new CheckGroup<User>("selectedUsers", form.getModelObject());
         users = new ListView<User>("users", LoadableDetachableModel.of(this::listUsers))
         {
             private static final long serialVersionUID = 1L;
@@ -307,23 +317,18 @@ public class CurationSidebar
             {
                 aItem.add(new Check<User>("user", aItem.getModel()));
                 aItem.add(new Label("name", aItem.getModelObject().getUsername()));
-
             }
         };
         selectedUsers.add(users);
-        usersForm.add(selectedUsers);
-        usersForm.add(visibleWhen(() -> !noDocsLabel.isVisible() && !finishedLabel.isVisible()));
-        return usersForm;
+        form.add(selectedUsers);
+        form.add(visibleWhen(() -> !noDocsLabel.isVisible() && !finishedLabel.isVisible()));
+        return form;
     }
 
     private List<User> listSelectedUsers()
     {
-        Optional<List<User>> users = curationService.listUsersSelectedForCuration(
-                userRepository.getCurrentUsername(), getModelObject().getProject().getId());
-        if (!users.isPresent()) {
-            return new ArrayList<>();
-        }
-        return users.get();
+        return curationService.listUsersSelectedForCuration(userRepository.getCurrentUsername(),
+                getModelObject().getProject().getId()).orElse(emptyList());
     }
 
     /**
@@ -360,6 +365,8 @@ public class CurationSidebar
         updateCurator(state, currentUser);
         curationService.updateMergeStrategy(currentUser.getUsername(), state.getProject().getId(),
                 manualMergeStrat);
+        curationService.setShowAll(currentUser.getUsername(), state.getProject().getId(),
+                showAll.getModelObject());
         updateUsers(state);
         // close settingsForm after apply was pressed
         settingsForm.setVisible(false);

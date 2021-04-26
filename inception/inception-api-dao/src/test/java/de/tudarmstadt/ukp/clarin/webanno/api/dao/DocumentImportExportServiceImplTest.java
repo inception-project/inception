@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 import org.mockito.Spy;
+import org.slf4j.MDC;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
@@ -57,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImpo
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
@@ -81,6 +83,8 @@ public class DocumentImportExportServiceImplTest
 
         RepositoryProperties repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder);
+
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         CasStorageServiceImpl storageService = new CasStorageServiceImpl(null, null,
                 repositoryProperties, new CasStoragePropertiesImpl(), new BackupProperties());

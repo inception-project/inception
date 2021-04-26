@@ -85,7 +85,7 @@ public class SelectionTask
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
