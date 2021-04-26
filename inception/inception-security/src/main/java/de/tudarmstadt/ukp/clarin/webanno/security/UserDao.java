@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -157,4 +158,6 @@ public interface UserDao
         return !activeProfiles.contains("auto-mode-preauth")
                 && "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
     }
+
+    boolean hasRole(User aUser, Role aRole);
 }

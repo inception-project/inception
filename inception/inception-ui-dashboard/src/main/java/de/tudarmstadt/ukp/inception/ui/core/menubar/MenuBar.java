@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
@@ -33,6 +34,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -60,6 +62,7 @@ public class MenuBar
     private static final String CID_ADMIN_LINK = "adminLink";
     private static final String CID_PROJECTS_LINK = "projectsLink";
     private static final String CID_DASHBOARD_LINK = "dashboardLink";
+    private static final String CID_SWAGGER_LINK = "swaggerLink";
 
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
@@ -117,6 +120,15 @@ public class MenuBar
 
         add(new BookmarkablePageLink<>(CID_ADMIN_LINK, AdminDashboardPage.class)
                 .add(visibleWhen(user.map(userRepository::isAdministrator).orElse(false))));
+
+        add(new ExternalLink(CID_SWAGGER_LINK, LoadableDetachableModel.of(this::getSwaggerUiUrl))
+                .add(visibleWhen(
+                        user.map(u -> userRepository.hasRole(u, ROLE_REMOTE)).orElse(false))));
+    }
+
+    private String getSwaggerUiUrl()
+    {
+        return RequestCycle.get().getUrlRenderer().renderContextRelativeUrl("/swagger-ui.html");
     }
 
     private boolean isPageHelpAvailable()
@@ -136,6 +148,11 @@ public class MenuBar
     private boolean userCanAccessProject(User aUser)
     {
         if (!project.isPresent().getObject() || !user.isPresent().getObject()) {
+            return false;
+        }
+
+        // Project has not been saved yet (happens when creating a project)
+        if (project.getObject().getId() == null) {
             return false;
         }
 

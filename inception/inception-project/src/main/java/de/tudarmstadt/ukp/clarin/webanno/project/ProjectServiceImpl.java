@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
@@ -60,7 +60,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
@@ -83,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ProjectService.SERVICE_NAME)
 public class ProjectServiceImpl
@@ -135,16 +133,15 @@ public class ProjectServiceImpl
         aProject.setCreated(new Date());
         entityManager.persist(aProject);
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aProject.getId()))) {
+        try (var logCtx = withProjectLogger(aProject)) {
             log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
+
+            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                    + "/" + aProject.getId();
+            FileUtils.forceMkdir(new File(path));
+
+            applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
         }
-
-        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId();
-        FileUtils.forceMkdir(new File(path));
-
-        applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
     }
 
     @Override
@@ -158,13 +155,11 @@ public class ProjectServiceImpl
     @Transactional
     public void createProjectPermission(ProjectPermission aPermission)
     {
-        entityManager.persist(aPermission);
+        try (var logCtx = withProjectLogger(aPermission.getProject())) {
+            entityManager.persist(aPermission);
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aPermission.getProject().getId()))) {
-            log.info("Created permission [{}] for user [{}] on project [{}]({})",
-                    aPermission.getLevel(), aPermission.getUser(),
-                    aPermission.getProject().getName(), aPermission.getProject().getId());
+            log.info("Created permission [{}] for user [{}] on project {}", aPermission.getLevel(),
+                    aPermission.getUser(), aPermission.getProject());
         }
     }
 
@@ -431,15 +426,13 @@ public class ProjectServiceImpl
     public void createGuideline(Project aProject, InputStream aIS, String aFileName)
         throws IOException
     {
-        String guidelinePath = repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/";
-        FileUtils.forceMkdir(new File(guidelinePath));
-        copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
+        try (var logCtx = withProjectLogger(aProject)) {
+            String guidelinePath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                    + PROJECT_FOLDER + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/";
+            FileUtils.forceMkdir(new File(guidelinePath));
+            copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aProject.getId()))) {
-            log.info("Created guidelines file [{}] in project [{}]({})", aFileName,
-                    aProject.getName(), aProject.getId());
+            log.info("Created guidelines file [{}] in project {}", aFileName, aProject);
         }
     }
 
@@ -523,38 +516,34 @@ public class ProjectServiceImpl
     @Transactional
     public void removeProject(Project aProject) throws IOException
     {
-        long start = System.currentTimeMillis();
+        try (var logCtx = withProjectLogger(aProject)) {
+            long start = System.currentTimeMillis();
 
-        // remove metadata from DB
-        Project project = aProject;
-        if (!entityManager.contains(project)) {
-            project = entityManager.merge(project);
-        }
+            // remove metadata from DB
+            Project project = aProject;
+            if (!entityManager.contains(project)) {
+                project = entityManager.merge(project);
+            }
 
-        applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
+            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
 
-        for (ProjectPermission permissions : getProjectPermissions(aProject)) {
-            entityManager.remove(permissions);
-        }
+            for (ProjectPermission permissions : getProjectPermissions(aProject)) {
+                entityManager.remove(permissions);
+            }
 
-        entityManager.remove(project);
+            entityManager.remove(project);
 
-        // remove the project directory from the file system
-        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId();
-        try {
-            FastIOUtils.delete(new File(path));
-        }
-        catch (FileNotFoundException | NoSuchFileException e) {
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aProject.getId()))) {
+            // remove the project directory from the file system
+            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                    + "/" + aProject.getId();
+            try {
+                FastIOUtils.delete(new File(path));
+            }
+            catch (FileNotFoundException | NoSuchFileException e) {
                 log.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
             }
-        }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aProject.getId()))) {
-            log.info("Removed project [{}]({}) ({})", aProject.getName(), aProject.getId(),
+            log.info("Removed project {} ({})", aProject,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
         }
     }
@@ -562,14 +551,12 @@ public class ProjectServiceImpl
     @Override
     public void removeGuideline(Project aProject, String aFileName) throws IOException
     {
-        FileUtils.forceDelete(
-                new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                        + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
+        try (var logCtx = withProjectLogger(aProject)) {
+            FileUtils.forceDelete(
+                    new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                            + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aProject.getId()))) {
-            log.info("Removed guidelines file [{}] from project [{}]({})", aFileName,
-                    aProject.getName(), aProject.getId());
+            log.info("Removed guidelines file [{}] from project {}", aFileName, aProject.getName());
         }
     }
 
@@ -577,13 +564,11 @@ public class ProjectServiceImpl
     @Transactional
     public void removeProjectPermission(ProjectPermission aPermission)
     {
-        entityManager.remove(aPermission);
+        try (var logCtx = withProjectLogger(aPermission.getProject())) {
+            entityManager.remove(aPermission);
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aPermission.getProject().getId()))) {
-            log.info("Removed permission [{}] for user [{}] on project [{}]({})",
-                    aPermission.getLevel(), aPermission.getUser(),
-                    aPermission.getProject().getName(), aPermission.getProject().getId());
+            log.info("Removed permission [{}] for user [{}] on project {}", aPermission.getLevel(),
+                    aPermission.getUser(), aPermission.getProject());
         }
     }
 
@@ -596,14 +581,8 @@ public class ProjectServiceImpl
         FileUtils.forceMkdir(new File(path));
 
         File newTcfFile = new File(path, FilenameUtils.getName(aFileName));
-        OutputStream os = null;
-        try {
-            os = new FileOutputStream(newTcfFile);
+        try (OutputStream os = new FileOutputStream(newTcfFile)) {
             copyLarge(aIs, os);
-        }
-        finally {
-            closeQuietly(os);
-            closeQuietly(aIs);
         }
     }
 
