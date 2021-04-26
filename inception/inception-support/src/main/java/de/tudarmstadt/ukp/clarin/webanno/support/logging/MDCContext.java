@@ -17,14 +17,41 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.logging;
 
-public final class Logging
-{
-    public static final String KEY_PROJECT_ID = "projectId";
-    public static final String KEY_USERNAME = "username";
-    public static final String KEY_REPOSITORY_PATH = "repositoryPath";
+import static java.util.Collections.emptyMap;
 
-    private Logging()
+import java.util.Map;
+
+import org.slf4j.MDC;
+
+public class MDCContext
+    implements AutoCloseable
+{
+    private final Map<String, String> context;
+
+    public static MDCContext open()
     {
-        // No instances
+        return new MDCContext();
+    }
+
+    private MDCContext()
+    {
+        context = MDC.getCopyOfContextMap();
+    }
+
+    public MDCContext with(String aKey, String aValue)
+    {
+        MDC.put(aKey, aValue);
+        return this;
+    }
+
+    @Override
+    public void close()
+    {
+        if (context != null) {
+            MDC.setContextMap(context);
+        }
+        else {
+            MDC.setContextMap(emptyMap());
+        }
     }
 }
