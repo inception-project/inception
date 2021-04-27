@@ -10,7 +10,7 @@ A Typescript API for text annotation.
 
 ## Using the API
 In order to use the API for your custom annotation editor, create a typescript file
-that imports the index.ts file located in:
+that imports the file located in:
 
 "inception-api-annotation-experimental/src/main/ts"
 

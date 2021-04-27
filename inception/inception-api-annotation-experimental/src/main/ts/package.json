@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "A TypeScript API for text annotation",
   "private": true,
-  "type": "module",
   "scripts": {
     "tsc": "tsc",
-    "wp": "webpack"
+    "wp": "webpack --stats-error-details"
   },
   "repository": {
     "type": "git",
@@ -19,21 +18,18 @@
   "author": "Christoph Scheunemann",
   "license": "",
   "devDependencies": {
+    "@types/cors": "^2.8.6",
     "@types/express": "^4.17.11",
-    "@types/node": "^14.14.35",
-    "@typescript-eslint/eslint-plugin": "^4.19.0",
-    "@typescript-eslint/parser": "^4.19.0",
-    "esbuild": "^0.11.11",
-    "eslint": "^7.22.0",
-    "jest": "^26.6.3",
-    "socket.io": "^4.0.1",
-    "socket.io-client": "^4.0.1",
-    "tiny-emitter": "^2.1.0",
-    "ts-jest": "^26.5.4",
+    "@types/node": "^13.7.0",
+    "@types/ws": "^7.4.1",
+    "body-parser": "^1.19.0",
+    "express": "4.17.1",
+    "server-static": "^2.0.5",
     "ts-loader": "^9.1.0",
     "ts-node": "^9.1.1",
-    "typedoc": "^0.20.35",
     "typescript": "^4.2.3",
-    "webpack": "^5.35.0"
+    "webpack": "^5.35.0",
+    "webpack-cli": "^4.6.0",
+    "ws": "^7.4.5"
   }
 }

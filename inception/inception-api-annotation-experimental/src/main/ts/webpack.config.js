@@ -1,19 +1,26 @@
+const path = require("path");
+
 module.exports = {
-    mode: "development",
-    devtool: "inline-source-map",
     entry: {
-        main: "./client.ts",
+        main: [
+            path.resolve(__dirname, "client", "Client.ts"),
+            path.resolve(__dirname, "server", "Server.ts")
+        ],
     },
     output: {
-        path: ('build'),
-        filename: "[name]-bundle.js",
+        path: path.resolve(__dirname, "dist", "build"),
+        library: 'express',
+        filename: "bundle.js"
     },
+    target : 'node',
     resolve: {
-        extensions: [".ts", ".tsx"],
+        extensions: [".js", ".jsx"],
+
     },
     module: {
         rules: [
             {loader: "ts-loader"},
         ],
-    }
+    },
+    mode: "development"
 }

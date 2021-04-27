@@ -41,6 +41,6 @@ public class ExperimentalAPIResourceReference
      */
     private ExperimentalAPIResourceReference()
     {
-        super(ExperimentalAPIResourceReference.class, "Server.js");
+        super(ExperimentalAPIResourceReference.class, "bundle.js");
     }
 }
