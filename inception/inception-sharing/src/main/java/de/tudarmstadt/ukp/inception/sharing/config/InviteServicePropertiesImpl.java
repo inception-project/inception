@@ -24,6 +24,7 @@ public class InviteServicePropertiesImpl
     implements InviteServiceProperties
 {
     private boolean guestsEnabled;
+    private String inviteBaseUrl;
 
     @Override
     public boolean isGuestsEnabled()
@@ -34,5 +35,16 @@ public class InviteServicePropertiesImpl
     public void setGuestsEnabled(boolean aGuestsEnabled)
     {
         guestsEnabled = aGuestsEnabled;
+    }
+
+    @Override
+    public String getInviteBaseUrl()
+    {
+        return inviteBaseUrl;
+    }
+
+    public void setInviteBaseUrl(String aInviteBaseUrl)
+    {
+        inviteBaseUrl = aInviteBaseUrl;
     }
 }

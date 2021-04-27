@@ -98,4 +98,6 @@ public interface InviteService
     boolean isDateExpired(ProjectInvite aInvite);
 
     boolean isMaxAnnotatorCountReached(ProjectInvite aInvite);
+
+    String getFullInviteLinkUrl(ProjectInvite aInvite);
 }
