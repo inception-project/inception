@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.sharing;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -38,6 +42,7 @@ import org.apache.commons.lang3.Validate;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -61,18 +66,21 @@ public class InviteServiceImpl
     private @PersistenceContext EntityManager entityManager;
 
     private final UserDao userRepository;
+    private final ProjectService projectService;
 
     private final SecureRandom random;
 
-    public InviteServiceImpl(UserDao aUserRepository)
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService)
     {
         random = new SecureRandom();
         userRepository = aUserRepository;
+        projectService = aProjectService;
     }
 
-    public InviteServiceImpl(UserDao aUserRepository, EntityManager aEntitymanager)
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
+            EntityManager aEntitymanager)
     {
-        this(aUserRepository);
+        this(aUserRepository, aProjectService);
         entityManager = aEntitymanager;
     }
 
@@ -184,21 +192,55 @@ public class InviteServiceImpl
     public String getValidInviteID(Project aProject)
     {
         Validate.notNull(aProject, "Project must be given");
+        Validate.notNull(aProject.getId(), "Project be saved");
 
-        String query = "SELECT p.inviteId FROM ProjectInvite p " //
-                + "WHERE p.project = :givenProject " //
-                + "AND p.expirationDate > :now";
-        List<String> inviteIDs = entityManager.createQuery(query, String.class)
-                .setParameter("givenProject", aProject) //
-                .setParameter("now", new Date()) //
-                .setMaxResults(1) //
-                .getResultList();
+        ProjectInvite invite = readProjectInvite(aProject);
 
-        if (inviteIDs.isEmpty()) {
+        if (invite == null) {
             return null;
-
         }
-        return inviteIDs.get(0);
+
+        if (isDateExpired(invite) || isProjectAnnotationComplete(invite)
+                || isMaxAnnotatorCountReached(invite)) {
+            return null;
+        }
+
+        return invite.getInviteId();
+    }
+
+    @Override
+    public boolean isProjectAnnotationComplete(ProjectInvite aInvite)
+    {
+        if (!aInvite.isDisableOnAnnotationComplete()) {
+            return false;
+        }
+
+        // Get the freshest project state from the DB
+        Project project = projectService.getProject(aInvite.getProject().getId());
+        return !asList(NEW, ANNOTATION_IN_PROGRESS).contains(project.getState());
+    }
+
+    @Override
+    public boolean isDateExpired(ProjectInvite aInvite)
+    {
+        if (aInvite.getExpirationDate() == null) {
+            return false;
+        }
+
+        return aInvite.getExpirationDate().before(new Date());
+    }
+
+    @Override
+    public boolean isMaxAnnotatorCountReached(ProjectInvite aInvite)
+    {
+        if (aInvite.getMaxAnnotatorCount() <= 0) {
+            return false;
+        }
+
+        int annotatorCount = projectService
+                .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
+
+        return annotatorCount >= aInvite.getMaxAnnotatorCount();
     }
 
     @Override

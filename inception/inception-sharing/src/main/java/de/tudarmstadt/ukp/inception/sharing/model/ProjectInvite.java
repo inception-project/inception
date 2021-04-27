@@ -85,6 +85,12 @@ public class ProjectInvite
     @Column(nullable = false)
     private Mandatoriness askForEMail = NOT_ALLOWED;
 
+    @Column(nullable = false)
+    private boolean disableOnAnnotationComplete = true;
+
+    @Column(nullable = false)
+    private int maxAnnotatorCount;
+
     public ProjectInvite()
     {
         // constructor for JPA
@@ -176,6 +182,26 @@ public class ProjectInvite
     public void setAskForEMail(Mandatoriness aAskForEMail)
     {
         askForEMail = aAskForEMail;
+    }
+
+    public boolean isDisableOnAnnotationComplete()
+    {
+        return disableOnAnnotationComplete;
+    }
+
+    public void setDisableOnAnnotationComplete(boolean aDisableOnAnnotationComplete)
+    {
+        disableOnAnnotationComplete = aDisableOnAnnotationComplete;
+    }
+
+    public int getMaxAnnotatorCount()
+    {
+        return maxAnnotatorCount;
+    }
+
+    public void setMaxAnnotatorCount(int aMaxAnnotatorCount)
+    {
+        maxAnnotatorCount = aMaxAnnotatorCount;
     }
 
     @PrePersist
