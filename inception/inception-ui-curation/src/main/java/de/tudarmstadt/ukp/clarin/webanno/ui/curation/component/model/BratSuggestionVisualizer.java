@@ -57,26 +57,19 @@ public abstract class BratSuggestionVisualizer
 {
     private static final long serialVersionUID = 6653508018500736430L;
 
-    private AbstractDefaultAjaxBehavior controller;
-
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
+
+    private AbstractDefaultAjaxBehavior controller;
+    private final int position;
 
     public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegment> aModel, int aPosition)
     {
         super(aId, aModel);
-        String username;
 
-        Project project = getModelObject().getAnnotatorState().getProject();
-        if (project.isAnonymousCuration()
-                && !projectService.isManager(project, userService.getCurrentUser())) {
-            username = "Anonymized annotator " + (aPosition + 1);
-        }
-        else {
-            username = getModelObject().getUsername();
-        }
+        position = aPosition;
 
-        add(new Label("username", username));
+        add(new Label("username", getModel().map(this::maybeAnonymizeUsername)));
 
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -96,6 +89,17 @@ public abstract class BratSuggestionVisualizer
 
         };
         add(controller);
+    }
+
+    private String maybeAnonymizeUsername(AnnotatorSegment aSegment)
+    {
+        Project project = aSegment.getAnnotatorState().getProject();
+        if (project.isAnonymousCuration()
+                && !projectService.isManager(project, userService.getCurrentUser())) {
+            return "Anonymized annotator " + (position + 1);
+        }
+
+        return aSegment.getUser().getUiName();
     }
 
     public void setModel(IModel<AnnotatorSegment> aModel)

@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.project.exporters;
 
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
+
 import java.io.Serializable;
 import java.util.Date;
+
+import de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness;
 
 public class ExportedProjectInvite
     implements Serializable
@@ -32,6 +36,7 @@ public class ExportedProjectInvite
     private Date created;
     private Date updated;
     private boolean guestAccessible;
+    private Mandatoriness askForEMail;
 
     public String getInviteId()
     {
@@ -103,4 +108,13 @@ public class ExportedProjectInvite
         guestAccessible = aGuestAccessible;
     }
 
+    public Mandatoriness getAskForEMail()
+    {
+        return askForEMail != null ? askForEMail : NOT_ALLOWED;
+    }
+
+    public void setAskForEMail(Mandatoriness aAskForEMail)
+    {
+        askForEMail = aAskForEMail != null ? aAskForEMail : NOT_ALLOWED;
+    }
 }

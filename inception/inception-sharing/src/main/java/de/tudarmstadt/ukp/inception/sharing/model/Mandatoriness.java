@@ -15,15 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.sharing.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
+import java.io.Serializable;
 
-public final class CurationMetadata
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+
+public enum Mandatoriness
+    implements PersistentEnum, Serializable
 {
-    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
-            new AnnotatorStateMetaDataKey<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    NOT_ALLOWED("not-allowed"),
+
+    OPTIONAL("optional"),
+
+    MANDATORY("mandatory");
+
+    private final String id;
+
+    public String getName()
+    {
+        return this.name().toLowerCase();
+    }
+
+    @Override
+    public String toString()
+    {
+        return this.name().toLowerCase();
+    }
+
+    Mandatoriness(String aId)
+    {
+        this.id = aId;
+    }
+
+    @Override
+    public String getId()
+    {
+        return id;
+    }
 }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.sharing.project;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
+import static java.util.Arrays.asList;
 
 import java.util.Date;
 
@@ -30,6 +31,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -44,6 +46,7 @@ import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
 
 import com.googlecode.wicket.kendo.ui.form.datetime.DatePicker;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
@@ -52,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBa
 import de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
+import de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
 public class InviteProjectSettingsPanel
@@ -98,6 +102,13 @@ public class InviteProjectSettingsPanel
         detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true)
                 .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()))
                 .add(new LambdaAjaxFormSubmittingBehavior("change", _target -> _target.add(this))));
+        detailsForm.add(new BootstrapSelect<Mandatoriness>("askForEMail",
+                asList(Mandatoriness.values()), new EnumChoiceRenderer<>(this))
+                        .setOutputMarkupId(true)
+                        .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled() && invite
+                                .map(ProjectInvite::isGuestAccessible).orElse(false).getObject()))
+                        .add(new LambdaAjaxFormSubmittingBehavior("change",
+                                _target -> _target.add(this))));
         detailsForm.add(new TextField<>("userIdPlaceholder")
                 .add(visibleWhen(invite.map(ProjectInvite::isGuestAccessible))));
         detailsForm.add(new LambdaAjaxLink("extendLink", this::actionExtendInviteDate));

@@ -41,6 +41,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -251,6 +252,11 @@ public class CasDiff
     public Map<String, DiffAdapter> getTypeAdapters()
     {
         return typeAdapters;
+    }
+
+    public Map<String, List<CAS>> getCasMap()
+    {
+        return cases;
     }
 
     /**
@@ -538,6 +544,18 @@ public class CasDiff
             return configurations;
         }
 
+        public Optional<Configuration> findConfiguration(String aCasGroupId, FeatureStructure aFS)
+        {
+            return configurations.stream().filter(cfg -> cfg.contains(aCasGroupId, aFS))
+                    .findFirst();
+        }
+
+        public Optional<Configuration> findConfiguration(String aCasGroupId, AID aAID)
+        {
+            return configurations.stream().filter(cfg -> cfg.contains(aCasGroupId, aAID))
+                    .findFirst();
+        }
+
         /**
          * @param aCasGroupId
          *            a CAS ID
@@ -815,6 +833,11 @@ public class CasDiff
          */
         private boolean stacked = false;
 
+        public String getRepresentativeCasGroupId()
+        {
+            return fsAddresses.entrySet().iterator().next().getKey();
+        }
+
         public Set<String> getCasGroupIds()
         {
             return fsAddresses.keySet();
@@ -872,6 +895,16 @@ public class CasDiff
         public AID getAID(String aCasGroupId)
         {
             return fsAddresses.get(aCasGroupId);
+        }
+
+        public boolean contains(String aCasGroupId, FeatureStructure aFS)
+        {
+            return new AID(getAddr(aFS)).equals(fsAddresses.get(aCasGroupId));
+        }
+
+        public boolean contains(String aCasGroupId, AID aAID)
+        {
+            return aAID.equals(fsAddresses.get(aCasGroupId));
         }
 
         public <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, int aCasId,
@@ -973,6 +1006,19 @@ public class CasDiff
         public ConfigurationSet getConfigurationSet(Position aPosition)
         {
             return data.get(aPosition);
+        }
+
+        public Optional<Configuration> findConfiguration(String aRepresentativeCasGroupId, AID aAid)
+        {
+            for (ConfigurationSet cfgSet : getConfigurationSets()) {
+                Optional<Configuration> cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId,
+                        aAid);
+                if (cfg.isPresent()) {
+                    return cfg;
+                }
+            }
+
+            return Optional.empty();
         }
 
         /**
