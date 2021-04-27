@@ -37,6 +37,8 @@ public class ExportedProjectInvite
     private Date updated;
     private boolean guestAccessible;
     private Mandatoriness askForEMail;
+    private boolean disableOnAnnotationComplete;
+    private int maxAnnotatorCount;
 
     public String getInviteId()
     {
@@ -116,5 +118,25 @@ public class ExportedProjectInvite
     public void setAskForEMail(Mandatoriness aAskForEMail)
     {
         askForEMail = aAskForEMail != null ? aAskForEMail : NOT_ALLOWED;
+    }
+
+    public boolean isDisableOnAnnotationComplete()
+    {
+        return disableOnAnnotationComplete;
+    }
+
+    public void setDisableOnAnnotationComplete(boolean aDisableOnAnnotationComplete)
+    {
+        disableOnAnnotationComplete = aDisableOnAnnotationComplete;
+    }
+
+    public int getMaxAnnotatorCount()
+    {
+        return maxAnnotatorCount;
+    }
+
+    public void setMaxAnnotatorCount(int aMaxAnnotatorCount)
+    {
+        maxAnnotatorCount = aMaxAnnotatorCount;
     }
 }
