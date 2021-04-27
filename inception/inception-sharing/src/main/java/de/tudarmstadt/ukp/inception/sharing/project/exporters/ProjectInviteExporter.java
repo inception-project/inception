@@ -76,6 +76,7 @@ public class ProjectInviteExporter
             exportedInvite.setInviteId(invite.getInviteId());
             exportedInvite.setUpdated(invite.getUpdated());
             exportedInvite.setUserIdPlaceholder(invite.getUserIdPlaceholder());
+            exportedInvite.setAskForEMail(invite.getAskForEMail());
             projectInvites.add(exportedInvite);
         }
 
@@ -104,6 +105,7 @@ public class ProjectInviteExporter
             invite.setInviteId(exportedInvite.getInviteId());
             invite.setUpdated(exportedInvite.getUpdated());
             invite.setUserIdPlaceholder(exportedInvite.getUserIdPlaceholder());
+            invite.setAskForEMail(exportedInvite.getAskForEMail());
             inviteService.writeProjectInvite(invite);
 
             LOG.info("Exported [{}] invites for project [{}]", 1, aProject.getName());

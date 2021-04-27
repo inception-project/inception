@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.sharing;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -27,6 +28,7 @@ import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -166,6 +168,10 @@ public class InviteServiceImpl
     @Transactional
     public void writeProjectInvite(ProjectInvite aInvite)
     {
+        if (!aInvite.isGuestAccessible()) {
+            aInvite.setAskForEMail(NOT_ALLOWED);
+        }
+
         if (aInvite.getId() == null) {
             entityManager.persist(aInvite);
         }
@@ -244,6 +250,14 @@ public class InviteServiceImpl
         invite.setExpirationDate(aExpirationDate);
         entityManager.merge(invite);
         return true;
+    }
+
+    @Override
+    public Optional<User> getProjectUser(Project aProject, String aUsername)
+    {
+        String realm = REALM_PROJECT_PREFIX + aProject.getId();
+
+        return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUsername));
     }
 
     @Override
