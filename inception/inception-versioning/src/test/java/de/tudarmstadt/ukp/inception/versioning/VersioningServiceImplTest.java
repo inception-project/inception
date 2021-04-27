@@ -42,6 +42,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -93,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitiali
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.text.PretokenizedTextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
@@ -102,21 +104,21 @@ public class VersioningServiceImplTest
     private @Autowired VersioningService sut;
     private @Autowired TestEntityManager testEntityManager;
     private @Autowired RepositoryProperties repositoryProperties;
-    private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userDao;
-    private @Autowired DocumentImportExportService importExportService;
     private @Autowired DocumentService documentService;
 
     @TempDir
-    File repoDir;
+    File repositoryDir;
 
     private Project testProject;
 
     @BeforeEach
     public void setUp()
     {
-        repositoryProperties.setPath(repoDir);
+        repositoryProperties.setPath(repositoryDir);
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
         testProject = new Project("testProject");
 
     }
@@ -436,15 +438,6 @@ public class VersioningServiceImplTest
         sut.initializeRepo(aProject);
     }
 
-    private SourceDocument buildSourceDocument(long aDocumentId)
-    {
-        SourceDocument doc = new SourceDocument();
-        doc.setProject(testProject);
-        doc.setId(aDocumentId);
-
-        return doc;
-    }
-
     private File getResource(String aResourceName)
     {
         return Paths.get("src", "test", "resources", aResourceName).toFile();
@@ -495,5 +488,4 @@ public class VersioningServiceImplTest
             }
         }
     }
-
 }

@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
 import static java.util.Arrays.asList;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -39,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -85,23 +88,25 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServic
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 @EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
-@SpringBootTest(webEnvironment = WebEnvironment.MOCK, properties = {
-        "repository.path=target/AeroRemoteApiControllerTest/repository" })
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
 @EnableWebSecurity
 @EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class AeroRemoteApiControllerTest
 {
+    static @TempDir File repositoryDir;
+
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     private MockMvc mvc;
 
@@ -114,17 +119,20 @@ public class AeroRemoteApiControllerTest
     @BeforeEach
     public void setup()
     {
+        repositoryProperties.setPath(repositoryDir);
+
         // @formatter:off
         mvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .alwaysDo(print())
                 .apply(SecurityMockMvcConfigurers.springSecurity())
+                .addFilters(new LoggingFilter(repositoryProperties.getPath().toString()))
                 .addFilters(new OpenCasStorageSessionForRequestFilter())
                 .build();
         // @formatter:on
 
         if (!initialized) {
-            userRepository.create(new User("admin", Role.ROLE_ADMIN));
+            userRepository.create(new User("admin", ROLE_ADMIN));
             initialized = true;
 
             FileSystemUtils.deleteRecursively(new File("target/RemoteApiController2Test"));
@@ -139,7 +147,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(post(API_BASE + "/projects")
@@ -148,7 +156,7 @@ public class AeroRemoteApiControllerTest
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .param("name", "project1"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("project1"));
         
@@ -156,7 +164,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("project1"));
         // @formatter:on
@@ -170,7 +178,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(multipart(API_BASE + "/projects/1/documents")
@@ -180,7 +188,7 @@ public class AeroRemoteApiControllerTest
                 .param("name", "test.txt")
                 .param("format", "text"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("test.txt"));
      
@@ -188,7 +196,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
@@ -203,7 +211,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(multipart(API_BASE + "/projects/1/documents/1/annotations/admin")
@@ -214,7 +222,7 @@ public class AeroRemoteApiControllerTest
                 .param("format", "text")
                 .param("state", "IN-PROGRESS"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.user").value("admin"))
             .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
             .andExpect(jsonPath("$.body.timestamp").doesNotExist());
@@ -223,7 +231,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].user").value("admin"))
             .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
             .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
@@ -238,7 +246,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
@@ -251,7 +259,7 @@ public class AeroRemoteApiControllerTest
                 .param("format", "text")
                 .param("state", "CURATION-COMPLETE"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.user").value("CURATION_USER"))
             .andExpect(jsonPath("$.body.state").value("COMPLETE"))
             .andExpect(jsonPath("$.body.timestamp").exists());
@@ -260,7 +268,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
@@ -277,13 +285,13 @@ public class AeroRemoteApiControllerTest
                 .param("projectId", "1")
                 .param("documentId", "1"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"));
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE));
      
         mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.NOT_STARTED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.RUNNING;
 import static java.lang.System.currentTimeMillis;
@@ -154,7 +155,7 @@ public class ProjectExportServiceImpl
     {
         boolean success = false;
         File exportTempDir = null;
-        try {
+        try (var logCtx = withProjectLogger(aRequest.getProject())) {
             // Directory to store source documents and annotation documents
             exportTempDir = File.createTempFile("webanno-project", "export");
             exportTempDir.delete();

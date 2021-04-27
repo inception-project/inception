@@ -63,7 +63,7 @@ public class PredictionTask
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             User user = getUser();

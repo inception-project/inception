@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -91,36 +92,64 @@ public class SpanRenderer
 
         List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
-            String uiTypeName = typeAdapter.getEncodedTypeName();
-            Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
+            for (VObject vobj : render(fs, aFeatures, aWindowBegin)) {
+                aResponse.add(vobj);
 
-            VRange range = new VRange(fs.getBegin() - aWindowBegin, fs.getEnd() - aWindowBegin);
-            VSpan span = new VSpan(typeAdapter.getLayer(), fs, uiTypeName, range, features);
-            span.addLazyDetails(getLazyDetails(fs, aFeatures));
+                if (vobj instanceof VSpan) {
+                    annoToSpanIdx.put(fs, (VSpan) vobj);
 
-            annoToSpanIdx.put(fs, span);
-
-            aResponse.add(span);
-
-            // Render errors if required features are missing
-            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
-
-            // Render slots
-            int fi = 0;
-            nextFeature: for (AnnotationFeature feat : typeAdapter.listFeatures()) {
-                if (!feat.isEnabled()) {
-                    continue nextFeature;
+                    renderLazyDetails(fs, vobj, aFeatures);
+                    renderRequiredFeatureErrors(aFeatures, fs, aResponse);
                 }
+            }
+        }
 
-                if (ARRAY.equals(feat.getMultiValueMode())
-                        && WITH_ROLE.equals(feat.getLinkMode())) {
-                    List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, fs);
-                    for (int li = 0; li < links.size(); li++) {
-                        LinkWithRoleModel link = links.get(li);
-                        FeatureStructure targetFS = selectFsByAddr(fs.getCAS(), link.targetAddr);
-                        aResponse.add(new VArc(typeAdapter.getLayer(), new VID(fs, fi, li),
-                                uiTypeName, fs, targetFS, link.role, features));
-                    }
+        for (SpanLayerBehavior behavior : behaviors) {
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
+        }
+    }
+
+    @Override
+    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin)
+    {
+        if (!checkTypeSystem(aFS.getCAS())) {
+            return null;
+        }
+
+        List<VObject> spansAndSlots = new ArrayList<>();
+
+        SpanAdapter typeAdapter = getTypeAdapter();
+        String uiTypeName = typeAdapter.getEncodedTypeName();
+        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
+
+        VRange range = new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin);
+        VSpan span = new VSpan(typeAdapter.getLayer(), aFS, uiTypeName, range, labelFeatures);
+        spansAndSlots.add(span);
+
+        renderSlots(aFS, spansAndSlots);
+
+        return spansAndSlots;
+    }
+
+    private void renderSlots(AnnotationFS aFS, List<VObject> aSpansAndSlots)
+    {
+        SpanAdapter typeAdapter = getTypeAdapter();
+        String uiTypeName = typeAdapter.getEncodedTypeName();
+
+        int fi = 0;
+        nextFeature: for (AnnotationFeature feat : typeAdapter.listFeatures()) {
+            if (!feat.isEnabled()) {
+                continue nextFeature;
+            }
+
+            if (ARRAY.equals(feat.getMultiValueMode()) && WITH_ROLE.equals(feat.getLinkMode())) {
+                List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, aFS);
+                for (int li = 0; li < links.size(); li++) {
+                    LinkWithRoleModel link = links.get(li);
+                    FeatureStructure targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
+                    aSpansAndSlots.add(new VArc(typeAdapter.getLayer(), new VID(aFS, fi, li),
+                            uiTypeName, aFS, targetFS, link.role));
                 }
                 fi++;
             }
