@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
@@ -120,37 +123,21 @@ public class RelationRenderer
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            if (typeAdapter.getAttachFeatureName() != null) {
-                dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
-                governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
-            }
-            else {
-                dependentFs = fs.getFeatureValue(dependentFeature);
-                governorFs = fs.getFeatureValue(governorFeature);
-            }
 
-            String bratTypeName = typeAdapter.getEncodedTypeName();
-            Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs,
-                    visibleFeatures);
-
-            if (dependentFs == null || governorFs == null) {
-                StringBuilder message = new StringBuilder();
-
-                message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                        + getAddr(fs) + "] has loose ends - cannot render.");
-                if (typeAdapter.getAttachFeatureName() != null) {
-                    message.append("\nRelation [" + typeAdapter.getLayer().getName()
-                            + "] attached to feature [" + typeAdapter.getAttachFeatureName()
-                            + "].");
+            for (VObject arc : render(fs, aFeatures, aWindowBegin)) {
+                if (!(arc instanceof VArc)) {
+                    continue;
                 }
-                message.append("\nDependent: " + dependentFs);
-                message.append("\nGovernor: " + governorFs);
 
-                RequestCycle requestCycle = RequestCycle.get();
-                IPageRequestHandler handler = PageRequestHandlerTracker
-                        .getLastHandler(requestCycle);
-                Page page = (Page) handler.getPage();
-                page.warn(message.toString());
+                aResponse.add(arc);
+                annoToArcIdx.put(fs, (VArc) arc);
+
+                renderYield(aResponse, fs, relationLinks, yieldDeps);
+
+                renderLazyDetails(fs, arc, aFeatures);
+                renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+            }
+        }
 
                 continue;
             }
@@ -166,23 +153,46 @@ public class RelationRenderer
             // Render errors if required features are missing
             renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
 
-            if (relationLinks.keySet().contains(getAddr(governorFs))
-                    && !yieldDeps.contains(getAddr(governorFs))) {
-                yieldDeps.add(getAddr(governorFs));
+    @Override
+    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin)
+    {
+        if (!checkTypeSystem(aFS.getCAS())) {
+            return Collections.emptyList();
+        }
+
+        RelationAdapter typeAdapter = getTypeAdapter();
+        FeatureStructure dependentFs = getGovernorFs(aFS);
+        FeatureStructure governorFs = getDependentFs(aFS);
 
                 // sort the annotations (begin, end)
                 List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
                 sortedDepFs
                         .sort(comparingInt(arg0 -> selectAnnotationByAddr(aCas, arg0).getBegin()));
 
-                String cm = getYieldMessage(aCas, sortedDepFs);
-                aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
+
+            message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
+                    + getAddr(aFS) + "] has loose ends - cannot render.");
+            if (typeAdapter.getAttachFeatureName() != null) {
+                message.append("\nRelation [" + typeAdapter.getLayer().getName()
+                        + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
             }
+            message.append("\nDependent: " + dependentFs);
+            message.append("\nGovernor: " + governorFs);
+
+            RequestCycle requestCycle = RequestCycle.get();
+            IPageRequestHandler handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
+            Page page = (Page) handler.getPage();
+            page.warn(message.toString());
+
+            return Collections.emptyList();
         }
 
-        for (RelationLayerBehavior behavior : behaviors) {
-            behavior.onRender(typeAdapter, aResponse, annoToArcIdx);
-        }
+        String bratTypeName = typeAdapter.getEncodedTypeName();
+        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
+
+        return asList(new VArc(typeAdapter.getLayer(), aFS, bratTypeName, governorFs, dependentFs,
+                labelFeatures));
     }
 
     /**

@@ -17,11 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -29,6 +36,8 @@ public abstract class Task
     implements Runnable
 {
     private final static AtomicInteger nextId = new AtomicInteger(1);
+
+    private @Autowired RepositoryProperties repositoryProperties;
 
     private final User user;
     private final Project project;
@@ -42,8 +51,8 @@ public abstract class Task
 
     public Task(User aUser, Project aProject, String aTrigger)
     {
-        notNull(aProject);
-        notNull(aTrigger);
+        notNull(aProject, "Project must be specified");
+        notNull(aTrigger, "Trigger must be specified");
 
         user = aUser;
         project = aProject;
@@ -80,6 +89,34 @@ public abstract class Task
     {
         return true;
     }
+
+    @Override
+    public void run()
+    {
+        try {
+            // We are in a new thread. Set up thread-specific MDC
+            if (repositoryProperties != null) {
+                MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            }
+
+            if (getUser() != null) {
+                MDC.put(KEY_USERNAME, getUser().getUsername());
+            }
+
+            if (getProject() != null) {
+                MDC.put(KEY_PROJECT_ID, String.valueOf(getProject().getId()));
+            }
+
+            execute();
+        }
+        finally {
+            MDC.remove(KEY_REPOSITORY_PATH);
+            MDC.remove(KEY_USERNAME);
+            MDC.remove(KEY_PROJECT_ID);
+        }
+    }
+
+    public abstract void execute();
 
     @Override
     public String toString()
