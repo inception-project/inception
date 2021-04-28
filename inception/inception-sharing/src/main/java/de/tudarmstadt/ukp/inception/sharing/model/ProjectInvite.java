@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.model;
 
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -34,6 +36,8 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
+import org.hibernate.annotations.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -76,6 +80,16 @@ public class ProjectInvite
 
     @Column(nullable = false)
     private boolean guestAccessible = false;
+
+    @Type(type = "de.tudarmstadt.ukp.inception.sharing.model.MandatorinessType")
+    @Column(nullable = false)
+    private Mandatoriness askForEMail = NOT_ALLOWED;
+
+    @Column(nullable = false)
+    private boolean disableOnAnnotationComplete = true;
+
+    @Column(nullable = false)
+    private int maxAnnotatorCount;
 
     public ProjectInvite()
     {
@@ -158,6 +172,36 @@ public class ProjectInvite
     public void setGuestAccessible(boolean aGuestAccessible)
     {
         guestAccessible = aGuestAccessible;
+    }
+
+    public Mandatoriness getAskForEMail()
+    {
+        return askForEMail;
+    }
+
+    public void setAskForEMail(Mandatoriness aAskForEMail)
+    {
+        askForEMail = aAskForEMail;
+    }
+
+    public boolean isDisableOnAnnotationComplete()
+    {
+        return disableOnAnnotationComplete;
+    }
+
+    public void setDisableOnAnnotationComplete(boolean aDisableOnAnnotationComplete)
+    {
+        disableOnAnnotationComplete = aDisableOnAnnotationComplete;
+    }
+
+    public int getMaxAnnotatorCount()
+    {
+        return maxAnnotatorCount;
+    }
+
+    public void setMaxAnnotatorCount(int aMaxAnnotatorCount)
+    {
+        maxAnnotatorCount = aMaxAnnotatorCount;
     }
 
     @PrePersist

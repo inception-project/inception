@@ -25,7 +25,7 @@
         --input-padding-y: 1.5rem;
       }
       
-      .form-group input[type=text],input[type=password] {
+      .form-group input[type=text],input[type=password],input[type=email] {
         padding: var(--input-padding-y) var(--input-padding-x);
         border-radius: 2rem;
       }
@@ -47,7 +47,7 @@
           <div class="card-body container-sm">
             <div wicket:id="expirationNotice">
               <h5 class="card-title mb-3 text-center">
-                This invitation has expired.
+                Unfortunately, no additional annotators are accepted at this time.
               </h5>
             </div>
             <form wicket:id="acceptInvitationForm">
@@ -64,6 +64,9 @@
               </div>
               <div class="form-group form-row mb-3" wicket:enclosure="password">
                 <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+              </div>
+              <div class="form-group form-row mb-3" wicket:enclosure="eMail">
+                <input wicket:id="eMail" type="email" class="form-control" placeholder="eMail address"/>
               </div>
               <div class="form-group form-row text-center" wicket:enclosure="registeredLogin">
                 <div class="form-check w-100">
