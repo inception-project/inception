@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import java.util.Date;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -42,7 +43,7 @@ public interface InviteService
     void removeInviteID(Project aProject);
 
     /**
-     * Get invite id for given project if it exists and has expired yet
+     * Get invite id for given project if it exists and has expired yet.
      * 
      * @param aProject
      *            the given project
@@ -88,5 +89,15 @@ public interface InviteService
 
     void writeProjectInvite(ProjectInvite aInvite);
 
+    Optional<User> getProjectUser(Project aProject, String aUsername);
+
     User getOrCreateProjectUser(Project aProject, String aUsername);
+
+    boolean isProjectAnnotationComplete(ProjectInvite aInvite);
+
+    boolean isDateExpired(ProjectInvite aInvite);
+
+    boolean isMaxAnnotatorCountReached(ProjectInvite aInvite);
+
+    String getFullInviteLinkUrl(ProjectInvite aInvite);
 }
