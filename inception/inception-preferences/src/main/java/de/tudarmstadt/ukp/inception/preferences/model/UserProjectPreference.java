@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.preferences.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -114,5 +115,22 @@ public class UserProjectPreference
     public void setTraits(String aTraits)
     {
         traits = aTraits;
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof UserProjectPreference)) {
+            return false;
+        }
+        UserProjectPreference castOther = (UserProjectPreference) other;
+        return Objects.equals(user, castOther.user) && Objects.equals(project, castOther.project)
+                && Objects.equals(name, castOther.name);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(user, project, name);
     }
 }
