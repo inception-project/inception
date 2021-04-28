@@ -44,7 +44,7 @@
     <addForeignKeyConstraint 
       constraintName="FK_user_preference_user"
       baseTableName="user_preference" baseColumnNames="user"
-      referencedTableName="user" referencedColumnNames="username"
+      referencedTableName="users" referencedColumnNames="username"
       deferrable="false" initiallyDeferred="false"
       onDelete="CASCADE" onUpdate="CASCADE"/>
     <addUniqueConstraint 
