@@ -37,9 +37,6 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
 
@@ -51,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness;
@@ -82,7 +78,8 @@ public class InviteProjectSettingsPanel
         detailsForm.add(visibleWhen(invite.isPresent()));
         detailsForm.setOutputMarkupId(true);
 
-        TextField<String> linkField = new TextField<>("linkText", getInviteLink())
+        TextField<String> linkField = new TextField<>("linkText",
+                invite.map(inviteService::getFullInviteLinkUrl))
         {
             private static final long serialVersionUID = -4045558203619280212L;
 
@@ -169,17 +166,5 @@ public class InviteProjectSettingsPanel
         inviteService.removeInviteID(getModelObject());
         invite.setObject(null);
         aTarget.add(this);
-    }
-
-    private IModel<String> getInviteLink()
-    {
-        return invite.map(ProjectInvite::getInviteId).map(inviteId -> {
-            CharSequence url = urlFor(AcceptInvitePage.class,
-                    new PageParameters()
-                            .set(AcceptInvitePage.PAGE_PARAM_PROJECT, getModelObject().getId())
-                            .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, inviteId));
-
-            return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
-        });
     }
 }
