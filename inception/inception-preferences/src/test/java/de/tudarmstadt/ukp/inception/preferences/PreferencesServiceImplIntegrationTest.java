@@ -27,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -46,16 +47,17 @@ import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class PreferencesServiceImplIntegrationTest
 {
     private static final Key<TestTraits> KEY = new Key<>(TestTraits.class, "test.traits");
 
-    private @Autowired TestEntityManager testEntityManager;
     private PreferencesServiceImpl sut;
+    
+    private @Autowired TestEntityManager testEntityManager;
     private @Autowired RepositoryProperties repositoryProperties;
-
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userDao;
 
@@ -65,6 +67,8 @@ public class PreferencesServiceImplIntegrationTest
     public void setUp()
     {
         repositoryProperties.setPath(repoDir);
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+        
         sut = new PreferencesServiceImpl(testEntityManager.getEntityManager());
     }
 
