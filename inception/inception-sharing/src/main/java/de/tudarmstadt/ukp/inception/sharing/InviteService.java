@@ -43,7 +43,7 @@ public interface InviteService
     void removeInviteID(Project aProject);
 
     /**
-     * Get invite id for given project if it exists and has expired yet
+     * Get invite id for given project if it exists and has expired yet.
      * 
      * @param aProject
      *            the given project
@@ -92,4 +92,12 @@ public interface InviteService
     Optional<User> getProjectUser(Project aProject, String aUsername);
 
     User getOrCreateProjectUser(Project aProject, String aUsername);
+
+    boolean isProjectAnnotationComplete(ProjectInvite aInvite);
+
+    boolean isDateExpired(ProjectInvite aInvite);
+
+    boolean isMaxAnnotatorCountReached(ProjectInvite aInvite);
+
+    String getFullInviteLinkUrl(ProjectInvite aInvite);
 }
