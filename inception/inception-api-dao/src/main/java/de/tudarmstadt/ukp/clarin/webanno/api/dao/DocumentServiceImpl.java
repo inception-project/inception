@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRAD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
@@ -69,7 +70,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -101,7 +101,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
 public class DocumentServiceImpl
@@ -219,8 +218,7 @@ public class DocumentServiceImpl
         if (isNull(aAnnotationDocument.getId())) {
             entityManager.persist(aAnnotationDocument);
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aAnnotationDocument.getProject().getId()))) {
+            try (var logCtx = withProjectLogger(aAnnotationDocument.getProject())) {
                 log.info(
                         "Created annotation document [{}] for user [{}] for source document "
                                 + "[{}]({}) in project [{}]({})",
@@ -520,8 +518,7 @@ public class DocumentServiceImpl
             FileUtils.forceDelete(new File(path));
         }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aDocument.getProject().getId()))) {
+        try (var logCtx = withProjectLogger(aDocument.getProject())) {
             Project project = aDocument.getProject();
             log.info("Removed source document [{}]({}) from project [{}]({})", aDocument.getName(),
                     aDocument.getId(), project.getName(), project.getId());
@@ -570,8 +567,7 @@ public class DocumentServiceImpl
             applicationEventPublisher
                     .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, cas));
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aDocument.getProject().getId()))) {
+            try (var logCtx = withProjectLogger(aDocument.getProject())) {
                 Project project = aDocument.getProject();
                 log.info("Imported source document [{}]({}) to project [{}]({})",
                         aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
@@ -1183,8 +1179,7 @@ public class DocumentServiceImpl
             FastIOUtils.delete(docFolder);
         }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(project.getId()))) {
+        try (var logCtx = withProjectLogger(project)) {
             log.info("Removed all documents from project [{}]({}) being deleted", project.getName(),
                     project.getId());
         }

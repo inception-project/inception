@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.MDC;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -39,6 +41,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +49,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -97,6 +101,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -104,6 +109,9 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl;
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
@@ -116,8 +124,6 @@ import de.tudarmstadt.ukp.inception.search.config.SearchServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @EnableAutoConfiguration
 @EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
@@ -135,6 +141,9 @@ public class MtasDocumentIndexTest
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
+    private @Autowired RepositoryProperties repositoryProperties;
+
+    public @TempDir File temporaryFolder;
 
     @BeforeEach
     public void testWatcher(TestInfo aTestInfo)
@@ -147,6 +156,10 @@ public class MtasDocumentIndexTest
     @BeforeEach
     public void setUp()
     {
+        repositoryProperties.setPath(temporaryFolder);
+
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
         if (!userRepository.exists("admin")) {
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
         }
@@ -468,11 +481,12 @@ public class MtasDocumentIndexTest
         private @Autowired EntityManager entityManager;
 
         @Bean
-        public ProjectService projectService(
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
+        public ProjectService projectService(UserDao aUserRepository,
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy,
+                RepositoryProperties aRepositoryProperties)
         {
-            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
-                    repositoryProperties(), aInitializerProxy);
+            return new ProjectServiceImpl(aUserRepository, applicationEventPublisher,
+                    aRepositoryProperties, aInitializerProxy);
         }
 
         @Bean
@@ -556,12 +570,25 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
+        public SchedulingProperties schedulingProperties()
+        {
+            return new SchedulingProperties();
+        }
+
+        @Bean
+        public SchedulingService schedulingService(ApplicationContext aContext,
+                SchedulingProperties aSchedulingProperties)
+        {
+            return new SchedulingServiceImpl(aContext, aSchedulingProperties);
+        }
+
+        @Bean
         public SearchService searchService(DocumentService aDocumentService,
                 ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
-                IndexScheduler aIndexScheduler, SearchServiceProperties aProperties)
+                SchedulingService aSchedulingService, SearchServiceProperties aProperties)
         {
             return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
-                    aIndexScheduler, aProperties);
+                    aSchedulingService, aProperties);
         }
 
         @Bean
@@ -579,24 +606,20 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public KnowledgeBaseService knowledgeBaseService()
+        public KnowledgeBaseService knowledgeBaseService(RepositoryProperties aRepoProperties,
+                KnowledgeBaseProperties aKBProperties)
         {
-            return new KnowledgeBaseServiceImpl(repositoryProperties(), knowledgeBaseProperties());
+            return new KnowledgeBaseServiceImpl(aRepoProperties, aKBProperties);
         }
 
         @Bean
-        public IndexScheduler indexScheduler()
+        public DocumentService documentService(RepositoryProperties aRepositoryProperties,
+                CasStorageService aCasStorageService,
+                DocumentImportExportService aImportExportService, ProjectService aProjectService)
         {
-            return new IndexSchedulerImpl();
-        }
-
-        @Bean
-        public DocumentService documentService(
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
-        {
-            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
-                    importExportService(), projectService(aInitializerProxy),
-                    applicationEventPublisher, entityManager);
+            return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
+                    aImportExportService, aProjectService, applicationEventPublisher,
+                    entityManager);
         }
 
         @Bean

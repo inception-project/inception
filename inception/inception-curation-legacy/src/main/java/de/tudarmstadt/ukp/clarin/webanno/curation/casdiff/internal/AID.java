@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class AID
     implements Serializable
@@ -38,6 +39,28 @@ public class AID
         addr = aAddr;
         feature = aFeature;
         index = aIndex;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(addr, feature, index);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        AID other = (AID) obj;
+        return addr == other.addr && Objects.equals(feature, other.feature) && index == other.index;
     }
 
     @Override

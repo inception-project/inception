@@ -60,6 +60,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
@@ -70,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEven
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class CasStorageServiceImplTest
 {
@@ -104,6 +106,8 @@ public class CasStorageServiceImplTest
 
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder);
+
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         sut = new CasStorageServiceImpl(null, null, repositoryProperties,
                 new CasStoragePropertiesImpl(), new BackupProperties());
@@ -463,6 +467,8 @@ public class CasStorageServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             for (int n = 0; n < repeat; n++) {
                 if (exception.get()) {
                     return;
@@ -505,6 +511,8 @@ public class CasStorageServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     sut.readOrCreateCas(doc, user, AUTO_CAS_UPGRADE, initializer,
@@ -538,6 +546,8 @@ public class CasStorageServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     Thread.sleep(2500 + rnd.nextInt(2500));
@@ -574,6 +584,8 @@ public class CasStorageServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     sut.readOrCreateCas(doc, user, AUTO_CAS_UPGRADE, initializer, UNMANAGED_ACCESS);
@@ -604,6 +616,8 @@ public class CasStorageServiceImplTest
         @Override
         public void run()
         {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (CasStorageSession session = openNested()) {
                     sut.readCas(doc, user, UNMANAGED_NON_INITIALIZING_ACCESS);

@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
@@ -68,6 +69,8 @@ public interface Renderer
      */
     void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
+
+    List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin);
 
     FeatureSupportRegistry getFeatureSupportRegistry();
 

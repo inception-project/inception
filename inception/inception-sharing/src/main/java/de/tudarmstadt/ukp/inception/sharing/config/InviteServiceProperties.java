@@ -20,4 +20,6 @@ package de.tudarmstadt.ukp.inception.sharing.config;
 public interface InviteServiceProperties
 {
     boolean isGuestsEnabled();
+
+    String getInviteBaseUrl();
 }

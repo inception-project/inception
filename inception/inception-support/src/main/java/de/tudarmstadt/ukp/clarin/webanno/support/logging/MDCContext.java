@@ -15,15 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.clarin.webanno.support.logging;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
+import static java.util.Collections.emptyMap;
 
-public final class CurationMetadata
+import java.util.Map;
+
+import org.slf4j.MDC;
+
+public class MDCContext
+    implements AutoCloseable
 {
-    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
-            new AnnotatorStateMetaDataKey<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    private final Map<String, String> context;
+
+    public static MDCContext open()
+    {
+        return new MDCContext();
+    }
+
+    private MDCContext()
+    {
+        context = MDC.getCopyOfContextMap();
+    }
+
+    public MDCContext with(String aKey, String aValue)
+    {
+        MDC.put(aKey, aValue);
+        return this;
+    }
+
+    @Override
+    public void close()
+    {
+        if (context != null) {
+            MDC.setContextMap(context);
+        }
+        else {
+            MDC.setContextMap(emptyMap());
+        }
+    }
 }

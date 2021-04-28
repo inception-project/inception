@@ -58,7 +58,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         Project project;
         try {

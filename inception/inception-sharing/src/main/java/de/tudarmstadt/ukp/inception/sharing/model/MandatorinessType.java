@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.sharing.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-public final class CurationMetadata
+/**
+ * Implementation of {@link PersistentEnumUserType}
+ */
+public class MandatorinessType
+    extends PersistentEnumUserType<Mandatoriness>
 {
-    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
-            new AnnotatorStateMetaDataKey<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    private static final long serialVersionUID = 7378581246428809177L;
+
+    @Override
+    public Class<Mandatoriness> returnedClass()
+    {
+        return Mandatoriness.class;
+    }
 }

@@ -23,10 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage.PAGE_PARAM_INVITE_ID;
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.MANDATORY;
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,13 +39,13 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.EmailTextField;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -114,9 +117,12 @@ public class AcceptInvitePage
         formModel = new CompoundPropertyModel<>(new FormData());
         formModel.getObject().registeredLogin = !invite.getObject().isGuestAccessible()
                 || !inviteServiceProperties.isGuestsEnabled();
+        formModel.getObject().askForEMail = invite.getObject().isGuestAccessible()
+                && invite.getObject().getAskForEMail() != NOT_ALLOWED
+                && inviteServiceProperties.isGuestsEnabled();
 
         Form<FormData> form = new Form<>("acceptInvitationForm", formModel);
-        form.add(new Label("project", PropertyModel.of(getProject(), "name")));
+        // form.add(new Label("project", PropertyModel.of(getProject(), "name")));
         form.add(new RequiredTextField<String>("username") //
                 .add(AttributeModifier.replace("placeholder",
                         LoadableDetachableModel.of(
@@ -124,6 +130,10 @@ public class AcceptInvitePage
                 .add(visibleWhen(() -> user == null)));
         form.add(new PasswordTextField("password") //
                 .add(visibleWhen(() -> user == null && formModel.getObject().registeredLogin)));
+        form.add(new EmailTextField("eMail") //
+                .setRequired(invite.getObject().getAskForEMail() == MANDATORY)
+                .add(visibleWhen(() -> user == null && formModel.getObject().askForEMail
+                        && !formModel.getObject().registeredLogin)));
         form.add(new LambdaAjaxButton<>("join", this::actionJoinProject));
         form.add(new CheckBox("registeredLogin") //
                 .setOutputMarkupPlaceholderTag(true) //
@@ -200,7 +210,7 @@ public class AcceptInvitePage
             user = signInAsRegisteredUserIfNecessary(aTarget);
         }
         else {
-            user = signInAsProjectUser(aForm.getModelObject().username);
+            user = signInAsProjectUser(aForm.getModelObject());
         }
 
         if (user == null) {
@@ -222,11 +232,25 @@ public class AcceptInvitePage
 
     }
 
-    private User signInAsProjectUser(String aUsername)
+    private User signInAsProjectUser(FormData aFormData)
     {
-        User user = inviteService.getOrCreateProjectUser(getProject(), aUsername);
+        Optional<User> existingUser = inviteService.getProjectUser(getProject(),
+                aFormData.username);
+        String storedEMail = existingUser.map(User::getEmail).orElse(null);
+        if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
+            error("Provided eMail address does not match stored eMail address");
+            return null;
+        }
+
+        User user = inviteService.getOrCreateProjectUser(getProject(), aFormData.username);
+        if (aFormData.eMail != null && user.getEmail() == null) {
+            user.setEmail(aFormData.eMail);
+            userRepository.update(user);
+        }
+
         ApplicationSession.get().signIn(asAuthentication(user));
         createProjectPermissionsIfNecessary(user);
+
         return user;
     }
 
@@ -278,6 +302,8 @@ public class AcceptInvitePage
 
         String username;
         String password;
+        String eMail;
         boolean registeredLogin;
+        boolean askForEMail;
     }
 }

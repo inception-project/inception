@@ -15,15 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.scheduling;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
-
-public final class CurationMetadata
+public interface MatchableTask
 {
-    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
-            new AnnotatorStateMetaDataKey<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    /**
+     * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
+     * the given task.
+     * 
+     * @param aTask
+     *            the given scheduling task
+     * @return whether the given task matches this one
+     */
+    boolean matches(Task aTask);
 }

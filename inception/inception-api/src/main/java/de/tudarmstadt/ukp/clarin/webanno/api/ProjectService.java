@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +27,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
+import org.slf4j.MDC;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
@@ -34,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.MDCContext;
 
 public interface ProjectService
 {
@@ -446,4 +452,13 @@ public interface ProjectService
         throws IOException;
 
     List<ProjectInitializer> listProjectInitializers();
+
+    static MDCContext withProjectLogger(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be given");
+        Validate.notNull(aProject.getId(), "Project must have been saved already");
+        Validate.notNull(MDC.get(KEY_REPOSITORY_PATH), "Repository path must be set in MDC");
+
+        return MDCContext.open().with(KEY_PROJECT_ID, String.valueOf(aProject.getId()));
+    }
 }
