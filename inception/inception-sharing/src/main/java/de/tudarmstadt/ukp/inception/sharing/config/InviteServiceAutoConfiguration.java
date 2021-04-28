@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.InviteServiceImpl;
@@ -42,9 +43,11 @@ public class InviteServiceAutoConfiguration
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
-    public InviteService inviteService(UserDao aUserRepository)
+    public InviteService inviteService(UserDao aUserRepository, ProjectService aProjectService,
+            InviteServiceProperties aInviteProperties)
     {
-        return new InviteServiceImpl(aUserRepository, entityManager);
+        return new InviteServiceImpl(aUserRepository, aProjectService, aInviteProperties,
+                entityManager);
     }
 
     @Order(InviteProjectSettingsPanelFactory.ORDER)

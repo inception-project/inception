@@ -15,11 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.sharing.config;
+package de.tudarmstadt.ukp.inception.sharing.model;
 
-public interface InviteServiceProperties
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
+
+/**
+ * Implementation of {@link PersistentEnumUserType}
+ */
+public class MandatorinessType
+    extends PersistentEnumUserType<Mandatoriness>
 {
-    boolean isGuestsEnabled();
+    private static final long serialVersionUID = 7378581246428809177L;
 
-    String getInviteBaseUrl();
+    @Override
+    public Class<Mandatoriness> returnedClass()
+    {
+        return Mandatoriness.class;
+    }
 }

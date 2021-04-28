@@ -15,11 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.sharing.config;
+package de.tudarmstadt.ukp.inception.sharing.model;
 
-public interface InviteServiceProperties
+import java.io.Serializable;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+
+public enum Mandatoriness
+    implements PersistentEnum, Serializable
 {
-    boolean isGuestsEnabled();
+    NOT_ALLOWED("not-allowed"),
 
-    String getInviteBaseUrl();
+    OPTIONAL("optional"),
+
+    MANDATORY("mandatory");
+
+    private final String id;
+
+    public String getName()
+    {
+        return this.name().toLowerCase();
+    }
+
+    @Override
+    public String toString()
+    {
+        return this.name().toLowerCase();
+    }
+
+    Mandatoriness(String aId)
+    {
+        this.id = aId;
+    }
+
+    @Override
+    public String getId()
+    {
+        return id;
+    }
 }
