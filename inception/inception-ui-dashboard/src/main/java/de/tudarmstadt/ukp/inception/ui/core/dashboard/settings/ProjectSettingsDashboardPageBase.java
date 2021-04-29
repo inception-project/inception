@@ -42,9 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 
 /**
@@ -54,12 +57,16 @@ public class ProjectSettingsDashboardPageBase
     extends ProjectPageBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    
+
+    private static final Key<Boolean> KEY_PINNED = new Key<>(Boolean.class,
+            "project-settings-menu/pinned");
+
     private static final long serialVersionUID = -2487663821276301436L;
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
+    private @SpringBean PreferencesService preferencesService;
 
     private DashboardMenu menu;
     private ChallengeResponseDialog deleteProjectDialog;
@@ -73,26 +80,32 @@ public class ProjectSettingsDashboardPageBase
             requireProjectRole(user, MANAGER);
         }
     }
-    
+
     @Override
     protected void onInitialize()
     {
         super.onInitialize();
-        
+
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
+        menu.setPinState(new LambdaModelAdapter.Builder<Boolean>() //
+                .getting(() -> preferencesService
+                        .loadTraitsForUser(KEY_PINNED, userRepository.getCurrentUser())
+                        .orElse(false)) //
+                .setting(v -> preferencesService.saveTraitsForUser(KEY_PINNED,
+                        userRepository.getCurrentUser(), v)) //
+                .build());
         add(menu);
-        
+
         add(new Label("projectName", LoadableDetachableModel.of(() -> getProject().getName())));
-        
-        add(new LambdaAjaxLink("delete", this::actionDelete)
-                .onConfigure((_this) -> _this.setEnabled(getProject() != null
-                        && getProject().getId() != null)));
-        
+
+        add(new LambdaAjaxLink("delete", this::actionDelete).onConfigure(
+                (_this) -> _this.setEnabled(getProject() != null && getProject().getId() != null)));
+
         IModel<String> projectNameModel = PropertyModel.of(getProject(), "name");
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
                 new StringResourceModel("DeleteProjectDialog.title", this),
-                new StringResourceModel("DeleteProjectDialog.text", this).setModel(getProjectModel())
-                        .setParameters(projectNameModel),
+                new StringResourceModel("DeleteProjectDialog.text", this)
+                        .setModel(getProjectModel()).setParameters(projectNameModel),
                 projectNameModel));
         deleteProjectDialog.setConfirmAction(this::actionDeletePerform);
     }

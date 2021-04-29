@@ -19,18 +19,23 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <ul class="nav flex-column">
-      <li wicket:id="items" class="d-flex text-left">
-        <a wicket:id="item" class="sidebar-item nav-link flex-fill flex-h-container pl-0">
-          <span class="pr-1 icon">
-            <span wicket:id="icon"></span>
-          </span>
-          <span class="label flex-content flex-v-container">
-            <span wicket:id="label"/>
-          </span>
-        </a>
-      </li>
-    </ul>
+    <div wicket:id="wrapper" class="dashboard-sidebar scrolling flex-content" style="max-width: min-content;">
+      <div wicket:id="pin" class="pin">
+        <a class="mt-1 mr-1" style="color: inherit"><i class="fas fa-thumbtack"></i></a>
+      </div>
+      <ul class="nav flex-column">
+        <li wicket:id="items" class="d-flex text-left">
+          <a wicket:id="item" class="sidebar-item nav-link flex-fill flex-h-container pl-0 pr-0">
+            <span class="pr-1 icon">
+              <span wicket:id="icon"></span>
+            </span>
+            <span class="label flex-content flex-v-container">
+              <span wicket:id="label"/>
+            </span>
+          </a>
+        </li>
+      </ul>
+    </div>
   </wicket:panel>
 </body>
 </html>

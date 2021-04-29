@@ -21,10 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 
 import java.util.List;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.Link;
@@ -32,11 +35,13 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -46,11 +51,23 @@ public class DashboardMenu
 {
     private static final long serialVersionUID = 8582941766827165724L;
 
+    private WebMarkupContainer wrapper;
+    private IModel<Boolean> pinState;
+
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
         super(aId, aModel);
 
-        add(new ListView<MenuItem>("items", aModel)
+        pinState = Model.of(false);
+
+        wrapper = new WebMarkupContainer("wrapper");
+        wrapper.add(AttributeModifier.append("class",
+                pinState.map(flag -> flag ? "" : "collapsed expand-on-hover")));
+        wrapper.setOutputMarkupId(true);
+
+        wrapper.add(new LambdaAjaxLink("pin", this::actionTogglePin));
+
+        wrapper.add(new ListView<MenuItem>("items", aModel)
         {
             private static final long serialVersionUID = 6345129880666905375L;
 
@@ -60,6 +77,19 @@ public class DashboardMenu
                 generateMenuItem(aItem);
             }
         });
+
+        add(wrapper);
+    }
+
+    public void setPinState(IModel<Boolean> aPinState)
+    {
+        pinState = aPinState;
+    }
+
+    private void actionTogglePin(AjaxRequestTarget aTarget)
+    {
+        pinState.setObject(!pinState.getObject());
+        aTarget.add(wrapper);
     }
 
     private void generateMenuItem(ListItem<MenuItem> aItem)
@@ -71,12 +101,12 @@ public class DashboardMenu
         if (item instanceof ProjectMenuItem) {
             ProjectMenuItem projectMenuItem = (ProjectMenuItem) item;
             ProjectPageBase currentPage = findParent(ProjectPageBase.class);
-            
+
             if (currentPage == null) {
                 throw new IllegalStateException(
                         "Menu item targetting a specific project must be on a project page");
             }
-            
+
             Project project = currentPage.getProject();
             long projectId = project.getId();
 
@@ -91,9 +121,8 @@ public class DashboardMenu
 
         menulink.add(new Icon("icon", item.getIcon()));
         menulink.add(new Label("label", item.getLabel()));
-        menulink.add(AttributeAppender.append("class", () -> 
-            getPage().getClass().equals(pageClass) ? "active" : ""
-        ));
+        menulink.add(AttributeAppender.append("class",
+                () -> getPage().getClass().equals(pageClass) ? "active" : ""));
         aItem.add(menulink);
     }
 

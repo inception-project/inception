@@ -18,13 +18,38 @@
 .dashboard-sidebar {
   overflow-x: hidden;
   background-color: var(--gray-dark);
+  position: relative;
+  padding-right: 16px;
+  
+  .pin {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    display: inline;
+    white-space: nowrap;
+    color: var(--gray);
+    transition: color .1s ease-in;
+    
+    &:hover {
+      color: var(--light);
+    }
+  }
+
+  .label {
+    white-space: nowrap;
+  }
+
   
   &.collapsed {
     max-width: 4rem;
+    padding-right: 0px;
 
     .label {
       display: none;
-      white-space: nowrap;
+    }
+  
+    .pin {
+      display: none;
     }
   
     &:not(:hover) {
@@ -41,9 +66,14 @@
   &.expand-on-hover {
     &:hover {
       max-width: unset;
+      padding-right: 16px;
       
       .label {
         display: flex;
+      }
+    
+      .pin {
+        display: inline;
       }
     }
   }
@@ -87,6 +117,14 @@
 
   &.dashboard-sidebar-light { 
     background-color: var(--light);
+    
+    &.collapsed {
+      .pin {
+        &:hover {
+          color: var(--gray-dark);
+        }
+      }
+    }
     
     .sidebar-item {
       color: var(--gray);

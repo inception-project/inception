@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.preferences;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
@@ -27,32 +28,35 @@ import javax.persistence.PersistenceContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.preferences.model.UserPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link PreferencesServiceAutoConfig#preferencesService}.
+ * </p>
+ */
 public class PreferencesServiceImpl
     implements PreferencesService
 {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(PreferencesServiceImpl.class);
 
     private @PersistenceContext EntityManager entityManager;
 
-    public PreferencesServiceImpl()
-    {
-    }
-
     public PreferencesServiceImpl(EntityManager aEntityManager)
     {
-        this();
         entityManager = aEntityManager;
     }
 
     @Override
+    @Transactional
     public <T> Optional<T> loadTraitsForUser(Key<T> aKey, User aUser)
     {
         String query = String.join("\n", //
@@ -60,13 +64,22 @@ public class PreferencesServiceImpl
                 "WHERE user = :user ", //
                 "AND name = :name");
 
-        String traits = entityManager.createQuery(query, String.class) //
+        List<String> traits = entityManager.createQuery(query, String.class) //
                 .setParameter("user", aUser) //
                 .setParameter("name", aKey.getName()) //
-                .getSingleResult();
+                .getResultList();
 
+        if (traits.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        if (traits.size() > 1) {
+            throw new IllegalStateException("Found more than one preference [" + aKey.getName()
+                    + "] for user [" + aUser.getUsername() + "]");
+        }
+        
         try {
-            return Optional.of(JSONUtil.fromJsonString(aKey.getTraitClass(), traits));
+            return Optional.of(JSONUtil.fromJsonString(aKey.getTraitClass(), traits.get(0)));
         }
         catch (IOException e) {
             LOGGER.error("Error while loading traits", e);
@@ -75,6 +88,7 @@ public class PreferencesServiceImpl
     }
 
     @Override
+    @Transactional
     public <T> void saveTraitsForUser(Key<T> aKey, User aUser, T aTraits)
     {
         try {
@@ -90,6 +104,7 @@ public class PreferencesServiceImpl
     }
 
     @Override
+    @Transactional
     public <T> Optional<T> loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject)
     {
         String query = String.join("\n", //
@@ -114,6 +129,7 @@ public class PreferencesServiceImpl
     }
 
     @Override
+    @Transactional
     public <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject,
             T aTraits)
     {
