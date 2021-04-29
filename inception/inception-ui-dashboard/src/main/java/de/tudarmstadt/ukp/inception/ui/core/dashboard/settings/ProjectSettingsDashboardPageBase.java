@@ -58,7 +58,7 @@ public class ProjectSettingsDashboardPageBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final Key<Boolean> KEY_PINNED = new Key<>(Boolean.class,
+    private static final Key<PinState> KEY_PINNED = new Key<>(PinState.class,
             "project-settings-menu/pinned");
 
     private static final long serialVersionUID = -2487663821276301436L;
@@ -89,9 +89,9 @@ public class ProjectSettingsDashboardPageBase
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         menu.setPinState(new LambdaModelAdapter.Builder<Boolean>() //
                 .getting(() -> preferencesService.loadTraitsForUser(KEY_PINNED,
-                        userRepository.getCurrentUser())) //
+                        userRepository.getCurrentUser()).isPinned) //
                 .setting(v -> preferencesService.saveTraitsForUser(KEY_PINNED,
-                        userRepository.getCurrentUser(), v)) //
+                        userRepository.getCurrentUser(), new PinState(v))) //
                 .build());
         add(menu);
 
@@ -132,5 +132,27 @@ public class ProjectSettingsDashboardPageBase
         return menuItemService.getMenuItems().stream()
                 .filter(item -> item.getPath().matches("/settings/[^/]+"))
                 .collect(Collectors.toList());
+    }
+
+    private static class PinState
+    {
+        public final boolean isPinned;
+
+        public PinState()
+        {
+            // Used for default constructing this preference
+            isPinned = false;
+        }
+
+        public PinState(boolean aIsPinned)
+        {
+            isPinned = aIsPinned;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "PinState{" + "isPinned=" + isPinned + '}';
+        }
     }
 }

@@ -64,7 +64,10 @@ public class PreferencesServiceImpl
             Optional<UserPreference> preference = getRawUserPreference(aKey, aUser);
             if (preference.isPresent()) {
                 String json = preference.get().getTraits();
-                return JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+                T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+                LOGGER.info("Loaded preferences for key [{}] and user [{}]: [{}]", aKey, aUser,
+                        result);
+                return result;
             }
             else {
                 LOGGER.debug("No preferences found for key [{}] and user [{}]", aKey, aUser);
@@ -88,6 +91,8 @@ public class PreferencesServiceImpl
             preference.setName(aKey.getName());
             preference.setTraits(toJsonString(aTraits));
             entityManager.persist(preference);
+
+            LOGGER.info("Saved preferences for key [{}] and user [{}]: [{}]", aKey, aUser, aTraits);
         }
         catch (IOException e) {
             LOGGER.error("Error while writing traits", e);
@@ -123,7 +128,10 @@ public class PreferencesServiceImpl
             Optional<UserProjectPreference> pref = getUserProjectPreference(aKey, aUser, aProject);
             if (pref.isPresent()) {
                 String json = pref.get().getTraits();
-                return JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+                T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+                LOGGER.info("Loaded preferences for key [{}] and user [{}] and project [{}]: [{}]",
+                        aKey, aUser, aProject, result);
+                return result;
             }
             else {
                 LOGGER.debug("No preferences found for key [{}] and user [{}]", aKey, aUser);
@@ -149,6 +157,9 @@ public class PreferencesServiceImpl
             preference.setName(aKey.getName());
             preference.setTraits(toJsonString(aTraits));
             entityManager.persist(preference);
+
+            LOGGER.info("Saved preferences for key [{}] and user [{}] and project [{}]: [{}]", aKey,
+                    aUser, aProject, aTraits);
         }
         catch (IOException e) {
             LOGGER.error("Error while writing traits", e);
