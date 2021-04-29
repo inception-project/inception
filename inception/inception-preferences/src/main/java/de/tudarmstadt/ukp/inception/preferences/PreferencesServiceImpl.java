@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.inception.preferences;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +49,7 @@ public class PreferencesServiceImpl
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PreferencesServiceImpl.class);
 
-    private @PersistenceContext EntityManager entityManager;
+    private final @PersistenceContext EntityManager entityManager;
 
     public PreferencesServiceImpl(EntityManager aEntityManager)
     {
@@ -57,33 +58,22 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> Optional<T> loadTraitsForUser(Key<T> aKey, User aUser)
+    public <T> T loadTraitsForUser(Key<T> aKey, User aUser)
     {
-        String query = String.join("\n", //
-                "SELECT traits", "FROM UserPreference ", //
-                "WHERE user = :user ", //
-                "AND name = :name");
-
-        List<String> traits = entityManager.createQuery(query, String.class) //
-                .setParameter("user", aUser) //
-                .setParameter("name", aKey.getName()) //
-                .getResultList();
-
-        if (traits.isEmpty()) {
-            return Optional.empty();
-        }
-        
-        if (traits.size() > 1) {
-            throw new IllegalStateException("Found more than one preference [" + aKey.getName()
-                    + "] for user [" + aUser.getUsername() + "]");
-        }
-        
         try {
-            return Optional.of(JSONUtil.fromJsonString(aKey.getTraitClass(), traits.get(0)));
+            Optional<UserPreference> preference = getRawUserPreference(aKey, aUser);
+            if (preference.isPresent()) {
+                String json = preference.get().getTraits();
+                return JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+            }
+            else {
+                LOGGER.debug("No preferences found for key [{}] and user [{}]", aKey, aUser);
+                return buildDefault(aKey.getTraitClass());
+            }
         }
         catch (IOException e) {
-            LOGGER.error("Error while loading traits", e);
-            return Optional.empty();
+            LOGGER.error("Error while loading traits, returning default", e);
+            return buildDefault(aKey.getTraitClass());
         }
     }
 
@@ -92,7 +82,8 @@ public class PreferencesServiceImpl
     public <T> void saveTraitsForUser(Key<T> aKey, User aUser, T aTraits)
     {
         try {
-            UserPreference preference = new UserPreference();
+            UserPreference preference = getRawUserPreference(aKey, aUser)
+                    .orElseGet(UserPreference::new);
             preference.setUser(aUser);
             preference.setName(aKey.getName());
             preference.setTraits(toJsonString(aTraits));
@@ -103,28 +94,45 @@ public class PreferencesServiceImpl
         }
     }
 
-    @Override
-    @Transactional
-    public <T> Optional<T> loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject)
+    private <T> Optional<UserPreference> getRawUserPreference(Key<T> aKey, User aUser)
     {
         String query = String.join("\n", //
-                "SELECT traits", "FROM UserProjectPreference ", //
+                "FROM UserPreference ", //
                 "WHERE user = :user ", //
-                "AND project = :project", //
                 "AND name = :name");
 
-        String traits = entityManager.createQuery(query, String.class) //
-                .setParameter("user", aUser) //
-                .setParameter("project", aProject) //
-                .setParameter("name", aKey.getName()) //
-                .getSingleResult();
-
+        String name = aKey.getName();
         try {
-            return Optional.of(JSONUtil.fromJsonString(aKey.getTraitClass(), traits));
+            UserPreference pref = entityManager.createQuery(query, UserPreference.class) //
+                    .setParameter("user", aUser) //
+                    .setParameter("name", name) //
+                    .getSingleResult();
+            return Optional.of(pref);
+        }
+        catch (NoResultException e) {
+            LOGGER.debug("No preferences found for key [{}] and user [{}]", name, aUser, e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    @Transactional
+    public <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject)
+    {
+        try {
+            Optional<UserProjectPreference> pref = getUserProjectPreference(aKey, aUser, aProject);
+            if (pref.isPresent()) {
+                String json = pref.get().getTraits();
+                return JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+            }
+            else {
+                LOGGER.debug("No preferences found for key [{}] and user [{}]", aKey, aUser);
+                return buildDefault(aKey.getTraitClass());
+            }
         }
         catch (IOException e) {
-            LOGGER.error("Error while loading traits", e);
-            return Optional.empty();
+            LOGGER.error("Error while loading traits, returning default", e);
+            return buildDefault(aKey.getTraitClass());
         }
     }
 
@@ -134,7 +142,8 @@ public class PreferencesServiceImpl
             T aTraits)
     {
         try {
-            UserProjectPreference preference = new UserProjectPreference();
+            UserProjectPreference preference = getUserProjectPreference(aKey, aUser, aProject)
+                    .orElseGet(UserProjectPreference::new);
             preference.setUser(aUser);
             preference.setProject(aProject);
             preference.setName(aKey.getName());
@@ -143,6 +152,43 @@ public class PreferencesServiceImpl
         }
         catch (IOException e) {
             LOGGER.error("Error while writing traits", e);
+        }
+    }
+
+    private <T> Optional<UserProjectPreference> getUserProjectPreference(Key<T> aKey, User aUser,
+            Project aProject)
+    {
+        String query = String.join("\n", //
+                "FROM UserProjectPreference ", //
+                "WHERE user = :user ", //
+                "AND project = :project", //
+                "AND name = :name");
+
+        try {
+            UserProjectPreference pref = entityManager //
+                    .createQuery(query, UserProjectPreference.class) //
+                    .setParameter("user", aUser) //
+                    .setParameter("project", aProject) //
+                    .setParameter("name", aKey.getName()) //
+                    .getSingleResult();
+
+            return Optional.of(pref);
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+
+    /*
+     * Use default constructor of aClass to create new instance of T
+     */
+    private <T> T buildDefault(Class<T> aClass)
+    {
+        try {
+            return aClass.getConstructor().newInstance();
+        }
+        catch (Exception e) {
+            return ExceptionUtils.rethrow(e);
         }
     }
 }

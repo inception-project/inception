@@ -55,7 +55,7 @@ public class PreferencesServiceImplIntegrationTest
     private static final Key<TestTraits> KEY = new Key<>(TestTraits.class, "test.traits");
 
     private PreferencesServiceImpl sut;
-    
+
     private @Autowired TestEntityManager testEntityManager;
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired ProjectService projectService;
@@ -68,7 +68,7 @@ public class PreferencesServiceImplIntegrationTest
     {
         repositoryProperties.setPath(repoDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-        
+
         sut = new PreferencesServiceImpl(testEntityManager.getEntityManager());
     }
 
@@ -88,12 +88,36 @@ public class PreferencesServiceImplIntegrationTest
     {
         User user = createUser();
         TestTraits expectedTraits = buildTestTraits();
-
         sut.saveTraitsForUser(KEY, user, expectedTraits);
 
-        TestTraits actualTraits = sut.loadTraitsForUser(KEY, user).get();
+        TestTraits actualTraits = sut.loadTraitsForUser(KEY, user);
 
-        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(actualTraits);
+        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(expectedTraits);
+    }
+
+    @Test
+    public void testThatTraitsForUserHaveDefaultIfNotFound()
+    {
+        User user = createUser();
+        TestTraits expectedTraits = new TestTraits();
+
+        TestTraits actualTraits = sut.loadTraitsForUser(KEY, user);
+
+        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(expectedTraits);
+    }
+
+    @Test
+    public void testThatTraitsForUserCanBeUpserted()
+    {
+        User user = createUser();
+        TestTraits expectedTraits = buildTestTraits();
+        sut.saveTraitsForUser(KEY, user, expectedTraits);
+        expectedTraits.setTestString("anotherTestValue");
+
+        sut.saveTraitsForUser(KEY, user, expectedTraits);
+        TestTraits actualTraits = sut.loadTraitsForUser(KEY, user);
+
+        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(expectedTraits);
     }
 
     @Test
@@ -105,9 +129,36 @@ public class PreferencesServiceImplIntegrationTest
 
         sut.saveTraitsForUserAndProject(KEY, user, project, expectedTraits);
 
-        TestTraits actualTraits = sut.loadTraitsForUserAndProject(KEY, user, project).get();
+        TestTraits actualTraits = sut.loadTraitsForUserAndProject(KEY, user, project);
 
-        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(actualTraits);
+        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(expectedTraits);
+    }
+
+    @Test
+    public void testThatTraitsForUserAndProjectHaveDefaultIfNotFound() throws IOException
+    {
+        User user = createUser();
+        Project project = createProject();
+        TestTraits expectedTraits = new TestTraits();
+
+        TestTraits actualTraits = sut.loadTraitsForUserAndProject(KEY, user, project);
+
+        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(expectedTraits);
+    }
+
+    @Test
+    public void testThatTraitsForUserAndProjectCanBeUpserted() throws IOException
+    {
+        User user = createUser();
+        Project project = createProject();
+        TestTraits expectedTraits = buildTestTraits();
+        sut.saveTraitsForUserAndProject(KEY, user, project, expectedTraits);
+        expectedTraits.setTestString("anotherTestValue");
+
+        sut.saveTraitsForUserAndProject(KEY, user, project, expectedTraits);
+        TestTraits actualTraits = sut.loadTraitsForUserAndProject(KEY, user, project);
+
+        assertThat(actualTraits).usingRecursiveComparison().isEqualTo(expectedTraits);
     }
 
     private TestTraits buildTestTraits()

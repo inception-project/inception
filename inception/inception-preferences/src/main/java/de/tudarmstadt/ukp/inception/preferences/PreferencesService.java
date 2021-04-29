@@ -17,18 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
-import java.util.Optional;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface PreferencesService
 {
-    <T> Optional<T> loadTraitsForUser(Key<T> aKey, User aUser);
+    <T> T loadTraitsForUser(Key<T> aKey, User aUser);
 
     <T> void saveTraitsForUser(Key<T> aKey, User aUser, T aTraits);
 
-    <T> Optional<T> loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject);
+    <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject);
 
     <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject, T aTraits);
 }

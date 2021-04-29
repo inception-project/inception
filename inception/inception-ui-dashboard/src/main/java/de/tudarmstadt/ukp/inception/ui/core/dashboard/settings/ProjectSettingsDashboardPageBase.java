@@ -88,9 +88,8 @@ public class ProjectSettingsDashboardPageBase
 
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         menu.setPinState(new LambdaModelAdapter.Builder<Boolean>() //
-                .getting(() -> preferencesService
-                        .loadTraitsForUser(KEY_PINNED, userRepository.getCurrentUser())
-                        .orElse(false)) //
+                .getting(() -> preferencesService.loadTraitsForUser(KEY_PINNED,
+                        userRepository.getCurrentUser())) //
                 .setting(v -> preferencesService.saveTraitsForUser(KEY_PINNED,
                         userRepository.getCurrentUser(), v)) //
                 .build());

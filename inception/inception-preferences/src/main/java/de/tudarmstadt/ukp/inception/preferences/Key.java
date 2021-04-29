@@ -37,4 +37,14 @@ public class Key<T>
     {
         return name;
     }
+
+    @Override
+    public String toString()
+    {
+        final StringBuilder sb = new StringBuilder("Key{");
+        sb.append("traitClass=").append(traitClass);
+        sb.append(", name='").append(name).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }
