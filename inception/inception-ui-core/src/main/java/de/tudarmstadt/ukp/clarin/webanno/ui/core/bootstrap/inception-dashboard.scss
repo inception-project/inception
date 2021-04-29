@@ -15,11 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+$dashboard-border-left: 3em;
+
 .dashboard-sidebar {
   overflow-x: hidden;
   background-color: var(--gray-dark);
   position: relative;
-  padding-right: 16px;
+  padding-right: $dashboard-border-left;
   
   .pin {
     position: absolute;
@@ -66,7 +68,7 @@
   &.expand-on-hover {
     &:hover {
       max-width: unset;
-      padding-right: 16px;
+      padding-right: $dashboard-border-left;
       
       .label {
         display: flex;
