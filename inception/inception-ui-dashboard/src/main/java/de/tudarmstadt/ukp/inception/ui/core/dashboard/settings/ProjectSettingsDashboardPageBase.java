@@ -42,11 +42,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 
@@ -58,17 +56,13 @@ public class ProjectSettingsDashboardPageBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final Key<PinState> KEY_PINNED = new Key<>(PinState.class,
-            "project-settings-menu/pinned");
-
     private static final long serialVersionUID = -2487663821276301436L;
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
-    private @SpringBean PreferencesService preferencesService;
+    private @SpringBean PreferencesService userPrefService;
 
-    private DashboardMenu menu;
     private ChallengeResponseDialog deleteProjectDialog;
 
     public ProjectSettingsDashboardPageBase(final PageParameters aParameters)
@@ -86,14 +80,7 @@ public class ProjectSettingsDashboardPageBase
     {
         super.onInitialize();
 
-        menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
-        menu.setPinState(new LambdaModelAdapter.Builder<Boolean>() //
-                .getting(() -> preferencesService.loadTraitsForUser(KEY_PINNED,
-                        userRepository.getCurrentUser()).isPinned) //
-                .setting(v -> preferencesService.saveTraitsForUser(KEY_PINNED,
-                        userRepository.getCurrentUser(), new PinState(v))) //
-                .build());
-        add(menu);
+        add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
 
         add(new Label("projectName", LoadableDetachableModel.of(() -> getProject().getName())));
 
@@ -132,27 +119,5 @@ public class ProjectSettingsDashboardPageBase
         return menuItemService.getMenuItems().stream()
                 .filter(item -> item.getPath().matches("/settings/[^/]+"))
                 .collect(Collectors.toList());
-    }
-
-    private static class PinState
-    {
-        public final boolean isPinned;
-
-        public PinState()
-        {
-            // Used for default constructing this preference
-            isPinned = false;
-        }
-
-        public PinState(boolean aIsPinned)
-        {
-            isPinned = aIsPinned;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "PinState{" + "isPinned=" + isPinned + '}';
-        }
     }
 }
