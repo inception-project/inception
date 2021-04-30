@@ -294,4 +294,10 @@ public class User
     {
         updated = aUpdated;
     }
+
+    @Override
+    public String toString()
+    {
+        return "[" + username + "]";
+    }
 }
