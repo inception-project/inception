@@ -21,10 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 
 import java.util.List;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.Link;
@@ -32,25 +35,75 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 public class DashboardMenu
     extends Panel
 {
     private static final long serialVersionUID = 8582941766827165724L;
 
+    private @SpringBean UserDao userRepository;
+    private @SpringBean PreferencesService userPrefService;
+
+    private WebMarkupContainer wrapper;
+    private IModel<Boolean> pinState;
+    private LambdaAjaxLink pin;
+
+    public static final Key<PinState> KEY_PINNED = new Key<>(PinState.class,
+            "dashboard-menus/pinned");
+
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
-        super(aId, aModel);
+        this(aId, aModel, true);
 
-        add(new ListView<MenuItem>("items", aModel)
+        User user = userRepository.getCurrentUser();
+        pinState = new LambdaModelAdapter.Builder<Boolean>() //
+                .getting(() -> userPrefService.loadTraitsForUser(KEY_PINNED, user).isPinned)
+                .setting(v -> userPrefService.saveTraitsForUser(KEY_PINNED, user, new PinState(v)))
+                .build();
+    }
+
+    public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel, boolean aInitialState)
+    {
+        this(aId, aModel, Model.of(aInitialState));
+    }
+
+    public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel, IModel<Boolean> aPinState)
+    {
+        super(aId, aModel);
+        pinState = aPinState;
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        wrapper = new WebMarkupContainer("wrapper");
+        wrapper.add(AttributeModifier.append("class",
+                pinState.map(flag -> flag ? "" : "collapsed expand-on-hover")));
+        wrapper.setOutputMarkupId(true);
+
+        pin = new LambdaAjaxLink("pin", this::actionTogglePin);
+        pin.add(AttributeModifier.append("class", pinState.map(flag -> flag ? "active" : "")));
+        wrapper.add(pin);
+
+        wrapper.add(new ListView<MenuItem>("items", getModel())
         {
             private static final long serialVersionUID = 6345129880666905375L;
 
@@ -60,6 +113,36 @@ public class DashboardMenu
                 generateMenuItem(aItem);
             }
         });
+
+        add(wrapper);
+    }
+
+    @SuppressWarnings("unchecked")
+    public IModel<List<MenuItem>> getModel()
+    {
+        return (IModel<List<MenuItem>>) getDefaultModel();
+    }
+
+    public IModel<Boolean> getPinState()
+    {
+        return pinState;
+    }
+
+    public void setPinState(IModel<Boolean> aPinState)
+    {
+        pinState = aPinState;
+    }
+
+    public DashboardMenu setPinnable(boolean aPinnable)
+    {
+        pin.setVisible(aPinnable);
+        return this;
+    }
+
+    private void actionTogglePin(AjaxRequestTarget aTarget)
+    {
+        pinState.setObject(!pinState.getObject());
+        aTarget.add(wrapper);
     }
 
     private void generateMenuItem(ListItem<MenuItem> aItem)
@@ -71,12 +154,12 @@ public class DashboardMenu
         if (item instanceof ProjectMenuItem) {
             ProjectMenuItem projectMenuItem = (ProjectMenuItem) item;
             ProjectPageBase currentPage = findParent(ProjectPageBase.class);
-            
+
             if (currentPage == null) {
                 throw new IllegalStateException(
                         "Menu item targetting a specific project must be on a project page");
             }
-            
+
             Project project = currentPage.getProject();
             long projectId = project.getId();
 
@@ -91,9 +174,8 @@ public class DashboardMenu
 
         menulink.add(new Icon("icon", item.getIcon()));
         menulink.add(new Label("label", item.getLabel()));
-        menulink.add(AttributeAppender.append("class", () -> 
-            getPage().getClass().equals(pageClass) ? "active" : ""
-        ));
+        menulink.add(AttributeAppender.append("class",
+                () -> getPage().getClass().equals(pageClass) ? "active" : ""));
         aItem.add(menulink);
     }
 
