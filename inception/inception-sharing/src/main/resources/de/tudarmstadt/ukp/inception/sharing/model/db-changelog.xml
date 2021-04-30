@@ -1,0 +1,106 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+  <changeSet author="INCEpTION Team" id="20210128-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="project_invite" />
+      </not>
+    </preConditions>
+    <createTable tableName="project_invite">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="project" type="BIGINT">
+      </column>
+      <column name="inviteId" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="expirationDate" type="datetime(6)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+    <addForeignKeyConstraint constraintName="FK_project_invite_project"
+      baseTableName="project_invite" baseColumnNames="project" 
+      referencedTableName="project" referencedColumnNames="id" 
+      deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="CASCADE"/>
+    <addUniqueConstraint constraintName="UK_project_invite_project" 
+      tableName="project_invite" columnNames="project" />
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210409-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210128-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="created" type="datetime(6)">
+        <constraints nullable="true" />
+      </column>
+      <column name="updated" type="datetime(6)">
+        <constraints nullable="true" />
+      </column>
+      <column name="invitationText" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+      <column name="guestAccessible" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210416-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210409-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="userIdPlaceholder" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210427-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210416-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="askForEMail" type="VARCHAR(255)" defaultValue="not-allowed">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210427-2">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210427-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="disableOnAnnotationComplete" type="BOOLEAN" defaultValueBoolean="true">
+        <constraints nullable="false"/>
+      </column>
+      <column name="maxAnnotatorCount" type="INT" defaultValueNumeric="0">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+</databaseChangeLog>

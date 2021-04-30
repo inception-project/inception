@@ -1,0 +1,379 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.sharing;
+
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
+import static java.util.Arrays.asList;
+
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.springframework.context.event.EventListener;
+import org.springframework.transaction.annotation.Transactional;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
+import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link InviteServiceAutoConfiguration#inviteService}.
+ * </p>
+ */
+public class InviteServiceImpl
+    implements InviteService
+{
+    public static final int INVITE_ID_BYTE_LENGTH = 16;
+    public static final int RANDOM_USERNAME_BYTE_LENGTH = 16;
+
+    private @PersistenceContext EntityManager entityManager;
+
+    private final UserDao userRepository;
+    private final ProjectService projectService;
+    private final InviteServiceProperties inviteProperties;
+
+    private final SecureRandom random;
+
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
+            InviteServiceProperties aInviteProperties)
+    {
+        random = new SecureRandom();
+        userRepository = aUserRepository;
+        projectService = aProjectService;
+        inviteProperties = aInviteProperties;
+    }
+
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
+            InviteServiceProperties aInviteProperties, EntityManager aEntitymanager)
+    {
+        this(aUserRepository, aProjectService, aInviteProperties);
+        entityManager = aEntitymanager;
+    }
+
+    @Override
+    @Transactional
+    public String generateInviteID(Project aProject)
+    {
+        // remove old invite if necessary
+        removeInviteID(aProject);
+        // set expiration date one year from now
+        Date expirationDate = getDateOneYearForth(new Date());
+        String inviteID = generateNewInvite(aProject, expirationDate);
+
+        return inviteID;
+    }
+
+    private String generateNewInvite(Project aProject, Date expirationDate)
+    {
+        // generate id
+        byte[] bytes = new byte[INVITE_ID_BYTE_LENGTH];
+        random.nextBytes(bytes);
+        String inviteID = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+
+        entityManager.persist(new ProjectInvite(aProject, inviteID, expirationDate));
+        return inviteID;
+    }
+
+    private String generateRandomUsername()
+    {
+        nextName: while (true) {
+            byte[] bytes = new byte[RANDOM_USERNAME_BYTE_LENGTH];
+            random.nextBytes(bytes);
+            String randomUserId = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+
+            // Do not accept base64 values which contain characters that are not safe for file
+            // names / not valid as usernames
+            if (!NameUtil.isNameValid(randomUserId)) {
+                continue nextName;
+            }
+
+            if (!userRepository.exists(randomUserId)) {
+                return randomUserId;
+            }
+        }
+    }
+
+    /**
+     * Get date one year from the given one
+     */
+    private Date getDateOneYearForth(Date aDate)
+    {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(aDate);
+        calendar.add(Calendar.YEAR, 1);
+        Date futureDate = calendar.getTime();
+        return futureDate;
+    }
+
+    @Override
+    @Transactional
+    public void removeInviteID(Project aProject)
+    {
+        ProjectInvite invite = readProjectInvite(aProject);
+
+        if (invite == null) {
+            return;
+        }
+
+        entityManager.remove(invite);
+        entityManager.flush();
+    }
+
+    @Override
+    @Transactional
+    public ProjectInvite readProjectInvite(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be given");
+
+        String query = "FROM ProjectInvite " //
+                + "WHERE project = :givenProject";
+        List<ProjectInvite> inviteIDs = entityManager.createQuery(query, ProjectInvite.class)
+                .setParameter("givenProject", aProject) //
+                .getResultList();
+
+        if (inviteIDs.isEmpty()) {
+            return null;
+        }
+
+        return inviteIDs.get(0);
+    }
+
+    @Override
+    @Transactional
+    public void writeProjectInvite(ProjectInvite aInvite)
+    {
+        if (!aInvite.isGuestAccessible()) {
+            aInvite.setAskForEMail(NOT_ALLOWED);
+        }
+
+        if (aInvite.getId() == null) {
+            entityManager.persist(aInvite);
+        }
+        else {
+            entityManager.merge(aInvite);
+        }
+    }
+
+    @Override
+    public String getValidInviteID(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be given");
+        Validate.notNull(aProject.getId(), "Project be saved");
+
+        ProjectInvite invite = readProjectInvite(aProject);
+
+        if (invite == null) {
+            return null;
+        }
+
+        if (isDateExpired(invite) || isProjectAnnotationComplete(invite)
+                || isMaxAnnotatorCountReached(invite)) {
+            return null;
+        }
+
+        return invite.getInviteId();
+    }
+
+    @Override
+    public boolean isProjectAnnotationComplete(ProjectInvite aInvite)
+    {
+        if (!aInvite.isDisableOnAnnotationComplete()) {
+            return false;
+        }
+
+        // Get the freshest project state from the DB
+        Project project = projectService.getProject(aInvite.getProject().getId());
+        return !asList(NEW, ANNOTATION_IN_PROGRESS).contains(project.getState());
+    }
+
+    @Override
+    public boolean isDateExpired(ProjectInvite aInvite)
+    {
+        if (aInvite.getExpirationDate() == null) {
+            return false;
+        }
+
+        return aInvite.getExpirationDate().before(new Date());
+    }
+
+    @Override
+    public boolean isMaxAnnotatorCountReached(ProjectInvite aInvite)
+    {
+        if (aInvite.getMaxAnnotatorCount() <= 0) {
+            return false;
+        }
+
+        int annotatorCount = projectService
+                .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
+
+        return annotatorCount >= aInvite.getMaxAnnotatorCount();
+    }
+
+    @Override
+    public boolean isValidInviteLink(Project aProject, String aInviteId)
+    {
+        if (aInviteId == null) {
+            return false;
+        }
+
+        String expectedId = getValidInviteID(aProject);
+        return expectedId != null && aInviteId.equals(expectedId);
+    }
+
+    @Override
+    public Date getExpirationDate(Project aProject)
+    {
+        ProjectInvite invite = readProjectInvite(aProject);
+        if (invite == null) {
+            return null;
+        }
+        return invite.getExpirationDate();
+    }
+
+    @Transactional
+    @Override
+    public void extendInviteLinkDate(Project aProject)
+    {
+        ProjectInvite invite = readProjectInvite(aProject);
+        if (invite == null) {
+            return;
+        }
+        Date newExpirationDate = getDateOneYearForth(invite.getExpirationDate());
+        invite.setExpirationDate(newExpirationDate);
+        entityManager.merge(invite);
+    }
+
+    @Override
+    @Transactional
+    public boolean generateInviteWithExpirationDate(Project aProject, Date aExpirationDate)
+    {
+        if (aExpirationDate.getTime() < new Date().getTime()) {
+            return false;
+        }
+        ProjectInvite invite = readProjectInvite(aProject);
+        if (invite == null) {
+            generateNewInvite(aProject, aExpirationDate);
+            return true;
+        }
+        invite.setExpirationDate(aExpirationDate);
+        entityManager.merge(invite);
+        return true;
+    }
+
+    @Override
+    public Optional<User> getProjectUser(Project aProject, String aUsername)
+    {
+        String realm = REALM_PROJECT_PREFIX + aProject.getId();
+
+        return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUsername));
+    }
+
+    @Override
+    public String getFullInviteLinkUrl(ProjectInvite aInvite)
+    {
+        // If a base URL is set in the properties, we use that.
+        if (StringUtils.isNotBlank(inviteProperties.getInviteBaseUrl())) {
+            StringBuilder url = new StringBuilder();
+            url.append(inviteProperties.getInviteBaseUrl().trim());
+            while (url.charAt(url.length() - 1) == '/') {
+                url.setLength(url.length() - 1);
+            }
+            url.append(NS_PROJECT);
+            url.append("/");
+            url.append(aInvite.getProject().getId());
+            url.append("/");
+            url.append("join-project");
+            url.append("/");
+            url.append(aInvite.getInviteId());
+            return url.toString();
+        }
+
+        // If we are in a Wicket context, we can use Wicket to render the URL for us
+        RequestCycle cycle = RequestCycle.get();
+        if (cycle != null) {
+            CharSequence url = cycle.urlFor(AcceptInvitePage.class,
+                    new PageParameters()
+                            .set(AcceptInvitePage.PAGE_PARAM_PROJECT, aInvite.getProject().getId())
+                            .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, aInvite.getInviteId()));
+
+            return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
+        }
+
+        throw new IllegalStateException("Please set the property [sharing.invites.invite-base-url] "
+                + "in the settings.properties file");
+    }
+
+    @Override
+    @Transactional
+    public User getOrCreateProjectUser(Project aProject, String aUsername)
+    {
+        String realm = REALM_PROJECT_PREFIX + aProject.getId();
+
+        User user = userRepository.getUserByRealmAndUiName(realm, aUsername);
+
+        if (user != null) {
+            return user;
+        }
+
+        User u = new User();
+        u.setUsername(generateRandomUsername());
+        u.setUiName(aUsername);
+        u.setPassword(EMPTY_PASSWORD);
+        u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
+        u.setEnabled(true);
+        u.setRoles(Set.of(ROLE_USER));
+        userRepository.create(u);
+
+        return u;
+    }
+
+    @EventListener
+    @Transactional
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
+    {
+        userRepository.deleteAllUsersFromRealm(REALM_PROJECT_PREFIX + aEvent.getProject().getId());
+    }
+}
