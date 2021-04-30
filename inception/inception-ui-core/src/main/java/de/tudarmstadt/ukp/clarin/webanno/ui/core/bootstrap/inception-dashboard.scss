@@ -15,16 +15,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+$dashboard-border-left: 3em;
+
 .dashboard-sidebar {
   overflow-x: hidden;
   background-color: var(--gray-dark);
+  position: relative;
+  padding-right: $dashboard-border-left;
+  width: min-content;
+
+  .pin {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    display: inline;
+    white-space: nowrap;
+    color: var(--gray);
+    transition: color .1s ease-in, transform .3s ease-in-out .6s;
+    transform: rotate(45deg);
+    
+    &:hover {
+      color: var(--light);
+      transform: rotate(0deg);
+    }
+  
+    &.active {
+      transform: rotate(0deg);
+      
+      &:hover {
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  .label {
+    white-space: nowrap;
+  }
+
   
   &.collapsed {
     max-width: 4rem;
+    padding-right: 0px;
 
     .label {
+      /* display: none; */
+    }
+  
+    .pin {
       display: none;
-      white-space: nowrap;
     }
   
     &:not(:hover) {
@@ -39,11 +77,18 @@
   }
     
   &.expand-on-hover {
+    transition: all .3s ease-in-out;
+    
     &:hover {
-      max-width: unset;
+      max-width: 20rem;
+      padding-right: $dashboard-border-left;
       
       .label {
         display: flex;
+      }
+    
+      .pin {
+        display: inline;
       }
     }
   }
@@ -87,6 +132,14 @@
 
   &.dashboard-sidebar-light { 
     background-color: var(--light);
+    
+    &.collapsed {
+      .pin {
+        &:hover {
+          color: var(--gray-dark);
+        }
+      }
+    }
     
     .sidebar-item {
       color: var(--gray);
