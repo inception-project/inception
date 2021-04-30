@@ -65,8 +65,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetee
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional
-@EntityScan(basePackages = { "de.tudarmstadt.ukp.inception",
-        "de.tudarmstadt.ukp.clarin.webanno.model" })
+@EntityScan(basePackages = { "de.tudarmstadt.ukp.inception", "de.tudarmstadt.ukp.clarin.webanno" })
 public class GazeteerServiceImplTest
 {
     @TempDir
