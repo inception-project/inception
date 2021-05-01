@@ -18,69 +18,72 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <head>
-  <wicket:head>
-    <style>
-      :root {
-        --input-padding-x: 1.5rem;
-        --input-padding-y: 1.5rem;
-      }
-      
-      .form-group input[type=text],input[type=password] {
-        padding: var(--input-padding-y) var(--input-padding-x);
-        border-radius: 2rem;
-      }
-      
-      .btn-login {
-        font-size: 0.9rem !important;
-        letter-spacing: 0.05rem !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: 2rem !important;
-      }
-    </style>
-  </wicket:head>
+    <wicket:head>
+        <style>
+            :root {
+                --input-padding-x: 1.5rem;
+                --input-padding-y: 1.5rem;
+            }
+
+            .form-group input[type=text],input[type=password],input[type=email] {
+                padding: var(--input-padding-y) var(--input-padding-x);
+                border-radius: 2rem;
+            }
+
+            .btn-login {
+                font-size: 0.9rem !important;
+                letter-spacing: 0.05rem !important;
+                padding: 0.75rem 1rem !important;
+                border-radius: 2rem !important;
+            }
+        </style>
+    </wicket:head>
 </head>
 <body>
-  <wicket:extend>
+<wicket:extend>
     <div class="scrolling flex-content flex-h-container flex-centered">
-      <div class="flex-content flex-v-container flex-centered">
-        <div class="card" style="background: white; padding: 3rem 3rem; min-width: 440px; max-width: 30%;">
-          <div class="card-body container-sm">
-            <div wicket:id="expirationNotice">
-              <h5 class="card-title mb-3 text-center">
-                This invitation has expired.
-              </h5>
+        <div class="flex-content flex-v-container flex-centered">
+            <div class="card" style="background: white; padding: 3rem 3rem; min-width: 440px; max-width: 30%;">
+                <div class="card-body container-sm">
+                    <div wicket:id="expirationNotice">
+                        <h5 class="card-title mb-3 text-center">
+                            Unfortunately, no additional annotators are accepted at this time.
+                        </h5>
+                    </div>
+                    <form wicket:id="acceptInvitationForm">
+                        <div class="mb-3 text-center">
+                            <div wicket:id="invitationText"/>
+                        </div>
+                        <div class="form-group form-row mb-3 text-center" wicket:id="tooManyUsersNotice">
+                            <div class="alert alert-warning" role="alert">
+                                <wicket:message key="tooManyUsers"/>
+                            </div>
+                        </div>
+                        <div class="form-group form-row mb-3"  wicket:enclosure="username">
+                            <input wicket:id="username" type="text" class="form-control"/>
+                        </div>
+                        <div class="form-group form-row mb-3" wicket:enclosure="password">
+                            <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+                        </div>
+                        <div class="form-group form-row mb-3" wicket:enclosure="eMail">
+                            <input wicket:id="eMail" type="email" class="form-control" placeholder="eMail address"/>
+                        </div>
+                        <div class="form-group form-row text-center" wicket:enclosure="registeredLogin">
+                            <div class="form-check w-100">
+                                <input class="form-check-input" type="checkbox" wicket:id="registeredLogin">
+                                <label class="form-check-label" wicket:for="registeredLogin">
+                                    <wicket:label key="registeredLogin"/>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group form-row justify-content-md-center">
+                            <button wicket:id="join" type="submit" class="btn btn-login btn-primary w-100">Join project</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <form wicket:id="acceptInvitationForm">
-              <div class="mb-3 text-center">
-                <div wicket:id="invitationText"/>
-              </div>
-              <div class="form-group form-row mb-3 text-center" wicket:id="tooManyUsersNotice">
-                <div class="alert alert-warning" role="alert">
-                  <wicket:message key="tooManyUsers"/>
-                </div>
-              </div>
-              <div class="form-group form-row mb-3"  wicket:enclosure="username">
-                <input wicket:id="username" type="text" class="form-control"/>
-              </div>
-              <div class="form-group form-row mb-3" wicket:enclosure="password">
-                <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
-              </div>
-              <div class="form-group form-row text-center" wicket:enclosure="registeredLogin">
-                <div class="form-check w-100">
-                  <input class="form-check-input" type="checkbox" wicket:id="registeredLogin">
-                  <label class="form-check-label" wicket:for="registeredLogin">
-                    <wicket:label key="registeredLogin"/>
-                  </label>
-                </div>
-              </div>
-              <div class="form-group form-row justify-content-md-center">
-                <button wicket:id="join" type="submit" class="btn btn-login btn-primary w-100">Join project</button>
-              </div>
-            </form>
-          </div>
         </div>
-      </div>
     </div>
-  </wicket:extend>
+</wicket:extend>
 </body>
 </html>

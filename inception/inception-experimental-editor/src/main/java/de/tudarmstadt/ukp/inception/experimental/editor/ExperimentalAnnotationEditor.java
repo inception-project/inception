@@ -17,21 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.editor;
 
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIResourceReference;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletContext;
+
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 
 public class ExperimentalAnnotationEditor extends AnnotationEditorBase
@@ -39,6 +40,8 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
     private static final long serialVersionUID = 2983502506977571078L;
 
     private final WebMarkupContainer vis;
+
+    private @SpringBean ServletContext servletContext;
 
     private static final Logger LOG = LoggerFactory.getLogger(ExperimentalAnnotationEditor.class);
 
@@ -69,4 +72,5 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
     {
         aTarget.add(vis);
     }
+
 }

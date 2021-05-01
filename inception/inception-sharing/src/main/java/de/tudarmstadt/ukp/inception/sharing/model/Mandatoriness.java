@@ -15,27 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.config;
+package de.tudarmstadt.ukp.inception.sharing.model;
 
-import de.tudarmstadt.ukp.inception.experimental.editor.websocket.WebsocketConfig;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import java.io.Serializable;
 
-@Configuration
-public class TypeScriptAnnotationEditorSupportAutoConfiguration
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+
+public enum Mandatoriness
+    implements PersistentEnum, Serializable
 {
+    NOT_ALLOWED("not-allowed"),
 
-    @Bean
-    public TypeScriptAnnotationEditorFactory typescriptAnnotationEditorFactory()
+    OPTIONAL("optional"),
+
+    MANDATORY("mandatory");
+
+    private final String id;
+
+    public String getName()
     {
-        System.out.println("--------------------CREATING---------------------------");
-        return new TypeScriptAnnotationEditorFactory();
+        return this.name().toLowerCase();
     }
 
-    @Bean
-    public WebsocketConfig websocketConfiguration()
+    @Override
+    public String toString()
     {
-        System.out.println("--------------------DOING---------------------------");
-        return new WebsocketConfig();
+        return this.name().toLowerCase();
+    }
+
+    Mandatoriness(String aId)
+    {
+        this.id = aId;
+    }
+
+    @Override
+    public String getId()
+    {
+        return id;
     }
 }

@@ -531,10 +531,12 @@
       <version>${javamelody.version}</version>
       </dependency>
     -->
+    <!-- Removed for Spring websocket
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-native-websocket-javax</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-curation</artifactId>
@@ -853,7 +855,9 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
+              <!-- Removed for Spring websocket
               <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
+              -->
               <!-- Tutorial Js dependencies -->
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>

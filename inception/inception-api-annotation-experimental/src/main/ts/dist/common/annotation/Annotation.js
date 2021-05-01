@@ -15,15 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-{
-  "compilerOptions": {
-    "rootDir": "./",
-    "outDir": "./dist",
-    "target": "ES6",
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "Node"
-  }
+export class Annotation {
+    constructor(aId, aQuote, aText, aColor, aRanges) {
+        this.id = aId;
+        this.quote = aQuote;
+        this.text = aText;
+        this.color = aColor;
+        this.ranges = aRanges;
+    }
 }
+//# sourceMappingURL=Annotation.js.map

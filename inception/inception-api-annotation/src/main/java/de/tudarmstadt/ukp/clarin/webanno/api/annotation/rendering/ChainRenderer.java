@@ -19,10 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonMap;
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
@@ -30,12 +29,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
@@ -57,8 +56,11 @@ public class ChainRenderer
 {
     private final List<SpanLayerBehavior> behaviors;
 
+    private Type chainType;
+    private Feature chainFirst;
+
     public ChainRenderer(ChainAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
+                         FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
 
@@ -73,28 +75,36 @@ public class ChainRenderer
     }
 
     @Override
-    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int aPageBegin, int aPageEnd)
+    protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
         ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType;
         try {
-            chainType = getType(aCas, typeAdapter.getChainTypeName());
+            chainType = aTypeSystem.getType(typeAdapter.getChainTypeName());
         }
         catch (IllegalArgumentException e) {
-            // If the type is not defined, then we do not need to try and render it because the
-            // CAS does not contain any instances of it
+            return false;
+        }
+
+        chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
+
+        return true;
+    }
+
+    @Override
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+                       int aPageBegin, int aPageEnd)
+    {
+        if (!checkTypeSystem(aCas)) {
             return;
         }
 
-        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+        ChainAdapter typeAdapter = getTypeAdapter();
 
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
         AnnotationFeature spanLabelFeature = null;
         AnnotationFeature arcLabelFeature = null;
-        for (AnnotationFeature f : visibleFeatures) {
+        for (AnnotationFeature f : aFeatures) {
             if (COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
                 spanLabelFeature = f;
             }
@@ -104,8 +114,6 @@ public class ChainRenderer
         }
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
-
-        Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
@@ -119,7 +127,7 @@ public class ChainRenderer
             // Iterate over the links of the chain
             while (linkFs != null) {
                 Feature linkNext = linkFs.getType()
-                        .getFeatureByBaseName(typeAdapter.getLinkNextFeatureName());
+                    .getFeatureByBaseName(typeAdapter.getLinkNextFeatureName());
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
@@ -140,17 +148,16 @@ public class ChainRenderer
                 // Render span
                 {
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
-                            (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
+                        (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     VRange offsets = new VRange(linkFs.getBegin() - aPageBegin,
-                            linkFs.getEnd() - aPageBegin);
+                        linkFs.getEnd() - aPageBegin);
 
                     VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, singletonMap("label", bratLabelText));
-                    span.addLazyDetails(getLazyDetails(linkFs, aFeatures));
-
+                        colorIndex, bratLabelText);
                     annoToSpanIdx.put(linkFs, span);
-
                     aResponse.add(span);
+
+                    renderLazyDetails(linkFs, span, aFeatures);
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -160,22 +167,21 @@ public class ChainRenderer
 
                     if (typeAdapter.isLinkedListBehavior() && arcLabelFeature != null) {
                         // Render arc label
-                        bratLabelText = TypeUtil.getUiLabelText(typeAdapter, prevLinkFs,
-                                asList(arcLabelFeature));
+                        bratLabelText = getUiLabelText(typeAdapter, prevLinkFs,
+                            asList(arcLabelFeature));
                     }
                     else {
                         // Render only chain type
-                        bratLabelText = TypeUtil.getUiLabelText(typeAdapter, prevLinkFs,
-                                emptyList());
+                        bratLabelText = getUiLabelText(typeAdapter, prevLinkFs, emptyList());
                     }
 
                     aResponse.add(new VArc(typeAdapter.getLayer(),
-                            new VID(prevLinkFs, 1, VID.NONE, VID.NONE), bratTypeName, prevLinkFs,
-                            linkFs, colorIndex, singletonMap("label", bratLabelText)));
+                        new VID(prevLinkFs, 1, VID.NONE, VID.NONE), bratTypeName, prevLinkFs,
+                        linkFs, colorIndex, bratLabelText));
                 }
 
                 // Render errors if required features are missing
-                renderRequiredFeatureErrors(visibleFeatures, linkFs, aResponse);
+                renderRequiredFeatureErrors(aFeatures, linkFs, aResponse);
 
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
@@ -194,7 +200,7 @@ public class ChainRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+                                int aWindowBegin)
     {
         return Collections.emptyList();
     }

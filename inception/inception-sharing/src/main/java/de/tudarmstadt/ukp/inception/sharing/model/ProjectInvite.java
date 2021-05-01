@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.sharing.model;
+
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -34,6 +36,8 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
+import org.hibernate.annotations.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -76,6 +80,16 @@ public class ProjectInvite
 
     @Column(nullable = false)
     private boolean guestAccessible = false;
+
+    @Type(type = "de.tudarmstadt.ukp.inception.sharing.model.MandatorinessType")
+    @Column(nullable = false)
+    private Mandatoriness askForEMail = NOT_ALLOWED;
+
+    @Column(nullable = false)
+    private boolean disableOnAnnotationComplete = true;
+
+    @Column(nullable = false)
+    private int maxAnnotatorCount;
 
     public ProjectInvite()
     {
@@ -160,6 +174,36 @@ public class ProjectInvite
         guestAccessible = aGuestAccessible;
     }
 
+    public Mandatoriness getAskForEMail()
+    {
+        return askForEMail;
+    }
+
+    public void setAskForEMail(Mandatoriness aAskForEMail)
+    {
+        askForEMail = aAskForEMail;
+    }
+
+    public boolean isDisableOnAnnotationComplete()
+    {
+        return disableOnAnnotationComplete;
+    }
+
+    public void setDisableOnAnnotationComplete(boolean aDisableOnAnnotationComplete)
+    {
+        disableOnAnnotationComplete = aDisableOnAnnotationComplete;
+    }
+
+    public int getMaxAnnotatorCount()
+    {
+        return maxAnnotatorCount;
+    }
+
+    public void setMaxAnnotatorCount(int aMaxAnnotatorCount)
+    {
+        maxAnnotatorCount = aMaxAnnotatorCount;
+    }
+
     @PrePersist
     protected void onCreate()
     {
@@ -205,7 +249,7 @@ public class ProjectInvite
         }
         ProjectInvite castOther = (ProjectInvite) other;
         return Objects.equals(project, castOther.project)
-                && Objects.equals(inviteId, castOther.inviteId);
+            && Objects.equals(inviteId, castOther.inviteId);
     }
 
     @Override

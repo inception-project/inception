@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.sharing;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -27,6 +32,7 @@ import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -36,6 +42,7 @@ import org.apache.commons.lang3.Validate;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -59,18 +66,21 @@ public class InviteServiceImpl
     private @PersistenceContext EntityManager entityManager;
 
     private final UserDao userRepository;
+    private final ProjectService projectService;
 
     private final SecureRandom random;
 
-    public InviteServiceImpl(UserDao aUserRepository)
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService)
     {
         random = new SecureRandom();
         userRepository = aUserRepository;
+        projectService = aProjectService;
     }
 
-    public InviteServiceImpl(UserDao aUserRepository, EntityManager aEntitymanager)
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
+                             EntityManager aEntitymanager)
     {
-        this(aUserRepository);
+        this(aUserRepository, aProjectService);
         entityManager = aEntitymanager;
     }
 
@@ -150,10 +160,10 @@ public class InviteServiceImpl
         Validate.notNull(aProject, "Project must be given");
 
         String query = "FROM ProjectInvite " //
-                + "WHERE project = :givenProject";
+            + "WHERE project = :givenProject";
         List<ProjectInvite> inviteIDs = entityManager.createQuery(query, ProjectInvite.class)
-                .setParameter("givenProject", aProject) //
-                .getResultList();
+            .setParameter("givenProject", aProject) //
+            .getResultList();
 
         if (inviteIDs.isEmpty()) {
             return null;
@@ -166,6 +176,10 @@ public class InviteServiceImpl
     @Transactional
     public void writeProjectInvite(ProjectInvite aInvite)
     {
+        if (!aInvite.isGuestAccessible()) {
+            aInvite.setAskForEMail(NOT_ALLOWED);
+        }
+
         if (aInvite.getId() == null) {
             entityManager.persist(aInvite);
         }
@@ -178,21 +192,55 @@ public class InviteServiceImpl
     public String getValidInviteID(Project aProject)
     {
         Validate.notNull(aProject, "Project must be given");
+        Validate.notNull(aProject.getId(), "Project be saved");
 
-        String query = "SELECT p.inviteId FROM ProjectInvite p " //
-                + "WHERE p.project = :givenProject " //
-                + "AND p.expirationDate > :now";
-        List<String> inviteIDs = entityManager.createQuery(query, String.class)
-                .setParameter("givenProject", aProject) //
-                .setParameter("now", new Date()) //
-                .setMaxResults(1) //
-                .getResultList();
+        ProjectInvite invite = readProjectInvite(aProject);
 
-        if (inviteIDs.isEmpty()) {
+        if (invite == null) {
             return null;
-
         }
-        return inviteIDs.get(0);
+
+        if (isDateExpired(invite) || isProjectAnnotationComplete(invite)
+            || isMaxAnnotatorCountReached(invite)) {
+            return null;
+        }
+
+        return invite.getInviteId();
+    }
+
+    @Override
+    public boolean isProjectAnnotationComplete(ProjectInvite aInvite)
+    {
+        if (!aInvite.isDisableOnAnnotationComplete()) {
+            return false;
+        }
+
+        // Get the freshest project state from the DB
+        Project project = projectService.getProject(aInvite.getProject().getId());
+        return !asList(NEW, ANNOTATION_IN_PROGRESS).contains(project.getState());
+    }
+
+    @Override
+    public boolean isDateExpired(ProjectInvite aInvite)
+    {
+        if (aInvite.getExpirationDate() == null) {
+            return false;
+        }
+
+        return aInvite.getExpirationDate().before(new Date());
+    }
+
+    @Override
+    public boolean isMaxAnnotatorCountReached(ProjectInvite aInvite)
+    {
+        if (aInvite.getMaxAnnotatorCount() <= 0) {
+            return false;
+        }
+
+        int annotatorCount = projectService
+            .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
+
+        return annotatorCount >= aInvite.getMaxAnnotatorCount();
     }
 
     @Override
@@ -244,6 +292,14 @@ public class InviteServiceImpl
         invite.setExpirationDate(aExpirationDate);
         entityManager.merge(invite);
         return true;
+    }
+
+    @Override
+    public Optional<User> getProjectUser(Project aProject, String aUsername)
+    {
+        String realm = REALM_PROJECT_PREFIX + aProject.getId();
+
+        return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUsername));
     }
 
     @Override

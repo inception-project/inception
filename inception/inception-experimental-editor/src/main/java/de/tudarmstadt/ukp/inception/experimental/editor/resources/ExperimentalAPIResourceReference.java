@@ -41,6 +41,6 @@ public class ExperimentalAPIResourceReference
      */
     private ExperimentalAPIResourceReference()
     {
-        super(ExperimentalAPIResourceReference.class, "bundle.js");
+        super(ExperimentalAPIResourceReference.class, "Annotator.js");
     }
 }

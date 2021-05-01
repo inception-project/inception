@@ -34,21 +34,44 @@ public class VArc
     private VID target;
 
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, Map<String, String> aFeatures)
+                FeatureStructure aTargetFS, String aLabelHint)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
-                new VID(getAddr(aTargetFS)), null, aFeatures, null);
+            new VID(getAddr(aTargetFS)), aLabelHint, null, null);
+    }
+
+    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
+                FeatureStructure aTargetFS, Map<String, String> aFeatures)
+    {
+        this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
+            new VID(getAddr(aTargetFS)), null, aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, String aLabelHint, Map<String, String> aFeatures)
+                FeatureStructure aTargetFS, String aLabelHint)
     {
         this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                aLabelHint, aFeatures, null);
+            aLabelHint, null, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
+                FeatureStructure aTargetFS, String aLabelHint, Map<String, String> aFeatures)
+    {
+        this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
+            aLabelHint, aFeatures, null);
+    }
+
+    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+                FeatureStructure aTargetFS, int aEquivalenceSet, String aLabel)
+    {
+        super(aLayer, aVid, aType, aEquivalenceSet, null);
+        setLabelHint(aLabel);
+        source = new VID(getAddr(aSourceFS));
+        target = new VID(getAddr(aTargetFS));
+    }
+
+    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+                FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
     {
         super(aLayer, aVid, aType, aEquivalenceSet, aFeatures);
         source = new VID(getAddr(aSourceFS));
@@ -56,7 +79,13 @@ public class VArc
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
-            String aLabel, Map<String, String> aFeatures, String aColor)
+                String aLabel, String aColor)
+    {
+        this(aLayer, aVid, aType, aSource, aTarget, aLabel, null, aColor);
+    }
+
+    public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
+                String aLabel, Map<String, String> aFeatures, String aColor)
     {
         super(aLayer, aVid, aType, aFeatures);
         setColorHint(aColor);

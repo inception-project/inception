@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalAnnotationEditor;
 
 /**
- * Support for experimental editor component.
  * <p>
  * This class is exposed as a Spring Component via
  * {@link TypeScriptAnnotationEditorSupportAutoConfiguration#typescriptAnnotationEditorFactory}

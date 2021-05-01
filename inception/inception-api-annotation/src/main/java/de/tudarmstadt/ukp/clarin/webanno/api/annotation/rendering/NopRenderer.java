@@ -35,21 +35,27 @@ public class NopRenderer
     extends Renderer_ImplBase<TypeAdapter>
 {
     public NopRenderer(TypeAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry)
+                       FeatureSupportRegistry aFeatureSupportRegistry)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
     }
 
     @Override
+    protected boolean typeSystemInit(TypeSystem aTypeSystem)
+    {
+        return false;
+    }
+
+    @Override
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int windowBeginOffset, int windowEndOffset)
+                       int windowBeginOffset, int windowEndOffset)
     {
         // Nothing to do
     }
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+                                int aWindowBegin)
     {
         return Collections.emptyList();
     }

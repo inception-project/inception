@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static java.util.Collections.emptyList;
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -32,6 +31,7 @@ import java.util.Map;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
@@ -56,8 +56,10 @@ public class SpanRenderer
 {
     private final List<SpanLayerBehavior> behaviors;
 
+    private Type type;
+
     public SpanRenderer(SpanAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
+                        FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
 
@@ -72,20 +74,30 @@ public class SpanRenderer
     }
 
     @Override
-    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int aWindowBegin, int aWindowEnd)
+    protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
         SpanAdapter typeAdapter = getTypeAdapter();
 
         // Iterate over the span annotations of the current type and render each of them
-        Type type;
         try {
-            type = getType(aCas, typeAdapter.getAnnotationTypeName());
+            type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
         }
         catch (IllegalArgumentException e) {
-            // If the type does not exist in the given CAS, then there is nothing to render
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+                       int aWindowBegin, int aWindowEnd)
+    {
+        if (!checkTypeSystem(aCas)) {
             return;
         }
+
+        SpanAdapter typeAdapter = getTypeAdapter();
 
         // Index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
@@ -111,7 +123,7 @@ public class SpanRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+                                int aWindowBegin)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return null;
@@ -149,14 +161,10 @@ public class SpanRenderer
                     LinkWithRoleModel link = links.get(li);
                     FeatureStructure targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
                     aSpansAndSlots.add(new VArc(typeAdapter.getLayer(), new VID(aFS, fi, li),
-                            uiTypeName, aFS, targetFS, link.role));
+                        uiTypeName, aFS, targetFS, link.role));
                 }
-                fi++;
             }
-        }
-
-        for (SpanLayerBehavior behavior : behaviors) {
-            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
+            fi++;
         }
     }
 }

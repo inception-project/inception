@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -58,7 +58,7 @@ public class ProjectInviteExporter
 
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+                           ExportedProject aExProject, File aStage)
         throws Exception
     {
         Project project = aRequest.getProject();
@@ -76,22 +76,25 @@ public class ProjectInviteExporter
             exportedInvite.setInviteId(invite.getInviteId());
             exportedInvite.setUpdated(invite.getUpdated());
             exportedInvite.setUserIdPlaceholder(invite.getUserIdPlaceholder());
+            exportedInvite.setAskForEMail(invite.getAskForEMail());
+            exportedInvite.setDisableOnAnnotationComplete(invite.isDisableOnAnnotationComplete());
+            exportedInvite.setMaxAnnotatorCount(invite.getMaxAnnotatorCount());
             projectInvites.add(exportedInvite);
         }
 
         aExProject.setProperty(KEY, projectInvites);
 
         LOG.info("Exported [{}] invites for project [{}]", projectInvites.size(),
-                aRequest.getProject().getName());
+            aRequest.getProject().getName());
     }
 
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
-            ExportedProject aExProject, ZipFile aZip)
+                           ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
         ExportedProjectInvite[] exportedProjectInvites = aExProject.getArrayProperty(KEY,
-                ExportedProjectInvite.class);
+            ExportedProjectInvite.class);
 
         if (exportedProjectInvites.length > 0) {
             ProjectInvite invite = new ProjectInvite();
@@ -104,6 +107,9 @@ public class ProjectInviteExporter
             invite.setInviteId(exportedInvite.getInviteId());
             invite.setUpdated(exportedInvite.getUpdated());
             invite.setUserIdPlaceholder(exportedInvite.getUserIdPlaceholder());
+            invite.setAskForEMail(exportedInvite.getAskForEMail());
+            invite.setDisableOnAnnotationComplete(exportedInvite.isDisableOnAnnotationComplete());
+            invite.setMaxAnnotatorCount(exportedInvite.getMaxAnnotatorCount());
             inviteService.writeProjectInvite(invite);
 
             LOG.info("Exported [{}] invites for project [{}]", 1, aProject.getName());

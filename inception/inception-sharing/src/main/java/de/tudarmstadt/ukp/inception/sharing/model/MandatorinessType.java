@@ -15,27 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.config;
+package de.tudarmstadt.ukp.inception.sharing.model;
 
-import de.tudarmstadt.ukp.inception.experimental.editor.websocket.WebsocketConfig;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-@Configuration
-public class TypeScriptAnnotationEditorSupportAutoConfiguration
+/**
+ * Implementation of {@link PersistentEnumUserType}
+ */
+public class MandatorinessType
+    extends PersistentEnumUserType<Mandatoriness>
 {
+    private static final long serialVersionUID = 7378581246428809177L;
 
-    @Bean
-    public TypeScriptAnnotationEditorFactory typescriptAnnotationEditorFactory()
+    @Override
+    public Class<Mandatoriness> returnedClass()
     {
-        System.out.println("--------------------CREATING---------------------------");
-        return new TypeScriptAnnotationEditorFactory();
-    }
-
-    @Bean
-    public WebsocketConfig websocketConfiguration()
-    {
-        System.out.println("--------------------DOING---------------------------");
-        return new WebsocketConfig();
+        return Mandatoriness.class;
     }
 }

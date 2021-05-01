@@ -18,12 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -37,13 +43,38 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     private Map<AnnotationFeature, Object> featureTraitsCache;
     private Map<AnnotationLayer, Object> layerTraitsCache;
 
+    private TypeSystem typeSystem;
+    private boolean allTypesPresent;
+
     public Renderer_ImplBase(T aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry)
+                             FeatureSupportRegistry aFeatureSupportRegistry)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
         layerSupportRegistry = aLayerSupportRegistry;
         typeAdapter = aTypeAdapter;
     }
+
+    /**
+     * Checks if the type system has changed compared to the last call. If this is the case, then
+     * {@link #typeSystemInit} is called to give the renderer the opportunity to obtain new type and
+     * feature information from the type system.
+     *
+     * @param aCas
+     *            a CAS.
+     * @return returns {@code true} if all types are present and rendering can commence and
+     *         {@code false} if any types are missing and rendering should be skipped.
+     */
+    protected boolean checkTypeSystem(CAS aCas)
+    {
+        if (typeSystem != aCas.getTypeSystem()) {
+            typeSystem = aCas.getTypeSystem();
+            allTypesPresent = typeSystemInit(typeSystem);
+        }
+
+        return allTypesPresent;
+    }
+
+    protected abstract boolean typeSystemInit(TypeSystem aTypeSystem);
 
     @Override
     public FeatureSupportRegistry getFeatureSupportRegistry()
@@ -51,6 +82,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         return featureSupportRegistry;
     }
 
+    @Override
     public T getTypeAdapter()
     {
         return typeAdapter;
@@ -68,7 +100,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         }
 
         Object trait = featureTraitsCache.computeIfAbsent(aFeature,
-                feature -> featureSupportRegistry.getFeatureSupport(feature).readTraits(feature));
+            feature -> featureSupportRegistry.getFeatureSupport(feature).readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
@@ -89,12 +121,18 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         }
 
         Object trait = layerTraitsCache.computeIfAbsent(aLayer,
-                feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
+            feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
 
         return Optional.empty();
+    }
+
+    public void renderLazyDetails(AnnotationFS fs, VObject aVObject,
+                                  List<AnnotationFeature> aFeatures)
+    {
+        aVObject.addLazyDetails(getLazyDetails(fs, aFeatures));
     }
 }
