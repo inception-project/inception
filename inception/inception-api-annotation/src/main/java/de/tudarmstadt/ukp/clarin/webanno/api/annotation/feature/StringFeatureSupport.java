@@ -191,7 +191,8 @@ public class StringFeatureSupport
         FeatureState featureState = aFeatureStateModel.getObject();
 
         // For really small tagsets where tag creation is not supported, use a radio group
-        if (!featureState.feature.getTagset().isCreateTag() && featureState.tagset.size() <= 3) {
+        if (!featureState.feature.getTagset().isCreateTag()
+                && featureState.tagset.size() < properties.getComboBoxThreshold()) {
             return RADIOGROUP;
         }
 

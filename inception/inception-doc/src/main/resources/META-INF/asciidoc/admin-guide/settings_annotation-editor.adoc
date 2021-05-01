@@ -38,6 +38,11 @@
 | false
 | 
 
+| annotation.feature-support.string.comboBoxThreshold
+| If the tagset is larger than the threshold, an combo-box field is used instead of a radio-choice.
+| 6
+| 16
+
 | annotation.feature-support.string.autoCompleteThreshold
 | If the tagset is larger than the threshold, an auto-complete field is used instead of a standard combobox.
 | 75
