@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.editor.config;
 
-import de.tudarmstadt.ukp.inception.experimental.editor.websocket.WebsocketConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.inception.experimental.editor.websocket.WebsocketConfig;
 
 @Configuration
 public class TypeScriptAnnotationEditorSupportAutoConfiguration

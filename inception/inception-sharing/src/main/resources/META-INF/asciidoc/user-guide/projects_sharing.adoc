@@ -37,10 +37,17 @@ The life time of an invite link can be controlled in several ways:
   project reaches this number, the invite link can no longer be used to join.
 * *By project state:* the invite can be configured to stop working once all documents in the document
   have been annotated. What exactly _all documents have been annotated_ means depends on the workload
+<<<<<<< HEAD
   management strategy that has been configured. E.g. for a project using the dynamic workload
   management, the annotations of the project are considered to complete once the required number
   of annotators per document have marked all their documents as finished.
 
+=======
+  management strategy that has been configured. E.g. for a project using the dynamic workload 
+  management, the annotations of the project are considered to complete once the required number
+  of annotators per document have marked all their documents as finished.
+  
+>>>>>>> 0c73222e5161cee40d4aee50b20880c268a965af
 If any of the configured conditions are triggered, an alert is shown next do the condition and the invite link cannot be used anymore.
 
 == Guest annotators
@@ -68,7 +75,11 @@ addition to the user ID. If a user provides an email address along with the user
 subsequent logins, the user needs to provide the same email address. If a different email address
 is provided, then the login is rejected.
 
+<<<<<<< HEAD
 NOTE: When importing a project with guest annotators, the annotations of the guests can only be
+=======
+NOTE: When importing a project with guest annotators, the annotations of the guests can only be 
+>>>>>>> 0c73222e5161cee40d4aee50b20880c268a965af
 imported if the respective guest accounts do not yet exist in the {product-name} instance. This
 means, it is possible to make a backup of a project and to import it into another {product-name}
 instance or also into the original instance after deleting the original project. However, when

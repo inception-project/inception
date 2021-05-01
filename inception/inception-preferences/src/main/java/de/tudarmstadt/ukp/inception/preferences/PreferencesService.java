@@ -15,23 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.preferences;
 
-export class Annotation
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
+public interface PreferencesService
 {
-    id : string
-    quote : string
-    text : string
-    color : string
-    ranges : Array<Range>
+    <T> T loadTraitsForUser(Key<T> aKey, User aUser);
 
-    constructor(aId : string, aQuote : string, aText : string, aColor : string, aRanges : Array<Range>)
-    {
-        this.id = aId
-        this.quote = aQuote
-        this.text = aText
-        this.color = aColor
-        this.ranges = aRanges
-    }
+    <T> void saveTraitsForUser(Key<T> aKey, User aUser, T aTraits);
 
+    <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject);
 
+    <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject, T aTraits);
 }

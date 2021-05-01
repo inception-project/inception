@@ -43,9 +43,11 @@ public class InviteServiceAutoConfiguration
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
-    public InviteService inviteService(UserDao aUserRepository, ProjectService aProjectService)
+    public InviteService inviteService(UserDao aUserRepository, ProjectService aProjectService,
+            InviteServiceProperties aInviteProperties)
     {
-        return new InviteServiceImpl(aUserRepository, aProjectService, entityManager);
+        return new InviteServiceImpl(aUserRepository, aProjectService, aInviteProperties,
+                entityManager);
     }
 
     @Order(InviteProjectSettingsPanelFactory.ORDER)

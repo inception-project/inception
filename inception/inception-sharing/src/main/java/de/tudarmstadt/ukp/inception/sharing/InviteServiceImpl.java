@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
 import static java.util.Arrays.asList;
 
@@ -38,7 +39,11 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
 /**
@@ -67,20 +73,23 @@ public class InviteServiceImpl
 
     private final UserDao userRepository;
     private final ProjectService projectService;
+    private final InviteServiceProperties inviteProperties;
 
     private final SecureRandom random;
 
-    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService)
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
+            InviteServiceProperties aInviteProperties)
     {
         random = new SecureRandom();
         userRepository = aUserRepository;
         projectService = aProjectService;
+        inviteProperties = aInviteProperties;
     }
 
     public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
-                             EntityManager aEntitymanager)
+            InviteServiceProperties aInviteProperties, EntityManager aEntitymanager)
     {
-        this(aUserRepository, aProjectService);
+        this(aUserRepository, aProjectService, aInviteProperties);
         entityManager = aEntitymanager;
     }
 
@@ -201,7 +210,7 @@ public class InviteServiceImpl
         }
 
         if (isDateExpired(invite) || isProjectAnnotationComplete(invite)
-            || isMaxAnnotatorCountReached(invite)) {
+                || isMaxAnnotatorCountReached(invite)) {
             return null;
         }
 
@@ -238,7 +247,7 @@ public class InviteServiceImpl
         }
 
         int annotatorCount = projectService
-            .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
+                .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
 
         return annotatorCount >= aInvite.getMaxAnnotatorCount();
     }
@@ -300,6 +309,41 @@ public class InviteServiceImpl
         String realm = REALM_PROJECT_PREFIX + aProject.getId();
 
         return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUsername));
+    }
+
+    @Override
+    public String getFullInviteLinkUrl(ProjectInvite aInvite)
+    {
+        // If a base URL is set in the properties, we use that.
+        if (StringUtils.isNotBlank(inviteProperties.getInviteBaseUrl())) {
+            StringBuilder url = new StringBuilder();
+            url.append(inviteProperties.getInviteBaseUrl().trim());
+            while (url.charAt(url.length() - 1) == '/') {
+                url.setLength(url.length() - 1);
+            }
+            url.append(NS_PROJECT);
+            url.append("/");
+            url.append(aInvite.getProject().getId());
+            url.append("/");
+            url.append("join-project");
+            url.append("/");
+            url.append(aInvite.getInviteId());
+            return url.toString();
+        }
+
+        // If we are in a Wicket context, we can use Wicket to render the URL for us
+        RequestCycle cycle = RequestCycle.get();
+        if (cycle != null) {
+            CharSequence url = cycle.urlFor(AcceptInvitePage.class,
+                    new PageParameters()
+                            .set(AcceptInvitePage.PAGE_PARAM_PROJECT, aInvite.getProject().getId())
+                            .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, aInvite.getInviteId()));
+
+            return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
+        }
+
+        throw new IllegalStateException("Please set the property [sharing.invites.invite-base-url] "
+                + "in the settings.properties file");
     }
 
     @Override

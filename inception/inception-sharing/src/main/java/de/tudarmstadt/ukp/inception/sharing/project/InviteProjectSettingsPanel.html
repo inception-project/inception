@@ -23,103 +23,56 @@
                 <i class="fas fa-envelope-open-text"></i>
                 <wicket:message key="enableJoinLink"/>
             </button>
-        </div>
-    </div>
-    <form wicket:id="form" class="flex-content flex-v-container">
-        <div class="flex-content scrolling card-body">
-            <div class="container-fluid">
-                <div class="form-group form-row" wicket:enclosure="linkText">
-                    <label class="col-sm-2 col-form-label"> <wicket:message key="inviteLink" />
-                    </label>
-                    <div class="col-sm-10">
-                        <div class="input-group">
-                            <input wicket:id="linkText" class="form-control" type="text"/>
-                            <div class="input-group-append">
-                                <button wicket:id="copyLink" class="btn btn-secondary" type="button">
-                                    <i class="fas fa-paste" wicket:message="title:copy"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group form-row" wicket:enclosure="expirationDate">
-                    <label class="col-sm-2 col-form-label">
-                        <wicket:message key="expirationDate" />
-                    </label>
-                    <div class="col-sm-10">
-                        <input wicket:id="expirationDate" type="date" />
-                        <button wicket:id="extendLink" class="btn btn-secondary">
-                            <i class="fas fa-forward" wicket:message="title:extend"></i>
-                        </button>
-                        <span wicket:id="alertExpirationDatePassed" class="alert alert-warning px-2 py-0 m-0 float-right" role="alert">
+            <span wicket:id="alertExpirationDatePassed" class="alert alert-warning px-2 py-0 m-0 float-right" role="alert">
               <i class="fas fa-exclamation-triangle"></i>
               Expiration date is in the past.
             </span>
-                    </div>
-                </div>
-                <div class="form-group form-row" wicket:enclosure="disableOnAnnotationComplete">
-                    <div class="offset-md-2 col-sm-10">
-                        <div class="form-check">
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="disableOnAnnotationComplete">
+          <div class="offset-md-2 col-sm-10">
+            <div class="form-check">
               <span wicket:id="alertAnnotationFinished" class="alert alert-warning px-2 py-0 m-0 float-right" role="alert">
                 <i class="fas fa-exclamation-triangle"></i>
                 All documents have been finished.
               </span>
-                            <input class="form-check-input" type="checkbox" wicket:id="disableOnAnnotationComplete">
-                            <label class="form-check-label" wicket:for="disableOnAnnotationComplete">
-                                <wicket:label key="disableOnAnnotationComplete"/>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group form-row" wicket:enclosure="maxAnnotatorCount">
-                    <label wicket:for="maxAnnotatorCount" class="col-sm-2 col-form-label">
-                        <wicket:label key="maxAnnotatorCount" />
-                    </label>
-                    <div class="col-sm-10">
+              <input class="form-check-input" type="checkbox" wicket:id="disableOnAnnotationComplete">
+              <label class="form-check-label" wicket:for="disableOnAnnotationComplete">
+                <wicket:label key="disableOnAnnotationComplete"/>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="maxAnnotatorCount">
+          <label wicket:for="maxAnnotatorCount" class="col-sm-2 col-form-label"> 
+            <wicket:label key="maxAnnotatorCount" />
+          </label>
+          <div class="col-sm-10">
             <span wicket:id="alertMaxAnnotatorsReached" class="alert alert-warning px-2 py-0 m-0 float-right" role="alert">
               <i class="fas fa-exclamation-triangle"></i>
               Maximum number of annotators reached.
             </span>
-                        <input wicket:id="maxAnnotatorCount" class="form-control" style="width: auto" type="number"/>
-                    </div>
-                </div>
-                <div class="form-group form-row" wicket:enclosure="invitationText">
-                    <label wicket:for="invitationText" class="col-sm-2 col-form-label">
-                        <wicket:label key="invitationText" />
-                    </label>
-                    <div class="col-sm-10">
-                        <textarea wicket:id="invitationText" class="form-control" rows="10"></textarea>
-                        <div class="small text-muted">
-                            <i class="fab fa-markdown"></i> Markdown supported
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group form-row" wicket:enclosure="guestAccessible">
-                    <div class="offset-md-2 col-sm-10">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" wicket:id="guestAccessible">
-                            <label class="form-check-label" wicket:for="guestAccessible">
-                                <wicket:label key="guestAccessible"/>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group form-row" wicket:enclosure="userIdPlaceholder">
-                    <label wicket:for="userIdPlaceholder" class="col-sm-2 col-form-label">
-                        <wicket:label key="userIdPlaceholder" />
-                    </label>
-                    <div class="col-sm-10">
-                        <input wicket:id="userIdPlaceholder" class="form-control" type="text" placeholder="User ID"/>
-                    </div>
-                </div>
-                <div class="form-group form-row" wicket:enclosure="askForEMail">
-                    <label class="col-form-label col-sm-2">
-                        <wicket:message key="askForEMail"/>
-                    </label>
-                    <div class="col-sm-10">
-                        <select wicket:id="askForEMail" class="form-control" data-container="body"></select>
-                    </div>
-                </div>
+            <input wicket:id="maxAnnotatorCount" class="form-control" style="width: auto" type="number"/>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="invitationText">
+          <label wicket:for="invitationText" class="col-sm-2 col-form-label"> 
+            <wicket:label key="invitationText" />
+          </label>
+          <div class="col-sm-10">
+            <textarea wicket:id="invitationText" class="form-control" rows="10"></textarea>
+            <div class="small text-muted">
+              <i class="fab fa-markdown"></i> Markdown supported
+            </div>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="guestAccessible">
+          <div class="offset-md-2 col-sm-10">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" wicket:id="guestAccessible">
+              <label class="form-check-label" wicket:for="guestAccessible">
+                <wicket:label key="guestAccessible"/>
+              </label>
             </div>
         </div>
         <div class="card-footer text-right">
@@ -132,6 +85,26 @@
                 <wicket:message key="save"/>
             </button>
         </div>
-    </form>
+        <div class="form-group form-row" wicket:enclosure="askForEMail">
+          <label class="col-form-label col-sm-2">
+            <wicket:message key="askForEMail"/>
+          </label>
+          <div class="col-sm-10">
+            <select wicket:id="askForEMail" class="form-control" data-container="body"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer text-right">
+      <button wicket:id="remove" class="btn btn-danger float-left">
+        <i class="fas fa-trash"/>
+        <wicket:message key="disableJoinLink"/>
+      </button>
+      <button wicket:id="save" class="btn btn-primary">
+        <i class="fas fa-save"></i>&nbsp;
+        <wicket:message key="save"/>
+      </button>
+    </div>
+  </form>
 </wicket:panel>
 </html>
