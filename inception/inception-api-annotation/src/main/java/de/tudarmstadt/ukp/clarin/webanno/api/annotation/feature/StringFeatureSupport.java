@@ -168,7 +168,7 @@ public class StringFeatureSupport
 
         EditorType editorType = traits.getEditorType();
         if (editorType == EditorType.AUTO) {
-            editorType = autoChooseFeatureEditor(aFeatureStateModel);
+            editorType = autoChooseFeatureEditorWithTagset(aFeatureStateModel);
         }
 
         switch (editorType) {
@@ -185,15 +185,18 @@ public class StringFeatureSupport
         }
     }
 
-    private EditorType autoChooseFeatureEditor(final IModel<FeatureState> aFeatureStateModel)
+    private EditorType autoChooseFeatureEditorWithTagset(
+            final IModel<FeatureState> aFeatureStateModel)
     {
-        // For really small tagsets, use a radio group
-        if (aFeatureStateModel.getObject().tagset.size() <= 3) {
+        FeatureState featureState = aFeatureStateModel.getObject();
+
+        // For really small tagsets where tag creation is not supported, use a radio group
+        if (!featureState.feature.getTagset().isCreateTag() && featureState.tagset.size() <= 3) {
             return RADIOGROUP;
         }
 
         // For mid-sized tagsets, use a combobox
-        if (aFeatureStateModel.getObject().tagset.size() < properties.getAutoCompleteThreshold()) {
+        if (featureState.tagset.size() < properties.getAutoCompleteThreshold()) {
             return COMBOBOX;
         }
 

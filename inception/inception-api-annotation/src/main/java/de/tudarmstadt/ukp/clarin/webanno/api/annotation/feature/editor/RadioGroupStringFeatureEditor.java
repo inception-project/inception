@@ -22,11 +22,13 @@ import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -59,6 +61,11 @@ public class RadioGroupStringFeatureEditor
         StringFeatureTraits traits = readFeatureTraits(feat);
 
         add(new LambdaAjaxLink("clear", this::actionClear));
+
+        WebMarkupContainer emptyTagsetWarning = new WebMarkupContainer("emptyTagsetWarning");
+        emptyTagsetWarning.setOutputMarkupPlaceholderTag(true);
+        emptyTagsetWarning.add(visibleWhen(() -> CollectionUtils.isEmpty(getModelObject().tagset)));
+        add(emptyTagsetWarning);
 
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
