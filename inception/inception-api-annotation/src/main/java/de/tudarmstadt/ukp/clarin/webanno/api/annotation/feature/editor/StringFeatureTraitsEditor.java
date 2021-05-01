@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 
 import java.util.Arrays;
 
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -146,13 +147,16 @@ public class StringFeatureTraitsEditor
         dynamicSize.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
         form.add(dynamicSize);
 
+        WebMarkupContainer editorTypeContainer = new WebMarkupContainer("editorTypeContainer");
+        editorTypeContainer.setOutputMarkupPlaceholderTag(true);
+        editorTypeContainer.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
         DropDownChoice<StringFeatureTraits.EditorType> editorType = new BootstrapSelect<>(
                 "editorType");
         editorType.setModel(PropertyModel.of(traits, "editorType"));
         editorType.setChoices(Arrays.asList(StringFeatureTraits.EditorType.values()));
         editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-        editorType.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
-        form.add(editorType);
+        editorTypeContainer.add(editorType);
+        form.add(editorTypeContainer);
     }
 
     private KeyBindingsConfigurationPanel newKeyBindingsConfigurationPanel(
