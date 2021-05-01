@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
@@ -60,6 +61,7 @@ public class DashboardMenu
     private @SpringBean UserDao userRepository;
     private @SpringBean PreferencesService userPrefService;
 
+    private WebMarkupContainer spacer;
     private WebMarkupContainer wrapper;
     private IModel<Boolean> pinState;
     private LambdaAjaxLink pin;
@@ -93,11 +95,15 @@ public class DashboardMenu
     protected void onInitialize()
     {
         super.onInitialize();
+        setOutputMarkupId(true);
+
+        spacer = new WebMarkupContainer("spacer");
+        spacer.add(LambdaBehavior.visibleWhen(pinState.map(flag -> !flag)));
+        add(spacer);
 
         wrapper = new WebMarkupContainer("wrapper");
         wrapper.add(AttributeModifier.append("class",
                 pinState.map(flag -> flag ? "" : "collapsed expand-on-hover")));
-        wrapper.setOutputMarkupId(true);
 
         pin = new LambdaAjaxLink("pin", this::actionTogglePin);
         pin.add(AttributeModifier.append("class", pinState.map(flag -> flag ? "active" : "")));
@@ -142,7 +148,7 @@ public class DashboardMenu
     private void actionTogglePin(AjaxRequestTarget aTarget)
     {
         pinState.setObject(!pinState.getObject());
-        aTarget.add(wrapper);
+        aTarget.add(this);
     }
 
     private void generateMenuItem(ListItem<MenuItem> aItem)
