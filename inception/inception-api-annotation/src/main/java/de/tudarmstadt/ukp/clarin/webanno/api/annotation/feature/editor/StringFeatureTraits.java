@@ -35,10 +35,32 @@ public class StringFeatureTraits
 {
     private static final long serialVersionUID = -8450181605003189055L;
 
+    public enum EditorType
+    {
+        AUTO("Auto (depending on tagset size)"), //
+        RADIOGROUP("Radio group (small tagsets)"), //
+        COMBOBOX("Combobox (mid-size tagsets)"), //
+        AUTOCOMPLETE("Autocomplete (large tagsets)");
+
+        private final String name;
+
+        EditorType(String name)
+        {
+            this.name = name;
+        }
+
+        @Override
+        public String toString()
+        {
+            return name;
+        }
+    }
+
     private boolean multipleRows = false;
     private boolean dynamicSize = false;
     private int collapsedRows = 1;
     private int expandedRows = 1;
+    private EditorType editorType = EditorType.AUTO;
     private List<KeyBinding> keyBindings = new ArrayList<>();
 
     public StringFeatureTraits()
@@ -84,6 +106,16 @@ public class StringFeatureTraits
     public void setExpandedRows(int expandedRows)
     {
         this.expandedRows = expandedRows;
+    }
+
+    public EditorType getEditorType()
+    {
+        return editorType;
+    }
+
+    public void setEditorType(EditorType aEditorType)
+    {
+        editorType = aEditorType;
     }
 
     @Override

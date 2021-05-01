@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.util.Arrays;
+
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -143,15 +145,24 @@ public class StringFeatureTraitsEditor
                 new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         dynamicSize.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
         form.add(dynamicSize);
+
+        DropDownChoice<StringFeatureTraits.EditorType> editorType = new BootstrapSelect<>(
+                "editorType");
+        editorType.setModel(PropertyModel.of(traits, "editorType"));
+        editorType.setChoices(Arrays.asList(StringFeatureTraits.EditorType.values()));
+        editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        editorType.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
+        form.add(editorType);
     }
 
     private KeyBindingsConfigurationPanel newKeyBindingsConfigurationPanel(
             IModel<AnnotationFeature> aFeature)
     {
-        KeyBindingsConfigurationPanel keyBindings = new KeyBindingsConfigurationPanel("keyBindings",
+        KeyBindingsConfigurationPanel panel = new KeyBindingsConfigurationPanel("keyBindings",
                 aFeature, traits.bind("keyBindings"));
-        keyBindings.setOutputMarkupId(true);
-        return keyBindings;
+        panel.setOutputMarkupId(true);
+        // panel.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
+        return panel;
     }
 
     private UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> getFeatureSupport()
