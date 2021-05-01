@@ -23,13 +23,14 @@
       <span wicket:id="feature"/>
       <span class="float-right">
         <span wicket:id="textIndicator"></span>
+        <a wicket:id="clear"><i class="fas fa-times"></i></a>
       </span>
     </label>
     <div class="feature-editor-value">
-      <div wicket:id="value">
-        <div wicket:id="radios">
+      <div wicket:id="value" class="radio-button-group">
+        <div wicket:id="radios" class="flex-h-container radio-button">
           <input wicket:id="radio" type="radio"/>
-          <label wicket:id="label" style="margin-right: 5%; padding-left: 20px;"></label>
+          <label wicket:id="label" class="flex-content"/>
         </div>
       </div>
       <div wicket:id="keyBindings" class="col-sm-12"/>

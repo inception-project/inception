@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsP
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class RadioGroupStringFeatureEditor
     extends TextFeatureEditorBase
@@ -57,11 +58,21 @@ public class RadioGroupStringFeatureEditor
         AnnotationFeature feat = getModelObject().feature;
         StringFeatureTraits traits = readFeatureTraits(feat);
 
+        add(new LambdaAjaxLink("clear", this::actionClear));
+
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
                 // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+    }
+
+    private void actionClear(AjaxRequestTarget aTarget)
+    {
+        getModelObject().value = null;
+        aTarget.add(this);
+        send(getFocusComponent(), BUBBLE,
+                new FeatureEditorValueChangedEvent(RadioGroupStringFeatureEditor.this, aTarget));
     }
 
     @Override
