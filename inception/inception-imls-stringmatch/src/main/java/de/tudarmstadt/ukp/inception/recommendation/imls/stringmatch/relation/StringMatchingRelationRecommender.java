@@ -172,11 +172,22 @@ public class StringMatchingRelationRecommender
         double overallTrainingSize = data.size() - testSetSize;
         double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
-        if (trainingData.size() < 1 || testData.size() < 1) {
-            log.info("Not enough data to evaluate, skipping!");
+        final int minTrainingSetSize = 1;
+        final int minTestSetSize = 1;
+        if (trainingData.size() < minTrainingSetSize || testData.size() < minTestSetSize) {
+            if ((getRecommender().getThreshold() <= 0.0d)) {
+                return new EvaluationResult();
+            }
+
+            String info = String.format(
+                    "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
+                    trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),
+                    (minTrainingSetSize + minTestSetSize));
+            log.info(info);
             EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
                     trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
