@@ -306,7 +306,7 @@ as to which type of *editor type* (i.e. input field) is displayed to the user.
 | An editor is chosen automatically depending on the size of the tagset and whether annotators can add to it.
 
 | Radio group
-| Each tag is shown as a button. Only one button can be active at a time. Best for quick access to small tagsets. Does not allow annotators to a new tags (yet).
+| Each tag is shown as a button. Only one button can be active at a time. Best for quick access to small tagsets. Does not allow annotators to add new tags (yet).
 
 | Combo box
 | A text field with auto-completion and button that opens a drop-down list showing all possible tags and their descriptions. Best for mid-sized tagsets.
