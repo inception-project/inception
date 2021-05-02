@@ -67,6 +67,10 @@ public class BasicProjectInitializer
             dependencies.add(BasicSpanRecommenderInitializer.class);
         }
 
+        if (context.getBeanNamesForType(BasicRelationRecommenderInitializer.class).length > 0) {
+            dependencies.add(BasicRelationRecommenderInitializer.class);
+        }
+
         return dependencies;
     }
 
