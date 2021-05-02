@@ -44,11 +44,7 @@ public interface InviteService
 
     /**
      * Get invite id for given project if it exists and has expired yet.
-<<<<<<< HEAD
      *
-=======
-     * 
->>>>>>> 0c73222e5161cee40d4aee50b20880c268a965af
      * @param aProject
      *            the given project
      */
@@ -102,6 +98,4 @@ public interface InviteService
     boolean isDateExpired(ProjectInvite aInvite);
 
     boolean isMaxAnnotatorCountReached(ProjectInvite aInvite);
-
-    String getFullInviteLinkUrl(ProjectInvite aInvite);
 }

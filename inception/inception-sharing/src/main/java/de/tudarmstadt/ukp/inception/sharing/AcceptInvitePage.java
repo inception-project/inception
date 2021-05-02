@@ -116,11 +116,10 @@ public class AcceptInvitePage
 
         formModel = new CompoundPropertyModel<>(new FormData());
         formModel.getObject().registeredLogin = !invite.getObject().isGuestAccessible()
-
-                || !inviteServiceProperties.isGuestsEnabled();
+            || !inviteServiceProperties.isGuestsEnabled();
         formModel.getObject().askForEMail = invite.getObject().isGuestAccessible()
-                && invite.getObject().getAskForEMail() != NOT_ALLOWED
-                && inviteServiceProperties.isGuestsEnabled();
+            && invite.getObject().getAskForEMail() != NOT_ALLOWED
+            && inviteServiceProperties.isGuestsEnabled();
 
         Form<FormData> form = new Form<>("acceptInvitationForm", formModel);
         // form.add(new Label("project", PropertyModel.of(getProject(), "name")));
@@ -130,11 +129,11 @@ public class AcceptInvitePage
                     () -> getUserIdPlaceholder(formModel.getObject().registeredLogin))))
             .add(visibleWhen(() -> user == null)));
         form.add(new PasswordTextField("password") //
-                .add(visibleWhen(() -> user == null && formModel.getObject().registeredLogin)));
+            .add(visibleWhen(() -> user == null && formModel.getObject().registeredLogin)));
         form.add(new EmailTextField("eMail") //
-                .setRequired(invite.getObject().getAskForEMail() == MANDATORY)
-                .add(visibleWhen(() -> user == null && formModel.getObject().askForEMail
-                        && !formModel.getObject().registeredLogin)));
+            .setRequired(invite.getObject().getAskForEMail() == MANDATORY)
+            .add(visibleWhen(() -> user == null && formModel.getObject().askForEMail
+                && !formModel.getObject().registeredLogin)));
         form.add(new LambdaAjaxButton<>("join", this::actionJoinProject));
         form.add(new CheckBox("registeredLogin") //
             .setOutputMarkupPlaceholderTag(true) //
@@ -236,7 +235,7 @@ public class AcceptInvitePage
     private User signInAsProjectUser(FormData aFormData)
     {
         Optional<User> existingUser = inviteService.getProjectUser(getProject(),
-                aFormData.username);
+            aFormData.username);
         String storedEMail = existingUser.map(User::getEmail).orElse(null);
         if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
             error("Provided eMail address does not match stored eMail address");

@@ -58,8 +58,7 @@ public class InviteServiceImplTest
     {
         projectService = Mockito.mock(ProjectService.class);
 
-        sut = new InviteServiceImpl(null, projectService, null,
-                testEntityManager.getEntityManager());
+        sut = new InviteServiceImpl(null, projectService, testEntityManager.getEntityManager());
         testProject = new Project("testProject");
         testProject.setState(ANNOTATION_IN_PROGRESS);
         testEntityManager.persist(testProject);
