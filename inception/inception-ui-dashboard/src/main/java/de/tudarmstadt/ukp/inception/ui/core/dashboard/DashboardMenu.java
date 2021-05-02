@@ -37,11 +37,6 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -51,40 +46,9 @@ public class DashboardMenu
 {
     private static final long serialVersionUID = 8582941766827165724L;
 
-    private @SpringBean UserDao userRepository;
-    private @SpringBean PreferencesService userPrefService;
-
-    private WebMarkupContainer spacer;
-    private WebMarkupContainer wrapper;
-    private IModel<Boolean> pinState;
-    private LambdaAjaxLink pin;
-
-    public static final Key<PinState> KEY_PINNED = new Key<>(PinState.class,
-            "dashboard-menus/pinned");
-
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
         super(aId, aModel);
-        pinState = aPinState;
-    }
-
-    @Override
-    protected void onInitialize()
-    {
-        super.onInitialize();
-        setOutputMarkupId(true);
-
-        spacer = new WebMarkupContainer("spacer");
-        spacer.add(LambdaBehavior.visibleWhen(pinState.map(flag -> !flag)));
-        add(spacer);
-
-        wrapper = new WebMarkupContainer("wrapper");
-        wrapper.add(AttributeModifier.append("class",
-                pinState.map(flag -> flag ? "" : "collapsed expand-on-hover")));
-
-        pin = new LambdaAjaxLink("pin", this::actionTogglePin);
-        pin.add(AttributeModifier.append("class", pinState.map(flag -> flag ? "active" : "")));
-        wrapper.add(pin);
 
         add(new ListView<MenuItem>("items", aModel)
         {
@@ -96,36 +60,6 @@ public class DashboardMenu
                 generateMenuItem(aItem);
             }
         });
-
-        add(wrapper);
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<List<MenuItem>> getModel()
-    {
-        return (IModel<List<MenuItem>>) getDefaultModel();
-    }
-
-    public IModel<Boolean> getPinState()
-    {
-        return pinState;
-    }
-
-    public void setPinState(IModel<Boolean> aPinState)
-    {
-        pinState = aPinState;
-    }
-
-    public DashboardMenu setPinnable(boolean aPinnable)
-    {
-        pin.setVisible(aPinnable);
-        return this;
-    }
-
-    private void actionTogglePin(AjaxRequestTarget aTarget)
-    {
-        pinState.setObject(!pinState.getObject());
-        aTarget.add(this);
     }
 
     private void generateMenuItem(ListItem<MenuItem> aItem)
@@ -140,7 +74,7 @@ public class DashboardMenu
 
             if (currentPage == null) {
                 throw new IllegalStateException(
-                    "Menu item targetting a specific project must be on a project page");
+                        "Menu item targetting a specific project must be on a project page");
             }
 
             Project project = currentPage.getProject();
@@ -149,7 +83,7 @@ public class DashboardMenu
             aItem.setVisible(projectMenuItem.applies(currentPage.getProject()));
 
             menulink = new BookmarkablePageLink<>("item", pageClass,
-                new PageParameters().set(PAGE_PARAM_PROJECT, projectId));
+                    new PageParameters().set(PAGE_PARAM_PROJECT, projectId));
         }
         else {
             menulink = new BookmarkablePageLink<>("item", pageClass);
@@ -169,6 +103,6 @@ public class DashboardMenu
         super.renderHead(aResponse);
 
         aResponse.render(CssHeaderItem
-            .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
+                .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
     }
 }

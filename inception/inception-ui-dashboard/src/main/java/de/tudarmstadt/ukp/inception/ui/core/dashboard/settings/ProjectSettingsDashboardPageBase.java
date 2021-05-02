@@ -85,15 +85,15 @@ public class ProjectSettingsDashboardPageBase
         add(new Label("projectName", LoadableDetachableModel.of(() -> getProject().getName())));
 
         add(new LambdaAjaxLink("delete", this::actionDelete)
-            .onConfigure((_this) -> _this.setEnabled(getProject() != null
-                && getProject().getId() != null)));
+                .onConfigure((_this) -> _this.setEnabled(getProject() != null
+                        && getProject().getId() != null)));
 
         IModel<String> projectNameModel = PropertyModel.of(getProject(), "name");
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
-            new StringResourceModel("DeleteProjectDialog.title", this),
-            new StringResourceModel("DeleteProjectDialog.text", this).setModel(getProjectModel())
-                .setParameters(projectNameModel),
-            projectNameModel));
+                new StringResourceModel("DeleteProjectDialog.title", this),
+                new StringResourceModel("DeleteProjectDialog.text", this).setModel(getProjectModel())
+                        .setParameters(projectNameModel),
+                projectNameModel));
         deleteProjectDialog.setConfirmAction(this::actionDeletePerform);
     }
 
@@ -118,7 +118,7 @@ public class ProjectSettingsDashboardPageBase
     private List<MenuItem> getMenuItems()
     {
         return menuItemService.getMenuItems().stream()
-            .filter(item -> item.getPath().matches("/settings/[^/]+"))
-            .collect(Collectors.toList());
+                .filter(item -> item.getPath().matches("/settings/[^/]+"))
+                .collect(Collectors.toList());
     }
 }

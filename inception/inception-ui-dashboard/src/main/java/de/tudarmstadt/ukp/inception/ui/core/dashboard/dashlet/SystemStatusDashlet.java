@@ -37,7 +37,7 @@ public class SystemStatusDashlet
         super(aId);
 
         add(new Label("activeUsers",
-            LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().size())));
+                LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().size())));
     }
 
     @Override
