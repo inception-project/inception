@@ -150,7 +150,7 @@ public class StringFeatureSupport
 
         StringFeatureTraits traits = readTraits(feature);
 
-        if (feature.getTagset() == null) {
+        if (feature.getTagset() == null || traits.isMultipleRows()) {
             if (traits.isMultipleRows()) {
                 // If multiple rows are set use a textarea
                 if (traits.isDynamicSize()) {

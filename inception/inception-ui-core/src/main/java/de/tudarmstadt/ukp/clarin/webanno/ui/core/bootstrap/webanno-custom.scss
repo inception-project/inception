@@ -466,12 +466,16 @@ div.left-tabpanel div.tab-row a:hover {
   label {
     @extend .btn;
     border: $border-width solid $primary;
+    text-align: left;
+  }
+
+  input[type="radio"]:checked ~ * {
+    color: $component-active-color;
   }
 
   input[type="radio"]:checked + label {
     @include box-shadow($btn-active-box-shadow);
     background: $component-active-bg;
-    color: $component-active-color;
     
     &:focus {
       @include box-shadow($btn-focus-box-shadow, $btn-active-box-shadow);

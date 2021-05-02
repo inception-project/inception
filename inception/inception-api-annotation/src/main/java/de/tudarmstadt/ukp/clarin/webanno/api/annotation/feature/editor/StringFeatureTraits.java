@@ -39,7 +39,7 @@ public class StringFeatureTraits
     {
         AUTO("Auto (depending on tagset size)"), //
         RADIOGROUP("Radio group (small tagsets)"), //
-        COMBOBOX("Combobox (mid-size tagsets)"), //
+        COMBOBOX("Combo box (mid-size tagsets)"), //
         AUTOCOMPLETE("Autocomplete (large tagsets)");
 
         private final String name;

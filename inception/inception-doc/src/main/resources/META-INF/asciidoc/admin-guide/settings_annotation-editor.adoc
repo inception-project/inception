@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_settings_annotation]]
 = Annotation editor
 
 [cols="4*", options="header"]

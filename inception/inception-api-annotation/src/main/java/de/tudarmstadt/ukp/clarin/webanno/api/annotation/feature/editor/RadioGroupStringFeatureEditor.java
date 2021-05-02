@@ -18,11 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -37,7 +39,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.IModelComparator;
 import org.apache.wicket.model.PropertyModel;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.Radio;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
@@ -145,7 +149,26 @@ public class RadioGroupStringFeatureEditor
                 Radio<Object> radio = new Radio<Object>("radio", (IModel) item.getModel(), aGroup);
                 Radio.Label label = new Radio.Label("label",
                         item.getModel().map(ReorderableTag::getName), radio);
-                item.add(radio, label);
+                label.add(AttributeModifier.append("class",
+                        item.getModel().map(ReorderableTag::getReordered)
+                                .map(_flag -> _flag ? "font-weight-bold" : "")));
+
+                String descriptionText = item.getModel().getObject().getDescription();
+
+                WebMarkupContainer description = new WebMarkupContainer("description");
+                description.add(visibleWhen(() -> isNotBlank(descriptionText)));
+
+                if (isNotBlank(descriptionText)) {
+                    TooltipBehavior tip = new TooltipBehavior();
+                    tip.setOption("autoHide", false);
+                    tip.setOption("showOn", Options.asString("click"));
+                    tip.setOption("content", Options.asString(descriptionText));
+                    description.add(tip);
+                }
+
+                add(description);
+
+                item.add(radio, label, description);
             }
         };
     }
