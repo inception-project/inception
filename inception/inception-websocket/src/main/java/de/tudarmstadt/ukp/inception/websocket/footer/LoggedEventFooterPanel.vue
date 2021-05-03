@@ -41,14 +41,16 @@
 module.exports = {
   props: {
     wsEndpoint: { type: String, required: true },   // should this be full ws://... url
-    topicChannel: { type: String, required: true }  // this should be /queue/loggedevents
+    topicChannel: { type: String, required: true },  // this should be /queue/loggedevents
+    feedbackPanelId: { type: String, required: true }
   },
   data() {
     return {
       events: [],
       socket: null,
       stompClient: null,
-      connected: false
+      connected: false,
+      feedbackPanel: null
     }
   },
   methods: {
@@ -61,19 +63,18 @@ module.exports = {
       var that = this;
       this.stompClient.connect({}, 
         function (frame) {
-          console.log('Connected: ' + frame);
           that.connected = true;
           that.stompClient.subscribe('/user/queue/errors', function (msg) {
             console.error('Websocket server error: ' + JSON.stringify(msg));
           });
           that.stompClient.subscribe('/app' + that.topicChannel, function (msg) {
-            console.log('Received initial data: ' + JSON.stringify(msg));
-              that.events = JSON.parse(msg.body);
+            that.events = JSON.parse(msg.body);
           });
           that.stompClient.subscribe('/topic' + that.topicChannel, function (msg) {
-            console.log('Received: ' + JSON.stringify(msg));
-            that.events.unshift(JSON.parse(msg.body));
+            var msgBody = JSON.parse(msg.body);
+            that.events.unshift(msgBody);
             that.events.pop();
+            that.addEventToFeedbackPanel(msgBody);
           });
         },
         function(error){
@@ -82,19 +83,35 @@ module.exports = {
       );
     },
     disconnect(){
-      console.log("Websocket disconnecting");
       if (this.stompClient !== null) {
         this.stompClient.disconnect();
       }
       this.connected = false;
-      console.log("Disconnected");
     },
     formatTime(timestamp) {
       return dayjs(timestamp).format("LLLL")
+    },
+    addEventToFeedbackPanel(event) {
+      // create event item with new event content
+      var eventItem = document.createElement('li');
+      eventItem.classList.add('alert', 'alert-info', 'alert-dismissable');
+      var eventSpan = document.createElement('span');
+      eventSpan.textContent = this.formatTime(event.timestamp) + ': ' + event.eventMsg;
+      eventItem.appendChild(eventSpan);
+      // get or create list in feedbackPanel and add new message item to it
+      var feedbackMsgList = this.feedbackPanel.querySelector('ul');
+      if (feedbackMsgList == null){
+        feedbackMsgList = document.createElement('ul');
+        feedbackMsgList.className = 'feedbackPanel';
+        this.feedbackPanel.appendChild(feedbackMsgList);
+      }
+      feedbackMsgList.appendChild(eventItem);
+      bootstrapFeedbackPanelFade();
     }
   },
   mounted(){
     this.connect();
+    this.feedbackPanel = document.getElementById(this.feedbackPanelId);
   },
   beforeUnmount(){
     this.disconnect();

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Lazy;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Controller
+@ConditionalOnProperty({"websocket.enabled", "websocket.loggedevent.enabled"})
 public class LoggedEventMessageControllerImpl implements LoggedEventMessageController
 {
     private static final int MAX_EVENTS = 5;
@@ -80,7 +82,7 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
     private DocumentService docService;
     private EventRepository eventRepo;
     private UserDao userRepo;
-        
+           
     
     public LoggedEventMessageControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate, 
             @Lazy @Autowired List<EventLoggingAdapter<?>> aAdapters, 

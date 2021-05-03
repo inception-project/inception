@@ -18,15 +18,18 @@
 package de.tudarmstadt.ukp.inception.websocket.footer;
 
 import org.apache.wicket.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
 
-//FIXME does not show up in footer without this order, would like to move to config-file
 @Order(FooterItem.ORDER_LEFT + 500)
 @org.springframework.stereotype.Component
+@ConditionalOnProperty({"websocket.enabled", "websocket.loggedevent.enabled"})
 public class LoggedEventFooterItem implements FooterItem
 {
+
+    public static final int ORDER = FooterItem.ORDER_LEFT + 500;
 
     @Override
     public Component create(String aId)

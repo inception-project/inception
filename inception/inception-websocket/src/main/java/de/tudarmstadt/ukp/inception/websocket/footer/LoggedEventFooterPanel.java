@@ -25,6 +25,8 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
+import org.apache.wicket.Page;
+import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.authorization.Action;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -32,8 +34,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.visit.IVisit;
+import org.apache.wicket.util.visit.IVisitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageController;
@@ -43,6 +50,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 public class LoggedEventFooterPanel extends VueComponent
 {
     private static final long serialVersionUID = -9006607500867612027L;
+    private final static Logger LOG = LoggerFactory.getLogger(LoggedEventFooterPanel.class);
 
     private @SpringBean LoggedEventMessageController loggedEventService;
     private @SpringBean ServletContext servletContext;
@@ -50,13 +58,50 @@ public class LoggedEventFooterPanel extends VueComponent
     public LoggedEventFooterPanel(String aId)
     {
         super(aId, "LoggedEventFooterPanel.vue");
-        // model will be added as props to vue component
-        setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(),
-                "topicChannel", loggedEventService.getTopicChannel())));
-        setOutputMarkupPlaceholderTag(true);
         
+        setOutputMarkupPlaceholderTag(true);
     }
     
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        // model will be added as props to vue component
+        setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(),
+                "topicChannel", loggedEventService.getTopicChannel(), 
+                "feedbackPanelId", retrieveFeedbackPanelId())));
+    }
+
+    private String retrieveFeedbackPanelId()
+    {
+        Page page = null;
+        BootstrapFeedbackPanel feedbackPanel = null;
+        String feedbackPanelId = "";
+        try {
+            page = getPage();
+        }
+        catch (WicketRuntimeException e) {
+            LOG.debug("No page yet.");
+        }
+        if (page != null) {
+            feedbackPanel = getPage().visitChildren(BootstrapFeedbackPanel.class,
+                new IVisitor<BootstrapFeedbackPanel, BootstrapFeedbackPanel>()
+                {
+
+                    @Override
+                    public void component(BootstrapFeedbackPanel aFeedbackPanel,
+                            IVisit<BootstrapFeedbackPanel> aVisit)
+                    {
+                        aVisit.stop(aFeedbackPanel);
+                    }
+                });
+            if (feedbackPanel != null) {
+                feedbackPanelId = feedbackPanel.getMarkupId();
+            }
+        }
+        return feedbackPanelId;
+    }
+
     private String constructEndpointUrl() {
         Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
                 WebsocketConfig.WS_ENDPOINT));

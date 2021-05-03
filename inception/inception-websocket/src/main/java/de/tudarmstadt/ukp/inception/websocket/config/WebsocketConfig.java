@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -25,11 +27,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
 public class WebsocketConfig
     implements WebSocketMessageBrokerConfigurer
 {
 
     public static final String WS_ENDPOINT = "/ws-endpoint";
+    
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry aRegistry)
@@ -51,15 +55,5 @@ public class WebsocketConfig
         aRegistry.setPreservePublishOrder(true); // messages to clients are by default not ordered,
                                                  // need to explicitly set order here
     }
-
-//    @Bean
-//    @Autowired
-//    public LoggedEventMessageController loggedEventMessageController(SimpMessagingTemplate aMsgTemplate, 
-//            @Lazy @Autowired List<EventLoggingAdapter<?>> aAdapters, 
-//            DocumentService aDocService, ProjectService aProjectService, @Autowired EventRepository aEventRepository,
-//            @Autowired UserDao aUserRepository) {
-//        return new LoggedEventMessageControllerImpl(aMsgTemplate, aAdapters, aDocService,
-//                aProjectService, aEventRepository, aUserRepository);
-//    }
     
 }

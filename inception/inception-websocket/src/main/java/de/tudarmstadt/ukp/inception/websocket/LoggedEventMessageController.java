@@ -43,5 +43,6 @@ public interface LoggedEventMessageController
      * @return the most recent events
      */
     public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
-
+    
+    public String handleException(Throwable exception);
 }
