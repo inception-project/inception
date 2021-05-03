@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 import static java.awt.Component.CENTER_ALIGNMENT;
 
 import java.awt.*;
-import java.beans.PropertyChangeEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -88,28 +87,30 @@ public class StandaloneShutdownDialogManager
         port = aEvt.getWebServer().getPort();
     }
 
-    private void handleCloseEvent(PropertyChangeEvent aEvt)
+    private void actionBrowse()
     {
-        if (aEvt.getPropertyName().equals(JOptionPane.VALUE_PROPERTY)) {
-            switch ((String) aEvt.getNewValue()) {
-            case ACTION_OPEN_BROWSER:
-                try {
-                    Desktop.getDesktop().browse(URI.create("http://localhost:8080"));
-                }
-                catch (IOException e) {
-                    log.error("Unable to open browser", e);
-                }
-                break;
-            case ACTION_SHUTDOWN:
-                System.exit(0);
-                break;
-            }
+        try {
+            Desktop.getDesktop().browse(URI.create("http://localhost:8080"));
         }
+        catch (IOException e) {
+            log.error("Unable to open browser", e);
+        }
+    }
+
+    private void actionShutdown()
+    {
+        System.exit(0);
     }
 
     private void showShutdownDialog()
     {
         JFrame frame = new JFrame("INCEpTION");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (Exception e) {
+            log.info("Unable to set system look and feel", e);
+        }
 
         // Image icon
         URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
@@ -135,44 +136,68 @@ public class StandaloneShutdownDialogManager
         JPanel buttonPanel = new JPanel();
 
         JButton shutdownButton = new JButton(ACTION_SHUTDOWN);
-        shutdownButton.addActionListener(e -> System.exit(0));
+        shutdownButton.addActionListener(e -> actionShutdown());
         buttonPanel.add(shutdownButton);
 
         if (Desktop.isDesktopSupported()
                 && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             JButton browseButton = new JButton(ACTION_OPEN_BROWSER);
-            browseButton.addActionListener(event -> {
-                try {
-                    Desktop.getDesktop().browse(URI.create("http://localhost:8080"));
-                }
-                catch (IOException e) {
-                    log.error("Unable to open browser", e);
-                }
-            });
+            browseButton.addActionListener(e -> actionBrowse());
             buttonPanel.add(browseButton);
         }
         buttonPanel.setAlignmentX(CENTER_ALIGNMENT);
         contentPanel.add(buttonPanel, BorderLayout.PAGE_END);
 
-        // Event handler
-        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        // Tray
+        if (SystemTray.isSupported()) {
+            // We only hide on close so that we can show the window again if needed
+            frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 
-        //
-        // final JDialog dialog = new JDialog(jFrame, applicationName,
-        // java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
-        // dialog.setContentPane(optionPane);
-        // dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        // dialog.addWindowListener(new WindowAdapter()
-        // {
-        // @Override
-        // public void windowClosing(WindowEvent we)
-        // {
-        // // Avoid closing window by other means than button
-        // }
-        // });
-        // optionPane.addPropertyChangeListener(this::handleCloseEvent);
+            SystemTray tray = SystemTray.getSystemTray();
+            TrayIcon trayIcon = new TrayIcon(icon.getImage());
+            trayIcon.setImageAutoSize(true);
+
+            PopupMenu popupMenu = new PopupMenu();
+
+            MenuItem untrayItem = new MenuItem("Show/Hide");
+            popupMenu.add(untrayItem);
+            untrayItem.addActionListener(e -> frame.setVisible(!frame.isVisible()));
+
+            MenuItem browseItem = new MenuItem(ACTION_OPEN_BROWSER);
+            browseItem.addActionListener(e -> actionBrowse());
+            popupMenu.add(browseItem);
+
+            MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN);
+            shutdownItem.addActionListener(e -> {
+                tray.remove(trayIcon);
+                actionShutdown();
+            });
+            popupMenu.add(shutdownItem);
+
+            trayIcon.setToolTip("INCEpTION");
+            trayIcon.setPopupMenu(popupMenu);
+
+            // Click should show/hide
+            trayIcon.addActionListener(e -> frame.setVisible(!frame.isVisible()));
+
+            try {
+                tray.add(trayIcon);
+
+                contentPanel.add(new JLabel("Closing this window minimizes it to tray."),
+                        BorderLayout.CENTER);
+            }
+            catch (AWTException e) {
+                log.error("Could not add to tray", e);
+                frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            }
+        }
+        else {
+            frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        }
+
         frame.add(contentPanel);
         frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 }
