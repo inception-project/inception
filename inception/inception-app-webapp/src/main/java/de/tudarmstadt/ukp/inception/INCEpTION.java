@@ -24,7 +24,6 @@ import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.awt.*;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -245,10 +244,7 @@ public class INCEpTION
 
     protected static void run(String[] args, Class<?>... aSources)
     {
-        URL splasScreenImageUrl = INCEpTION.class.getResource("splash.png");
-        URL iconUrl = INCEpTION.class.getResource("icon.png");
-
-        Optional<JFrame> splash = LoadingSplashScreen.setupScreen(splasScreenImageUrl, iconUrl);
+        Optional<JFrame> splash = LoadingSplashScreen.setupScreen();
 
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
         // Add the main application as the root Spring context

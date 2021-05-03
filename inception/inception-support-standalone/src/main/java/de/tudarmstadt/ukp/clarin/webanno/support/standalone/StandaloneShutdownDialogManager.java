@@ -17,15 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static java.awt.Component.CENTER_ALIGNMENT;
+
 import java.awt.*;
-import java.awt.Desktop.Action;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,41 +74,7 @@ public class StandaloneShutdownDialogManager
             eventPublisher.publishEvent(
                     new ShutdownDialogAvailableEvent(StandaloneShutdownDialogManager.this));
 
-            final int style;
-            final String[] options;
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Action.BROWSE)) {
-                style = JOptionPane.OK_CANCEL_OPTION;
-                options = new String[] { ACTION_SHUTDOWN, ACTION_OPEN_BROWSER };
-            }
-            else {
-                style = JOptionPane.OK_OPTION;
-                options = new String[] { ACTION_SHUTDOWN };
-            }
-
-            EventQueue.invokeLater(() -> {
-                final JOptionPane optionPane = new JOptionPane(
-                        new JLabel("<HTML>" + applicationName + " is running now and can be "
-                                + "accessed via <b>http://localhost:8080</b>.<br>" + applicationName
-                                + " works best with the browsers Google Chrome or Safari.<br>"
-                                + "Use this dialog to shut " + applicationName + " down.</HTML>"),
-                        JOptionPane.INFORMATION_MESSAGE, style, null, options);
-
-                final JDialog dialog = new JDialog((JFrame) null, applicationName,
-                        java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
-                dialog.setContentPane(optionPane);
-                dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-                dialog.addWindowListener(new WindowAdapter()
-                {
-                    @Override
-                    public void windowClosing(WindowEvent we)
-                    {
-                        // Avoid closing window by other means than button
-                    }
-                });
-                optionPane.addPropertyChangeListener(this::handleCloseEvent);
-                dialog.pack();
-                dialog.setVisible(true);
-            });
+            EventQueue.invokeLater(this::showShutdownDialog);
         }
         else {
             log.info(
@@ -138,5 +105,74 @@ public class StandaloneShutdownDialogManager
                 break;
             }
         }
+    }
+
+    private void showShutdownDialog()
+    {
+        JFrame frame = new JFrame("INCEpTION");
+
+        // Image icon
+        URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
+        ImageIcon icon = new ImageIcon(iconUrl);
+        frame.setIconImage(icon.getImage());
+        frame.setResizable(false);
+
+        // Content panel
+        JPanel contentPanel = new JPanel();
+        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        contentPanel.setBorder(padding);
+        contentPanel.setLayout(new BorderLayout());
+
+        // Label
+        JLabel label = new JLabel("<html>" + applicationName + " is running now and can be "
+                + "accessed via <b>http://localhost:8080</b>.<br>" + applicationName
+                + " works best with the browsers Google Chrome or Safari.<br>"
+                + "Use this dialog to shut " + applicationName + " down.</html>");
+
+        contentPanel.add(label, BorderLayout.PAGE_START);
+
+        // Button Layout
+        JPanel buttonPanel = new JPanel();
+
+        JButton shutdownButton = new JButton(ACTION_SHUTDOWN);
+        shutdownButton.addActionListener(e -> System.exit(0));
+        buttonPanel.add(shutdownButton);
+
+        if (Desktop.isDesktopSupported()
+                && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            JButton browseButton = new JButton(ACTION_OPEN_BROWSER);
+            browseButton.addActionListener(event -> {
+                try {
+                    Desktop.getDesktop().browse(URI.create("http://localhost:8080"));
+                }
+                catch (IOException e) {
+                    log.error("Unable to open browser", e);
+                }
+            });
+            buttonPanel.add(browseButton);
+        }
+        buttonPanel.setAlignmentX(CENTER_ALIGNMENT);
+        contentPanel.add(buttonPanel, BorderLayout.PAGE_END);
+
+        // Event handler
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+
+        //
+        // final JDialog dialog = new JDialog(jFrame, applicationName,
+        // java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
+        // dialog.setContentPane(optionPane);
+        // dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        // dialog.addWindowListener(new WindowAdapter()
+        // {
+        // @Override
+        // public void windowClosing(WindowEvent we)
+        // {
+        // // Avoid closing window by other means than button
+        // }
+        // });
+        // optionPane.addPropertyChangeListener(this::handleCloseEvent);
+        frame.add(contentPanel);
+        frame.pack();
+        frame.setVisible(true);
     }
 }

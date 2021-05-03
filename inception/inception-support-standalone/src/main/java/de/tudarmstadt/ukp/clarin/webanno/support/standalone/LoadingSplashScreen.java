@@ -39,6 +39,13 @@ public class LoadingSplashScreen
         return Optional.of(window);
     }
 
+    public static Optional<JFrame> setupScreen()
+    {
+        URL splasHScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
+        URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
+        return setupScreen(splasHScreenImageUrl, iconUrl);
+    }
+
     private static class SplashWindow
         extends JFrame
     {
