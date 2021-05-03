@@ -17,6 +17,13 @@
  */
 $dashboard-border-left: 3em;
 
+.dashboard-menu {
+  @extend .flex-content;
+  @extend .flex-v-container;
+  max-width: min-content;
+  position: relative;
+}
+
 .dashboard-sidebar {
   overflow-x: hidden;
   background-color: var(--gray-dark);
@@ -78,6 +85,10 @@ $dashboard-border-left: 3em;
     
   &.expand-on-hover {
     transition: all .3s ease-in-out;
+    position: absolute; 
+    top: 0px; 
+    bottom: 0px;
+    z-index: 9999;
     
     &:hover {
       max-width: 20rem;
