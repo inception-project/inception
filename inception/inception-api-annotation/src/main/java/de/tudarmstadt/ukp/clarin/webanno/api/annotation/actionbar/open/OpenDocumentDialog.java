@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
 
 import java.util.List;
 
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -106,6 +107,9 @@ public class OpenDocumentDialog
                         if (ppb != null) {
                             ((ProjectPageBase) ppb).backToProjectPage();
                         }
+                    }
+                    catch (RestartResponseException e) {
+                        throw e;
                     }
                     catch (Exception e) {
                         setResponsePage(getApplication().getHomePage());
