@@ -15,13 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class Annotation {
-    constructor(aId, aQuote, aText, aColor, aRanges) {
-        this.id = aId;
-        this.quote = aQuote;
-        this.text = aText;
-        this.color = aColor;
-        this.ranges = aRanges;
+package de.tudarmstadt.ukp.inception.experimental.editor.websocket.model;
+
+public class WebsocketMessageHandler {
+
+    private final String content;
+
+    public WebsocketMessageHandler(String aContent) {
+        content = aContent;
+    }
+
+    public String getContent() {
+        return content;
     }
 }
-//# sourceMappingURL=Annotation.js.map

@@ -900,6 +900,162 @@ var Client = class {
   }
 };
 
+// node_modules/@stomp/stompjs/esm6/compatibility/heartbeat-info.js
+var HeartbeatInfo = class {
+  constructor(client) {
+    this.client = client;
+  }
+  get outgoing() {
+    return this.client.heartbeatOutgoing;
+  }
+  set outgoing(value) {
+    this.client.heartbeatOutgoing = value;
+  }
+  get incoming() {
+    return this.client.heartbeatIncoming;
+  }
+  set incoming(value) {
+    this.client.heartbeatIncoming = value;
+  }
+};
+
+// node_modules/@stomp/stompjs/esm6/compatibility/compat-client.js
+var CompatClient = class extends Client {
+  constructor(webSocketFactory) {
+    super();
+    this.maxWebSocketFrameSize = 16 * 1024;
+    this._heartbeatInfo = new HeartbeatInfo(this);
+    this.reconnect_delay = 0;
+    this.webSocketFactory = webSocketFactory;
+    this.debug = (...message) => {
+      console.log(...message);
+    };
+  }
+  _parseConnect(...args) {
+    let closeEventCallback;
+    let connectCallback;
+    let errorCallback;
+    let headers = {};
+    if (args.length < 2) {
+      throw new Error("Connect requires at least 2 arguments");
+    }
+    if (typeof args[1] === "function") {
+      [headers, connectCallback, errorCallback, closeEventCallback] = args;
+    } else {
+      switch (args.length) {
+        case 6:
+          [
+            headers.login,
+            headers.passcode,
+            connectCallback,
+            errorCallback,
+            closeEventCallback,
+            headers.host
+          ] = args;
+          break;
+        default:
+          [
+            headers.login,
+            headers.passcode,
+            connectCallback,
+            errorCallback,
+            closeEventCallback
+          ] = args;
+      }
+    }
+    return [headers, connectCallback, errorCallback, closeEventCallback];
+  }
+  connect(...args) {
+    const out = this._parseConnect(...args);
+    if (out[0]) {
+      this.connectHeaders = out[0];
+    }
+    if (out[1]) {
+      this.onConnect = out[1];
+    }
+    if (out[2]) {
+      this.onStompError = out[2];
+    }
+    if (out[3]) {
+      this.onWebSocketClose = out[3];
+    }
+    super.activate();
+  }
+  disconnect(disconnectCallback, headers = {}) {
+    if (disconnectCallback) {
+      this.onDisconnect = disconnectCallback;
+    }
+    this.disconnectHeaders = headers;
+    super.deactivate();
+  }
+  send(destination, headers = {}, body = "") {
+    headers = Object.assign({}, headers);
+    const skipContentLengthHeader = headers["content-length"] === false;
+    if (skipContentLengthHeader) {
+      delete headers["content-length"];
+    }
+    this.publish({
+      destination,
+      headers,
+      body,
+      skipContentLengthHeader
+    });
+  }
+  set reconnect_delay(value) {
+    this.reconnectDelay = value;
+  }
+  get ws() {
+    return this.webSocket;
+  }
+  get version() {
+    return this.connectedVersion;
+  }
+  get onreceive() {
+    return this.onUnhandledMessage;
+  }
+  set onreceive(value) {
+    this.onUnhandledMessage = value;
+  }
+  get onreceipt() {
+    return this.onUnhandledReceipt;
+  }
+  set onreceipt(value) {
+    this.onUnhandledReceipt = value;
+  }
+  get heartbeat() {
+    return this._heartbeatInfo;
+  }
+  set heartbeat(value) {
+    this.heartbeatIncoming = value.incoming;
+    this.heartbeatOutgoing = value.outgoing;
+  }
+};
+
+// node_modules/@stomp/stompjs/esm6/compatibility/stomp.js
+var Stomp = class {
+  static client(url, protocols) {
+    if (protocols == null) {
+      protocols = Versions.default.protocolVersions();
+    }
+    const wsFn = () => {
+      const klass = Stomp.WebSocketClass || WebSocket;
+      return new klass(url, protocols);
+    };
+    return new CompatClient(wsFn);
+  }
+  static over(ws) {
+    let wsFn;
+    if (typeof ws === "function") {
+      wsFn = ws;
+    } else {
+      console.warn("Stomp.over did not receive a factory, auto reconnect will not work. Please see https://stomp-js.github.io/api-docs/latest/classes/Stomp.html#over");
+      wsFn = () => ws;
+    }
+    return new CompatClient(wsFn);
+  }
+};
+Stomp.WebSocketClass = null;
+
 // client/Annotator.ts
 var Annotator = class {
   constructor() {
@@ -909,12 +1065,12 @@ var Annotator = class {
       setTimeout(function() {
         document.getElementById("connect-button").addEventListener("click", (e) => that.connect());
         document.getElementById("disconnect-button").addEventListener("click", (e) => that.disconnect());
-        document.getElementById("send-to-server").addEventListener("click", (e) => that.sendMessageToServer(that.clientMsg));
+        document.getElementById("send-to-server").addEventListener("click", (e) => that.sendMessageToServer());
       }, 1e3);
     } else {
       document.getElementById("connect-button").addEventListener("click", (e) => that.connect());
       document.getElementById("disconnect-button").addEventListener("click", (e) => that.disconnect());
-      document.getElementById("disconnect-button").addEventListener("click", (e) => that.sendMessageToServer(null));
+      document.getElementById("disconnect-button").addEventListener("click", (e) => that.sendMessageToServer());
     }
   }
   connect() {
@@ -923,20 +1079,14 @@ var Annotator = class {
       return;
     }
     let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/inception_app_webapp_war_exploded/ws";
-    this.stompClient = new Client({
-      brokerURL: url
+    this.stompClient = Stomp.over(function() {
+      return new WebSocket(url);
     });
     this.stompClient.onConnect = function(frame) {
       that.connected = true;
-      console.log("CONNECTED!, Frame: " + frame);
-      that.stompClient.subscribe("/app", function(msg) {
-        console.log("Received initial data: " + JSON.stringify(msg));
+      that.stompClient.subscribe("/queue/selected_annotation", function(msg) {
+        console.log("Received data2: " + JSON.stringify(msg) + frame);
         that.events = JSON.parse(msg.body);
-      });
-      that.stompClient.subscribe("/topic", function(msg) {
-        console.log("Received: " + JSON.stringify(msg));
-        that.events.unshift(JSON.parse(msg.body));
-        that.events.pop();
       });
     };
     this.stompClient.onStompError = function(frame) {
@@ -953,22 +1103,22 @@ var Annotator = class {
       this.stompClient.deactivate();
     }
   }
-  sendMessageToServer(msg) {
-    console.log("Should be sending now: " + msg);
+  sendMessageToServer() {
+    this.stompClient.publish({destination: "/app/select_annotation_by_client", body: "TEST_TEXT"});
   }
   receiveServerMessage(serverMessage) {
-    switch (serverMessage.type) {
+    switch (serverMessage) {
       case "newAnnotationForClient":
-        console.log("Server Message __ New Annotation for Client (" + this.connection + "): " + serverMessage);
+        console.log("Server Message __ New Annotation for Client: ");
         break;
       case "deletedAnnotationForClient":
-        console.log("Server Message __ Deleted Annotation for Client (" + this.connection + "): " + serverMessage);
+        console.log("Server Message __ Deleted Annotation for Client: ");
         break;
       case "newConnectedClientForClient":
-        console.log("Server Message __ New Connected Client Message for Client (" + this.connection + "): " + serverMessage);
+        console.log("Server Message __ New Connected Client Message for Client: ");
         break;
       case "selectedAnnotationForClient":
-        console.log("Server Message __ Selected Annotation for Client (" + this.connection + "): " + serverMessage);
+        console.log("Server Message __ Selected Annotation for Client: ");
         break;
     }
   }

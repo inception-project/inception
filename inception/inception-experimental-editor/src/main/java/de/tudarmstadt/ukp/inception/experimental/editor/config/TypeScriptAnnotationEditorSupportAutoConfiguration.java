@@ -29,14 +29,13 @@ public class TypeScriptAnnotationEditorSupportAutoConfiguration
     @Bean
     public TypeScriptAnnotationEditorFactory typescriptAnnotationEditorFactory()
     {
-        System.out.println("--------------------CREATING---------------------------");
         return new TypeScriptAnnotationEditorFactory();
     }
 
     @Bean
     public WebsocketConfig websocketConfiguration()
     {
-        System.out.println("--------------------DOING---------------------------");
         return new WebsocketConfig();
     }
+
 }
