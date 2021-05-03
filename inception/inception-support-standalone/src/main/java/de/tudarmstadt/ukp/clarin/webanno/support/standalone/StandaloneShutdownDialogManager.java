@@ -23,6 +23,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Year;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -75,6 +76,13 @@ public class StandaloneShutdownDialogManager
             eventPublisher.publishEvent(
                     new ShutdownDialogAvailableEvent(StandaloneShutdownDialogManager.this));
 
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            }
+            catch (Exception e) {
+                log.info("Unable to set system look and feel", e);
+            }
+
             EventQueue.invokeLater(this::showShutdownDialog);
         }
         else {
@@ -105,15 +113,44 @@ public class StandaloneShutdownDialogManager
         System.exit(0);
     }
 
+    private void actionShowAbout()
+    {
+        JFrame frame = new JFrame(applicationName + " - About");
+
+        JPanel contentPanel = new JPanel();
+        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        contentPanel.setBorder(padding);
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.PAGE_AXIS));
+
+        JLabel header = new JLabel(applicationName);
+        header.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        contentPanel.add(header);
+
+        contentPanel.add(new JLabel(
+                "A semantic annotation platform offering intelligent assistance and knowledge management."));
+
+        contentPanel.add(new JLabel(
+                "<html>For more information, see <b>https://inception-project.github.io</b>"));
+
+        contentPanel.add(new JLabel("Java version: " + System.getProperty("java.version")));
+        contentPanel.add(new JLabel("INCEpTION version: " + SettingsUtil.getVersionString()));
+
+        contentPanel.add(
+                new JLabel("INCEpTION is provided as open source under the Apache License v2.0."));
+        contentPanel.add(new JLabel("<html>© " + Year.now().getValue()
+                + " The Ubiquitous Knowledge Processing (UKP) Lab <br/>"
+                + "at the Department of Computer Science, Technical University Darmstadt.</html>"));
+
+        frame.add(contentPanel);
+
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
     private void showShutdownDialog()
     {
-        JFrame frame = new JFrame("INCEpTION");
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception e) {
-            log.info("Unable to set system look and feel", e);
-        }
+        JFrame frame = new JFrame(applicationName);
 
         // Image icon
         URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
@@ -129,8 +166,8 @@ public class StandaloneShutdownDialogManager
 
         // Label
         JLabel label = new JLabel("<html>" + applicationName + " is running now and can be "
-                + "accessed via <b>http://localhost:8080</b>.<br>" + applicationName
-                + " works best with the browsers Google Chrome or Safari.<br>"
+                + "accessed via <b>http://localhost:" + port + "</b>." + "<br>" //
+                + applicationName + " works best with the browsers Google Chrome or Safari.<br>" //
                 + "Use this dialog to shut " + applicationName + " down.</html>");
 
         contentPanel.add(label, BorderLayout.PAGE_START);
@@ -170,6 +207,10 @@ public class StandaloneShutdownDialogManager
             browseItem.addActionListener(e -> actionBrowse());
             popupMenu.add(browseItem);
 
+            MenuItem aboutItem = new MenuItem("About");
+            aboutItem.addActionListener(e -> actionShowAbout());
+            popupMenu.add(aboutItem);
+
             MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN);
             shutdownItem.addActionListener(e -> {
                 tray.remove(trayIcon);
@@ -177,7 +218,7 @@ public class StandaloneShutdownDialogManager
             });
             popupMenu.add(shutdownItem);
 
-            trayIcon.setToolTip("INCEpTION " + SettingsUtil.getVersionString());
+            trayIcon.setToolTip(applicationName + " " + SettingsUtil.getVersionString());
             trayIcon.setPopupMenu(popupMenu);
 
             // Click should show/hide
