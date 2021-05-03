@@ -198,7 +198,6 @@ public class StandaloneShutdownDialogManager
             browseButton.addActionListener(e -> actionBrowse());
             buttonPanel.add(browseButton);
             frame.getRootPane().setDefaultButton(browseButton);
-            frame.requestFocus();
         }
 
         JButton shutdownButton = new JButton(ACTION_SHUTDOWN);
@@ -263,5 +262,6 @@ public class StandaloneShutdownDialogManager
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        frame.requestFocus();
     }
 }
