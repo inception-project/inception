@@ -6,9 +6,9 @@
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -299,7 +299,8 @@ public class StringMatchingRecommender
         final int minTrainingSetSize = 1;
         final int minTestSetSize = 1;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
-            if (gazeteerService != null && !gazeteerService.listGazeteers(recommender).isEmpty()) {
+            if ((getRecommender().getThreshold() <= 0.0d) || (gazeteerService != null
+                    && !gazeteerService.listGazeteers(recommender).isEmpty())) {
                 // We cannot evaluate, but the user expects to see immediate results from the
                 // gazeteer - so we return with an "unknown" result but without marking it as
                 // skipped so that the selection task allows the recommender to activate.
