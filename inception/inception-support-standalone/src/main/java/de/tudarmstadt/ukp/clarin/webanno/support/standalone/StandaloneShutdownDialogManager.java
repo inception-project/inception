@@ -19,13 +19,30 @@ package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
 import static java.awt.Component.CENTER_ALIGNMENT;
 
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Desktop;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Year;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 
 import org.slf4j.Logger;
