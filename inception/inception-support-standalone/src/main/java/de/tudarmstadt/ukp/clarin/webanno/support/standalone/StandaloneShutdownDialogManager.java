@@ -192,16 +192,19 @@ public class StandaloneShutdownDialogManager
         // Button Layout
         JPanel buttonPanel = new JPanel();
 
-        JButton shutdownButton = new JButton(ACTION_SHUTDOWN);
-        shutdownButton.addActionListener(e -> actionShutdown());
-        buttonPanel.add(shutdownButton);
-
         if (Desktop.isDesktopSupported()
                 && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             JButton browseButton = new JButton(ACTION_OPEN_BROWSER);
             browseButton.addActionListener(e -> actionBrowse());
             buttonPanel.add(browseButton);
+            frame.getRootPane().setDefaultButton(browseButton);
+            frame.requestFocus();
         }
+
+        JButton shutdownButton = new JButton(ACTION_SHUTDOWN);
+        shutdownButton.addActionListener(e -> actionShutdown());
+        buttonPanel.add(shutdownButton);
+
         buttonPanel.setAlignmentX(CENTER_ALIGNMENT);
         contentPanel.add(buttonPanel, BorderLayout.PAGE_END);
 
