@@ -17,47 +17,74 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GraphicsEnvironment;
-import java.awt.Toolkit;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.net.URL;
 import java.util.Optional;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JWindow;
+import javax.swing.*;
 
 public class LoadingSplashScreen
 {
-    public static Optional<JWindow> setupScreen(URL aImage)
+    public static Optional<JFrame> setupScreen(URL aSplashScreenImageUrl, URL aIconUrl)
     {
         if (GraphicsEnvironment.isHeadless()) {
             return Optional.empty();
         }
 
-        SplashWindow window = new SplashWindow(aImage);
+        SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl);
         window.setVisible(true);
 
         return Optional.of(window);
     }
 
     private static class SplashWindow
-        extends JWindow
+        extends JFrame
     {
         private static final long serialVersionUID = 2429606748142131008L;
 
-        public SplashWindow(URL aUrl)
+        public SplashWindow(URL aSplashScreenImageUrl, URL aIconUrl)
         {
-            JLabel l = new JLabel(new ImageIcon(aUrl));
+            JLabel l = new JLabel(new ImageIcon(aSplashScreenImageUrl));
             JLabel info = new JLabel("Application is loading...");
             getContentPane().add(l, BorderLayout.CENTER);
             getContentPane().add(info, BorderLayout.SOUTH);
+
+            ImageIcon img = new ImageIcon(aIconUrl);
+            setIconImage(img.getImage());
+
+            setUndecorated(true);
             pack();
+
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             Dimension labelSize = l.getPreferredSize();
             setLocation(screenSize.width / 2 - (labelSize.width / 2),
                     screenSize.height / 2 - (labelSize.height / 2));
+
+            addMouseMotionListener(new MouseMotionListener()
+            {
+                private int mx, my;
+
+                @Override
+                public void mouseMoved(MouseEvent aEvent)
+                {
+                    mx = aEvent.getXOnScreen();
+                    my = aEvent.getYOnScreen();
+                }
+
+                @Override
+                public void mouseDragged(MouseEvent aEvent)
+                {
+                    Point p = SplashWindow.this.getLocation();
+                    p.x += aEvent.getXOnScreen() - mx;
+                    p.y += aEvent.getYOnScreen() - my;
+                    mx = aEvent.getXOnScreen();
+                    my = aEvent.getYOnScreen();
+                    SplashWindow.this.setLocation(p);
+                }
+            });
+
             setVisible(true);
         }
     }

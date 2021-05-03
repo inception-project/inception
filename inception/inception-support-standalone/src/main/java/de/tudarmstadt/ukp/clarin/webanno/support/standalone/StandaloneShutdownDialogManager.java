@@ -17,20 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
-import java.awt.Desktop;
+import java.awt.*;
 import java.awt.Desktop.Action;
-import java.awt.EventQueue;
-import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +39,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-@Component("standaloneShutdownDialog")
+@Component("standaloneShutdownDialogManager")
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class StandaloneShutdownDialog
+public class StandaloneShutdownDialogManager
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -75,8 +70,8 @@ public class StandaloneShutdownDialog
                 && runningFromCommandline) {
             log.info("If you are running " + applicationName
                     + " in a server environment, please use '-Djava.awt.headless=true'");
-            eventPublisher
-                    .publishEvent(new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
+            eventPublisher.publishEvent(
+                    new ShutdownDialogAvailableEvent(StandaloneShutdownDialogManager.this));
 
             final int style;
             final String[] options;
@@ -97,7 +92,8 @@ public class StandaloneShutdownDialog
                                 + "Use this dialog to shut " + applicationName + " down.</HTML>"),
                         JOptionPane.INFORMATION_MESSAGE, style, null, options);
 
-                final JDialog dialog = new JDialog((JFrame) null, applicationName, false);
+                final JDialog dialog = new JDialog((JFrame) null, applicationName,
+                        java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
                 dialog.setContentPane(optionPane);
                 dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
                 dialog.addWindowListener(new WindowAdapter()
