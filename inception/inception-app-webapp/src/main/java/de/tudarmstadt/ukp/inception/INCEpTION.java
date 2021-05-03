@@ -23,12 +23,12 @@ import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
-import java.awt.*;
+import java.awt.Window;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.swing.*;
+import javax.swing.JFrame;
 import javax.validation.Validator;
 
 import org.apache.catalina.Context;
