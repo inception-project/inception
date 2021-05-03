@@ -39,6 +39,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+
 @Component("standaloneShutdownDialogManager")
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class StandaloneShutdownDialogManager
@@ -175,7 +177,7 @@ public class StandaloneShutdownDialogManager
             });
             popupMenu.add(shutdownItem);
 
-            trayIcon.setToolTip("INCEpTION");
+            trayIcon.setToolTip("INCEpTION " + SettingsUtil.getVersionString());
             trayIcon.setPopupMenu(popupMenu);
 
             // Click should show/hide
