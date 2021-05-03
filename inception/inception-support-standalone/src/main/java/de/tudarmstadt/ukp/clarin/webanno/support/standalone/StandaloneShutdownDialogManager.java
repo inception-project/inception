@@ -105,7 +105,7 @@ public class StandaloneShutdownDialogManager
         else {
             log.info(
                     "Running in server environment or from command line: disabling interactive shutdown dialog.");
-            log.info("You can close INCEpTION from the comand line by pressing via Ctrl+C");
+            log.info("You can close INCEpTION from the command line by pressing via Ctrl+C");
         }
     }
 
