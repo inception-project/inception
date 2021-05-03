@@ -65,12 +65,12 @@ public class PreferencesServiceImpl
             if (preference.isPresent()) {
                 String json = preference.get().getTraits();
                 T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
-                LOGGER.info("Loaded preferences for key [{}] and user [{}]: [{}]", aKey, aUser,
+                LOGGER.debug("Loaded preferences for key {} and user {}: [{}]", aKey, aUser,
                         result);
                 return result;
             }
             else {
-                LOGGER.debug("No preferences found for key [{}] and user [{}]", aKey, aUser);
+                LOGGER.debug("No preferences found for key {} and user {}", aKey, aUser);
                 return buildDefault(aKey.getTraitClass());
             }
         }
@@ -92,7 +92,7 @@ public class PreferencesServiceImpl
             preference.setTraits(toJsonString(aTraits));
             entityManager.persist(preference);
 
-            LOGGER.info("Saved preferences for key [{}] and user [{}]: [{}]", aKey, aUser, aTraits);
+            LOGGER.info("Saved preferences for key {} and user {}: [{}]", aKey, aUser, aTraits);
         }
         catch (IOException e) {
             LOGGER.error("Error while writing traits", e);
@@ -115,7 +115,7 @@ public class PreferencesServiceImpl
             return Optional.of(pref);
         }
         catch (NoResultException e) {
-            LOGGER.debug("No preferences found for key [{}] and user [{}]", name, aUser, e);
+            LOGGER.debug("No preferences found for key {} and user {}", name, aUser, e);
             return Optional.empty();
         }
     }
@@ -129,12 +129,12 @@ public class PreferencesServiceImpl
             if (pref.isPresent()) {
                 String json = pref.get().getTraits();
                 T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
-                LOGGER.info("Loaded preferences for key [{}] and user [{}] and project [{}]: [{}]",
+                LOGGER.info("Loaded preferences for key {} and user {} and project {}: [{}]",
                         aKey, aUser, aProject, result);
                 return result;
             }
             else {
-                LOGGER.debug("No preferences found for key [{}] and user [{}]", aKey, aUser);
+                LOGGER.debug("No preferences found for key {} and user {}", aKey, aUser);
                 return buildDefault(aKey.getTraitClass());
             }
         }
@@ -158,7 +158,7 @@ public class PreferencesServiceImpl
             preference.setTraits(toJsonString(aTraits));
             entityManager.persist(preference);
 
-            LOGGER.info("Saved preferences for key [{}] and user [{}] and project [{}]: [{}]", aKey,
+            LOGGER.info("Saved preferences for key {} and user {} and project {}: [{}]", aKey,
                     aUser, aProject, aTraits);
         }
         catch (IOException e) {

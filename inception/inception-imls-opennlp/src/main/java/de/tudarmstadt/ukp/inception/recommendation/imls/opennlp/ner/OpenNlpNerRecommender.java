@@ -192,7 +192,13 @@ public class OpenNlpNerRecommender
         double overallTrainingSize = data.size() - testSetSize;
         double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
-        if (trainingSetSize < 2 || testSetSize < 2) {
+        final int minTrainingSetSize = 2;
+        final int minTestSetSize = 2;
+        if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
+            if ((getRecommender().getThreshold() <= 0.0d)) {
+                return new EvaluationResult();
+            }
+
             String info = String.format(
                     "Not enough evaluation data: training set [%s] sentences, test set [%s] of total [%s]",
                     trainingSetSize, testSetSize, data.size());
