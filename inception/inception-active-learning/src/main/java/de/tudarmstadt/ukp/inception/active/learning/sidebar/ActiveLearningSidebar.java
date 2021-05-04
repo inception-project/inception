@@ -181,6 +181,7 @@ public class ActiveLearningSidebar
     private ConfirmationDialog confirmationDialog;
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
+    private Form<Void> sessionControlForm;
 
     private String highlightDocumentName;
     private VID highlightVID;
@@ -213,10 +214,11 @@ public class ActiveLearningSidebar
             alStateModel.setObject(alState);
         }
 
+        add(sessionControlForm = createSessionControlForm());
+
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
         mainContainer.add(createNoRecommendersMessage());
-        mainContainer.add(createSessionControlForm());
         mainContainer.add(createNoRecommendationLabel());
         mainContainer.add(clearSkippedRecommendationForm());
         mainContainer.add(createRecommendationOperationForm());
@@ -290,7 +292,7 @@ public class ActiveLearningSidebar
                 .collect(toList());
     }
 
-    private void actionStartSession(AjaxRequestTarget target, Form<?> form)
+    private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form)
     {
         ActiveLearningUserState alState = alStateModel.getObject();
         AnnotatorState state = getModelObject();
@@ -298,9 +300,11 @@ public class ActiveLearningSidebar
         // Start new session
         alState.setSessionActive(true);
 
+        aTarget.add(sessionControlForm);
+
         refreshSuggestions();
 
-        moveToNextRecommendation(target, false);
+        moveToNextRecommendation(aTarget, false);
 
         String userName = state.getUser().getUsername();
         Project project = state.getProject();
@@ -314,7 +318,7 @@ public class ActiveLearningSidebar
         ActiveLearningUserState alState = alStateModel.getObject();
         AnnotatorState state = getModelObject();
 
-        target.add(mainContainer);
+        target.add(mainContainer, sessionControlForm);
 
         // Stop current session
         alState.setSessionActive(false);

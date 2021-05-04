@@ -82,7 +82,7 @@ public class StringMatchingRecommenderAutoConfiguration
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "imls.relation.string", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "recommender.string-matching.relation", name = "enabled", havingValue = "true")
     public StringMatchingRelationRecommenderFactory stringMatchingRelationRecommenderFactory()
     {
         return new StringMatchingRelationRecommenderFactory();

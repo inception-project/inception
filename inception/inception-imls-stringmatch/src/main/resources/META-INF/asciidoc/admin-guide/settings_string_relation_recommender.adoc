@@ -27,7 +27,7 @@ You can enable the String recommender for relations in your {product-name} insta
 | Default
 | Example
 
-| imls.relation.string.enabled
+| recommender.string-matching.relation
 | enable/disable String relation recommender
 | false
 | true
