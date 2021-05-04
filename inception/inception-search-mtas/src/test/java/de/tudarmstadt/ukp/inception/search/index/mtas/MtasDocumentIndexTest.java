@@ -75,11 +75,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;

@@ -27,7 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;

@@ -20,9 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config;
 import java.time.Duration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@link CasStorageServiceAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties("cas-storage.cache")
 public class CasStoragePropertiesImpl
     implements CasStorageProperties

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
@@ -30,8 +30,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.failOnConcurrentModification;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.failOnConcurrentModification;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -64,7 +64,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.ConcurrentReferenceHashMap;
@@ -83,12 +82,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasHolder;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasKey;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.PooledCasHolderFactory;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.SessionManagedCas;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -96,7 +92,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
-@Component(CasStorageService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CasStorageServiceAutoConfiguration#casStorageService}.
+ * </p>
+ */
 public class CasStorageServiceImpl
     implements CasStorageService
 {
