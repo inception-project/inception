@@ -41,22 +41,32 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Annotation;
 
 @Controller
-public class WebsocketControllerImpl implements WebsocketController {
+public class WebsocketControllerImpl implements WebsocketController
+{
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Set<String> genericEvents = unmodifiableSet();
 
     private List<String> connectedClientId = new ArrayList<>();
 
-    private static final String SELECT_ANNOTATION_BY_CLIENT_EVENT = "/selected_annotation";
-    private static final String SELECT_ANNOTATION_BY_CLIENT_EVENT_TOPIC =
-        "/selectTopic" + SELECT_ANNOTATION_BY_CLIENT_EVENT;
+    /** ----------------- PUB / SUB CHANNELS --------------- **/
+
+    private static final String SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION = "/select_annotation_by_client";
+    private static final String SERVER_SEND_CLIENT_SELECTED_ANNOTATION = "/queue/selected_annotation_for_client";
+
+    private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_by_client";
+    private static final String SERVER_SEND_CLIENT_NEW_ANNOTATION = "/topic/new_annotation_for_client";
+
+    private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_by_client";
+    private static final String SERVER_SEND_CLIENT_DELETE_ANNOTATION = "/topic/delete_annotation_for_client";
+
+    /** ----------------------------------------------------- **/
 
     @EventListener
-    public void connectionEstablished(SessionConnectedEvent sce)
+    public void connectionEstablished(SessionConnectedEvent aSce)
     {
-        MessageHeaders msgHeaders = sce.getMessage().getHeaders();
+        MessageHeaders msgHeaders = aSce.getMessage().getHeaders();
         Principal princ = (Principal) msgHeaders.get("simpUser");
-        StompHeaderAccessor sha = StompHeaderAccessor.wrap(sce.getMessage());
+        StompHeaderAccessor sha = StompHeaderAccessor.wrap(aSce.getMessage());
         List<String> nativeHeaders = sha.getNativeHeader("userId");
         if (nativeHeaders != null)
         {
@@ -70,30 +80,60 @@ public class WebsocketControllerImpl implements WebsocketController {
         }
     }
 
+
+    // ------- TO BE REMOVED, INFO ONLY --------- //
+
     @EventListener
     @Override
     public void onApplicationEvent(ApplicationEvent aEvent) {
         System.out.println("---- EVENT ---- : " + aEvent);
     }
 
-    @Override
-    public String getTopicChannel() {
-        return SELECT_ANNOTATION_BY_CLIENT_EVENT;
-    }
+    // ------------------------------------------- //
 
+
+    // ----------- ERROR HANDLER ------------- //
 
     @MessageExceptionHandler
     @SendToUser("/queue/errors")
-    public String handleException(Throwable exception) {
-        return exception.getMessage();
+    public String handleException(Throwable aException)
+    {
+        return aException.getMessage();
     }
 
-    @MessageMapping("/select_annotation_by_client")
-    @SendTo("/queue/selected_annotation")
-    public Annotation getAnnotation(Message<String> aMessage) throws Exception {
-        System.out.println("Reveiced SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
+    // ---------------------------------------- //
+
+
+    /** ------------- PUB / SUB HANDLING ------------- **/
+
+    @MessageMapping(SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION)
+    @SendTo(SERVER_SEND_CLIENT_SELECTED_ANNOTATION)
+    public Annotation getSelectedAnnotationByClient(Message<String> aMessage) throws Exception {
+        System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
         return new Annotation();
     }
+
+    @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_ANNOTATION)
+    @SendTo(SERVER_SEND_CLIENT_NEW_ANNOTATION)
+    public Annotation getNewAnnotationByClient(Message<String> aMessage) throws Exception {
+        System.out.println("RECEIVED NEW ANNOTATION BY CLIENT, Message: " + aMessage);
+        return new Annotation();
+    }
+
+    @MessageMapping(SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION)
+    @SendTo(SERVER_SEND_CLIENT_DELETE_ANNOTATION)
+    public Annotation getDeleteAnnotationByClient(Message<String> aMessage) throws Exception {
+        System.out.println("RECEIVED NEW ANNOTATION BY CLIENT, Message: " + aMessage);
+        return new Annotation();
+    }
+
+    /** ----------------------------------------------- **/
+
+
+
+
+    // --------------- GETTER AND SETTER ------------------ //
+
     public List<String> getConnectedClientId()
     {
         return connectedClientId;
@@ -102,4 +142,6 @@ public class WebsocketControllerImpl implements WebsocketController {
     {
         this.connectedClientId = connectedClientId;
     }
+
+    // ---------------------------------------------------- //
 }

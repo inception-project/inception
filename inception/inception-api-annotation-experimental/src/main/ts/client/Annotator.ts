@@ -16,17 +16,20 @@
  * limitations under the License.
  */
 
-import {Client, Stomp} from '@stomp/stompjs';
+import {Client, Frame, Stomp} from '@stomp/stompjs';
 
 class Annotator
 {
     stompClient : Client;
-    events: [];
     connected : boolean = false;
 
     constructor()
     {
         let that = this;
+
+        // DEFINE ACTIONS / EVENTS
+
+        // ------------------------- SHOWCASE ONLY --------------------------- //
 
         if (document.getElementById('connect-button') == null) {
             setTimeout(function(){
@@ -35,7 +38,7 @@ class Annotator
                 document.getElementById('disconnect-button').addEventListener("click", (e: Event) =>
                     that.disconnect());
                 document.getElementById('send-to-server').addEventListener("click", (e: Event) =>
-                    that.sendMessageToServer());
+                    that.sendSelectAnnotationMessageToServer());
             }, 1000);
         } else {
             document.getElementById('connect-button').addEventListener("click", (e:Event) =>
@@ -43,11 +46,12 @@ class Annotator
             document.getElementById('disconnect-button').addEventListener("click", (e: Event) =>
                 that.disconnect());
             document.getElementById('disconnect-button').addEventListener("click", (e: Event) =>
-                that.sendMessageToServer());
+                that.sendSelectAnnotationMessageToServer());
         }
-
     }
 
+
+    //CREATE WEBSOCKET CONNECTION (WILL BE IN DEFAULT CONSTRUCTOR)
     connect()
     {
         if (this.connected) {
@@ -59,28 +63,49 @@ class Annotator
             + window.location.host
             + "/inception_app_webapp_war_exploded/ws";
 
-        //this.connection = new WebSocket(url);
         this.stompClient = Stomp.over(function() {
             return new WebSocket(url);
         });
 
+        //REQUIRED DUE TO JS SCOPE
+        const that = this;
+
         this.stompClient.onConnect = function (frame) {
             that.connected = true;
 
-            that.stompClient.subscribe('/queue/selected_annotation', function (msg) {
-                console.log('Received data2: ' + JSON.stringify(msg) + frame);
-                that.events = JSON.parse(msg.body);
+
+            // ------ DEFINE ALL SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
+
+            that.stompClient.subscribe('/queue/selected_annotation_for_client', function (msg) {
+                that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body), frame);
             });
+
+            that.stompClient.subscribe('/topic/new_annotation_for_client', function (msg) {
+                that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body), frame);
+            });
+
+            that.stompClient.subscribe('/topic/delete_annotation_for_client', function (msg) {
+                that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body), frame);
+            });
+
+            // ------------------------------------------------------------ //
+
         };
+
+
+        // ------ ERROR HANDLING ------ //
 
         this.stompClient.onStompError = function (frame) {
             console.log('Broker reported error: ' + frame.headers['message']);
             console.log('Additional details: ' + frame.body);
         };
-        const that = this;
+
+        // ------------------------------- //
+
         this.stompClient.activate();
     }
 
+    // ------ DISCONNECT -------- //
     disconnect()
     {
         if (this.connected) {
@@ -89,37 +114,52 @@ class Annotator
             this.stompClient.deactivate();
         }
     }
+    // ------------------------------- //
 
-    //Event handling
+
+    /** ----------- Event handling ------------------ **/
 
     // ---------------- SEND ------------------------- //
 
-    sendMessageToServer()
+    sendSelectAnnotationMessageToServer()
     {
-        this.stompClient.publish({destination: "/app/select_annotation_by_client", body:"TEST_TEXT"});
+        this.stompClient.publish({destination: "/app/select_annotation_by_client", body:"SELECT"});
+        this.stompClient.publish({destination: "/app/new_annotation_by_client", body:"NEW"});
+        this.stompClient.publish({destination: "/app/delete_annotation_by_client", body:"DELETE"});
     }
 
-    // ---------------- RECEIVE ---------------------- //
-
-    receiveServerMessage(serverMessage: String)
+    sendCreateAnnotationMessageToServer()
     {
-        switch (serverMessage) {
-            case "newAnnotationForClient":
-                console.log("Server Message __ New Annotation for Client: ")
-                break;
-            case "deletedAnnotationForClient":
-                console.log("Server Message __ Deleted Annotation for Client: ")
-                break;
-            case "newConnectedClientForClient":
-                console.log("Server Message __ New Connected Client Message for Client: ")
-                break;
-            case "selectedAnnotationForClient":
-                console.log("Server Message __ Selected Annotation for Client: ")
-                break;
-
-        }
+        this.stompClient.publish({destination: "/app/new_annotation_by_client", body:"NEW"});
     }
 
+    sendDeleteAnnotationMessageToServer()
+    {
+        this.stompClient.publish({destination: "/app/delete_annotation_by_client", body:"DELETE"});
+    }
+
+    // ------------------------------------------------ //
+
+
+    // ---------------- RECEIVE ----------------------- //
+
+    receiveSelectedAnnotationMessageByServer(aMessage : string, aFrame : Frame)
+    {
+        console.log('RECEIVED SELECTED ANNOTATION: ' + JSON.stringify(aMessage) + aFrame);
+    }
+
+    receiveNewAnnotationMessageByServer(aMessage : string, aFrame : Frame)
+    {
+        console.log('RECEIVED NEW ANNOTATION: ' + JSON.stringify(aMessage) + aFrame);
+    }
+
+    receiveDeleteAnnotationMessageByServer(aMessage : string, aFrame : Frame)
+    {
+        console.log('RECEIVED DELETE ANNOTATION: ' + JSON.stringify(aMessage) + aFrame);
+    }
+
+
+    /** ---------------------------------------------- **/
 }
 
 let annotator = new Annotator()

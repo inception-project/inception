@@ -1,20 +1,3 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 // node_modules/@stomp/stompjs/esm6/byte.js
 var BYTE = {
   LF: "\n",
@@ -1065,12 +1048,12 @@ var Annotator = class {
       setTimeout(function() {
         document.getElementById("connect-button").addEventListener("click", (e) => that.connect());
         document.getElementById("disconnect-button").addEventListener("click", (e) => that.disconnect());
-        document.getElementById("send-to-server").addEventListener("click", (e) => that.sendMessageToServer());
+        document.getElementById("send-to-server").addEventListener("click", (e) => that.sendSelectAnnotationMessageToServer());
       }, 1e3);
     } else {
       document.getElementById("connect-button").addEventListener("click", (e) => that.connect());
       document.getElementById("disconnect-button").addEventListener("click", (e) => that.disconnect());
-      document.getElementById("disconnect-button").addEventListener("click", (e) => that.sendMessageToServer());
+      document.getElementById("disconnect-button").addEventListener("click", (e) => that.sendSelectAnnotationMessageToServer());
     }
   }
   connect() {
@@ -1082,18 +1065,23 @@ var Annotator = class {
     this.stompClient = Stomp.over(function() {
       return new WebSocket(url);
     });
+    const that = this;
     this.stompClient.onConnect = function(frame) {
       that.connected = true;
-      that.stompClient.subscribe("/queue/selected_annotation", function(msg) {
-        console.log("Received data2: " + JSON.stringify(msg) + frame);
-        that.events = JSON.parse(msg.body);
+      that.stompClient.subscribe("/queue/selected_annotation_for_client", function(msg) {
+        that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body), frame);
+      });
+      that.stompClient.subscribe("/topic/new_annotation_for_client", function(msg) {
+        that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body), frame);
+      });
+      that.stompClient.subscribe("/topic/delete_annotation_for_client", function(msg) {
+        that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body), frame);
       });
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
       console.log("Additional details: " + frame.body);
     };
-    const that = this;
     this.stompClient.activate();
   }
   disconnect() {
@@ -1103,24 +1091,25 @@ var Annotator = class {
       this.stompClient.deactivate();
     }
   }
-  sendMessageToServer() {
-    this.stompClient.publish({destination: "/app/select_annotation_by_client", body: "TEST_TEXT"});
+  sendSelectAnnotationMessageToServer() {
+    this.stompClient.publish({destination: "/app/select_annotation_by_client", body: "SELECT"});
+    this.stompClient.publish({destination: "/app/new_annotation_by_client", body: "NEW"});
+    this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: "DELETE"});
   }
-  receiveServerMessage(serverMessage) {
-    switch (serverMessage) {
-      case "newAnnotationForClient":
-        console.log("Server Message __ New Annotation for Client: ");
-        break;
-      case "deletedAnnotationForClient":
-        console.log("Server Message __ Deleted Annotation for Client: ");
-        break;
-      case "newConnectedClientForClient":
-        console.log("Server Message __ New Connected Client Message for Client: ");
-        break;
-      case "selectedAnnotationForClient":
-        console.log("Server Message __ Selected Annotation for Client: ");
-        break;
-    }
+  sendCreateAnnotationMessageToServer() {
+    this.stompClient.publish({destination: "/app/new_annotation_by_client", body: "NEW"});
+  }
+  sendDeleteAnnotationMessageToServer() {
+    this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: "DELETE"});
+  }
+  receiveSelectedAnnotationMessageByServer(aMessage, aFrame) {
+    console.log("RECEIVED SELECTED ANNOTATION: " + JSON.stringify(aMessage) + aFrame);
+  }
+  receiveNewAnnotationMessageByServer(aMessage, aFrame) {
+    console.log("RECEIVED NEW ANNOTATION: " + JSON.stringify(aMessage) + aFrame);
+  }
+  receiveDeleteAnnotationMessageByServer(aMessage, aFrame) {
+    console.log("RECEIVED DELETE ANNOTATION: " + JSON.stringify(aMessage) + aFrame);
   }
 };
 var annotator = new Annotator();
