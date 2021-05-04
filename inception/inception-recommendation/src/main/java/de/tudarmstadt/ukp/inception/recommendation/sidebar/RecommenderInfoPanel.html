@@ -18,49 +18,51 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="card">
-    <div class="card-header small">
-      Recommenders
-    </div>
-    <div class="card-body p-0">
-      <div wicket:id="recommenderContainer" class="list-group-flush">
-        <div wicket:id="recommender" class="list-group-item px-2">
-          <div wicket:id="name" class="list-group-item-heading small mb-2"></div>
-          <div wicket:id="resultsContainer" class="d-flex small rounded border mb-2">
-            <div class="d-flex flex-fill flex-column p-2 border-right">
-              <div class="d-flex flex-row">
-                <label>F1</label>
-                <span wicket:id="f1Score" class="flex-grow-1 text-right"/>
-              </div>
-              <div class="d-flex flex-row">
-                <label>Accuracy</label>
-                <span wicket:id="accuracy" class="flex-grow-1 text-right"/>
-              </div>
-            </div>
-            <div class="d-flex flex-fill flex-column p-2">
-              <div class="d-flex flex-row">
-                <label>Precision</label>
-                <span wicket:id="precision" class="flex-grow-1 text-right"/>
-              </div>
-              <div class="d-flex flex-row">
-                <label>Recall</label>
-                <span wicket:id="recall" class="flex-grow-1 text-right"/>
-              </div>
-            </div>
-          </div>
-          <div class="text-right">
-            <span wicket:id="state" class="badge badge-pill float-left"/>
-            <button wicket:id="exportModel" class="btn btn-sm btn-secondary">
-              <i class="fas fa-download"></i>
-            </button>
-            <button wicket:id="acceptBest" class="btn btn-sm btn-success">
-              <i class="fas fa-check"></i>&nbsp;
-              Accept best
-            </button>
-          </div>
-          <div class="clearfix"></div>
+  <div wicket:id="recommenderContainer" class="flex-v-container flex-gutter flex-only-internal-gutter">
+    <div wicket:id="recommender" class="card">
+      <div class="card-header small">
+        <span wicket:id="state" class="badge float-right ml-2 p-1">
+          <i wicket:id="icon" style="font-size: 120%;"/>
+        </span>
+        <span wicket:id="name"/>
+      </div>
+      <div class="card-body" wicket:enclosure="noEvaluationMessage">
+        <div wicket:id="noEvaluationMessage" class="small no-data-notice">
+          Always active. Evaluation disabled.
         </div>
       </div>
+      <div wicket:id="resultsContainer" class="card-body small flex-h-container p-0">
+        <div class="d-flex flex-fill flex-column px-2 pt-2 border-right">
+          <div class="d-flex flex-row">
+            <label>F1</label>
+            <span wicket:id="f1Score" class="flex-grow-1 text-right"/>
+          </div>
+          <div class="d-flex flex-row">
+            <label>Accuracy</label>
+            <span wicket:id="accuracy" class="flex-grow-1 text-right"/>
+          </div>
+        </div>
+        <div class="d-flex flex-fill flex-column px-2 pt-2">
+          <div class="d-flex flex-row">
+            <label>Precision</label>
+            <span wicket:id="precision" class="flex-grow-1 text-right"/>
+          </div>
+          <div class="d-flex flex-row">
+            <label>Recall</label>
+            <span wicket:id="recall" class="flex-grow-1 text-right"/>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer actions text-right">
+        <button wicket:id="exportModel" class="btn btn-sm btn-secondary">
+          <i class="fas fa-download"></i>
+        </button>
+        <button wicket:id="acceptBest" class="btn btn-sm btn-success">
+          <i class="fas fa-check"></i>&nbsp;
+          Accept best
+        </button>
+      </div>
+      <div class="clearfix"></div>
     </div>
   </div>
 </wicket:panel>
