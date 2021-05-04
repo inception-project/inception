@@ -75,10 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.OpenCasStorageSessionForRequestFilter;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
@@ -324,10 +321,11 @@ public class AeroRemoteApiControllerTest
         }
 
         @Bean
-        public DocumentService documentService()
+        public DocumentService documentService(CasStorageService aCasStorageService,
+                DocumentImportExportService aDocumentImportExportService)
         {
-            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
-                    importExportService(), projectService(), applicationEventPublisher,
+            return new DocumentServiceImpl(repositoryProperties(), aCasStorageService,
+                    aDocumentImportExportService, projectService(), applicationEventPublisher,
                     entityManager);
         }
 
@@ -345,19 +343,12 @@ public class AeroRemoteApiControllerTest
         }
 
         @Bean
-        public CasStorageService casStorageService()
-        {
-            return new CasStorageServiceImpl(null, null, repositoryProperties(),
-                    new CasStoragePropertiesImpl(), backupProperties());
-        }
-
-        @Bean
-        public DocumentImportExportService importExportService()
+        public DocumentImportExportService importExportService(CasStorageService aCasStorageService)
         {
             DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
             return new DocumentImportExportServiceImpl(repositoryProperties(),
-                    asList(new TextFormatSupport()), casStorageService(), annotationService(),
+                    asList(new TextFormatSupport()), aCasStorageService, annotationService(),
                     properties);
         }
 
@@ -378,12 +369,6 @@ public class AeroRemoteApiControllerTest
         public RepositoryProperties repositoryProperties()
         {
             return new RepositoryProperties();
-        }
-
-        @Bean
-        public BackupProperties backupProperties()
-        {
-            return new BackupProperties();
         }
 
         @Bean
