@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.initializers.BasicProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationLayerInitializer;
+import de.tudarmstadt.ukp.inception.initializers.BasicRelationRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationTagSetInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicSpanLayerInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicSpanRecommenderInitializer;
@@ -42,10 +43,13 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
 
 @AutoConfigureAfter({ KnowledgeBaseServiceAutoConfiguration.class,
-        RecommenderServiceAutoConfiguration.class })
+        RecommenderServiceAutoConfiguration.class,
+        StringMatchingRecommenderAutoConfiguration.class })
 // @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
 public class ProjectInitializersAutoConfiguration
@@ -81,7 +85,7 @@ public class ProjectInitializersAutoConfiguration
         return new BasicSpanLayerInitializer(aAnnotationSchemaService);
     }
 
-    @ConditionalOnBean(RecommendationService.class)
+    @ConditionalOnBean({ RecommendationService.class, StringMatchingRecommenderFactory.class })
     @Autowired
     @Bean
     public BasicSpanRecommenderInitializer basicSpanRecommenderInitializer(
@@ -89,6 +93,18 @@ public class ProjectInitializersAutoConfiguration
             StringMatchingRecommenderFactory aRecommenderFactory)
     {
         return new BasicSpanRecommenderInitializer(aRecommenderService, aAnnotationService,
+                aRecommenderFactory);
+    }
+
+    @ConditionalOnBean({ RecommendationService.class,
+            StringMatchingRelationRecommenderFactory.class, BasicSpanRecommenderInitializer.class })
+    @Autowired
+    @Bean
+    public BasicRelationRecommenderInitializer basicRelationRecommenderInitializer(
+            RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
+            StringMatchingRelationRecommenderFactory aRecommenderFactory)
+    {
+        return new BasicRelationRecommenderInitializer(aRecommenderService, aAnnotationService,
                 aRecommenderFactory);
     }
 

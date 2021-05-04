@@ -40,11 +40,12 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -106,15 +107,16 @@ public class RecommenderInfoPanel
                         .filter(r -> r.getRecommender().equals(recommender)).findAny();
                 item.add(new Label("name", recommender.getName()));
 
-                Label state = new Label("state");
+                WebMarkupContainer state = new WebMarkupContainer("state");
                 if (evaluatedRecommender.isPresent()) {
                     EvaluatedRecommender evalRec = evaluatedRecommender.get();
                     if (evalRec.isActive()) {
-                        state.setDefaultModel(Model.of("active"));
+                        state.add(new Icon("icon", FontAwesome5IconType.play_circle_s));
+                        state.add(AttributeAppender.append("title", "active"));
                         state.add(AttributeAppender.append("class", "badge-success"));
                     }
                     else {
-                        state.setDefaultModel(Model.of("inactive"));
+                        state.add(new Icon("state", FontAwesome5IconType.stop_circle_s));
                         state.add(AttributeModifier.replace("title",
                                 evalRec.getDeactivationReason()));
                         state.add(AttributeModifier.append("style", "; cursor: help"));
@@ -122,7 +124,7 @@ public class RecommenderInfoPanel
                     }
                 }
                 else {
-                    state.setDefaultModel(Model.of("pending..."));
+                    state.add(new Icon("state", FontAwesome5IconType.hourglass_half_s));
                     state.add(AttributeAppender.append("class", "badge-light"));
                 }
                 item.add(state);
@@ -157,6 +159,9 @@ public class RecommenderInfoPanel
                 resultsContainer.add(new Label("recall",
                         evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
                 item.add(resultsContainer);
+
+                item.add(new WebMarkupContainer("noEvaluationMessage")
+                        .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
         IModel<List<Recommender>> recommenders = LoadableDetachableModel
