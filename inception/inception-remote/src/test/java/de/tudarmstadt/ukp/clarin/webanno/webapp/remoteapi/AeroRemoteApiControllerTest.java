@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
@@ -72,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
@@ -308,10 +308,10 @@ public class AeroRemoteApiControllerTest
         }
 
         @Bean
-        public ProjectService projectService()
+        public ProjectService projectService(RepositoryProperties aProperties)
         {
-            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
-                    repositoryProperties(), null);
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher, aProperties,
+                    null);
         }
 
         @Bean
@@ -322,11 +322,12 @@ public class AeroRemoteApiControllerTest
 
         @Bean
         public DocumentService documentService(CasStorageService aCasStorageService,
-                DocumentImportExportService aDocumentImportExportService)
+                DocumentImportExportService aDocumentImportExportService,
+                RepositoryProperties aProperties)
         {
-            return new DocumentServiceImpl(repositoryProperties(), aCasStorageService,
-                    aDocumentImportExportService, projectService(), applicationEventPublisher,
-                    entityManager);
+            return new DocumentServiceImpl(aProperties, aCasStorageService,
+                    aDocumentImportExportService, projectService(aProperties),
+                    applicationEventPublisher, entityManager);
         }
 
         @Bean
@@ -343,13 +344,13 @@ public class AeroRemoteApiControllerTest
         }
 
         @Bean
-        public DocumentImportExportService importExportService(CasStorageService aCasStorageService)
+        public DocumentImportExportService importExportService(CasStorageService aCasStorageService,
+                RepositoryProperties aProperties)
         {
             DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
-            return new DocumentImportExportServiceImpl(repositoryProperties(),
-                    asList(new TextFormatSupport()), aCasStorageService, annotationService(),
-                    properties);
+            return new DocumentImportExportServiceImpl(aProperties, asList(new TextFormatSupport()),
+                    aCasStorageService, annotationService(), properties);
         }
 
         @Bean
@@ -360,15 +361,9 @@ public class AeroRemoteApiControllerTest
         }
 
         @Bean
-        public ProjectExportService exportService()
+        public ProjectExportService exportService(ProjectService aProjectService)
         {
-            return new ProjectExportServiceImpl(null, null, projectService());
-        }
-
-        @Bean
-        public RepositoryProperties repositoryProperties()
-        {
-            return new RepositoryProperties();
+            return new ProjectExportServiceImpl(null, null, aProjectService);
         }
 
         @Bean
