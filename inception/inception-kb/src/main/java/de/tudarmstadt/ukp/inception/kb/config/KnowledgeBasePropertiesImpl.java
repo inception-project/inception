@@ -23,6 +23,11 @@ import java.time.temporal.ChronoUnit;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@link KnowledgeBaseServiceAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties("knowledge-base")
 public class KnowledgeBasePropertiesImpl
     implements KnowledgeBaseProperties
