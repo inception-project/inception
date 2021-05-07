@@ -19,6 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.util.Arrays;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -122,19 +126,19 @@ public class StringFeatureTraitsEditor
         tagset.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
         // If we change the tagset, the input component for the key bindings may change, so we need
         // to re-generate the key bindings
-        tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
-            KeyBindingsConfigurationPanel newKeyBindings = newKeyBindingsConfigurationPanel(
-                    aFeature);
-            keyBindings.replaceWith(newKeyBindings);
-            keyBindings = newKeyBindings;
-            _target.add(keyBindings);
-        }));
+        tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                _target -> refreshKeyBindings(_target, aFeature)));
         form.add(tagset);
 
         CheckBox multipleRows = new CheckBox("multipleRows");
         multipleRows.setModel(PropertyModel.of(traits, "multipleRows"));
-        multipleRows.add(
-                new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
+        multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+            if (multipleRows.getModelObject()) {
+                aFeature.getObject().setTagset(null);
+            }
+            _target.add(form);
+            refreshKeyBindings(_target, aFeature);
+        }));
         form.add(multipleRows);
 
         CheckBox dynamicSize = new CheckBox("dynamicSize");
@@ -143,15 +147,37 @@ public class StringFeatureTraitsEditor
                 new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         dynamicSize.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
         form.add(dynamicSize);
+
+        WebMarkupContainer editorTypeContainer = new WebMarkupContainer("editorTypeContainer");
+        editorTypeContainer.setOutputMarkupPlaceholderTag(true);
+        editorTypeContainer.add(visibleWhen(() -> !traits.getObject().isMultipleRows()
+                && aFeature.getObject().getTagset() != null));
+        DropDownChoice<StringFeatureTraits.EditorType> editorType = new BootstrapSelect<>(
+                "editorType");
+        editorType.setModel(PropertyModel.of(traits, "editorType"));
+        editorType.setChoices(Arrays.asList(StringFeatureTraits.EditorType.values()));
+        editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        editorTypeContainer.add(editorType);
+        form.add(editorTypeContainer);
+    }
+
+    private void refreshKeyBindings(AjaxRequestTarget aTarget, IModel<AnnotationFeature> aFeature)
+    {
+        KeyBindingsConfigurationPanel newKeyBindings = newKeyBindingsConfigurationPanel(aFeature);
+        keyBindings.replaceWith(newKeyBindings);
+        keyBindings = newKeyBindings;
+        aTarget.add(keyBindings);
     }
 
     private KeyBindingsConfigurationPanel newKeyBindingsConfigurationPanel(
             IModel<AnnotationFeature> aFeature)
     {
-        KeyBindingsConfigurationPanel keyBindings = new KeyBindingsConfigurationPanel("keyBindings",
+        getFeatureSupport().writeTraits(aFeature.getObject(), traits.getObject());
+        KeyBindingsConfigurationPanel panel = new KeyBindingsConfigurationPanel("keyBindings",
                 aFeature, traits.bind("keyBindings"));
-        keyBindings.setOutputMarkupId(true);
-        return keyBindings;
+        panel.setOutputMarkupId(true);
+        // panel.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
+        return panel;
     }
 
     private UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> getFeatureSupport()

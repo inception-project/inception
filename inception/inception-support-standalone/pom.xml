@@ -25,6 +25,11 @@
   <artifactId>inception-support-standalone</artifactId>
   <name>INCEpTION - Core - Support for standalone mode</name>
   <dependencies>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support</artifactId>
+    </dependency>
+
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>

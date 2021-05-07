@@ -25,10 +25,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 
 @SpringBootTest
-@Import(SpringConfig.class)
 public class WebSocketTest
 {
 
@@ -85,6 +87,16 @@ public class WebSocketTest
         public void setTestMessage(String testMessage)
         {
             this.testMessage = testMessage;
+        }
+    }
+
+    @Configuration
+    public static class TestContext
+    {
+        @Bean
+        public RepositoryProperties repositoryProperties()
+        {
+            return new RepositoryProperties();
         }
     }
 }
