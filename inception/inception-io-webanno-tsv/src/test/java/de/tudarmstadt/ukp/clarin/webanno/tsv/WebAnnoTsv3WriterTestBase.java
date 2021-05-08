@@ -1897,7 +1897,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         String reference = FileUtils.readFileToString(referenceFile, "UTF-8");
         String actual = FileUtils.readFileToString(actualFile, "UTF-8");
 
-        assertThat(reference).isEqualToNormalizingNewlines(actual);
+        assertThat(actual).isEqualToNormalizingNewlines(reference);
     }
 
     private static JCas makeJCas() throws UIMAException
