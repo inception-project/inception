@@ -31,6 +31,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasPersistenceUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 public class CasPersistenceUtilsTest

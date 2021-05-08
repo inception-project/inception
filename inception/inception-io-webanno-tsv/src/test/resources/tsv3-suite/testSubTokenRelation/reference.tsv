@@ -1,0 +1,8 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.Span|value
+
+
+#Text=Test
+1-1	0-4	Test	_	
+1-1.1	0-1	T	OTH	
+1-1.2	3-4	t	OTH	
