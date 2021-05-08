@@ -75,11 +75,11 @@ public class NamedEntityLinkerFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        NamedEntityLinkerTraits traits = readTraits(aRecommender);
-        ConceptFeatureTraits featureTraits = (ConceptFeatureTraits) fsRegistry
-                .readTraits(aRecommender.getFeature()).orElseGet(ConceptFeatureTraits::new);
+        NamedEntityLinkerTraits linkerTraits = readTraits(aRecommender);
+        ConceptFeatureTraits featureTraits = fsRegistry.readTraits(aRecommender.getFeature(),
+                ConceptFeatureTraits::new);
 
-        return new NamedEntityLinker(aRecommender, traits, kbService, clService, fsRegistry,
+        return new NamedEntityLinker(aRecommender, linkerTraits, kbService, clService, fsRegistry,
                 featureTraits);
     }
 

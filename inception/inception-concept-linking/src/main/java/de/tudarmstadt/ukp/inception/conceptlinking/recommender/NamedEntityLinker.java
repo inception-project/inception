@@ -104,8 +104,8 @@ public class NamedEntityLinker
         List<KBHandle> handles = new ArrayList<>();
 
         AnnotationFeature feat = recommender.getFeature();
-        ConceptFeatureTraits conceptFeatureTraits = (ConceptFeatureTraits) fsRegistry
-                .readTraits(feat).orElseThrow();
+        ConceptFeatureTraits conceptFeatureTraits = fsRegistry.readTraits(feat,
+                ConceptFeatureTraits::new);
 
         if (conceptFeatureTraits.getRepositoryId() != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),

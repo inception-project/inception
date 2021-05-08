@@ -22,6 +22,7 @@ import java.util.Optional;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -43,21 +44,21 @@ public class DisabledKBWarning
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean KnowledgeBaseService kbService;
 
-    private IModel<ConceptFeatureTraits> featureTraits;
-    private Project project;
+    private final IModel<ConceptFeatureTraits> featureTraits;
+    private final Project project;
 
     public DisabledKBWarning(String aId, IModel<AnnotationFeature> aFeatureModel,
             IModel<ConceptFeatureTraits> aTraitsModel)
     {
-        super(aId);
+        super(aId, aFeatureModel);
 
         AnnotationFeature feature = aFeatureModel.getObject();
         project = feature.getProject();
 
         // If traits are not explicitly given, try to resolve them via featureSupportRegistry
         if (aTraitsModel == null) {
-            featureTraits = aFeatureModel.map(feat -> (ConceptFeatureTraits) featureSupportRegistry
-                    .readTraits(feat).orElseThrow());
+            featureTraits = Model
+                    .of(featureSupportRegistry.readTraits(feature, ConceptFeatureTraits::new));
         }
         else {
             featureTraits = aTraitsModel;

@@ -31,5 +31,5 @@ public interface ContextLookupExtensionPoint<C, E extends Extension<C>>
      * @throws IllegalArgumentException
      *             if there is no support for the given feature.
      */
-    <X extends E> Optional<X> findExtension(C aKey);
+    <X extends E> Optional<X> findGenericExtension(C aKey);
 }

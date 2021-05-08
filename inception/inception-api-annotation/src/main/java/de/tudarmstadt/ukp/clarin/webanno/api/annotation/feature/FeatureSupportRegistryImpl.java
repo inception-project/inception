@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -94,8 +95,15 @@ public class FeatureSupportRegistryImpl
     }
 
     @Override
-    public <T> Optional<T> readTraits(AnnotationFeature aFeature)
+    public <T> Optional<FeatureSupport<T>> findExtension(AnnotationFeature aKey)
     {
-        return findExtension(aFeature).map(fs -> (T) fs.readTraits(aFeature));
+        return super.findGenericExtension(aKey);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T readTraits(AnnotationFeature aFeature, SerializableSupplier<T> aIfMissing)
+    {
+        return findExtension(aFeature).map(fs -> (T) fs.readTraits(aFeature)).orElseGet(aIfMissing);
     }
 }

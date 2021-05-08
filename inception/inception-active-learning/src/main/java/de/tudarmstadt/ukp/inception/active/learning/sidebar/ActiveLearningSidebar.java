@@ -636,7 +636,7 @@ public class ActiveLearningSidebar
         // Create AnnotationFeature and FeatureSupport
         AnnotationFeature feat = annotationService.getFeature(suggestion.getFeature(),
                 alState.getLayer());
-        FeatureSupport featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
+        FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
 
         // Load CAS in which to create the annotation. This might be different from the one that
         // is currently viewed by the user, e.g. if the user switched to another document after
