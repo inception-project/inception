@@ -49,6 +49,7 @@ import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.FSCollectionFactory;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
@@ -70,6 +71,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import webanno.custom.Relation;
 import webanno.custom.Span;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
@@ -502,22 +504,24 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence("aaaaaa bbbbbb cccccc");
         assertEquals(asList("aaaaaa", "bbbbbb", "cccccc"), toText(select(jcas, Token.class)));
 
-        // 1111111111
-        // 01234567890123456789
-        // --------------------
-        // aaaaaa bbbbbb cccccc
-        // 1 ------ - single token
-        // 2 ------+------ - multi-token
-        // 3 -- - inside token
-        // 4 ---- - token prefix
-        // 5 ---- - token suffix
-        // 6 ---+------ - multi-token prefix
-        // 7 ------+--- - multi-token suffix
-        // 8 ---+--- - multi-token prefix + suffix
-        // 9 ---+------+--- - multi-token prefix + full + suffix
-        // 10 | - zero-span inside token
-        // 11 | - zero-span beginning of token
-        // 12 | - zero-span end of token
+        // @formatter:off
+        //               1111111111 
+        //     01234567890123456789
+        //     --------------------
+        //     aaaaaa bbbbbb cccccc
+        //  1  ------               - single token
+        //  2  ------+------        - multi-token
+        //  3           --          - inside token
+        //  4         ----          - token prefix
+        //  5           ----        - token suffix
+        //  6     ---+------        - multi-token prefix 
+        //  7  ------+---           - multi-token suffix
+        //  8     ---+---           - multi-token prefix + suffix
+        //  9     ---+------+---    - multi-token prefix + full + suffix
+        // 10            |          - zero-span inside token
+        // 11         |             - zero-span beginning of token
+        // 12               |       - zero-span end of token
+        // @formatter:on
 
         List<Span> annotations = new ArrayList<>();
         annotations.add(new Span(jcas, 0, 6)); // 1
@@ -1823,6 +1827,33 @@ public abstract class WebAnnoTsv3WriterTestBase
         writeAndAssertEquals(jcas);
     }
 
+    @Test
+    public void testSubTokenRelation() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence("Test");
+        Span s1 = new Span(jcas, 0, 1);
+        s1.setValue("OTH");
+        Span s2 = new Span(jcas, 3, 4);
+        s2.setValue("OTH");
+        Relation r = new Relation(jcas, s2.getBegin(), s2.getEnd());
+        r.setGovernor(s1);
+        r.setDependent(s2);
+        asList(s1, s2).forEach(Annotation::addToIndexes);
+
+        writeAndAssertEquals(jcas);
+    }
+
+    @Test
+    public void testSubTokenPrefix() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence("Test");
+        Span s = new Span(jcas, 0, 1);
+        s.setValue("OTH");
+        s.addToIndexes();
+
+        writeAndAssertEquals(jcas);
+    }
+
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {
@@ -1851,8 +1882,10 @@ public abstract class WebAnnoTsv3WriterTestBase
             }
         }
 
-        AnalysisEngineDescription xmi = createEngineDescription(XmiWriter.class,
-                XmiWriter.PARAM_TARGET_LOCATION, targetFolder, XmiWriter.PARAM_OVERWRITE, true);
+        AnalysisEngineDescription xmi = createEngineDescription( //
+                XmiWriter.class, //
+                XmiWriter.PARAM_TARGET_LOCATION, targetFolder, //
+                XmiWriter.PARAM_OVERWRITE, true);
 
         SimplePipeline.runPipeline(aJCas, tsv, xmi);
 
@@ -1978,5 +2011,4 @@ public abstract class WebAnnoTsv3WriterTestBase
         aCas.addFsToIndexes(link);
         return link;
     }
-
 }
