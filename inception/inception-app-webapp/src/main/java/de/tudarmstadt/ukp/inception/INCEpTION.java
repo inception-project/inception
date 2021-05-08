@@ -22,11 +22,12 @@ import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
+import java.awt.Window;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.swing.JWindow;
+import javax.swing.JFrame;
 import javax.validation.Validator;
 
 import org.apache.catalina.Context;
@@ -238,10 +239,9 @@ public class INCEpTION
                 + "optional:${inception.home:${user.home}/.inception}/settings.properties");
     }
 
-    protected static void run(String[] args, Class... aSources)
+    protected static void run(String[] args, Class<?>... aSources)
     {
-        Optional<JWindow> splash = LoadingSplashScreen
-                .setupScreen(INCEpTION.class.getResource("splash.png"));
+        Optional<JFrame> splash = LoadingSplashScreen.setupScreen();
 
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
         // Add the main application as the root Spring context
@@ -253,7 +253,7 @@ public class INCEpTION
         builder.listeners(event -> {
             if (event instanceof ApplicationReadyEvent
                     || event instanceof ShutdownDialogAvailableEvent) {
-                splash.ifPresent(it -> it.dispose());
+                splash.ifPresent(Window::dispose);
             }
         });
         builder.run(args);
