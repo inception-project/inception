@@ -15,17 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket;
+package de.tudarmstadt.ukp.clarin.webanno.api.config;
 
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
-@SpringBootConfiguration
-@ComponentScan(basePackages = { "de.tudarmstadt.ukp.inception" })
-@EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.security" })
-@EnableAutoConfiguration
-public class SpringConfig
+@Configuration
+@EnableConfigurationProperties({ RepositoryProperties.class })
+public class RepositoryAutoConfiguration
 {
+    // No Beans
 }

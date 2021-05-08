@@ -22,7 +22,6 @@ import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageProperties;
 
 @ManagedResource("de.tudarmstadt.ukp.clarin.webanno.api.dao:type=CasStorageServiceImpl,name=sharedReadOnlyCasCache")
