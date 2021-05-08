@@ -43,19 +43,6 @@ public class FeatureSupportRegistryImpl
     }
 
     @Override
-    public <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature)
-    {
-        return findExtension(aFeature);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId)
-    {
-        return (T) getExtension(aFeatureSupportId);
-    }
-
-    @Override
     public List<FeatureType> getAllTypes(AnnotationLayer aLayer)
     {
         List<FeatureType> allTypes = new ArrayList<>();
@@ -104,5 +91,11 @@ public class FeatureSupportRegistryImpl
             }
         }
         return featureType;
+    }
+
+    @Override
+    public <T> Optional<T> readTraits(AnnotationFeature aFeature)
+    {
+        return findExtension(aFeature).map(fs -> (T) fs.readTraits(aFeature));
     }
 }

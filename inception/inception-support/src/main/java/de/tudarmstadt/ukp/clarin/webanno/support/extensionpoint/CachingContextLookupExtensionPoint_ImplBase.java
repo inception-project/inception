@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.Validate;
@@ -60,7 +61,7 @@ public abstract class CachingContextLookupExtensionPoint_ImplBase<C, E extends E
     }
 
     @Override
-    public synchronized <X extends E> X findExtension(C aContext)
+    public synchronized <X extends E> Optional<X> findExtension(C aContext)
     {
         Validate.notNull(aContext, "Extension lookup context must be specified");
 
@@ -79,11 +80,6 @@ public abstract class CachingContextLookupExtensionPoint_ImplBase<C, E extends E
             extension = findFirstAcceptingExtension(aContext);
         }
 
-        if (extension == null) {
-            throw new IllegalArgumentException(
-                    "Unable to find suitable extension for handling [" + aContext + "]");
-        }
-
-        return (X) extension;
+        return Optional.ofNullable((X) extension);
     }
 }

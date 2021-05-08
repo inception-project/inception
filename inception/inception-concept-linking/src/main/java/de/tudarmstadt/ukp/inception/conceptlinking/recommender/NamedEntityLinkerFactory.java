@@ -26,7 +26,6 @@ import static java.util.Arrays.asList;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -77,10 +76,8 @@ public class NamedEntityLinkerFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         NamedEntityLinkerTraits traits = readTraits(aRecommender);
-
-        AnnotationFeature feature = aRecommender.getFeature();
-        FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feature);
-        ConceptFeatureTraits featureTraits = fs.readTraits(feature);
+        ConceptFeatureTraits featureTraits = (ConceptFeatureTraits) fsRegistry
+                .readTraits(aRecommender.getFeature()).orElseGet(ConceptFeatureTraits::new);
 
         return new NamedEntityLinker(aRecommender, traits, kbService, clService, fsRegistry,
                 featureTraits);

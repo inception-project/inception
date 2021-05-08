@@ -464,7 +464,7 @@ public class ActiveLearningSidebar
     {
         AnnotationFeature feat = annotationService.getFeature(aCurrentRecommendation.getFeature(),
                 alStateModel.getObject().getLayer());
-        FeatureSupport<?> featureSupport = featureSupportRegistry.getFeatureSupport(feat);
+        FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
         String labelValue = featureSupport.renderFeatureValue(feat,
                 aCurrentRecommendation.getLabel());
         return labelValue;
@@ -527,7 +527,7 @@ public class ActiveLearningSidebar
         // Obtain the feature state which serves as a model to the editor
         AnnotationFeature feat = annotationService.getFeature(aCurrentRecommendation.getFeature(),
                 alState.getLayer());
-        FeatureSupport<?> featureSupport = featureSupportRegistry.getFeatureSupport(feat);
+        FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
         // We get away with passing "null" here instead of the CAS because we currently
         // have no recommenders for any feature types that actually need the CAS (i.e.
         // link feature types and the likes).
@@ -636,7 +636,7 @@ public class ActiveLearningSidebar
         // Create AnnotationFeature and FeatureSupport
         AnnotationFeature feat = annotationService.getFeature(suggestion.getFeature(),
                 alState.getLayer());
-        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(feat);
+        FeatureSupport featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
 
         // Load CAS in which to create the annotation. This might be different from the one that
         // is currently viewed by the user, e.g. if the user switched to another document after
@@ -846,8 +846,8 @@ public class ActiveLearningSidebar
                 AnnotationFeature recAnnotationFeature = rec.getAnnotationFeature();
                 String recFeatureValue;
                 if (recAnnotationFeature != null) {
-                    FeatureSupport featureSupport = featureSupportRegistry
-                            .getFeatureSupport(recAnnotationFeature);
+                    FeatureSupport<?> featureSupport = featureSupportRegistry
+                            .findExtension(recAnnotationFeature).orElseThrow();
                     recFeatureValue = featureSupport.renderFeatureValue(recAnnotationFeature,
                             rec.getAnnotation());
                 }

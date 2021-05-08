@@ -22,14 +22,12 @@ import java.util.Optional;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -40,6 +38,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class DisabledKBWarning
     extends Panel
 {
+    private static final long serialVersionUID = -4673760000245492439L;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean KnowledgeBaseService kbService;
@@ -57,9 +56,8 @@ public class DisabledKBWarning
 
         // If traits are not explicitly given, try to resolve them via featureSupportRegistry
         if (aTraitsModel == null) {
-            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                    .getFeatureSupport(aFeatureModel.getObject());
-            featureTraits = Model.of(fs.readTraits(aFeatureModel.getObject()));
+            featureTraits = aFeatureModel.map(feat -> (ConceptFeatureTraits) featureSupportRegistry
+                    .readTraits(feat).orElseThrow());
         }
         else {
             featureTraits = aTraitsModel;

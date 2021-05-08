@@ -32,7 +32,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
@@ -105,8 +104,8 @@ public class NamedEntityLinker
         List<KBHandle> handles = new ArrayList<>();
 
         AnnotationFeature feat = recommender.getFeature();
-        FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feat);
-        ConceptFeatureTraits conceptFeatureTraits = fs.readTraits(feat);
+        ConceptFeatureTraits conceptFeatureTraits = (ConceptFeatureTraits) fsRegistry
+                .readTraits(feat).orElseThrow();
 
         if (conceptFeatureTraits.getRepositoryId() != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),
