@@ -116,7 +116,6 @@
     <jena.version>3.17.0</jena.version>
 
     <servlet-api.version>4.0.1</servlet-api.version>
-    <okhttp.version>5.0.0-alpha.2</okhttp.version>
 
     <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
     <asciidoctor.version>2.3.0</asciidoctor.version>
@@ -125,6 +124,7 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.12.3</jackson.version>
+    <mockwebserver3.version>5.0.0-alpha.2</mockwebserver3.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
@@ -277,7 +277,7 @@
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3</artifactId>
+      <artifactId>mockwebserver3-junit5</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -709,15 +709,14 @@
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>mockwebserver3</artifactId>
-        <version>${okhttp.version}</version>
+        <artifactId>mockwebserver3-junit5</artifactId>
+        <version>${mockwebserver3.version}</version>
         <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-          </exclusion>
-        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>4.0.1</version>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>
@@ -989,6 +988,11 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-kotlin</artifactId>
         <version>${jackson.version}</version>
       </dependency>
 
@@ -1397,16 +1401,6 @@
         <groupId>commons-validator</groupId>
         <artifactId>commons-validator</artifactId>
         <version>1.6</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okio</groupId>
-        <artifactId>okio</artifactId>
-        <version>2.10.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>${okhttp.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
@@ -1822,7 +1816,7 @@
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
-            <dependency>com.squareup.okhttp3:mockwebserver3</dependency>
+            <dependency>com.squareup.okhttp3:mockwebserver3-junit5</dependency>
             <dependency>org.awaitility:awaitility</dependency>
           </ignoredDependencies>
         </configuration>

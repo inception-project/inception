@@ -125,12 +125,6 @@
     </dependency>
     
     <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <version>4.0.1</version>
-    </dependency>
-
-    <dependency>
       <groupId>ch.rasc</groupId>
       <artifactId>piwik-tracking</artifactId>
       <version>1.0.3</version>
