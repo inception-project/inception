@@ -134,7 +134,7 @@ public class NamedEntityLinkerTest
         FeatureSupportRegistry fsRegistry = mock(FeatureSupportRegistry.class);
         FeatureSupport fs = mock(FeatureSupport.class);
         when(fsRegistry.findExtension(recommender.getFeature())).thenReturn(Optional.of(fs));
-        when(fs.readTraits(recommender.getFeature())).thenReturn(new ConceptFeatureTraits());
+        when(fsRegistry.readTraits(any(), any())).thenReturn(new ConceptFeatureTraits());
 
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 kbService, clService, fsRegistry, new ConceptFeatureTraits());
