@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@link CasStorageServiceAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties("backup")
 public class BackupProperties
 {
