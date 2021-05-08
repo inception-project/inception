@@ -210,6 +210,10 @@ public class OpenNlpPosRecommender
         final int minTrainingSetSize = 2;
         final int minTestSetSize = 2;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
+            if ((getRecommender().getThreshold() <= 0.0d)) {
+                return new EvaluationResult();
+            }
+
             String info = String.format(
                     "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
                     trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),

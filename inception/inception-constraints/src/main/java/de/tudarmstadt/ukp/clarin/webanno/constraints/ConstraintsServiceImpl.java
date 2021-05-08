@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;

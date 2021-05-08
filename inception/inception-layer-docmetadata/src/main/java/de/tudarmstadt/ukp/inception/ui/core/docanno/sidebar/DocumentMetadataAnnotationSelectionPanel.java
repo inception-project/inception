@@ -159,7 +159,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         createdAnnotationAddress = fs.getAddress();
         annotationPage.writeEditorCas(cas);
 
-        aTarget.add(this);
+        aTarget.add(annotationsContainer);
 
         findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
     }
@@ -187,7 +187,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             remove(aDetailPanel);
 
             findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
-            aTarget.add(this);
+            aTarget.add(annotationsContainer);
         }
         catch (Exception e) {
             handleException(this, aTarget, e);
