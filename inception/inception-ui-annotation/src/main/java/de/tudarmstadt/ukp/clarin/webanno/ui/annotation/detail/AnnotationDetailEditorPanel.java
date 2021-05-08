@@ -56,6 +56,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -1034,6 +1035,28 @@ public abstract class AnnotationDetailEditorPanel
         RequestCycle.get().find(AjaxRequestTarget.class)
                 .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
 
+        // == DELETE ATTACHED SPANS ==
+        // This case is currently not implemented because WebAnno currently does not allow to
+        // create spans that attach to other spans. The only span type for which this is relevant
+        // is the Token type which cannot be deleted.
+        if (adapter instanceof SpanAdapter) {
+            for (AnnotationFeature attachFeature : annotationService
+                    .listAttachedSpanFeatures(adapter.getLayer())) {
+                // AnnotationFS attachedFs = adapter.getFeatureValue(attachFeature, fs);
+                AnnotationFS attachedFs = FSUtil.getFeature(fs, attachFeature.getName(),
+                        AnnotationFS.class);
+                if (attachedFs == null) {
+                    continue;
+                }
+
+                TypeAdapter attachedSpanLayerAdapter = annotationService
+                        .findAdapter(state.getProject(), attachedFs);
+
+                deleteAnnotation(aCas, state, attachedFs, attachedSpanLayerAdapter.getLayer(),
+                        attachedSpanLayerAdapter);
+            }
+        }
+
         // == DELETE ATTACHED RELATIONS ==
         // If the deleted FS is a span, we must delete all relations that
         // point to it directly or indirectly via the attachFeature.
@@ -1049,54 +1072,13 @@ public abstract class AnnotationDetailEditorPanel
             }
         }
 
-        // == DELETE ATTACHED SPANS ==
-        // This case is currently not implemented because WebAnno currently does not allow to
-        // create spans that attach to other spans. The only span type for which this is relevant
-        // is the Token type which cannot be deleted.
-
         // == CLEAN UP LINK FEATURES ==
         // If the deleted FS is a span that is the target of a link feature, we must unset that
         // link and delete the slot if it is a multi-valued link. Here, we have to scan all
         // annotations from layers that have link features that could point to the FS
         // to be deleted: the link feature must be the type of the FS or it must be generic.
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationFeature linkFeature : annotationService
-                    .listAttachedLinkFeatures(layer)) {
-                Type linkHostType = CasUtil.getType(aCas, linkFeature.getLayer().getName());
-
-                for (FeatureStructure linkHostFS : CasUtil.selectFS(aCas, linkHostType)) {
-                    List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
-                            linkHostFS);
-                    Iterator<LinkWithRoleModel> i = links.iterator();
-                    boolean modified = false;
-                    while (i.hasNext()) {
-                        LinkWithRoleModel link = i.next();
-                        if (link.targetAddr == getAddr(fs)) {
-                            i.remove();
-                            info("Cleared slot [" + link.role + "] in feature ["
-                                    + linkFeature.getUiName() + "] on ["
-                                    + linkFeature.getLayer().getUiName() + "]");
-                            LOG.debug("Cleared slot [" + link.role + "] in feature ["
-                                    + linkFeature.getName() + "] on annotation ["
-                                    + getAddr(linkHostFS) + "]");
-                            modified = true;
-                        }
-                    }
-                    if (modified) {
-                        setFeature(linkHostFS, linkFeature, links);
-
-                        // If the currently armed slot is part of this link, then we disarm the slot
-                        // to avoid the armed slot no longer pointing at the index which the user
-                        // had selected it to point at.
-                        FeatureState armedFeature = state.getArmedFeature();
-                        if (armedFeature != null
-                                && WebAnnoCasUtil.getAddr(linkHostFS) == armedFeature.vid.getId()
-                                && armedFeature.feature.equals(linkFeature)) {
-                            state.clearArmedSlot();
-                        }
-                    }
-                }
-            }
+            cleanUpLinkFeatures(aCas, fs, (SpanAdapter) adapter, state);
         }
 
         // If the deleted FS is a relation, we don't have to do anything. Nothing can point to a
@@ -1106,10 +1088,50 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Actually delete annotation
-        adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
-                state.getSelection().getAnnotation());
+        adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas, new VID(fs));
 
-        info(generateMessage(state.getSelectedAnnotationLayer(), null, true));
+        info(generateMessage(adapter.getLayer(), null, true));
+    }
+
+    private void cleanUpLinkFeatures(CAS aCas, FeatureStructure fs, SpanAdapter adapter,
+            AnnotatorState state)
+    {
+        for (AnnotationFeature linkFeature : annotationService
+                .listAttachedLinkFeatures(adapter.getLayer())) {
+            Type linkHostType = CasUtil.getType(aCas, linkFeature.getLayer().getName());
+
+            for (FeatureStructure linkHostFS : CasUtil.selectFS(aCas, linkHostType)) {
+                List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature, linkHostFS);
+                Iterator<LinkWithRoleModel> i = links.iterator();
+                boolean modified = false;
+                while (i.hasNext()) {
+                    LinkWithRoleModel link = i.next();
+                    if (link.targetAddr == getAddr(fs)) {
+                        i.remove();
+                        info("Cleared slot [" + link.role + "] in feature ["
+                                + linkFeature.getUiName() + "] on ["
+                                + linkFeature.getLayer().getUiName() + "]");
+                        LOG.debug("Cleared slot [" + link.role + "] in feature ["
+                                + linkFeature.getName() + "] on annotation [" + getAddr(linkHostFS)
+                                + "]");
+                        modified = true;
+                    }
+                }
+                if (modified) {
+                    setFeature(linkHostFS, linkFeature, links);
+
+                    // If the currently armed slot is part of this link, then we disarm the slot
+                    // to avoid the armed slot no longer pointing at the index which the user
+                    // had selected it to point at.
+                    FeatureState armedFeature = state.getArmedFeature();
+                    if (armedFeature != null
+                            && WebAnnoCasUtil.getAddr(linkHostFS) == armedFeature.vid.getId()
+                            && armedFeature.feature.equals(linkFeature)) {
+                        state.clearArmedSlot();
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -1117,9 +1139,15 @@ public abstract class AnnotationDetailEditorPanel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        CAS cas = getEditorCas();
-
         AnnotatorState state = getModelObject();
+
+        TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
+        if (!(adapter instanceof RelationAdapter)) {
+            error("chains cannot be reversed");
+            return;
+        }
+
+        CAS cas = getEditorCas();
 
         AnnotationFS idFs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
@@ -1131,21 +1159,14 @@ public abstract class AnnotationDetailEditorPanel
 
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
 
-        TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-        if (adapter instanceof RelationAdapter) {
-            // If no features, still create arc #256
-            AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
-                    state.getUser().getUsername(), targetFs, originFs, cas);
-            state.getSelection().setAnnotation(new VID(getAddr(arc)));
+        // If no features, still create arc #256
+        AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
+                state.getUser().getUsername(), targetFs, originFs, cas);
+        state.getSelection().setAnnotation(new VID(getAddr(arc)));
 
-            for (FeatureState featureState : featureStates) {
-                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), cas,
-                        getAddr(arc), featureState.feature, featureState.value);
-            }
-        }
-        else {
-            error("chains cannot be reversed");
-            return;
+        for (FeatureState featureState : featureStates) {
+            adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), cas,
+                    getAddr(arc), featureState.feature, featureState.value);
         }
 
         // persist changes

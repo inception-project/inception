@@ -726,6 +726,21 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
+    public List<AnnotationFeature> listAttachedSpanFeatures(AnnotationLayer aLayer)
+    {
+        String query = String.join("\n", //
+                "SELECT l.attachFeature", //
+                "FROM AnnotationLayer AS l", //
+                "WHERE l.attachType = :layer", //
+                "ORDER BY l.attachFeature.uiName");
+
+        return entityManager.createQuery(query, AnnotationFeature.class)
+                .setParameter("layer", aLayer).setHint(CACHEABLE, true) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
     public List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer)
     {
         if (isNull(aLayer) || isNull(aLayer.getId())) {

@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -156,10 +158,10 @@ public class SpanAdapter
 
         // delete associated attachFeature
         if (getAttachTypeName() != null) {
-            Type theType = CasUtil.getType(aCas, getAttachTypeName());
+            Type theType = getType(aCas, getAttachTypeName());
             Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
             if (attachFeature != null) {
-                CasUtil.selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
+                selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
                         .setFeatureValue(attachFeature, null);
             }
         }
