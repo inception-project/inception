@@ -38,6 +38,7 @@ import org.apache.wicket.model.Model;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
 
@@ -48,10 +49,10 @@ public class AnnotatorColumn
 
     private IModel<Set<String>> selectedUsers;
 
-    public AnnotatorColumn(String aUsername, IModel<Set<String>> aSelectedUsers)
+    public AnnotatorColumn(User aUser, IModel<Set<String>> aSelectedUsers)
     {
-        super(Model.of(aUsername), annotatorSortKey(aUsername),
-                row -> row.getAnnotationDocument(aUsername));
+        super(Model.of(aUser.getUiName()), annotatorSortKey(aUser.getUsername()),
+                row -> row.getAnnotationDocument(aUser.getUsername()));
         selectedUsers = aSelectedUsers;
     }
 
