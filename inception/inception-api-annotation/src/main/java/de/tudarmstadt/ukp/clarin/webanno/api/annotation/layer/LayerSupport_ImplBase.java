@@ -52,7 +52,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
             List<AnnotationFeature> aFeatures)
     {
         for (AnnotationFeature feature : aFeatures) {
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+            FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
             fs.generateFeature(aTSD, aTD, feature);
         }
     }

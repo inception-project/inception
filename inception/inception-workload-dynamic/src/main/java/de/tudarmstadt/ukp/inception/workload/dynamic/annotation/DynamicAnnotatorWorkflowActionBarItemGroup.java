@@ -156,10 +156,8 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             // otherwise select the current one
             DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(currentWorkload);
             WorkflowExtension currentWorkflowExtension = workflowExtensionPoint
-                    .getExtension(traits.getWorkflowType());
-            if (currentWorkflowExtension == null) {
-                currentWorkflowExtension = new DefaultWorkflowExtension();
-            }
+                    .getExtension(traits.getWorkflowType())
+                    .orElseGet(DefaultWorkflowExtension::new);
 
             // Get all documents for which the state is NEW, or which have not been created yet.
             List<SourceDocument> sourceDocuments = workloadManagementService
