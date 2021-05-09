@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recomm
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.IOException;
@@ -129,7 +130,7 @@ public class ExternalRecommender
         trainingRequest.setDocuments(documents);
 
         HttpRequest request = HttpRequest.newBuilder() //
-                .uri(URI.create(traits.getRemoteUrl()).resolve("train")) //
+                .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("train")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(Duration.of(READ_TIMEOUT, SECONDS))
                 .POST(BodyPublishers.ofString(toJson(trainingRequest), UTF_8)).build();
@@ -163,7 +164,7 @@ public class ExternalRecommender
         predictionRequest.setMetadata(buildMetadata(aCas));
 
         HttpRequest request = HttpRequest.newBuilder() //
-                .uri(URI.create(traits.getRemoteUrl()).resolve("predict")) //
+                .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(Duration.of(READ_TIMEOUT, SECONDS)) //
                 .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)).build();
