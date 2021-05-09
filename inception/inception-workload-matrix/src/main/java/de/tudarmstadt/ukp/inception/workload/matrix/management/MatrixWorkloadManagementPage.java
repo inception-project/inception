@@ -194,7 +194,7 @@ public class MatrixWorkloadManagementPage
         List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
                 ANNOTATOR);
         for (User annotator : annotators) {
-            columns.add(new AnnotatorColumn(annotator.getUsername(), selectedUsers));
+            columns.add(new AnnotatorColumn(annotator, selectedUsers));
         }
 
         DataTable<DocumentMatrixRow, DocumentMatrixSortKey> table = new DefaultDataTable<>(

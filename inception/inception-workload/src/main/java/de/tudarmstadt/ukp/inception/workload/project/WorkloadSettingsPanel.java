@@ -92,7 +92,7 @@ public class WorkloadSettingsPanel
         WorkloadManager manager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         WorkloadManagerExtension<?> extension = workloadManagerExtensionPoint
-                .getExtension(manager.getType());
+                .getExtension(manager.getType()).orElseThrow();
         return new WorkloadManagerType(extension.getId(), extension.getId());
     }
 

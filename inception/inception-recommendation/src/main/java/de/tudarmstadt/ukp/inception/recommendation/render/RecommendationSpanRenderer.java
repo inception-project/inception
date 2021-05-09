@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -127,7 +127,7 @@ public class RecommendationSpanRenderer
                 AnnotationFeature feature = features.get(ao.getFeature());
 
                 // Retrieve the UI display label for the given feature value
-                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
+                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature).orElseThrow();
                 String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());
 
                 Map<String, String> featureAnnotation = new HashMap<>();

@@ -31,6 +31,7 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQu
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.FINISHED;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.STATE;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension.DEFAULT_WORKFLOW;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -118,7 +119,6 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDia
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
@@ -647,16 +647,15 @@ public class DynamicWorkloadManagementPage
     {
         DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
-        WorkflowExtension extension = workflowExtensionPoint.getExtension(traits.getWorkflowType());
+        WorkflowExtension extension = workflowExtensionPoint.getExtension(traits.getWorkflowType())
+                .orElse(null);
         // NP catch for older project
         if (extension == null) {
-            return new WorkflowType(DefaultWorkflowExtension.DEFAULT_WORKFLOW,
-                    traits.getWorkflowType());
+            return new WorkflowType(DEFAULT_WORKFLOW, traits.getWorkflowType());
         }
         else {
             return new WorkflowType(extension.getId(), traits.getWorkflowType());
         }
-
     }
 
     private void actionSubmit(AjaxRequestTarget aTarget, Form<?> aForm)

@@ -144,12 +144,9 @@ public class FactLinkingServiceImpl
     {
         AnnotationLayer linkedLayer = annotationService.findLayer(aProject,
                 NamedEntity.class.getName());
-        AnnotationFeature linkedFeature = annotationService
-                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                .getFeatureSupport(linkedFeature);
-        ConceptFeatureTraits traits = fs.readTraits(linkedFeature);
-        return traits;
+        AnnotationFeature linkedFeature = annotationService.getFeature(LINKED_LAYER_FEATURE,
+                linkedLayer);
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(linkedFeature).orElseThrow();
+        return (ConceptFeatureTraits) fs.readTraits(linkedFeature);
     }
-
 }

@@ -283,8 +283,8 @@ public class FeatureEditorListPanel
             final FeatureEditor editor;
 
             // Look up a suitable editor and instantiate it
-            FeatureSupport featureSupport = featureSupportRegistry
-                    .getFeatureSupport(featureState.feature);
+            FeatureSupport<?> featureSupport = featureSupportRegistry
+                    .findExtension(featureState.feature).orElseThrow();
             AnnotationDetailEditorPanel editorPanel = findParent(AnnotationDetailEditorPanel.class);
             editor = featureSupport.createEditor("editor", FeatureEditorListPanel.this, editorPanel,
                     getModel(), item.getModel());
@@ -451,7 +451,7 @@ public class FeatureEditorListPanel
         // Check if any of the features suppresses auto-focus...
         for (FeatureState fstate : getModelObject().getFeatureStates()) {
             AnnotationFeature feature = fstate.getFeature();
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+            FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
             if (fs.suppressAutoFocus(feature)) {
                 return;
             }
