@@ -150,7 +150,7 @@ public class RecommendationRelationRenderer
                 // Retrieve the UI display label for the given feature value
                 AnnotationFeature feature = features.get(suggestion.getFeature());
 
-                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
+                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature).orElseThrow();
                 String annotation = featureSupport.renderFeatureValue(feature,
                         suggestion.getLabel());
 

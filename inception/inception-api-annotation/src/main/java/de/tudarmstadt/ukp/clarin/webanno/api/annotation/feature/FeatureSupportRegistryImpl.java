@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -40,19 +41,6 @@ public class FeatureSupportRegistryImpl
             @Lazy @Autowired(required = false) List<FeatureSupport<?>> aFeatureSupports)
     {
         super(aFeatureSupports, AnnotationFeature::getId);
-    }
-
-    @Override
-    public <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature)
-    {
-        return findExtension(aFeature);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId)
-    {
-        return (T) getExtension(aFeatureSupportId);
     }
 
     @Override
@@ -104,5 +92,18 @@ public class FeatureSupportRegistryImpl
             }
         }
         return featureType;
+    }
+
+    @Override
+    public <T> Optional<FeatureSupport<T>> findExtension(AnnotationFeature aKey)
+    {
+        return super.findGenericExtension(aKey);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T readTraits(AnnotationFeature aFeature, SerializableSupplier<T> aIfMissing)
+    {
+        return findExtension(aFeature).map(fs -> (T) fs.readTraits(aFeature)).orElseGet(aIfMissing);
     }
 }

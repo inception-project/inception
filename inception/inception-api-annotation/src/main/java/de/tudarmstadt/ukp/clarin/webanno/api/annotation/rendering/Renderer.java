@@ -87,7 +87,7 @@ public interface Renderer
             }
 
             String label = defaultString(
-                    fsr.findExtension(feature).renderFeatureValue(feature, aFs));
+                    fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs));
 
             features.put(feature.getName(), label);
         }
@@ -113,7 +113,7 @@ public interface Renderer
                 tiggerLayerLevelLazyDetails = true;
             }
 
-            details.addAll(fsr.findExtension(feature).getLazyDetails(feature, aFs));
+            details.addAll(fsr.findExtension(feature).orElseThrow().getLazyDetails(feature, aFs));
         }
 
         if (tiggerLayerLevelLazyDetails) {
@@ -153,7 +153,7 @@ public interface Renderer
             }
 
             String text = defaultString(
-                    fsr.findExtension(feature).renderFeatureValue(feature, aFs));
+                    fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs));
 
             details.add(new VLazyDetailResult(feature.getName(), text));
         }

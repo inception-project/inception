@@ -23,6 +23,7 @@ import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,9 +82,9 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
 
     @SuppressWarnings("unchecked")
     @Override
-    public <X extends E> X getExtension(String aId)
+    public <X extends E> Optional<X> getExtension(String aId)
     {
-        return (X) getExtensions().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
-                .orElse(null);
+        return (Optional<X>) getExtensions().stream().filter(fs -> fs.getId().equals(aId))
+                .findFirst();
     }
 }

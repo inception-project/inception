@@ -85,7 +85,7 @@ public class KeyBindingsConfigurationPanel
         keyBindingsContainer.add(new LambdaAjaxSubmitLink<>("addKeyBinding", this::addKeyBinding));
 
         AnnotationFeature feature = aModel.getObject();
-        FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         featureState = Model.of(new FeatureState(VID.NONE_ID, feature, null));
         if (feature.getTagset() != null) {
             featureState.getObject().tagset = schemaService
@@ -113,7 +113,7 @@ public class KeyBindingsConfigurationPanel
             protected void populateItem(ListItem<KeyBinding> aItem)
             {
                 AnnotationFeature feature = KeyBindingsConfigurationPanel.this.getModelObject();
-                FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+                FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
 
                 KeyBinding keyBinding = aItem.getModelObject();
 
@@ -145,7 +145,7 @@ public class KeyBindingsConfigurationPanel
         // Copy value from the value editor over into the form model (key binding) and then add it
         // to the list
         AnnotationFeature feature = getModelObject();
-        FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         keyBinding.setValue(fs.unwrapFeatureValue(feature, null, featureState.getObject().value));
         keyBindings.getObject().add(keyBinding);
 

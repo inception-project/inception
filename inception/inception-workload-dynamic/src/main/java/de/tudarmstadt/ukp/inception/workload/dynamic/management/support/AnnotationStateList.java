@@ -29,15 +29,19 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
 
 public class AnnotationStateList
     extends Panel
 {
     private static final long serialVersionUID = -8717096450102813443L;
+
+    private @SpringBean UserDao userRepository;
 
     public AnnotationStateList(String aId, IModel<List<AnnotationDocument>> aModel)
     {
@@ -56,7 +60,8 @@ public class AnnotationStateList
                 Label stateLabel = new Label("stateSymbol", stateSymbol(state));
                 stateLabel.setEscapeModelStrings(false);
                 aItem.add(stateLabel);
-                aItem.add(new Label("annotatorName", aItem.getModelObject().getUser()));
+                aItem.add(new Label("annotatorName",
+                        userRepository.get(aItem.getModelObject().getUser()).getUiName()));
                 aItem.add(new AttributeAppender("style", "cursor: pointer", ";"));
                 aItem.add(AjaxEventBehavior.onEvent("click", //
                         _target -> stateLabel.send(stateLabel, BUBBLE,
