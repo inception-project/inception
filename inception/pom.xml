@@ -124,7 +124,7 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.12.3</jackson.version>
-    <mockwebserver3.version>5.0.0-alpha.2</mockwebserver3.version>
+    <okhttp.version>4.9.1</okhttp.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
@@ -259,7 +259,6 @@
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
@@ -273,16 +272,6 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.awaitility</groupId>
-      <artifactId>awaitility</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -709,23 +698,18 @@
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>mockwebserver3-junit5</artifactId>
-        <version>${mockwebserver3.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>mockwebserver3</artifactId>
-        <version>${mockwebserver3.version}</version>
+        <artifactId>mockwebserver</artifactId>
+        <version>${okhttp.version}</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
-        <version>2.2.2</version>
+        <version>2.10.0</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>okhttp</artifactId>
-        <version>4.0.1</version>
+        <version>${okhttp.version}</version>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>
@@ -1825,8 +1809,6 @@
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
-            <dependency>com.squareup.okhttp3:mockwebserver3-junit5</dependency>
-            <dependency>org.awaitility:awaitility</dependency>
           </ignoredDependencies>
         </configuration>
         <dependencies>
