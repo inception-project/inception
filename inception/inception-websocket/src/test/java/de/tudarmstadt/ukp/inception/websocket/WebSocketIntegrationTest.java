@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.websocket;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,8 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
@@ -69,7 +84,6 @@ public class WebSocketIntegrationTest
     @TempDir
     File repositoryDir;
     
-    private User testAdmin;
     private Project testProject;
     private SourceDocument testDoc;
     
@@ -93,7 +107,6 @@ public class WebSocketIntegrationTest
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
         
-        testAdmin = new User("testAdmin", Role.ROLE_USER, Role.ROLE_ADMIN);
         testProject = new Project("testProject");
         testDoc = new SourceDocument("testDoc", testProject, "text");
         projectService.createProject(testProject);
@@ -111,8 +124,7 @@ public class WebSocketIntegrationTest
             public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
             {
                 super.afterConnected(aSession, aConnectedHeaders);
-                System.out.println("Connected to websocket");
-                aSession.subscribe("topic/loggedEvents", new StompFrameHandler()
+                aSession.subscribe("/topic/loggedEvents", new StompFrameHandler()
                 {
                     @Override
                     public Type getPayloadType(StompHeaders aHeaders)
@@ -123,11 +135,12 @@ public class WebSocketIntegrationTest
                     @Override
                     public void handleFrame(StompHeaders aHeaders, Object aPayload)
                     {
-                        System.out.println("Subscription payload: " + aPayload);
                         receivedMessages.add((LoggedEventMessage) aPayload);
                         latch.countDown();
                     }
-                });                
+                });    
+                applicationEventPublisher.publishEvent(
+                        new DocumentStateChangedEvent(new Object(), testDoc, SourceDocumentState.NEW));
             }
 
             @Override
@@ -147,10 +160,7 @@ public class WebSocketIntegrationTest
         };
         
         session = webSocketClient.connect(websocketUrl, sessionHandler).get(1, TimeUnit.SECONDS);
-        latch.await(5, TimeUnit.SECONDS);
-        applicationEventPublisher.publishEvent(
-                new DocumentStateChangedEvent(new Object(), testDoc, SourceDocumentState.NEW));
-        latch.await(5, TimeUnit.SECONDS);
+        latch.await(1, TimeUnit.SECONDS);
         session.disconnect();
         
         assertThat(receivedMessages.size()).isEqualTo(1);

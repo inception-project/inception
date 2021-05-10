@@ -55,5 +55,5 @@ public class WebsocketConfig
         aRegistry.setPreservePublishOrder(true); // messages to clients are by default not ordered,
                                                  // need to explicitly set order here
     }
-    
+   
 }

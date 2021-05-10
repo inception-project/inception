@@ -31,11 +31,21 @@ public class LoggedEventMessage
     
     private String eventMsg;
     
+    public LoggedEventMessage() {}
+    
+    public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
+            long aTimestamp, String aEventMsg)
+    {
+        actorName = aActorName;
+        projectName = aProjectName;
+        documentName = aDocumentName;
+        timestamp = aTimestamp;
+        eventMsg = aEventMsg;
+    }
     
     public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
             Date aCreationDate)
     {
-        super();
         actorName = aActorName;
         projectName = aProjectName;
         documentName = aDocumentName;

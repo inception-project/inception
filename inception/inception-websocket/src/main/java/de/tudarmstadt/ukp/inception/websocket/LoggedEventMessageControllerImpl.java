@@ -103,7 +103,6 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
         if (eventMsg == null) {
             return;
         }
-        
         msgTemplate.convertAndSend(LOGGED_EVENTS_TOPIC, eventMsg);
     }
 
