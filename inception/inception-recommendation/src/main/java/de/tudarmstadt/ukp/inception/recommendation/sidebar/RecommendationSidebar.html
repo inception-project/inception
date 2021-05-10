@@ -33,54 +33,56 @@
             <i class="fas fa-redo"></i>
             <span class="d-none d-xl-inline">&nbsp;<wicket:message key="retrain"/></span>
           </button> 
+          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+              <i class="fas fa-cog"></i>
+            </button>
+            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 440px;">
+              <form wicket:id="form" class="card">
+                <div class="card-body">
+                  <div class="form-group form-row" wicket:enclosure="showAllPredictions">
+                    <div class="col-sm-12">
+                      <div class="form-check">
+                        <input wicket:id="showAllPredictions" class="form-check-input" type="checkbox"/>
+                        <label wicket:for="showAllPredictions">
+                          <wicket:message key="showAll"/>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group form-row" wicket:enclosure="maxPredictions">
+                    <label class="col-sm-8 col-form-label"><wicket:message key="maxSuggestions"/>
+                        <a target="_blank" wicket:message="href:max.suggestions.help.link">
+                            <i class="fas fa-question-circle"></i>
+                        </a>
+                    </label>
+                    <div class="col-sm-4">
+                      <input wicket:id="maxPredictions" type="number" class="form-control"/>
+                    </div>
+                  </div>
+                  <div class="form-group form-row" wicket:enclosure="confidenceThreshold">
+                    <label class="col-sm-8 col-form-label">
+                      <wicket:message key="confidenceThreshold"/>
+                    </label>
+                    <div class="col-sm-4">
+                      <input wicket:id="confidenceThreshold" type="number" class="form-control"/>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer text-right">
+                  <button wicket:id="save" class="btn btn-primary">
+                    <i class="fas fa-save"></i>&nbsp;
+                    <wicket:message key="save"/>
+                  </button> 
+                </div>
+              </form>
+            </div>
+          </span>
         </div>
       </div>
       <div class="scrolling card-body flex-v-container">
         <span class="flex-content no-data-notice" wicket:id="noRecommendersLabel"></span>
-        <div class="mb-3">
-          <form wicket:id="form" class="card">
-            <div class="card-header small">
-              <wicket:message key="settings"/>
-              <div class="actions">
-                <button wicket:id="save" class="btn btn-primary">
-                  <i class="fas fa-save"></i>&nbsp;
-                  <wicket:message key="save"/>
-                </button> 
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="form-group form-row" wicket:enclosure="maxPredictions">
-                <label class="col-sm-8 col-form-label"><wicket:message key="maxSuggestions"/>
-                    <a target="_blank" wicket:message="href:max.suggestions.help.link">
-                        <i class="fas fa-question-circle"></i>
-                    </a>
-                </label>
-                <div class="col-sm-4">
-                  <input wicket:id="maxPredictions" type="number" class="form-control"/>
-                </div>
-              </div>
-              <div class="form-group form-row" wicket:enclosure="confidenceThreshold">
-                <label class="col-sm-8 col-form-label">
-                  <wicket:message key="confidenceThreshold"/>
-                </label>
-                <div class="col-sm-4">
-                  <input wicket:id="confidenceThreshold" type="number" class="form-control"/>
-                </div>
-              </div>
-              <div class="form-group form-row" wicket:enclosure="showAllPredictions">
-                <div class="col-sm-12">
-                  <div class="form-check">
-                    <input wicket:id="showAllPredictions" class="form-check-input" type="checkbox"/>
-                    <label wicket:for="showAllPredictions">
-                      <wicket:message key="showAll"/>
-                    </label>
-                  </div>
-                </div>  
-              </div>
-            </div>
-          </form>
-        </div>
-        <div wicket:id="learningCurve" class="mb-3"></div>
+        <!-- <div wicket:id="learningCurve" class="mb-3"></div> -->
         <div wicket:id="recommenders" ></div>
       </div>
     </div>

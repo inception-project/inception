@@ -49,7 +49,7 @@ public class BasicRelationLayerInitializer
     implements LayerInitializer
 {
     public static final String BASIC_RELATION_LAYER_NAME = "custom.Relation";
-    public static final String BASIC_RELATION_FEATURE_NAME = "label";
+    public static final String BASIC_RELATION_LABEL_FEATURE_NAME = "label";
 
     private final AnnotationSchemaService annotationSchemaService;
 
@@ -102,7 +102,7 @@ public class BasicRelationLayerInitializer
                 aProject);
 
         annotationSchemaService.createFeature(
-                new AnnotationFeature(aProject, relationLayer, BASIC_RELATION_FEATURE_NAME, "Label",
+                new AnnotationFeature(aProject, relationLayer, BASIC_RELATION_LABEL_FEATURE_NAME, "Label",
                         TYPE_NAME_STRING, "Relation label", relationTagSet));
     }
 }
