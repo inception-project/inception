@@ -17,30 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-/**
- * This class is exposed as a Spring Component via {@link TelemetryServiceAutoConfiguration}.
- */
-@ConfigurationProperties("telemetry")
-public class TelemetryServicePropertiesImpl
-    implements TelemetryServiceProperties
+public interface MatomoTelemetryServiceProperties
 {
-    private AutoResponse autoRespond;
+    String DEFAULT_SERVER_SCHEME = "https";
+    String DEFAULT_SERVER_HOST = "blinky.ukp.informatik.tu-darmstadt.de";
+    String DEFAULT_SERVER_PATH = "matomo/piwik.php";
+    int DEFAULT_SITE_ID = 2;
+    String DEFAULT_CONTEXT = "https://webanno.github.io/telemetry";
 
-    @Override
-    public AutoResponse getAutoRespond()
-    {
-        return autoRespond;
-    }
+    String getServerScheme();
 
-    public void setAutoRespond(AutoResponse aAutoRespond)
-    {
-        autoRespond = aAutoRespond;
-    }
+    String getServerHost();
 
-    public static enum AutoResponse
-    {
-        ACCEPT, REJECT
-    }
+    String getServerPath();
+
+    int getSiteId();
+
+    String getContext();
 }
