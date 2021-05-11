@@ -74,8 +74,8 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
             SessionConnectEvent.class.getSimpleName(), SessionDisconnectEvent.class.getSimpleName(),
             SessionSubscribeEvent.class.getSimpleName(), SessionUnsubscribeEvent.class.getSimpleName());
     
-    private static final String LOGGED_EVENTS = "/loggedEvents";
-    private static final String LOGGED_EVENTS_TOPIC = "/topic" + LOGGED_EVENTS;
+    public static final String LOGGED_EVENTS = "/loggedEvents";
+    public static final String LOGGED_EVENTS_TOPIC = "/topic" + LOGGED_EVENTS;
     private SimpMessagingTemplate msgTemplate;
     private List<EventLoggingAdapter<?>> eventAdapters;
     private ProjectService projectService;
@@ -132,12 +132,6 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
         return (EventLoggingAdapter<ApplicationEvent>) eventAdapter.get();
     }
 
-    @Override
-    public String getTopicChannel()
-    {
-        return LOGGED_EVENTS;
-    }
-
     @SubscribeMapping(LOGGED_EVENTS)
     @Override
     public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal)
@@ -145,10 +139,9 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
         String subscribingUsername = aPrincipal.getName();
         User subscribingUser = userRepo.get(subscribingUsername);
         if (subscribingUser == null || !userRepo.isAdministrator(subscribingUser)) {
-            log.info("Subscribing user {} is unknown or not an admin.", subscribingUsername);
-            // TODO check if this will keep the user from subscribing 
-            // or we need to intercept the subscribe message beforehand
-            throw new IllegalArgumentException("User is not permitted to subscribe to this channel.");
+            log.debug("Subscribing user {} is unknown or not an admin.", subscribingUsername);
+            throw new IllegalArgumentException(String.format(
+                    "User is not permitted to subscribe to this channel: %s", LOGGED_EVENTS));
         }
         List<LoggedEventMessage> recentEvents = eventRepo
                 .listFilteredRecentActivity(genericEvents, MAX_EVENTS).stream()

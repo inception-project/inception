@@ -17,26 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.websocket;
 
-import java.security.Principal;
-import java.util.List;
+import org.springframework.messaging.support.ChannelInterceptor;
 
-import org.springframework.context.ApplicationEvent;
-
-import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
-
-public interface LoggedEventMessageController
+/**
+ * 
+ * Implement this for interceptors that should be injected as interceptors for client inbound channel 
+ * e.g. to check subscription request.
+ *
+ */
+public interface InboundChannelInterceptor
+    extends ChannelInterceptor
 {
-    /***
-     * Push messages on received application events to named user
-     */
-    public void onApplicationEvent(ApplicationEvent aEvent);
 
-    /**
-     * Return the most recent logged events to the subscribing client
-     * @param aPrincipal the subscribing client
-     * @return the most recent events
-     */
-    public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
-    
-    public String handleException(Throwable exception);
 }

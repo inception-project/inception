@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPane
 import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageController;
+import de.tudarmstadt.ukp.inception.websocket.LoggedEventMessageControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
@@ -68,7 +69,7 @@ public class LoggedEventFooterPanel extends VueComponent
         super.onConfigure();
         // model will be added as props to vue component
         setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(),
-                "topicChannel", loggedEventService.getTopicChannel(), 
+                "topicChannel", LoggedEventMessageControllerImpl.LOGGED_EVENTS, 
                 "feedbackPanelId", retrieveFeedbackPanelId())));
     }
 

@@ -65,7 +65,7 @@ module.exports = {
         function (frame) {
           that.connected = true;
           that.stompClient.subscribe('/user/queue/errors', function (msg) {
-            console.error('Websocket server error: ' + JSON.stringify(msg));
+            console.error('Websocket server error: ' + JSON.stringify(msg.body));
           });
           that.stompClient.subscribe('/app' + that.topicChannel, function (msg) {
             that.events = JSON.parse(msg.body);

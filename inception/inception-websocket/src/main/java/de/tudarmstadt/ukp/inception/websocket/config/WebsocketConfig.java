@@ -18,12 +18,18 @@
 package de.tudarmstadt.ukp.inception.websocket.config;
 
 
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import de.tudarmstadt.ukp.inception.websocket.InboundChannelInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -34,7 +40,17 @@ public class WebsocketConfig
 
     public static final String WS_ENDPOINT = "/ws-endpoint";
     
-
+    private ChannelInterceptor[] inboundInterceptors;
+    
+    /**
+     * @param aInboundInterceptors
+     *            interceptors that will be added to the client inbound channel e.g. to check authorization
+     *            before subscription
+     */
+    public WebsocketConfig(@Autowired InboundChannelInterceptor[] aInboundInterceptors) {
+        inboundInterceptors = aInboundInterceptors;
+    }
+    
     @Override
     public void registerStompEndpoints(StompEndpointRegistry aRegistry)
     {
@@ -54,6 +70,12 @@ public class WebsocketConfig
                                                              // channels pre-fixed with this
         aRegistry.setPreservePublishOrder(true); // messages to clients are by default not ordered,
                                                  // need to explicitly set order here
+    }
+    
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration aRegistration)
+    {
+        aRegistration.interceptors(inboundInterceptors);
     }
    
 }

@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.support.AbstractMessageChannel;
@@ -62,7 +63,7 @@ public class LoggedEventMessageServiceImplTest
     
     private Project testProject;
     private SourceDocument testDoc;
-    private User testUser;
+    private User testAdmin;
     
     private LoggedEventMessageControllerImpl sut;
     
@@ -74,7 +75,7 @@ public class LoggedEventMessageServiceImplTest
         testProject.setId(1L);
         testDoc = new SourceDocument("testDoc", testProject, "text");
         testDoc.setId(2L);
-        testUser = new User("testUser", Role.ROLE_USER);
+        testAdmin = new User("testAdmin", Role.ROLE_USER, Role.ROLE_ADMIN);
         
         when(projectService.getProject(1L)).thenReturn(testProject);
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
@@ -85,7 +86,7 @@ public class LoggedEventMessageServiceImplTest
     
     @Test
     public void thatSpanCreatedEventIsRelayedToUser() {
-        sut.onApplicationEvent(new SpanCreatedEvent(getClass(), testDoc, testUser.getUsername(), null, null));
+        sut.onApplicationEvent(new SpanCreatedEvent(getClass(), testDoc, testAdmin.getUsername(), null, null));
         
         List<Message<?>> messages = outboundChannel.getMessages();
         LoggedEventMessage msg = (LoggedEventMessage) messages.get(0).getPayload();
@@ -93,12 +94,13 @@ public class LoggedEventMessageServiceImplTest
         assertThat(messages).hasSize(1);
         assertThat(msg.getDocumentName()).isEqualTo(testDoc.getName());
         assertThat(msg.getProjectName()).isEqualTo(testProject.getName());
-        assertThat(msg.getActorName()).isEqualTo(testUser.getUsername());
+        assertThat(msg.getActorName()).isEqualTo(testAdmin.getUsername());
         assertThat(msg.getEventMsg()).isEqualTo(SpanCreatedEvent.class.getSimpleName());
     }
     
     @SpringBootConfiguration
-    @EnableAutoConfiguration(exclude = EventLoggingAutoConfiguration.class)
+    @EnableAutoConfiguration(exclude = {EventLoggingAutoConfiguration.class, 
+            LiquibaseAutoConfiguration.class})
     @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.websocket"})
     public static class SpringConfig
     {
