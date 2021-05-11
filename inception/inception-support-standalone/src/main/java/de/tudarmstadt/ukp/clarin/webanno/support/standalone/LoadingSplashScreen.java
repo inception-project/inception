@@ -77,8 +77,9 @@ public class LoadingSplashScreen
             applicationName = aApplicationName;
 
             JLabel l = new JLabel(new ImageIcon(aSplashScreenImageUrl));
-            info = new JLabel(applicationName + " is loading...");
             getContentPane().add(l, BorderLayout.CENTER);
+
+            info = new JLabel(applicationName + " is loading...");
             getContentPane().add(info, BorderLayout.SOUTH);
 
             ImageIcon img = new ImageIcon(aIconUrl);

@@ -22,7 +22,9 @@ import static java.awt.Font.BOLD;
 import static java.awt.Font.SANS_SERIF;
 import static java.text.MessageFormat.format;
 import static javax.swing.BoxLayout.PAGE_AXIS;
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
+import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 
 import java.awt.AWTException;
 import java.awt.BorderLayout;
@@ -34,11 +36,14 @@ import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Year;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -49,9 +54,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
+import javax.swing.text.DefaultCaret;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +76,8 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.RingBufferAppender;
 
 @Component("standaloneShutdownDialogManager")
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -146,6 +155,76 @@ public class StandaloneShutdownDialogManager
         System.exit(SpringApplication.exit(context));
     }
 
+    private void actionShowLog()
+    {
+        JFrame frame = new JFrame(applicationName + " - Log");
+
+        JPanel contentPanel = new JPanel();
+        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        contentPanel.setBorder(padding);
+        contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
+
+        JTextArea logArea = new JTextArea(20, 80);
+        logArea.setEditable(false);
+        // Set text before setting the caret policy so we start in follow mode
+        logArea.setText(getLog());
+        DefaultCaret caret = (DefaultCaret) logArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+        JScrollPane scroll = new JScrollPane(logArea);
+        scroll.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
+        scroll.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_ALWAYS);
+        contentPanel.add(scroll);
+        frame.add(contentPanel);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        bringToFront(frame);
+
+        // Watch the log and if the log has scrolled down all the way to the bottom, follow
+        Timer timer = new Timer(250, e -> {
+            int savedHorizontal = scroll.getHorizontalScrollBar().getValue();
+            int vpos = scroll.getVerticalScrollBar().getValue() + scroll.getHeight()
+                    - scroll.getHorizontalScrollBar().getHeight() /*- (lineHeight / 2)*/;
+            boolean atBottom = vpos >= scroll.getVerticalScrollBar().getMaximum();
+            logArea.setText(getLog());
+            if (savedHorizontal != 0) {
+                scroll.getHorizontalScrollBar().setValue(savedHorizontal);
+            }
+            if (atBottom) {
+                EventQueue.invokeLater(() -> {
+                    scroll.getVerticalScrollBar()
+                            .setValue(scroll.getVerticalScrollBar().getMaximum());
+                });
+            }
+        });
+        timer.start();
+
+        frame.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosed(WindowEvent aE)
+            {
+                timer.stop();
+            }
+        });
+    }
+
+    private String getLog()
+    {
+        return RingBufferAppender.events().stream() //
+                .map(LogMessage::getMessage) //
+                .collect(Collectors.joining("\n"));
+    }
+
+    private void bringToFront(JFrame aFrame)
+    {
+        EventQueue.invokeLater(() -> {
+            aFrame.setAlwaysOnTop(true);
+            aFrame.setAlwaysOnTop(false);
+        });
+    }
+
     private void actionShowAbout()
     {
         ResourceBundle bundle = ResourceBundle.getBundle(getClass().getName());
@@ -181,6 +260,7 @@ public class StandaloneShutdownDialogManager
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        bringToFront(frame);
     }
 
     private void showShutdownDialog()
@@ -244,7 +324,11 @@ public class StandaloneShutdownDialogManager
             browseItem.addActionListener(e -> actionBrowse());
             popupMenu.add(browseItem);
 
-            MenuItem aboutItem = new MenuItem("About");
+            MenuItem logItem = new MenuItem("Log...");
+            logItem.addActionListener(e -> actionShowLog());
+            popupMenu.add(logItem);
+
+            MenuItem aboutItem = new MenuItem("About...");
             aboutItem.addActionListener(e -> actionShowAbout());
             popupMenu.add(aboutItem);
 

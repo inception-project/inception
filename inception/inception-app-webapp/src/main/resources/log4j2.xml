@@ -2,6 +2,8 @@
 <Configuration status="WARN">
 
   <Appenders>
+    <RingBufferAppender name="RingBufferAppender"/>
+  
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
       <!--SHORT PATTERN -->
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger{1} - %msg%n" />
@@ -51,6 +53,7 @@
     <!-- Avoid warning when components is not rerendered because it has been removed from page -->
     <Logger name="org.apache.wicket.page.PartialPageUpdate" level="ERROR"/>
     <Root level="warn">
+      <AppenderRef ref="RingBufferAppender" />
       <AppenderRef ref="ConsoleAppender" />
       <AppenderRef ref="ProjectAppender" />
     </Root>
