@@ -110,10 +110,19 @@ public class MenuBar
 
         add(new BookmarkablePageLink<>(CID_HOME_LINK, getApplication().getHomePage()));
 
-        PageParameters dbParams = new PageParameters().set(PAGE_PARAM_PROJECT,
-                project.map(Project::getId).orElse(-1l).getObject());
-        add(new BookmarkablePageLink<>(CID_DASHBOARD_LINK, ProjectDashboardPage.class, dbParams)
-                .add(visibleWhen(user.map(this::userCanAccessProject).orElse(false))));
+        BookmarkablePageLink<Void> dashboardLink = new BookmarkablePageLink<>(CID_DASHBOARD_LINK,
+                ProjectDashboardPage.class)
+        {
+            private static final long serialVersionUID = -8735871053513210365L;
+
+            public PageParameters getPageParameters()
+            {
+                return new PageParameters().set(PAGE_PARAM_PROJECT,
+                        project.map(Project::getId).orElse(-1l).getObject());
+            }
+        };
+        dashboardLink.add(visibleWhen(user.map(this::userCanAccessProject).orElse(false)));
+        add(dashboardLink);
 
         add(new BookmarkablePageLink<>(CID_PROJECTS_LINK, ProjectsOverviewPage.class)
                 .add(visibleWhen(user.map(this::requiresProjectsOverview).orElse(false))));
