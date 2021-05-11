@@ -188,6 +188,7 @@ public class InceptionSecurity
                     .antMatchers("/assets/**").permitAll()
                     .antMatchers("/images/**").permitAll()
                     .antMatchers("/resources/**").permitAll()
+                    .antMatchers("/about/**").permitAll()
                     .antMatchers("/wicket/resource/**").permitAll()
                     .antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll()
                     .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')")
