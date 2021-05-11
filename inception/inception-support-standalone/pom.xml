@@ -29,6 +29,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    
 
     <!-- Spring dependencies -->
     <dependency>
@@ -53,13 +59,5 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-
-<!--  
-    <dependency>
-      <groupId>net.sourceforge.winstone</groupId>
-      <artifactId>winstone</artifactId>
-      <version>0.9.10</version>
-    </dependency>
--->
   </dependencies>
 </project>
