@@ -173,13 +173,25 @@
     </dependency>
     <dependency>
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-curation</artifactId>
+    	<artifactId>inception-io-text</artifactId>
     	<scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-io-text</artifactId>
+    	<artifactId>inception-api-dao</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>org.springframework.boot</groupId>
+    	<artifactId>spring-boot-test</artifactId>
     	<scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.wicket</groupId>
+    	<artifactId>wicket-util</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>javax.persistence</groupId>
+    	<artifactId>javax.persistence-api</artifactId>
     </dependency>
   </dependencies>
 
