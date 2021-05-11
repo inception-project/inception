@@ -32,8 +32,6 @@ import javax.validation.Validator;
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
@@ -90,8 +88,6 @@ import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
 public class INCEpTION
     extends SpringBootServletInitializer
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     static final String INCEPTION_BASE_PACKAGE = "de.tudarmstadt.ukp.inception";
     static final String WEBANNO_BASE_PACKAGE = "de.tudarmstadt.ukp.clarin.webanno";
 
@@ -250,6 +246,8 @@ public class INCEpTION
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
         init(builder);
+        System.setProperty("GLOBAL_LOG_FOLDER",
+                SettingsUtil.getApplicationHome().getAbsolutePath());
         builder.listeners(event -> splash.ifPresent(_splash -> _splash.handleEvent(event)));
         builder.run(args);
     }
