@@ -23,12 +23,10 @@ import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
-import java.awt.Window;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.swing.JFrame;
 import javax.validation.Validator;
 
 import org.apache.catalina.Context;
@@ -43,7 +41,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.TypeExcludeFilter;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -69,7 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
 import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
-import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
+import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen.SplashWindow;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
 import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
@@ -244,7 +241,7 @@ public class INCEpTION
 
     protected static void run(String[] args, Class<?>... aSources)
     {
-        Optional<JFrame> splash = LoadingSplashScreen.setupScreen();
+        Optional<SplashWindow> splash = LoadingSplashScreen.setupScreen("INCEpTION");
 
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
         // Add the main application as the root Spring context
@@ -253,12 +250,7 @@ public class INCEpTION
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
         init(builder);
-        builder.listeners(event -> {
-            if (event instanceof ApplicationReadyEvent
-                    || event instanceof ShutdownDialogAvailableEvent) {
-                splash.ifPresent(Window::dispose);
-            }
-        });
+        builder.listeners(event -> splash.ifPresent(_splash -> _splash.handleEvent(event)));
         builder.run(args);
     }
 

@@ -18,6 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
 import static java.awt.Component.CENTER_ALIGNMENT;
+import static java.awt.Font.BOLD;
+import static java.awt.Font.SANS_SERIF;
+import static java.text.MessageFormat.format;
+import static javax.swing.BoxLayout.PAGE_AXIS;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
 import java.awt.AWTException;
 import java.awt.BorderLayout;
@@ -33,6 +38,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Year;
+import java.util.ResourceBundle;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -41,6 +47,8 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -49,8 +57,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -58,6 +68,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
 
 @Component("standaloneShutdownDialogManager")
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -70,6 +81,9 @@ public class StandaloneShutdownDialogManager
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private ApplicationContext context;
 
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
@@ -85,9 +99,11 @@ public class StandaloneShutdownDialogManager
         log.info("Console: " + ((System.console() != null) ? "available" : "not available"));
         log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
 
+        boolean forceUi = System.getProperty("forceUi") != null;
+
         // Show this only when run from the standalone JAR via a double-click
-        if (port != -1 && System.console() == null && !GraphicsEnvironment.isHeadless()
-                && runningFromCommandline) {
+        if (forceUi || (port != -1 && System.console() == null && !GraphicsEnvironment.isHeadless()
+                && runningFromCommandline)) {
             log.info("If you are running " + applicationName
                     + " in a server environment, please use '-Djava.awt.headless=true'");
             eventPublisher.publishEvent(
@@ -127,36 +143,38 @@ public class StandaloneShutdownDialogManager
 
     private void actionShutdown()
     {
-        System.exit(0);
+        System.exit(SpringApplication.exit(context));
     }
 
     private void actionShowAbout()
     {
+        ResourceBundle bundle = ResourceBundle.getBundle(getClass().getName());
+
         JFrame frame = new JFrame(applicationName + " - About");
 
         JPanel contentPanel = new JPanel();
         Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         contentPanel.setBorder(padding);
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.PAGE_AXIS));
+        contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
 
         JLabel header = new JLabel(applicationName);
-        header.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        header.setFont(new Font(SANS_SERIF, BOLD, 16));
         contentPanel.add(header);
 
-        contentPanel.add(new JLabel(
-                "A semantic annotation platform offering intelligent assistance and knowledge management."));
-
-        contentPanel.add(new JLabel(
-                "<html>For more information, see <b>https://inception-project.github.io</b>"));
-
+        contentPanel.add(new JLabel(bundle.getString("shortDescription")));
         contentPanel.add(new JLabel("Java version: " + System.getProperty("java.version")));
         contentPanel.add(new JLabel("INCEpTION version: " + SettingsUtil.getVersionString()));
+        contentPanel.add(new JLabel(bundle.getString("license")));
+        contentPanel.add(new JLabel(
+                format(bundle.getString("copyright"), Integer.toString(Year.now().getValue()))));
 
-        contentPanel.add(
-                new JLabel("INCEpTION is provided as open source under the Apache License v2.0."));
-        contentPanel.add(new JLabel("<html>© " + Year.now().getValue()
-                + " The Ubiquitous Knowledge Processing (UKP) Lab <br/>"
-                + "at the Department of Computer Science, Technical University Darmstadt.</html>"));
+        JTextArea dependencies = new JTextArea(20, 80);
+        dependencies.setEditable(false);
+        dependencies.setText(ApplicationInformation.loadDependencies());
+        dependencies.setCaretPosition(0);
+        JScrollPane scroll = new JScrollPane(dependencies);
+        scroll.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
+        contentPanel.add(scroll);
 
         frame.add(contentPanel);
 

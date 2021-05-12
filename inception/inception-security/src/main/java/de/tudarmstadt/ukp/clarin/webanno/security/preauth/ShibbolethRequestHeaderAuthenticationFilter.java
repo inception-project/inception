@@ -41,8 +41,6 @@ public class ShibbolethRequestHeaderAuthenticationFilter
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String REALM_PREAUTH = "preauth";
-
     private UserDao userRepository;
 
     private void newUserLogin(String aID, HttpServletRequest aRequest)
@@ -50,7 +48,6 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         User u = new User();
         u.setUsername((String) super.getPreAuthenticatedPrincipal(aRequest));
         u.setPassword(EMPTY_PASSWORD);
-        u.setRealm(REALM_PREAUTH);
         u.setEnabled(true);
 
         Set<Role> s = new HashSet<>();
