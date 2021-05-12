@@ -19,21 +19,16 @@ package de.tudarmstadt.ukp.inception.experimental.editor;
 
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIResourceReference;
+import de.tudarmstadt.ukp.inception.experimental.api.resources.ExperimentalAPIResourceReference;
 
 
 public class ExperimentalAnnotationEditor extends AnnotationEditorBase
@@ -42,14 +37,11 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
 
     private final WebMarkupContainer vis;
 
-    private @SpringBean ServletContext servletContext;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExperimentalAnnotationEditor.class);
-
-    public ExperimentalAnnotationEditor(String id, IModel<AnnotatorState> aModel,
+    public ExperimentalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
                                         final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
-        super(id, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider);
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
@@ -62,9 +54,7 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-
         aResponse.render(forReference(ExperimentalAPIResourceReference.get()));
-
     }
 
 

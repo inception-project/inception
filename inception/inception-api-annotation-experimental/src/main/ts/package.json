@@ -4,7 +4,7 @@
   "description": "A TypeScript API for text annotation",
   "private": true,
   "scripts": {
-    "es": "./node_modules/esbuild/bin/esbuild ./client/Annotator.ts --format=cjs --bundle --outfile=./build/Annotator.js"
+    "es": "./node_modules/esbuild/bin/esbuild ./client/Annotator.ts --format=cjs --bundle --outfile=../java/de/tudarmstadt/ukp/inception/experimental/api/resources/Annotator.js"
   },
   "repository": {
     "type": "git",

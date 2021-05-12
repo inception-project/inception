@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.websocket;
+package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
-import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-@Configuration
+import de.tudarmstadt.ukp.inception.experimental.api.config.ExperimentalAnnotationAPIAutoConfiguration;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExperimentalAnnotationAPIAutoConfiguration#websocketConfiguration}
+ * </p>
+ */
 @EnableWebSocketMessageBroker
 public class WebsocketConfig
     implements WebSocketMessageBrokerConfigurer

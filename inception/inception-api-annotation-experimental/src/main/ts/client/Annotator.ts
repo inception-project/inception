@@ -1,21 +1,3 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import {Client, Frame, Stomp} from '@stomp/stompjs';
 
 class Annotator
@@ -23,35 +5,51 @@ class Annotator
     stompClient : Client;
     connected : boolean = false;
 
+    document : string;
+    project : string;
+    username : string;
+    viewPortBegin : number;
+    viewPortEnd : number;
+
     constructor()
     {
-        let that = this;
+        const that = this;
 
-        // DEFINE ACTIONS / EVENTS
+        //Testing only
+        //Click events triggering either select annotation or create annotation
+        onclick = function (aEvent)
+        {
+            let elem = <Element>aEvent.target;
+            if (elem.tagName === 'text') {
+                console.log(elem);
+                that.sendSelectAnnotationMessageToServer();
+            }
 
-        // ------------------------- SHOWCASE ONLY --------------------------- //
 
-        if (document.getElementById('connect-button') == null) {
-            setTimeout(function(){
-                document.getElementById('connect-button').addEventListener("click", (e:Event) =>
-                    that.connect());
-                document.getElementById('disconnect-button').addEventListener("click", (e: Event) =>
-                    that.disconnect());
-                document.getElementById('send-to-server').addEventListener("click", (e: Event) =>
-                    that.sendSelectAnnotationMessageToServer());
-            }, 1000);
-        } else {
-            document.getElementById('connect-button').addEventListener("click", (e:Event) =>
-                that.connect());
-            document.getElementById('disconnect-button').addEventListener("click", (e: Event) =>
-                that.disconnect());
-            document.getElementById('disconnect-button').addEventListener("click", (e: Event) =>
-                that.sendSelectAnnotationMessageToServer());
         }
+        ondblclick = function (aEvent)
+        {
+            let elem = <Element>aEvent.target;
+            if (elem.tagName === 'text') {
+                console.log(elem);
+                that.sendCreateAnnotationMessageToServer();
+            }
+
+
+        }
+
+        // Experimental yet only (will be retrieved automatically)
+        this.username = "admin";
+        this.document = "Doc4";
+        this.project = "Annotation Study";
+        this.viewPortBegin = 0;
+        this.viewPortEnd = 10;
+
+        this.connect();
     }
 
 
-    //CREATE WEBSOCKET CONNECTION (WILL BE IN DEFAULT CONSTRUCTOR)
+    //CREATE WEBSOCKET CONNECTION
     connect()
     {
         if (this.connected) {
@@ -73,21 +71,32 @@ class Annotator
         this.stompClient.onConnect = function (frame) {
             that.connected = true;
 
+            const prop = frame.headers; //Will be needed for getting client details
 
             // ------ DEFINE ALL SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
 
-            that.stompClient.subscribe('/queue/selected_annotation_for_client', function (msg) {
+            that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function (msg) {
+                that.receiveNewDocumentMessageByServer(JSON.parse(msg.body), frame);
+            });
+
+            that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.username, function (msg) {
+                that.receiveNewViewportMessageByServer(JSON.parse(msg.body), frame);
+            });
+
+            that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function (msg) {
                 that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body), frame);
             });
 
-            that.stompClient.subscribe('/topic/new_annotation_for_client', function (msg) {
-                that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body), frame);
-            });
+            //Multiple subscriptions due to viewport
+            for (let i = that.viewPortBegin; i <= that.viewPortEnd; i++) {
+                that.stompClient.subscribe("/topic/annotation_created_for_clients/" + that.project + "/" + that.document + "/" + i, function (msg) {
+                    that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body), frame);
+                });
 
-            that.stompClient.subscribe('/topic/delete_annotation_for_client', function (msg) {
-                that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body), frame);
-            });
-
+                that.stompClient.subscribe("/topic/annotation_deleted_for_clients/" + that.project + "/" + that.document + "/" + i, function (msg) {
+                    that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body), frame);
+                });
+            }
             // ------------------------------------------------------------ //
 
         };
@@ -117,20 +126,57 @@ class Annotator
     // ------------------------------- //
 
 
+    /** ----------- Actions ----------- **/
+
+    editAnnotation = function(aEvent)
+    {
+        //TODO
+    }
+
+    unsubscribe(channel : string)
+    {
+        this.stompClient.unsubscribe(channel);
+    }
+
+
+    /** -------------------------------- **/
+
+
     /** ----------- Event handling ------------------ **/
 
     // ---------------- SEND ------------------------- //
 
+    sendNewDocumentMessageToServer()
+    {
+        this.stompClient.publish({destination: "/app/new_document_by_client", body:"NEW DOCUMENT REQUIRED"});
+
+    }
+
+    sendNewViewportMessageToServer()
+    {
+        this.stompClient.publish({destination: "/app/new_viewport_by_client", body:"NEW VIEWPORT REQUIRED"});
+    }
+
     sendSelectAnnotationMessageToServer()
     {
-        this.stompClient.publish({destination: "/app/select_annotation_by_client", body:"SELECT"});
-        this.stompClient.publish({destination: "/app/new_annotation_by_client", body:"NEW"});
-        this.stompClient.publish({destination: "/app/delete_annotation_by_client", body:"DELETE"});
+        let json = JSON.stringify(
+            { username: this.username,
+                   project: this.project,
+                   document: this.document,
+                   begin: 0, end: 8});
+        this.stompClient.publish({destination: "/app/select_annotation_by_client", body: json});
     }
 
     sendCreateAnnotationMessageToServer()
     {
-        this.stompClient.publish({destination: "/app/new_annotation_by_client", body:"NEW"});
+        let json = {
+            username : this.username,
+            project : this.project,
+            document : this.document,
+            begin : 0,
+            end : 8
+        }
+        this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
     }
 
     sendDeleteAnnotationMessageToServer()
@@ -142,10 +188,19 @@ class Annotator
 
 
     // ---------------- RECEIVE ----------------------- //
+    receiveNewDocumentMessageByServer(aMessage : string, aFrame : Frame)
+    {
+        console.log('RECEIVED DOCUMENT: ' + JSON.parse(aMessage) + ',' + aFrame);
+    }
+
+    receiveNewViewportMessageByServer(aMessage : string, aFrame : Frame)
+    {
+        console.log('RECEIVED VIEWPORT: ' + JSON.parse(aMessage) + ',' + aFrame);
+    }
 
     receiveSelectedAnnotationMessageByServer(aMessage : string, aFrame : Frame)
     {
-        console.log('RECEIVED SELECTED ANNOTATION: ' + JSON.stringify(aMessage) + aFrame);
+        console.log('RECEIVED SELECTED ANNOTATION: ' + JSON.parse(aMessage) + ',' + aFrame);
     }
 
     receiveNewAnnotationMessageByServer(aMessage : string, aFrame : Frame)

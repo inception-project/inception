@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.experimental.editor.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.experimental.editor.websocket.WebsocketConfig;
-
 @Configuration
 public class TypeScriptAnnotationEditorSupportAutoConfiguration
 {
@@ -31,11 +29,4 @@ public class TypeScriptAnnotationEditorSupportAutoConfiguration
     {
         return new TypeScriptAnnotationEditorFactory();
     }
-
-    @Bean
-    public WebsocketConfig websocketConfiguration()
-    {
-        return new WebsocketConfig();
-    }
-
 }
