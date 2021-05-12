@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
@@ -45,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -243,14 +244,13 @@ public class OpenDocumentDialogPanel
         userListChoice = new OverviewListChoice<>("user", Model.of(), listUsers());
         userListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
-
             private static final long serialVersionUID = 1L;
 
             @Override
             public Object getDisplayValue(DecoratedObject<User> aUser)
             {
                 User user = aUser.get();
-                String username = defaultIfEmpty(aUser.getLabel(), user.getUsername());
+                String username = defaultIfEmpty(aUser.getLabel(), user.getUiName());
                 if (user.equals(currentUser.get())) {
                     username += " (me)";
                 }
@@ -278,7 +278,7 @@ public class OpenDocumentDialogPanel
                 aTarget.add(docListChoice);
             }
         }).add(visibleWhen(
-                () -> state.getMode().equals(Mode.ANNOTATION) && isManagerForListedProjects()));
+                () -> state.getMode().equals(ANNOTATION) && isManagerForListedProjects()));
 
         if (userListChoice.getChoices().contains(viewUser)) {
             userListChoice.setModelObject(viewUser);
@@ -321,15 +321,15 @@ public class OpenDocumentDialogPanel
         if (state.getMode().equals(Mode.CURATION)
                 || !projectService.isManager(selectedProject, currentUser)) {
             DecoratedObject<User> du = DecoratedObject.of(currentUser);
-            du.setLabel(currentUser.getUsername());
+            du.setLabel(currentUser.getUiName());
             users.add(du);
             return users;
         }
 
         for (User user : projectService.listProjectUsersWithPermissions(selectedProject,
-                PermissionLevel.ANNOTATOR)) {
+                ANNOTATOR)) {
             DecoratedObject<User> du = DecoratedObject.of(user);
-            du.setLabel(user.getUsername());
+            du.setLabel(user.getUiName());
             if (user.equals(currentUser)) {
                 users.add(0, du);
             }

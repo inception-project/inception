@@ -15,16 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.config;
 
 import java.io.File;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@link RepositoryAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties("repository")
 public class RepositoryProperties
 {

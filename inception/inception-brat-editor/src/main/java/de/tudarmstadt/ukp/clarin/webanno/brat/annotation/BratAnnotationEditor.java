@@ -376,8 +376,8 @@ public class BratAnnotationEditor
             // Is it a feature-level lazy detail?
             else {
                 AnnotationFeature feature = annotationService.getFeature(database, layer);
-                details = featureSupportRegistry.findExtension(feature).renderLazyDetails(feature,
-                        keyParam.toString());
+                details = featureSupportRegistry.findExtension(feature).orElseThrow()
+                        .renderLazyDetails(feature, keyParam.toString());
             }
 
             response.setResults(details.stream()

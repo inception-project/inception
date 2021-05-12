@@ -15,17 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket;
+package de.tudarmstadt.ukp.inception.ui.core.about;
 
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.context.annotation.ComponentScan;
+import org.apache.wicket.Component;
+import org.springframework.core.annotation.Order;
 
-@SpringBootConfiguration
-@ComponentScan(basePackages = { "de.tudarmstadt.ukp.inception" })
-@EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.security" })
-@EnableAutoConfiguration
-public class SpringConfig
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
+
+@Order(FooterItem.ORDER_RIGHT + 100)
+@org.springframework.stereotype.Component
+public class AboutFooterItem
+    implements FooterItem
 {
+    @Override
+    public Component create(String aId)
+    {
+        return new AboutFooterPanel(aId);
+    }
 }

@@ -137,7 +137,7 @@ public class FeatureDetailForm
                 Component newTraits;
                 if (FeatureDetailForm.this.getModelObject() != null && getModelObject() != null) {
                     FeatureSupport<?> fs = featureSupportRegistry
-                            .getFeatureSupport(getModelObject().getFeatureSupportId());
+                            .getExtension(getModelObject().getFeatureSupportId()).orElseThrow();
                     newTraits = fs.createTraitsEditor(MID_TRAITS,
                             FeatureDetailForm.this.getModel());
                 }
@@ -292,7 +292,7 @@ public class FeatureDetailForm
             feature.setName(name);
 
             FeatureSupport<?> fs = featureSupportRegistry
-                    .getFeatureSupport(featureType.getModelObject().getFeatureSupportId());
+                    .getExtension(featureType.getModelObject().getFeatureSupportId()).orElseThrow();
 
             // Let the feature support finalize the configuration of the feature
             fs.configureFeature(feature);

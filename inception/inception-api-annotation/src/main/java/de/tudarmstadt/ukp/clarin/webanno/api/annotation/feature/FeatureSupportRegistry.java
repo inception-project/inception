@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.danekja.java.util.function.serializable.SerializableSupplier;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -42,15 +45,7 @@ public interface FeatureSupportRegistry
 
     FeatureType getFeatureType(AnnotationFeature aFeature);
 
-    /**
-     * @deprecated Use {@link #findExtension} instead;
-     */
-    @Deprecated
-    <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature);
+    <T> T readTraits(AnnotationFeature aFeature, SerializableSupplier<T> aIfMissing);
 
-    /**
-     * @deprecated Use {@link #getExtension} instead;
-     */
-    @Deprecated
-    <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId);
+    <T> Optional<FeatureSupport<T>> findExtension(AnnotationFeature aKey);
 }

@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.showMessageDialog;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
@@ -24,6 +29,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.net.BindException;
 import java.net.URL;
 import java.util.Optional;
 
@@ -31,36 +37,47 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import org.springframework.boot.context.event.ApplicationFailedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEvent;
+
 public class LoadingSplashScreen
 {
-    public static Optional<JFrame> setupScreen(URL aSplashScreenImageUrl, URL aIconUrl)
+    public static Optional<SplashWindow> setupScreen(URL aSplashScreenImageUrl, URL aIconUrl,
+            String aApplicationName)
     {
         if (GraphicsEnvironment.isHeadless()) {
             return Optional.empty();
         }
 
-        SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl);
+        SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl, aApplicationName);
         window.setVisible(true);
 
         return Optional.of(window);
     }
 
-    public static Optional<JFrame> setupScreen()
+    public static Optional<SplashWindow> setupScreen(String aApplicationName)
     {
         URL splasHScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
         URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
-        return setupScreen(splasHScreenImageUrl, iconUrl);
+        return setupScreen(splasHScreenImageUrl, iconUrl, aApplicationName);
     }
 
-    private static class SplashWindow
+    public static class SplashWindow
         extends JFrame
     {
         private static final long serialVersionUID = 2429606748142131008L;
 
-        public SplashWindow(URL aSplashScreenImageUrl, URL aIconUrl)
+        private JLabel info;
+        private boolean disposed = false;
+        private String applicationName;
+
+        public SplashWindow(URL aSplashScreenImageUrl, URL aIconUrl, String aApplicationName)
         {
+            applicationName = aApplicationName;
+
             JLabel l = new JLabel(new ImageIcon(aSplashScreenImageUrl));
-            JLabel info = new JLabel("Application is loading...");
+            info = new JLabel(applicationName + " is loading...");
             getContentPane().add(l, BorderLayout.CENTER);
             getContentPane().add(info, BorderLayout.SOUTH);
 
@@ -99,6 +116,70 @@ public class LoadingSplashScreen
             });
 
             setVisible(true);
+        }
+
+        @Override
+        public void dispose()
+        {
+            disposed = true;
+            super.dispose();
+        }
+
+        public boolean isDisposed()
+        {
+            return disposed;
+        }
+
+        public void setInfo(String aInfo)
+        {
+            if (info == null) {
+                return;
+            }
+
+            info.setText(aInfo);
+        }
+
+        public void handleEvent(ApplicationEvent aEvent)
+        {
+            if (aEvent instanceof ApplicationReadyEvent
+                    || aEvent instanceof ShutdownDialogAvailableEvent) {
+                dispose();
+                return;
+            }
+
+            if (!isDisposed()) {
+                setInfo(applicationName + " is loading... - " + aEvent.getClass().getSimpleName());
+            }
+
+            if (aEvent instanceof ApplicationFailedEvent) {
+                ApplicationFailedEvent failEvent = (ApplicationFailedEvent) aEvent;
+                showMessageDialog(null, getErrorMessage(failEvent), applicationName + " - Error",
+                        ERROR_MESSAGE);
+                System.exit(0);
+            }
+        }
+
+        public String getErrorMessage(ApplicationFailedEvent aEvent)
+        {
+            if (aEvent.getException() == null) {
+                return "Unknown error";
+            }
+
+            StringBuilder msg = new StringBuilder();
+
+            String rootCauseMsg = getRootCauseMessage(aEvent.getException());
+            Throwable rootCause = getRootCause(aEvent.getException());
+            if (rootCause instanceof BindException || rootCauseMsg.contains("already in use")) {
+                msg.append("It appears the network port " + applicationName
+                        + " is trying to use is already being used by another application.\nMaybe "
+                        + "you have already started " + applicationName + " before?\n");
+            }
+
+            msg.append("\n");
+            msg.append("Error type: " + getRootCause(aEvent.getException()).getClass() + "\n");
+            msg.append("Error message: " + rootCauseMsg);
+
+            return msg.toString();
         }
     }
 }

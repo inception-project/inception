@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
 @Configuration
