@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 // node_modules/@stomp/stompjs/esm6/byte.js
 var BYTE = {
   LF: "\n",
@@ -1060,9 +1077,11 @@ var Annotator = class {
         that.sendCreateAnnotationMessageToServer();
       }
     };
-    this.clientId = "1";
+    this.username = "admin";
     this.document = "Doc4";
     this.project = "Annotation Study";
+    this.viewPortBegin = 0;
+    this.viewPortEnd = 10;
     this.connect();
   }
   connect() {
@@ -1077,16 +1096,24 @@ var Annotator = class {
     const that = this;
     this.stompClient.onConnect = function(frame) {
       that.connected = true;
-      console.log("SUBSCRIBED TO: /queue/selected_annotation_for_client" + that.clientId);
-      that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.clientId, function(msg) {
+      const prop = frame.headers;
+      that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function(msg) {
+        that.receiveNewDocumentMessageByServer(JSON.parse(msg.body), frame);
+      });
+      that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.username, function(msg) {
+        that.receiveNewViewportMessageByServer(JSON.parse(msg.body), frame);
+      });
+      that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function(msg) {
         that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body), frame);
       });
-      that.stompClient.subscribe("/topic/new_annotation_for_client", function(msg) {
-        that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body), frame);
-      });
-      that.stompClient.subscribe("/topic/delete_annotation_for_client", function(msg) {
-        that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body), frame);
-      });
+      for (let i = that.viewPortBegin; i <= that.viewPortEnd; i++) {
+        that.stompClient.subscribe("/topic/annotation_created_for_clients/" + that.project + "/" + that.document + "/" + i, function(msg) {
+          that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body), frame);
+        });
+        that.stompClient.subscribe("/topic/annotation_deleted_for_clients/" + that.project + "/" + that.document + "/" + i, function(msg) {
+          that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body), frame);
+        });
+      }
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
@@ -1101,9 +1128,18 @@ var Annotator = class {
       this.stompClient.deactivate();
     }
   }
+  unsubscribe(channel) {
+    this.stompClient.unsubscribe(channel);
+  }
+  sendNewDocumentMessageToServer() {
+    this.stompClient.publish({destination: "/app/new_document_by_client", body: "NEW DOCUMENT REQUIRED"});
+  }
+  sendNewViewportMessageToServer() {
+    this.stompClient.publish({destination: "/app/new_viewport_by_client", body: "NEW VIEWPORT REQUIRED"});
+  }
   sendSelectAnnotationMessageToServer() {
     let json = JSON.stringify({
-      clientId: this.clientId,
+      username: this.username,
       project: this.project,
       document: this.document,
       begin: 0,
@@ -1113,7 +1149,7 @@ var Annotator = class {
   }
   sendCreateAnnotationMessageToServer() {
     let json = {
-      clientId: this.clientId,
+      username: this.username,
       project: this.project,
       document: this.document,
       begin: 0,
@@ -1123,6 +1159,12 @@ var Annotator = class {
   }
   sendDeleteAnnotationMessageToServer() {
     this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: "DELETE"});
+  }
+  receiveNewDocumentMessageByServer(aMessage, aFrame) {
+    console.log("RECEIVED DOCUMENT: " + JSON.parse(aMessage) + "," + aFrame);
+  }
+  receiveNewViewportMessageByServer(aMessage, aFrame) {
+    console.log("RECEIVED VIEWPORT: " + JSON.parse(aMessage) + "," + aFrame);
   }
   receiveSelectedAnnotationMessageByServer(aMessage, aFrame) {
     console.log("RECEIVED SELECTED ANNOTATION: " + JSON.parse(aMessage) + "," + aFrame);

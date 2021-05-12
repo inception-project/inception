@@ -36,7 +36,6 @@ import com.google.gson.Gson;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -107,8 +106,6 @@ public class WebsocketControllerImpl
 
     /** ------------- PUB / SUB HANDLING ------------- **/
 
-    // --------------------------- General Document -------------------------------- //
-
     @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_DOCUMENT)
     @Override
     public void handleNewDocument(Message<String> aMessage)
@@ -141,14 +138,11 @@ public class WebsocketControllerImpl
         return aText;
     }
 
-    // --------------------------- Annotations -------------------------------- //
-
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION)
     public void handleSelectAnnotation(Message<String> aMessage)
     {
-        System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT");
-        System.out.println("PAYLOAD: " + aMessage.getPayload());
+        System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
         publishSelectAnnotation("admin", new Annotation());
     }
 
@@ -169,11 +163,6 @@ public class WebsocketControllerImpl
         System.out.println("RECEIVED NEW ANNOTATION BY CLIENT");
         System.out.println(aMessage.getPayload());
         CAS cas = getCasForDocument("Annotation Study", "Doc4", "admin");
-
-        // TODO check type
-        cas.createAnnotation(cas.getAnnotationType(),
-                Integer.parseInt((String) aMessage.getHeaders().get("begin")),
-                Integer.parseInt((String) aMessage.getHeaders().get("end")));
 
         return "CREATED";
     }
@@ -205,10 +194,4 @@ public class WebsocketControllerImpl
             return null;
         }
     }
-
-    // ------------------------------------------------- //
-
-    // --------------- GETTER AND SETTER ------------------ //
-
-    // ---------------------------------------------------- //
 }
