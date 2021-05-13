@@ -17,35 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
-import org.apache.uima.cas.CAS;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
+import java.io.IOException;
 
-import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Annotation;
+import org.apache.uima.cas.CAS;
+import org.springframework.messaging.Message;
 
 public interface WebsocketController
 {
-    /***
-     * Push messages on received application events to named user
-     */
-    void onApplicationEvent(ApplicationEvent aEvent);
+    void handleDocumentRequest(Message<String> aMessage) throws IOException;
 
-    void handleNewDocument(Message<String> aMessage);
+    void handleViewportRequest(Message<String> aMessage) throws IOException;
 
-    String publishNewDocument(@DestinationVariable String aClient, String aText);
+    void handleSelectAnnotation(Message<String> aMessage) throws IOException;
 
-    void handleRequestViewport(Message<String> aMessage);
+    void handleNewAnnotation(Message<String> aMessage) throws IOException;
 
-    String publishRequestViewport(@DestinationVariable String aClient, String aText);
-
-    void handleSelectAnnotation(Message<String> aMessage);
-
-    Annotation publishSelectAnnotation(@DestinationVariable String aClient, Annotation aAnnotation);
-
-    String handleNewAnnotation(Message<String> aMessage);
-
-    String handleDeleteAnnotation(Message<String> aMessage);
+    void handleDeleteAnnotation(Message<String> aMessage) throws IOException;
 
     /**
      * Returns CAS from websocket message. All three String parameters are contained in the header
@@ -61,5 +48,5 @@ public interface WebsocketController
      */
     CAS getCasForDocument(String aProject, String aDocument, String aUser);
 
-
+    String[] purifyPayload(String aPayload);
 }

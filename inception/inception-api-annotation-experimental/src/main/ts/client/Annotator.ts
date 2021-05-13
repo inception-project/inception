@@ -93,25 +93,25 @@ class Annotator
             // ------ DEFINE ALL SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
 
             that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function (msg) {
-                that.receiveNewDocumentMessageByServer(JSON.parse(msg.body), frame);
+                that.receiveNewDocumentMessageByServer(JSON.parse(msg.body));
             });
 
             that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.username, function (msg) {
-                that.receiveNewViewportMessageByServer(JSON.parse(msg.body), frame);
+                that.receiveNewViewportMessageByServer(JSON.parse(msg.body));
             });
 
             that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function (msg) {
-                that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body), frame);
+                that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
             });
 
             //Multiple subscriptions due to viewport
             for (let i = that.viewPortBegin; i <= that.viewPortEnd; i++) {
                 that.stompClient.subscribe("/topic/annotation_created_for_clients/" + that.project + "/" + that.document + "/" + i, function (msg) {
-                    that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body), frame);
+                    that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body));
                 });
 
                 that.stompClient.subscribe("/topic/annotation_deleted_for_clients/" + that.project + "/" + that.document + "/" + i, function (msg) {
-                    that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body), frame);
+                    that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body));
                 });
             }
             // ------------------------------------------------------------ //
@@ -205,29 +205,29 @@ class Annotator
 
 
     // ---------------- RECEIVE ----------------------- //
-    receiveNewDocumentMessageByServer(aMessage : string, aFrame : Frame)
+    receiveNewDocumentMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED DOCUMENT: ' + JSON.parse(aMessage) + ',' + aFrame);
+        console.log('RECEIVED DOCUMENT: ' + JSON.parse(aMessage));
     }
 
-    receiveNewViewportMessageByServer(aMessage : string, aFrame : Frame)
+    receiveNewViewportMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED VIEWPORT: ' + JSON.parse(aMessage) + ',' + aFrame);
+        console.log('RECEIVED VIEWPORT: ' + JSON.parse(aMessage));
     }
 
-    receiveSelectedAnnotationMessageByServer(aMessage : string, aFrame : Frame)
+    receiveSelectedAnnotationMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED SELECTED ANNOTATION: ' + JSON.parse(aMessage) + ',' + aFrame);
+        console.log('RECEIVED SELECTED ANNOTATION: ' + aMessage);
     }
 
-    receiveNewAnnotationMessageByServer(aMessage : string, aFrame : Frame)
+    receiveNewAnnotationMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED NEW ANNOTATION: ' + JSON.stringify(aMessage) + aFrame);
+        console.log('RECEIVED NEW ANNOTATION: ' + JSON.stringify(aMessage));
     }
 
-    receiveDeleteAnnotationMessageByServer(aMessage : string, aFrame : Frame)
+    receiveDeleteAnnotationMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED DELETE ANNOTATION: ' + JSON.stringify(aMessage) + aFrame);
+        console.log('RECEIVED DELETE ANNOTATION: ' + JSON.stringify(aMessage));
     }
 
 
