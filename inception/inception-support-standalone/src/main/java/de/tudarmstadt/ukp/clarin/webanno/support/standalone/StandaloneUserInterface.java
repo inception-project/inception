@@ -94,6 +94,10 @@ public class StandaloneUserInterface
         contentPanel.setBorder(padding);
         contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
 
+        JLabel info = new JLabel(
+                "Only recent log messages are displayed here. For more information, check the log file.");
+        contentPanel.add(info);
+
         JTextArea logArea = new JTextArea(20, 80);
         logArea.setEditable(false);
         // Set text before setting the caret policy so we start in follow mode
