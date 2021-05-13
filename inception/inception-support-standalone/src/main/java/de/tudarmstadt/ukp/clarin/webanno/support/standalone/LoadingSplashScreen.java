@@ -21,14 +21,19 @@ import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.awt.SystemTray;
 import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.lang.invoke.MethodHandles;
 import java.net.BindException;
 import java.net.URL;
 import java.util.Optional;
@@ -37,12 +42,15 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import org.slf4j.Logger;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 
 public class LoadingSplashScreen
 {
+    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
+
     public static Optional<SplashWindow> setupScreen(URL aSplashScreenImageUrl, URL aIconUrl,
             String aApplicationName)
     {
@@ -71,6 +79,7 @@ public class LoadingSplashScreen
         private JLabel info;
         private boolean disposed = false;
         private String applicationName;
+        private TrayIcon trayIcon;
 
         public SplashWindow(URL aSplashScreenImageUrl, URL aIconUrl, String aApplicationName)
         {
@@ -117,11 +126,25 @@ public class LoadingSplashScreen
             });
 
             setVisible(true);
+
+            // Tray
+            if (SystemTray.isSupported()) {
+                try {
+                    trayIcon = StandaloneUserInterface.makeStartupSystemTrayMenu(aApplicationName);
+                }
+                catch (AWTException e) {
+                    LOG.error("Could not add startup menu to tray", e);
+                }
+            }
         }
 
         @Override
         public void dispose()
         {
+            if (trayIcon != null) {
+                SystemTray.getSystemTray().remove(trayIcon);
+            }
+
             disposed = true;
             super.dispose();
         }

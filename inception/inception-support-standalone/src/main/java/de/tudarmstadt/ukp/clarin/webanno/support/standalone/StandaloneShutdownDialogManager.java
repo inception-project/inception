@@ -17,48 +17,35 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_OPEN_BROWSER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_SHUTDOWN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.bringToFront;
+import static java.awt.BorderLayout.CENTER;
 import static java.awt.Component.CENTER_ALIGNMENT;
-import static java.awt.Font.BOLD;
-import static java.awt.Font.SANS_SERIF;
-import static java.text.MessageFormat.format;
-import static javax.swing.BoxLayout.PAGE_AXIS;
-import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
-import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
-import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
+import static java.awt.Desktop.getDesktop;
+import static java.awt.Desktop.isDesktopSupported;
+import static java.awt.EventQueue.invokeLater;
+import static javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE;
+import static javax.swing.WindowConstants.HIDE_ON_CLOSE;
 
 import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
-import java.awt.EventQueue;
-import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.time.Year;
-import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.Timer;
 import javax.swing.UIManager;
-import javax.swing.WindowConstants;
 import javax.swing.border.Border;
-import javax.swing.text.DefaultCaret;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,18 +62,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.RingBufferAppender;
 
 @Component("standaloneShutdownDialogManager")
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class StandaloneShutdownDialogManager
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private static final String ACTION_OPEN_BROWSER = "Open browser";
-    private static final String ACTION_SHUTDOWN = "Shut down";
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -125,7 +106,7 @@ public class StandaloneShutdownDialogManager
                 log.info("Unable to set system look and feel", e);
             }
 
-            EventQueue.invokeLater(this::showShutdownDialog);
+            invokeLater(() -> showShutdownDialog());
         }
         else {
             log.info(
@@ -140,137 +121,12 @@ public class StandaloneShutdownDialogManager
         port = aEvt.getWebServer().getPort();
     }
 
-    private void actionBrowse()
-    {
-        try {
-            Desktop.getDesktop().browse(URI.create("http://localhost:8080"));
-        }
-        catch (IOException e) {
-            log.error("Unable to open browser", e);
-        }
-    }
-
-    private void actionShutdown()
-    {
-        System.exit(SpringApplication.exit(context));
-    }
-
-    private void actionShowLog()
-    {
-        JFrame frame = new JFrame(applicationName + " - Log");
-
-        JPanel contentPanel = new JPanel();
-        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
-        contentPanel.setBorder(padding);
-        contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
-
-        JTextArea logArea = new JTextArea(20, 80);
-        logArea.setEditable(false);
-        // Set text before setting the caret policy so we start in follow mode
-        logArea.setText(getLog());
-        DefaultCaret caret = (DefaultCaret) logArea.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-        JScrollPane scroll = new JScrollPane(logArea);
-        scroll.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
-        scroll.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_ALWAYS);
-        contentPanel.add(scroll);
-        frame.add(contentPanel);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        bringToFront(frame);
-
-        // Watch the log and if the log has scrolled down all the way to the bottom, follow
-        Timer timer = new Timer(250, e -> {
-            int savedHorizontal = scroll.getHorizontalScrollBar().getValue();
-            int vpos = scroll.getVerticalScrollBar().getValue() + scroll.getHeight()
-                    - scroll.getHorizontalScrollBar().getHeight() /*- (lineHeight / 2)*/;
-            boolean atBottom = vpos >= scroll.getVerticalScrollBar().getMaximum();
-            logArea.setText(getLog());
-            if (savedHorizontal != 0) {
-                scroll.getHorizontalScrollBar().setValue(savedHorizontal);
-            }
-            if (atBottom) {
-                EventQueue.invokeLater(() -> {
-                    scroll.getVerticalScrollBar()
-                            .setValue(scroll.getVerticalScrollBar().getMaximum());
-                });
-            }
-        });
-        timer.start();
-
-        frame.addWindowListener(new WindowAdapter()
-        {
-            @Override
-            public void windowClosed(WindowEvent aE)
-            {
-                timer.stop();
-            }
-        });
-    }
-
-    private String getLog()
-    {
-        return RingBufferAppender.events().stream() //
-                .map(LogMessage::getMessage) //
-                .collect(Collectors.joining("\n"));
-    }
-
-    private void bringToFront(JFrame aFrame)
-    {
-        EventQueue.invokeLater(() -> {
-            aFrame.setAlwaysOnTop(true);
-            aFrame.setAlwaysOnTop(false);
-        });
-    }
-
-    private void actionShowAbout()
-    {
-        ResourceBundle bundle = ResourceBundle.getBundle(getClass().getName());
-
-        JFrame frame = new JFrame(applicationName + " - About");
-
-        JPanel contentPanel = new JPanel();
-        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
-        contentPanel.setBorder(padding);
-        contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
-
-        JLabel header = new JLabel(applicationName);
-        header.setFont(new Font(SANS_SERIF, BOLD, 16));
-        contentPanel.add(header);
-
-        contentPanel.add(new JLabel(bundle.getString("shortDescription")));
-        contentPanel.add(new JLabel("Java version: " + System.getProperty("java.version")));
-        contentPanel.add(new JLabel("INCEpTION version: " + SettingsUtil.getVersionString()));
-        contentPanel.add(new JLabel(bundle.getString("license")));
-        contentPanel.add(new JLabel(
-                format(bundle.getString("copyright"), Integer.toString(Year.now().getValue()))));
-
-        JTextArea dependencies = new JTextArea(20, 80);
-        dependencies.setEditable(false);
-        dependencies.setText(ApplicationInformation.loadDependencies());
-        dependencies.setCaretPosition(0);
-        JScrollPane scroll = new JScrollPane(dependencies);
-        scroll.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
-        contentPanel.add(scroll);
-
-        frame.add(contentPanel);
-
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-        bringToFront(frame);
-    }
-
     private void showShutdownDialog()
     {
         JFrame frame = new JFrame(applicationName);
 
         // Image icon
-        URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
-        ImageIcon icon = new ImageIcon(iconUrl);
-        frame.setIconImage(icon.getImage());
+        frame.setIconImage(StandaloneUserInterface.getIconImage());
         frame.setResizable(false);
 
         // Content panel
@@ -290,8 +146,7 @@ public class StandaloneShutdownDialogManager
         // Button Layout
         JPanel buttonPanel = new JPanel();
 
-        if (Desktop.isDesktopSupported()
-                && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+        if (isDesktopSupported() && getDesktop().isSupported(Desktop.Action.BROWSE)) {
             JButton browseButton = new JButton(ACTION_OPEN_BROWSER);
             browseButton.addActionListener(e -> actionBrowse());
             buttonPanel.add(browseButton);
@@ -307,63 +162,88 @@ public class StandaloneShutdownDialogManager
 
         // Tray
         if (SystemTray.isSupported()) {
-            // We only hide on close so that we can show the window again if needed
-            frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-
-            SystemTray tray = SystemTray.getSystemTray();
-            TrayIcon trayIcon = new TrayIcon(icon.getImage());
-            trayIcon.setImageAutoSize(true);
-
-            PopupMenu popupMenu = new PopupMenu();
-
-            MenuItem untrayItem = new MenuItem("Show/Hide");
-            popupMenu.add(untrayItem);
-            untrayItem.addActionListener(e -> frame.setVisible(!frame.isVisible()));
-
-            MenuItem browseItem = new MenuItem(ACTION_OPEN_BROWSER);
-            browseItem.addActionListener(e -> actionBrowse());
-            popupMenu.add(browseItem);
-
-            MenuItem logItem = new MenuItem("Log...");
-            logItem.addActionListener(e -> actionShowLog());
-            popupMenu.add(logItem);
-
-            MenuItem aboutItem = new MenuItem("About...");
-            aboutItem.addActionListener(e -> actionShowAbout());
-            popupMenu.add(aboutItem);
-
-            MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN);
-            shutdownItem.addActionListener(e -> {
-                tray.remove(trayIcon);
-                actionShutdown();
-            });
-            popupMenu.add(shutdownItem);
-
-            trayIcon.setToolTip(applicationName + " " + SettingsUtil.getVersionString());
-            trayIcon.setPopupMenu(popupMenu);
-
-            // Click should show/hide
-            trayIcon.addActionListener(e -> frame.setVisible(!frame.isVisible()));
-
             try {
-                tray.add(trayIcon);
+                // We only hide on close so that we can show the window again if needed
+                frame.setDefaultCloseOperation(HIDE_ON_CLOSE);
 
-                contentPanel.add(new JLabel("Closing this window minimizes it to tray."),
-                        BorderLayout.CENTER);
+                makeSystemTrayMenu(frame);
+
+                contentPanel.add(new JLabel("Closing this window minimizes it to tray."), CENTER);
             }
             catch (AWTException e) {
-                log.error("Could not add to tray", e);
-                frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+                log.error("Could not application menu add to tray", e);
+                frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
             }
+
         }
         else {
-            frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         }
 
         frame.add(contentPanel);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        bringToFront(frame);
         frame.requestFocus();
+
+        if (isDesktopSupported() && getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            actionBrowse();
+        }
+    }
+
+    private void makeSystemTrayMenu(JFrame frame) throws AWTException
+    {
+        SystemTray tray = SystemTray.getSystemTray();
+        TrayIcon trayIcon = new TrayIcon(frame.getIconImage());
+        trayIcon.setImageAutoSize(true);
+
+        PopupMenu popupMenu = new PopupMenu();
+
+        MenuItem untrayItem = new MenuItem("Show/Hide");
+        popupMenu.add(untrayItem);
+        untrayItem.addActionListener(e -> frame.setVisible(!frame.isVisible()));
+
+        MenuItem browseItem = new MenuItem(ACTION_OPEN_BROWSER);
+        browseItem.addActionListener(e -> actionBrowse());
+        popupMenu.add(browseItem);
+
+        MenuItem logItem = new MenuItem("Log...");
+        logItem.addActionListener(e -> StandaloneUserInterface.actionShowLog(applicationName));
+        popupMenu.add(logItem);
+
+        MenuItem aboutItem = new MenuItem("About...");
+        aboutItem.addActionListener(e -> StandaloneUserInterface.actionShowAbout(applicationName));
+        popupMenu.add(aboutItem);
+
+        MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN);
+        shutdownItem.addActionListener(e -> {
+            tray.remove(trayIcon);
+            actionShutdown();
+        });
+        popupMenu.add(shutdownItem);
+
+        trayIcon.setToolTip(applicationName + " " + SettingsUtil.getVersionString());
+        trayIcon.setPopupMenu(popupMenu);
+
+        // Click should show/hide
+        trayIcon.addActionListener(e -> frame.setVisible(!frame.isVisible()));
+
+        tray.add(trayIcon);
+    }
+
+    private void actionBrowse()
+    {
+        try {
+            Desktop.getDesktop().browse(URI.create("http://localhost:" + port));
+        }
+        catch (IOException e) {
+            log.error("Unable to open browser", e);
+        }
+    }
+
+    private void actionShutdown()
+    {
+        System.exit(SpringApplication.exit(context));
     }
 }
