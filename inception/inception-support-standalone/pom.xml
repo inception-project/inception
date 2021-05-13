@@ -29,6 +29,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+    
 
     <!-- Spring dependencies -->
     <dependency>
@@ -48,18 +54,14 @@
       <artifactId>spring-boot</artifactId>
     </dependency>
 
-    <!-- LOGGING DEPENDENCIES - SLF4J -->
+    <!-- LOGGING DEPENDENCIES - SLF4J/LOG4J -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-
-<!--  
     <dependency>
-      <groupId>net.sourceforge.winstone</groupId>
-      <artifactId>winstone</artifactId>
-      <version>0.9.10</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
     </dependency>
--->
   </dependencies>
 </project>
