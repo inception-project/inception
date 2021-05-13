@@ -54,10 +54,14 @@
       <artifactId>spring-boot</artifactId>
     </dependency>
 
-    <!-- LOGGING DEPENDENCIES - SLF4J -->
+    <!-- LOGGING DEPENDENCIES - SLF4J/LOG4J -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
     </dependency>
   </dependencies>
 </project>
