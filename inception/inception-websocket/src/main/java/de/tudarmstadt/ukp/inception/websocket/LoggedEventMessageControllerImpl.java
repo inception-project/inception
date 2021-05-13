@@ -26,8 +26,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
@@ -53,8 +51,6 @@ import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
@@ -65,7 +61,6 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 public class LoggedEventMessageControllerImpl implements LoggedEventMessageController
 {
     private static final int MAX_EVENTS = 5;
-    private final Logger log = LoggerFactory.getLogger(getClass());
     private final Set<String> genericEvents = unmodifiableSet( ApplicationEvent.class.getSimpleName(),
             ApplicationContextEvent.class.getSimpleName(), ServletRequestHandledEvent.class.getSimpleName(),
             SessionCreationEvent.class.getSimpleName(), SessionDestroyedEvent.class.getSimpleName(),
@@ -81,19 +76,17 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
     private ProjectService projectService;
     private DocumentService docService;
     private EventRepository eventRepo;
-    private UserDao userRepo;
            
     
     public LoggedEventMessageControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate, 
             @Lazy @Autowired List<EventLoggingAdapter<?>> aAdapters, 
             @Autowired DocumentService aDocService, @Autowired ProjectService aProjectService, 
-            @Autowired EventRepository aEventRepository, @Autowired UserDao aUserRepository) {
+            @Autowired EventRepository aEventRepository) {
         msgTemplate = aMsgTemplate;
         eventAdapters = aAdapters;
         docService = aDocService;
         projectService = aProjectService;
         eventRepo = aEventRepository;
-        userRepo = aUserRepository;
     }
     
     @EventListener
@@ -136,13 +129,6 @@ public class LoggedEventMessageControllerImpl implements LoggedEventMessageContr
     @Override
     public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal)
     {
-        String subscribingUsername = aPrincipal.getName();
-        User subscribingUser = userRepo.get(subscribingUsername);
-        if (subscribingUser == null || !userRepo.isAdministrator(subscribingUser)) {
-            log.debug("Subscribing user {} is unknown or not an admin.", subscribingUsername);
-            throw new IllegalArgumentException(String.format(
-                    "User is not permitted to subscribe to this channel: %s", LOGGED_EVENTS));
-        }
         List<LoggedEventMessage> recentEvents = eventRepo
                 .listFilteredRecentActivity(genericEvents, MAX_EVENTS).stream()
                 .map(event -> createLoggedEventMessage(event.getUser(), event.getProject(),

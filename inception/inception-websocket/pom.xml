@@ -118,30 +118,57 @@
       <artifactId>spring-websocket</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot</artifactId>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>org.springframework.security</groupId>
+    	<artifactId>spring-security-config</artifactId>
+    </dependency>
+        <dependency>
+    	<groupId>org.springframework.security</groupId>
+    	<artifactId>spring-security-messaging</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
+        <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-api-dao</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.wicket</groupId>
+    	<artifactId>wicket-util</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>javax.persistence</groupId>
+    	<artifactId>javax.persistence-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
+    	<groupId>org.springframework.boot</groupId>
+    	<artifactId>spring-boot-starter-data-jpa</artifactId>
+    	<scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.springframework.boot</groupId>
+    	<artifactId>spring-boot-test</artifactId>
+    	<scope>test</scope>
+    </dependency>
+        <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
       <scope>test</scope>
@@ -152,18 +179,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>com.h2database</groupId>
-    	<artifactId>h2</artifactId>
+    	<groupId>org.springframework</groupId>
+    	<artifactId>spring-test</artifactId>
     	<scope>test</scope>
     </dependency>
-    <dependency>
-    	<groupId>org.springframework.boot</groupId>
-    	<artifactId>spring-boot-starter-data-jpa</artifactId>
+        <dependency>
+    	<groupId>com.h2database</groupId>
+    	<artifactId>h2</artifactId>
     	<scope>test</scope>
     </dependency>
     <dependency>
@@ -175,23 +197,6 @@
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
     	<artifactId>inception-io-text</artifactId>
     	<scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-api-dao</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>org.springframework.boot</groupId>
-    	<artifactId>spring-boot-test</artifactId>
-    	<scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>org.apache.wicket</groupId>
-    	<artifactId>wicket-util</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>javax.persistence</groupId>
-    	<artifactId>javax.persistence-api</artifactId>
     </dependency>
   </dependencies>
 
@@ -212,6 +217,8 @@
                 - no actual code dependency
               -->
               <usedDependency>org.webjars.npm:webstomp-client</usedDependency>
+              <!-- Needed for websocket security config, but not detected by Maven -->
+              <usedDependency>org.springframework.security:spring-security-messaging</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

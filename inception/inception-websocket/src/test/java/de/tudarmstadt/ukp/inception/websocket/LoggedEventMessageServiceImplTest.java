@@ -42,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
@@ -57,7 +56,6 @@ public class LoggedEventMessageServiceImplTest
     private @Mock DocumentService docService;
     private @Mock ProjectService projectService;
     private @Mock EventRepository eventRepository;
-    private @Mock UserDao userRepo;
     private List<EventLoggingAdapter<?>> adapters;
     private TestChannel outboundChannel;
     
@@ -81,7 +79,7 @@ public class LoggedEventMessageServiceImplTest
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
 
         sut = new LoggedEventMessageControllerImpl(new SimpMessagingTemplate(outboundChannel),
-                adapters, docService, projectService, eventRepository, userRepo);
+                adapters, docService, projectService, eventRepository);
     }
     
     @Test
