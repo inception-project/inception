@@ -225,6 +225,12 @@ public class AnnotationDocument
     }
 
     @Override
+    public String toString()
+    {
+        return "[" + user + "@" + name + "](" + id + ")";
+    }
+
+    @Override
     public boolean equals(final Object other)
     {
         if (!(other instanceof AnnotationDocument)) {

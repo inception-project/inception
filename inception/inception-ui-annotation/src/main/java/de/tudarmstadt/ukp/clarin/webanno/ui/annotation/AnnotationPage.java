@@ -450,8 +450,14 @@ public class AnnotationPage
             state.reset();
 
             if (isEditable()) {
-                // After creating an new CAS or upgrading the CAS, we need to save it
-                documentService.writeAnnotationCas(editorCas, annotationDocument, false);
+                // After creating an new CAS or upgrading the CAS, we need to save it. If the
+                // document is accessed for the first time and thus will transition from NEW to
+                // IN_PROGRESS, then we use this opportunity also to set the timestamp of the
+                // annotation document - this ensures that e.g. the dynamic workflow considers the
+                // document to be "active" for the given user so that it won't be considered as
+                // abandoned immediately after having been opened for the first time
+                documentService.writeAnnotationCas(editorCas, annotationDocument,
+                        AnnotationDocumentState.NEW.equals(annotationDocument.getState()));
 
                 // Initialize timestamp in state
                 updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(

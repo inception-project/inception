@@ -42,6 +42,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class InviteServiceImplTest
@@ -50,6 +51,7 @@ public class InviteServiceImplTest
 
     private @Autowired TestEntityManager testEntityManager;
     private ProjectService projectService;
+    private WorkloadManagementService workloadManagementService;
 
     private Project testProject;
 
@@ -57,8 +59,9 @@ public class InviteServiceImplTest
     public void setUp() throws Exception
     {
         projectService = Mockito.mock(ProjectService.class);
+        workloadManagementService = Mockito.mock(WorkloadManagementService.class);
 
-        sut = new InviteServiceImpl(null, projectService, null,
+        sut = new InviteServiceImpl(null, projectService, null, workloadManagementService,
                 testEntityManager.getEntityManager());
         testProject = new Project("testProject");
         testProject.setState(ANNOTATION_IN_PROGRESS);

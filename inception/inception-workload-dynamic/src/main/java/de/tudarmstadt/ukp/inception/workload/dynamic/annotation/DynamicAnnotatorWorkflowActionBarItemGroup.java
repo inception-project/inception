@@ -18,11 +18,10 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
-import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 
@@ -46,12 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * This is only enabled for annotators of a project with the dynamic workload enabled. An annotator
@@ -133,55 +128,23 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
             _target.add(page);
 
-            List<AnnotationDocument> inProgressDocuments = workloadManagementService
-                    .getAnnotationDocumentListForUserWithState(project, user, IN_PROGRESS);
-
             // Assign a new document with actionLoadDocument
-
-            // First, check if there are other documents which have been in the state INPROGRESS
-            // Load the first one found
-            if (!inProgressDocuments.isEmpty()) {
-                annotatorState.setDocument(inProgressDocuments.get(0).getDocument(),
-                        documentService.listSourceDocuments(project));
-                getAnnotationPage().actionLoadDocument(_target);
-                return;
+            Optional<SourceDocument> nextDocument = dynamicWorkloadExtension
+                    .nextDocumentToAnnotate(project, user);
+            if (nextDocument.isPresent()) {
+                // This was the case, so load the document and return
+                page.getModelObject().setDocument(nextDocument.get(),
+                        documentService.listSourceDocuments(nextDocument.get().getProject()));
+                page.actionLoadDocument(aTarget);
             }
-
-            // No annotation documents in the state INPROGRESS, now select a new one
-            // depending on the workload strategy selected
-            WorkloadManager currentWorkload = workloadManagementService
-                    .loadOrCreateWorkloadManagerConfiguration(project);
-
-            // If there are no traits set yet, use the DefaultWorkflowExtension
-            // otherwise select the current one
-            DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(currentWorkload);
-            WorkflowExtension currentWorkflowExtension = workflowExtensionPoint
-                    .getExtension(traits.getWorkflowType())
-                    .orElseGet(DefaultWorkflowExtension::new);
-
-            // Get all documents for which the state is NEW, or which have not been created yet.
-            List<SourceDocument> sourceDocuments = workloadManagementService
-                    .getAnnotationDocumentListForUser(project, user);
-
-            // Rearrange list of documents according to current workflow
-            sourceDocuments = currentWorkflowExtension.rankDocuments(sourceDocuments);
-
-            // Load the new document, if loadNextDocument() returns false, redirect the user to the
-            // homepage
-            if (!currentWorkflowExtension.loadNextDocument(sourceDocuments, project,
-                    currentWorkload, getAnnotationPage(), _target, workloadManagementService,
-                    traits, documentService)) {
-                redirectUserToHomePage();
+            else {
+                // Nothing left, so returning to homepage and showing hint
+                page.getSession()
+                        .info("There are no more documents to annotate available for you.");
+                page.setResponsePage(getAnnotationPage().getApplication().getHomePage());
             }
         });
-        finishDocumentDialog.show(aTarget);
-    }
 
-    private void redirectUserToHomePage()
-    {
-        // Nothing left, so returning to homepage and showing hint
-        getAnnotationPage().getSession()
-                .info("There are no more documents to annotate available for you.");
-        getAnnotationPage().setResponsePage(getAnnotationPage().getApplication().getHomePage());
+        finishDocumentDialog.show(aTarget);
     }
 }

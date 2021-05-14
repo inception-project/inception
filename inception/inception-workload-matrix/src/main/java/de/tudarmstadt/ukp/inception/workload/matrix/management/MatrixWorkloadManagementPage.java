@@ -37,7 +37,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,6 +51,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -63,6 +67,7 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -106,6 +111,8 @@ public class MatrixWorkloadManagementPage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -2102136855109258306L;
+
+    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
@@ -486,11 +493,20 @@ public class MatrixWorkloadManagementPage
             return;
         }
 
-        documentService.transitionAnnotationDocumentState(annotationDocument, transition);
+        try {
+            documentService.transitionAnnotationDocumentState(annotationDocument, transition);
+            success(format("The state of document [%s] for user [%s] has been set to [%s]",
+                    aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                    annotationDocument.getState()));
+        }
+        catch (IOException e) {
+            LOG.error("Unable to set the state of document {} for user {}",
+                    aEvent.getSourceDocument(), aEvent.getUsername(), e);
+            error(format("Unable to set state of document [%s] for user [%s]: %s",
+                    aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                    ExceptionUtils.getRootCauseMessage(e)));
+        }
 
-        success(format("The state of document [%s] for user [%s] has been set to [%s]",
-                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
-                annotationDocument.getState()));
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();

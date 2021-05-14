@@ -125,6 +125,9 @@ public interface DocumentService
      */
     List<SourceDocument> listSourceDocuments(Project aProject);
 
+    List<SourceDocument> listSourceDocumentsInState(Project aProject,
+            SourceDocumentState... aStates);
+
     /**
      * ROLE_ADMINs or project admins can remove source documents from a project. removing a a source
      * document also removes an annotation document related to that document
@@ -490,6 +493,9 @@ public interface DocumentService
      */
     List<AnnotationDocument> listAnnotationDocuments(Project aProject);
 
+    List<AnnotationDocument> listAnnotationDocumentsInState(Project aProject,
+            AnnotationDocumentState... aStates);
+
     /**
      * List all the {@link AnnotationDocument annotation documents} for a given
      * {@link SourceDocument}.
@@ -529,15 +535,6 @@ public interface DocumentService
     List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
 
     /**
-     * Number of expected annotation documents in this project (numUser X document - Ignored)
-     *
-     * @param project
-     *            the project.
-     * @return the number of annotation documents.
-     */
-    int numberOfExpectedAnnotationDocuments(Project project);
-
-    /**
      * List all annotation documents in a project that are already closed. used to compute overall
      * project progress
      *
@@ -557,7 +554,7 @@ public interface DocumentService
     List<AnnotationDocument> listFinishedAnnotationDocuments(SourceDocument aDocument);
 
     /**
-     * List all annotation documents for this source document (including in active and delted user
+     * List all annotation documents for this source document (including in active and deleted user
      * annotation and those created by project admins or super admins for Test purpose. This method
      * is called when a source document (or Project) is deleted so that associated annotation
      * documents also get removed.
@@ -657,7 +654,8 @@ public interface DocumentService
             AnnotationDocumentState aState);
 
     AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentStateTransition aTransition);
+            AnnotationDocumentStateTransition aTransition)
+        throws IOException;
 
     /**
      * Check if any curation documents exists in the given project.

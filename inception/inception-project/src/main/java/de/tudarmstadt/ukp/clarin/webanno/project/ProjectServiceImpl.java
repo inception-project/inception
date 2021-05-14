@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -74,11 +75,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
@@ -832,6 +835,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
     public List<Project> listProjectsForAgreement()
     {
         String query = "SELECT DISTINCT p FROM Project p, ProjectPermission pp "
@@ -843,6 +847,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
     public List<Project> listManageableCuratableProjects(User aUser)
     {
         String query = "SELECT DISTINCT p FROM Project p, ProjectPermission pp "
@@ -854,5 +859,20 @@ public class ProjectServiceImpl
                 .setParameter("curator", PermissionLevel.CURATOR)
                 .setParameter("manager", PermissionLevel.MANAGER).getResultList();
         return projects;
+    }
+
+    @Override
+    @Transactional
+    public void setProjectState(Project aProject, ProjectState aState)
+    {
+        ProjectState oldState = aProject.getState();
+
+        aProject.setState(aState);
+        updateProject(aProject);
+
+        if (!Objects.equals(oldState, aProject.getState())) {
+            applicationEventPublisher
+                    .publishEvent(new ProjectStateChangedEvent(this, aProject, oldState));
+        }
     }
 }

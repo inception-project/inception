@@ -19,30 +19,43 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension_Impl;
+import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowDocumentNavigationActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.RandomizedWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
-    public DynamicWorkloadExtension dynamicWorkloadExtension()
+    public DynamicWorkloadExtension dynamicWorkloadExtension(DocumentService documentService,
+            WorkloadManagementService aWorkloadManagementService,
+            WorkflowExtensionPoint aWorkflowExtensionPoint, ProjectService aProjectService,
+            UserDao aUserRepository)
     {
-        return new DynamicWorkloadExtension_Impl();
+        return new DynamicWorkloadExtension_Impl(aWorkloadManagementService,
+                aWorkflowExtensionPoint, documentService, aProjectService, aUserRepository);
     }
 
     @Bean
-    public WorkflowExtensionPoint workflowExtensionPoint(List<WorkflowExtension> aWorkflowExtension)
+    public WorkflowExtensionPoint workflowExtensionPoint(
+            @Lazy @Autowired(required = false) List<WorkflowExtension> aWorkflowExtension)
     {
         return new WorkflowExtensionPointImpl(aWorkflowExtension);
     }
@@ -59,4 +72,19 @@ public class DynamicWorkloadManagerAutoConfiguration
         return new RandomizedWorkflowExtension();
     }
 
+    @Bean
+    public DynamicWorkflowActionBarExtension DynamicWorkflowActionBarExtension(
+            WorkloadManagementService aWorkloadManagementService, ProjectService aProjectService)
+    {
+        return new DynamicWorkflowActionBarExtension(aWorkloadManagementService, aProjectService);
+    }
+
+    @Bean
+    public DynamicWorkflowDocumentNavigationActionBarExtension dynamicWorkflowDocumentNavigationActionBarExtension(
+            DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
+            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService)
+    {
+        return new DynamicWorkflowDocumentNavigationActionBarExtension(aDocumentService,
+                aWorkloadManagementService, aDynamicWorkloadExtension, aProjectService);
+    }
 }

@@ -35,6 +35,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -494,6 +495,48 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<SourceDocument> listSourceDocumentsInState(Project aProject,
+            SourceDocumentState... aStates)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aStates, "States must be specified");
+        Validate.notEmpty(aStates, "States must not be an empty list");
+
+        String query = String.join("\n", //
+                "FROM SourceDocument", //
+                "WHERE project =:project", //
+                "AND state IN (:states)", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, SourceDocument.class) //
+                .setParameter("states", asList(aStates)) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationDocument> listAnnotationDocumentsInState(Project aProject,
+            AnnotationDocumentState... aStates)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aStates, "States must be specified");
+        Validate.notEmpty(aStates, "States must not be an empty list");
+
+        String query = String.join("\n", //
+                "FROM AnnotationDocument", //
+                "WHERE project =:project", //
+                "AND state IN (:states)", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, AnnotationDocument.class) //
+                .setParameter("states", asList(aStates)) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
     @Transactional
     public void removeSourceDocument(SourceDocument aDocument) throws IOException
     {
@@ -822,6 +865,7 @@ public class DocumentServiceImpl
 
         writeAnnotationCas(cas, aDocument, aUser, false);
 
+        adoc.setTimestamp(null);
         setAnnotationDocumentState(adoc, AnnotationDocumentState.NEW);
 
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
@@ -970,31 +1014,6 @@ public class DocumentServiceImpl
     }
 
     @Override
-    public int numberOfExpectedAnnotationDocuments(Project aProject)
-    {
-        // Get all annotators in the project
-        List<String> users = getAllAnnotators(aProject);
-        // Bail out already. HQL doesn't seem to like queries with an empty
-        // parameter right of "in"
-        if (users.isEmpty()) {
-            return 0;
-        }
-
-        int ignored = 0;
-        List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND user in (:users)",
-                        AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("users", users).getResultList();
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
-                ignored++;
-            }
-        }
-        return listSourceDocuments(aProject).size() * users.size() - ignored;
-    }
-
-    @Override
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
     {
         Set<String> users = projectService.listProjectUsersWithPermissions(aDocument.getProject())
@@ -1133,9 +1152,18 @@ public class DocumentServiceImpl
     @Transactional
     public AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentStateTransition aTransition)
+        throws IOException
     {
-        return setAnnotationDocumentState(aDocument,
-                AnnotationDocumentStateTransition.transition(aTransition));
+        AnnotationDocumentState targetState = AnnotationDocumentStateTransition
+                .transition(aTransition);
+
+        if (AnnotationDocumentStateTransition.IGNORE_TO_NEW == aTransition) {
+            if (casStorageService.existsCas(aDocument.getDocument(), aDocument.getUser())) {
+                targetState = AnnotationDocumentState.IN_PROGRESS;
+            }
+        }
+
+        return setAnnotationDocumentState(aDocument, targetState);
     }
 
     @EventListener
