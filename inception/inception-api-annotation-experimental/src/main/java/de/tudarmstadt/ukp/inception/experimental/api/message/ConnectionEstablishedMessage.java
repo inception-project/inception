@@ -17,39 +17,40 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.message;
 
-public class ViewportMessage
+public class ConnectionEstablishedMessage
 {
-    private int begin;
-    private int end;
-    private String text;
+    private String user;
+    private String document;
+    private String project;
 
-    public ViewportMessage(int aBegin, int aEnd)
+    public ConnectionEstablishedMessage(String aUser, String aDocument, String aProject)
     {
-        this.begin = aBegin;
-        this.end = aEnd;
+        user = aUser;
+        document = aDocument;
+        project = aProject;
     }
 
-    public int getBegin() {
-        return begin;
+    public String getUser() {
+        return user;
     }
 
-    public void setBegin(int begin) {
-        this.begin = begin;
+    public void setUser(String user) {
+        this.user = user;
     }
 
-    public int getEnd() {
-        return end;
+    public String getDocument() {
+        return document;
     }
 
-    public void setEnd(int end) {
-        this.end = end;
+    public void setDocument(String document) {
+        this.document = document;
     }
 
-    public String getText() {
-        return text;
+    public String getProject() {
+        return project;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setProject(String project) {
+        this.project = project;
     }
 }

@@ -27,6 +27,7 @@ class Annotator
     username : string;
     viewPortBegin : number;
     viewPortEnd : number;
+    viewPortSize : number;
 
     constructor()
     {
@@ -41,26 +42,39 @@ class Annotator
                 console.log(elem);
                 that.sendSelectAnnotationMessageToServer();
             }
-
-
-        }
-        ondblclick = function (aEvent)
-        {
-            let elem = <Element>aEvent.target;
-            if (elem.tagName === 'text') {
-                console.log(elem);
-                that.sendCreateAnnotationMessageToServer();
+            ondblclick = function (aEvent)
+            {
+                let elem = <Element>aEvent.target;
+                if (elem.tagName === 'text') {
+                    console.log(elem);
+                    that.sendCreateAnnotationMessageToServer();
+                }
             }
 
+            // ---------- NEW VIEWPORT --------- //
+            if (elem.className === 'fas fa-step-forward') {
+                console.log(elem);
+                that.sendNewViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + 1 + that.viewPortSize);
+            }
+
+            if (elem.className === 'fas fa-step-backward') {
+                console.log(elem);
+                that.sendNewViewportMessageToServer(that.viewPortBegin - 1 - that.viewPortSize, that.viewPortBegin - 1);
+            }
+
+            if (elem.className === 'fas fa-fast-forward') {
+                console.log(elem);
+                that.sendNewViewportMessageToServer(100, 1111);
+            }
+
+            if (elem.className === 'fas fa-fast-backward') {
+                console.log(elem);
+                that.sendNewViewportMessageToServer(0, that.viewPortSize);
+            }
+
+            // ------------------------------------ //
 
         }
-
-        // Experimental yet only (will be retrieved automatically)
-        this.username = "admin";
-        this.document = "Doc4";
-        this.project = "Annotation Study";
-        this.viewPortBegin = 0;
-        this.viewPortEnd = 10;
 
         this.connect();
     }
@@ -88,9 +102,20 @@ class Annotator
         this.stompClient.onConnect = function (frame) {
             that.connected = true;
 
-            const prop = frame.headers; //Will be needed for getting client details
+            // Experimental yet only (will be retrieved automatically)
+            const header = frame.headers;
+            let data: keyof typeof header;  // Type is "one" | "two" | "three"
+            for (data in header) {
+                that.username = header[data];
+                break;
+            }
 
             // ------ DEFINE ALL SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
+
+            //Client receive initial data
+            that.stompClient.subscribe("/queue/connection_message/" + that.username, function (msg) {
+                that.receiveConnectionMessageByServer(JSON.parse(msg.body));
+            });
 
             that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function (msg) {
                 that.receiveNewDocumentMessageByServer(JSON.parse(msg.body));
@@ -169,9 +194,15 @@ class Annotator
 
     }
 
-    sendNewViewportMessageToServer()
+    sendNewViewportMessageToServer(aBegin : number, aEnd : number)
     {
-        this.stompClient.publish({destination: "/app/new_viewport_by_client", body:"NEW VIEWPORT REQUIRED"});
+        let json = JSON.stringify(
+        {
+            username: this.username,
+            project: this.project,
+            document: this.document,
+            begin: aBegin, end: aEnd});
+        this.stompClient.publish({destination: "/app/new_viewport_by_client", body: json});
     }
 
     sendSelectAnnotationMessageToServer()
@@ -205,14 +236,19 @@ class Annotator
 
 
     // ---------------- RECEIVE ----------------------- //
+
+    receiveConnectionMessageByServer(aMessage : string)
+    {
+        console.log('RECEIVED CONNECTION MESSAGE: ' + aMessage);
+    }
     receiveNewDocumentMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED DOCUMENT: ' + JSON.parse(aMessage));
+        console.log('RECEIVED DOCUMENT: ' + aMessage);
     }
 
     receiveNewViewportMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED VIEWPORT: ' + JSON.parse(aMessage));
+        console.log('RECEIVED VIEWPORT: ' + aMessage);
     }
 
     receiveSelectedAnnotationMessageByServer(aMessage : string)
@@ -222,12 +258,12 @@ class Annotator
 
     receiveNewAnnotationMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED NEW ANNOTATION: ' + JSON.stringify(aMessage));
+        console.log('RECEIVED NEW ANNOTATION: ' + aMessage);
     }
 
     receiveDeleteAnnotationMessageByServer(aMessage : string)
     {
-        console.log('RECEIVED DELETE ANNOTATION: ' + JSON.stringify(aMessage));
+        console.log('RECEIVED DELETE ANNOTATION: ' + aMessage);
     }
 
 

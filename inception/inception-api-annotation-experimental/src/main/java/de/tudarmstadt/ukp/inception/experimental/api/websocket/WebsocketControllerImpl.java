@@ -18,15 +18,19 @@
 package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.slf4j.MDC;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -37,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.message.ConnectionEstablishedMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.NewDocumentMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
@@ -53,6 +58,8 @@ public class WebsocketControllerImpl
     /**
      * ----------------- PUB / SUB CHANNELS ---------------
      **/
+    private static final String SERVER_SEND_CLIENT_CONNECTION_MESSAGE = "/queue/connection_message/";
+
     private static final String SERVER_RECEIVE_CLIENT_NEW_DOCUMENT = "/new_document_by_client";
     private static final String SERVER_SEND_CLIENT_NEW_DOCUMENT = "/queue/new_document_for_client/";
 
@@ -94,6 +101,18 @@ public class WebsocketControllerImpl
     }
     // ---------------------------------------- //
 
+    // ------- TO BE REMOVED, INFO ONLY --------- //
+    @EventListener
+    public void connectionEstablished(SessionConnectedEvent aSce) throws IOException, CASException
+    {
+        System.out.println("CONNECTION ESTABLISHED");
+        String user = Objects.requireNonNull(aSce.getUser()).getName();
+        ConnectionEstablishedMessage connectionEstablishedMessage = new ConnectionEstablishedMessage(
+                user, "Doc4", "Annotation Study");
+        String msg = JSONUtil.toJsonString(connectionEstablishedMessage);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_CONNECTION_MESSAGE + user, msg);
+    }
+
     /**
      * ------------- PUB / SUB HANDLING -------------
      **/
@@ -117,7 +136,9 @@ public class WebsocketControllerImpl
     {
         System.out.println("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
         String[] payload = purifyPayload(aMessage.getPayload());
-        ViewportMessage viewportMessage = new ViewportMessage();
+        ViewportMessage viewportMessage = new ViewportMessage(
+                Integer.parseInt(payload[3].split(":")[1]),
+                Integer.parseInt(payload[4].split(":")[1]));
         // TODO retrieve desired content and fill ViewportMessage
         String msg = JSONUtil.toJsonString(viewportMessage);
         simpMessagingTemplate
