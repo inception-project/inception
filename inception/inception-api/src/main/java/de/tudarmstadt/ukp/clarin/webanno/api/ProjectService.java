@@ -167,8 +167,9 @@ public interface ProjectService
      *            The {@link Project} object to be created.
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
+     * @return the project;
      */
-    void createProject(Project project) throws IOException;
+    Project createProject(Project project) throws IOException;
 
     /**
      * Update a project. This is only necessary when dealing with a detached project entity.

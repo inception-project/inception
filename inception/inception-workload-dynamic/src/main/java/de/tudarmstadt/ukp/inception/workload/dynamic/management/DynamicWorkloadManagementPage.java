@@ -17,10 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
@@ -51,7 +47,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
@@ -105,7 +100,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -720,33 +714,32 @@ public class DynamicWorkloadManagementPage
         throws IOException
     {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
+
         if (resetDocument.getModelObject() == null) {
             error("Please select a document you wish to change its status first!");
+            return;
         }
-        else if (documentState.getModelObject() == null) {
+
+        if (documentState.getModelObject() == null) {
             error("Please select a state you wish to assign to the document");
+            return;
         }
-        // State and document have been selected
-        else {
-            // Either FINSIHED to INPROGRESS
-            if (documentState.getModelObject().equals(AnnotationDocumentState.IN_PROGRESS)) {
-                documentService.transitionAnnotationDocumentState(
-                        documentService.getAnnotationDocument(
-                                documentService.getSourceDocument(currentProject.getObject(),
-                                        resetDocument.getModelObject().getName()),
-                                userSelection.getModelObject()),
-                        ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
-            }
-            else {
-                // OR INPROGRESS to FINSIHED
-                documentService.transitionAnnotationDocumentState(
-                        documentService.getAnnotationDocument(
-                                documentService.getSourceDocument(currentProject.getObject(),
-                                        resetDocument.getModelObject().getName()),
-                                userSelection.getModelObject()),
-                        ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-            }
+
+        // Either FINSIHED to INPROGRESS
+        if (documentState.getModelObject() == AnnotationDocumentState.FINISHED) {
+            documentService.setAnnotationDocumentState(resetDocument.getModelObject(),
+                    AnnotationDocumentState.IN_PROGRESS);
             success("Document status changed");
+        }
+        else if (documentState.getModelObject() == AnnotationDocumentState.IN_PROGRESS) {
+
+            // OR INPROGRESS to FINSIHED
+            documentService.setAnnotationDocumentState(resetDocument.getModelObject(),
+                    AnnotationDocumentState.FINISHED);
+            success("Document status changed");
+        }
+        else {
+            error("Can only change the status of documents that are in-progress or finished");
         }
 
         updateTable(aAjaxRequestTarget);
@@ -756,7 +749,7 @@ public class DynamicWorkloadManagementPage
         throws IOException
     {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
-        ;
+
         // First check if there are documents to assign
         Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
         for (SourceDocument source : documentsToAssign) {
@@ -764,14 +757,14 @@ public class DynamicWorkloadManagementPage
                     .createOrGetAnnotationDocument(source, userSelection.getModelObject());
 
             // Only if the document is in state NEW we can assign it to INPROGRESS
-            if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
-                documentService.transitionAnnotationDocumentState(annotationDocument,
-                        AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+            if (AnnotationDocumentState.NEW == annotationDocument.getState()) {
+                documentService.setAnnotationDocumentState(annotationDocument,
+                        AnnotationDocumentState.IN_PROGRESS);
                 success("Document(s) assigned");
             }
             else {
-                error("Document '" + annotationDocument.getName()
-                        + "' is either already assigned or even finished.");
+                error("Document [" + annotationDocument.getName()
+                        + "] is either already assigned or even finished.");
             }
         }
 
@@ -882,37 +875,28 @@ public class DynamicWorkloadManagementPage
         AnnotationDocument annotationDocument = documentService
                 .createOrGetAnnotationDocument(aEvent.getSourceDocument(), user);
 
-        AnnotationDocumentStateTransition transition;
+        AnnotationDocumentState targetState;
         switch (annotationDocument.getState()) {
         case NEW:
-            transition = NEW_TO_IGNORE;
+            targetState = AnnotationDocumentState.IGNORE;
             break;
         case IGNORE:
-            transition = IGNORE_TO_NEW;
+            targetState = AnnotationDocumentState.NEW;
             break;
         case IN_PROGRESS:
-            transition = ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+            targetState = AnnotationDocumentState.FINISHED;
             break;
         case FINISHED:
-            transition = ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+            targetState = AnnotationDocumentState.IN_PROGRESS;
             break;
         default:
             return;
         }
 
-        try {
-            documentService.transitionAnnotationDocumentState(annotationDocument, transition);
-            success(format("The state of document [%s] for user [%s] has been set to [%s]",
-                    aEvent.getSourceDocument().getName(), aEvent.getUsername(),
-                    annotationDocument.getState()));
-        }
-        catch (IOException e) {
-            LOG.error("Unable to set the state of document {} for user {}",
-                    aEvent.getSourceDocument(), aEvent.getUsername(), e);
-            error(format("Unable to set state of document [%s] for user [%s]: %s",
-                    aEvent.getSourceDocument().getName(), aEvent.getUsername(),
-                    ExceptionUtils.getRootCauseMessage(e)));
-        }
+        documentService.setAnnotationDocumentState(annotationDocument, targetState);
+        success(format("The state of document [%s] for user [%s] has been set to [%s]",
+                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                annotationDocument.getState()));
 
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 

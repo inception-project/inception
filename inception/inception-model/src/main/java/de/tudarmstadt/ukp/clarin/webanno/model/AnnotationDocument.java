@@ -67,10 +67,32 @@ public class AnnotationDocument
     @JoinColumn(name = "document")
     private SourceDocument document;
 
+    /**
+     * The effective state of the annotation document. This state may be set by the annotator user
+     * or by a third person (e.g. curator/manager) or the system (e.g. workload manager).
+     */
     @Column(nullable = false)
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
     private AnnotationDocumentState state = AnnotationDocumentState.NEW;
 
+    /**
+     * State manually set by the annotator user. If a third person (e.g. curator/manager) or the
+     * system (e.g. workload manager) wants to change the state, they only change {@link #state} and
+     * leave this field here as it is. The exception is if the document is reset in which case the
+     * state should be cleared. This state is maintained mostly for informational purposes, e.g. to
+     * allow managers to see whether an annotation document as marked as finished by the annotator
+     * or if it was marked as finished by the manager or by the system.
+     */
+    @Column(nullable = true)
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
+    private AnnotationDocumentState annotatorState;
+
+    /**
+     * Last change made to the annotations or the last state transition triggered by the annotator
+     * user. State changes triggered by a third person (e.g. curator/manager) or by the system (e.g.
+     * workload manager) should not update the timestamp - except if the change is a reset of the
+     * annotation document in which case the timestamp should be cleared.
+     */
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
@@ -90,14 +112,12 @@ public class AnnotationDocument
         // Nothing to do
     }
 
-    public AnnotationDocument(String aName, Project aProject, String aUser,
-            SourceDocument aDocument)
+    public AnnotationDocument(String aName, String aUser, SourceDocument aDocument)
     {
-        super();
         name = aName;
-        project = aProject;
         user = aUser;
         document = aDocument;
+        project = aDocument.getProject();
     }
 
     public SourceDocument getDocument()
@@ -158,6 +178,16 @@ public class AnnotationDocument
     public void setState(AnnotationDocumentState aState)
     {
         state = aState;
+    }
+
+    public AnnotationDocumentState getAnnotatorState()
+    {
+        return annotatorState;
+    }
+
+    public void setAnnotatorState(AnnotationDocumentState aAnnotatorState)
+    {
+        annotatorState = aAnnotatorState;
     }
 
     public Date getTimestamp()

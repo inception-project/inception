@@ -34,7 +34,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -64,9 +64,10 @@ public interface DocumentService
      *
      * @param document
      *            {@link SourceDocument} to be created
+     * @return the source document
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void createSourceDocument(SourceDocument document);
+    SourceDocument createSourceDocument(SourceDocument document);
 
     /**
      * Check if a Source document with this same name exist in the project. The caller method then
@@ -200,52 +201,72 @@ public interface DocumentService
     // --------------------------------------------------------------------------------------------
 
     /**
-     * creates the {@link AnnotationDocument } object in the database.
+     * Creates the {@link AnnotationDocument} object in the database.
      *
      * @param annotationDocument
-     *            {@link AnnotationDocument} comprises of the the name of the {@link SourceDocument}
-     *            , id of {@link SourceDocument}, id of the {@link Project}, and id of {@link User}
+     *            {@link AnnotationDocument} comprises of the the name of the
+     *            {@link SourceDocument}, id of {@link SourceDocument}, id of the {@link Project},
+     *            and id of {@link User}
+     * @return the annotation document.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createAnnotationDocument(AnnotationDocument annotationDocument);
+    AnnotationDocument createAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
-     * Creates an annotation document. The {@link AnnotationDocument} is stored in the
-     * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
-     * documents are stored per project, user and document
+     * Saves the annotations from the CAS to the storage.
      *
      * @param aCas
      *            the CAS.
-     * @param annotationDocument
+     * @param aAnnotationDocument
      *            the annotation document.
+     * @param aExplicitAnnotatorUserAction
+     *            indicate that the CAS is written as the result of an explicit annotator user
+     *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(CAS aCas, AnnotationDocument annotationDocument,
-            boolean aUpdateTimestamp)
+    void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
+            boolean aExplicitAnnotatorUserAction)
         throws IOException;
 
     /**
-     * Creates an annotation document. The {@link AnnotationDocument} is stored in the
-     * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
-     * documents are stored per project, user and document
+     * Saves the annotations from the CAS to the storage.
      *
      * @param aCas
      *            the CAS.
-     * @param document
+     * @param aDocument
      *            the source document.
-     * @param user
+     * @param aUser
      *            The User who perform this operation
+     * @param aExplicitAnnotatorUserAction
+     *            indicate that the CAS is written as the result of an explicit annotator user
+     *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(CAS aCas, SourceDocument document, User user, boolean aUpdateTimestamp)
+    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
+            boolean aExplicitAnnotatorUserAction)
         throws IOException;
 
-    void writeAnnotationCas(CAS aCas, SourceDocument document, String user,
-            boolean aUpdateTimestamp)
+    /**
+     * Saves the annotations from the CAS to the storage.
+     *
+     * @param aCas
+     *            the CAS.
+     * @param aDocument
+     *            the source document.
+     * @param aUser
+     *            The User who perform this operation
+     * @param aExplicitAnnotatorUserAction
+     *            indicate that the CAS is written as the result of an explicit annotator user
+     *            action (i.e. not as a result of a third person or implicitly by the system).
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
+            boolean aExplicitAnnotatorUserAction)
         throws IOException;
 
     /**
@@ -261,7 +282,9 @@ public interface DocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void resetAnnotationCas(SourceDocument aDocument, User aUser) throws UIMAException, IOException;
+    void resetAnnotationCas(SourceDocument aDocument, User aUser,
+            AnnotationDocumentStateChangeFlag... aFlags)
+        throws UIMAException, IOException;
 
     /**
      * A Method that checks if there is already an annotation document created for the source
@@ -648,14 +671,10 @@ public interface DocumentService
     Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, User aUser);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentState aState);
+            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
 
     void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
             AnnotationDocumentState aState);
-
-    AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentStateTransition aTransition)
-        throws IOException;
 
     /**
      * Check if any curation documents exists in the given project.

@@ -22,11 +22,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 
 import java.util.Map;
 
-import javax.transaction.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -152,8 +151,7 @@ public class MatrixWorkloadExtensionImpl
             documentService.setSourceDocumentState(aDocument, SourceDocumentState.NEW);
         }
         else {
-            documentService.setSourceDocumentState(aDocument,
-                    SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            documentService.setSourceDocumentState(aDocument, ANNOTATION_IN_PROGRESS);
         }
     }
 }

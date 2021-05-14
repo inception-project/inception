@@ -17,6 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
+import java.util.List;
+import java.util.stream.Stream;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
@@ -26,33 +33,72 @@ public enum AnnotationDocumentState
     implements PersistentEnum
 {
     /**
-     * For every source document, there will be a NEW annotation document, untill the user start
-     * annotating it.
+     * Indicates that the annotator has not yet started working on the document. The first time an
+     * annotator opens a document, the state is immediately switched from {@link #NEW} to
+     * {@link #IN_PROGRESS}. It is not necessary for the annotator to actually create an annotation.
+     * If no {@link AnnotationDocument} exists yet for a given combination of {@link SourceDocument}
+     * and {@code User}, then {@link #NEW} is the default state that should be assumed.
+     * <p>
+     * When an annotation document is set back to the {@link #NEW} state, all annotations made by
+     * the annotator should be discarded. Either, the annotation CAS should be deleted entirely, or
+     * it should be reset to the initial CAS of the source document.
      */
-    NEW("NEW", "black"),
+    @JsonProperty("NEW")
+    NEW("NEW", "black", false, false),
 
     /**
-     * annotation document has been created for this document for this annotator
+     * Indicates that the annotator as started working on the document. The annotator may not yet
+     * actually have created any annotations.
      */
-    IN_PROGRESS("INPROGRESS", "blue"),
+    @JsonProperty("IN_PROGRESS")
+    IN_PROGRESS("INPROGRESS", "blue", true, false),
 
     /**
-     * annotator has marked annotation document as complete
+     * Indicates that the annotation is complete. No further annotations can be added.
      */
-    FINISHED("FINISHED", "red"),
+    @JsonProperty("FINISHED")
+    FINISHED("FINISHED", "red", true, true),
 
     /**
-     * Ignore this annotation document from further processing such as curation
+     * Indicates that the given document should not be offered to an annotator. If is possible that
+     * the annotator has already started working on the project.
      */
-    IGNORE("IGNORE", "black");
+    @JsonProperty("IGNORE")
+    IGNORE("IGNORE", "black", false, true);
+
+    private static final List<AnnotationDocumentState> TAKEN_STATES;
+    private static final List<AnnotationDocumentState> TERMINAL_STATES;
+
+    static {
+        TAKEN_STATES = Stream.of(values()) //
+                .filter(AnnotationDocumentState::isTaken) //
+                .collect(toUnmodifiableList());
+        TERMINAL_STATES = Stream.of(values()) //
+                .filter(AnnotationDocumentState::isTerminal) //
+                .collect(toUnmodifiableList());
+    }
 
     private final String id;
     private final String color;
 
-    AnnotationDocumentState(String aId, String aColor)
+    /**
+     * An annotation document that is taken counts towards goals. E.g. if a document is taken by a
+     * certain number of annotators, then the system may not assign it to other annotators anymore.
+     */
+    private final boolean taken;
+
+    /**
+     * This is an end state of an annotation document. An annotation document in a terminal state
+     * can no longer be edited.
+     */
+    private final boolean terminal;
+
+    AnnotationDocumentState(String aId, String aColor, boolean aTaken, boolean aTerminal)
     {
         id = aId;
         color = aColor;
+        taken = aTaken;
+        terminal = aTerminal;
     }
 
     public String getName()
@@ -75,5 +121,36 @@ public enum AnnotationDocumentState
     public String toString()
     {
         return getId();
+    }
+
+    /**
+     * @return if a annotation document is considered to be taken.
+     */
+    public boolean isTaken()
+    {
+        return taken;
+    }
+
+    /**
+     * @return if a state is terminal.
+     */
+    public boolean isTerminal()
+    {
+        return terminal;
+    }
+
+    public static AnnotationDocumentState defaultState()
+    {
+        return NEW;
+    }
+
+    public static List<AnnotationDocumentState> takenStates()
+    {
+        return TAKEN_STATES;
+    }
+
+    public static List<AnnotationDocumentState> terminalStates()
+    {
+        return TERMINAL_STATES;
     }
 }

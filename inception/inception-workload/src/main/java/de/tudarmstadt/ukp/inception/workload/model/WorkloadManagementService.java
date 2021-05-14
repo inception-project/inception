@@ -38,8 +38,8 @@ public interface WorkloadManagementService
 
     void saveConfiguration(WorkloadManager aManager);
 
-    List<AnnotationDocument> listAnnotationDocumentsForSourceDocumentInState(SourceDocument aSourceDocument,
-            AnnotationDocumentState aState);
+    List<AnnotationDocument> listAnnotationDocumentsForSourceDocumentInState(
+            SourceDocument aSourceDocument, AnnotationDocumentState aState);
 
     Long getNumberOfUsersWorkingOnADocument(SourceDocument aDocument);
 

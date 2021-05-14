@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
@@ -95,7 +96,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -166,15 +167,16 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void createSourceDocument(SourceDocument aDocument)
+    public SourceDocument createSourceDocument(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
         if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
+            return aDocument;
         }
         else {
-            entityManager.merge(aDocument);
+            return entityManager.merge(aDocument);
         }
     }
 
@@ -212,7 +214,7 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
+    public AnnotationDocument createAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
@@ -229,9 +231,11 @@ public class DocumentServiceImpl
                         aAnnotationDocument.getProject().getName(),
                         aAnnotationDocument.getProject().getId());
             }
+
+            return aAnnotationDocument;
         }
         else {
-            entityManager.merge(aAnnotationDocument);
+            return entityManager.merge(aAnnotationDocument);
         }
     }
 
@@ -797,15 +801,16 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aUpdateTimestamp)
+            boolean aExplicitAnnotatorUserAction)
         throws IOException
     {
         casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
                 aAnnotationDocument.getUser());
 
-        if (aUpdateTimestamp) {
+        if (aExplicitAnnotatorUserAction) {
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS);
+            setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS,
+                    EXPLICIT_ANNOTATOR_USER_ACTION);
         }
 
         applicationEventPublisher
@@ -829,26 +834,27 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
-            boolean aUpdateTimestamp)
+            boolean aExplicitAnnotatorUserAction)
         throws IOException
     {
         AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
+        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
     }
 
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
-            boolean aUpdateTimestamp)
+            boolean aExplicitAnnotatorUserAction)
         throws IOException
     {
         AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
+        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
     }
 
     @Override
     @Transactional
-    public void resetAnnotationCas(SourceDocument aDocument, User aUser)
+    public void resetAnnotationCas(SourceDocument aDocument, User aUser,
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
@@ -866,7 +872,7 @@ public class DocumentServiceImpl
         writeAnnotationCas(cas, aDocument, aUser, false);
 
         adoc.setTimestamp(null);
-        setAnnotationDocumentState(adoc, AnnotationDocumentState.NEW);
+        setAnnotationDocumentState(adoc, AnnotationDocumentState.NEW, aFlags);
 
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
     }
@@ -984,8 +990,7 @@ public class DocumentServiceImpl
     {
         // First get the source documents
         List<SourceDocument> sourceDocuments = entityManager
-                .createQuery("FROM SourceDocument " + "WHERE project = (:project)",
-                        SourceDocument.class)
+                .createQuery("FROM SourceDocument WHERE project = (:project)", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
 
         // Next we get all the annotation document records. We can use these to filter out
@@ -1108,13 +1113,18 @@ public class DocumentServiceImpl
 
     private List<String> getAllAnnotators(Project aProject)
     {
-        String query = String.join("\n", "SELECT DISTINCT p.user",
-                "FROM ProjectPermission p, User u", "WHERE p.project = :project",
-                "  AND p.level   = :level", "  AND p.user    = u.username");
+        String query = String.join("\n", //
+                "SELECT DISTINCT p.user", //
+                "FROM ProjectPermission p, User u", //
+                "WHERE p.project = :project", //
+                "  AND p.level   = :level", //
+                "  AND p.user    = u.username");
 
         // Get all annotators in the project
-        List<String> users = entityManager.createQuery(query, String.class)
-                .setParameter("project", aProject).setParameter("level", ANNOTATOR).getResultList();
+        List<String> users = entityManager.createQuery(query, String.class) //
+                .setParameter("project", aProject) //
+                .setParameter("level", ANNOTATOR) //
+                .getResultList();
 
         return users;
     }
@@ -1122,11 +1132,25 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentState aState)
+            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
         AnnotationDocumentState oldState = aDocument.getState();
 
         aDocument.setState(aState);
+
+        if (aState == AnnotationDocumentState.NEW) {
+            // If a document is reset, the annotator state is cleared
+            aDocument.setAnnotatorState(null);
+        }
+        else if (aState == AnnotationDocumentState.IN_PROGRESS) {
+            // If a manager/curator send the document back to the annotator, the annotator state
+            // is re-set to being in progress
+            aDocument.setAnnotatorState(AnnotationDocumentState.IN_PROGRESS);
+        }
+        else if (asList(aFlags).contains(EXPLICIT_ANNOTATOR_USER_ACTION)) {
+            // Otherwise, the annotator state is only update by explicit annotator actions
+            aDocument.setAnnotatorState(aState);
+        }
 
         createAnnotationDocument(aDocument);
 
@@ -1146,24 +1170,6 @@ public class DocumentServiceImpl
         for (AnnotationDocument doc : aDocuments) {
             setAnnotationDocumentState(doc, aState);
         }
-    }
-
-    @Override
-    @Transactional
-    public AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentStateTransition aTransition)
-        throws IOException
-    {
-        AnnotationDocumentState targetState = AnnotationDocumentStateTransition
-                .transition(aTransition);
-
-        if (AnnotationDocumentStateTransition.IGNORE_TO_NEW == aTransition) {
-            if (casStorageService.existsCas(aDocument.getDocument(), aDocument.getUser())) {
-                targetState = AnnotationDocumentState.IN_PROGRESS;
-            }
-        }
-
-        return setAnnotationDocumentState(aDocument, targetState);
     }
 
     @EventListener

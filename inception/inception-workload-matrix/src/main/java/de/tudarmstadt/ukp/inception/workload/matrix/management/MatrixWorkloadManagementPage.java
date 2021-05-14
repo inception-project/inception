@@ -21,10 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FI
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -39,7 +35,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,7 +46,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -78,7 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -475,37 +469,28 @@ public class MatrixWorkloadManagementPage
         AnnotationDocument annotationDocument = documentService
                 .createOrGetAnnotationDocument(aEvent.getSourceDocument(), user);
 
-        AnnotationDocumentStateTransition transition;
+        AnnotationDocumentState targetState;
         switch (annotationDocument.getState()) {
         case NEW:
-            transition = NEW_TO_IGNORE;
+            targetState = AnnotationDocumentState.IGNORE;
             break;
         case IGNORE:
-            transition = IGNORE_TO_NEW;
+            targetState = AnnotationDocumentState.NEW;
             break;
         case IN_PROGRESS:
-            transition = ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+            targetState = AnnotationDocumentState.FINISHED;
             break;
         case FINISHED:
-            transition = ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+            targetState = AnnotationDocumentState.IN_PROGRESS;
             break;
         default:
             return;
         }
 
-        try {
-            documentService.transitionAnnotationDocumentState(annotationDocument, transition);
-            success(format("The state of document [%s] for user [%s] has been set to [%s]",
-                    aEvent.getSourceDocument().getName(), aEvent.getUsername(),
-                    annotationDocument.getState()));
-        }
-        catch (IOException e) {
-            LOG.error("Unable to set the state of document {} for user {}",
-                    aEvent.getSourceDocument(), aEvent.getUsername(), e);
-            error(format("Unable to set state of document [%s] for user [%s]: %s",
-                    aEvent.getSourceDocument().getName(), aEvent.getUsername(),
-                    ExceptionUtils.getRootCauseMessage(e)));
-        }
+        documentService.setAnnotationDocumentState(annotationDocument, targetState);
+        success(format("The state of document [%s] for user [%s] has been set to [%s]",
+                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                annotationDocument.getState()));
 
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
@@ -543,7 +528,7 @@ public class MatrixWorkloadManagementPage
     public void onAnnotatorColumnCellOpenContextMenuEvent(
             AnnotatorColumnCellOpenContextMenuEvent aEvent)
     {
-        if (aEvent.getState() == NEW || aEvent.getState() == IGNORE) {
+        if (aEvent.getState() == NEW) {
             info("Documents on which work has not yet been started cannot be reset.");
             aEvent.getTarget().addChildren(getPage(), IFeedback.class);
             return;

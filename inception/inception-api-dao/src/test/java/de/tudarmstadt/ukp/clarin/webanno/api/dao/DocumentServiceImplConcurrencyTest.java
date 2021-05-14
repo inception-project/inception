@@ -74,7 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @ExtendWith(MockitoExtension.class)
-public class DocumentServiceImplTest
+public class DocumentServiceImplConcurrencyTest
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -101,7 +101,6 @@ public class DocumentServiceImplTest
     @BeforeEach
     public void setup() throws Exception
     {
-
         exception.set(false);
         rwTasksCompleted.set(false);
         managedReadCounter.set(0);
@@ -123,7 +122,7 @@ public class DocumentServiceImplTest
         lenient().doAnswer(_invocation -> {
             SourceDocument doc = _invocation.getArgument(0, SourceDocument.class);
             String user = _invocation.getArgument(1, String.class);
-            return new AnnotationDocument(doc.getName(), doc.getProject(), user, doc);
+            return new AnnotationDocument(doc.getName(), user, doc);
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
         lenient().when(importExportService.importCasFromFile(any(File.class), any(Project.class),

@@ -127,7 +127,7 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public void createProject(Project aProject) throws IOException
+    public Project createProject(Project aProject) throws IOException
     {
         if (aProject.getId() != null) {
             throw new IllegalArgumentException("Project has already been created before.");
@@ -145,6 +145,8 @@ public class ProjectServiceImpl
 
             applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
         }
+
+        return aProject;
     }
 
     @Override

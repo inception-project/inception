@@ -101,11 +101,9 @@ public class CurationServiceTest
     public void listUsersReadyForCuration_ShouldReturnFinishedUsers()
     {
         // create finished annotationdocuments
-        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", testProject, "beate",
-                testDocument);
+        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", "beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", testProject, "kevin",
-                testDocument);
+        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", "kevin", testDocument);
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
@@ -120,11 +118,9 @@ public class CurationServiceTest
     public void listFinishedUsers_ShouldReturnFinishedUsers()
     {
         // create finished annotationdocuments
-        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", testProject, "beate",
-                testDocument);
+        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", "beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", testProject, "kevin",
-                testDocument);
+        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", "kevin", testDocument);
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);

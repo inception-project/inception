@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
+import static java.util.Calendar.YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.text.ParseException;
@@ -30,7 +32,6 @@ import java.util.Date;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,6 +43,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
@@ -50,24 +52,35 @@ public class InviteServiceImplTest
     private InviteService sut;
 
     private @Autowired TestEntityManager testEntityManager;
+
     private ProjectService projectService;
     private WorkloadManagementService workloadManagementService;
+    private WorkloadManagerExtension workloadManagerExtension;
 
     private Project testProject;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        projectService = Mockito.mock(ProjectService.class);
-        workloadManagementService = Mockito.mock(WorkloadManagementService.class);
-
-        sut = new InviteServiceImpl(null, projectService, null, workloadManagementService,
-                testEntityManager.getEntityManager());
         testProject = new Project("testProject");
         testProject.setState(ANNOTATION_IN_PROGRESS);
         testEntityManager.persist(testProject);
 
+        projectService = mock(ProjectService.class);
         when(projectService.getProject(any(Long.class))).thenReturn(testProject);
+
+        workloadManagerExtension = mock(WorkloadManagerExtension.class);
+        when(workloadManagerExtension.freshenStatus(any())).thenAnswer(_call -> {
+            Project project = (Project) _call.getArgument(0);
+            return project.getState();
+        });
+
+        workloadManagementService = mock(WorkloadManagementService.class);
+        when(workloadManagementService.getWorkloadManagerExtension(any()))
+                .thenReturn(workloadManagerExtension);
+
+        sut = new InviteServiceImpl(null, projectService, null, workloadManagementService,
+                testEntityManager.getEntityManager());
     }
 
     @AfterEach
@@ -159,7 +172,7 @@ public class InviteServiceImplTest
         Date newDate = sut.getExpirationDate(testProject);
         Calendar newCalendar = Calendar.getInstance();
         newCalendar.setTime(newDate);
-        assertThat(newCalendar.get(Calendar.YEAR) - oldCalendar.get(Calendar.YEAR)).isEqualTo(1);
+        assertThat(newCalendar.get(YEAR) - oldCalendar.get(YEAR)).isEqualTo(1);
     }
 
     @Test
@@ -171,6 +184,5 @@ public class InviteServiceImplTest
 
         Date generatedDate = sut.getExpirationDate(testProject);
         assertThat(generatedDate).isEqualTo(expectedDate);
-
     }
 }

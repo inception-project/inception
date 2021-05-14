@@ -103,11 +103,12 @@ public class UserDaoImpl
 
     @Override
     @Transactional
-    public void create(User aUser)
+    public User create(User aUser)
     {
         entityManager.persist(aUser);
         entityManager.flush();
         log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
+        return aUser;
     }
 
     @Override
