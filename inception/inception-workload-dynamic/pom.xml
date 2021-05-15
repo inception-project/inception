@@ -59,15 +59,24 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-dao</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload</artifactId>
-    </dependency>
+
 
     <dependency>
       <groupId>org.springframework</groupId>
@@ -80,6 +89,10 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -185,6 +198,12 @@
       <artifactId>h2</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
   </dependencies>
   
   <build>
