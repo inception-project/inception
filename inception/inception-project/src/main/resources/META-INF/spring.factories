@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration
+de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration,\
+de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration

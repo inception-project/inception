@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -100,6 +101,7 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
         DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
+        ProjectInitializersAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
