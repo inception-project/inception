@@ -29,8 +29,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -44,13 +42,12 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Propagation;
@@ -65,12 +62,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -112,7 +109,9 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
 // REC: Not particularly clear why Propagation.NEVER is required, but if it is not there, the test
 // waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
-@Import({ ProjectServiceAutoConfiguration.class, //
+@Import({ //
+        DocumentServiceAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
@@ -463,12 +462,9 @@ public class MtasDocumentIndexTest
         assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
 
-    @Configuration
+    @SpringBootConfiguration
     public static class TestContext
     {
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
-        private @Autowired EntityManager entityManager;
-
         @Lazy
         @Bean
         public NamedEntityLayerInitializer namedEntityLayerInitializer(
@@ -507,16 +503,6 @@ public class MtasDocumentIndexTest
                 @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
             return new TokenLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Bean
-        public DocumentService documentService(RepositoryProperties aRepositoryProperties,
-                CasStorageService aCasStorageService,
-                DocumentImportExportService aImportExportService, ProjectService aProjectService)
-        {
-            return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
-                    aImportExportService, aProjectService, applicationEventPublisher,
-                    entityManager);
         }
 
         @Bean
