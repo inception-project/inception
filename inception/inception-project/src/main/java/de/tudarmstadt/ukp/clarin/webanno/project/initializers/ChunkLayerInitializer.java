@@ -33,13 +33,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectServiceAutoConfiguration#chunkLayerInitializer}.
+ * {@link ProjectInitializersAutoConfiguration#chunkLayerInitializer}.
  * </p>
  */
 public class ChunkLayerInitializer

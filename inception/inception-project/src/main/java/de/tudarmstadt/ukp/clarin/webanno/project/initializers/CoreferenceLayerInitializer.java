@@ -34,12 +34,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectServiceAutoConfiguration#coreferenceLayerInitializer}.
+ * {@link ProjectInitializersAutoConfiguration#coreferenceLayerInitializer}.
  * </p>
  */
 public class CoreferenceLayerInitializer

@@ -29,12 +29,12 @@ import org.springframework.core.io.ClassPathResource;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectServiceAutoConfiguration#partOfSpeechTagSetInitializer}.
+ * {@link ProjectInitializersAutoConfiguration#partOfSpeechTagSetInitializer}.
  * </p>
  */
 public class PartOfSpeechTagSetInitializer

@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectServiceAutoConfiguration#semPredArgLayerInitializer}.
+ * {@link ProjectInitializersAutoConfiguration#semPredArgLayerInitializer}.
  * </p>
  */
 public class SemPredArgLayerInitializer
