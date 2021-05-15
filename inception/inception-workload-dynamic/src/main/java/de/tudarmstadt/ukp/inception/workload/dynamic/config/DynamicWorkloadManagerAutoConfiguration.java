@@ -73,7 +73,7 @@ public class DynamicWorkloadManagerAutoConfiguration
     }
 
     @Bean
-    public DynamicWorkflowActionBarExtension DynamicWorkflowActionBarExtension(
+    public DynamicWorkflowActionBarExtension dynamicWorkflowActionBarExtension(
             WorkloadManagementService aWorkloadManagementService, ProjectService aProjectService)
     {
         return new DynamicWorkflowActionBarExtension(aWorkloadManagementService, aProjectService);
