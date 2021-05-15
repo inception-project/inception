@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.config;
 
 import java.io.File;
 
+import org.slf4j.MDC;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 /**
  * <p>
@@ -48,5 +50,10 @@ public class RepositoryProperties
     public void setPath(File aPath)
     {
         path = aPath;
+
+        // This is mainly a convenience for unit tests. For production environments, it must be made
+        // sure that the MDC is configured e.g. on the worker threads for incoming requests and
+        // such.
+        MDC.put(Logging.KEY_REPOSITORY_PATH, aPath.getPath().toString());
     }
 }

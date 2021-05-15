@@ -63,7 +63,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
@@ -75,7 +74,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -87,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -104,15 +103,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 
-@Component(DocumentService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentServiceAutoConfiguration#documentService}.
+ * </p>
+ */
 public class DocumentServiceImpl
     implements DocumentService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
+    private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final DocumentImportExportService importExportService;
     private final ProjectService projectService;
@@ -122,7 +124,8 @@ public class DocumentServiceImpl
     @Autowired
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
             CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
+            EntityManager aEntityManager)
     {
         repositoryProperties = aRepositoryProperties;
         log.info("Document repository path: " + repositoryProperties.getPath());
@@ -131,15 +134,6 @@ public class DocumentServiceImpl
         importExportService = aImportExportService;
         projectService = aProjectService;
         applicationEventPublisher = aApplicationEventPublisher;
-    }
-
-    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
-            CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
-            EntityManager aEntityManager)
-    {
-        this(aRepositoryProperties, aCasStorageService, aImportExportService, aProjectService,
-                aApplicationEventPublisher);
         entityManager = aEntityManager;
     }
 

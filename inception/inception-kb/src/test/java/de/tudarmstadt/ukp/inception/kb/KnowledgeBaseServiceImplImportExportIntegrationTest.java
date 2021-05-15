@@ -44,7 +44,6 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -60,11 +59,13 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@Transactional
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false)
+@EnableAutoConfiguration
+@EntityScan({ //
+        "de.tudarmstadt.ukp.inception.kb.model", //
+        "de.tudarmstadt.ukp.clarin.webanno.model" })
 public class KnowledgeBaseServiceImplImportExportIntegrationTest
 {
-
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
@@ -263,9 +264,6 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
-            "de.tudarmstadt.ukp.clarin.webanno.model" })
     public static class SpringConfig
     {
         // No content
