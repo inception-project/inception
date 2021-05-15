@@ -30,11 +30,15 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationServiceAutoConfiguration#layerBehaviorRegistry}.
+ * </p>
+ */
 public class LayerBehaviorRegistryImpl
     implements LayerBehaviorRegistry
 {

@@ -32,16 +32,15 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.MDC;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +48,15 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -73,77 +73,82 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
-import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl;
-import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
-import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
-import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
-import de.tudarmstadt.ukp.inception.search.config.SearchServicePropertiesImpl;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 
 @EnableAutoConfiguration
-@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
-        "de.tudarmstadt.ukp.inception.search.model", "de.tudarmstadt.ukp.inception.kb.model",
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
+        "de.tudarmstadt.ukp.inception.search.model", //
+        "de.tudarmstadt.ukp.inception.kb.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-@TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off", //
+                "spring.main.allow-bean-definition-overriding=true", //
+                "repository.path=" + MtasDocumentIndexTest.TEST_OUTPUT_FOLDER })
+// REC: Not particularly clear why Propagation.NEVER is required, but if it is not there, the test
+// waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
+@Import({ ProjectServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
+        AnnotationServiceAutoConfiguration.class, //
+        SecurityAutoConfiguration.class, //
+        SearchServiceAutoConfiguration.class, //
+        SchedulingServiceAutoConfiguration.class, //
+        MtasDocumentIndexAutoConfiguration.class, //
+        KnowledgeBaseServiceAutoConfiguration.class })
 public class MtasDocumentIndexTest
 {
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/MtasDocumentIndexTest";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
-    private @Autowired RepositoryProperties repositoryProperties;
 
-    public @TempDir File temporaryFolder;
+    @BeforeAll
+    public static void setupClass()
+    {
+        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
+    }
 
     @BeforeEach
     public void testWatcher(TestInfo aTestInfo)
@@ -156,10 +161,6 @@ public class MtasDocumentIndexTest
     @BeforeEach
     public void setUp()
     {
-        repositoryProperties.setPath(temporaryFolder);
-
-        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-
         if (!userRepository.exists("admin")) {
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
         }
@@ -480,45 +481,12 @@ public class MtasDocumentIndexTest
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
         private @Autowired EntityManager entityManager;
 
-        @Bean
-        public ProjectService projectService(UserDao aUserRepository,
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy,
-                RepositoryProperties aRepositoryProperties)
-        {
-            return new ProjectServiceImpl(aUserRepository, applicationEventPublisher,
-                    aRepositoryProperties, aInitializerProxy, entityManager);
-        }
-
-        @Bean
-        public PhysicalIndexFactory mtasDocumentIndexFactory(DocumentService aDocumentService,
-                AnnotationSchemaService aSchemaService, RepositoryProperties aRepositoryProperties,
-                FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
-                FeatureSupportRegistry aFeatureSupportRegistry)
-        {
-            return new MtasDocumentIndexFactory(aSchemaService, aDocumentService,
-                    aRepositoryProperties, aFeatureIndexingSupportRegistry,
-                    aFeatureSupportRegistry);
-        }
-
+        @Primary
         @Bean
         public FeatureSupportRegistry featureSupportRegistry()
         {
             return new FeatureSupportRegistryImpl(asList(new NumberFeatureSupport(),
                     new BooleanFeatureSupport(), new StringFeatureSupport()));
-        }
-
-        @Bean
-        public FeatureIndexingSupport primitiveUimaIndexingSupport(
-                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
-        {
-            return new PrimitiveUimaIndexingSupport(aFeatureSupportRegistry);
-        }
-
-        @Bean
-        public FeatureIndexingSupportRegistry featureIndexingSupportRegistry(
-                @Lazy @Autowired(required = false) List<FeatureIndexingSupport> aIndexingSupports)
-        {
-            return new FeatureIndexingSupportRegistryImpl(aIndexingSupports);
         }
 
         @Lazy
@@ -561,57 +529,6 @@ public class MtasDocumentIndexTest
             return new TokenLayerInitializer(aAnnotationSchemaService);
         }
 
-        @Lazy
-        @Bean
-        public PhysicalIndexRegistry indexRegistry(
-                @Lazy @Autowired(required = false) List<PhysicalIndexFactory> aExtensions)
-        {
-            return new PhysicalIndexRegistryImpl(aExtensions);
-        }
-
-        @Bean
-        public SchedulingProperties schedulingProperties()
-        {
-            return new SchedulingProperties();
-        }
-
-        @Bean
-        public SchedulingService schedulingService(ApplicationContext aContext,
-                SchedulingProperties aSchedulingProperties)
-        {
-            return new SchedulingServiceImpl(aContext, aSchedulingProperties);
-        }
-
-        @Bean
-        public SearchService searchService(DocumentService aDocumentService,
-                ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
-                SchedulingService aSchedulingService, SearchServiceProperties aProperties)
-        {
-            return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
-                    aSchedulingService, aProperties);
-        }
-
-        @Bean
-        public SearchServiceProperties searchServiceProperties()
-        {
-            SearchServicePropertiesImpl properties = new SearchServicePropertiesImpl();
-            properties.setEnabled(true);
-            return properties;
-        }
-
-        @Bean
-        public UserDao userRepository()
-        {
-            return new UserDaoImpl();
-        }
-
-        @Bean
-        public KnowledgeBaseService knowledgeBaseService(RepositoryProperties aRepoProperties,
-                KnowledgeBaseProperties aKBProperties)
-        {
-            return new KnowledgeBaseServiceImpl(aRepoProperties, aKBProperties);
-        }
-
         @Bean
         public DocumentService documentService(RepositoryProperties aRepositoryProperties,
                 CasStorageService aCasStorageService,
@@ -623,26 +540,14 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public AnnotationSchemaService annotationSchemaService()
-        {
-            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
-                    entityManager);
-        }
-
-        @Bean
-        public CasStorageService casStorageService()
-        {
-            return new CasStorageServiceImpl(null, null, repositoryProperties(),
-                    new CasStoragePropertiesImpl(), backupProperties());
-        }
-
-        @Bean
-        public DocumentImportExportService importExportService()
+        public DocumentImportExportService importExportService(
+                RepositoryProperties aRepositoryProperties, CasStorageService aCasStorageService,
+                AnnotationSchemaService aAnnotationService)
         {
             DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
-            return new DocumentImportExportServiceImpl(repositoryProperties(),
+            return new DocumentImportExportServiceImpl(aRepositoryProperties,
                     asList(new TextFormatSupport(), new Conll2002FormatSupport()),
-                    casStorageService(), annotationSchemaService(), properties);
+                    aCasStorageService, aAnnotationService, properties);
         }
 
         @Bean
@@ -650,24 +555,6 @@ public class MtasDocumentIndexTest
                 AnnotationSchemaService aAnnotationService)
         {
             return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
-        }
-
-        @Bean
-        public RepositoryProperties repositoryProperties()
-        {
-            return new RepositoryProperties();
-        }
-
-        @Bean
-        public KnowledgeBaseProperties knowledgeBaseProperties()
-        {
-            return new KnowledgeBasePropertiesImpl();
-        }
-
-        @Bean
-        public BackupProperties backupProperties()
-        {
-            return new BackupProperties();
         }
 
         @Bean

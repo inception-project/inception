@@ -50,7 +50,6 @@ import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -74,7 +73,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -93,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagCreatedEvent;
@@ -113,16 +112,17 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * Implementation of methods defined in the {@link AnnotationSchemaService} interface
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationServiceAutoConfiguration#annotationSchemaService}.
+ * </p>
  */
-@Component(AnnotationSchemaService.SERVICE_NAME)
 public class AnnotationSchemaServiceImpl
     implements AnnotationSchemaService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @PersistenceContext EntityManager entityManager;
-
+    private final EntityManager entityManager;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
@@ -132,11 +132,12 @@ public class AnnotationSchemaServiceImpl
     @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ApplicationEventPublisher aApplicationEventPublisher, EntityManager aEntityManager)
     {
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
         applicationEventPublisher = aApplicationEventPublisher;
+        entityManager = aEntityManager;
 
         immutableTagsCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
                 .maximumSize(10 * 1024).build(this::loadImmutableTags);
@@ -151,14 +152,20 @@ public class AnnotationSchemaServiceImpl
 
     public AnnotationSchemaServiceImpl()
     {
-        this(null, null, (EntityManager) null);
-    }
+        layerSupportRegistry = null;
+        featureSupportRegistry = null;
+        applicationEventPublisher = null;
+        entityManager = null;
 
-    public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry, EntityManager aEntityManager)
-    {
-        this(aLayerSupportRegistry, aFeatureSupportRegistry, (ApplicationEventPublisher) null);
-        entityManager = aEntityManager;
+        immutableTagsCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024).build(this::loadImmutableTags);
+
+        try {
+            builtInTypes = createTypeSystemDescription();
+        }
+        catch (ResourceInitializationException e) {
+            throw new IllegalStateException("Unable to initialize built-in type system", e);
+        }
     }
 
     @Override

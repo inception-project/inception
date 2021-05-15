@@ -20,8 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.persistence.EntityManager;
+import java.io.File;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -31,36 +32,54 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.annotation.Import;
+import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 
 @EnableAutoConfiguration
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
-@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off", //
+                "repository.path=" + DocumentServiceImplDatabaseTest.TEST_OUTPUT_FOLDER })
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-@Transactional(propagation = Propagation.NEVER)
+@Import({ //
+        ProjectServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
+        AnnotationServiceAutoConfiguration.class, //
+        SecurityAutoConfiguration.class, //
+        SchedulingServiceAutoConfiguration.class })
 public class DocumentServiceImplDatabaseTest
 {
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/DocumentServiceImplDatabaseTest";
+
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userRepository;
     private @Autowired DocumentService documentService;
+
+    @BeforeAll
+    public static void setupClass()
+    {
+        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
+    }
 
     @Test
     public void testThatAnnotationDocumentsForNonExistingUserAreNotReturned() throws Exception
@@ -94,51 +113,20 @@ public class DocumentServiceImplDatabaseTest
     public static class TestContext
     {
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
-        private @Autowired EntityManager entityManager;
 
         @Bean
-        public ProjectService projectService()
+        public DocumentService documentService(RepositoryProperties aRepositoryProperties,
+                CasStorageService aCasStorageService, ProjectService aProjectService,
+                ApplicationEventPublisher aApplicationEventPublisher)
         {
-            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
-                    repositoryProperties(), null, entityManager);
+            return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService, null,
+                    aProjectService, applicationEventPublisher);
         }
 
-        @Bean
-        public UserDao userRepository()
-        {
-            return new UserDaoImpl();
-        }
-
-        @Bean
-        public DocumentService documentService()
-        {
-            return new DocumentServiceImpl(repositoryProperties(), casStorageService(), null, null,
-                    applicationEventPublisher);
-        }
-
-        @Bean
-        public CasStorageService casStorageService()
-        {
-            return new CasStorageServiceImpl(null, null, repositoryProperties(),
-                    new CasStoragePropertiesImpl(), backupProperties());
-        }
-
-        @Bean
-        public RepositoryProperties repositoryProperties()
-        {
-            return new RepositoryProperties();
-        }
-
-        @Bean
-        public BackupProperties backupProperties()
-        {
-            return new BackupProperties();
-        }
-
-        @Bean
-        public ApplicationContextProvider contextProvider()
-        {
-            return new ApplicationContextProvider();
-        }
+        // @Bean
+        // public ApplicationContextProvider contextProvider()
+        // {
+        // return new ApplicationContextProvider();
+        // }
     }
 }

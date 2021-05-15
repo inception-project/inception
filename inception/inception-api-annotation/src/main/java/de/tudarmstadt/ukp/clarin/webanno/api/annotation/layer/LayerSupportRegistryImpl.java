@@ -31,27 +31,31 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationServiceAutoConfiguration#layerSupportRegistry}.
+ * </p>
+ */
 public class LayerSupportRegistryImpl
     implements LayerSupportRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<LayerSupport> layerSupportsProxy;
+    private final List<LayerSupport<?, ?>> layerSupportsProxy;
 
     private List<LayerSupport> layerSupports;
 
     private final LoadingCache<AnnotationLayer, LayerSupport<?, ?>> supportCache;
 
     public LayerSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<LayerSupport> aLayerSupports)
+            @Lazy @Autowired(required = false) List<LayerSupport<?, ?>> aLayerSupports)
     {
         layerSupportsProxy = aLayerSupports;
 

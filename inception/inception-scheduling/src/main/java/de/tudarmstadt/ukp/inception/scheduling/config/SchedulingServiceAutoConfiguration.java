@@ -17,31 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@ConfigurationProperties("inception.scheduling")
-public class SchedulingProperties
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl;
+
+@Configuration
+@EnableConfigurationProperties({ SchedulingProperties.class })
+public class SchedulingServiceAutoConfiguration
 {
-    private int numberOfThreads = 4;
-    private int queueSize = 100;
-
-    public int getNumberOfThreads()
+    @Bean
+    public SchedulingService schedulingService(ApplicationContext aApplicationContext,
+            SchedulingProperties aConfig)
     {
-        return numberOfThreads;
-    }
-
-    public void setNumberOfThreads(int aNumberOfThreads)
-    {
-        numberOfThreads = aNumberOfThreads;
-    }
-
-    public int getQueueSize()
-    {
-        return queueSize;
-    }
-
-    public void setQueueSize(int aQueueSize)
-    {
-        queueSize = queueSize;
+        return new SchedulingServiceImpl(aApplicationContext, aConfig);
     }
 }

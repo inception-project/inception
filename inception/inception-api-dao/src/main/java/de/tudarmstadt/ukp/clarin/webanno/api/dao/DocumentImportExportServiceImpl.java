@@ -114,11 +114,11 @@ public class DocumentImportExportServiceImpl
     private final List<FormatSupport> formatsProxy;
     private Map<String, FormatSupport> formats;
 
-    public DocumentImportExportServiceImpl(@Autowired RepositoryProperties aRepositoryProperties,
+    @Autowired
+    public DocumentImportExportServiceImpl(RepositoryProperties aRepositoryProperties,
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
-            @Autowired CasStorageService aCasStorageService,
-            @Autowired AnnotationSchemaService aAnnotationService,
-            @Autowired DocumentImportExportServiceProperties aServiceProperties)
+            CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,
+            DocumentImportExportServiceProperties aServiceProperties)
     {
         repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;

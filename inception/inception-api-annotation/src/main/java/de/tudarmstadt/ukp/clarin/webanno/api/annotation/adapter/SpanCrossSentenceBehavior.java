@@ -36,7 +36,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
@@ -53,8 +52,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * Ensure that annotations do not cross sentence boundaries. For chain layers, this check applies
  * only to the chain elements. Chain links can still cross sentence boundaries.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationServiceAutoConfiguration#spanCrossSentenceBehavior}.
+ * </p>
  */
-@Component
 public class SpanCrossSentenceBehavior
     extends SpanLayerBehavior
 {
