@@ -52,7 +52,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
@@ -67,7 +66,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -79,47 +77,43 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 
-@Component(ProjectService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ProjectServiceAutoConfiguration#projectService}.
+ * </p>
+ */
 public class ProjectServiceImpl
     implements ProjectService, SmartLifecycle
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @PersistenceContext EntityManager entityManager;
+    private final EntityManager entityManager;
     private final UserDao userRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RepositoryProperties repositoryProperties;
     private final List<ProjectInitializer> initializerProxy;
-    private List<ProjectInitializer> initializers;
 
+    private List<ProjectInitializer> initializers;
     private boolean running = false;
 
     @Autowired
     public ProjectServiceImpl(UserDao aUserRepository,
             ApplicationEventPublisher aApplicationEventPublisher,
             RepositoryProperties aRepositoryProperties,
-            @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
+            @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy,
+            EntityManager aEntityManager)
     {
+        entityManager = aEntityManager;
         userRepository = aUserRepository;
         applicationEventPublisher = aApplicationEventPublisher;
         repositoryProperties = aRepositoryProperties;
         initializerProxy = aInitializerProxy;
-    }
-
-    /**
-     * This constructor is used for testing to set specific test objects for fields
-     */
-    public ProjectServiceImpl(UserDao aUserRepository,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            RepositoryProperties aRepositoryProperties, List<ProjectInitializer> aInitializerProxy,
-            EntityManager aEntityManager)
-    {
-        this(aUserRepository, aApplicationEventPublisher, aRepositoryProperties, aInitializerProxy);
-        entityManager = aEntityManager;
     }
 
     @Override

@@ -26,13 +26,17 @@ import java.util.Optional;
 import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.CachingContextLookupExtensionPoint_ImplBase;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#featureSupportRegistry}.
+ * </p>
+ */
 public class FeatureSupportRegistryImpl
     extends CachingContextLookupExtensionPoint_ImplBase<AnnotationFeature, FeatureSupport<?>>
     implements FeatureSupportRegistry

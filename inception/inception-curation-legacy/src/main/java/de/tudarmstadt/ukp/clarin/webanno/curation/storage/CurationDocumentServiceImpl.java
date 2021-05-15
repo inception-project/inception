@@ -1,5 +1,5 @@
 /*
-# * Licensed to the Technische Universität Darmstadt under one
+ * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The Technische Universität Darmstadt 
@@ -26,39 +26,42 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
-@Component(CurationDocumentService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CurationDocumentServiceAutoConfiguration#curationDocumentService}.
+ * </p>
+ */
 public class CurationDocumentServiceImpl
     implements CurationDocumentService
 {
+    private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, EntityManager aEntityManager)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
+        entityManager = aEntityManager;
     }
 
     @Override

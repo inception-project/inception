@@ -58,6 +58,7 @@ installPrefs inception-pdf-editor
 installPrefs inception-plugin-api
 installPrefs inception-plugin-manager
 installPrefs inception-plugin-parent
+installPrefs inception-preferences
 installPrefs inception-project
 installPrefs inception-recommendation
 installPrefs inception-recommendation-api

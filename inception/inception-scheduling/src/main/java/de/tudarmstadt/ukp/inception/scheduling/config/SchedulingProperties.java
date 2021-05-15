@@ -18,9 +18,7 @@
 package de.tudarmstadt.ukp.inception.scheduling.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("inception.scheduling")
 public class SchedulingProperties
 {
