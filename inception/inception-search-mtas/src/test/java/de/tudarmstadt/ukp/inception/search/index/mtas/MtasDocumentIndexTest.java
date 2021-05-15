@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -53,23 +52,15 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -79,7 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
@@ -104,6 +95,9 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
 // waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
 @Import({ //
+        TextFormatsAutoConfiguration.class, //
+        ConllFormatsAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
@@ -459,24 +453,6 @@ public class MtasDocumentIndexTest
     @SpringBootConfiguration
     public static class TestContext
     {
-        @Bean
-        public DocumentImportExportService importExportService(
-                RepositoryProperties aRepositoryProperties, CasStorageService aCasStorageService,
-                AnnotationSchemaService aAnnotationService)
-        {
-            DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
-            return new DocumentImportExportServiceImpl(aRepositoryProperties,
-                    asList(new TextFormatSupport(), new Conll2002FormatSupport()),
-                    aCasStorageService, aAnnotationService, properties);
-        }
-
-        @Bean
-        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-                AnnotationSchemaService aAnnotationService)
-        {
-            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
-        }
-
         @Bean
         public ApplicationContextProvider contextProvider()
         {
