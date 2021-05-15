@@ -40,6 +40,7 @@ import org.springframework.util.FileSystemUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -53,7 +54,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.inception.preferences.model" })
-@Import({ SecurityAutoConfiguration.class, RepositoryAutoConfiguration.class })
+@Import({ //
+        SecurityAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class })
 public class PreferencesServiceImplIntegrationTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/PreferencesServiceImplIntegrationTest";
