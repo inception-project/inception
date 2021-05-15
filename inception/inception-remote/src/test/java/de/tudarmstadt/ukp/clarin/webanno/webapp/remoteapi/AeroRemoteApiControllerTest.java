@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
-import static java.util.Arrays.asList;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -58,16 +57,13 @@ import org.springframework.web.context.WebApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.OpenCasStorageSessionForRequestFilter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -78,7 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
-import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 
 @EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
@@ -89,6 +85,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoCo
                 "repository.path=" + AeroRemoteApiControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @Import({ //
+        TextFormatsAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
@@ -303,16 +301,6 @@ public class AeroRemoteApiControllerTest
     @Configuration
     public static class TestContext
     {
-        @Bean
-        public DocumentImportExportService importExportService(CasStorageService aCasStorageService,
-                RepositoryProperties aProperties, AnnotationSchemaService aAnnotationSchemaService)
-        {
-            DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
-
-            return new DocumentImportExportServiceImpl(aProperties, asList(new TextFormatSupport()),
-                    aCasStorageService, aAnnotationSchemaService, properties);
-        }
-
         @Bean
         public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
                 AnnotationSchemaService aAnnotationService)

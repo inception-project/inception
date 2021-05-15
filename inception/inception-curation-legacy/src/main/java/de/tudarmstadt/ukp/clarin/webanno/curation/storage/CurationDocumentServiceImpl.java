@@ -1,5 +1,5 @@
 /*
-# * Licensed to the Technische Universität Darmstadt under one
+ * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The Technische Universität Darmstadt 
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -47,18 +46,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 public class CurationDocumentServiceImpl
     implements CurationDocumentService
 {
+    private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, EntityManager aEntityManager)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
+        entityManager = aEntityManager;
     }
 
     @Override
