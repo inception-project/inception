@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.CachingContextLo
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#featureSupportRegistry}.
+ * {@code AnnotationServiceAutoConfiguration#featureSupportRegistry}.
  * </p>
  */
 public class FeatureSupportRegistryImpl

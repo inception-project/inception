@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
  *
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#spanOverlapBehavior}.
+ * {@code AnnotationServiceAutoConfiguration#spanOverlapBehavior}.
  * </p>
  */
 public class SpanOverlapBehavior

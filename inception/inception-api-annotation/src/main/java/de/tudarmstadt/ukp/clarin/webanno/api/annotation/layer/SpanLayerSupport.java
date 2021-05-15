@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#spanLayerSupport}.
+ * {@code AnnotationServiceAutoConfiguration#spanLayerSupport}.
  * </p>
  */
 public class SpanLayerSupport

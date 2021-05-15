@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#relationCrossSentenceBehavior}.
+ * {@code AnnotationServiceAutoConfiguration#relationCrossSentenceBehavior}.
  * </p>
  */
 public class RelationCrossSentenceBehavior

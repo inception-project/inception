@@ -53,7 +53,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
@@ -63,16 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
@@ -119,7 +108,6 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "spring.main.allow-bean-definition-overriding=true", //
                 "repository.path=" + MtasDocumentIndexTest.TEST_OUTPUT_FOLDER })
 // REC: Not particularly clear why Propagation.NEVER is required, but if it is not there, the test
 // waits forever for the indexing to complete...
@@ -481,14 +469,6 @@ public class MtasDocumentIndexTest
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
         private @Autowired EntityManager entityManager;
 
-        @Primary
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry()
-        {
-            return new FeatureSupportRegistryImpl(asList(new NumberFeatureSupport(),
-                    new BooleanFeatureSupport(), new StringFeatureSupport()));
-        }
-
         @Lazy
         @Bean
         public NamedEntityLayerInitializer namedEntityLayerInitializer(
@@ -561,16 +541,6 @@ public class MtasDocumentIndexTest
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
-        }
-
-        @Bean
-        public LayerSupportRegistry layerSupportRegistry()
-        {
-            FeatureSupportRegistry fsr = featureSupportRegistry();
-
-            return new LayerSupportRegistryImpl(asList(new SpanLayerSupport(fsr, null, null),
-                    new RelationLayerSupport(fsr, null, null),
-                    new ChainLayerSupport(fsr, null, null)));
         }
     }
 }

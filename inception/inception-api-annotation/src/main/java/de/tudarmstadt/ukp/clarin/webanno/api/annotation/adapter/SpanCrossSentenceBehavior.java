@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * only to the chain elements. Chain links can still cross sentence boundaries.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#spanCrossSentenceBehavior}.
+ * {@code AnnotationServiceAutoConfiguration#spanCrossSentenceBehavior}.
  * </p>
  */
 public class SpanCrossSentenceBehavior

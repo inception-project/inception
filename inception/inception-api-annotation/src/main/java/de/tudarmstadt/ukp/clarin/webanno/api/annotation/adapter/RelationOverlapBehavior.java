@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
  * Handles the {@link OverlapMode} setting for {@link WebAnnoConst#RELATION_TYPE relation layers}.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#relationOverlapBehavior}.
+ * {@code AnnotationServiceAutoConfiguration#relationOverlapBehavior}.
  * </p>
  */
 public class RelationOverlapBehavior

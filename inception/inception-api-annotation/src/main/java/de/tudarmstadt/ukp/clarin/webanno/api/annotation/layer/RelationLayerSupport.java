@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#relationLayerSupport}.
+ * {@code AnnotationServiceAutoConfiguration#relationLayerSupport}.
  * </p>
  */
 public class RelationLayerSupport

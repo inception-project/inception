@@ -30,7 +30,7 @@ import org.springframework.core.annotation.Order;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#relationAttachmentBehavior}.
+ * {@code AnnotationServiceAutoConfiguration#relationAttachmentBehavior}.
  * </p>
  */
 @Order(10)

@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#numberFeatureSupport}.
+ * {@code AnnotationServiceAutoConfiguration#numberFeatureSupport}.
  * </p>
  */
 public class NumberFeatureSupport

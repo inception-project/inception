@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#booleanFeatureSupport}.
+ * {@code AnnotationServiceAutoConfiguration#booleanFeatureSupport}.
  * </p>
  */
 public class BooleanFeatureSupport

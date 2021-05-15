@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#spanAnchoringModeBehavior}.
+ * {@code AnnotationServiceAutoConfiguration#spanAnchoringModeBehavior}.
  * </p>
  */
 @Order(10)
