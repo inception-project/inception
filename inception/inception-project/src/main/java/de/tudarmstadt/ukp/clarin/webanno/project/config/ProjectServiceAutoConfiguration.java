@@ -28,10 +28,29 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ChunkLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.CoreferenceLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.CoreferenceRelationTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.CoreferenceTypeTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.DependencyFlavorTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.DependencyLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.DependencyTypeTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LemmaLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.MorphologicalFeaturesLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.OrthographyLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SemPredArgLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SofaChangeOperationTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 @Configuration
@@ -47,5 +66,128 @@ public class ProjectServiceAutoConfiguration
     {
         return new ProjectServiceImpl(aUserRepository, aApplicationEventPublisher,
                 aRepositoryProperties, aInitializerProxy, entityManager);
+    }
+
+    @Bean
+    public ChunkLayerInitializer chunkLayerInitializer(AnnotationSchemaService aSchemaService)
+    {
+        return new ChunkLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public CoreferenceLayerInitializer coreferenceLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new CoreferenceLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public CoreferenceRelationTagSetInitializer coreferenceRelationTagSetInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new CoreferenceRelationTagSetInitializer(aSchemaService);
+    }
+
+    @Bean
+    public CoreferenceTypeTagSetInitializer coreferenceTypeTagSetInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new CoreferenceTypeTagSetInitializer(aSchemaService);
+    }
+
+    @Bean
+    public DependencyFlavorTagSetInitializer dependencyFlavorTagSetInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new DependencyFlavorTagSetInitializer(aSchemaService);
+    }
+
+    @Bean
+    public DependencyLayerInitializer dependencyLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new DependencyLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public DependencyTypeTagSetInitializer dependencyTypeTagSetInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new DependencyTypeTagSetInitializer(aSchemaService);
+    }
+
+    @Bean
+    public LemmaLayerInitializer lemmaLayerInitializer(AnnotationSchemaService aSchemaService)
+    {
+        return new LemmaLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public MorphologicalFeaturesLayerInitializer morphologicalFeaturesLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new MorphologicalFeaturesLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public NamedEntityLayerInitializer namedEntityLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new NamedEntityLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new NamedEntityTagSetInitializer(aSchemaService);
+    }
+
+    @Bean
+    public OrthographyLayerInitializer orthographyLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new OrthographyLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public PartOfSpeechLayerInitializer partOfSpeechLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new PartOfSpeechLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public PartOfSpeechTagSetInitializer partOfSpeechTagSetInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new PartOfSpeechTagSetInitializer(aSchemaService);
+    }
+
+    @Bean
+    public SemPredArgLayerInitializer semPredArgLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new SemPredArgLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public SofaChangeOperationTagSetInitializer sofaChangeOperationTagSetInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new SofaChangeOperationTagSetInitializer(aSchemaService);
+    }
+
+    @Bean
+    public SurfaceFormLayerInitializer SurfaceFormLayerInitializer(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new SurfaceFormLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public TokenLayerInitializer tokenLayerInitializer(AnnotationSchemaService aSchemaService)
+    {
+        return new TokenLayerInitializer(aSchemaService);
     }
 }

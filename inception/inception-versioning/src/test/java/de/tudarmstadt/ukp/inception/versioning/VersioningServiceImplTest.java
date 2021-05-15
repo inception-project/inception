@@ -67,13 +67,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.text.PretokenizedTextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
@@ -88,6 +85,7 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
+        TextFormatsAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
@@ -366,37 +364,10 @@ public class VersioningServiceImplTest
         }
 
         @Bean
-        public PretokenizedTextFormatSupport pretokenizedTextFormatSupport()
-        {
-            return new PretokenizedTextFormatSupport();
-        }
-
-        @Bean
         public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
                 AnnotationSchemaService aAnnotationService)
         {
             return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
-        }
-
-        @Bean
-        public TokenLayerInitializer TokenLayerInitializer(
-                AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new TokenLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Bean
-        public NamedEntityLayerInitializer namedEntityLayerInitializer(
-                AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityLayerInitializer(aAnnotationService);
-        }
-
-        @Bean
-        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
-                AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityTagSetInitializer(aAnnotationService);
         }
     }
 }

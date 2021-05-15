@@ -49,7 +49,6 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
@@ -75,11 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -465,46 +459,6 @@ public class MtasDocumentIndexTest
     @SpringBootConfiguration
     public static class TestContext
     {
-        @Lazy
-        @Bean
-        public NamedEntityLayerInitializer namedEntityLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityLayerInitializer(aAnnotationService);
-        }
-
-        @Lazy
-        @Bean
-        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityTagSetInitializer(aAnnotationService);
-        }
-
-        @Lazy
-        @Bean
-        public PartOfSpeechLayerInitializer partOfSpeechLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new PartOfSpeechLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Lazy
-        @Bean
-        public PartOfSpeechTagSetInitializer partOfSpeechTagSetInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new PartOfSpeechTagSetInitializer(aAnnotationSchemaService);
-        }
-
-        @Lazy
-        @Bean
-        public TokenLayerInitializer TokenLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new TokenLayerInitializer(aAnnotationSchemaService);
-        }
-
         @Bean
         public DocumentImportExportService importExportService(
                 RepositoryProperties aRepositoryProperties, CasStorageService aCasStorageService,
