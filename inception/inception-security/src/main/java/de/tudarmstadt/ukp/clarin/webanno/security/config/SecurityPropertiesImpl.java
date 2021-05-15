@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
+/**
+ * This class is exposed as a Spring Component via {@link SecurityAutoConfiguration}.
+ */
 @ConfigurationProperties("security")
 public class SecurityPropertiesImpl
     implements SecurityProperties

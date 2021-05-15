@@ -15,31 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
+package de.tudarmstadt.ukp.clarin.webanno.text.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.LegacyRemoteApiController;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.text.LineOrientedTextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.PretokenizedTextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 
 @Configuration
-public class RemoteApiConfig
+public class TextFormatsAutoConfiguration
 {
-    public static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
-
-    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
-    public AeroRemoteApiController aeroRemoteApiController()
+    public TextFormatSupport textFormatSupport()
     {
-        return new AeroRemoteApiController();
+        return new TextFormatSupport();
     }
 
-    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
-    public LegacyRemoteApiController legacyRemoteApiController()
+    public LineOrientedTextFormatSupport lineOrientedTextFormatSupport()
     {
-        return new LegacyRemoteApiController();
+        return new LineOrientedTextFormatSupport();
     }
+
+    @Bean
+    public PretokenizedTextFormatSupport pretokenizedTextFormatSupport()
+    {
+        return new PretokenizedTextFormatSupport();
+    }
+
 }

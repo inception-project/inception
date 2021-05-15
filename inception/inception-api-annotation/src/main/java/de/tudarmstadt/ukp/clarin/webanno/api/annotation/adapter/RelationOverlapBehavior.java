@@ -37,7 +37,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -53,8 +52,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Handles the {@link OverlapMode} setting for {@link WebAnnoConst#RELATION_TYPE relation layers}.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#relationOverlapBehavior}.
+ * </p>
  */
-@Component
 public class RelationOverlapBehavior
     extends RelationLayerBehavior
 {

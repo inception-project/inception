@@ -39,7 +39,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
@@ -80,6 +79,7 @@ public class InceptionSecurity
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationProvider authenticationProvider;
     private final UserDao userRepository;
+    private final SessionRegistry sessionRegistry;
 
     // The AuthenticationManager is created by this configuration, yet we also need to access it
     // when constructing the OverridableUserDetailsManager - to break the cyclic dependency, we
@@ -88,13 +88,14 @@ public class InceptionSecurity
     public InceptionSecurity(PasswordEncoder aPasswordEncoder,
             @Lazy AuthenticationManager aAuthenticationManager,
             @Lazy AuthenticationProvider aAuthenticationProvider, DataSource aDataSource,
-            UserDao aUserRepository)
+            SessionRegistry aSessionRegistry, UserDao aUserRepository)
     {
         passwordEncoder = aPasswordEncoder;
         authenticationManager = aAuthenticationManager;
         authenticationProvider = aAuthenticationProvider;
         dataSource = aDataSource;
         userRepository = aUserRepository;
+        sessionRegistry = aSessionRegistry;
     }
 
     @Autowired
@@ -151,7 +152,7 @@ public class InceptionSecurity
 
     @Configuration
     @Profile("auto-mode-builtin")
-    public static class WebUiSecurity
+    public class WebUiSecurity
         extends WebSecurityConfigurerAdapter
     {
         // Expose the AuthenticationManager using the legacy bean name that is expected by
@@ -162,12 +163,6 @@ public class InceptionSecurity
         public AuthenticationManager authenticationManagerBean() throws Exception
         {
             return super.authenticationManagerBean();
-        }
-
-        @Bean
-        public SessionRegistry sessionRegistry()
-        {
-            return new SessionRegistryImpl();
         }
 
         @Override
@@ -214,7 +209,7 @@ public class InceptionSecurity
                     // mark the server session as invalid on the next request. This is used e.g. to
                     // force-sign-out users that are being deleted.
                     .maximumSessions(-1)
-                    .sessionRegistry(sessionRegistry());
+                    .sessionRegistry(sessionRegistry);
             // @formatter:on
         }
     }
@@ -232,12 +227,6 @@ public class InceptionSecurity
         public AuthenticationManager authenticationManagerBean() throws Exception
         {
             return super.authenticationManagerBean();
-        }
-
-        @Bean
-        public SessionRegistry sessionRegistry()
-        {
-            return new SessionRegistryImpl();
         }
 
         @Override
@@ -280,7 +269,7 @@ public class InceptionSecurity
                     // mark the server session as invalid on the next request. This is used e.g. to
                     // force-sign-out users that are being deleted.
                     .maximumSessions(-1)
-                    .sessionRegistry(sessionRegistry());
+                    .sessionRegistry(sessionRegistry);
             // @formatter:on
         }
     }
