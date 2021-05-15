@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#layerBehaviorRegistry}.
+ * {@code AnnotationServiceAutoConfiguration#layerBehaviorRegistry}.
  * </p>
  */
 public class LayerBehaviorRegistryImpl

@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationServiceAutoConfiguration#layerSupportRegistry}.
+ * {@code AnnotationServiceAutoConfiguration#layerSupportRegistry}.
  * </p>
  */
 public class LayerSupportRegistryImpl
