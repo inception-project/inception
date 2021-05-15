@@ -36,11 +36,10 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.transaction.Transactional;
-
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
