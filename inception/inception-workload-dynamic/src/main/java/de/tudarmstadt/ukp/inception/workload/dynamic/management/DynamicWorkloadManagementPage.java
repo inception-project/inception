@@ -702,8 +702,7 @@ public class DynamicWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         // Writes the new traits into the DB
-        dynamicWorkloadExtension.writeTraits(workloadManagementService, aForm.getModelObject(),
-                currentProject.getObject());
+        dynamicWorkloadExtension.writeTraits(aForm.getModelObject(), currentProject.getObject());
         success("Changes saved");
 
         updateTable(aTarget);

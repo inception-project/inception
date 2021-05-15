@@ -216,14 +216,8 @@ public class DocumentServiceImpl
             entityManager.persist(aAnnotationDocument);
 
             try (var logCtx = withProjectLogger(aAnnotationDocument.getProject())) {
-                log.info(
-                        "Created annotation document [{}] for user [{}] for source document "
-                                + "[{}]({}) in project [{}]({})",
-                        aAnnotationDocument.getId(), aAnnotationDocument.getUser(),
-                        aAnnotationDocument.getDocument().getName(),
-                        aAnnotationDocument.getDocument().getId(),
-                        aAnnotationDocument.getProject().getName(),
-                        aAnnotationDocument.getProject().getId());
+                log.info("Created annotation document {} in project {}", aAnnotationDocument,
+                        aAnnotationDocument.getProject());
             }
 
             return aAnnotationDocument;

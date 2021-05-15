@@ -55,12 +55,14 @@ public class MatrixWorkloadExtensionImpl
 
     public static final String MATRIX_WORKLOAD_MANAGER_EXTENSION_ID = "matrix";
 
+    private final WorkloadManagementService workloadManagementService;
     private final DocumentService documentService;
     private final ProjectService projectService;
 
-    public MatrixWorkloadExtensionImpl(DocumentService aDocumentService,
-            ProjectService aProjectService)
+    public MatrixWorkloadExtensionImpl(WorkloadManagementService aWorkloadManagementService,
+            DocumentService aDocumentService, ProjectService aProjectService)
     {
+        workloadManagementService = aWorkloadManagementService;
         documentService = aDocumentService;
         projectService = aProjectService;
     }
@@ -98,14 +100,13 @@ public class MatrixWorkloadExtensionImpl
     }
 
     @Override
-    public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-            MatrixWorkloadTrait aTrait, Project aProject)
+    public void writeTraits(MatrixWorkloadTrait aTrait, Project aProject)
     {
         try {
-            WorkloadManager manager = aWorkloadManagementService
+            WorkloadManager manager = workloadManagementService
                     .loadOrCreateWorkloadManagerConfiguration(aProject);
             manager.setTraits(JSONUtil.toJsonString(aTrait));
-            aWorkloadManagementService.saveConfiguration(manager);
+            workloadManagementService.saveConfiguration(manager);
         }
         catch (Exception e) {
             this.log.error("Unable to write traits", e);

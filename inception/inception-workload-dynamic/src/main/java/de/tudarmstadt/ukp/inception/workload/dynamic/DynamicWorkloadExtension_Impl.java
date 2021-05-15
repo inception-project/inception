@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -121,14 +122,13 @@ public class DynamicWorkloadExtension_Impl
     }
 
     @Override
-    public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadTraits aTrait, Project aProject)
+    public void writeTraits(DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
-            WorkloadManager manager = aWorkloadManagementService
+            WorkloadManager manager = workloadManagementService
                     .loadOrCreateWorkloadManagerConfiguration(aProject);
             manager.setTraits(JSONUtil.toJsonString(aTrait));
-            aWorkloadManagementService.saveConfiguration(manager);
+            workloadManagementService.saveConfiguration(manager);
         }
         catch (Exception e) {
             this.log.error("Unable to write traits", e);
@@ -232,11 +232,11 @@ public class DynamicWorkloadExtension_Impl
                 for (AnnotationDocument adoc : docSet.getValue()) {
                     User user = userCache.computeIfAbsent(adoc.getUser(),
                             username -> userRepository.get(username));
-                    try {
+                    try (var session = CasStorageSession.openNested()) {
                         documentService.resetAnnotationCas(adoc.getDocument(), user);
                     }
                     catch (UIMAException | IOException e) {
-                        log.error("Unable to reset abandoned document {}", adoc);
+                        log.error("Unable to reset abandoned document {}", adoc, e);
                     }
                 }
             }

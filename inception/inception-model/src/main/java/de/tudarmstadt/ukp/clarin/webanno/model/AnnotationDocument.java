@@ -112,11 +112,11 @@ public class AnnotationDocument
         // Nothing to do
     }
 
-    public AnnotationDocument(String aName, String aUser, SourceDocument aDocument)
+    public AnnotationDocument(String aUser, SourceDocument aDocument)
     {
-        name = aName;
         user = aUser;
         document = aDocument;
+        name = aDocument.getName();
         project = aDocument.getProject();
     }
 

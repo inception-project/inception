@@ -27,16 +27,19 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensionImpl;
 import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadStateWatcher;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.matrix", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MatrixWorkloadManagerAutoConfiguration
 {
     @Bean
-    public MatrixWorkloadExtension matrixWorkloadExtension(DocumentService aDocumentService,
+    public MatrixWorkloadExtension matrixWorkloadExtension(
+            WorkloadManagementService aWorkloadManagementService, DocumentService aDocumentService,
             ProjectService aProjectService)
     {
-        return new MatrixWorkloadExtensionImpl(aDocumentService, aProjectService);
+        return new MatrixWorkloadExtensionImpl(aWorkloadManagementService, aDocumentService,
+                aProjectService);
     }
 
     @Bean

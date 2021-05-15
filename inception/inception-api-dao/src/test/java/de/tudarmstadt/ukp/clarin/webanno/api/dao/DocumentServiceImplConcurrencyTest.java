@@ -122,7 +122,7 @@ public class DocumentServiceImplConcurrencyTest
         lenient().doAnswer(_invocation -> {
             SourceDocument doc = _invocation.getArgument(0, SourceDocument.class);
             String user = _invocation.getArgument(1, String.class);
-            return new AnnotationDocument(doc.getName(), user, doc);
+            return new AnnotationDocument(user, doc);
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
         lenient().when(importExportService.importCasFromFile(any(File.class), any(Project.class),

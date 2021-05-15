@@ -45,11 +45,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-@DataJpaTest
+@DataJpaTest(showSql = false)
 @ExtendWith(SpringExtension.class)
+@EnableAutoConfiguration
+@EntityScan({ //
+        "de.tudarmstadt.ukp.inception.curation", //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 public class CurationServiceTest
 {
-
     private CurationService sut;
 
     @Autowired
@@ -100,10 +104,10 @@ public class CurationServiceTest
     @Test
     public void listUsersReadyForCuration_ShouldReturnFinishedUsers()
     {
-        // create finished annotationdocuments
-        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", "beate", testDocument);
+        // create finished annotation documents
+        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", "kevin", testDocument);
+        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
@@ -117,10 +121,10 @@ public class CurationServiceTest
     @Test
     public void listFinishedUsers_ShouldReturnFinishedUsers()
     {
-        // create finished annotationdocuments
-        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", "beate", testDocument);
+        // create finished annotation documents
+        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", "kevin", testDocument);
+        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
@@ -140,13 +144,8 @@ public class CurationServiceTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.curation",
-            "de.tudarmstadt.ukp.clarin.webanno.model",
-            "de.tudarmstadt.ukp.clarin.webanno.security.model" })
     public static class SpringConfig
     {
         // No content
     }
-
 }

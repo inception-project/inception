@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.h2.util.IOUtils.getInputStreamFromString;
 
 import java.io.File;
 
@@ -39,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
@@ -51,6 +53,8 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 
 @EnableAutoConfiguration
@@ -63,6 +67,7 @@ import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfi
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
         DocumentImportExportServiceAutoConfiguration.class, //
+        TextFormatsAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
@@ -104,8 +109,8 @@ public class DocumentServiceImplDatabaseTest
     {
         SourceDocument doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
-        AnnotationDocument ann = sut.createAnnotationDocument(
-                new AnnotationDocument("ann", annotator1.getUsername(), doc));
+        AnnotationDocument ann = sut
+                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         assertThat(sut.listAnnotationDocuments(doc))
                 .as("As long as the user exists, the annotation document must be found")
@@ -123,8 +128,8 @@ public class DocumentServiceImplDatabaseTest
     {
         SourceDocument doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
-        AnnotationDocument ann = sut.createAnnotationDocument(
-                new AnnotationDocument("ann", annotator1.getUsername(), doc));
+        AnnotationDocument ann = sut
+                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         sut.setAnnotationDocumentState(ann, AnnotationDocumentState.IGNORE);
         assertThat(ann.getState()) //
@@ -180,6 +185,34 @@ public class DocumentServiceImplDatabaseTest
         assertThat(ann.getState()) //
                 .as("Manager locking document updates effective state") //
                 .isEqualTo(AnnotationDocumentState.IGNORE);
+    }
+
+    @Test
+    public void thatResettingADocumentSetsAlsoResetsTheStates() throws Exception
+    {
+        SourceDocument doc = sut
+                .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
+
+        AnnotationDocument ann = sut
+                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
+
+        try (var session = CasStorageSession.open()) {
+            sut.uploadSourceDocument(getInputStreamFromString("This is a test."), doc);
+        }
+
+        sut.setAnnotationDocumentState(ann, AnnotationDocumentState.IN_PROGRESS,
+                EXPLICIT_ANNOTATOR_USER_ACTION);
+        sut.setAnnotationDocumentState(ann, AnnotationDocumentState.IGNORE);
+
+        try (var session = CasStorageSession.open()) {
+            sut.resetAnnotationCas(doc, annotator1);
+        }
+
+        assertThat(ann.getState()).as("Resetting CAS sets effective state to NEW") //
+                .isEqualTo(AnnotationDocumentState.NEW);
+        assertThat(ann.getAnnotatorState()) //
+                .as("Resetting CAS clears the annotator state") //
+                .isNull();
     }
 
     @SpringBootConfiguration
