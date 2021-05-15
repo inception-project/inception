@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.persistence.EntityManager;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -91,14 +93,14 @@ public class DocumentServiceImplDatabaseTest
     @Configuration
     public static class TestContext
     {
-        @Autowired
-        ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired EntityManager entityManager;
 
         @Bean
         public ProjectService projectService()
         {
             return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
-                    repositoryProperties(), null);
+                    repositoryProperties(), null, entityManager);
         }
 
         @Bean

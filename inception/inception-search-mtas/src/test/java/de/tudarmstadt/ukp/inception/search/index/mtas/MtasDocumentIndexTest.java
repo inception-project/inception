@@ -486,7 +486,7 @@ public class MtasDocumentIndexTest
                 RepositoryProperties aRepositoryProperties)
         {
             return new ProjectServiceImpl(aUserRepository, applicationEventPublisher,
-                    aRepositoryProperties, aInitializerProxy);
+                    aRepositoryProperties, aInitializerProxy, entityManager);
         }
 
         @Bean

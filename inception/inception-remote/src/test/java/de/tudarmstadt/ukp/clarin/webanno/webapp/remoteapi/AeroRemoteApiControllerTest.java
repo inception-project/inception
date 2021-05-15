@@ -311,7 +311,7 @@ public class AeroRemoteApiControllerTest
         public ProjectService projectService(RepositoryProperties aProperties)
         {
             return new ProjectServiceImpl(userRepository(), applicationEventPublisher, aProperties,
-                    null);
+                    null, entityManager);
         }
 
         @Bean

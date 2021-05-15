@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -213,10 +215,11 @@ public class PreferencesServiceImplIntegrationTest
         @Bean
         public ProjectService projectService(UserDao aUserDao,
                 RepositoryProperties aRepositoryProperties,
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy,
+                EntityManager entityManager)
         {
             return new ProjectServiceImpl(aUserDao, applicationEventPublisher,
-                    aRepositoryProperties, aInitializerProxy);
+                    aRepositoryProperties, aInitializerProxy, entityManager);
         }
     }
 
