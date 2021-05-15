@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -43,5 +44,11 @@ public class SecurityAutoConfiguration
     {
         return new UserDaoImpl(entityManager, aSecurityProperties, transactionManager,
                 aSessionRegistry);
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry()
+    {
+        return new SessionRegistryImpl();
     }
 }
