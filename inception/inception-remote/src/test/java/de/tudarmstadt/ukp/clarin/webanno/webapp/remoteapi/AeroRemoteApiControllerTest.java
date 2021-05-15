@@ -81,16 +81,15 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiConfig;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 
 @EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "remote-api.enabled", //
+                "remote-api.enabled=true", //
                 "repository.path=" + AeroRemoteApiControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @Import({ //
@@ -99,7 +98,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiConfig
         RepositoryAutoConfiguration.class, //
         AnnotationServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
-        RemoteApiConfig.class })
+        RemoteApiAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
@@ -341,12 +340,6 @@ public class AeroRemoteApiControllerTest
         public ProjectExportService exportService(ProjectService aProjectService)
         {
             return new ProjectExportServiceImpl(null, null, aProjectService);
-        }
-
-        @Bean
-        public ApplicationContextProvider contextProvider()
-        {
-            return new ApplicationContextProvider();
         }
     }
 }
