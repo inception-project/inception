@@ -1093,6 +1093,8 @@ var Annotator = class {
         that.sendNewViewportMessageToServer(0, that.viewPortSize);
       }
     };
+    this.document = "Doc4";
+    this.project = "Annotation Study";
     this.connect();
   }
   connect() {
@@ -1113,32 +1115,24 @@ var Annotator = class {
         that.username = header[data];
         break;
       }
-      that.document = "";
-      that.document = "Doc4";
-      that.project = "Annotation Study";
-      that.viewPortBegin = 0;
-      that.viewPortEnd = 10;
-      that.viewPortSize = 10;
-      that.stompClient.subscribe("/queue/connection_message/" + that.username, function(msg) {
-        that.receiveConnectionMessageByServer(JSON.parse(msg.body));
-      });
+      that.sendNewDocumentMessageToServer(null);
       that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function(msg) {
         that.receiveNewDocumentMessageByServer(JSON.parse(msg.body));
-      });
-      that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.username, function(msg) {
-        that.receiveNewViewportMessageByServer(JSON.parse(msg.body));
-      });
-      that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function(msg) {
-        that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
-      });
-      for (let i = that.viewPortBegin; i <= that.viewPortEnd; i++) {
-        that.stompClient.subscribe("/topic/annotation_created_for_clients/" + that.project + "/" + that.document + "/" + i, function(msg) {
-          that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body));
+        that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.username, function(msg2) {
+          that.receiveNewViewportMessageByServer(JSON.parse(msg2.body));
         });
-        that.stompClient.subscribe("/topic/annotation_deleted_for_clients/" + that.project + "/" + that.document + "/" + i, function(msg) {
-          that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body));
+        that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function(msg2) {
+          that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg2.body));
         });
-      }
+        for (let i = that.viewPortBegin; i <= that.viewPortEnd; i++) {
+          that.stompClient.subscribe("/topic/annotation_created_for_clients/" + that.project + "/" + that.document + "/" + i, function(msg2) {
+            that.receiveNewAnnotationMessageByServer(JSON.parse(msg2.body));
+          });
+          that.stompClient.subscribe("/topic/annotation_deleted_for_clients/" + that.project + "/" + that.document + "/" + i, function(msg2) {
+            that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg2.body));
+          });
+        }
+      });
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
@@ -1156,8 +1150,17 @@ var Annotator = class {
   unsubscribe(channel) {
     this.stompClient.unsubscribe(channel);
   }
-  sendNewDocumentMessageToServer() {
-    this.stompClient.publish({destination: "/app/new_document_by_client", body: "NEW DOCUMENT REQUIRED"});
+  sendNewDocumentMessageToServer(aDocument) {
+    if (!aDocument) {
+      this.stompClient.publish({destination: "/app/new_document_by_client", body: "INIT"});
+    } else {
+      let json = JSON.stringify({
+        username: this.username,
+        project: this.project,
+        nextDocument: aDocument
+      });
+      this.stompClient.publish({destination: "/app/new_document_by_client", body: json});
+    }
   }
   sendNewViewportMessageToServer(aBegin, aEnd) {
     let json = JSON.stringify({
@@ -1191,9 +1194,6 @@ var Annotator = class {
   }
   sendDeleteAnnotationMessageToServer() {
     this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: "DELETE"});
-  }
-  receiveConnectionMessageByServer(aMessage) {
-    console.log("RECEIVED CONNECTION MESSAGE: " + aMessage);
   }
   receiveNewDocumentMessageByServer(aMessage) {
     console.log("RECEIVED DOCUMENT: " + aMessage);

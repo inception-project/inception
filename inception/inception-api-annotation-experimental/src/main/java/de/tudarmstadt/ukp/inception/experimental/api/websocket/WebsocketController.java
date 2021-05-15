@@ -48,5 +48,5 @@ public interface WebsocketController
      */
     CAS getCasForDocument(String aProject, String aDocument, String aUser);
 
-    String[] purifyPayload(String aPayload);
+    void initializeDataAndCas(String aPayload);
 }
