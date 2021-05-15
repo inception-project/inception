@@ -46,27 +46,21 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -94,9 +88,11 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
+        DocumentServiceAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         VersioningServiceAutoConfiguration.class, CasStorageServiceAutoConfiguration.class, //
-        RepositoryAutoConfiguration.class, AnnotationServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, AnnotationSchemaServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class })
 public class VersioningServiceImplTest
 {
@@ -293,63 +289,6 @@ public class VersioningServiceImplTest
         assertThat(sut.repoExists(testProject)).isFalse();
     }
 
-    @SpringBootConfiguration
-    public static class TestContext
-    {
-        @Bean
-        public DocumentService documentService(RepositoryProperties aRepositoryProperties,
-                CasStorageService aCasStorageService,
-                DocumentImportExportService aImportExportService, ProjectService aProjectService,
-                ApplicationEventPublisher aApplicationEventPublisher)
-        {
-            return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
-                    aImportExportService, aProjectService, aApplicationEventPublisher);
-        }
-
-        @Bean
-        public DocumentImportExportService importExportService(
-                RepositoryProperties aRepositoryProperties,
-                AnnotationSchemaService aAnnotationSchemaService,
-                CasStorageService aCasStorageService)
-        {
-            DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
-            return new DocumentImportExportServiceImpl(aRepositoryProperties,
-                    List.of(new XmiFormatSupport(), new PretokenizedTextFormatSupport()),
-                    aCasStorageService, aAnnotationSchemaService, properties);
-        }
-
-        @Bean
-        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-                AnnotationSchemaService aAnnotationService)
-        {
-            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
-        }
-
-        @Lazy
-        @Bean
-        public TokenLayerInitializer TokenLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new TokenLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Lazy
-        @Bean
-        public NamedEntityLayerInitializer namedEntityLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityLayerInitializer(aAnnotationService);
-        }
-
-        @Lazy
-        @Bean
-        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityTagSetInitializer(aAnnotationService);
-        }
-    }
-
     private User addUser(String aUserName)
     {
         User user = new User();
@@ -414,6 +353,50 @@ public class VersioningServiceImplTest
                 CAS cas = documentService.createOrReadInitialCas(sourceDocument);
                 documentService.writeAnnotationCas(cas, sourceDocument, aUser, false);
             }
+        }
+    }
+
+    @SpringBootConfiguration
+    public static class TestContext
+    {
+        @Bean
+        public XmiFormatSupport xmiFormatSupport()
+        {
+            return new XmiFormatSupport();
+        }
+
+        @Bean
+        public PretokenizedTextFormatSupport pretokenizedTextFormatSupport()
+        {
+            return new PretokenizedTextFormatSupport();
+        }
+
+        @Bean
+        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
+                AnnotationSchemaService aAnnotationService)
+        {
+            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
+        }
+
+        @Bean
+        public TokenLayerInitializer TokenLayerInitializer(
+                AnnotationSchemaService aAnnotationSchemaService)
+        {
+            return new TokenLayerInitializer(aAnnotationSchemaService);
+        }
+
+        @Bean
+        public NamedEntityLayerInitializer namedEntityLayerInitializer(
+                AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityLayerInitializer(aAnnotationService);
+        }
+
+        @Bean
+        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
+                AnnotationSchemaService aAnnotationService)
+        {
+            return new NamedEntityTagSetInitializer(aAnnotationService);
         }
     }
 }

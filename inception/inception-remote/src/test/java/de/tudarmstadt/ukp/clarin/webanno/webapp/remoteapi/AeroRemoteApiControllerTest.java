@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.OpenCasStorageSessionForRequestFilter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
@@ -96,7 +96,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoCo
         ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationServiceAutoConfiguration.class, //
+        AnnotationSchemaServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         RemoteApiAutoConfiguration.class })
 @EntityScan({ //

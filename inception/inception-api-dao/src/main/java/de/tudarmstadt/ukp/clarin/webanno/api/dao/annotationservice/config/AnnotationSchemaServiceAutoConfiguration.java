@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 
 @Configuration
-public class AnnotationServiceAutoConfiguration
+public class AnnotationSchemaServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
 

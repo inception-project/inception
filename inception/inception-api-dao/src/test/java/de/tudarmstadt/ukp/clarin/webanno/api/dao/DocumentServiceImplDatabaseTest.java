@@ -25,23 +25,20 @@ import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -61,10 +58,11 @@ import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfi
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
+        DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationServiceAutoConfiguration.class, //
+        AnnotationSchemaServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         SchedulingServiceAutoConfiguration.class })
 public class DocumentServiceImplDatabaseTest
@@ -109,24 +107,9 @@ public class DocumentServiceImplDatabaseTest
         assertThat(documentService.listAnnotationDocuments(doc)).isEmpty();
     }
 
-    @Configuration
+    @SpringBootConfiguration
     public static class TestContext
     {
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
-
-        @Bean
-        public DocumentService documentService(RepositoryProperties aRepositoryProperties,
-                CasStorageService aCasStorageService, ProjectService aProjectService,
-                ApplicationEventPublisher aApplicationEventPublisher)
-        {
-            return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService, null,
-                    aProjectService, applicationEventPublisher);
-        }
-
-        // @Bean
-        // public ApplicationContextProvider contextProvider()
-        // {
-        // return new ApplicationContextProvider();
-        // }
+        // All handled via auto-configuration
     }
 }
