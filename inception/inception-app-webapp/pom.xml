@@ -867,7 +867,6 @@
               <usedDependency>org.webjars.npm:kinetic</usedDependency>
               <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
               <!-- Other -->
-              <usedDependency>com.fasterxml.jackson.datatype:jackson-datatype-jsr310</usedDependency>
               <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
           </configuration>
