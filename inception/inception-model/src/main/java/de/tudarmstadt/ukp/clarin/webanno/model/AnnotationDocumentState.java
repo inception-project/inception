@@ -44,27 +44,27 @@ public enum AnnotationDocumentState
      * it should be reset to the initial CAS of the source document.
      */
     @JsonProperty("NEW")
-    NEW("NEW", "black", false, false),
+    NEW("NEW", "<i class=\"far fa-circle\"></i>", "black", false, false),
 
     /**
      * Indicates that the annotator as started working on the document. The annotator may not yet
      * actually have created any annotations.
      */
     @JsonProperty("IN_PROGRESS")
-    IN_PROGRESS("INPROGRESS", "blue", true, false),
+    IN_PROGRESS("INPROGRESS", "<i class=\"far fa-play-circle\"></i>", "blue", true, false),
 
     /**
      * Indicates that the annotation is complete. No further annotations can be added.
      */
     @JsonProperty("FINISHED")
-    FINISHED("FINISHED", "red", true, true),
+    FINISHED("FINISHED", "<i class=\"far fa-check-circle\"></i>", "red", true, true),
 
     /**
      * Indicates that the given document should not be offered to an annotator. If is possible that
      * the annotator has already started working on the project.
      */
     @JsonProperty("IGNORE")
-    IGNORE("IGNORE", "black", false, true);
+    IGNORE("IGNORE", "<i class=\"fas fa-lock\"></i>", "black", false, true);
 
     private static final List<AnnotationDocumentState> TAKEN_STATES;
     private static final List<AnnotationDocumentState> TERMINAL_STATES;
@@ -80,6 +80,7 @@ public enum AnnotationDocumentState
 
     private final String id;
     private final String color;
+    private final String symbol;
 
     /**
      * An annotation document that is taken counts towards goals. E.g. if a document is taken by a
@@ -93,9 +94,11 @@ public enum AnnotationDocumentState
      */
     private final boolean terminal;
 
-    AnnotationDocumentState(String aId, String aColor, boolean aTaken, boolean aTerminal)
+    AnnotationDocumentState(String aId, String aSymbol, String aColor, boolean aTaken,
+            boolean aTerminal)
     {
         id = aId;
+        symbol = aSymbol;
         color = aColor;
         taken = aTaken;
         terminal = aTerminal;
@@ -139,6 +142,11 @@ public enum AnnotationDocumentState
         return terminal;
     }
 
+    public String symbol()
+    {
+        return symbol;
+    }
+
     public static AnnotationDocumentState defaultState()
     {
         return NEW;
@@ -152,5 +160,60 @@ public enum AnnotationDocumentState
     public static List<AnnotationDocumentState> terminalStates()
     {
         return TERMINAL_STATES;
+    }
+
+    public static String symbol(AnnotationDocument aDoc)
+    {
+        if (aDoc == null) {
+            return NEW.symbol;
+        }
+
+        if (aDoc.getAnnotatorState() != null && aDoc.getAnnotatorState() != aDoc.getState()) {
+            return aDoc.getState().symbol + " (" + aDoc.getAnnotatorState().symbol + ")";
+        }
+
+        return aDoc.getState().symbol;
+    }
+
+    public static AnnotationDocumentState oneClickTransition(AnnotationDocument aDoc)
+    {
+        if (aDoc.getAnnotatorState() != null) {
+            switch (aDoc.getAnnotatorState()) {
+            case FINISHED: // fall-through
+            case IN_PROGRESS:
+                switch (aDoc.getState()) {
+                case IN_PROGRESS:
+                    return FINISHED;
+                case FINISHED:
+                    return IGNORE;
+                case IGNORE:
+                    return IN_PROGRESS;
+                case NEW: // fall-through
+                default:
+                    // These combinations of effective and annotator state should not be reachable.
+                    // We we reach them, better do nothing.
+                    return aDoc.getState();
+                }
+            case IGNORE: // fall-through
+            case NEW: // fall-through
+            default:
+                // These states should normally not be settable by the annotator. We should not do
+                // anything if we encounter these...
+                return aDoc.getState();
+            }
+        }
+
+        switch (aDoc.getState()) {
+        case NEW:
+            return IGNORE;
+        case IN_PROGRESS:
+            return FINISHED;
+        case FINISHED:
+            return IN_PROGRESS;
+        case IGNORE:
+            return NEW;
+        default:
+            return aDoc.getState();
+        }
     }
 }

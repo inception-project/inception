@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.oneClickTransition;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
@@ -41,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +82,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -89,6 +93,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.utils.RequestCycleUtils;
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
@@ -105,16 +110,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorStateOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
@@ -143,6 +152,8 @@ public class DynamicWorkloadManagementPage
     private static final long serialVersionUID = 1180618893870240262L;
 
     private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
+
+    public static final String CSS_CLASS_STATE_TOGGLE = "state-toggle";
 
     private static final String MID_LABEL = "label";
 
@@ -175,6 +186,8 @@ public class DynamicWorkloadManagementPage
 
     // Modal dialog
     private ModalWindow infoDialog;
+    private ChallengeResponseDialog resetDocumentDialog;
+    private ContextMenu contextMenu;
 
     // SpringBeans
     private @SpringBean UserDao userRepository;
@@ -212,7 +225,7 @@ public class DynamicWorkloadManagementPage
         // Each column creates TableMetaData
         List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> documentStateSymbol(item.getState()))
+                item -> item.getState().symbol())
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
@@ -234,9 +247,6 @@ public class DynamicWorkloadManagementPage
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
                 AnnotationQueueItem::getLastUpdated));
 
-        // Own column type, contains only a click
-        // able image (AJAX event),
-        // creates a small panel dialog containing metadata
         columns.add(new HeaderlessColumn<AnnotationQueueItem, AnnotationQueueSortKeys>()
         {
             private static final long serialVersionUID = 1L;
@@ -273,8 +283,9 @@ public class DynamicWorkloadManagementPage
                 LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
                         (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
 
-                link.add(new Label(MID_LABEL, documentStateSymbol(aItem.getModel().getObject()))
-                        .setEscapeModelStrings(false));
+                link.add(new Label(MID_LABEL,
+                        aItem.getModel().map(SourceDocumentState::symbol).orElse(""))
+                                .setEscapeModelStrings(false));
                 link.add(new AttributeAppender("class", () -> dataProvider.getFilterState()
                         .getStates().contains(aItem.getModelObject()) ? "active" : "", " "));
                 aItem.add(link);
@@ -293,6 +304,9 @@ public class DynamicWorkloadManagementPage
         add(createUserForm());
         add(createSettingsForm());
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
+
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
+        add(contextMenu = new ContextMenu("contextMenu"));
     }
 
     /**
@@ -819,24 +833,6 @@ public class DynamicWorkloadManagementPage
         aTarget.add(table, stateFilters);
     }
 
-    private String documentStateSymbol(SourceDocumentState aDocState)
-    {
-        switch (aDocState) {
-        case NEW:
-            return "<i class=\"far fa-circle\"></i>";
-        case ANNOTATION_IN_PROGRESS:
-            return "<i class=\"far fa-play-circle\"></i>";
-        case ANNOTATION_FINISHED:
-            return "<i class=\"far fa-check-circle\"></i>";
-        case CURATION_IN_PROGRESS:
-            return "<i class=\"fas fa-clipboard\"></i>";
-        case CURATION_FINISHED:
-            return "<i class=\"fas fa-clipboard-check\"></i>";
-        }
-
-        return "";
-    }
-
     private List<AnnotationQueueItem> getQueue()
     {
         Project project = currentProject.getObject();
@@ -857,7 +853,7 @@ public class DynamicWorkloadManagementPage
         List<AnnotationQueueItem> queue = new ArrayList<>();
         for (Entry<SourceDocument, List<AnnotationDocument>> e : documentMap.entrySet()) {
             queue.add(new AnnotationQueueItem(e.getKey(), e.getValue(),
-                    traits.getDefaultNumberOfAnnotations()));
+                    traits.getDefaultNumberOfAnnotations(), traits.getAbandonationTimeout()));
         }
         return queue;
     }
@@ -870,35 +866,75 @@ public class DynamicWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
     {
-        User user = userRepository.get(aEvent.getUsername());
         AnnotationDocument annotationDocument = documentService
-                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), user);
+                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
 
-        AnnotationDocumentState targetState;
-        switch (annotationDocument.getState()) {
-        case NEW:
-            targetState = AnnotationDocumentState.IGNORE;
-            break;
-        case IGNORE:
-            targetState = AnnotationDocumentState.NEW;
-            break;
-        case IN_PROGRESS:
-            targetState = AnnotationDocumentState.FINISHED;
-            break;
-        case FINISHED:
-            targetState = AnnotationDocumentState.IN_PROGRESS;
-            break;
-        default:
-            return;
-        }
+        AnnotationDocumentState targetState = oneClickTransition(annotationDocument);
 
         documentService.setAnnotationDocumentState(annotationDocument, targetState);
-        success(format("The state of document [%s] for user [%s] has been set to [%s]",
-                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
-                annotationDocument.getState()));
 
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         updateTable(aEvent.getTarget());
+    }
+
+    @OnEvent
+    public void onAnnotatorStateOpenContextMenuEvent(AnnotatorStateOpenContextMenuEvent aEvent)
+    {
+        if (aEvent.getState() == NEW) {
+            info("Documents on which work has not yet been started cannot be reset.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        List<IMenuItem> items = contextMenu.getItemList();
+        items.clear();
+
+        // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
+        // the information we need in the menu item here
+        SourceDocument document = aEvent.getSourceDocument();
+        User user = aEvent.getUser();
+        items.add(new LambdaMenuItem("Reset",
+                _target -> actionResetAnnotationDocument(_target, document, user)));
+        items.add(new LambdaMenuItem("Touch",
+                _target -> actionTouchAnnotationDocument(_target, document, user)));
+
+        contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
+    }
+
+    private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            User aUser)
+    {
+        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("ResetDocumentDialog.text", this)
+                        .setParameters(documentNameModel, aUser.getUiName()));
+        resetDocumentDialog.setResponseModel(documentNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            documentService.resetAnnotationCas(aDocument, aUser);
+
+            success(format("The annotations of document [%s] for user [%s] have been set reset.",
+                    aDocument.getName(), aUser.getUiName()));
+            _target.addChildren(getPage(), IFeedback.class);
+
+            updateTable(_target);
+        });
+        resetDocumentDialog.show(aTarget);
+    }
+
+    private void actionTouchAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            User aUser)
+    {
+        AnnotationDocument ann = documentService.getAnnotationDocument(aDocument, aUser);
+        ann.setTimestamp(new Date());
+        documentService.createAnnotationDocument(ann);
+
+        success(format("The timestamp of document [%s] for user [%s] has been updated.",
+                aDocument.getName(), aUser.getUiName()));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        updateTable(aTarget);
     }
 }

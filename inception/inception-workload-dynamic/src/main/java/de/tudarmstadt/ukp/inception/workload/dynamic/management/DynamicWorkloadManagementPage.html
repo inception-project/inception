@@ -18,44 +18,24 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org" xmlns="http://www.w3.org/1999/html" lang="">
 <wicket:head>
-  <style type="text/css">
-.page-content {
- overflow: auto;
-}
-
-tr td:nth-child(2), tr th:nth-child(2), tr td:nth-child(5), tr th:nth-child(5)
- {
- text-align: left;
-}
-
-tr th:nth-child(2)
-{
- width: 80%;
-}
-
-tr th:nth-child(5)
-{
- width: 20%;
-}
-
-tr th:nth-child(6)
-{
- min-width: 10em;
-}
-
-.k-floatwrap {
- height: fit-content;
- border: none;
-}
-
-.ddFilterForm, .ddUserForm {
- position: absolute;
- left: 0;
- z-index: 1000;
- display: none;
- background-color: #fff;
- border: 1px solid rgba(0, 0, 0, 0.15);
-}
+<style type="text/css">
+  .page-content { overflow: auto; }
+  tr td:nth-child(2), tr th:nth-child(2), tr td:nth-child(5), tr th:nth-child(5) { text-align: left; }
+  tr th:nth-child(2) { width: 80%; }
+  tr th:nth-child(5) { width: 20%; }
+  tr th:nth-child(6) { min-width: 10em; }
+  .k-floatwrap { height: fit-content; border: none; }
+  .state-toggle { cursor: pointer; }
+  .document-table .badge { font-size: 85% !important; }
+  
+  .ddFilterForm, .ddUserForm {
+   position: absolute;
+   left: 0;
+   z-index: 1000;
+   display: none;
+   background-color: #fff;
+   border: 1px solid rgba(0, 0, 0, 0.15);
+  }
 </style>
 <script>
 $( document ).ready(function() { 
@@ -289,11 +269,11 @@ $( document ).ready(function() {
                 </form>
               </div>
             </span>
-             <button wicket:id="refresh" class="btn btn-action btn-secondary">
+            <button wicket:id="refresh" class="btn btn-action btn-secondary">
               <i class="fas fa-redo"></i>&nbsp;
               <wicket:message key="refresh" />
             </button>
-        </div>
+          </div>
           <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
             <div wicket:id="stateFilters" class="input-group justify-content-end">
               <div class="input-group-prepend">
@@ -310,15 +290,48 @@ $( document ).ready(function() {
                 </wicket:container>
               </div>
             </div>
+            <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span class="btn-group" role="group">
+                <button class="btn btn-secondary btn-action" type="button">
+                  Legend
+                </button>
+                <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+                <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em; font-size: small;">
+                  <li class="dropdown-header">Document states</li>
+                  <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                  <li class="dropdown-item-text"><i class="far fa-play-circle"/> Annotation in progress</li>
+                  <li class="dropdown-item-text"><i class="far fa-check-circle"/> Annotation finished</li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard"/> Curation in progress</li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Curation finished</li>
+                  <li class="dropdown-header">Curation states</li>
+                  <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard"/> In progress</li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Finished</li>
+                  <li class="dropdown-header">Annotation states</li>
+                  <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                  <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
+                  <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
+                  <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
+                  <li class="dropdown-header">Other</li>
+                  <li class="dropdown-item-text"><i class="fas fa-lock"/> (<i class="far fa-play-circle"/>) 
+                  If the state assigned by the annotator user differs from the effective state, it is
+                  show in parentheses</li>
+                  <li class="dropdown-item-text"><i class="fas fa-user-clock"/>
+                  Annotator has abandoned the document</li>
+                </ul>
+              </span>
+            </span>
           </div>
         </div>
 
         <div class="flex-content scrolling card p-0">
-          <table class="table table-sm table-hover table-striped" cellspacing="0"
+          <table class="table table-sm table-hover table-striped document-table" cellspacing="0"
             wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
           </table>
         </div>
         
+        <div wicket:id="resetDocumentDialog"/>
+        <div wicket:id="contextMenu" style="width: 250px;"></div>
         <div wicket:id="infoDialog"></div>
       </div>
     </div>
