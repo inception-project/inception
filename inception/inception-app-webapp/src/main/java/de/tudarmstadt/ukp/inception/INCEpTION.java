@@ -24,8 +24,6 @@ import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.validation.Validator;
@@ -34,12 +32,10 @@ import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -48,17 +44,11 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.ComponentScan.Filter;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
@@ -77,11 +67,7 @@ import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
 @SpringBootApplication
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
-@ComponentScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE },
-    excludeFilters = {
-        @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
-        @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
-        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+@ComponentScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
 @EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -138,22 +124,6 @@ public class INCEpTION
                 SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
         return pluginManager;
-    }
-
-    // The WebAnno User model class picks this bean up by name!
-    @Bean
-    public PasswordEncoder passwordEncoder()
-    {
-        // Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
-        // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder
-        String encoderForEncoding = "bcrypt";
-        Map<String, PasswordEncoder> encoders = new HashMap<>();
-        encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
-        DelegatingPasswordEncoder delegatingEncoder = new DelegatingPasswordEncoder(
-                encoderForEncoding, encoders);
-        // Decode legacy passwords without encoder ID using the StandardPasswordEncoder
-        delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
-        return delegatingEncoder;
     }
 
     @Bean

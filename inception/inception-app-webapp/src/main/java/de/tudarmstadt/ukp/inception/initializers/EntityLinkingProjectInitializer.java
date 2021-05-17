@@ -30,14 +30,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.QuickProjectInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectInitializersAutoConfiguration#entityLinkingProjectInitializer}.
+ * {@link InceptionProjectInitializersAutoConfiguration#entityLinkingProjectInitializer}.
  * </p>
  */
 public class EntityLinkingProjectInitializer

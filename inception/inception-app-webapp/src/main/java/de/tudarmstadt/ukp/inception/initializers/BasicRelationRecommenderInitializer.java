@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.Str
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectInitializersAutoConfiguration#basicRelationRecommenderInitializer}.
+ * {@link InceptionProjectInitializersAutoConfiguration#basicRelationRecommenderInitializer}.
  * </p>
  */
 public class BasicRelationRecommenderInitializer
