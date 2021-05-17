@@ -39,6 +39,7 @@ import java.util.Set;
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -78,16 +79,19 @@ public class DynamicWorkloadExtension_Impl
     private final DocumentService documentService;
     private final ProjectService projectService;
     private final UserDao userRepository;
+    private final SessionRegistry sessionRegistry;
 
     public DynamicWorkloadExtension_Impl(WorkloadManagementService aWorkloadManagementService,
             WorkflowExtensionPoint aWorkflowExtensionPoint, DocumentService aDocumentService,
-            ProjectService aProjectService, UserDao aUserRepository)
+            ProjectService aProjectService, UserDao aUserRepository,
+            SessionRegistry aSessionRegistry)
     {
         workloadManagementService = aWorkloadManagementService;
         workflowExtensionPoint = aWorkflowExtensionPoint;
         documentService = aDocumentService;
         projectService = aProjectService;
         userRepository = aUserRepository;
+        sessionRegistry = aSessionRegistry;
     }
 
     @Override
@@ -202,6 +206,11 @@ public class DynamicWorkloadExtension_Impl
             // If the SOURCE document is already in curation, we do not touch the state anymore
             if (doc.getDocument().getState() == CURATION_FINISHED
                     || doc.getDocument().getState() == CURATION_IN_PROGRESS) {
+                continue;
+            }
+
+            if (!sessionRegistry.getAllSessions(doc.getUser(), false).isEmpty()) {
+                log.debug("Deferring abandonation check on {} for user with active session", doc);
                 continue;
             }
 

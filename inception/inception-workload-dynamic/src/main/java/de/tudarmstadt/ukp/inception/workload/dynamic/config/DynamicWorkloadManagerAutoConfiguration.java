@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -40,17 +41,18 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.RandomizedWo
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
     public DynamicWorkloadExtension dynamicWorkloadExtension(DocumentService documentService,
             WorkloadManagementService aWorkloadManagementService,
             WorkflowExtensionPoint aWorkflowExtensionPoint, ProjectService aProjectService,
-            UserDao aUserRepository)
+            UserDao aUserRepository, SessionRegistry aSessionRegistry)
     {
         return new DynamicWorkloadExtension_Impl(aWorkloadManagementService,
-                aWorkflowExtensionPoint, documentService, aProjectService, aUserRepository);
+                aWorkflowExtensionPoint, documentService, aProjectService, aUserRepository,
+                aSessionRegistry);
     }
 
     @Bean

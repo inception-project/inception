@@ -14,13 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_monitoring]]
-= Monitoring
+[[sect_matrix_workload]]
+= Static assignment
 
-NOTE: This functionality is only available to *curators* and *managers*.
+Use *static assignment* if annotators should be able to freely choose which documents they want to annotate in which order and/or if you want to precisely control which annotator should be able to access which document.
 
-This page allows you to monitor the progress of your annotation project. It also allows you to
-change the status of the annotation and curation documents. This allows you:
+To enable the *static assignment* workload manager, go to the *Workload* tab in the project settings.
+
+In this mode, the workload management page allows you to monitor the progress of your annotation project. It also allows you to change the status of the annotation and curation documents. This allows you:
 
 * to control which users should annotator which documents,
 * to re-open document marked as finished so annotators can correct mistakes

@@ -27,7 +27,9 @@ import java.io.File;
 import java.time.Duration;
 
 import org.apache.uima.cas.CAS;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -36,6 +38,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -94,6 +97,12 @@ public class DynamicWorkflowTest
     private @Autowired UserDao userService;
     private @Autowired WorkloadManagementService workloadManagementService;
     private @Autowired DynamicWorkloadExtension dynamicWorkloadExtension;
+    private @Autowired SessionRegistry sessionRegistry;
+
+    private User annotator;
+    private Project project;
+    private AnnotationDocument annotationDocument;
+    private DynamicWorkloadTraits traits;
 
     @BeforeAll
     public static void setupClass()
@@ -101,52 +110,97 @@ public class DynamicWorkflowTest
         FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
     }
 
-    @Test
-    public void thatAbandonedDocumentsAreReset() throws Exception
+    @BeforeEach
+    public void setup() throws Exception
     {
-        User annotator = userService.create(new User("anno1"));
-        Project project = projectService.createProject(new Project("test"));
+        annotator = userService.create(new User("anno1"));
+        project = projectService.createProject(new Project("test"));
+
+        SourceDocument doc = documentService
+                .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
+        annotationDocument = documentService
+                .createAnnotationDocument(new AnnotationDocument(annotator.getUsername(), doc));
+
+        try (var session = CasStorageSession.open()) {
+            documentService.uploadSourceDocument(getInputStreamFromString("This is a test."),
+                    annotationDocument.getDocument());
+            CAS cas = documentService.readAnnotationCas(annotationDocument);
+            buildFS(cas, NamedEntity.class.getName()) //
+                    .withFeature("value", "test") //
+                    .buildAndAddToIndexes();
+            documentService.writeAnnotationCas(cas, annotationDocument, true);
+        }
 
         WorkloadManager workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         workloadManager.setType(DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID);
-        DynamicWorkloadTraits traits = new DynamicWorkloadTraits();
+        traits = new DynamicWorkloadTraits();
         traits.setAbandonationTimeout(Duration.of(1, SECONDS));
         traits.setAbandonationState(AnnotationDocumentState.NEW);
         dynamicWorkloadExtension.writeTraits(traits, project);
+    }
 
-        SourceDocument doc = documentService
-                .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
-        AnnotationDocument ann = documentService
-                .createAnnotationDocument(new AnnotationDocument(annotator.getUsername(), doc));
+    @AfterEach
+    public void tearDown() throws Exception
+    {
+        projectService.removeProject(project);
+    }
 
-        try (var session = CasStorageSession.open()) {
-            documentService.uploadSourceDocument(getInputStreamFromString("This is a test."), doc);
-            CAS cas = documentService.readAnnotationCas(ann);
-            buildFS(cas, NamedEntity.class.getName()) //
-                    .withFeature("value", "test") //
-                    .buildAndAddToIndexes();
-            documentService.writeAnnotationCas(cas, ann, true);
-        }
-
-        ann = documentService.getAnnotationDocument(doc, annotator.getUsername());
-        assertThat(ann.getState()).as("Effective state is in-progress after the CAS update")
+    @Test
+    public void thatAbandonedDocumentsAreReset() throws Exception
+    {
+        var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
+                annotationDocument.getUser());
+        assertThat(ann.getState()) //
+                .as("Effective state is in-progress after the CAS update")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
-        assertThat(ann.getAnnotatorState()).as(
-                "Annotator state is in-progress as the CAS update was marked as explicit action")
+        assertThat(ann.getAnnotatorState()) //
+                .as("Annotator state is in-progress as the CAS update was marked as explicit action")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
 
         sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
 
         dynamicWorkloadExtension.freshenStatus(project);
 
-        ann = documentService.getAnnotationDocument(doc, annotator.getUsername());
-        assertThat(ann.getState())
+        var annAfterRefresh = documentService.getAnnotationDocument(
+                annotationDocument.getDocument(), annotationDocument.getUser());
+        assertThat(annAfterRefresh.getState())
                 .as("After the abandonation timeout has passed, the effective state has been reset")
                 .isEqualTo(traits.getAbandonationState());
-        assertThat(ann.getAnnotatorState()).as(
-                "After the abandonation timeout has passed, the annotator state has been cleared")
+        assertThat(annAfterRefresh.getAnnotatorState()) //
+                .as("After the abandonation timeout has passed, the annotator state has been cleared")
                 .isNull();
+    }
+
+    @Test
+    public void thatDocumentsForUsersLoggedInAreExemptFromAbandonation() throws Exception
+    {
+        var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
+                annotationDocument.getUser());
+        assertThat(ann.getState()) //
+                .as("Effective state is in-progress after the CAS update")
+                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+        assertThat(ann.getAnnotatorState()) //
+                .as("Annotator state is in-progress as the CAS update was marked as explicit action")
+                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+
+        sessionRegistry.registerNewSession("dummy-session-id", annotator.getUsername());
+
+        sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
+
+        dynamicWorkloadExtension.freshenStatus(project);
+
+        var annAfterRefresh = documentService.getAnnotationDocument(ann.getDocument(),
+                ann.getUser());
+        assertThat(annAfterRefresh.getUpdated()) //
+                .as("Database record was not updated at all") //
+                .isEqualTo(ann.getUpdated());
+        assertThat(annAfterRefresh.getState())
+                .as("Even After the abandonation timeout has passed, nothing has changed")
+                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+        assertThat(annAfterRefresh.getAnnotatorState()) //
+                .as("Even After the abandonation timeout has passed, nothing has changed") //
+                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
     }
 
     @SpringBootConfiguration

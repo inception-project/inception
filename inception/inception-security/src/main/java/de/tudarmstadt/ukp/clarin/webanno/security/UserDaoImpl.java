@@ -150,7 +150,8 @@ public class UserDaoImpl
     public void delete(User aUser)
     {
         if (sessionRegistry != null) {
-            sessionRegistry.getAllSessions(aUser, false).forEach(_session -> _session.expireNow());
+            sessionRegistry.getAllSessions(aUser.getUsername(), false)
+                    .forEach(_session -> _session.expireNow());
         }
 
         entityManager.remove(entityManager.merge(aUser));
