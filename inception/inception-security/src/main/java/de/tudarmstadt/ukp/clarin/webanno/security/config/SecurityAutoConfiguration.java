@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -26,6 +29,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -50,5 +57,21 @@ public class SecurityAutoConfiguration
     public SessionRegistry sessionRegistry()
     {
         return new SessionRegistryImpl();
+    }
+
+    // The WebAnno User model class picks this bean up by name!
+    @Bean
+    public PasswordEncoder passwordEncoder()
+    {
+        // Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
+        // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder
+        String encoderForEncoding = "bcrypt";
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
+        encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
+        DelegatingPasswordEncoder delegatingEncoder = new DelegatingPasswordEncoder(
+                encoderForEncoding, encoders);
+        // Decode legacy passwords without encoder ID using the StandardPasswordEncoder
+        delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
+        return delegatingEncoder;
     }
 }
