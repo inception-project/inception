@@ -184,6 +184,11 @@
     	<artifactId>h2</artifactId>
     	<scope>test</scope>
     </dependency>
+        <dependency>
+        	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        	<artifactId>inception-project</artifactId>
+        	<scope>test</scope>
+        </dependency>
   </dependencies>
 
   <build>
@@ -205,6 +210,8 @@
               <usedDependency>org.webjars.npm:webstomp-client</usedDependency>
               <!-- Needed for websocket security config, but not detected by Maven -->
               <usedDependency>org.springframework.security:spring-security-messaging</usedDependency>
+              <!-- Necessary test dependency, but not detected by Maven -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
