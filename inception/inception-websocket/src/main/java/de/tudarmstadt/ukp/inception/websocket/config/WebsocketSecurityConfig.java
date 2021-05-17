@@ -17,35 +17,40 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
+import static org.springframework.messaging.simp.SimpMessageType.DISCONNECT;
+import static org.springframework.messaging.simp.SimpMessageType.SUBSCRIBE;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
 
 @Configuration
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
-public class WebsocketSecurityConfig extends AbstractSecurityWebSocketMessageBrokerConfigurer
+public class WebsocketSecurityConfig
+    extends AbstractSecurityWebSocketMessageBrokerConfigurer
 {
-
     @Override
-    protected void configureInbound(MessageSecurityMetadataSourceRegistry aMessages)
+    protected void configureInbound(MessageSecurityMetadataSourceRegistry aSecurityRegistry)
     {
-        aMessages.simpTypeMatchers(SimpMessageType.DISCONNECT).permitAll()      // allow everyone to disconnect
-                .nullDestMatcher().authenticated()                              // messages other than MESSAGE,SUBSCRIBE
-                                                                                // are allowed for authenticated users
-                .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")  // subscribing to logged events is 
-                                                                                // only for admins   
-                .simpTypeMatchers(SimpMessageType.SUBSCRIBE).authenticated()    // authenticated users can subscribe
-                .anyMessage().denyAll();                                        // all other messages are 
-                                                                                // denied (if you later want users to 
-                                                                                // send messages, you need to allow 
-                                                                                // it for specific channels)
+        aSecurityRegistry //
+                // allow everyone to disconnect
+                .simpTypeMatchers(DISCONNECT).permitAll()
+                // messages other than MESSAGE,SUBSCRIBE are allowed for authenticated users
+                .nullDestMatcher().authenticated() //
+                // subscribing to logged events is only for admins
+                .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
+                // authenticated users can subscribe
+                .simpTypeMatchers(SUBSCRIBE).authenticated()
+                // all other messages are denied (if you later want users to send messages,
+                // you need to allow it for specific channels)
+                .anyMessage().denyAll();
     }
 
     // disable check for CSRF token, TODO delete if this becomes available
     @Override
-    protected boolean sameOriginDisabled() {
+    protected boolean sameOriginDisabled()
+    {
         return true;
     }
 }

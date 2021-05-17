@@ -20,16 +20,16 @@
   <div class="float-left">
     <div class="btn-group dropup">
       <a role="button" class="ml-1 mr-1" data-boundary="viewport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <i class="fas fa-rss"></i>
+        <i class="fas fa-scroll"></i>
       </a>
-      <div class="dropdown-menu">
-        <div class="card-header">
+      <div class="dropdown-menu shadow-lg p-0 m-0">
+        <div class="card-header small">
         Recent logged events
         </div>
-        <div class="scrolling card-body">
-        <ul class="list-group list-group-flush" style="min-height:15em">
-          <li v-show="!events.length" class="list-group-item">No recent events</li>
-          <li v-for="event in events" class="list-group-item">{{formatTime(event.timestamp)}}: {{event.eventMsg}}</li>
+        <div class="scrolling card-body small p-0">
+        <ul class="list-group list-group-flush">
+          <li v-show="!events.length" class="list-group-item p-1">No recent events</li>
+          <li v-for="event in events" class="list-group-item p-1">{{formatTime(event.timestamp)}}: {{event.eventMsg}}</li>
         </ul>
         </div>
       </div>

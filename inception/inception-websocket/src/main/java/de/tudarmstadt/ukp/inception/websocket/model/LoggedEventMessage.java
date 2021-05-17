@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.model;
 
-
 import java.util.Date;
 
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
@@ -28,11 +27,14 @@ public class LoggedEventMessage
     private String projectName;
     private String documentName;
     private long timestamp;
-    
+
     private String eventMsg;
-    
-    public LoggedEventMessage() {}
-    
+
+    public LoggedEventMessage()
+    {
+        // Nothing to do
+    }
+
     public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
             long aTimestamp, String aEventMsg)
     {
@@ -42,7 +44,7 @@ public class LoggedEventMessage
         timestamp = aTimestamp;
         eventMsg = aEventMsg;
     }
-    
+
     public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
             Date aCreationDate)
     {
