@@ -28,11 +28,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.curation.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.curation.CurationRenderer;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 import de.tudarmstadt.ukp.inception.curation.CurationServiceImpl;
+import de.tudarmstadt.ukp.inception.curation.merge.AutomaticMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarFactory;
 
 @Configuration
@@ -61,5 +64,27 @@ public class CurationServiceAutoConfiguration
     public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService)
     {
         return new CurationSidebarFactory(aProjectService);
+    }
+
+    @Bean
+    public CurationRenderer curationRenderer(CurationService aCurationService,
+            LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
+            UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
+    {
+        return new CurationRenderer(aCurationService, aLayerSupportRegistry, aDocumentService,
+                aUserRepository, aAnnotationService);
+    }
+
+    @Bean(AutomaticMergeStrategy.BEAN_NAME)
+    public AutomaticMergeStrategy automaticMergeStrategy(CurationService aCurationService,
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new AutomaticMergeStrategy(aCurationService, aAnnotationService);
+    }
+
+    @Bean(ManualMergeStrategy.BEAN_NAME)
+    public ManualMergeStrategy manualMergeStrategy()
+    {
+        return new ManualMergeStrategy();
     }
 }
