@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,8 @@ import opennlp.tools.util.Span;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpNerRecommender
-    extends RecommendationEngine {
+    extends RecommendationEngine
+{
     public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("opennlp_ner_model");
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
 
@@ -68,19 +69,22 @@ public class OpenNlpNerRecommender
 
     private final OpenNlpNerRecommenderTraits traits;
 
-    public OpenNlpNerRecommender(Recommender aRecommender, OpenNlpNerRecommenderTraits aTraits) {
+    public OpenNlpNerRecommender(Recommender aRecommender, OpenNlpNerRecommenderTraits aTraits)
+    {
         super(aRecommender);
 
         traits = aTraits;
     }
 
     @Override
-    public boolean isReadyForPrediction(RecommenderContext aContext) {
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
 
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException {
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
+    {
         List<NameSample> nameSamples = extractNameSamples(aCasses);
 
         if (nameSamples.size() < 2) {
@@ -102,14 +106,16 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability() {
+    public RecommendationEngineCapability getTrainingCapability()
+    {
         return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException {
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    {
         TokenNameFinderModel model = aContext.get(KEY_MODEL).orElseThrow(
-            () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         NameFinderME finder = new NameFinderME(model);
 
@@ -130,7 +136,7 @@ public class OpenNlpNerRecommender
 
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
-                .toArray(String[]::new);
+                    .toArray(String[]::new);
 
             for (Span prediction : finder.find(tokens)) {
                 String label = prediction.getType();
@@ -154,28 +160,30 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public int estimateSampleCount(List<CAS> aCasses) {
+    public int estimateSampleCount(List<CAS> aCasses)
+    {
         return extractNameSamples(aCasses).size();
     }
 
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
-        throws RecommendationException {
+        throws RecommendationException
+    {
         List<NameSample> data = extractNameSamples(aCasses);
         List<NameSample> trainingSet = new ArrayList<>();
         List<NameSample> testSet = new ArrayList<>();
 
         for (NameSample nameSample : data) {
             switch (aDataSplitter.getTargetSet(nameSample)) {
-                case TRAIN:
-                    trainingSet.add(nameSample);
-                    break;
-                case TEST:
-                    testSet.add(nameSample);
-                    break;
-                default:
-                    // Do nothing
-                    break;
+            case TRAIN:
+                trainingSet.add(nameSample);
+                break;
+            case TEST:
+                testSet.add(nameSample);
+                break;
+            default:
+                // Do nothing
+                break;
             }
         }
 
@@ -192,19 +200,19 @@ public class OpenNlpNerRecommender
             }
 
             String info = String.format(
-                "Not enough evaluation data: training set [%s] sentences, test set [%s] of total [%s]",
-                trainingSetSize, testSetSize, data.size());
+                    "Not enough evaluation data: training set [%s] sentences, test set [%s] of total [%s]",
+                    trainingSetSize, testSetSize, data.size());
             LOG.info(info);
 
             EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
-                trainRatio);
+                    trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
         }
 
         LOG.info("Training on [{}] sentences, predicting on [{}] of total [{}]", trainingSet.size(),
-            testSet.size(), data.size());
+                testSet.size(), data.size());
 
         // Train model
         TokenNameFinderModel model = train(trainingSet, traits.getParameters());
@@ -228,7 +236,7 @@ public class OpenNlpNerRecommender
         }
 
         return labelPairs.stream().collect(
-            EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
+                EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
     }
 
     /**
@@ -236,7 +244,8 @@ public class OpenNlpNerRecommender
      * sentence.
      */
     private List<LabelPair> determineLabelsForASentence(String[] sentence, Span[] predictedNames,
-                                                        Span[] goldNames) {
+            Span[] goldNames)
+    {
         int predictedNameIdx = 0;
         int goldNameIdx = 0;
 
@@ -276,7 +285,8 @@ public class OpenNlpNerRecommender
      * Check that token index is part of the given span and return the span's label or no-label
      * (token is outside span).
      */
-    private String determineLabel(Span aName, int aTokenIdx) {
+    private String determineLabel(Span aName, int aTokenIdx)
+    {
         String label = NO_NE_TAG;
 
         if (aName.getStart() <= aTokenIdx && aName.getEnd() > aTokenIdx) {
@@ -286,21 +296,21 @@ public class OpenNlpNerRecommender
         return label;
     }
 
-    private List<NameSample> extractNameSamples(List<CAS> aCasses) {
+    private List<NameSample> extractNameSamples(List<CAS> aCasses)
+    {
         List<NameSample> nameSamples = new ArrayList<>();
 
-        casses:
-        for (CAS cas : aCasses) {
+        casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            for (AnnotationFS sentence : cas.<Annotation>select(sentenceType)) {
+            for (AnnotationFS sentence : cas.<Annotation> select(sentenceType)) {
                 if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }
 
-                Collection<Annotation> tokens = cas.<Annotation>select(tokenType)
-                    .coveredBy(sentence).asList();
+                Collection<Annotation> tokens = cas.<Annotation> select(tokenType)
+                        .coveredBy(sentence).asList();
 
                 NameSample nameSample = createNameSample(cas, sentence, tokens);
                 if (nameSample.getNames().length > 0) {
@@ -313,15 +323,17 @@ public class OpenNlpNerRecommender
     }
 
     private NameSample createNameSample(CAS aCas, AnnotationFS aSentence,
-                                        Collection<? extends AnnotationFS> aTokens) {
+            Collection<? extends AnnotationFS> aTokens)
+    {
         String[] tokenTexts = aTokens.stream().map(AnnotationFS::getCoveredText)
-            .toArray(String[]::new);
+                .toArray(String[]::new);
         Span[] annotatedSpans = extractAnnotatedSpans(aCas, aSentence, aTokens);
         return new NameSample(tokenTexts, annotatedSpans, true);
     }
 
     private Span[] extractAnnotatedSpans(CAS aCas, AnnotationFS aSentence,
-                                         Collection<? extends AnnotationFS> aTokens) {
+            Collection<? extends AnnotationFS> aTokens)
+    {
         // Create spans from target annotations
         Type annotationType = getType(aCas, layerName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);
@@ -354,7 +366,7 @@ public class OpenNlpNerRecommender
             AnnotationFS endToken = idxTokenEndOffset.get(annotation.getEnd());
             if (beginToken == null || endToken == null) {
                 LOG.warn("Skipping annotation not starting/ending at token boundaries: [{}-{}, {}]",
-                    annotation.getBegin(), annotation.getEnd(), label);
+                        annotation.getBegin(), annotation.getEnd(), label);
                 continue;
             }
 
@@ -379,12 +391,14 @@ public class OpenNlpNerRecommender
     }
 
     private TokenNameFinderModel train(List<NameSample> aNameSamples,
-                                       TrainingParameters aParameters)
-        throws RecommendationException {
+            TrainingParameters aParameters)
+        throws RecommendationException
+    {
         try (NameSampleStream stream = new NameSampleStream(aNameSamples)) {
             TokenNameFinderFactory finderFactory = new TokenNameFinderFactory();
             return NameFinderME.train("unknown", null, stream, aParameters, finderFactory);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             LOG.error("Exception during training the OpenNLP Named Entity Recognizer model.", e);
             throw new RecommendationException("Error while training OpenNLP pos", e);
         }

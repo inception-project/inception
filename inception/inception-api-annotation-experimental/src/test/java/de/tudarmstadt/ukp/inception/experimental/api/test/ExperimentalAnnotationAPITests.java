@@ -30,7 +30,6 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 /*
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "websocket.enabled=true"})
-
  */
 public class ExperimentalAnnotationAPITests
 {

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 
 /**
@@ -60,8 +61,8 @@ public class ProjectSettingsDashboardPageBase
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
+    private @SpringBean PreferencesService userPrefService;
 
-    private DashboardMenu menu;
     private ChallengeResponseDialog deleteProjectDialog;
 
     public ProjectSettingsDashboardPageBase(final PageParameters aParameters)
@@ -79,20 +80,18 @@ public class ProjectSettingsDashboardPageBase
     {
         super.onInitialize();
 
-        menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
-        add(menu);
+        add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
 
         add(new Label("projectName", LoadableDetachableModel.of(() -> getProject().getName())));
 
-        add(new LambdaAjaxLink("delete", this::actionDelete)
-                .onConfigure((_this) -> _this.setEnabled(getProject() != null
-                        && getProject().getId() != null)));
+        add(new LambdaAjaxLink("delete", this::actionDelete).onConfigure(
+                (_this) -> _this.setEnabled(getProject() != null && getProject().getId() != null)));
 
         IModel<String> projectNameModel = PropertyModel.of(getProject(), "name");
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
                 new StringResourceModel("DeleteProjectDialog.title", this),
-                new StringResourceModel("DeleteProjectDialog.text", this).setModel(getProjectModel())
-                        .setParameters(projectNameModel),
+                new StringResourceModel("DeleteProjectDialog.text", this)
+                        .setModel(getProjectModel()).setParameters(projectNameModel),
                 projectNameModel));
         deleteProjectDialog.setConfirmAction(this::actionDeletePerform);
     }

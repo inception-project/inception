@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,7 +59,7 @@ public class SpanRenderer
     private Type type;
 
     public SpanRenderer(SpanAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
-                        FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
+            FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
 
@@ -91,7 +91,7 @@ public class SpanRenderer
 
     @Override
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-                       int aWindowBegin, int aWindowEnd)
+            int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aCas)) {
             return;
@@ -123,7 +123,7 @@ public class SpanRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-                                int aWindowBegin)
+            int aWindowBegin)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return null;
@@ -161,7 +161,7 @@ public class SpanRenderer
                     LinkWithRoleModel link = links.get(li);
                     FeatureStructure targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
                     aSpansAndSlots.add(new VArc(typeAdapter.getLayer(), new VID(aFS, fi, li),
-                        uiTypeName, aFS, targetFS, link.role));
+                            uiTypeName, aFS, targetFS, link.role));
                 }
             }
             fi++;

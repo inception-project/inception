@@ -641,9 +641,6 @@ public class BratAnnotationEditor
         // aResponse.render(
         // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
-        //Experimental Editor
-        //aResponse.render(forReference(ExperimentalAPIResourceReference.get()));
-
         // When the page is re-loaded or when the component is added to the page, we need to
         // initialize the brat stuff.
         StringBuilder js = new StringBuilder();

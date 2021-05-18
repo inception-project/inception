@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -84,7 +84,7 @@ public class MenuBar
 
         user = LoadableDetachableModel.of(userRepository::getCurrentUser);
         project = LoadableDetachableModel.of(() -> findParent(ProjectContext.class)) //
-            .map(ProjectContext::getProject);
+                .map(ProjectContext::getProject);
 
         add(new LogoutPanel("logoutPanel", user));
 
@@ -102,8 +102,8 @@ public class MenuBar
             protected void populateItem(ListItem<ImageLinkDecl> aItem)
             {
                 aItem.add(new ImageLink("link",
-                    new UrlResourceReference(Url.parse(aItem.getModelObject().getImageUrl())),
-                    Model.of(aItem.getModelObject().getLinkUrl())));
+                        new UrlResourceReference(Url.parse(aItem.getModelObject().getImageUrl())),
+                        Model.of(aItem.getModelObject().getLinkUrl())));
             }
         };
         add(links);
@@ -123,15 +123,16 @@ public class MenuBar
         };
         dashboardLink.add(visibleWhen(user.map(this::userCanAccessProject).orElse(false)));
         add(dashboardLink);
+
         add(new BookmarkablePageLink<>(CID_PROJECTS_LINK, ProjectsOverviewPage.class)
-            .add(visibleWhen(user.map(this::requiresProjectsOverview).orElse(false))));
+                .add(visibleWhen(user.map(this::requiresProjectsOverview).orElse(false))));
 
         add(new BookmarkablePageLink<>(CID_ADMIN_LINK, AdminDashboardPage.class)
-            .add(visibleWhen(user.map(userRepository::isAdministrator).orElse(false))));
+                .add(visibleWhen(user.map(userRepository::isAdministrator).orElse(false))));
 
         add(new ExternalLink(CID_SWAGGER_LINK, LoadableDetachableModel.of(this::getSwaggerUiUrl))
-            .add(visibleWhen(
-                user.map(u -> userRepository.hasRole(u, ROLE_REMOTE)).orElse(false))));
+                .add(visibleWhen(
+                        user.map(u -> userRepository.hasRole(u, ROLE_REMOTE)).orElse(false))));
     }
 
     private String getSwaggerUiUrl()
@@ -170,6 +171,6 @@ public class MenuBar
     private boolean requiresProjectsOverview(User aUser)
     {
         return userRepository.isAdministrator(aUser) || userRepository.isProjectCreator(aUser)
-            || projectService.listAccessibleProjects(aUser).size() > 1;
+                || projectService.listAccessibleProjects(aUser).size() > 1;
     }
 }

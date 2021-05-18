@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     private boolean allTypesPresent;
 
     public Renderer_ImplBase(T aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
-                             FeatureSupportRegistry aFeatureSupportRegistry)
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
         layerSupportRegistry = aLayerSupportRegistry;
@@ -58,7 +58,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
      * Checks if the type system has changed compared to the last call. If this is the case, then
      * {@link #typeSystemInit} is called to give the renderer the opportunity to obtain new type and
      * feature information from the type system.
-     *
+     * 
      * @param aCas
      *            a CAS.
      * @return returns {@code true} if all types are present and rendering can commence and
@@ -122,7 +122,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         }
 
         Object trait = layerTraitsCache.computeIfAbsent(aLayer,
-            feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
+                feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
@@ -132,7 +132,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     }
 
     public void renderLazyDetails(AnnotationFS fs, VObject aVObject,
-                                  List<AnnotationFeature> aFeatures)
+            List<AnnotationFeature> aFeatures)
     {
         aVObject.addLazyDetails(getLazyDetails(fs, aFeatures));
     }

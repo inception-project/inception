@@ -23,14 +23,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import de.tudarmstadt.ukp.inception.experimental.api.config.ExperimentalAnnotationAPIAutoConfiguration;
-
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link ExperimentalAnnotationAPIAutoConfiguration#websocketConfiguration}
- * </p>
- */
 
 @Configuration
 @EnableWebSocketMessageBroker

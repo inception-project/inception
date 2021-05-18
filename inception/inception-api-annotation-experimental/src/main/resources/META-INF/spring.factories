@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.experimental.api.config.ExperimentalAnnotationAPIAutoConfiguration

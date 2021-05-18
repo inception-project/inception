@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -75,8 +75,8 @@ public class RelationRenderer
     private Feature arcSpanFeature;
 
     public RelationRenderer(RelationAdapter aTypeAdapter,
-                            LayerSupportRegistry aLayerSupportRegistry,
-                            FeatureSupportRegistry aFeatureSupportRegistry, List<RelationLayerBehavior> aBehaviors)
+            LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry, List<RelationLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
 
@@ -113,7 +113,7 @@ public class RelationRenderer
 
     @Override
     public void render(final CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-                       int aWindowBegin, int aWindowEnd)
+            int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aCas)) {
             return;
@@ -150,18 +150,18 @@ public class RelationRenderer
     }
 
     private void renderYield(VDocument aResponse, AnnotationFS fs,
-                             Map<Integer, Set<Integer>> relationLinks, List<Integer> yieldDeps)
+            Map<Integer, Set<Integer>> relationLinks, List<Integer> yieldDeps)
     {
         FeatureStructure governorFs = getDependentFs(fs);
 
         if (relationLinks.keySet().contains(getAddr(governorFs))
-            && !yieldDeps.contains(getAddr(governorFs))) {
+                && !yieldDeps.contains(getAddr(governorFs))) {
             yieldDeps.add(getAddr(governorFs));
 
             // sort the annotations (begin, end)
             List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
             sortedDepFs.sort(
-                comparingInt(arg0 -> selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
+                    comparingInt(arg0 -> selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
 
             String cm = getYieldMessage(fs.getCAS(), sortedDepFs);
             aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
@@ -170,7 +170,7 @@ public class RelationRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-                                int aWindowBegin)
+            int aWindowBegin)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return Collections.emptyList();
@@ -184,10 +184,10 @@ public class RelationRenderer
             StringBuilder message = new StringBuilder();
 
             message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                + getAddr(aFS) + "] has loose ends - cannot render.");
+                    + getAddr(aFS) + "] has loose ends - cannot render.");
             if (typeAdapter.getAttachFeatureName() != null) {
                 message.append("\nRelation [" + typeAdapter.getLayer().getName()
-                    + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
+                        + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
             }
             message.append("\nDependent: " + dependentFs);
             message.append("\nGovernor: " + governorFs);
@@ -204,7 +204,7 @@ public class RelationRenderer
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
         return asList(new VArc(typeAdapter.getLayer(), aFS, bratTypeName, governorFs, dependentFs,
-            labelFeatures));
+                labelFeatures));
     }
 
     /**
@@ -251,7 +251,7 @@ public class RelationRenderer
 
             if (dependentFs == null || governorFs == null) {
                 log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                    + getAddr(fs) + "] has loose ends - cannot render.");
+                        + getAddr(fs) + "] has loose ends - cannot render.");
                 continue;
             }
 
@@ -281,7 +281,7 @@ public class RelationRenderer
     {
         for (Integer dep : aRelLinks.get(aGov)) {
             if (aRelLinks.containsKey(dep)
-                && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
+                    && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
                 aRelLinks.get(aGov).addAll(aRelLinks.get(dep));
                 updateLinks(aRelLinks, dep);
             }

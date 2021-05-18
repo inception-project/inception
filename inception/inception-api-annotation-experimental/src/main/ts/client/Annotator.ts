@@ -25,51 +25,48 @@ class Annotator {
     project: string;
     username: string;
     viewPortBegin: number;
-    viewPortEnd: 0;
-    viewPortSize: 1;
+    viewPortEnd: number;
+    viewPortSize: number;
 
     constructor() {
         const that = this;
+        this.viewPortSize = 2;
 
         //Testing only
         //Click events triggering either select annotation or create annotation
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             if (elem.tagName === 'text') {
-                console.log(elem);
                 that.sendSelectAnnotationMessageToServer();
             }
-            ondblclick = function (aEvent) {
-                let elem = <Element>aEvent.target;
-                if (elem.tagName === 'text') {
-                    console.log(elem);
-                    that.sendCreateAnnotationMessageToServer();
-                }
+            // --------- NEXT DOCUMENT ------- //
+            if (elem.className === 'far fa-caret-square-right') {
+                that.sendNewDocumentMessageToServer("Doc4");
             }
 
             // ---------- NEW VIEWPORT --------- //
             if (elem.className === 'fas fa-step-forward') {
-                console.log(elem);
                 that.sendNewViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + 1 + that.viewPortSize);
             }
 
             if (elem.className === 'fas fa-step-backward') {
-                console.log(elem);
                 that.sendNewViewportMessageToServer(that.viewPortBegin - 1 - that.viewPortSize, that.viewPortBegin - 1);
             }
 
             if (elem.className === 'fas fa-fast-forward') {
-                console.log(elem);
                 that.sendNewViewportMessageToServer(100, 1111);
             }
 
             if (elem.className === 'fas fa-fast-backward') {
-                console.log(elem);
                 that.sendNewViewportMessageToServer(0, that.viewPortSize);
             }
+        }
 
-            // ------------------------------------ //
-
+        ondblclick = function (aEvent) {
+            let elem = <Element>aEvent.target;
+            if (elem.tagName === 'text') {
+                that.sendCreateAnnotationMessageToServer();
+            }
         }
 
         this.document = "Doc4";
@@ -109,33 +106,12 @@ class Annotator {
 
             // ------ DEFINE ALL SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
 
-            that.sendNewDocumentMessageToServer(null);
-
             //Client receive initial data
             that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function (msg) {
                 that.receiveNewDocumentMessageByServer(JSON.parse(msg.body));
-
-                //TODO UNSUBSCRIBE ALL PREVIOUS
-
-                that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.username, function (msg) {
-                    that.receiveNewViewportMessageByServer(JSON.parse(msg.body));
-                });
-
-                that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function (msg) {
-                    that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
-                });
-
-                //Multiple subscriptions due to viewport
-                for (let i = that.viewPortBegin; i <= that.viewPortEnd; i++) {
-                    that.stompClient.subscribe("/topic/annotation_created_for_clients/" + that.project + "/" + that.document + "/" + i, function (msg) {
-                        that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body));
-                    });
-
-                    that.stompClient.subscribe("/topic/annotation_deleted_for_clients/" + that.project + "/" + that.document + "/" + i, function (msg) {
-                        that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body));
-                    });
-                }
-
+            });
+            that.stompClient.subscribe("/queue/connection_message/" + that.username, function (msg) {
+                console.log("RECEIVED inital data")
             });
 
         };
@@ -231,8 +207,8 @@ class Annotator {
             username: this.username,
             project: this.project,
             document: this.document,
-            begin: 0,
-            end: 8
+            begin: this.viewPortBegin,
+            end: this.viewPortEnd
         }
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
     }
@@ -247,6 +223,44 @@ class Annotator {
     receiveNewDocumentMessageByServer(aMessage: string)
     {
         console.log('RECEIVED DOCUMENT: ' + aMessage);
+
+        let keys = Object.keys(aMessage)
+
+        /*
+        let values = keys.map(k => aMessage[k])
+        console.log(keys);
+        console.log(values);
+
+         */
+
+        //TODO RECEIVE CORRECT VALUES FROM MESSAGE
+        this.project = "Annotation Study";
+        this.document = "Doc4";
+        //TODO UNSUBSCRIBE ALL PREVIOUS
+
+        const that = this;
+
+        this.stompClient.subscribe("/queue/new_viewport_for_client/" + this.username, function (msg) {
+            that.receiveNewViewportMessageByServer(JSON.parse(msg.body));
+        });
+
+        this.stompClient.subscribe("/queue/selected_annotation_for_client/" + this.username, function (msg) {
+            that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
+        });
+
+        this.viewPortBegin = 0;
+        this.viewPortEnd = this.viewPortBegin + this.viewPortSize;
+
+        //Multiple subscriptions due to viewport
+        for (let i = this.viewPortBegin; i <= this.viewPortEnd; i++) {
+            this.stompClient.subscribe("/topic/annotation_created_for_clients/" + this.project + "/" + this.document + "/" + i, function (msg) {
+                that.receiveNewAnnotationMessageByServer(JSON.parse(msg.body));
+            });
+
+            this.stompClient.subscribe("/topic/annotation_deleted_for_clients/" + this.project + "/" + this.document + "/" + i, function (msg) {
+                that.receiveDeleteAnnotationMessageByServer(JSON.parse(msg.body));
+            });
+        }
     }
 
     receiveNewViewportMessageByServer(aMessage: string)

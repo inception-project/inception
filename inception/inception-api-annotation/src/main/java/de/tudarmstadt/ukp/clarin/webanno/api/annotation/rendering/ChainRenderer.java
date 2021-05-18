@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,7 @@ public class ChainRenderer
     private Feature chainFirst;
 
     public ChainRenderer(ChainAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
-                         FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
+            FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
 
@@ -92,7 +92,7 @@ public class ChainRenderer
 
     @Override
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-                       int aPageBegin, int aPageEnd)
+            int aPageBegin, int aPageEnd)
     {
         if (!checkTypeSystem(aCas)) {
             return;
@@ -127,7 +127,7 @@ public class ChainRenderer
             // Iterate over the links of the chain
             while (linkFs != null) {
                 Feature linkNext = linkFs.getType()
-                    .getFeatureByBaseName(typeAdapter.getLinkNextFeatureName());
+                        .getFeatureByBaseName(typeAdapter.getLinkNextFeatureName());
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
@@ -148,12 +148,12 @@ public class ChainRenderer
                 // Render span
                 {
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
-                        (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
+                            (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     VRange offsets = new VRange(linkFs.getBegin() - aPageBegin,
-                        linkFs.getEnd() - aPageBegin);
+                            linkFs.getEnd() - aPageBegin);
 
                     VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                        colorIndex, bratLabelText);
+                            colorIndex, bratLabelText);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
 
@@ -168,7 +168,7 @@ public class ChainRenderer
                     if (typeAdapter.isLinkedListBehavior() && arcLabelFeature != null) {
                         // Render arc label
                         bratLabelText = getUiLabelText(typeAdapter, prevLinkFs,
-                            asList(arcLabelFeature));
+                                asList(arcLabelFeature));
                     }
                     else {
                         // Render only chain type
@@ -176,8 +176,8 @@ public class ChainRenderer
                     }
 
                     aResponse.add(new VArc(typeAdapter.getLayer(),
-                        new VID(prevLinkFs, 1, VID.NONE, VID.NONE), bratTypeName, prevLinkFs,
-                        linkFs, colorIndex, bratLabelText));
+                            new VID(prevLinkFs, 1, VID.NONE, VID.NONE), bratTypeName, prevLinkFs,
+                            linkFs, colorIndex, bratLabelText));
                 }
 
                 // Render errors if required features are missing
@@ -200,7 +200,7 @@ public class ChainRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-                                int aWindowBegin)
+            int aWindowBegin)
     {
         return Collections.emptyList();
     }
