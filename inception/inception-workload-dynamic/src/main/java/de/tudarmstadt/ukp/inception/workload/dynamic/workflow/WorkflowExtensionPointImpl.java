@@ -24,6 +24,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
@@ -32,7 +35,8 @@ public class WorkflowExtensionPointImpl
     extends ExtensionPoint_ImplBase<Project, WorkflowExtension>
     implements WorkflowExtensionPoint
 {
-    public WorkflowExtensionPointImpl(List<WorkflowExtension> aExtensions)
+    public WorkflowExtensionPointImpl(
+            @Lazy @Autowired(required = false) List<WorkflowExtension> aExtensions)
     {
         super(aExtensions);
     }

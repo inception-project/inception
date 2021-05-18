@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
@@ -28,35 +30,43 @@ public enum SourceDocumentState
     /**
      * No annotation document has been created for this document
      */
-    NEW("NEW", "black"),
+    @JsonProperty("NEW")
+    NEW("NEW", "<i class=\"far fa-circle\"></i>", "black"),
 
     /**
      * At least one annotation document has been created for the document
      */
-    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black"),
+    @JsonProperty("ANNOTATION_IN_PROGRESS")
+    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "<i class=\"far fa-play-circle\"></i>",
+            "black"),
 
     /**
      * All annotations have marked their annotation document as finished
      */
-    ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
+    @JsonProperty("ANNOTATION_FINISHED")
+    ANNOTATION_FINISHED("ANNOTATION_FINISHED", "<i class=\"far fa-check-circle\"></i>", "green"),
 
     /**
      * curator has started working with the annotation document, annotators can no longer make
      * modifications in annotation documents
      */
-    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue"),
+    @JsonProperty("CURATION_IN_PROGRESS")
+    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "<i class=\"fas fa-clipboard\"></i>", "blue"),
 
     /**
      * curator claims to have curated all annotations
      */
-    CURATION_FINISHED("CURATION_FINISHED", "red");
+    @JsonProperty("CURATION_FINISHED")
+    CURATION_FINISHED("CURATION_FINISHED", "<i class=\"fas fa-clipboard-check\"></i>", "red");
 
     private final String id;
+    private final String symbol;
     private final String color;
 
-    SourceDocumentState(String aId, String aColor)
+    SourceDocumentState(String aId, String aSymbol, String aColor)
     {
         id = aId;
+        symbol = aSymbol;
         color = aColor;
     }
 
@@ -74,6 +84,11 @@ public enum SourceDocumentState
     public String getColor()
     {
         return color;
+    }
+
+    public String symbol()
+    {
+        return symbol;
     }
 
     @Override

@@ -43,7 +43,6 @@ import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -64,10 +63,9 @@ import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 // @formatter:off
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
-@ComponentScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
 @EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -113,7 +111,6 @@ public class INCEpTION
             {
                 return null;
             }
-
         };
     }
 

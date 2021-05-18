@@ -17,14 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 import static java.time.Duration.ofSeconds;
 
-import java.util.Map;
 import java.util.Objects;
 
 import javax.persistence.EntityManager;
@@ -35,10 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
@@ -93,22 +88,7 @@ public class DynamicWorkloadUpdateDocumentStateTask
                 workloadManagementService.loadOrCreateWorkloadManagerConfiguration(project));
         int requiredAnnotatorCount = traits.getDefaultNumberOfAnnotations();
 
-        Map<AnnotationDocumentState, Long> stats = documentService
-                .getAnnotationDocumentStats(document);
-        long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
-        long inProgressCount = stats.get(AnnotationDocumentState.IN_PROGRESS);
-
-        // If enough documents are finished, mark as finished
-        if (finishedCount >= requiredAnnotatorCount) {
-            documentService.setSourceDocumentState(document, ANNOTATION_FINISHED);
-        }
-        // ... or if nobody has started yet, mark as new
-        else if (finishedCount + inProgressCount == 0) {
-            documentService.setSourceDocumentState(document, SourceDocumentState.NEW);
-        }
-        else {
-            documentService.setSourceDocumentState(document, ANNOTATION_IN_PROGRESS);
-        }
+        dynamicWorkloadExtension.updateDocumentState(doc, requiredAnnotatorCount);
     }
 
     @Override

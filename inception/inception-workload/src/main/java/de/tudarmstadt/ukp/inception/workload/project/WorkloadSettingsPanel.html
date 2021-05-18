@@ -17,30 +17,19 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<head>
-<wicket:head>
-  <style type="text/css">
-input[type="radio"], label {
- vertical-align: middle;
- padding: 4px;
- margin: 4px;
-}
-</style>
-</wicket:head>
-</head>
 <body>
   <wicket:panel>
     <div class="scrolling flex-content flex-h-container">
       <form wicket:id="form" class="flex-content flex-v-container">
         <div class="card-body">
           <div class="form-group form-row">
-            <label class="col-sm-2 col-form-label">
+            <label class="col-sm-4 col-form-label">
               <wicket:message key="workloadType" />
               <a target="_blank" wicket:message="href:workload.help.link">
                 <i class="fas fa-question-circle"></i>
               </a>
             </label>
-            <div class="col-sm-12">
+            <div class="col-sm-8">
               <select wicket:id="workloadStrategy" class="form-control" data-container="body"/>
             </div>
           </div>
