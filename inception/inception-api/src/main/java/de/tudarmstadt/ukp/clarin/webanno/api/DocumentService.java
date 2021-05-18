@@ -573,8 +573,6 @@ public interface DocumentService
     /**
      * List all annotation documents for a given source document that are already closed.
      * 
-     * @Override
-     *
      * @param aDocument
      *            a source document.
      * @return the annotation documents.
