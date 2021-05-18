@@ -84,7 +84,9 @@ public abstract class WicketApplicationBase
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
-        getCspSettings().blocking().disabled();
+        // getCspSettings().blocking().disabled();
+        getCspSettings().reporting().unsafeInline();
+        // getCspSettings().blocking();
 
         initStatelessChecker();
 
