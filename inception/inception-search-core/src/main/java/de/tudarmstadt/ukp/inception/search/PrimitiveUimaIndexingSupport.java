@@ -83,7 +83,7 @@ public class PrimitiveUimaIndexingSupport
     public MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
             AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
     {
-        FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
+        FeatureSupport<?> featSup = featureSupportRegistry.findExtension(aFeature).orElseThrow();
         String featureValue = featSup.renderFeatureValue(aFeature, aAnnotation);
         MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
         if (isEmpty(featureValue)) {

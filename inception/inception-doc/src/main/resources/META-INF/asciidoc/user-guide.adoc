@@ -96,7 +96,11 @@ include::{include-dir}curation.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}monitoring.adoc[leveloffset=+1]
+include::{include-dir}workload.adoc[leveloffset=+1]
+
+include::{include-dir}workload_matrix.adoc[leveloffset=+2]
+
+include::{include-dir}workload_dynamic.adoc[leveloffset=+2]
 
 <<<
 
@@ -186,10 +190,6 @@ include::{include-dir}guidelines.adoc[leveloffset=+1]
 <<<
 
 include::{include-dir}pdf-editor.adoc[leveloffset=+1]
-
-<<<
-
-include::{include-dir}workload.adoc[leveloffset=+1]
 
 <<<
 

@@ -18,8 +18,12 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.management.DynamicWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
+import static java.time.Duration.between;
+import static java.time.Instant.now;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -34,7 +38,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxEventBehavior;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorStateOpenContextMenuEvent;
 
 public class AnnotationStateList
     extends Panel
@@ -43,7 +50,8 @@ public class AnnotationStateList
 
     private @SpringBean UserDao userRepository;
 
-    public AnnotationStateList(String aId, IModel<List<AnnotationDocument>> aModel)
+    public AnnotationStateList(String aId, IModel<List<AnnotationDocument>> aModel,
+            Duration aAbandonationTimeout)
     {
         super(aId, aModel);
 
@@ -55,37 +63,38 @@ public class AnnotationStateList
             protected void populateItem(ListItem<AnnotationDocument> aItem)
             {
                 AnnotationDocument row = aItem.getModelObject();
-                AnnotationDocumentState state = aItem.getModel().map(AnnotationDocument::getState)
-                        .orElse(NEW).getObject();
-                Label stateLabel = new Label("stateSymbol", stateSymbol(state));
+                User user = userRepository.get(aItem.getModelObject().getUser());
+
+                IModel<String> labelModel = aItem.getModel() //
+                        .map(AnnotationDocumentState::symbol) //
+                        .orElse(NEW.symbol());
+                Label stateLabel = new Label("stateSymbol");
+                Duration idleTime = between(row.getTimestamp().toInstant(), now());
+                if (idleTime.compareTo(aAbandonationTimeout) > 0) {
+                    labelModel = labelModel
+                            .map(_label -> "<i class=\"fas fa-user-clock\"></i> " + _label);
+                    aItem.add(new AttributeAppender("class", "badge-warning", " "));
+                }
+                else {
+                    aItem.add(new AttributeAppender("class", "badge-secondary", " "));
+                    aItem.add(AjaxEventBehavior.onEvent("click", _target -> stateLabel.send(
+                            stateLabel, BUBBLE,
+                            new AnnotatorColumnCellClickEvent(_target, row.getDocument(), user))));
+                    aItem.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
+                }
+                stateLabel.setDefaultModel(labelModel);
                 stateLabel.setEscapeModelStrings(false);
                 aItem.add(stateLabel);
-                aItem.add(new Label("annotatorName",
-                        userRepository.get(aItem.getModelObject().getUser()).getUiName()));
-                aItem.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                aItem.add(AjaxEventBehavior.onEvent("click", //
-                        _target -> stateLabel.send(stateLabel, BUBBLE,
-                                new AnnotatorColumnCellClickEvent(_target, row.getDocument(),
-                                        row.getUser()))));
+
+                aItem.add(new Label("annotatorName", user.getUiName()));
+                aItem.add(new LambdaAjaxEventBehavior("contextmenu",
+                        _target -> stateLabel.send(aItem, BUBBLE,
+                                new AnnotatorStateOpenContextMenuEvent(_target, aItem,
+                                        row.getDocument(), user, row.getState())))
+                                                .setPreventDefault(true));
             }
         };
 
         add(annotationStates);
-    }
-
-    private String stateSymbol(AnnotationDocumentState aDocState)
-    {
-        switch (aDocState) {
-        case NEW:
-            return "<i class=\"far fa-circle\"></i>";
-        case IN_PROGRESS:
-            return "<i class=\"far fa-play-circle\"></i>";
-        case FINISHED:
-            return "<i class=\"far fa-check-circle\"></i>";
-        case IGNORE:
-            return "<i class=\"fas fa-lock\"></i>";
-        }
-
-        return "";
     }
 }

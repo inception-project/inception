@@ -18,14 +18,11 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
-import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -50,12 +47,14 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * <p>
@@ -74,22 +73,26 @@ public class InviteServiceImpl
     private final UserDao userRepository;
     private final ProjectService projectService;
     private final InviteServiceProperties inviteProperties;
+    private final WorkloadManagementService workloadManagementService;
 
     private final SecureRandom random;
 
     public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
-            InviteServiceProperties aInviteProperties)
+            InviteServiceProperties aInviteProperties,
+            WorkloadManagementService aWorkloadManagementService)
     {
         random = new SecureRandom();
         userRepository = aUserRepository;
         projectService = aProjectService;
         inviteProperties = aInviteProperties;
+        workloadManagementService = aWorkloadManagementService;
     }
 
     public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
-            InviteServiceProperties aInviteProperties, EntityManager aEntitymanager)
+            InviteServiceProperties aInviteProperties,
+            WorkloadManagementService aWorkloadManagementService, EntityManager aEntitymanager)
     {
-        this(aUserRepository, aProjectService, aInviteProperties);
+        this(aUserRepository, aProjectService, aInviteProperties, aWorkloadManagementService);
         entityManager = aEntitymanager;
     }
 
@@ -225,8 +228,11 @@ public class InviteServiceImpl
         }
 
         // Get the freshest project state from the DB
-        Project project = projectService.getProject(aInvite.getProject().getId());
-        return !asList(NEW, ANNOTATION_IN_PROGRESS).contains(project.getState());
+        ProjectState state = workloadManagementService
+                .getWorkloadManagerExtension(aInvite.getProject())
+                .freshenStatus(aInvite.getProject());
+
+        return state.isAnnotationFinal();
     }
 
     @Override

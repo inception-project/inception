@@ -18,9 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("remote-api")
 public class RemoteApiProperties
 {

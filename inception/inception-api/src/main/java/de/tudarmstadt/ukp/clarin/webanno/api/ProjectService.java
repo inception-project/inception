@@ -31,11 +31,13 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.MDC;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -165,8 +167,9 @@ public interface ProjectService
      *            The {@link Project} object to be created.
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
+     * @return the project;
      */
-    void createProject(Project project) throws IOException;
+    Project createProject(Project project) throws IOException;
 
     /**
      * Update a project. This is only necessary when dealing with a detached project entity.
@@ -175,6 +178,17 @@ public interface ProjectService
      *            The {@link Project} object to be updated.
      */
     void updateProject(Project project);
+
+    /**
+     * Update the project state and issue a {@link ProjectStateChangedEvent} if necessary. Make sure
+     * that the status of the project object is fresh to avoid getting spurious events.
+     * 
+     * @param aProject
+     *            The {@link Project} object to be updated.
+     * @param aState
+     *            the new state.
+     */
+    void setProjectState(Project aProject, ProjectState aState);
 
     /**
      * A method that check is a project exists with the same name already. getSingleResult() fails
