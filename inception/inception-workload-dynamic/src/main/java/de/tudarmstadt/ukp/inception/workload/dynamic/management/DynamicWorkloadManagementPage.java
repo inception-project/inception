@@ -17,10 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.oneClickTransition;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
@@ -31,25 +29,30 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQu
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.FINISHED;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.STATE;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension.DEFAULT_WORKFLOW;
-import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toList;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -63,7 +66,9 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationTo
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -77,15 +82,18 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.utils.RequestCycleUtils;
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
@@ -97,20 +105,25 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorStateOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
@@ -138,6 +151,10 @@ public class DynamicWorkloadManagementPage
 {
     private static final long serialVersionUID = 1180618893870240262L;
 
+    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
+
+    public static final String CSS_CLASS_STATE_TOGGLE = "state-toggle";
+
     private static final String MID_LABEL = "label";
 
     // Forms
@@ -152,14 +169,12 @@ public class DynamicWorkloadManagementPage
     private AnnotationQueueOverviewDataProvider dataProvider;
 
     // Input Fields
-    private NumberTextField<Integer> defaultNumberDocumentsTextField;
     private TextField<String> userFilterTextField;
     private TextField<String> documentFilterTextField;
     private AjaxDatePicker dateFrom;
     private AjaxDatePicker dateTo;
     private AjaxCheckBox unused;
     private BootstrapRadioChoice<DateSelection> dateChoices;
-    private DropDownChoice<WorkflowType> workflowChoices;
     private DropDownChoice<User> userSelection;
     private DropDownChoice<AnnotationDocument> resetDocument;
     private DropDownChoice<AnnotationDocumentState> documentState;
@@ -171,6 +186,8 @@ public class DynamicWorkloadManagementPage
 
     // Modal dialog
     private ModalWindow infoDialog;
+    private ChallengeResponseDialog resetDocumentDialog;
+    private ContextMenu contextMenu;
 
     // SpringBeans
     private @SpringBean UserDao userRepository;
@@ -208,7 +225,7 @@ public class DynamicWorkloadManagementPage
         // Each column creates TableMetaData
         List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> documentStateSymbol(item.getState()))
+                item -> item.getState().symbol())
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
@@ -230,9 +247,6 @@ public class DynamicWorkloadManagementPage
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
                 AnnotationQueueItem::getLastUpdated));
 
-        // Own column type, contains only a click
-        // able image (AJAX event),
-        // creates a small panel dialog containing metadata
         columns.add(new HeaderlessColumn<AnnotationQueueItem, AnnotationQueueSortKeys>()
         {
             private static final long serialVersionUID = 1L;
@@ -269,8 +283,9 @@ public class DynamicWorkloadManagementPage
                 LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
                         (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
 
-                link.add(new Label(MID_LABEL, documentStateSymbol(aItem.getModel().getObject()))
-                        .setEscapeModelStrings(false));
+                link.add(new Label(MID_LABEL,
+                        aItem.getModel().map(SourceDocumentState::symbol).orElse(""))
+                                .setEscapeModelStrings(false));
                 link.add(new AttributeAppender("class", () -> dataProvider.getFilterState()
                         .getStates().contains(aItem.getModelObject()) ? "active" : "", " "));
                 aItem.add(link);
@@ -282,13 +297,16 @@ public class DynamicWorkloadManagementPage
         stateFilters = new WebMarkupContainer("stateFilters");
         stateFilters.setOutputMarkupPlaceholderTag(true);
         stateFilters.add(listview);
-
         add(stateFilters);
 
         // Add forms of the dropdowns
         add(createSearchForm());
         add(createUserForm());
         add(createSettingsForm());
+        add(new LambdaAjaxLink("refresh", this::actionRefresh));
+
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
+        add(contextMenu = new ContextMenu("contextMenu"));
     }
 
     /**
@@ -396,40 +414,79 @@ public class DynamicWorkloadManagementPage
     /**
      * @return the "Settings" dropdown menu form
      */
-    public Form<Void> createSettingsForm()
+    public Form<DynamicWorkloadTraits> createSettingsForm()
     {
-        Form<Void> settingsForm = new Form<>("settingsForm");
+        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
+
+        Form<DynamicWorkloadTraits> settingsForm = new Form<>("settingsForm",
+                new CompoundPropertyModel<>(traits));
         settingsForm.setOutputMarkupId(true);
 
-        // Init defaultDocumentsNumberTextField
-        defaultNumberDocumentsTextField = new NumberTextField<>("defaultDocumentsNumberTextField",
-                new Model<>(), Integer.class);
+        settingsForm.add(new NumberTextField<>("defaultNumberOfAnnotations", Integer.class) //
+                .setMinimum(1) //
+                .setConvertEmptyInputStringToNull(false) //
+                .setRequired(true));
 
-        // Get default model from the DB
-        defaultNumberDocumentsTextField
-                .setDefaultModel(new CompoundPropertyModel<>((dynamicWorkloadExtension
-                        .readTraits(
-                                workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
-                                        currentProject.getObject()))
-                        .getDefaultNumberOfAnnotations())));
+        CheckBox abandonationToggle = new CheckBox("abandonationToggle");
+        abandonationToggle.setModel(new LambdaModelAdapter<Boolean>(() -> {
+            Duration d = settingsForm.getModelObject().getAbandonationTimeout();
+            return !(d.isNegative() || d.isZero());
+        }, v -> {
+            if (!v) {
+                settingsForm.getModelObject().setAbandonationTimeout(Duration.ofMillis(0));
+            }
+            else {
+                settingsForm.getModelObject().setAbandonationTimeout(Duration.ofDays(1));
+            }
+        }));
+        abandonationToggle.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                _target -> _target.add(settingsForm)));
+        settingsForm.add(abandonationToggle);
 
-        defaultNumberDocumentsTextField.setMinimum(1);
-        defaultNumberDocumentsTextField.setRequired(true);
-        defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
-        settingsForm.add(defaultNumberDocumentsTextField);
+        Component abandonationTimeout = new NumberTextField<>("abandonationTimeout", Long.class) //
+                .setMinimum(0l) //
+                .setConvertEmptyInputStringToNull(false) //
+                .setRequired(true)
+                .setModel(new LambdaModelAdapter<Long>(
+                        () -> settingsForm.getModelObject().getAbandonationTimeout().toMinutes(),
+                        v -> settingsForm.getModelObject().setAbandonationTimeout(ofMinutes(v))))
+                .setOutputMarkupId(true);
+        abandonationTimeout.add(visibleWhen(abandonationToggle.getModel()));
+        settingsForm.add(abandonationTimeout);
 
-        // Dropdown menu for the workflow strategy
-        workflowChoices = new DropDownList<>("workflowStrategy");
-        workflowChoices.setChoiceRenderer(new LambdaChoiceRenderer<>(WorkflowType::getUiName));
-        workflowChoices.setModel(LoadableDetachableModel.of(this::getWorkflowChoice));
+        settingsForm.add(new LambdaAjaxButton<>("abandonationOneDay", (_target, _form) -> {
+            settingsForm.getModelObject().setAbandonationTimeout(Duration.ofDays(1));
+            _target.add(settingsForm);
+        }).add(visibleWhen(abandonationToggle.getModel())));
+
+        settingsForm.add(new LambdaAjaxButton<>("abandonationOneWeek", (_target, _form) -> {
+            settingsForm.getModelObject().setAbandonationTimeout(Duration.ofDays(7));
+            _target.add(settingsForm);
+        }).add(visibleWhen(abandonationToggle.getModel())));
+
+        DropDownChoice<AnnotationDocumentState> abandonationState = new DropDownList<>(
+                "abandonationState");
+        abandonationState.setRequired(true);
+        abandonationState.setNullValid(false);
+        abandonationState.setChoiceRenderer(new EnumChoiceRenderer<>(abandonationState));
+        abandonationState.setChoices(asList(AnnotationDocumentState.NEW,
+                AnnotationDocumentState.IGNORE, AnnotationDocumentState.FINISHED));
+        abandonationState.add(visibleWhen(abandonationToggle.getModel()));
+        settingsForm.add(abandonationState);
+
+        DropDownChoice<String> workflowChoices = new DropDownList<>("workflowType");
+        workflowChoices.setChoiceRenderer(
+                new LambdaChoiceRenderer<>(id -> workflowExtensionPoint.getExtension(id)
+                        .map(WorkflowExtension::getLabel).orElse("<" + id + " not available>")));
         workflowChoices.setRequired(true);
         workflowChoices.setNullValid(false);
-        workflowChoices.setChoices(workflowExtensionPoint.getTypes());
-
-        // add them to the form
+        workflowChoices.setChoices(workflowExtensionPoint.getTypes().stream() //
+                .sorted(Comparator.comparing(WorkflowType::getUiName))
+                .map(WorkflowType::getWorkflowExtensionId) //
+                .collect(toList()));
         settingsForm.add(workflowChoices);
 
-        // Confirmation button
         settingsForm.add(new LambdaAjaxButton<>("save", this::actionConfirm));
 
         return settingsForm;
@@ -462,7 +519,7 @@ public class DynamicWorkloadManagementPage
 
         // Dropdown menu with all available users of the project
         userSelection = new DropDownList<>("userSelection");
-        userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUsername));
+        userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUiName));
         // No default model required, as the input shall be empty by default
         userSelection.setModel(new Model<>());
         userSelection.setNullValid(true);
@@ -470,19 +527,8 @@ public class DynamicWorkloadManagementPage
         userSelection.setOutputMarkupId(true);
 
         // Add AjaxUpdating Behavior to the dropdown
-        userSelection.add(new AjaxFormComponentUpdatingBehavior("change")
-        {
-            /**
-             * 
-             */
-            private static final long serialVersionUID = 3661600387962267783L;
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
-            {
-                aTarget.add(userSelection, userAssignDocumentForm, userResetDocumentForm);
-            }
-        });
+        userSelection.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> _target
+                .add(userSelection, userAssignDocumentForm, userResetDocumentForm)));
 
         userSelectionForm.add(userSelection);
 
@@ -643,19 +689,9 @@ public class DynamicWorkloadManagementPage
         return documentState.getModelObject();
     }
 
-    private WorkflowType getWorkflowChoice()
+    private void actionRefresh(AjaxRequestTarget aTarget)
     {
-        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
-                .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
-        WorkflowExtension extension = workflowExtensionPoint.getExtension(traits.getWorkflowType())
-                .orElse(null);
-        // NP catch for older project
-        if (extension == null) {
-            return new WorkflowType(DEFAULT_WORKFLOW, traits.getWorkflowType());
-        }
-        else {
-            return new WorkflowType(extension.getId(), traits.getWorkflowType());
-        }
+        updateTable(aTarget);
     }
 
     private void actionSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -675,15 +711,12 @@ public class DynamicWorkloadManagementPage
         aTarget.add(table, searchForm);
     }
 
-    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<DynamicWorkloadTraits> aForm)
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
         // Writes the new traits into the DB
-        dynamicWorkloadExtension.writeTraits(workloadManagementService,
-                new DynamicWorkloadTraits(workflowChoices.getModelObject().getWorkflowExtensionId(),
-                        parseInt(defaultNumberDocumentsTextField.getInput())),
-                currentProject.getObject());
+        dynamicWorkloadExtension.writeTraits(aForm.getModelObject(), currentProject.getObject());
         success("Changes saved");
 
         updateTable(aTarget);
@@ -691,44 +724,45 @@ public class DynamicWorkloadManagementPage
 
     private void actionSetDocumentStatus(AjaxRequestTarget aAjaxRequestTarget,
             Form<AnnotationDocumentState> aForm)
+        throws IOException
     {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
+
         if (resetDocument.getModelObject() == null) {
             error("Please select a document you wish to change its status first!");
+            return;
         }
-        else if (documentState.getModelObject() == null) {
+
+        if (documentState.getModelObject() == null) {
             error("Please select a state you wish to assign to the document");
+            return;
         }
-        // State and document have been selected
-        else {
-            // Either FINSIHED to INPROGRESS
-            if (documentState.getModelObject().equals(AnnotationDocumentState.IN_PROGRESS)) {
-                documentService.transitionAnnotationDocumentState(
-                        documentService.getAnnotationDocument(
-                                documentService.getSourceDocument(currentProject.getObject(),
-                                        resetDocument.getModelObject().getName()),
-                                userSelection.getModelObject()),
-                        ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
-            }
-            else {
-                // OR INPROGRESS to FINSIHED
-                documentService.transitionAnnotationDocumentState(
-                        documentService.getAnnotationDocument(
-                                documentService.getSourceDocument(currentProject.getObject(),
-                                        resetDocument.getModelObject().getName()),
-                                userSelection.getModelObject()),
-                        ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-            }
+
+        // Either FINSIHED to INPROGRESS
+        if (documentState.getModelObject() == AnnotationDocumentState.FINISHED) {
+            documentService.setAnnotationDocumentState(resetDocument.getModelObject(),
+                    AnnotationDocumentState.IN_PROGRESS);
             success("Document status changed");
+        }
+        else if (documentState.getModelObject() == AnnotationDocumentState.IN_PROGRESS) {
+
+            // OR INPROGRESS to FINSIHED
+            documentService.setAnnotationDocumentState(resetDocument.getModelObject(),
+                    AnnotationDocumentState.FINISHED);
+            success("Document status changed");
+        }
+        else {
+            error("Can only change the status of documents that are in-progress or finished");
         }
 
         updateTable(aAjaxRequestTarget);
     }
 
     private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget, Form<?> aForm)
+        throws IOException
     {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
-        ;
+
         // First check if there are documents to assign
         Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
         for (SourceDocument source : documentsToAssign) {
@@ -736,14 +770,14 @@ public class DynamicWorkloadManagementPage
                     .createOrGetAnnotationDocument(source, userSelection.getModelObject());
 
             // Only if the document is in state NEW we can assign it to INPROGRESS
-            if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
-                documentService.transitionAnnotationDocumentState(annotationDocument,
-                        AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+            if (AnnotationDocumentState.NEW == annotationDocument.getState()) {
+                documentService.setAnnotationDocumentState(annotationDocument,
+                        AnnotationDocumentState.IN_PROGRESS);
                 success("Document(s) assigned");
             }
             else {
-                error("Document '" + annotationDocument.getName()
-                        + "' is either already assigned or even finished.");
+                error("Document [" + annotationDocument.getName()
+                        + "] is either already assigned or even finished.");
             }
         }
 
@@ -762,12 +796,12 @@ public class DynamicWorkloadManagementPage
 
         // Set contents of the modalWindow
         List<String> finishedUsersForDocument = workloadManagementService
-                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.FINISHED,
-                        doc.getSourceDocument(), currentProject.getObject())
+                .listAnnotationDocumentsForSourceDocumentInState(doc.getSourceDocument(),
+                        AnnotationDocumentState.FINISHED)
                 .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
         List<String> inProgressUsersForDocument = workloadManagementService
-                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.IN_PROGRESS,
-                        doc.getSourceDocument(), currentProject.getObject())
+                .listAnnotationDocumentsForSourceDocumentInState(doc.getSourceDocument(),
+                        AnnotationDocumentState.IN_PROGRESS)
                 .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
         infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.getContentId(),
                 doc.getSourceDocument(), finishedUsersForDocument, inProgressUsersForDocument));
@@ -799,27 +833,11 @@ public class DynamicWorkloadManagementPage
         aTarget.add(table, stateFilters);
     }
 
-    private String documentStateSymbol(SourceDocumentState aDocState)
-    {
-        switch (aDocState) {
-        case NEW:
-            return "<i class=\"far fa-circle\"></i>";
-        case ANNOTATION_IN_PROGRESS:
-            return "<i class=\"far fa-play-circle\"></i>";
-        case ANNOTATION_FINISHED:
-            return "<i class=\"far fa-check-circle\"></i>";
-        case CURATION_IN_PROGRESS:
-            return "<i class=\"fas fa-clipboard\"></i>";
-        case CURATION_FINISHED:
-            return "<i class=\"fas fa-clipboard-check\"></i>";
-        }
-
-        return "";
-    }
-
     private List<AnnotationQueueItem> getQueue()
     {
         Project project = currentProject.getObject();
+
+        dynamicWorkloadExtension.freshenStatus(project);
 
         Map<SourceDocument, List<AnnotationDocument>> documentMap = new HashMap<>();
 
@@ -835,7 +853,7 @@ public class DynamicWorkloadManagementPage
         List<AnnotationQueueItem> queue = new ArrayList<>();
         for (Entry<SourceDocument, List<AnnotationDocument>> e : documentMap.entrySet()) {
             queue.add(new AnnotationQueueItem(e.getKey(), e.getValue(),
-                    traits.getDefaultNumberOfAnnotations()));
+                    traits.getDefaultNumberOfAnnotations(), traits.getAbandonationTimeout()));
         }
         return queue;
     }
@@ -848,35 +866,75 @@ public class DynamicWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
     {
-        User user = userRepository.get(aEvent.getUsername());
         AnnotationDocument annotationDocument = documentService
-                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), user);
+                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
 
-        AnnotationDocumentStateTransition transition;
-        switch (annotationDocument.getState()) {
-        case NEW:
-            transition = NEW_TO_IGNORE;
-            break;
-        case IGNORE:
-            transition = IGNORE_TO_NEW;
-            break;
-        case IN_PROGRESS:
-            transition = ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-            break;
-        case FINISHED:
-            transition = ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-            break;
-        default:
-            return;
-        }
+        AnnotationDocumentState targetState = oneClickTransition(annotationDocument);
 
-        documentService.transitionAnnotationDocumentState(annotationDocument, transition);
+        documentService.setAnnotationDocumentState(annotationDocument, targetState);
 
-        success(format("The state of document [%s] for user [%s] has been set to [%s]",
-                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
-                annotationDocument.getState()));
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         updateTable(aEvent.getTarget());
+    }
+
+    @OnEvent
+    public void onAnnotatorStateOpenContextMenuEvent(AnnotatorStateOpenContextMenuEvent aEvent)
+    {
+        if (aEvent.getState() == NEW) {
+            info("Documents on which work has not yet been started cannot be reset.");
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        List<IMenuItem> items = contextMenu.getItemList();
+        items.clear();
+
+        // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
+        // the information we need in the menu item here
+        SourceDocument document = aEvent.getSourceDocument();
+        User user = aEvent.getUser();
+        items.add(new LambdaMenuItem("Reset",
+                _target -> actionResetAnnotationDocument(_target, document, user)));
+        items.add(new LambdaMenuItem("Touch",
+                _target -> actionTouchAnnotationDocument(_target, document, user)));
+
+        contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
+    }
+
+    private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            User aUser)
+    {
+        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setChallengeModel(new StringResourceModel("ResetDocumentDialog.text", this)
+                        .setParameters(documentNameModel, aUser.getUiName()));
+        resetDocumentDialog.setResponseModel(documentNameModel);
+        resetDocumentDialog.setConfirmAction(_target -> {
+            documentService.resetAnnotationCas(aDocument, aUser);
+
+            success(format("The annotations of document [%s] for user [%s] have been set reset.",
+                    aDocument.getName(), aUser.getUiName()));
+            _target.addChildren(getPage(), IFeedback.class);
+
+            updateTable(_target);
+        });
+        resetDocumentDialog.show(aTarget);
+    }
+
+    private void actionTouchAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            User aUser)
+    {
+        AnnotationDocument ann = documentService.getAnnotationDocument(aDocument, aUser);
+        ann.setTimestamp(new Date());
+        documentService.createAnnotationDocument(ann);
+
+        success(format("The timestamp of document [%s] for user [%s] has been updated.",
+                aDocument.getName(), aUser.getUiName()));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        updateTable(aTarget);
     }
 }

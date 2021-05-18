@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.workload.extension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
@@ -39,6 +39,12 @@ public interface WorkloadManagerExtension<T>
 
     T readTraits(WorkloadManager aWorkloadManager);
 
-    void writeTraits(WorkloadManagementService aWorkloadManagementService, T aTrait,
-            Project aProject);
+    void writeTraits(T aTrait, Project aProject);
+
+    /**
+     * Ask the workload manager to immediately refresh the state of the documents and overall
+     * project. This can be called immediately before fetching the project status in order to ensure
+     * that the project status is reliable.
+     */
+    ProjectState freshenStatus(Project aProject);
 }

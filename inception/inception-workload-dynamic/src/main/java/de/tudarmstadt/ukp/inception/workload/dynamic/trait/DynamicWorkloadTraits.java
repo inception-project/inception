@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.trait;
 
-import java.io.Serializable;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 
+import java.io.Serializable;
+import java.time.Duration;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 
 /**
@@ -32,11 +36,13 @@ public class DynamicWorkloadTraits
     private String workflowType;
     private int defaultNumberOfAnnotations;
 
+    private Duration abandonationTimeout;
+    private AnnotationDocumentState abandonationState = IGNORE;
+
     public DynamicWorkloadTraits()
     {
         workflowType = DefaultWorkflowExtension.DEFAULT_WORKFLOW;
         defaultNumberOfAnnotations = 6;
-
     }
 
     public DynamicWorkloadTraits(String aWorkflowType, int aDefaultNumberOfAnnotations)
@@ -50,9 +56,9 @@ public class DynamicWorkloadTraits
         return defaultNumberOfAnnotations;
     }
 
-    public void setDefaultNumberOfAnnotations(int defaultNumberOfAnnotations)
+    public void setDefaultNumberOfAnnotations(int aDefaultNumberOfAnnotations)
     {
-        this.defaultNumberOfAnnotations = defaultNumberOfAnnotations;
+        defaultNumberOfAnnotations = aDefaultNumberOfAnnotations;
     }
 
     public String getWorkflowType()
@@ -60,8 +66,36 @@ public class DynamicWorkloadTraits
         return workflowType;
     }
 
-    public void setWorkflowType(String workflowType)
+    public void setWorkflowType(String aWorkflowType)
     {
-        this.workflowType = workflowType;
+        this.workflowType = aWorkflowType;
+    }
+
+    public Duration getAbandonationTimeout()
+    {
+        if (abandonationTimeout == null) {
+            return Duration.ofMinutes(0);
+        }
+
+        return abandonationTimeout;
+    }
+
+    public void setAbandonationTimeout(Duration aAbandonationTimeout)
+    {
+        abandonationTimeout = aAbandonationTimeout;
+    }
+
+    public AnnotationDocumentState getAbandonationState()
+    {
+        if (abandonationState == null) {
+            return AnnotationDocumentState.IGNORE;
+        }
+
+        return abandonationState;
+    }
+
+    public void setAbandonationState(AnnotationDocumentState aAbandonationState)
+    {
+        abandonationState = aAbandonationState;
     }
 }

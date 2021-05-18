@@ -220,6 +220,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-text</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
       <scope>test</scope>
@@ -256,6 +261,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  
   <build>
     <pluginManagement>
       <plugins>

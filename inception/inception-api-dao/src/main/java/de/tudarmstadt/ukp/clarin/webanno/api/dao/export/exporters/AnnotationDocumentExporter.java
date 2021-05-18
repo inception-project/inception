@@ -99,7 +99,8 @@ public class AnnotationDocumentExporter
 
     @Autowired
     public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
-            DocumentImportExportService aImportExportService, RepositoryProperties aRepositoryProperties)
+            DocumentImportExportService aImportExportService,
+            RepositoryProperties aRepositoryProperties)
     {
         documentService = aDocumentService;
         userRepository = aUserRepository;
@@ -138,6 +139,7 @@ public class AnnotationDocumentExporter
             ExportedAnnotationDocument exAnnotationDocument = new ExportedAnnotationDocument();
             exAnnotationDocument.setName(annotationDocument.getName());
             exAnnotationDocument.setState(annotationDocument.getState());
+            exAnnotationDocument.setAnnotatorState(annotationDocument.getAnnotatorState());
             exAnnotationDocument.setUser(annotationDocument.getUser());
             exAnnotationDocument.setTimestamp(annotationDocument.getTimestamp());
             exAnnotationDocument.setSentenceAccessed(annotationDocument.getSentenceAccessed());
@@ -305,6 +307,7 @@ public class AnnotationDocumentExporter
             AnnotationDocument annotationDocument = new AnnotationDocument();
             annotationDocument.setName(exAnnotationDocument.getName());
             annotationDocument.setState(exAnnotationDocument.getState());
+            annotationDocument.setAnnotatorState(exAnnotationDocument.getAnnotatorState());
             annotationDocument.setProject(aProject);
             annotationDocument.setUser(exAnnotationDocument.getUser());
             annotationDocument.setTimestamp(exAnnotationDocument.getTimestamp());

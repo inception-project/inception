@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -81,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.Selectio
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -450,8 +450,14 @@ public class AnnotationPage
             state.reset();
 
             if (isEditable()) {
-                // After creating an new CAS or upgrading the CAS, we need to save it
-                documentService.writeAnnotationCas(editorCas, annotationDocument, false);
+                // After creating an new CAS or upgrading the CAS, we need to save it. If the
+                // document is accessed for the first time and thus will transition from NEW to
+                // IN_PROGRESS, then we use this opportunity also to set the timestamp of the
+                // annotation document - this ensures that e.g. the dynamic workflow considers the
+                // document to be "active" for the given user so that it won't be considered as
+                // abandoned immediately after having been opened for the first time
+                documentService.writeAnnotationCas(editorCas, annotationDocument,
+                        AnnotationDocumentState.NEW.equals(annotationDocument.getState()));
 
                 // Initialize timestamp in state
                 updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(
@@ -487,8 +493,8 @@ public class AnnotationPage
                 }
 
                 if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
-                    documentService.transitionAnnotationDocumentState(annotationDocument,
-                            AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+                    documentService.setAnnotationDocumentState(annotationDocument,
+                            AnnotationDocumentState.IN_PROGRESS, EXPLICIT_ANNOTATOR_USER_ACTION);
                 }
 
                 if (state.getUser().getUsername().equals(CURATION_USER)) {
