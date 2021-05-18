@@ -120,27 +120,7 @@
       <artifactId>caffeine</artifactId>
     </dependency>
 
-    <!-- JUNIT DEPENDENCY FOR TESTING -->
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
+    <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-conll-asl</artifactId>

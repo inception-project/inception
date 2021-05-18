@@ -158,16 +158,7 @@
       <artifactId>wicket-kendo-ui</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
+    <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
