@@ -23,7 +23,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 
 /**
@@ -42,9 +41,4 @@ public interface WorkloadManagementService
             SourceDocument aSourceDocument, AnnotationDocumentState aState);
 
     Long getNumberOfUsersWorkingOnADocument(SourceDocument aDocument);
-
-    List<SourceDocument> listAnnotationDocumentsForUser(Project aProject, User aUser);
-
-    List<AnnotationDocument> getAnnotationDocumentListForUserWithState(Project aProject, User aUser,
-            AnnotationDocumentState aState);
 }
