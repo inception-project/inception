@@ -15,37 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic;
+package de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.FeatureStructureBuilder.buildFS;
 import static java.lang.Thread.sleep;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.h2.util.IOUtils.getInputStreamFromString;
 
 import java.io.File;
 import java.time.Duration;
+import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
@@ -59,9 +54,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.Fixtures;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -72,7 +68,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
         properties = { //
                 "spring.main.banner-mode=off", //
                 "workload.dynamic.enabled=true", //
-                "repository.path=" + DynamicWorkflowTest.TEST_OUTPUT_FOLDER })
+                "repository.path=" + DynamicWorkloadExtensionImplTest.TEST_OUTPUT_FOLDER })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
@@ -88,20 +84,19 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
         SchedulingServiceAutoConfiguration.class, //
         WorkloadManagementAutoConfiguration.class, //
         DynamicWorkloadManagerAutoConfiguration.class })
-public class DynamicWorkflowTest
+public class DynamicWorkloadExtensionImplTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/DynamicWorkflowTest";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/DynamicWorkloadExtensionImplTest";
 
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired UserDao userService;
     private @Autowired WorkloadManagementService workloadManagementService;
     private @Autowired DynamicWorkloadExtension dynamicWorkloadExtension;
-    private @Autowired SessionRegistry sessionRegistry;
 
     private User annotator;
+    private User otherAnnotator;
     private Project project;
-    private AnnotationDocument annotationDocument;
     private DynamicWorkloadTraits traits;
 
     @BeforeAll
@@ -114,29 +109,17 @@ public class DynamicWorkflowTest
     public void setup() throws Exception
     {
         annotator = userService.create(new User("anno1"));
+        otherAnnotator = userService.create(new User("anno2"));
         project = projectService.createProject(new Project("test"));
-
-        SourceDocument doc = documentService
-                .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
-        annotationDocument = documentService
-                .createAnnotationDocument(new AnnotationDocument(annotator.getUsername(), doc));
-
-        try (var session = CasStorageSession.open()) {
-            documentService.uploadSourceDocument(getInputStreamFromString("This is a test."),
-                    annotationDocument.getDocument());
-            CAS cas = documentService.readAnnotationCas(annotationDocument);
-            buildFS(cas, NamedEntity.class.getName()) //
-                    .withFeature("value", "test") //
-                    .buildAndAddToIndexes();
-            documentService.writeAnnotationCas(cas, annotationDocument, true);
-        }
 
         WorkloadManager workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         workloadManager.setType(DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID);
         traits = new DynamicWorkloadTraits();
+        traits.setDefaultNumberOfAnnotations(1);
         traits.setAbandonationTimeout(Duration.of(1, SECONDS));
         traits.setAbandonationState(AnnotationDocumentState.NEW);
+        traits.setWorkflowType(DefaultWorkflowExtension.DEFAULT_WORKFLOW);
         dynamicWorkloadExtension.writeTraits(traits, project);
     }
 
@@ -147,65 +130,92 @@ public class DynamicWorkflowTest
     }
 
     @Test
-    public void thatAbandonedDocumentsAreReset() throws Exception
+    public void thatInProgressDocumentsAreReturnedBeforeNewDocuments() throws Exception
     {
-        var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                annotationDocument.getUser());
-        assertThat(ann.getState()) //
-                .as("Effective state is in-progress after the CAS update")
-                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
-        assertThat(ann.getAnnotatorState()) //
-                .as("Annotator state is in-progress as the CAS update was marked as explicit action")
-                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+        // Order matters here because documents tend to be returned in alphabetical order and
+        // it would be nice if we'd actually not get NEW or IN_PROGRESS document randomly as the
+        // first option to pick.
+        createAnnotationDocument("1.txt", AnnotationDocumentState.FINISHED);
+        createAnnotationDocument("2.txt", AnnotationDocumentState.NEW);
+        createAnnotationDocument("3.txt", AnnotationDocumentState.IN_PROGRESS);
 
-        sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
+        Optional<SourceDocument> nextDoc = dynamicWorkloadExtension.nextDocumentToAnnotate(project,
+                annotator);
 
-        dynamicWorkloadExtension.freshenStatus(project);
-
-        var annAfterRefresh = documentService.getAnnotationDocument(
-                annotationDocument.getDocument(), annotationDocument.getUser());
-        assertThat(annAfterRefresh.getState())
-                .as("After the abandonation timeout has passed, the effective state has been reset")
-                .isEqualTo(traits.getAbandonationState());
-        assertThat(annAfterRefresh.getAnnotatorState()) //
-                .as("After the abandonation timeout has passed, the annotator state has been cleared")
-                .isNull();
+        assertThat(nextDoc)
+                .as("If there is a document already in progress, it should be picked next")
+                .map(SourceDocument::getName) //
+                .isPresent().get().isEqualTo("3.txt");
     }
 
     @Test
-    public void thatDocumentsForUsersLoggedInAreExemptFromAbandonation() throws Exception
+    public void thatDocumentsWithoutAnnotationDocumentsAreReturned() throws Exception
     {
-        var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                annotationDocument.getUser());
-        assertThat(ann.getState()) //
-                .as("Effective state is in-progress after the CAS update")
-                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
-        assertThat(ann.getAnnotatorState()) //
-                .as("Annotator state is in-progress as the CAS update was marked as explicit action")
-                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+        // Order matters here because documents tend to be returned in alphabetical order and
+        // it would be nice if we'd actually not get NEW or IN_PROGRESS document randomly as the
+        // first option to pick.
+        createAnnotationDocument("1.txt", AnnotationDocumentState.FINISHED);
+        createAnnotationDocument("2.txt", AnnotationDocumentState.IGNORE);
+        // For the last document, we don't even have an AnnotationDocument yet! The state is
+        // implicitly NEW
+        createSourceDocument("3.txt");
 
-        sessionRegistry.registerNewSession("dummy-session-id", annotator.getUsername());
+        Optional<SourceDocument> nextDoc = dynamicWorkloadExtension.nextDocumentToAnnotate(project,
+                annotator);
+
+        assertThat(nextDoc)
+                .as("If there is a new document an none that is in-progress, pick the new one")
+                .map(SourceDocument::getName) //
+                .isPresent().get().isEqualTo("3.txt");
+    }
+
+    @Test
+    public void thatDocumentsAnotherUserIsWorkingOnAreNotReturned() throws Exception
+    {
+        AnnotationDocument ann = new AnnotationDocument(otherAnnotator.getUsername(),
+                createSourceDocument("1.txt"));
+        ann.setState(AnnotationDocumentState.IN_PROGRESS);
+        documentService.createAnnotationDocument(ann);
+
+        Optional<SourceDocument> nextDoc = dynamicWorkloadExtension.nextDocumentToAnnotate(project,
+                annotator);
+
+        assertThat(nextDoc) //
+                .as("There are no documents left to annotate") //
+                .isNotPresent();
+
+    }
+
+    @Test
+    public void thatAbandonedDocumentsAreNotReturned() throws Exception
+    {
+        AnnotationDocument ann = new AnnotationDocument(otherAnnotator.getUsername(),
+                createSourceDocument("1.txt"));
+        Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, ann);
 
         sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
 
-        dynamicWorkloadExtension.freshenStatus(project);
+        Optional<SourceDocument> nextDoc = dynamicWorkloadExtension.nextDocumentToAnnotate(project,
+                annotator);
 
-        var annAfterRefresh = documentService.getAnnotationDocument(ann.getDocument(),
-                ann.getUser());
-        assertThat(annAfterRefresh.getUpdated()) //
-                .as("Database record was not updated at all") //
-                .isEqualTo(ann.getUpdated());
-        assertThat(annAfterRefresh.getState())
-                .as("Even After the abandonation timeout has passed, nothing has changed")
-                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
-        assertThat(annAfterRefresh.getAnnotatorState()) //
-                .as("Even After the abandonation timeout has passed, nothing has changed") //
-                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+        assertThat(nextDoc) //
+                .as("Document was abandoned by other user, so it can be worked on now")
+                .map(SourceDocument::getName) //
+                .isPresent().get().isEqualTo("1.txt");
     }
 
-    @SpringBootConfiguration
-    public static class TestContext
+    private SourceDocument createSourceDocument(String aName)
     {
-        // All handled via auto-configuration
+        return documentService
+                .createSourceDocument(new SourceDocument(aName, project, TextFormatSupport.ID));
+    }
+
+    private AnnotationDocument createAnnotationDocument(String aName,
+            AnnotationDocumentState aState)
+    {
+        SourceDocument doc = createSourceDocument(aName);
+        AnnotationDocument ann = new AnnotationDocument(annotator.getUsername(), doc);
+        ann.setState(aState);
+        return documentService.createAnnotationDocument(ann);
     }
 }

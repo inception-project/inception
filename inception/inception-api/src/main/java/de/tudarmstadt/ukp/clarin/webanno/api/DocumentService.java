@@ -519,6 +519,9 @@ public interface DocumentService
     List<AnnotationDocument> listAnnotationDocumentsInState(Project aProject,
             AnnotationDocumentState... aStates);
 
+    List<AnnotationDocument> listAnnotationDocumentsWithStateForUser(Project aProject, User aUser,
+            AnnotationDocumentState aState);
+
     /**
      * List all the {@link AnnotationDocument annotation documents} for a given
      * {@link SourceDocument}.
@@ -569,6 +572,8 @@ public interface DocumentService
 
     /**
      * List all annotation documents for a given source document that are already closed.
+     * 
+     * @Override
      *
      * @param aDocument
      *            a source document.
