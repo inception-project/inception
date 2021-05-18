@@ -67,7 +67,8 @@ public class CurationServiceTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new CurationServiceImpl(testEntityManager.getEntityManager());
+        sut = new CurationServiceImpl(testEntityManager.getEntityManager(), null, null, null, null,
+                null);
 
         // create users
         User current = new User("current", Role.ROLE_USER);
