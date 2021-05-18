@@ -334,6 +334,7 @@
       <artifactId>inception-preferences</artifactId>
     </dependency>
 
+
     <!-- UIMA DEPENDENCIES -->
     <dependency>
       <groupId>org.apache.uima</groupId>
@@ -570,6 +571,10 @@
       <groupId>org.webjars.bower</groupId>
       <artifactId>jquery.scrollTo</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-kotlin</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -786,7 +791,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
-			  <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
@@ -861,6 +866,8 @@
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>
               <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
+              <!-- Other -->
+              <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

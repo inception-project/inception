@@ -1,13 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
-
   <Appenders>
+    <RingBufferAppender name="RingBufferAppender"/>
+  
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
       <!--SHORT PATTERN -->
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger{1} - %msg%n" />
       <!--ROBUST PATTERN
         <PatternLayout pattern="%d{ISO8601} %level{length=5} [%thread] %logger - %msg%n"/> -->
     </Console>
+
+    <Routing name="GlobalLogAppender">
+      <Routes pattern="$${sys:GLOBAL_LOG_FOLDER:-NONE}">
+        <!--
+          - This route is used when we do *not* have a an application home set (yet).
+          -->
+        <Route key="NONE">
+          <Null name="null"/>
+        </Route>
+        
+        <Route>
+          <RollingFile name="rollingFile"
+            fileName="${sys:GLOBAL_LOG_FOLDER}/application.log"
+            filePattern="${sys:GLOBAL_LOG_FOLDER}/application.%d{dd-MMM}.log.gz"
+            ignoreExceptions="false">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger{1} - %msg%n" />
+            <Policies>
+              <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5" />
+          </RollingFile>
+        </Route>
+      </Routes>
+    </Routing>
 
     <Routing name="ProjectAppender">
       <Routes pattern="$${ctx:projectId}">
@@ -30,7 +55,7 @@
         <Route>
           <File name="Project-${ctx:projectId}"
             fileName="${ctx:repositoryPath}/project/project-${ctx:projectId}.log">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} [${ctx:username}] %msg%n" />
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger{1} - %msg%n" />
           </File>
         </Route>
       </Routes>
@@ -50,9 +75,12 @@
     <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
     <!-- Avoid warning when components is not rerendered because it has been removed from page -->
     <Logger name="org.apache.wicket.page.PartialPageUpdate" level="ERROR"/>
+    
     <Root level="warn">
+      <AppenderRef ref="RingBufferAppender" />
       <AppenderRef ref="ConsoleAppender" />
       <AppenderRef ref="ProjectAppender" />
+      <AppenderRef ref="GlobalLogAppender" />
     </Root>
   </Loggers>
 </Configuration>

@@ -52,6 +52,7 @@ public class AnnotatorColumn
                 .filter(doc -> doc.getState() != AnnotationDocumentState.NEW) //
                 .collect(toList()));
 
-        aItem.add(new AnnotationStateList(aComponentId, annotators));
+        aItem.add(new AnnotationStateList(aComponentId, annotators,
+                aRowModel.getObject().getAbandonationTimeout()));
     }
 }

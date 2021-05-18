@@ -24,10 +24,6 @@
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
-    <!-- 
-     First the INCEpTION resources. That way they take precedence over resources from WebAnno
-     which allows us to overlay e.g. INCEpTION screenshots on WebAnno documentation. 
-     -->
     <dependencySet>
       <outputDirectory>/</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
@@ -35,20 +31,6 @@
       <scope>compile</scope>
       <includes>
         <include>*:inception-*:jar</include>
-      </includes>
-      <unpackOptions>
-        <includes>
-          <include>**/META-INF/asciidoc/**</include>
-        </includes>
-      </unpackOptions>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>/</outputDirectory>
-      <useProjectArtifact>false</useProjectArtifact>
-      <unpack>true</unpack>
-      <scope>compile</scope>
-      <includes>
-        <include>*:webanno-*:jar</include>
       </includes>
       <unpackOptions>
         <includes>

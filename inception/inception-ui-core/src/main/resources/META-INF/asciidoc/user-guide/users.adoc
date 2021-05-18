@@ -26,7 +26,7 @@ image::manage_users.png[align="center"]
 Now you may change his role or password, specify  an e-mail address and dis- or enable his account by placing the tick.
 
 NOTE: Disabling an account prevents the user from logging in. The user remains associated with any
-      projects and remains visible in on the <<sect_monitoring>> page.
+      projects and remains visible in the project user management and the project workload management.
 
 To create a new user, click on *Create* in the left frame. This will display a similar frame as the one described in the last paragraph. Here you have to give a login-name to the new user.
 
