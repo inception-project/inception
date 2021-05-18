@@ -23,6 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -174,7 +177,10 @@ public class DynamicWorkloadExtensionImplTest
     {
         AnnotationDocument ann = new AnnotationDocument(otherAnnotator.getUsername(),
                 createSourceDocument("1.txt"));
+        Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, ann);
         ann.setState(AnnotationDocumentState.IN_PROGRESS);
+        ann = documentService.getAnnotationDocument(ann.getDocument(), ann.getUser());
+        ann.setTimestamp(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()));
         documentService.createAnnotationDocument(ann);
 
         Optional<SourceDocument> nextDoc = dynamicWorkloadExtension.nextDocumentToAnnotate(project,
@@ -183,7 +189,6 @@ public class DynamicWorkloadExtensionImplTest
         assertThat(nextDoc) //
                 .as("There are no documents left to annotate") //
                 .isNotPresent();
-
     }
 
     @Test
