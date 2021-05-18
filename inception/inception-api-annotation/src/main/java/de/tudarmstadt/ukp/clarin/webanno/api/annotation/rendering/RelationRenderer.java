@@ -124,7 +124,7 @@ public class RelationRenderer
         RelationLayerTraits traits = typeAdapter.getTraits(RelationLayerTraits.class)
                 .orElseGet(RelationLayerTraits::new);
 
-        if (!traits.getRenderArcs()) {
+        if (!traits.isRenderArcs()) {
             return;
         }
 

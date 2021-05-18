@@ -47,7 +47,7 @@ public class RelationLayerTraits
         coloringRules = aColoringRules;
     }
 
-    public boolean getRenderArcs()
+    public boolean isRenderArcs()
     {
         return renderArcs;
     }
