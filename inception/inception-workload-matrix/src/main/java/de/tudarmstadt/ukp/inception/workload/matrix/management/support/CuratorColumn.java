@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.CURATION_STATE;
 import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
@@ -62,7 +63,7 @@ public class CuratorColumn
 
         Label stateLabel = new Label(aComponentId, stateSymbol(state));
         stateLabel.setEscapeModelStrings(false);
-        stateLabel.add(new AttributeAppender("style", "cursor: pointer", ";"));
+        stateLabel.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
         stateLabel.add(onEvent("click", //
                 _target -> stateLabel.send(stateLabel, BUBBLE,
                         new CuratorColumnCellClickEvent(_target, row.getSourceDocument()))));
@@ -92,11 +93,10 @@ public class CuratorColumn
     {
         switch (aDocState) {
         case CURATION_IN_PROGRESS:
-            return "<i class=\"fas fa-clipboard\"></i>";
         case CURATION_FINISHED:
-            return "<i class=\"fas fa-clipboard-check\"></i>";
+            return aDocState.symbol();
         default:
-            return "<i class=\"far fa-circle\"></i>";
+            return SourceDocumentState.NEW.symbol();
         }
     }
 }

@@ -248,6 +248,7 @@ public class AcceptInvitePage
             userRepository.update(user);
         }
 
+        // Want to make sure we clear any session-bound state
         ApplicationSession.get().signIn(asAuthentication(user));
         createProjectPermissionsIfNecessary(user);
 

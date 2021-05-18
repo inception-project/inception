@@ -49,7 +49,8 @@ Moreover, you can use knowledge bases, e.g. for tasks like xref:named_entity_rec
 The following picture gives you a first impression on how annotated texts look like.
 In this example, text xref:layers_and_features_in_getting_started[spans] have been annotated as whether they refer to a person (PER), location (LOC), organization (ORG) or any other (OTH).
 
-image::getting_started_example_for_annotations.png[align="center"]
+[.right]
+image::getting_started_example_for_annotations.png[width=400]
 
 {product-name}'s key features are: First, before you annotate, you need a corpus to be annotated (*Corpus Creation*).
 You might have one already and import it or create it in {product-name}.
@@ -119,7 +120,8 @@ Check the website, subscribe to github notifications or the google group (see <<
 After a moment, a splash screen will display.
 It shows that the application is loading.
 
-image::getting_started_starting_the_jar_I.png[align="center",height=200,width=600]
+[.right]
+image::getting_started_starting_the_jar_I.png[align="center",width=400]
 
 NOTE: *In case {product-name} does not start:* If double-clicking the JAR file does not start {product-name}, you might need to make the file executable first.
 Right-click on the JAR file and navigate through the settings and permissions.
@@ -128,7 +130,7 @@ There, you can mark it as executable.
 Once the initialization is complete, a dialog appears.
 Here, you can open the application in your default browser or shut it down again:
 
-image::getting_started_starting_the_jar_II.png[align="center",height=300]
+image::getting_started_starting_the_jar_II.png[align="center"]
 
 *Step 2b - Open via terminal:* If you prefer the command line, you may enter this command instead of double-clicking.
 Make sure that instead of "`x.xx.x`", you enter the version you downloaded:
@@ -139,8 +141,7 @@ $ java -jar inception-app-standalone-x.xx.x.jar
 ----
 
 In this case, no splash screen will appear.
-Just go to
-http://localhost:8080/[_http://localhost:8080_] in your browser.
+Just go to http://localhost:8080/[_http://localhost:8080_] in your browser.
 
 *Step 3 - Log in:* The first time you start the application, a default user with the *username _admin_* and the *password _admin_* is created.
 Use this username and password to log in to the application.
@@ -159,7 +160,8 @@ In order to understand what you read in this guide, it makes sense to have an an
 We created several example projects for you to play with.
 You find them in the section https://inception-project.github.io/example-projects/[Example Projects] on our website.
 
-image::getting_started_download_example_project.png[align="center"]
+[.right]
+image::getting_started_download_example_project.png[width=400]
 
 
 *Step 1 - Download:* For this guide, we use the _Interactive Concept Linking_ project.
@@ -255,7 +257,7 @@ image::getting_started_users.png[align="center"]
 
 |Curator |- curate only|
 - Curation +
-- Monitoring +
+- Workload +
 - Agreement +
 - Evaluation
 
@@ -469,8 +471,8 @@ For agreement, some common measures are provided.
 
 image::getting_started_agreement.png[align="center"]
 
-* *Monitoring:* Here you can check the overall progress of your project; see which user is working on or has finished which document; and toggle for each user the status of each document between *Done / In Progress* or between *New / Locked*.
-For details, see <<Monitoring>> in the main documentation.
+* *Workload:* Here you can check the overall progress of your project; see which user is working on or has finished which document; and toggle for each user the status of each document between *Done / In Progress* or between *New / Locked*.
+For details, see <<sect_workload>> in the main documentation.
 
 image::getting_started_monitoring.png[align="center"]
 

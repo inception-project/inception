@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,13 +18,11 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
-import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -38,18 +36,25 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * <p>
@@ -67,20 +72,27 @@ public class InviteServiceImpl
 
     private final UserDao userRepository;
     private final ProjectService projectService;
+    private final InviteServiceProperties inviteProperties;
+    private final WorkloadManagementService workloadManagementService;
 
     private final SecureRandom random;
 
-    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService)
+    public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
+            InviteServiceProperties aInviteProperties,
+            WorkloadManagementService aWorkloadManagementService)
     {
         random = new SecureRandom();
         userRepository = aUserRepository;
         projectService = aProjectService;
+        inviteProperties = aInviteProperties;
+        workloadManagementService = aWorkloadManagementService;
     }
 
     public InviteServiceImpl(UserDao aUserRepository, ProjectService aProjectService,
-                             EntityManager aEntitymanager)
+            InviteServiceProperties aInviteProperties,
+            WorkloadManagementService aWorkloadManagementService, EntityManager aEntitymanager)
     {
-        this(aUserRepository, aProjectService);
+        this(aUserRepository, aProjectService, aInviteProperties, aWorkloadManagementService);
         entityManager = aEntitymanager;
     }
 
@@ -160,10 +172,10 @@ public class InviteServiceImpl
         Validate.notNull(aProject, "Project must be given");
 
         String query = "FROM ProjectInvite " //
-            + "WHERE project = :givenProject";
+                + "WHERE project = :givenProject";
         List<ProjectInvite> inviteIDs = entityManager.createQuery(query, ProjectInvite.class)
-            .setParameter("givenProject", aProject) //
-            .getResultList();
+                .setParameter("givenProject", aProject) //
+                .getResultList();
 
         if (inviteIDs.isEmpty()) {
             return null;
@@ -201,7 +213,7 @@ public class InviteServiceImpl
         }
 
         if (isDateExpired(invite) || isProjectAnnotationComplete(invite)
-            || isMaxAnnotatorCountReached(invite)) {
+                || isMaxAnnotatorCountReached(invite)) {
             return null;
         }
 
@@ -216,8 +228,11 @@ public class InviteServiceImpl
         }
 
         // Get the freshest project state from the DB
-        Project project = projectService.getProject(aInvite.getProject().getId());
-        return !asList(NEW, ANNOTATION_IN_PROGRESS).contains(project.getState());
+        ProjectState state = workloadManagementService
+                .getWorkloadManagerExtension(aInvite.getProject())
+                .freshenStatus(aInvite.getProject());
+
+        return state.isAnnotationFinal();
     }
 
     @Override
@@ -238,7 +253,7 @@ public class InviteServiceImpl
         }
 
         int annotatorCount = projectService
-            .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
+                .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
 
         return annotatorCount >= aInvite.getMaxAnnotatorCount();
     }
@@ -300,6 +315,41 @@ public class InviteServiceImpl
         String realm = REALM_PROJECT_PREFIX + aProject.getId();
 
         return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUsername));
+    }
+
+    @Override
+    public String getFullInviteLinkUrl(ProjectInvite aInvite)
+    {
+        // If a base URL is set in the properties, we use that.
+        if (StringUtils.isNotBlank(inviteProperties.getInviteBaseUrl())) {
+            StringBuilder url = new StringBuilder();
+            url.append(inviteProperties.getInviteBaseUrl().trim());
+            while (url.charAt(url.length() - 1) == '/') {
+                url.setLength(url.length() - 1);
+            }
+            url.append(NS_PROJECT);
+            url.append("/");
+            url.append(aInvite.getProject().getId());
+            url.append("/");
+            url.append("join-project");
+            url.append("/");
+            url.append(aInvite.getInviteId());
+            return url.toString();
+        }
+
+        // If we are in a Wicket context, we can use Wicket to render the URL for us
+        RequestCycle cycle = RequestCycle.get();
+        if (cycle != null) {
+            CharSequence url = cycle.urlFor(AcceptInvitePage.class,
+                    new PageParameters()
+                            .set(AcceptInvitePage.PAGE_PARAM_PROJECT, aInvite.getProject().getId())
+                            .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, aInvite.getInviteId()));
+
+            return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
+        }
+
+        throw new IllegalStateException("Please set the property [sharing.invites.invite-base-url] "
+                + "in the settings.properties file");
     }
 
     @Override

@@ -111,11 +111,12 @@ public class UserDaoImpl
 
     @Override
     @Transactional
-    public void create(User aUser)
+    public User create(User aUser)
     {
         entityManager.persist(aUser);
         entityManager.flush();
         log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
+        return aUser;
     }
 
     @Override
@@ -149,7 +150,8 @@ public class UserDaoImpl
     public void delete(User aUser)
     {
         if (sessionRegistry != null) {
-            sessionRegistry.getAllSessions(aUser, false).forEach(_session -> _session.expireNow());
+            sessionRegistry.getAllSessions(aUser.getUsername(), false)
+                    .forEach(_session -> _session.expireNow());
         }
 
         entityManager.remove(entityManager.merge(aUser));
