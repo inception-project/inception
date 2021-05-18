@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension_Impl;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtensionImpl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowDocumentNavigationActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
@@ -50,7 +50,7 @@ public class DynamicWorkloadManagerAutoConfiguration
             WorkflowExtensionPoint aWorkflowExtensionPoint, ProjectService aProjectService,
             UserDao aUserRepository, SessionRegistry aSessionRegistry)
     {
-        return new DynamicWorkloadExtension_Impl(aWorkloadManagementService,
+        return new DynamicWorkloadExtensionImpl(aWorkloadManagementService,
                 aWorkflowExtensionPoint, documentService, aProjectService, aUserRepository,
                 aSessionRegistry);
     }

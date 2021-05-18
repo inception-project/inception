@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.20.0-SNAPSHOT</version>
+    <version>0.21.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -604,6 +604,9 @@
           - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
           - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
           -  .setFilenameComparator(java.util.Comparator)'
+          -
+          - Update 2021-05-18: Tried with assembly 3.3.0 and even tried adding plexus-utils 3.3.0
+          -                    as a direct dependency, but both didn't fix the problem.
          -->
         <version>3.1.1</version>
         <executions>
