@@ -604,6 +604,9 @@
           - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
           - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
           -  .setFilenameComparator(java.util.Comparator)'
+          -
+          - Update 2021-05-18: Tried with assembly 3.3.0 and even tried adding plexus-utils 3.3.0
+          -                    as a direct dependency, but both didn't fix the problem.
          -->
         <version>3.1.1</version>
         <executions>
