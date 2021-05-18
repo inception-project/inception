@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
@@ -35,7 +36,8 @@ public class WorkloadManagerExtensionPointImpl
 {
 
     @Autowired
-    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension<?>> aExtensions)
+    public WorkloadManagerExtensionPointImpl(
+            @Lazy @Autowired(required = false) List<WorkloadManagerExtension<?>> aExtensions)
     {
         super(aExtensions);
     }

@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiConfig.REMOTE_API_ENABLED_CONDITION;
-
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,8 +28,25 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiCont
 import io.swagger.v3.oas.models.info.Info;
 
 @Configuration
-public class SwaggerConfig
+@EnableConfigurationProperties(RemoteApiProperties.class)
+public class RemoteApiAutoConfiguration
 {
+    static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
+
+    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroRemoteApiController aeroRemoteApiController()
+    {
+        return new AeroRemoteApiController();
+    }
+
+    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public LegacyRemoteApiController legacyRemoteApiController()
+    {
+        return new LegacyRemoteApiController();
+    }
+
     @ConditionalOnExpression("!(" + REMOTE_API_ENABLED_CONDITION + ")")
     @Bean
     public GroupedOpenApi defaultDocket()

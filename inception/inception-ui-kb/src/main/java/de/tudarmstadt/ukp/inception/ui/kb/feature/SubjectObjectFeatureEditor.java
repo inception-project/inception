@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.LINKED_LAYER_FEATURE;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -391,17 +392,14 @@ public class SubjectObjectFeatureEditor
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
                 .findLayer(this.stateModel.getObject().getProject(), linkedType);
-        AnnotationFeature linkedAnnotationFeature = annotationService
-                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
-        return linkedAnnotationFeature;
+        return annotationService.getFeature(LINKED_LAYER_FEATURE, linkedLayer);
     }
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
     {
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                .getFeatureSupport(aAnnotationFeature);
-        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
-        return traits;
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(aAnnotationFeature)
+                .orElseThrow();
+        return (ConceptFeatureTraits) fs.readTraits(aAnnotationFeature);
     }
 
     private CAS getEditorCas(AnnotationActionHandler aHandler) throws IOException

@@ -127,7 +127,7 @@ public class RecommendationSpanRenderer
                 AnnotationFeature feature = features.get(ao.getFeature());
 
                 // Retrieve the UI display label for the given feature value
-                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
+                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature).orElseThrow();
                 String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());
 
                 Map<String, String> featureAnnotation = new HashMap<>();

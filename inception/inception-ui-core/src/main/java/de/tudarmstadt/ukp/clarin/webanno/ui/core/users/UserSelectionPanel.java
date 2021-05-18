@@ -112,7 +112,7 @@ class UserSelectionPanel
         add(realm);
 
         // Only allow creating accounts in the global realm
-        createButton.add(visibleWhen(() -> realm.getModelObject() == null));
+        createButton.add(visibleWhen(() -> realm.getModelObject().getId() == null));
     }
 
     private List<Realm> listRealms()

@@ -19,13 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.event;
 
 import static java.time.Duration.ofSeconds;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,10 +31,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 
 public class UpdateProjectStateTask
@@ -68,36 +63,7 @@ public class UpdateProjectStateTask
 
         SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
 
-        ProjectState oldState = project.getState();
-
-        // We had some strange reports about being unable to calculate the project state, so to
-        // be better able to debug this, we add some more detailed information to the exception
-        // message here.
-        try {
-            project.setState(stats.getProjectState());
-            projectService.updateProject(project);
-        }
-        catch (IllegalStateException e) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("\nDetailed document states in project [" + project.getName() + "]("
-                    + project.getId() + "):\n");
-            String detailQuery = "SELECT id, name, state FROM " + SourceDocument.class.getName()
-                    + " WHERE project = :project";
-            Query q = entityManager.createQuery(detailQuery).setParameter("project", project);
-            for (Object res : q.getResultList()) {
-                sb.append("- ");
-                sb.append(Arrays.toString((Object[]) res));
-                sb.append('\n');
-            }
-            IllegalStateException ne = new IllegalStateException(e.getMessage() + sb, e.getCause());
-            ne.setStackTrace(e.getStackTrace());
-            throw ne;
-        }
-
-        if (!Objects.equals(oldState, project.getState())) {
-            applicationEventPublisher
-                    .publishEvent(new ProjectStateChangedEvent(this, project, oldState));
-        }
+        projectService.setProjectState(project, stats.getProjectState());
     }
 
     @Override

@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.event;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 import static java.time.Duration.ofSeconds;
 
-import java.util.Map;
 import java.util.Objects;
 
 import javax.persistence.EntityManager;
@@ -34,11 +32,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 public class MatrixWorkloadUpdateDocumentStateTask
@@ -48,6 +45,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired WorkloadManagementService workloadManagementService;
+    private @Autowired MatrixWorkloadExtension matrixWorkloadExtension;
 
     private final SourceDocument document;
 
@@ -87,22 +85,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
 
         int annotatorCount = projectService.listProjectUsersWithPermissions(project).size();
 
-        Map<AnnotationDocumentState, Long> stats = documentService.getAnnotationDocumentStats(doc);
-        long ignoreCount = stats.get(AnnotationDocumentState.IGNORE);
-        long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
-        long newCount = stats.get(AnnotationDocumentState.NEW);
-
-        // If all documents are ignored or finished, we set the source document to finished
-        if ((finishedCount + ignoreCount) == annotatorCount) {
-            documentService.setSourceDocumentState(doc, ANNOTATION_FINISHED);
-        }
-        // ... or we set it to new if there is at least one new document and the others are ignored
-        else if ((newCount + ignoreCount) == annotatorCount) {
-            documentService.setSourceDocumentState(doc, SourceDocumentState.NEW);
-        }
-        else {
-            documentService.setSourceDocumentState(doc, SourceDocumentState.ANNOTATION_IN_PROGRESS);
-        }
+        matrixWorkloadExtension.updateDocumentState(doc, annotatorCount);
     }
 
     @Override

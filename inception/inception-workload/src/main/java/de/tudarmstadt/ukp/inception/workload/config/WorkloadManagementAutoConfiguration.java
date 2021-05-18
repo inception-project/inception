@@ -21,8 +21,10 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
@@ -36,7 +38,7 @@ public class WorkloadManagementAutoConfiguration<T>
 {
     @Bean
     public WorkloadManagerExtensionPoint workloadExtensionPoint(
-            List<WorkloadManagerExtension<?>> aWorkloadExtensions)
+            @Lazy @Autowired(required = false) List<WorkloadManagerExtension<?>> aWorkloadExtensions)
     {
         return new WorkloadManagerExtensionPointImpl(aWorkloadExtensions);
     }

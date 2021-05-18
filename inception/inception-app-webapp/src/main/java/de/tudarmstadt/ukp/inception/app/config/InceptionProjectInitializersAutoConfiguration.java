@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
@@ -47,21 +46,20 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.Strin
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
 
-@AutoConfigureAfter({ KnowledgeBaseServiceAutoConfiguration.class,
-        RecommenderServiceAutoConfiguration.class,
+@AutoConfigureAfter({ //
+        KnowledgeBaseServiceAutoConfiguration.class, //
+        RecommenderServiceAutoConfiguration.class, //
         StringMatchingRecommenderAutoConfiguration.class })
 // @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
-public class ProjectInitializersAutoConfiguration
+public class InceptionProjectInitializersAutoConfiguration
 {
-    @Autowired
     @Bean
     public BasicProjectInitializer basicProjectInitializer(ApplicationContext aContext)
     {
         return new BasicProjectInitializer(aContext);
     }
 
-    @Autowired
     @Bean
     public BasicRelationLayerInitializer basicRelationLayerInitializer(
             AnnotationSchemaService aAnnotationSchemaService)
@@ -69,7 +67,6 @@ public class ProjectInitializersAutoConfiguration
         return new BasicRelationLayerInitializer(aAnnotationSchemaService);
     }
 
-    @Autowired
     @Bean
     public BasicRelationTagSetInitializer basicRelationTagSetInitializer(
             AnnotationSchemaService aAnnotationSchemaService)
@@ -77,7 +74,6 @@ public class ProjectInitializersAutoConfiguration
         return new BasicRelationTagSetInitializer(aAnnotationSchemaService);
     }
 
-    @Autowired
     @Bean
     public BasicSpanLayerInitializer basicSpanLayerInitializer(
             AnnotationSchemaService aAnnotationSchemaService)
@@ -86,7 +82,6 @@ public class ProjectInitializersAutoConfiguration
     }
 
     @ConditionalOnBean({ RecommendationService.class, StringMatchingRecommenderFactory.class })
-    @Autowired
     @Bean
     public BasicSpanRecommenderInitializer basicSpanRecommenderInitializer(
             RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
@@ -98,7 +93,6 @@ public class ProjectInitializersAutoConfiguration
 
     @ConditionalOnBean({ RecommendationService.class,
             StringMatchingRelationRecommenderFactory.class, BasicSpanRecommenderInitializer.class })
-    @Autowired
     @Bean
     public BasicRelationRecommenderInitializer basicRelationRecommenderInitializer(
             RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
@@ -108,7 +102,6 @@ public class ProjectInitializersAutoConfiguration
                 aRecommenderFactory);
     }
 
-    @Autowired
     @Bean
     public BasicSpanTagSetInitializer basicSpanTagSetInitializer(
             AnnotationSchemaService aAnnotationSchemaService)
@@ -117,7 +110,6 @@ public class ProjectInitializersAutoConfiguration
     }
 
     @ConditionalOnBean(RecommendationService.class)
-    @Autowired
     @Bean
     public NamedEntityIdentifierStringRecommenderInitializer namedEntityIdentifierStringRecommenderInitializer(
             RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
@@ -127,7 +119,6 @@ public class ProjectInitializersAutoConfiguration
                 aAnnotationService, aRecommenderFactory);
     }
 
-    @Autowired
     @Bean
     public StandardProjectInitializer standardProjectInitializer(
             @Lazy ProjectService aProjectService)
@@ -136,7 +127,6 @@ public class ProjectInitializersAutoConfiguration
     }
 
     @ConditionalOnBean(KnowledgeBaseService.class)
-    @Autowired
     @Bean
     public WikiDataKnowledgeBaseInitializer wikiDataKnowledgeBaseInitializer(
             KnowledgeBaseService aKbService, KnowledgeBaseProperties aKbProperties)
@@ -145,7 +135,6 @@ public class ProjectInitializersAutoConfiguration
     }
 
     @ConditionalOnBean(WikiDataKnowledgeBaseInitializer.class)
-    @Autowired
     @Bean
     public EntityLinkingProjectInitializer entityLinkingProjectInitializer(
             ApplicationContext aContext, AnnotationSchemaService aAnnotationService)

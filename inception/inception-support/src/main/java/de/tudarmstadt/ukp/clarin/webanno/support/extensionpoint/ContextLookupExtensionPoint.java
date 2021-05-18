@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint;
 
+import java.util.Optional;
+
 public interface ContextLookupExtensionPoint<C, E extends Extension<C>>
     extends ExtensionPoint<C, E>
 {
@@ -29,5 +31,5 @@ public interface ContextLookupExtensionPoint<C, E extends Extension<C>>
      * @throws IllegalArgumentException
      *             if there is no support for the given feature.
      */
-    <X extends E> X findExtension(C aKey);
+    <X extends E> Optional<X> findGenericExtension(C aKey);
 }
