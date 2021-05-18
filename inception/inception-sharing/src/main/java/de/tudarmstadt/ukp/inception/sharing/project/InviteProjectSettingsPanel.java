@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,9 +37,6 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
 
@@ -51,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.inception.sharing.AcceptInvitePage;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness;
@@ -76,13 +72,14 @@ public class InviteProjectSettingsPanel
         invite = CompoundPropertyModel.of(inviteService.readProjectInvite(getModelObject()));
 
         add(new LambdaAjaxLink("regen", this::actionShareProject)
-            .add(visibleWhenNot(invite.isPresent())));
+                .add(visibleWhenNot(invite.isPresent())));
 
         Form<ProjectInvite> detailsForm = new Form<>("form", invite);
         detailsForm.add(visibleWhen(invite.isPresent()));
         detailsForm.setOutputMarkupId(true);
 
-        TextField<String> linkField = new TextField<>("linkText", getInviteLink())
+        TextField<String> linkField = new TextField<>("linkText",
+                invite.map(inviteService::getFullInviteLinkUrl))
         {
             private static final long serialVersionUID = -4045558203619280212L;
 
@@ -96,39 +93,39 @@ public class InviteProjectSettingsPanel
         detailsForm.add(linkField);
 
         detailsForm.add(new WebMarkupContainer("copyLink")
-            .add(new ClipboardJsBehavior().setTarget(linkField)));
+                .add(new ClipboardJsBehavior().setTarget(linkField)));
 
         detailsForm.add(new DatePicker("expirationDate", "yyyy-MM-dd"));
 
         detailsForm.add(new TextArea<>("invitationText").add(AttributeModifier
-            .replace("placeholder", new ResourceModel("invitationText.placeholder"))));
+                .replace("placeholder", new ResourceModel("invitationText.placeholder"))));
 
         detailsForm.add(new CheckBox("disableOnAnnotationComplete").setOutputMarkupId(true));
 
         detailsForm.add(new NumberTextField<Integer>("maxAnnotatorCount") //
-            .setMinimum(0).setOutputMarkupId(true));
+                .setMinimum(0).setOutputMarkupId(true));
 
         detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true)
-            .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()))
-            .add(new LambdaAjaxFormSubmittingBehavior("change", _t -> _t.add(this))));
+                .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()))
+                .add(new LambdaAjaxFormSubmittingBehavior("change", _t -> _t.add(this))));
 
         BootstrapSelect<Mandatoriness> askForEMail = new BootstrapSelect<>("askForEMail",
-            asList(Mandatoriness.values()), new EnumChoiceRenderer<>(this));
+                asList(Mandatoriness.values()), new EnumChoiceRenderer<>(this));
         askForEMail.setOutputMarkupId(true);
         askForEMail.add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()
-            && invite.map(ProjectInvite::isGuestAccessible).orElse(false).getObject()));
+                && invite.map(ProjectInvite::isGuestAccessible).orElse(false).getObject()));
         askForEMail.add(new LambdaAjaxFormSubmittingBehavior("change", _t -> _t.add(this)));
         detailsForm.add(askForEMail);
 
         detailsForm.add(new TextField<>("userIdPlaceholder")
-            .add(visibleWhen(invite.map(ProjectInvite::isGuestAccessible))));
+                .add(visibleWhen(invite.map(ProjectInvite::isGuestAccessible))));
 
         detailsForm.add(new WebMarkupContainer("alertExpirationDatePassed")
-            .add(visibleWhen(invite.map(inviteService::isDateExpired))));
+                .add(visibleWhen(invite.map(inviteService::isDateExpired))));
         detailsForm.add(new WebMarkupContainer("alertMaxAnnotatorsReached")
-            .add(visibleWhen(invite.map(inviteService::isMaxAnnotatorCountReached))));
+                .add(visibleWhen(invite.map(inviteService::isMaxAnnotatorCountReached))));
         detailsForm.add(new WebMarkupContainer("alertAnnotationFinished")
-            .add(visibleWhen(invite.map(inviteService::isProjectAnnotationComplete))));
+                .add(visibleWhen(invite.map(inviteService::isProjectAnnotationComplete))));
 
         detailsForm.add(new LambdaAjaxLink("extendLink", this::actionExtendInviteDate));
         detailsForm.add(new LambdaAjaxButton<>("save", this::actionSave));
@@ -169,17 +166,5 @@ public class InviteProjectSettingsPanel
         inviteService.removeInviteID(getModelObject());
         invite.setObject(null);
         aTarget.add(this);
-    }
-
-    private IModel<String> getInviteLink()
-    {
-        return invite.map(ProjectInvite::getInviteId).map(inviteId -> {
-            CharSequence url = urlFor(AcceptInvitePage.class,
-                new PageParameters()
-                    .set(AcceptInvitePage.PAGE_PARAM_PROJECT, getModelObject().getId())
-                    .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, inviteId));
-
-            return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
-        });
     }
 }

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,7 +73,7 @@ import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/join-project/${"
-    + PAGE_PARAM_INVITE_ID + "}")
+        + PAGE_PARAM_INVITE_ID + "}")
 public class AcceptInvitePage
     extends ProjectPageBase
 {
@@ -112,37 +112,37 @@ public class AcceptInvitePage
         }
 
         add(new WebMarkupContainer("expirationNotice")
-            .add(visibleWhen(() -> !invitationIsValid.orElse(false).getObject())));
+                .add(visibleWhen(() -> !invitationIsValid.orElse(false).getObject())));
 
         formModel = new CompoundPropertyModel<>(new FormData());
         formModel.getObject().registeredLogin = !invite.getObject().isGuestAccessible()
-            || !inviteServiceProperties.isGuestsEnabled();
+                || !inviteServiceProperties.isGuestsEnabled();
         formModel.getObject().askForEMail = invite.getObject().isGuestAccessible()
-            && invite.getObject().getAskForEMail() != NOT_ALLOWED
-            && inviteServiceProperties.isGuestsEnabled();
+                && invite.getObject().getAskForEMail() != NOT_ALLOWED
+                && inviteServiceProperties.isGuestsEnabled();
 
         Form<FormData> form = new Form<>("acceptInvitationForm", formModel);
         // form.add(new Label("project", PropertyModel.of(getProject(), "name")));
         form.add(new RequiredTextField<String>("username") //
-            .add(AttributeModifier.replace("placeholder",
-                LoadableDetachableModel.of(
-                    () -> getUserIdPlaceholder(formModel.getObject().registeredLogin))))
-            .add(visibleWhen(() -> user == null)));
+                .add(AttributeModifier.replace("placeholder",
+                        LoadableDetachableModel.of(
+                                () -> getUserIdPlaceholder(formModel.getObject().registeredLogin))))
+                .add(visibleWhen(() -> user == null)));
         form.add(new PasswordTextField("password") //
-            .add(visibleWhen(() -> user == null && formModel.getObject().registeredLogin)));
+                .add(visibleWhen(() -> user == null && formModel.getObject().registeredLogin)));
         form.add(new EmailTextField("eMail") //
-            .setRequired(invite.getObject().getAskForEMail() == MANDATORY)
-            .add(visibleWhen(() -> user == null && formModel.getObject().askForEMail
-                && !formModel.getObject().registeredLogin)));
+                .setRequired(invite.getObject().getAskForEMail() == MANDATORY)
+                .add(visibleWhen(() -> user == null && formModel.getObject().askForEMail
+                        && !formModel.getObject().registeredLogin)));
         form.add(new LambdaAjaxButton<>("join", this::actionJoinProject));
         form.add(new CheckBox("registeredLogin") //
-            .setOutputMarkupPlaceholderTag(true) //
-            .add(visibleWhen(() -> invite.getObject().isGuestAccessible()
-                && inviteServiceProperties.isGuestsEnabled() && user == null))
-            .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                _target -> _target.add(form))));
+                .setOutputMarkupPlaceholderTag(true) //
+                .add(visibleWhen(() -> invite.getObject().isGuestAccessible()
+                        && inviteServiceProperties.isGuestsEnabled() && user == null))
+                .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                        _target -> _target.add(form))));
         form.add(new Label("invitationText", LoadableDetachableModel.of(this::getInvitationText))
-            .setEscapeModelStrings(false));
+                .setEscapeModelStrings(false));
 
         tooManyUsersNotice = new WebMarkupContainer("tooManyUsersNotice");
         tooManyUsersNotice.add(visibleWhen(this::isTooManyUsers));
@@ -156,7 +156,7 @@ public class AcceptInvitePage
     private String getUserIdPlaceholder(boolean aRegisteredLogin)
     {
         if (aRegisteredLogin || invite.getObject() == null
-            || isBlank(invite.getObject().getUserIdPlaceholder())) {
+                || isBlank(invite.getObject().getUserIdPlaceholder())) {
             return "User ID";
         }
 
@@ -172,13 +172,13 @@ public class AcceptInvitePage
         String invitationText;
         if (isBlank(invite.getObject().getInvitationText())) {
             invitationText = String.join("\n", //
-                "## Welcome!", //
-                "", //
-                "You have been invited to join the project", //
-                "**" + getProject().getName() + "**", //
-                "as an annotator.", //
-                "", //
-                "Would you like to join?");
+                    "## Welcome!", //
+                    "", //
+                    "You have been invited to join the project", //
+                    "**" + getProject().getName() + "**", //
+                    "as an annotator.", //
+                    "", //
+                    "Would you like to join?");
         }
         else {
             invitationText = invite.getObject().getInvitationText();
@@ -220,14 +220,14 @@ public class AcceptInvitePage
         }
 
         setResponsePage(ProjectDashboardPage.class, new PageParameters()
-            .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, getProject().getId()));
+                .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, getProject().getId()));
     }
 
     private Authentication asAuthentication(User aUser)
     {
         Set<GrantedAuthority> authorities = userRepository.listAuthorities(aUser).stream()
-            .map(_role -> new SimpleGrantedAuthority(_role.getAuthority()))
-            .collect(Collectors.toSet());
+                .map(_role -> new SimpleGrantedAuthority(_role.getAuthority()))
+                .collect(Collectors.toSet());
         return new UsernamePasswordAuthenticationToken(aUser.getUsername(), null, authorities);
 
     }
@@ -235,7 +235,7 @@ public class AcceptInvitePage
     private User signInAsProjectUser(FormData aFormData)
     {
         Optional<User> existingUser = inviteService.getProjectUser(getProject(),
-            aFormData.username);
+                aFormData.username);
         String storedEMail = existingUser.map(User::getEmail).orElse(null);
         if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
             error("Provided eMail address does not match stored eMail address");
@@ -278,7 +278,7 @@ public class AcceptInvitePage
     {
         if (!projectService.existsProjectPermissionLevel(aUser, getProject(), ANNOTATOR)) {
             projectService.createProjectPermission(
-                new ProjectPermission(getProject(), aUser.getUsername(), ANNOTATOR));
+                    new ProjectPermission(getProject(), aUser.getUsername(), ANNOTATOR));
             getSession().success("You have successfully joined the project.");
         }
         else {

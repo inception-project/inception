@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ public interface InviteService
 {
     /**
      * Generate random expiring invite id for the project and save to database
-     *
+     * 
      * @param aProject
      *            the given project
      */
@@ -36,7 +36,7 @@ public interface InviteService
 
     /**
      * Delete invite id for the project if it exists
-     *
+     * 
      * @param aProject
      *            the given project
      */
@@ -44,7 +44,7 @@ public interface InviteService
 
     /**
      * Get invite id for given project if it exists and has expired yet.
-     *
+     * 
      * @param aProject
      *            the given project
      */
@@ -52,7 +52,7 @@ public interface InviteService
 
     /**
      * Check if given invite ID is valid for the given project
-     *
+     * 
      * @param aProject
      *            the relevant project
      * @param aInviteId
@@ -62,7 +62,7 @@ public interface InviteService
 
     /**
      * Get the expiration date of the invite link belonging to the given project
-     *
+     * 
      * @param aProject
      *            the corresponding project
      */
@@ -76,7 +76,7 @@ public interface InviteService
     /**
      * Set expiration date of the invite link of the given project or generate new invite link with
      * the given date
-     *
+     * 
      * @param aProject
      *            the project
      * @param aExpirationDate
@@ -98,4 +98,6 @@ public interface InviteService
     boolean isDateExpired(ProjectInvite aInvite);
 
     boolean isMaxAnnotatorCountReached(ProjectInvite aInvite);
+
+    String getFullInviteLinkUrl(ProjectInvite aInvite);
 }
