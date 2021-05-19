@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -86,19 +88,30 @@ public class PreRendererImpl
         List<AnnotationFeature> supportedFeatures = supportedFeaturesCache.get(project);
         List<AnnotationFeature> allFeatures = allFeaturesCache.get(project);
 
-        // Render (custom) layers
+        // Create the renderers
+        List<Renderer> renderers = new ArrayList<>();
         for (AnnotationLayer layer : aLayers) {
-            List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream() //
-                    .filter(feature -> feature.getLayer().equals(layer)) //
-                    .collect(toList());
             List<AnnotationFeature> layerAllFeatures = allFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
                     .collect(toList());
             // We need to pass in *all* the annotation features here because we also to that in
             // other places where we create renderers - and the set of features must always be
             // the same because otherwise the IDs of armed slots would be inconsistent
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
-                    .createRenderer(layer, () -> layerAllFeatures);
+            renderers.add(layerSupportRegistry.getLayerSupport(layer) //
+                    .createRenderer(layer, () -> layerAllFeatures));
+        }
+
+        // Bring the renderers into an order per @Order annotation on the renderer classes.
+        // The idea is in particular that spans are rendered before the relations which connect to
+        // the spans.
+        AnnotationAwareOrderComparator.sort(renderers);
+
+        // Render (custom) layers
+        for (Renderer renderer : renderers) {
+            List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream() //
+                    .filter(feature -> feature.getLayer()
+                            .equals(renderer.getTypeAdapter().getLayer())) //
+                    .collect(toList());
             renderer.render(aCas, layerSupportedFeatures, aResponse, windowBegin, windowEnd);
         }
     }
