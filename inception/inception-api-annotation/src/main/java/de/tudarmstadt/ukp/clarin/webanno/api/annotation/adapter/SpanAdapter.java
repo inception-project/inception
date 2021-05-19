@@ -64,15 +64,12 @@ public class SpanAdapter
 
     private AnnotationSchemaService annotationSchemaService;
 
-    public SpanAdapter(AnnotationSchemaService aAnnotationSchemaService,
-            LayerSupportRegistry aLayerSupportRegistry,
+    public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-
-        annotationSchemaService = aAnnotationSchemaService;
 
         if (aBehaviors == null) {
             behaviors = emptyList();

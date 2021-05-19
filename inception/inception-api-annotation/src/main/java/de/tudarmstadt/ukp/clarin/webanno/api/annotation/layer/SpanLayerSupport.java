@@ -29,13 +29,10 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
@@ -54,11 +51,8 @@ public class SpanLayerSupport
     extends LayerSupport_ImplBase<SpanAdapter, SpanLayerTraits>
     implements InitializingBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
-    private final AnnotationSchemaService annotationSchemaService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -66,13 +60,11 @@ public class SpanLayerSupport
     @Autowired
     public SpanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry,
-            AnnotationSchemaService aAnnotationSchemaService)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
-        annotationSchemaService = aAnnotationSchemaService;
     }
 
     @Override
@@ -109,8 +101,8 @@ public class SpanLayerSupport
     public SpanAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        SpanAdapter adapter = new SpanAdapter(annotationSchemaService, getLayerSupportRegistry(),
-                featureSupportRegistry, eventPublisher, aLayer, aFeatures,
+        SpanAdapter adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
         return adapter;

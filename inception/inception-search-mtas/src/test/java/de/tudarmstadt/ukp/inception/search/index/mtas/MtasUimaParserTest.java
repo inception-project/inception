@@ -253,8 +253,8 @@ public class MtasUimaParserTest
                 .thenReturn(asList(tokenLayer, posLayer, depLayer));
 
         when(annotationSchemaService.getAdapter(posLayer))
-                .thenReturn(new SpanAdapter(annotationSchemaService, layerSupportRegistry,
-                        featureSupportRegistry, null, posLayer, () -> asList(posLayerValue), null));
+                .thenReturn(new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                        posLayer, () -> asList(posLayerValue), null));
 
         when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new RelationAdapter(
                 layerSupportRegistry, featureSupportRegistry, null, depLayer, FEAT_REL_TARGET,
