@@ -22,17 +22,22 @@ import java.util.Map;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 
-@Component(ManualMergeStrategy.BEAN_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CurationServiceAutoConfiguration#manualMergeStrategy}.
+ * </p>
+ */
 public class ManualMergeStrategy
     implements MergeStrategy
 {
     public static final String BEAN_NAME = "manualStrategy";
 
-    private String uiName = "Manual";
+    private final String UI_NAME = "Manual";
 
     @Override
     public boolean equals(final Object other)
@@ -41,13 +46,13 @@ public class ManualMergeStrategy
             return false;
         }
         ManualMergeStrategy castOther = (ManualMergeStrategy) other;
-        return new EqualsBuilder().append(uiName, castOther.uiName).isEquals();
+        return new EqualsBuilder().append(UI_NAME, castOther.UI_NAME).isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(uiName).toHashCode();
+        return new HashCodeBuilder().append(UI_NAME).toHashCode();
     }
 
     @Override
@@ -60,12 +65,6 @@ public class ManualMergeStrategy
     @Override
     public String getUiName()
     {
-        return uiName;
+        return UI_NAME;
     }
-
-    public void setUiName(String aUiName)
-    {
-        uiName = aUiName;
-    }
-
 }
