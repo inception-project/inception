@@ -199,7 +199,8 @@ public class DynamicWorkloadExtensionImpl
         DynamicWorkloadTraits traits = readTraits(currentWorkload);
 
         // If the duration is not positive, then we can already stop here
-        if (!traits.getAbandonationTimeout().negated().isNegative()) {
+        if (traits.getAbandonationTimeout().isZero()
+                || traits.getAbandonationTimeout().isNegative()) {
             return projectService.getProject(aProject.getId()).getState();
         }
 
