@@ -29,10 +29,12 @@ import org.springframework.security.core.session.SessionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtensionImpl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowDocumentNavigationActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.event.DynamicWorkloadStateWatcher;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPointImpl;
@@ -50,9 +52,8 @@ public class DynamicWorkloadManagerAutoConfiguration
             WorkflowExtensionPoint aWorkflowExtensionPoint, ProjectService aProjectService,
             UserDao aUserRepository, SessionRegistry aSessionRegistry)
     {
-        return new DynamicWorkloadExtensionImpl(aWorkloadManagementService,
-                aWorkflowExtensionPoint, documentService, aProjectService, aUserRepository,
-                aSessionRegistry);
+        return new DynamicWorkloadExtensionImpl(aWorkloadManagementService, aWorkflowExtensionPoint,
+                documentService, aProjectService, aUserRepository, aSessionRegistry);
     }
 
     @Bean
@@ -72,6 +73,13 @@ public class DynamicWorkloadManagerAutoConfiguration
     public RandomizedWorkflowExtension randomizedWorkflowExtension()
     {
         return new RandomizedWorkflowExtension();
+    }
+
+    @Bean
+    public DynamicWorkloadStateWatcher dynamicWorkloadStateWatcher(
+            SchedulingService aSchedulingService)
+    {
+        return new DynamicWorkloadStateWatcher(aSchedulingService);
     }
 
     @Bean
