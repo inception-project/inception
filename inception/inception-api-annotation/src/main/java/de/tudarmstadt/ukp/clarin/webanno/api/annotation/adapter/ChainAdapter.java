@@ -487,7 +487,7 @@ public class ChainAdapter
     }
 
     @Override
-    public void initialize(AnnotationSchemaService aSchemaService)
+    public void initializeLayerConfiguration(AnnotationSchemaService aSchemaService)
     {
         AnnotationFeature relationFeature = new AnnotationFeature();
         relationFeature.setType(CAS.TYPE_NAME_STRING);

@@ -17,11 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic;
 
+import java.util.Optional;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 
 public interface DynamicWorkloadExtension
     extends WorkloadManagerExtension<DynamicWorkloadTraits>
 {
-    public static final String DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID = "dynamic";
+    static final String DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID = "dynamic";
+
+    Optional<SourceDocument> nextDocumentToAnnotate(Project aProject, User aUser);
+
+    void updateDocumentState(SourceDocument aDocument, int aRequiredAnnotatorCount);
 }

@@ -80,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
@@ -96,6 +97,7 @@ public class PairwiseCodingAgreementTable
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userRepository;
 
     private final RefreshingView<String> rows;
     private final AjaxDownloadLink exportAllButton;
@@ -179,11 +181,13 @@ public class PairwiseCodingAgreementTable
                         }
                         // Raters header horizontally
                         else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
-                            cell.add(new Label("label", Model.of(aCellItem.getModelObject())));
+                            cell.add(new Label("label",
+                                    userRepository.get(aCellItem.getModelObject()).getUiName()));
                         }
                         // Raters header vertically
                         else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
-                            cell.add(new Label("label", Model.of(aRowItem.getModelObject())));
+                            cell.add(new Label("label",
+                                    userRepository.get(aRowItem.getModelObject()).getUiName()));
                         }
                         // Upper diagonal
                         else if (aCellItem.getIndex() > aRowItem.getIndex()) {

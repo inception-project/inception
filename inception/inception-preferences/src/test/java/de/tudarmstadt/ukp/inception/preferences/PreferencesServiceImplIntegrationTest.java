@@ -24,10 +24,9 @@ import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,40 +34,51 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Import;
+import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off", //
+                "repository.path=" + PreferencesServiceImplIntegrationTest.TEST_OUTPUT_FOLDER })
+@EnableAutoConfiguration
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
+        "de.tudarmstadt.ukp.clarin.webanno.security.model", //
+        "de.tudarmstadt.ukp.inception.preferences.model" })
+@Import({ //
+        SecurityAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class })
 public class PreferencesServiceImplIntegrationTest
 {
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/PreferencesServiceImplIntegrationTest";
+
     private static final Key<TestTraits> KEY = new Key<>(TestTraits.class, "test.traits");
 
     private PreferencesServiceImpl sut;
 
     private @Autowired TestEntityManager testEntityManager;
-    private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userDao;
 
-    public @TempDir File repoDir;
+    @BeforeAll
+    public static void setupClass()
+    {
+        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
+    }
 
     @BeforeEach
     public void setUp()
     {
-        repositoryProperties.setPath(repoDir);
-        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-
         sut = new PreferencesServiceImpl(testEntityManager.getEntityManager());
     }
 
@@ -190,34 +200,8 @@ public class PreferencesServiceImplIntegrationTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.model",
-            "de.tudarmstadt.ukp.clarin.webanno.security.model",
-            "de.tudarmstadt.ukp.inception.preferences.model" })
     public static class TestContext
     {
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
-
-        @Bean
-        public RepositoryProperties repositoryProperties()
-        {
-            return new RepositoryProperties();
-        }
-
-        @Bean
-        public UserDao userRepository()
-        {
-            return new UserDaoImpl();
-        }
-
-        @Bean
-        public ProjectService projectService(UserDao aUserDao,
-                RepositoryProperties aRepositoryProperties,
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
-        {
-            return new ProjectServiceImpl(aUserDao, applicationEventPublisher,
-                    aRepositoryProperties, aInitializerProxy);
-        }
+        // Everything is handled by auto-config
     }
-
 }

@@ -21,6 +21,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * Fired when a user clicks on a cell in an annotator column.
@@ -29,15 +30,15 @@ public class AnnotatorColumnCellClickEvent
     extends AbstractAjaxAwareEvent
 {
     private final SourceDocument sourceDocument;
-    private final String username;
+    private final User user;
 
     public AnnotatorColumnCellClickEvent(AjaxRequestTarget aTarget, SourceDocument aSourceDocument,
-            String aUsername)
+            User aUser)
     {
         super(aTarget);
 
         sourceDocument = aSourceDocument;
-        username = aUsername;
+        user = aUser;
     }
 
     public SourceDocument getSourceDocument()
@@ -45,8 +46,8 @@ public class AnnotatorColumnCellClickEvent
         return sourceDocument;
     }
 
-    public String getUsername()
+    public User getUser()
     {
-        return username;
+        return user;
     }
 }

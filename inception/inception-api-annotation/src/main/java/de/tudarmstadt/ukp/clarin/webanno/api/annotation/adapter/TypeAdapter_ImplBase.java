@@ -120,8 +120,8 @@ public abstract class TypeAdapter_ImplBase
 
         Object oldValue = getValue(fs, aFeature);
 
-        featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aCas, aFeature, aAddress,
-                aValue);
+        featureSupportRegistry.findExtension(aFeature).orElseThrow().setFeatureValue(aCas, aFeature,
+                aAddress, aValue);
 
         Object newValue = getValue(fs, aFeature);
 
@@ -152,8 +152,8 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        return (T) featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature,
-                aFs);
+        return (T) featureSupportRegistry.findExtension(aFeature).orElseThrow()
+                .getFeatureValue(aFeature, aFs);
     }
 
     public void publishEvent(ApplicationEvent aEvent)
@@ -164,7 +164,7 @@ public abstract class TypeAdapter_ImplBase
     }
 
     @Override
-    public void initialize(AnnotationSchemaService aSchemaService)
+    public void initializeLayerConfiguration(AnnotationSchemaService aSchemaService)
     {
         // Nothing to do
     }

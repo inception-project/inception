@@ -26,10 +26,14 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#relationAttachmentBehavior}.
+ * </p>
+ */
 @Order(10)
-@Component
 public class RelationAttachmentBehavior
     extends RelationLayerBehavior
 {

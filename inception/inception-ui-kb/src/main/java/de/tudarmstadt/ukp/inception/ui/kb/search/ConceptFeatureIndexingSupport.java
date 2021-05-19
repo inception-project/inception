@@ -94,7 +94,7 @@ public class ConceptFeatureIndexingSupport
     {
         // Returns KB IRI label after checking if the
         // feature type is associated with KB and feature value is not null
-        FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
+        FeatureSupport<?> featSup = featureSupportRegistry.findExtension(aFeature).orElseThrow();
         KBHandle featureObject = featSup.getFeatureValue(aFeature, aAnnotation);
         MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
 

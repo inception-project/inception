@@ -212,7 +212,8 @@ public class CasMergeTest
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
-        FeatureSupport slotSupport = featureSupportRegistry.getFeatureSupport(slotFeature);
+        FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
+                .orElseThrow();
 
         assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
 
@@ -245,7 +246,8 @@ public class CasMergeTest
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
-        FeatureSupport slotSupport = featureSupportRegistry.getFeatureSupport(slotFeature);
+        FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
+                .orElseThrow();
 
         assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
 

@@ -114,7 +114,7 @@ public class ProjectPermissionsExporterTest
 
         // Import the project again
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        doNothing().when(userService).create(userCaptor.capture());
+        when(userService.create(userCaptor.capture())).thenAnswer(_call -> _call.getArgument(0));
 
         ArgumentCaptor<ProjectPermission> permissionCaptor = ArgumentCaptor
                 .forClass(ProjectPermission.class);

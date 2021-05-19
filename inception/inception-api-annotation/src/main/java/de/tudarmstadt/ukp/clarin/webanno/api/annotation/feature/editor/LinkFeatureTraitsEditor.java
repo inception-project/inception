@@ -187,7 +187,8 @@ public class LinkFeatureTraitsEditor
 
     private SlotFeatureSupport getFeatureSupport()
     {
-        return featureSupportRegistry.getFeatureSupport(featureSupportId);
+        return (SlotFeatureSupport) featureSupportRegistry.getExtension(featureSupportId)
+                .orElseThrow();
     }
 
     /**

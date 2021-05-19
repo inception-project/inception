@@ -105,11 +105,13 @@ public class ManageUsersPage
             passwordField = new PasswordTextField("password");
             passwordField.setModel(PropertyModel.of(DetailForm.this, "password"));
             passwordField.setRequired(false);
+            passwordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
             add(passwordField);
 
             repeatPasswordField = new PasswordTextField("repeatPassword");
             repeatPasswordField.setModel(PropertyModel.of(DetailForm.this, "repeatPassword"));
             repeatPasswordField.setRequired(false);
+            repeatPasswordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
             add(repeatPasswordField);
 
             add(new EqualPasswordInputValidator(passwordField, repeatPasswordField));

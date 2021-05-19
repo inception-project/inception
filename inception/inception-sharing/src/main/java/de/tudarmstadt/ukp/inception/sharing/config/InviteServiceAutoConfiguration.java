@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -34,6 +33,7 @@ import de.tudarmstadt.ukp.inception.sharing.InviteServiceImpl;
 import de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.sharing.project.ProjectSharingMenuItem;
 import de.tudarmstadt.ukp.inception.sharing.project.exporters.ProjectInviteExporter;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @EnableConfigurationProperties(InviteServicePropertiesImpl.class)
@@ -44,20 +44,19 @@ public class InviteServiceAutoConfiguration
 
     @Bean
     public InviteService inviteService(UserDao aUserRepository, ProjectService aProjectService,
-            InviteServiceProperties aInviteProperties)
+            InviteServiceProperties aInviteProperties,
+            WorkloadManagementService aWorkloadManagementService)
     {
         return new InviteServiceImpl(aUserRepository, aProjectService, aInviteProperties,
-                entityManager);
+                aWorkloadManagementService, entityManager);
     }
 
-    @Order(InviteProjectSettingsPanelFactory.ORDER)
     @Bean
     public InviteProjectSettingsPanelFactory inviteProjectSettingsPanelFactory()
     {
         return new InviteProjectSettingsPanelFactory();
     }
 
-    @Order(InviteProjectSettingsPanelFactory.ORDER)
     @Bean
     public ProjectSharingMenuItem projectSharingMenuItem()
     {

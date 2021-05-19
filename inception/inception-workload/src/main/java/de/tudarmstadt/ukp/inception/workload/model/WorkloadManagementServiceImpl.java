@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.workload.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static java.util.Arrays.asList;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -30,8 +34,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 
 /**
@@ -90,6 +94,14 @@ public class WorkloadManagementServiceImpl
         return result;
     }
 
+    @Override
+    public WorkloadManagerExtension<?> getWorkloadManagerExtension(Project aProject)
+    {
+        WorkloadManager currentWorkload = loadOrCreateWorkloadManagerConfiguration(aProject);
+        return workloadManagerExtensionPoint.getExtension(currentWorkload.getType())
+                .orElse(workloadManagerExtensionPoint.getDefault());
+    }
+
     /**
      * Saves the configuration in the DB
      */
@@ -97,13 +109,16 @@ public class WorkloadManagementServiceImpl
     @Transactional
     public void saveConfiguration(WorkloadManager aManager)
     {
-        entityManager
-                .createQuery("UPDATE WorkloadManager "
-                        + "SET workloadType = :workloadType, traits = :traits "
-                        + "WHERE project = :projectID")
-                .setParameter("workloadType", aManager.getType())
-                .setParameter("traits", aManager.getTraits())
-                .setParameter("projectID", aManager.getProject()).executeUpdate();
+        String query = String.join("\n", //
+                "UPDATE WorkloadManager ", //
+                "SET workloadType = :workloadType, traits = :traits ", //
+                "WHERE project = :projectID");
+
+        entityManager.createQuery(query) //
+                .setParameter("workloadType", aManager.getType()) //
+                .setParameter("traits", aManager.getTraits()) //
+                .setParameter("projectID", aManager.getProject()) //
+                .executeUpdate();
     }
 
     /**
@@ -112,14 +127,17 @@ public class WorkloadManagementServiceImpl
      */
     @Override
     @Transactional
-    public List<AnnotationDocument> getUsersForSpecificDocumentAndState(
-            AnnotationDocumentState aState, SourceDocument aSourceDocument, Project aProject)
+    public List<AnnotationDocument> listAnnotationDocumentsForSourceDocumentInState(
+            SourceDocument aSourceDocument, AnnotationDocumentState aState)
     {
-        return entityManager.createQuery(
-                "SELECT anno FROM AnnotationDocument anno " + "WHERE anno.project = :projectID "
-                        + "AND anno.name = :document " + "AND anno.state = :state",
-                AnnotationDocument.class).setParameter("projectID", aProject)
-                .setParameter("document", aSourceDocument.getName()).setParameter("state", aState)
+        String query = String.join("\n", //
+                "FROM AnnotationDocument", //
+                "WHERE document = :document", //
+                "AND state = :state");
+
+        return entityManager.createQuery(query, AnnotationDocument.class) //
+                .setParameter("document", aSourceDocument) //
+                .setParameter("state", aState) //
                 .getResultList();
     }
 
@@ -129,46 +147,16 @@ public class WorkloadManagementServiceImpl
      */
     @Override
     @Transactional
-    public Long getNumberOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject)
+    public Long getNumberOfUsersWorkingOnADocument(SourceDocument aDocument)
     {
-        return entityManager
-                .createQuery(
-                        " SELECT COUNT(anno) " + "FROM AnnotationDocument anno "
-                                + "WHERE anno.name = :name " + "AND anno.project = :project ",
-                        Long.class)
-                .setParameter("name", aDocument.getName()).setParameter("project", aProject)
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM AnnotationDocument", //
+                "WHERE document = :document", "AND state IN (:states)");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("document", aDocument) //
+                .setParameter("states", asList(IN_PROGRESS, FINISHED)) //
                 .getSingleResult();
     }
-
-    /**
-     * This method is a fast DB search to get all SOURCE DOCUMENTS (List) for a specific User in a
-     * specific Project with a State NEW.
-     */
-    @Override
-    @Transactional
-    public List<SourceDocument> getAnnotationDocumentListForUser(Project aProject, User aUser)
-    {
-        return entityManager.createQuery("SELECT source FROM SourceDocument source "
-                + "WHERE source.project = :project AND source.name NOT IN (SELECT anno.name FROM AnnotationDocument anno "
-                + "WHERE anno.user = :user AND anno.project = :project AND (anno.state = 'INPROGRESS' OR anno.state = 'FINISHED'))",
-                SourceDocument.class).setParameter("project", aProject)
-                .setParameter("user", aUser.getUsername()).getResultList();
-    }
-
-    /**
-     * This method is a fast DB search to get all ANNOTATION DOCUMENTS (List) for a specific User in
-     * a specific Project with a specific State.
-     */
-    @Override
-    @Transactional
-    public List<AnnotationDocument> getAnnotationDocumentListForUserWithState(Project aProject,
-            User aUser, AnnotationDocumentState aState)
-    {
-        return entityManager.createQuery("SELECT anno FROM AnnotationDocument anno "
-                + "WHERE anno.user = :user AND anno.project = :project AND anno.state = :state",
-                AnnotationDocument.class).setParameter("project", aProject)
-                .setParameter("user", aUser.getUsername()).setParameter("state", aState)
-                .getResultList();
-    }
-
 }

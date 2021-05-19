@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration
+de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration

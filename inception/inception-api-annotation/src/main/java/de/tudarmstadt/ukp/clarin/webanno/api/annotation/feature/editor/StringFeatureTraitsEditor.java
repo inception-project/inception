@@ -182,6 +182,7 @@ public class StringFeatureTraitsEditor
 
     private UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> getFeatureSupport()
     {
-        return featureSupportRegistry.getFeatureSupport(featureSupportId);
+        return (UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>) featureSupportRegistry
+                .getExtension(featureSupportId).orElseThrow();
     }
 }

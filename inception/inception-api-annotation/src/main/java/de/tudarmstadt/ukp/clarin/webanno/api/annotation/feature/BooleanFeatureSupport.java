@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.BooleanFeatureEditor;
@@ -36,7 +35,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#booleanFeatureSupport}.
+ * </p>
+ */
 public class BooleanFeatureSupport
     extends UimaPrimitiveFeatureSupport_ImplBase<Void>
 {

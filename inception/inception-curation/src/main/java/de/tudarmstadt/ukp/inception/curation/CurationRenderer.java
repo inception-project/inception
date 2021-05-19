@@ -38,8 +38,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -64,18 +62,35 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CurationServiceAutoConfiguration#curationRenderer}.
+ * </p>
+ */
 public class CurationRenderer
     implements RenderStep
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired CurationService curationService;
-    private @Autowired LayerSupportRegistry layerSupportRegistry;
-    private @Autowired DocumentService documentService;
-    private @Autowired UserDao userRepository;
-    private @Autowired AnnotationSchemaService annotationService;
+    private final CurationService curationService;
+    private final LayerSupportRegistry layerSupportRegistry;
+    private final DocumentService documentService;
+    private final UserDao userRepository;
+    private final AnnotationSchemaService annotationService;
+
+    public CurationRenderer(CurationService aCurationService,
+            LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
+            UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
+    {
+        curationService = aCurationService;
+        layerSupportRegistry = aLayerSupportRegistry;
+        documentService = aDocumentService;
+        userRepository = aUserRepository;
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
