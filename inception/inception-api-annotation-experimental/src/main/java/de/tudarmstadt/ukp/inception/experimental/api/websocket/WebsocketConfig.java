@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -25,6 +26,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 
 @Configuration
+@ConditionalOnProperty(prefix = "ui.editor.experimental", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableWebSocketMessageBroker
 public class WebsocketConfig
     implements WebSocketMessageBrokerConfigurer

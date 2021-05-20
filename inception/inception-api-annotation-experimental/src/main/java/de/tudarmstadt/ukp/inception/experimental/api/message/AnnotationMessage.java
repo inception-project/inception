@@ -28,6 +28,7 @@ public class AnnotationMessage
     private String quote;
     private String text;
     private String color;
+    private boolean delete;
 
     public String getId()
     {
@@ -78,4 +79,15 @@ public class AnnotationMessage
     {
         color = aColor;
     }
+
+    public boolean isDelete()
+    {
+        return delete;
+    }
+
+    public void setDelete(boolean aDelete)
+    {
+        this.delete = aDelete;
+    }
+
 }

@@ -75,10 +75,9 @@ public class WebsocketControllerImpl
     private static final String SERVER_SEND_CLIENT_SELECTED_ANNOTATION = "/queue/selected_annotation_for_client/";
 
     private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_by_client/";
-    private static final String SERVER_SEND_CLIENT_NEW_ANNOTATION = "/topic/annotation_created_for_clients/";
-
     private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_by_client";
-    private static final String SERVER_SEND_CLIENT_DELETE_ANNOTATION = "/topic/annotation_deleted_for_clients/";
+
+    private static final String SERVER_SEND_CLIENT_UPDATE_ANNOTATION = "/topic/annotation_update_for_clients/";
 
     /**
      * -----------------------------------------------------
@@ -178,7 +177,7 @@ public class WebsocketControllerImpl
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
         simpMessagingTemplate.convertAndSend(
-                SERVER_SEND_CLIENT_NEW_ANNOTATION + data.get(1) + data.get(2) + data.get(3), msg);
+            SERVER_SEND_CLIENT_UPDATE_ANNOTATION + data.get(1) + data.get(2) + data.get(3), msg);
         CasStorageSession.get().close();
     }
 
@@ -194,7 +193,7 @@ public class WebsocketControllerImpl
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
         simpMessagingTemplate.convertAndSend(
-                SERVER_SEND_CLIENT_DELETE_ANNOTATION + data.get(1) + data.get(2) + data.get(3),
+            SERVER_SEND_CLIENT_UPDATE_ANNOTATION + data.get(1) + data.get(2) + data.get(3),
                 msg);
         CasStorageSession.get().close();
     }

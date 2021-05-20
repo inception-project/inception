@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalAnnotationEd
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link TypeScriptAnnotationEditorSupportAutoConfiguration#typescriptAnnotationEditorFactory}
+ * {@link TypeScriptAnnotationEditorAutoConfiguration#typescriptAnnotationEditorFactory}
  * </p>
  */
 public class TypeScriptAnnotationEditorFactory
@@ -39,7 +39,7 @@ public class TypeScriptAnnotationEditorFactory
     @Override
     public String getDisplayName()
     {
-        return "experimental editor";
+        return "Experimental editor";
     }
 
     @Override

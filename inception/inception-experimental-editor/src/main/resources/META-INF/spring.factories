@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.experimental.editor.config.TypeScriptAnnotationEditorSupportAutoConfiguration
+de.tudarmstadt.ukp.inception.experimental.editor.config.TypeScriptAnnotationEditorAutoConfiguration

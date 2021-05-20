@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.experimental.api.resources.ExperimentalAPIResourceReference;
 
-
 public class ExperimentalAnnotationEditor extends AnnotationEditorBase
 {
     private static final long serialVersionUID = 2983502506977571078L;
@@ -49,14 +48,12 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
 
     }
 
-
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
         aResponse.render(forReference(ExperimentalAPIResourceReference.get()));
     }
-
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
