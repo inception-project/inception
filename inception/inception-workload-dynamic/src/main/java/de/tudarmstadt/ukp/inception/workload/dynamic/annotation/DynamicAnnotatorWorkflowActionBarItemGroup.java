@@ -134,7 +134,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                 // This was the case, so load the document and return
                 page.getModelObject().setDocument(nextDocument.get(),
                         documentService.listSourceDocuments(nextDocument.get().getProject()));
-                page.actionLoadDocument(aTarget);
+                page.actionLoadDocument(_target);
             }
             else {
                 // Nothing left, so returning to homepage and showing hint
