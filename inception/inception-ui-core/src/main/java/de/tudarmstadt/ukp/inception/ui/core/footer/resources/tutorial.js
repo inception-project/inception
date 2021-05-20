@@ -41,23 +41,24 @@ function runRoutines() {
 				return;
 			}
 			
-			if (currentPage == contextPath + "/" && ps == "tutorialStarted")
-			{
-				enjoyhint_instance = new EnjoyHint({
-					onEnd : function() {
-						setCookie(cName, 'tutorialStarted');
-					},
-					onSkip : function() {
-						setCookie(cName, 'ended');
-					}
-				});
+			//if (currentPage == contextPath + "/" && ps == "tutorialStarted")
+			//{
+			//	enjoyhint_instance = new EnjoyHint({
+			//		onEnd : function() {
+			//			setCookie(cName, 'tutorialStarted');
+			//		},
+			//		onSkip : function() {
+			//			setCookie(cName, 'ended');
+			//		}
+			//	});
 
-				enjoyhint_script_steps = createFirstPageRoutine();
-				enjoyhint_instance.set(enjoyhint_script_steps);
-				enjoyhint_instance.runScript();
-			} 
+			//	enjoyhint_script_steps = createFirstPageRoutine();
+			//	enjoyhint_instance.set(enjoyhint_script_steps);
+			//	enjoyhint_instance.runScript();
+			//} 
 			
-			else if (currentPage.endsWith("/settings")  && projectId == 'NEW' && ps == "tutorialStarted") 
+			//else 
+			if (currentPage.endsWith("/settings")  && projectId == 'NEW' && ps == "tutorialStarted") 
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onSkip : function() {
@@ -269,6 +270,11 @@ function startTutorial() {
 		}
 	});
 
+	// disable home link
+	var homeLink = document.querySelector(".navbar-brand");
+	if (homeLink != null){
+		homeLink.style.pointerEvents = 'none';
+	}
 	enjoyhint_script_steps = createFirstPageRoutine();
 	enjoyhint_instance.set(enjoyhint_script_steps);
 	
@@ -330,7 +336,7 @@ function createFirstPageRoutine() {
 				'next .navbar-brand' : "Welcome to INCEpTION! Let me guide you through its features. At any time during the tutorial you can click 'x' to quit the tour.",
 				'nextButton' : {
 					className : "myNext",
-					text : "Sure"
+					text : "Let's start!"
 				},
 				'showSkip': false
 			},
@@ -368,23 +374,41 @@ function createFirstPageRoutinePart2() {
 }
 
 function createDashboardRoutine() {
+    var settingsSidebarItemSelector = getDashboardSidebarSelector('/settings/details');
 	var a = [
 			{
-				'click li:nth-last-child(1)' : "Before getting started, let's configure the project. Please click 'Settings'.",
-				'showSkip': false
+			    "event": "click",
+			    "selector": settingsSidebarItemSelector,
+				"description" : "Before getting started, let's configure the project. Please click 'Settings'.",
+				"showSkip": false
 			} ];
 	return a;
 }
 
 function createOpenDocumentsRoutine(enjoyHint) {
+    var documentSidebarItemSelector = getDashboardSidebarSelector('/documents');
 	var a = [
 		    {
-		    	'click li:contains(Documents)' : 'Click here to add a document to the project.',
-		    	'showSkip': false
+		    	"event": "click",
+		    	"selector": documentSidebarItemSelector,
+		    	"description" : "Click here to add a document to the project.",
+		    	"showSkip": false
 		    }
 			];
 
 	return a;
+}
+
+/**
+ * If the sidebar is collapsed we select the icon to click on, else the whole link
+ */
+function getDashboardSidebarSelector(urlEnd) {
+	if (document.querySelector('.dashboard-sidebar.collapsed') != null) {
+		return 'a[href$="' + urlEnd + '"] > .icon';
+	}
+	else {
+		return 'a[href$="' + urlEnd + '"]';
+	}
 }
 
 function createAddDocumentRoutine(enjoyHint) {
@@ -400,10 +424,13 @@ function createAddDocumentRoutine(enjoyHint) {
 }
 
 function createOpenRecommendersRoutine(enjoyHint) {
+    var recommendersSidebarItemSelector = getDashboardSidebarSelector('/recommenders');
 	var a = [
-			{
-				'click li:contains(Recommenders)' : 'Now, lets add a recommender. Click here!',
-				'showSkip': false
+		    {
+		    	"event": "click",
+		    	"selector": recommendersSidebarItemSelector,
+		    	"description" : 'Now, lets add a recommender. Click here!',
+		    	"showSkip": false
 		    }
 			];
 
@@ -473,23 +500,39 @@ function createLastRoutine() {
 }
 
 function createDashboardRoutine2() {
+    var annotateSidebarItemSelector = getDashboardSidebarSelector('/annotate');
+    var curateSidebarItemSelector = getDashboardSidebarSelector('/curate');
+    var monitoringSidebarItemSelector = getDashboardSidebarSelector('/monitoring');
+    var simulationSidebarItemSelector = getDashboardSidebarSelector('/simulation');
 	var a = [
-		{
-			'next li:first-of-type' : "Finally, some information on the Dashboard's buttons: Here, you can annotate your documents.",
-			'showSkip': false
+	    {
+		    "event": "next",
+		    "selector": annotateSidebarItemSelector,
+		    "description" : "Finally, some information on the Dashboard's buttons: Here, you can annotate your documents.",
+		    "showSkip": false,
+		    "showNext": true
+		},
+	    {
+		    "event": "next",
+		    "selector": curateSidebarItemSelector,
+		    "description" : "Completely annotated documents can be curated to form the final result documents.",
+		    "showSkip": false,
+		    "showNext": true
 		},
 		{
-			'next li:nth-of-type(2)' : 'Completely annotated documents can be curated to form the final result documents.',
-			'showSkip': false
+		    "event": "next",
+		    "selector": monitoringSidebarItemSelector,
+		    "description" : "Here, you can see the annotators' progress and assign documents.",
+		    "showSkip": false,
+		    "showNext": true
 		},
 		{
-			'next li:nth-of-type(3)' : 'Here, you can see the annotators\' progress and assign documents.',
-			'showSkip': false
-		},
-		{
-			'next li:nth-of-type(4)' : 'This allows you to evaluate your recommenders.',
-			'showSkip': false
-		} 
+		    "event": "next",
+		    "selector": simulationSidebarItemSelector,
+		    "description" : "This allows you to evaluate your recommenders.",
+		    "showSkip": false,
+		    "showNext": true
+		}
 		];
 
 	return a;
