@@ -24,6 +24,7 @@ import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.MDC;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
@@ -48,6 +49,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.message.NewDocumentMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
 @Controller
+@ConditionalOnProperty(prefix = "ui.editor.experimental", name = "enabled", havingValue = "true")
 public class WebsocketControllerImpl
     implements WebsocketController
 {

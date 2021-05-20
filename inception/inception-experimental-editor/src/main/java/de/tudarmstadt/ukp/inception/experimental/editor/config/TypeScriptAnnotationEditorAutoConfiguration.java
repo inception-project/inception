@@ -22,10 +22,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnProperty(prefix = "ui.experimental", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ui.experimental", name = "enabled", havingValue = "true")
 public class TypeScriptAnnotationEditorAutoConfiguration
 {
-
     @Bean
     public TypeScriptAnnotationEditorFactory typescriptAnnotationEditorFactory()
     {
