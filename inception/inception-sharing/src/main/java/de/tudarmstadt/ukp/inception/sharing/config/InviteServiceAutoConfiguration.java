@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -52,14 +51,12 @@ public class InviteServiceAutoConfiguration
                 aWorkloadManagementService, entityManager);
     }
 
-    @Order(InviteProjectSettingsPanelFactory.ORDER)
     @Bean
     public InviteProjectSettingsPanelFactory inviteProjectSettingsPanelFactory()
     {
         return new InviteProjectSettingsPanelFactory();
     }
 
-    @Order(InviteProjectSettingsPanelFactory.ORDER)
     @Bean
     public ProjectSharingMenuItem projectSharingMenuItem()
     {
