@@ -148,9 +148,5 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-      <dependency>
-          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-          <artifactId>inception-experimental-editor</artifactId>
-      </dependency>
   </dependencies>
 </project>
