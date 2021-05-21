@@ -21,17 +21,20 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExten
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-@Component
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkflowActionBarExtension}
+ * </p>
+ */
 public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {

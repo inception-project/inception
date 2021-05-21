@@ -100,7 +100,8 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         }
 
         Object trait = featureTraitsCache.computeIfAbsent(aFeature,
-                feature -> featureSupportRegistry.getFeatureSupport(feature).readTraits(feature));
+                feature -> featureSupportRegistry.findExtension(feature).orElseThrow()
+                        .readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);

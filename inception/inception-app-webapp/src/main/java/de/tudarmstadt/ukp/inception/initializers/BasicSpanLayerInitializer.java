@@ -36,12 +36,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
-import de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectInitializersAutoConfiguration#basicSpanLayerInitializer}.
+ * {@link InceptionProjectInitializersAutoConfiguration#basicSpanLayerInitializer}.
  * </p>
  */
 public class BasicSpanLayerInitializer

@@ -28,41 +28,49 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
- * Implementation of methods defined in the {@link UserDao} interface
+ * <p>
+ * This class is exposed as a Spring Component via {@link SecurityAutoConfiguration#userService}.
+ * </p>
  */
-@Component("userRepository")
 public class UserDaoImpl
     implements UserDao
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @PersistenceContext EntityManager entityManager;
-    private @Autowired(required = false) SecurityProperties securityProperties;
-    private @Autowired(required = false) PlatformTransactionManager transactionManager;
-    private @Autowired(required = false) SessionRegistry sessionRegistry;
+    private final EntityManager entityManager;
+    private final SecurityProperties securityProperties;
+    private final PlatformTransactionManager transactionManager;
+    private final SessionRegistry sessionRegistry;
+
+    public UserDaoImpl(EntityManager aEntityManager, SecurityProperties aSecurityProperties,
+            PlatformTransactionManager aTransactionManager, SessionRegistry aSessionRegistry)
+    {
+        entityManager = aEntityManager;
+        securityProperties = aSecurityProperties;
+        transactionManager = aTransactionManager;
+        sessionRegistry = aSessionRegistry;
+    }
 
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
@@ -103,11 +111,12 @@ public class UserDaoImpl
 
     @Override
     @Transactional
-    public void create(User aUser)
+    public User create(User aUser)
     {
         entityManager.persist(aUser);
         entityManager.flush();
         log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
+        return aUser;
     }
 
     @Override
@@ -141,7 +150,8 @@ public class UserDaoImpl
     public void delete(User aUser)
     {
         if (sessionRegistry != null) {
-            sessionRegistry.getAllSessions(aUser, false).forEach(_session -> _session.expireNow());
+            sessionRegistry.getAllSessions(aUser.getUsername(), false)
+                    .forEach(_session -> _session.expireNow());
         }
 
         entityManager.remove(entityManager.merge(aUser));

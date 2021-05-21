@@ -23,11 +23,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -77,6 +80,25 @@ public class SettingsUtil
     public static String getPropApplicationHome()
     {
         return propApplicationHome;
+    }
+
+    public static void setGlobalLogFolder(Path aPath)
+    {
+        System.setProperty("GLOBAL_LOG_FOLDER", aPath.toString());
+    }
+
+    public static Optional<Path> getGlobalLogFolder()
+    {
+        String prop = System.getProperty("GLOBAL_LOG_FOLDER");
+        if (prop == null) {
+            return Optional.empty();
+        }
+        return Optional.of(Paths.get(prop));
+    }
+
+    public static Optional<Path> getGlobalLogFile()
+    {
+        return getGlobalLogFolder().map(dir -> dir.resolve("application.log"));
     }
 
     public static Properties getVersionProperties()

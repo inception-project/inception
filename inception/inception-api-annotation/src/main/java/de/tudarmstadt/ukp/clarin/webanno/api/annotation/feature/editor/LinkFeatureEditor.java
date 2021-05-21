@@ -657,7 +657,7 @@ public class LinkFeatureEditor
     private LinkFeatureTraits getTraits()
     {
         AnnotationFeature feat = getModelObject().feature;
-        FeatureSupport<LinkFeatureTraits> fs = featureSupportRegistry.getFeatureSupport(feat);
-        return fs.readTraits(feat);
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(feat).orElseThrow();
+        return (LinkFeatureTraits) fs.readTraits(feat);
     }
 }

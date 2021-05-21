@@ -20,12 +20,11 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.20.0-SNAPSHOT</version>
+    <version>0.21.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-testing</artifactId>
   <name>INCEpTION - Test Support library</name>
   <dependencies>
-
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation</artifactId>
@@ -57,6 +56,8 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
     </dependency>
+    
+    <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
@@ -65,11 +66,6 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-util</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

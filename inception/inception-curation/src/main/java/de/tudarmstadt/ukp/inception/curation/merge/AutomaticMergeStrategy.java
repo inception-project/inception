@@ -28,8 +28,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -40,19 +38,32 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
+import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 
-@Component(AutomaticMergeStrategy.BEAN_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CurationServiceAutoConfiguration#automaticMergeStrategy}.
+ * </p>
+ */
 public class AutomaticMergeStrategy
     implements MergeStrategy
 {
     public static final String BEAN_NAME = "automaticStrategy";
 
-    private String uiName = "Automatic";
+    private final static String UI_NAME = "Automatic";
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired CurationService curationService;
-    private @Autowired AnnotationSchemaService annotationService;
+    private final CurationService curationService;
+    private final AnnotationSchemaService annotationService;
+
+    public AutomaticMergeStrategy(CurationService aCurationService,
+            AnnotationSchemaService aAnnotationService)
+    {
+        curationService = aCurationService;
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public boolean equals(final Object other)
@@ -61,13 +72,13 @@ public class AutomaticMergeStrategy
             return false;
         }
         AutomaticMergeStrategy castOther = (AutomaticMergeStrategy) other;
-        return new EqualsBuilder().append(uiName, castOther.uiName).isEquals();
+        return new EqualsBuilder().append(UI_NAME, castOther.UI_NAME).isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(uiName).toHashCode();
+        return new HashCodeBuilder().append(UI_NAME).toHashCode();
     }
 
     @Override
@@ -103,12 +114,6 @@ public class AutomaticMergeStrategy
     @Override
     public String getUiName()
     {
-        return uiName;
+        return UI_NAME;
     }
-
-    public void setUiName(String aUiName)
-    {
-        uiName = aUiName;
-    }
-
 }

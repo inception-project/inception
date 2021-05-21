@@ -35,7 +35,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -52,8 +51,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Handles the {@link OverlapMode} setting for {@link WebAnnoConst#SPAN_TYPE span layers}.
+ *
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#spanOverlapBehavior}.
+ * </p>
  */
-@Component
 public class SpanOverlapBehavior
     extends SpanLayerBehavior
 {
