@@ -36,6 +36,7 @@ public abstract class VObject
     private String colorHint;
     private String label;
     private int equivalenceSet;
+    private boolean visible = true;
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
     {
@@ -125,5 +126,15 @@ public abstract class VObject
     public String getLabelHint()
     {
         return label;
+    }
+
+    public boolean isVisible()
+    {
+        return visible;
+    }
+
+    public void setVisible(boolean aVisible)
+    {
+        visible = aVisible;
     }
 }

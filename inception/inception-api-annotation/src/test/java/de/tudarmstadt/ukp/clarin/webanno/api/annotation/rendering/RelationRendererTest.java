@@ -128,7 +128,7 @@ public class RelationRendererTest
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry, null),
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerSupportRegistry.init();
     }
