@@ -18,21 +18,16 @@
 package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -44,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ConnectionEstablishedMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.NewDocumentMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
@@ -58,9 +52,6 @@ public class WebsocketControllerImpl
     private final UserDao userDao;
     private final RepositoryProperties repositoryProperties;
     private final SimpMessagingTemplate simpMessagingTemplate;
-
-    private CAS cas;
-    private ArrayList<String> data = new ArrayList<>();
 
     /**
      * ----------------- PUB / SUB CHANNELS ---------------
@@ -105,18 +96,6 @@ public class WebsocketControllerImpl
     }
     // ---------------------------------------- //
 
-    // ------- TO BE REMOVED, INFO ONLY --------- //
-    @EventListener
-    public void connectionEstablished(SessionConnectedEvent aSce) throws IOException
-    {
-        System.out.println("CONNECTION ESTABLISHED");
-        String user = Objects.requireNonNull(aSce.getUser()).getName();
-        ConnectionEstablishedMessage connectionEstablishedMessage = new ConnectionEstablishedMessage(
-                user, "Doc4", "Annotation Study");
-        String msg = JSONUtil.toJsonString(connectionEstablishedMessage);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_CONNECTION_MESSAGE + user, msg);
-    }
-
     /**
      * ------------- PUB / SUB HANDLING -------------
      **/
@@ -126,13 +105,19 @@ public class WebsocketControllerImpl
     public void handleDocumentRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW DOCUMENT BY CLIENT, Message: " + aMessage);
-        initializeDataAndCas(aMessage.getPayload());
+        String[] data = purifyData(aMessage.getPayload());
+        CAS cas = getCasForDocument(data[0], data[1], "Doc4");
+
         NewDocumentMessage newDocumentMessage = new NewDocumentMessage();
-        // TODO retrieve desired content and fill NewDocumentMessage
-        newDocumentMessage.setName(data.get(2));
+        newDocumentMessage.setName("Doc4");
+        String[] sentences = cas.getDocumentText().split("/.");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < Integer.parseInt(data[2]); i++) {
+            sb.append(sentences[i]);
+        }
+        newDocumentMessage.setViewportText(sb.toString());
         String msg = JSONUtil.toJsonString(newDocumentMessage);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_DOCUMENT + data.get(0), msg);
-        CasStorageSession.get().close();
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_DOCUMENT + data[0], msg);
     }
 
     @Override
@@ -140,15 +125,21 @@ public class WebsocketControllerImpl
     public void handleViewportRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
-        initializeDataAndCas(aMessage.getPayload());
-
-        System.out.println(data.get(3) + ", " + data.get(4));
-        ViewportMessage viewportMessage = new ViewportMessage(Integer.parseInt(data.get(3)),
-                Integer.parseInt(data.get(4)));
-        // TODO retrieve desired content and fill ViewportMessage
-        String msg = JSONUtil.toJsonString(viewportMessage);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + data.get(0), msg);
-        CasStorageSession.get().close();
+        String[] data = purifyData(aMessage.getPayload());
+        CAS cas = getCasForDocument(data[0], data[1], data[2]);
+        ViewportMessage viewportMessage = new ViewportMessage(Integer.parseInt(data[3]), Integer.parseInt(data[4]));
+        String[] sentences = cas.getDocumentText().split("/.");
+        StringBuilder sb = new StringBuilder();
+        if (sentences.length >= Integer.parseInt(data[4])) {
+            for (int i = Integer.parseInt(data[3]); i < Integer.parseInt(data[4]); i++) {
+                sb.append(sentences[i]);
+            }
+            viewportMessage.setText(sb.toString());
+            String msg = JSONUtil.toJsonString(viewportMessage);
+            simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + data[0], msg);
+        } else {
+            System.out.println("Requested sentences do not exist in the document");
+        }
     }
 
     @Override
@@ -156,15 +147,13 @@ public class WebsocketControllerImpl
     public void handleSelectAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
-        initializeDataAndCas(aMessage.getPayload());
-        System.out.println("------ CAS Text -----");
-        System.out.println(cas.getDocumentText());
+        String[] data = purifyData(aMessage.getPayload());
+        CAS cas = getCasForDocument(data[0], data[1], data[2]);
         AnnotationMessage annotationMessage = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_ANNOTATION + data.get(0),
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_ANNOTATION + data[0],
                 msg);
-        CasStorageSession.get().close();
     }
 
     @Override
@@ -172,15 +161,15 @@ public class WebsocketControllerImpl
     public void handleNewAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW ANNOTATION BY CLIENT");
-        initializeDataAndCas(aMessage.getPayload());
+        String[] data = purifyData(aMessage.getPayload());
+        CAS cas = getCasForDocument(data[0], data[1], data[2]);
 
         // TODO cas.createAnnotation()
         AnnotationMessage annotationMessage = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
         simpMessagingTemplate.convertAndSend(
-            SERVER_SEND_CLIENT_UPDATE_ANNOTATION + data.get(1) + data.get(2) + data.get(3), msg);
-        CasStorageSession.get().close();
+            SERVER_SEND_CLIENT_UPDATE_ANNOTATION, msg);
     }
 
     @Override
@@ -188,16 +177,17 @@ public class WebsocketControllerImpl
     public void handleDeleteAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED DELETE ANNOTATION BY CLIENT");
-        initializeDataAndCas(aMessage.getPayload());
+        String[] data = purifyData(aMessage.getPayload());
+        CAS cas = getCasForDocument(data[0], data[1], data[2]);
 
         // TODO cas.deleteAnnotation()
         AnnotationMessage annotationMessage = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
         simpMessagingTemplate.convertAndSend(
-            SERVER_SEND_CLIENT_UPDATE_ANNOTATION + data.get(1) + data.get(2) + data.get(3),
+            SERVER_SEND_CLIENT_UPDATE_ANNOTATION,
                 msg);
-        CasStorageSession.get().close();
+
     }
 
     /**
@@ -207,26 +197,25 @@ public class WebsocketControllerImpl
     // --------------- SUPPORT METHODS ---------------- //
 
     @Override
-    public void initializeDataAndCas(String aPayload)
-    {
-        CasStorageSession.open();
-        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+    public String[] purifyData(String aPayload) {
         String[] spliced = aPayload.replace("\"", "").replace("{", "").replace("}", "").split(",");
         for (int i = 0; i < spliced.length; i++) {
             spliced[i] = spliced[i].split(":")[1];
         }
-        data.clear();
-        data.addAll(Arrays.asList(spliced));
-        cas = getCasForDocument(data.get(1), data.get(2), data.get(0));
+        return spliced;
     }
 
     @Override
-    public CAS getCasForDocument(String aProject, String aDocument, String aUser)
+    public CAS getCasForDocument(String aUser, String aProject, String aDocument)
     {
         try {
+            CasStorageSession.open();
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             Project project = projectService.getProject(aProject);
             SourceDocument sourceDocument = documentService.getSourceDocument(project, aDocument);
-            return documentService.readAnnotationCas(sourceDocument, aUser);
+            CAS cas = documentService.readAnnotationCas(sourceDocument, aUser);
+            CasStorageSession.get().close();
+            return cas;
         }
         catch (Exception e) {
             e.printStackTrace();

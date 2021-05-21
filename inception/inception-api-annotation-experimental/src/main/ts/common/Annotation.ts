@@ -15,10 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export class Annotation
 {
-  "Config" : [
+    private _id : string;
+    private _type : string;
+
+    constructor(aID : string, aType : string)
     {
-      "url" : "ws://localhost:8080"
+        this._id = aID;
+        this._type = aType
     }
-  ]
+
+
+    get id(): string {
+        return this._id;
+    }
+
+    set id(value: string) {
+        this._id = value;
+    }
+
+    get type(): string {
+        return this._type;
+    }
+
+    set type(value: string) {
+        this._type = value;
+    }
 }

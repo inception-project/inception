@@ -26,7 +26,6 @@ public class AnnotationMessage
     private String id;
     private List<Range> ranges;
     private String quote;
-    private String text;
     private String color;
     private boolean delete;
 
@@ -58,16 +57,6 @@ public class AnnotationMessage
     public void setQuote(String aQuote)
     {
         quote = aQuote;
-    }
-
-    public String getText()
-    {
-        return text;
-    }
-
-    public void setText(String aText)
-    {
-        text = aText;
     }
 
     public String getColor()

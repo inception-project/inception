@@ -19,18 +19,8 @@ package de.tudarmstadt.ukp.inception.experimental.api.message;
 
 public class NewDocumentMessage
 {
-    private String id;
     private String name;
-
-    public String getId()
-    {
-        return id;
-    }
-
-    public void setId(String aId)
-    {
-        id = aId;
-    }
+    private String viewportText;
 
     public String getName()
     {
@@ -40,5 +30,15 @@ public class NewDocumentMessage
     public void setName(String aName)
     {
         name = aName;
+    }
+
+    public String getViewportText()
+    {
+        return viewportText;
+    }
+
+    public void setViewportText(String aViewportText)
+    {
+        this.viewportText = aViewportText;
     }
 }
