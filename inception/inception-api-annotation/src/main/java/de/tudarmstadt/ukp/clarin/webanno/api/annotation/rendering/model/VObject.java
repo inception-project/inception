@@ -36,6 +36,7 @@ public abstract class VObject
     private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
     private String colorHint;
     private String label;
+    private boolean actionButtons;
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
     {
@@ -120,5 +121,15 @@ public abstract class VObject
     public String getLabelHint()
     {
         return label;
+    }
+
+    public boolean isActionButtons()
+    {
+        return actionButtons;
+    }
+
+    public void setActionButtons(boolean aActionButtons)
+    {
+        actionButtons = aActionButtons;
     }
 }
