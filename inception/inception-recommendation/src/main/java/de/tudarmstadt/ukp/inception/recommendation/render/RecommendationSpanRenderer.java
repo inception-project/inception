@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -40,13 +39,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 
 /**
  * Render spans.
@@ -54,11 +53,22 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 public class RecommendationSpanRenderer
     implements RecommendationTypeRenderer
 {
-    private SpanAdapter typeAdapter;
+    private final SpanAdapter typeAdapter;
+    private final RecommendationService recommendationService;
+    private final AnnotationSchemaService annotationService;
+    private final FeatureSupportRegistry fsRegistry;
+    private final RecommenderProperties recommenderProperties;
 
-    public RecommendationSpanRenderer(SpanAdapter aTypeAdapter)
+    public RecommendationSpanRenderer(SpanAdapter aTypeAdapter,
+            RecommendationService aRecommendationService,
+            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+            RecommenderProperties aRecommenderProperties)
     {
         typeAdapter = aTypeAdapter;
+        recommendationService = aRecommendationService;
+        annotationService = aAnnotationService;
+        fsRegistry = aFsRegistry;
+        recommenderProperties = aRecommenderProperties;
     }
 
     /**
@@ -73,28 +83,27 @@ public class RecommendationSpanRenderer
      *            Data model for brat annotations
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, AnnotationLayer aLayer,
-            RecommendationService aRecommendationService,
-            LearningRecordService learningRecordService, AnnotationSchemaService aAnnotationService,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService,
-            int aWindowBeginOffset, int aWindowEndOffset)
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, int aWindowBeginOffset,
+            int aWindowEndOffset)
     {
-        if (aCas == null || aRecommendationService == null) {
+        if (aCas == null || recommendationService == null) {
             return;
         }
 
-        Predictions predictions = aRecommendationService.getPredictions(aState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         // No recommendations available at all
         if (predictions == null) {
             return;
         }
 
+        AnnotationLayer layer = typeAdapter.getLayer();
+
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
         SuggestionDocumentGroup<SpanSuggestion> groups = predictions.getGroupedPredictions(
-                SpanSuggestion.class, sourceDocumentName, aLayer, aWindowBeginOffset,
+                SpanSuggestion.class, sourceDocumentName, layer, aWindowBeginOffset,
                 aWindowEndOffset);
 
         // No recommendations to render for this layer
@@ -104,15 +113,15 @@ public class RecommendationSpanRenderer
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        aRecommendationService.calculateSpanSuggestionVisibility(aCas,
-                aState.getUser().getUsername(), aLayer, groups, aWindowBeginOffset,
+        recommendationService.calculateSpanSuggestionVisibility(aCas,
+                aState.getUser().getUsername(), layer, groups, aWindowBeginOffset,
                 aWindowEndOffset);
 
-        Preferences pref = aRecommendationService.getPreferences(aState.getUser(),
-                aLayer.getProject());
+        Preferences pref = recommendationService.getPreferences(aState.getUser(),
+                layer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        Map<String, AnnotationFeature> features = aAnnotationService.listSupportedFeatures(aLayer)
+        Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
                 .stream()
                 .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
@@ -127,17 +136,17 @@ public class RecommendationSpanRenderer
                 AnnotationFeature feature = features.get(ao.getFeature());
 
                 // Retrieve the UI display label for the given feature value
-                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature).orElseThrow();
+                FeatureSupport<?> featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                 String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());
 
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(ao.getFeature(), annotation);
 
-                VSpan v = new VSpan(aLayer, vid, bratTypeName,
+                VSpan v = new VSpan(layer, vid, bratTypeName,
                         new VRange(ao.getBegin() - aWindowBeginOffset,
                                 ao.getEnd() - aWindowBeginOffset),
                         featureAnnotation, COLOR);
-                v.setActionButtons(true);
+                v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
                 v.addLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                 v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
                 vdoc.add(v);
