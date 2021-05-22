@@ -275,8 +275,18 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -694,7 +704,6 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
         <version>${mockito.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.assertj</groupId>
@@ -1822,7 +1831,6 @@
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
-            <dependency>commons-logging:commons-logging</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
@@ -1844,7 +1852,9 @@
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
-            <dependency>com.squareup.okhttp3:mockwebserver3</dependency>
+            <dependency>com.squareup.okhttp3:mockwebserver</dependency>
+            <dependency>com.squareup.okhttp3:okhttp</dependency>
+            <dependency>com.squareup.okio:okio</dependency>
             <dependency>org.awaitility:awaitility</dependency>
             <dependency>org.springframework:spring-test</dependency>
           </ignoredDependencies>
@@ -1854,6 +1864,9 @@
             <!--
               - Required to use the dependency plugin on newer Java versions.
               - See: https://issues.apache.org/jira/browse/MDEP-613
+              -
+              - Updating to more recent versions doesn't work because we get a 
+              - "Unsupported api 524288" error in inception-boot-loader
             -->
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-dependency-analyzer</artifactId>
