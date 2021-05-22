@@ -28,6 +28,16 @@ public class InstanceIdentity
     @Id
     private String id;
 
+    public InstanceIdentity()
+    {
+        // Required for JPA
+    }
+
+    public InstanceIdentity(String aId)
+    {
+        id = aId;
+    }
+
     public String getId()
     {
         return id;

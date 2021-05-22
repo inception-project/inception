@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
@@ -159,51 +158,5 @@ public class WorkloadManagementServiceImpl
                 .setParameter("document", aDocument) //
                 .setParameter("states", asList(IN_PROGRESS, FINISHED)) //
                 .getSingleResult();
-    }
-
-    /**
-     * This method is a fast DB search to get all SOURCE DOCUMENTS (List) for a specific User in a
-     * specific Project with a State NEW.
-     */
-    @Override
-    @Transactional
-    public List<SourceDocument> listAnnotationDocumentsForUser(Project aProject, User aUser)
-    {
-        String query = String.join("\n", //
-                "SELECT source FROM SourceDocument source ", //
-                "WHERE source.project = :project", //
-                "AND source.name NOT IN (SELECT anno.name ", //
-                "  FROM AnnotationDocument anno ", //
-                "  WHERE anno.user = :user ", //
-                "  AND anno.project = :project ", //
-                "  AND (anno.state = 'INPROGRESS' OR anno.state = 'FINISHED')", //
-                ")");
-
-        return entityManager.createQuery(query, SourceDocument.class) //
-                .setParameter("project", aProject) //
-                .setParameter("user", aUser.getUsername()) //
-                .getResultList();
-    }
-
-    /**
-     * This method is a fast DB search to get all ANNOTATION DOCUMENTS (List) for a specific User in
-     * a specific Project with a specific State.
-     */
-    @Override
-    @Transactional
-    public List<AnnotationDocument> getAnnotationDocumentListForUserWithState(Project aProject,
-            User aUser, AnnotationDocumentState aState)
-    {
-        String query = String.join("\n", //
-                "FROM AnnotationDocument", //
-                "WHERE user = :user", //
-                "AND project = :project", //
-                "AND state = :state");
-
-        return entityManager.createQuery(query, AnnotationDocument.class) //
-                .setParameter("project", aProject) //
-                .setParameter("user", aUser.getUsername()) //
-                .setParameter("state", aState) //
-                .getResultList();
     }
 }

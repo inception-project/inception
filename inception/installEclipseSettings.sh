@@ -85,6 +85,7 @@ installPrefs inception-ui-project
 installPrefs inception-ui-search
 installPrefs inception-ui-tagsets
 installPrefs inception-versioning
+installPrefs inception-websocket
 installPrefs inception-workload
 installPrefs inception-workload-dynamic
 installPrefs inception-workload-matrix
