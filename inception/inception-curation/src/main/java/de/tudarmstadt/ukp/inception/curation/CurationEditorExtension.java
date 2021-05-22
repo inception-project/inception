@@ -27,7 +27,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -44,8 +43,14 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResu
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 
-@Component(CurationEditorExtension.EXTENSION_ID)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CurationServiceAutoConfiguration#curationEditorExtension}.
+ * </p>
+ */
 public class CurationEditorExtension
     extends AnnotationEditorExtensionImplBase
     implements AnnotationEditorExtension
@@ -56,11 +61,20 @@ public class CurationEditorExtension
     private static final String ACTION_SELECT_ARC = "arcOpenDialog";
     private static final String ACTION_SELECT_SPAN = "spanOpenDialog";
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired AnnotationSchemaService annotationService;
-    private @Autowired DocumentService documentService;
-    private @Autowired CurationRenderer curationRenderer;
+    private final AnnotationSchemaService annotationService;
+    private final DocumentService documentService;
+    private final CurationRenderer curationRenderer;
+
+    @Autowired
+    public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
+            DocumentService aDocumentService, CurationRenderer aCurationRenderer)
+    {
+        annotationService = aAnnotationService;
+        documentService = aDocumentService;
+        curationRenderer = aCurationRenderer;
+    }
 
     @Override
     public String getBeanName()

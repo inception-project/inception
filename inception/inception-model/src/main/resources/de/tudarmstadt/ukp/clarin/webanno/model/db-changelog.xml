@@ -1269,4 +1269,15 @@
     </preConditions>
     <dropTable tableName="train_document" cascadeConstraints="true"/>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210514-01">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_document" columnName="annotatorState" />
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_document">
+      <column name="annotatorState" type="VARCHAR(255)"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

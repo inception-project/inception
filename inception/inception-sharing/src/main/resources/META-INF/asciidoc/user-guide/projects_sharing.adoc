@@ -18,7 +18,7 @@
 = Invite Links
 
 ====
-NOTE: This feature is not enabled by default. However, you can enable it by adding `sharing.invites.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `sharing.invites.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
 
 
@@ -46,8 +46,9 @@ If any of the configured conditions are triggered, an alert is shown next do the
 == Guest annotators
 
 ====
-NOTE: This feature is not enabled by default. However, you can enable it by adding `sharing.invites.guests-enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `sharing.invites.guests-enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
+
 
 By default, users need to already have a {product-name} account to be able to use the link. However,
 by activating the option *Allow guest annotators*, a person accessing the invite link can simply

@@ -181,6 +181,7 @@ public class ActiveLearningSidebar
     private ConfirmationDialog confirmationDialog;
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
+    private Form<Void> sessionControlForm;
 
     private String highlightDocumentName;
     private VID highlightVID;
@@ -213,10 +214,11 @@ public class ActiveLearningSidebar
             alStateModel.setObject(alState);
         }
 
+        add(sessionControlForm = createSessionControlForm());
+
         mainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
         mainContainer.add(createNoRecommendersMessage());
-        mainContainer.add(createSessionControlForm());
         mainContainer.add(createNoRecommendationLabel());
         mainContainer.add(clearSkippedRecommendationForm());
         mainContainer.add(createRecommendationOperationForm());
@@ -290,7 +292,7 @@ public class ActiveLearningSidebar
                 .collect(toList());
     }
 
-    private void actionStartSession(AjaxRequestTarget target, Form<?> form)
+    private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form)
     {
         ActiveLearningUserState alState = alStateModel.getObject();
         AnnotatorState state = getModelObject();
@@ -298,9 +300,11 @@ public class ActiveLearningSidebar
         // Start new session
         alState.setSessionActive(true);
 
+        aTarget.add(sessionControlForm);
+
         refreshSuggestions();
 
-        moveToNextRecommendation(target, false);
+        moveToNextRecommendation(aTarget, false);
 
         String userName = state.getUser().getUsername();
         Project project = state.getProject();
@@ -314,7 +318,7 @@ public class ActiveLearningSidebar
         ActiveLearningUserState alState = alStateModel.getObject();
         AnnotatorState state = getModelObject();
 
-        target.add(mainContainer);
+        target.add(mainContainer, sessionControlForm);
 
         // Stop current session
         alState.setSessionActive(false);
@@ -460,7 +464,7 @@ public class ActiveLearningSidebar
     {
         AnnotationFeature feat = annotationService.getFeature(aCurrentRecommendation.getFeature(),
                 alStateModel.getObject().getLayer());
-        FeatureSupport<?> featureSupport = featureSupportRegistry.getFeatureSupport(feat);
+        FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
         String labelValue = featureSupport.renderFeatureValue(feat,
                 aCurrentRecommendation.getLabel());
         return labelValue;
@@ -523,7 +527,7 @@ public class ActiveLearningSidebar
         // Obtain the feature state which serves as a model to the editor
         AnnotationFeature feat = annotationService.getFeature(aCurrentRecommendation.getFeature(),
                 alState.getLayer());
-        FeatureSupport<?> featureSupport = featureSupportRegistry.getFeatureSupport(feat);
+        FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
         // We get away with passing "null" here instead of the CAS because we currently
         // have no recommenders for any feature types that actually need the CAS (i.e.
         // link feature types and the likes).
@@ -632,7 +636,7 @@ public class ActiveLearningSidebar
         // Create AnnotationFeature and FeatureSupport
         AnnotationFeature feat = annotationService.getFeature(suggestion.getFeature(),
                 alState.getLayer());
-        FeatureSupport featureSupport = featureSupportRegistry.getFeatureSupport(feat);
+        FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
 
         // Load CAS in which to create the annotation. This might be different from the one that
         // is currently viewed by the user, e.g. if the user switched to another document after
@@ -842,8 +846,8 @@ public class ActiveLearningSidebar
                 AnnotationFeature recAnnotationFeature = rec.getAnnotationFeature();
                 String recFeatureValue;
                 if (recAnnotationFeature != null) {
-                    FeatureSupport featureSupport = featureSupportRegistry
-                            .getFeatureSupport(recAnnotationFeature);
+                    FeatureSupport<?> featureSupport = featureSupportRegistry
+                            .findExtension(recAnnotationFeature).orElseThrow();
                     recFeatureValue = featureSupport.renderFeatureValue(recAnnotationFeature,
                             rec.getAnnotation());
                 }

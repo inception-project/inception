@@ -35,11 +35,16 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SchedulingServiceAutoConfiguration#schedulingService}.
+ * </p>
+ */
 public class SchedulingServiceImpl
     implements SchedulingService, DisposableBean
 {

@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.StringFeatureTraits.EditorType.AUTOCOMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.StringFeatureTraits.EditorType.COMBOBOX;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.StringFeatureTraits.EditorType.RADIOGROUP;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -30,7 +33,6 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -40,7 +42,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEd
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoComboboxTextFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.RadioGroupStringFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.StringFeatureTraits;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.StringFeatureTraits.EditorType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.StringFeatureTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.TextAreaFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -51,7 +55,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#stringFeatureSupport}.
+ * </p>
+ */
 public class StringFeatureSupport
     extends UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>
 {
@@ -144,7 +153,8 @@ public class StringFeatureSupport
         }
 
         StringFeatureTraits traits = readTraits(feature);
-        if (feature.getTagset() == null) {
+
+        if (feature.getTagset() == null || traits.isMultipleRows()) {
             if (traits.isMultipleRows()) {
                 // If multiple rows are set use a textarea
                 if (traits.isDynamicSize()) {
@@ -160,14 +170,43 @@ public class StringFeatureSupport
             }
         }
 
-        if (aFeatureStateModel.getObject().tagset.size() < properties.getAutoCompleteThreshold()) {
-            // For smaller tagsets, use a combobox
+        EditorType editorType = traits.getEditorType();
+        if (editorType == EditorType.AUTO) {
+            editorType = autoChooseFeatureEditorWithTagset(aFeatureStateModel);
+        }
+
+        switch (editorType) {
+        case RADIOGROUP:
+            return new RadioGroupStringFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
+        case COMBOBOX:
             return new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
+        case AUTOCOMPLETE:
+            return new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
+                    properties.getAutoCompleteMaxResults(), aHandler);
+        default:
+            throw new IllegalStateException(
+                    "Unknown editor type: [" + traits.getEditorType() + "]");
+        }
+    }
+
+    private EditorType autoChooseFeatureEditorWithTagset(
+            final IModel<FeatureState> aFeatureStateModel)
+    {
+        FeatureState featureState = aFeatureStateModel.getObject();
+
+        // For really small tagsets where tag creation is not supported, use a radio group
+        if (!featureState.feature.getTagset().isCreateTag()
+                && featureState.tagset.size() < properties.getComboBoxThreshold()) {
+            return RADIOGROUP;
+        }
+
+        // For mid-sized tagsets, use a combobox
+        if (featureState.tagset.size() < properties.getAutoCompleteThreshold()) {
+            return COMBOBOX;
         }
 
         // For larger ones, use an auto-complete field
-        return new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
-                properties.getAutoCompleteMaxResults(), aHandler);
+        return AUTOCOMPLETE;
     }
 
     @Override

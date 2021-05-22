@@ -1,3 +1,4 @@
+[[sect_projects_tagsets]]
 = Tagsets
 
 To manager the tagsets, click on the tab *Tagsets* in the project pane. 

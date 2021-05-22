@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.20.0-SNAPSHOT</version>
+    <version>0.21.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -195,6 +195,11 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-versioning</artifactId>
     </dependency>
+    <!-- INCEPTION - SPRING WEBSOCKET -->
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-websocket</artifactId>
+    </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
@@ -244,6 +249,10 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-imscwb-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
@@ -309,11 +318,27 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-telemetry</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-matrix</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-dynamic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-sharing</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-preferences</artifactId>
+    </dependency>
+
 
     <!-- UIMA DEPENDENCIES -->
     <dependency>
@@ -520,10 +545,6 @@
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
-      <artifactId>wicket-spring-boot-starter</artifactId>
-    </dependency>
     <!--
       <dependency>
       <groupId>net.bull.javamelody</groupId>
@@ -531,10 +552,6 @@
       <version>${javamelody.version}</version>
       </dependency>
     -->
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-native-websocket-javax</artifactId>
-    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-curation</artifactId>
@@ -550,26 +567,6 @@
     <dependency>
       <groupId>org.webjars.bower</groupId>
       <artifactId>jquery.scrollTo</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload-matrix</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload-dynamic</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-sharing</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-preferences</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -600,6 +597,9 @@
           - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
           - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
           -  .setFilenameComparator(java.util.Comparator)'
+          -
+          - Update 2021-05-18: Tried with assembly 3.3.0 and even tried adding plexus-utils 3.3.0
+          -                    as a direct dependency, but both didn't fix the problem.
          -->
         <version>3.1.1</version>
         <executions>
@@ -787,7 +787,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
-			  <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
@@ -809,6 +809,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-preferences</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
@@ -842,7 +843,6 @@
               <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
-
               <usedDependency>commons-logging:commons-logging</usedDependency>
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
@@ -857,8 +857,6 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
-              <!-- Spring Web MVC data conversion -->
-              <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
               <!-- Tutorial Js dependencies -->
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>

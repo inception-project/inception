@@ -56,8 +56,9 @@ public interface UserDao
      * 
      * @param aUser
      *            the user to create.
+     * @return the user.
      */
-    void create(User aUser);
+    User create(User aUser);
 
     /**
      * Update existing {@link User}

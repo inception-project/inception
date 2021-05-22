@@ -21,10 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FI
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.oneClickTransition;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -37,7 +34,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,6 +62,7 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -73,7 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -106,6 +106,11 @@ public class MatrixWorkloadManagementPage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -2102136855109258306L;
+
+    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
+
+    public static final String CSS_CLASS_STATE_TOGGLE = "state-toggle";
+    public static final String CSS_CLASS_SELECTED = "s";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
@@ -194,7 +199,7 @@ public class MatrixWorkloadManagementPage
         List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
                 ANNOTATOR);
         for (User annotator : annotators) {
-            columns.add(new AnnotatorColumn(annotator.getUsername(), selectedUsers));
+            columns.add(new AnnotatorColumn(annotator, selectedUsers));
         }
 
         DataTable<DocumentMatrixRow, DocumentMatrixSortKey> table = new DefaultDataTable<>(
@@ -252,21 +257,20 @@ public class MatrixWorkloadManagementPage
     }
 
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            String aUser)
+            User aUser)
     {
         IModel<String> documentNameModel = Model.of(aDocument.getName());
         resetDocumentDialog
                 .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
         resetDocumentDialog
                 .setChallengeModel(new StringResourceModel("ResetDocumentDialog.text", this)
-                        .setParameters(documentNameModel, aUser));
+                        .setParameters(documentNameModel, aUser.getUiName()));
         resetDocumentDialog.setResponseModel(documentNameModel);
         resetDocumentDialog.setConfirmAction(_target -> {
-            User user = userRepository.get(aUser);
-            documentService.resetAnnotationCas(aDocument, user);
+            documentService.resetAnnotationCas(aDocument, aUser);
 
             success(format("The annotations of document [%s] for user [%s] have been set reset.",
-                    aDocument.getName(), aUser));
+                    aDocument.getName(), aUser.getUiName()));
             _target.addChildren(getPage(), IFeedback.class);
 
             reloadMatrixData();
@@ -464,33 +468,16 @@ public class MatrixWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
     {
-        User user = userRepository.get(aEvent.getUsername());
         AnnotationDocument annotationDocument = documentService
-                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), user);
+                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
 
-        AnnotationDocumentStateTransition transition;
-        switch (annotationDocument.getState()) {
-        case NEW:
-            transition = NEW_TO_IGNORE;
-            break;
-        case IGNORE:
-            transition = IGNORE_TO_NEW;
-            break;
-        case IN_PROGRESS:
-            transition = ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-            break;
-        case FINISHED:
-            transition = ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-            break;
-        default:
-            return;
-        }
+        AnnotationDocumentState targetState = oneClickTransition(annotationDocument);
 
-        documentService.transitionAnnotationDocumentState(annotationDocument, transition);
-
+        documentService.setAnnotationDocumentState(annotationDocument, targetState);
         success(format("The state of document [%s] for user [%s] has been set to [%s]",
-                aEvent.getSourceDocument().getName(), aEvent.getUsername(),
+                aEvent.getSourceDocument().getName(), aEvent.getUser().getUiName(),
                 annotationDocument.getState()));
+
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
@@ -527,7 +514,7 @@ public class MatrixWorkloadManagementPage
     public void onAnnotatorColumnCellOpenContextMenuEvent(
             AnnotatorColumnCellOpenContextMenuEvent aEvent)
     {
-        if (aEvent.getState() == NEW || aEvent.getState() == IGNORE) {
+        if (aEvent.getState() == NEW) {
             info("Documents on which work has not yet been started cannot be reset.");
             aEvent.getTarget().addChildren(getPage(), IFeedback.class);
             return;
@@ -539,9 +526,9 @@ public class MatrixWorkloadManagementPage
         // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
         // the information we need in the menu item here
         SourceDocument document = aEvent.getSourceDocument();
-        String username = aEvent.getUsername();
+        User user = aEvent.getUser();
         items.add(new LambdaMenuItem("Reset",
-                _target -> actionResetAnnotationDocument(_target, document, username)));
+                _target -> actionResetAnnotationDocument(_target, document, user)));
 
         contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
     }

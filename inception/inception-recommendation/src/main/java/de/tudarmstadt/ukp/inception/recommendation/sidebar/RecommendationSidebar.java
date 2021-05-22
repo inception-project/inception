@@ -132,8 +132,8 @@ public class RecommendationSidebar
 
         add(form);
 
-        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
-                .add(visibleWhen(() -> !recommenders.isEmpty())));
+        // add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
+        // .add(visibleWhen(() -> !recommenders.isEmpty())));
 
         recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));

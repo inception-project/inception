@@ -28,14 +28,12 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -45,11 +43,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-@DataJpaTest
-@ExtendWith(SpringExtension.class)
+@DataJpaTest(showSql = false, properties = { //
+        "spring.main.banner-mode=off" })
+@EnableAutoConfiguration
+@EntityScan({ //
+        "de.tudarmstadt.ukp.inception.curation", //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 public class CurationServiceTest
 {
-
     private CurationService sut;
 
     @Autowired
@@ -63,7 +65,8 @@ public class CurationServiceTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new CurationServiceImpl(testEntityManager.getEntityManager());
+        sut = new CurationServiceImpl(testEntityManager.getEntityManager(), null, null, null, null,
+                null);
 
         // create users
         User current = new User("current", Role.ROLE_USER);
@@ -100,12 +103,10 @@ public class CurationServiceTest
     @Test
     public void listUsersReadyForCuration_ShouldReturnFinishedUsers()
     {
-        // create finished annotationdocuments
-        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", testProject, "beate",
-                testDocument);
+        // create finished annotation documents
+        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", testProject, "kevin",
-                testDocument);
+        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
@@ -119,12 +120,10 @@ public class CurationServiceTest
     @Test
     public void listFinishedUsers_ShouldReturnFinishedUsers()
     {
-        // create finished annotationdocuments
-        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", testProject, "beate",
-                testDocument);
+        // create finished annotation documents
+        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", testProject, "kevin",
-                testDocument);
+        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
         annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
@@ -144,13 +143,8 @@ public class CurationServiceTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.curation",
-            "de.tudarmstadt.ukp.clarin.webanno.model",
-            "de.tudarmstadt.ukp.clarin.webanno.security.model" })
     public static class SpringConfig
     {
         // No content
     }
-
 }

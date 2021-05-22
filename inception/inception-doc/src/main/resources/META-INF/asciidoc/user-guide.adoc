@@ -96,7 +96,11 @@ include::{include-dir}curation.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}monitoring.adoc[leveloffset=+1]
+include::{include-dir}workload.adoc[leveloffset=+1]
+
+include::{include-dir}workload_matrix.adoc[leveloffset=+2]
+
+include::{include-dir}workload_dynamic.adoc[leveloffset=+2]
 
 <<<
 
@@ -189,15 +193,12 @@ include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}workload.adoc[leveloffset=+1]
-
-<<<
-
-include::{include-dir}faq.adoc[]
-
-<<<
-
 = Appendices
+
+[appendix]
+include::{include-dir}faq.adoc[leveloffset=+1]
+
+<<<
 
 [appendix]
 include::{include-dir}formats.adoc[leveloffset=+1]
@@ -243,8 +244,6 @@ include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]
 include::{include-dir}formats-webannotsv2.adoc[leveloffset=+2]
 
 include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
-
-include::{include-dir}faq.adoc[leveloffset=+1]
 
 <<<
 

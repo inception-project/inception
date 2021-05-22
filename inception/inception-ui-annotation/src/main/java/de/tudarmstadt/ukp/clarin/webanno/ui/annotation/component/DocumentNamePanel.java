@@ -55,7 +55,7 @@ public class DocumentNamePanel
         AnnotatorState state = getModelObject();
 
         if (state.getUser() != null) {
-            sb.append(state.getUser().getUsername());
+            sb.append(state.getUser().getUiName());
             sb.append(": ");
         }
 
