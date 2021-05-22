@@ -1086,6 +1086,7 @@ var Annotator = class {
     this.viewPortSize = aViewPortSize;
     onclick = function(aEvent) {
       let elem = aEvent.target;
+      console.log(elem);
       if (elem.tagName === "text") {
         console.log(elem);
         that.sendSelectAnnotationMessageToServer(new Annotation("test", "TTTT"));

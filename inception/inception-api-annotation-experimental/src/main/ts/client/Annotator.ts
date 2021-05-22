@@ -45,6 +45,9 @@ class Annotator {
         //Click events triggering either select annotation or create annotation
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
+
+            console.log(elem)
+
             if (elem.tagName === 'text') {
                 console.log(elem);
                 that.sendSelectAnnotationMessageToServer(new Annotation("test", "TTTT"));
@@ -70,6 +73,9 @@ class Annotator {
             if (elem.className === 'fas fa-fast-backward') {
                 that.sendNewViewportMessageToServer(0, that.viewPortSize);
             }
+
+
+
         }
 
         ondblclick = function (aEvent) {

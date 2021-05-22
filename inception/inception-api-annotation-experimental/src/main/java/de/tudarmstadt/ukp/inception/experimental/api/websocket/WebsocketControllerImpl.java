@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.message.NewDocumentMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
 @Controller
-@ConditionalOnProperty(prefix = "ui.editor.experimental", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "ui.experimental", name = "enabled", havingValue = "true")
 public class WebsocketControllerImpl
     implements WebsocketController
 {
