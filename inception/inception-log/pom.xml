@@ -53,6 +53,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-security</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>org.springframework</groupId>
+    	<artifactId>spring-websocket</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.springframework</groupId>

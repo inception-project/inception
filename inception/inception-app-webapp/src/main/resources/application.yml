@@ -105,9 +105,6 @@ wicket:
   web:
     servlet:
       dispatcher-types: request, error, async, forward
-  external:
-    # Enables WebSocket support - dependency required 
-    websocket: true
   verifier:
     dependencies:
       throw-exception-on-dependency-version-mismatch: false

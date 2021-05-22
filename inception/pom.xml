@@ -681,6 +681,11 @@
         <artifactId>inception-versioning</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-websocket</artifactId>
+        <version>0.21.0-SNAPSHOT</version>
+      </dependency>
 
       <!-- Testing -->
 
@@ -1748,6 +1753,7 @@
     <module>inception-docker</module>
     <!-- Versioning -->
     <module>inception-versioning</module>
+    <module>inception-websocket</module>
   </modules>
 
   <build>

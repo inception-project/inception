@@ -195,6 +195,11 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-versioning</artifactId>
     </dependency>
+    <!-- INCEPTION - SPRING WEBSOCKET -->
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-websocket</artifactId>
+    </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
@@ -540,10 +545,6 @@
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
-      <artifactId>wicket-spring-boot-starter</artifactId>
-    </dependency>
     <!--
       <dependency>
       <groupId>net.bull.javamelody</groupId>
@@ -551,10 +552,6 @@
       <version>${javamelody.version}</version>
       </dependency>
     -->
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-native-websocket-javax</artifactId>
-    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-curation</artifactId>
@@ -812,6 +809,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-preferences</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
@@ -859,8 +857,6 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
-              <!-- Spring Web MVC data conversion -->
-              <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
               <!-- Tutorial Js dependencies -->
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>
