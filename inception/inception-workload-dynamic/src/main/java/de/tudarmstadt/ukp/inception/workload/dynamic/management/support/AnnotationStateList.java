@@ -70,7 +70,8 @@ public class AnnotationStateList
                         .orElse(NEW.symbol());
                 Label stateLabel = new Label("stateSymbol");
                 Duration idleTime = between(row.getTimestamp().toInstant(), now());
-                if (idleTime.compareTo(aAbandonationTimeout) > 0) {
+                if (!aAbandonationTimeout.isZero() && !aAbandonationTimeout.isNegative()
+                        && idleTime.compareTo(aAbandonationTimeout) > 0) {
                     labelModel = labelModel
                             .map(_label -> "<i class=\"fas fa-user-clock\"></i> " + _label);
                     aItem.add(new AttributeAppender("class", "badge-warning", " "));
