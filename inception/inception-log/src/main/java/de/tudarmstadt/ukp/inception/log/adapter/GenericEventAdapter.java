@@ -25,6 +25,11 @@ import org.springframework.security.authentication.event.AbstractAuthenticationE
 import org.springframework.security.core.session.SessionCreationEvent;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.web.context.support.ServletRequestHandledEvent;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
+import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 public class GenericEventAdapter
     implements EventLoggingAdapter<ApplicationEvent>
@@ -41,6 +46,12 @@ public class GenericEventAdapter
                         || aEvent instanceof SessionDestroyedEvent //
                         || aEvent instanceof AbstractAuthorizationEvent //
                         || aEvent instanceof AbstractAuthenticationEvent //
-                        || aEvent instanceof WebServerInitializedEvent);
+                        || aEvent instanceof WebServerInitializedEvent  //
+                        // Websocket events 
+                        || aEvent instanceof SessionConnectedEvent //
+                        || aEvent instanceof SessionConnectEvent //
+                        || aEvent instanceof SessionDisconnectEvent  //
+                        || aEvent instanceof SessionSubscribeEvent //
+                        || aEvent instanceof SessionUnsubscribeEvent );
     }
 }

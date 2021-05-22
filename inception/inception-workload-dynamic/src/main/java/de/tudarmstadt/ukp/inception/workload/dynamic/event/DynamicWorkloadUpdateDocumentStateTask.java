@@ -74,6 +74,7 @@ public class DynamicWorkloadUpdateDocumentStateTask
         // DB if there is a high event frequency
         if (!DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project).getType())) {
+            return;
         }
 
         // Get the latest state

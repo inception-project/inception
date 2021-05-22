@@ -391,7 +391,7 @@ public class LayerDetailForm
         // persisted in the database.
         if (isNewLayer) {
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            adapter.initialize(annotationService);
+            adapter.initializeLayerConfiguration(annotationService);
         }
 
         success("Settings for layer [" + layer.getUiName() + "] saved.");

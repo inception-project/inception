@@ -73,6 +73,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
         // DB if there is a high event frequency
         if (!MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project).getType())) {
+            return;
         }
 
         // Get the latest state

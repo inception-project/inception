@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.sharing.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguratio
  * {@link InviteServiceAutoConfiguration#inviteProjectSettingsPanelFactory()}.
  * </p>
  */
+@Order(InviteProjectSettingsPanelFactory.ORDER)
 public class InviteProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {

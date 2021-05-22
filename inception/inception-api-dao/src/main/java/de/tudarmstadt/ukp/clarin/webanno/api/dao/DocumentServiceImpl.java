@@ -65,6 +65,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -516,6 +517,12 @@ public class DocumentServiceImpl
         Validate.notNull(aStates, "States must be specified");
         Validate.notEmpty(aStates, "States must not be an empty list");
 
+        if (ArrayUtils.contains(aStates, AnnotationDocumentState.NEW)) {
+            throw new IllegalArgumentException(
+                    "Querying for annotation documents in state NEW because if the state is NEW, "
+                            + "the annotation document entity might not even have been created yet.");
+        }
+
         String query = String.join("\n", //
                 "FROM AnnotationDocument", //
                 "WHERE project =:project", //
@@ -525,6 +532,34 @@ public class DocumentServiceImpl
         return entityManager.createQuery(query, AnnotationDocument.class) //
                 .setParameter("states", asList(aStates)) //
                 .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> listAnnotationDocumentsWithStateForUser(Project aProject,
+            User aUser, AnnotationDocumentState aState)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aUser, "User must be specified");
+        Validate.notNull(aState, "State must be specified");
+
+        if (aState == AnnotationDocumentState.NEW) {
+            throw new IllegalArgumentException(
+                    "Querying for annotation documents in state NEW because if the state is NEW, "
+                            + "the annotation document entity might not even have been created yet.");
+        }
+
+        String query = String.join("\n", //
+                "FROM AnnotationDocument", //
+                "WHERE user = :user", //
+                "AND project = :project", //
+                "AND state = :state", "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, AnnotationDocument.class) //
+                .setParameter("project", aProject) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("state", aState) //
                 .getResultList();
     }
 
@@ -985,8 +1020,7 @@ public class DocumentServiceImpl
         // documents which are IGNOREed for given users.
         List<AnnotationDocument> annotationDocuments = entityManager
                 .createQuery(
-                        "FROM AnnotationDocument "
-                                + "WHERE user = (:username) AND project = (:project)",
+                        "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)",
                         AnnotationDocument.class)
                 .setParameter("username", aUser.getUsername()).setParameter("project", aProject)
                 .getResultList();

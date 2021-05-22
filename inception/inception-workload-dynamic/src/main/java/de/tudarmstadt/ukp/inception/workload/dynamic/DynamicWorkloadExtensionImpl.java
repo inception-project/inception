@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
@@ -69,7 +70,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
  * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension}
  * </p>
  */
-public class DynamicWorkloadExtension_Impl
+public class DynamicWorkloadExtensionImpl
     implements DynamicWorkloadExtension
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -81,7 +82,7 @@ public class DynamicWorkloadExtension_Impl
     private final UserDao userRepository;
     private final SessionRegistry sessionRegistry;
 
-    public DynamicWorkloadExtension_Impl(WorkloadManagementService aWorkloadManagementService,
+    public DynamicWorkloadExtensionImpl(WorkloadManagementService aWorkloadManagementService,
             WorkflowExtensionPoint aWorkflowExtensionPoint, DocumentService aDocumentService,
             ProjectService aProjectService, UserDao aUserRepository,
             SessionRegistry aSessionRegistry)
@@ -144,11 +145,15 @@ public class DynamicWorkloadExtension_Impl
     {
         // First, check if there are other documents which have been in the state INPROGRESS
         // Load the first one found
-        List<AnnotationDocument> inProgressDocuments = workloadManagementService
-                .getAnnotationDocumentListForUserWithState(aProject, aUser, IN_PROGRESS);
+        List<AnnotationDocument> inProgressDocuments = documentService
+                .listAnnotationDocumentsWithStateForUser(aProject, aUser, IN_PROGRESS);
         if (!inProgressDocuments.isEmpty()) {
             return Optional.of(inProgressDocuments.get(0).getDocument());
         }
+
+        // Make sure that any documents that could be eligible for annotation due to having been
+        // abandoned by another user are available
+        freshenStatus(aProject);
 
         WorkloadManager currentWorkload = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(aProject);
@@ -161,8 +166,11 @@ public class DynamicWorkloadExtension_Impl
                 .orElseGet(DefaultWorkflowExtension::new);
 
         // Get all documents for which the state is NEW, or which have not been created yet.
-        List<SourceDocument> sourceDocuments = workloadManagementService
-                .listAnnotationDocumentsForUser(aProject, aUser);
+        List<SourceDocument> sourceDocuments = documentService
+                .listAnnotatableDocuments(aProject, aUser).entrySet().stream()
+                .filter(entry -> entry.getValue() == null
+                        || entry.getValue().getState() == AnnotationDocumentState.NEW)
+                .map(entry -> entry.getKey()).collect(Collectors.toList());
 
         // Rearrange list of documents according to current workflow
         sourceDocuments = currentWorkflowExtension.rankDocuments(sourceDocuments);
@@ -191,7 +199,8 @@ public class DynamicWorkloadExtension_Impl
         DynamicWorkloadTraits traits = readTraits(currentWorkload);
 
         // If the duration is not positive, then we can already stop here
-        if (!traits.getAbandonationTimeout().negated().isNegative()) {
+        if (traits.getAbandonationTimeout().isZero()
+                || traits.getAbandonationTimeout().isNegative()) {
             return projectService.getProject(aProject.getId()).getState();
         }
 
