@@ -22,9 +22,9 @@
       <a role="button" class="ml-1 mr-1" data-boundary="viewport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <i class="fas fa-scroll"></i>
       </a>
-      <div class="dropdown-menu shadow-lg p-0 m-0">
+      <div class="dropdown-menu shadow-lg p-0 m-0" style="z-index: 9999;">
         <div class="card-header small">
-        Recent logged events
+          Recent logged events
         </div>
         <div class="scrolling card-body small p-0">
         <ul class="list-group list-group-flush">

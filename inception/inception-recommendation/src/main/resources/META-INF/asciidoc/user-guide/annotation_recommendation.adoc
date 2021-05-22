@@ -18,9 +18,9 @@
 = Recommenders
 After configuring one or more recommender in the <<sect_projects_recommendation, Project Settings>>,
 they can be used during annotation to generate predictions. In the annotation view, predictions are
-shown as grey bubbles next to normal annotations in blue. Predictions can be accepted by clicking
-once on them. In order to reject, use a double-click. For an example how recommendations look in
-action, please see the screenshot below.
+shown as grey bubbles. Predictions can be accepted by clicking once on them. In order to reject,
+use a double-click. For an example how recommendations look in action, please see the screenshot
+below.
 
 image::recommendation1.png[align="center"]
 
@@ -45,3 +45,12 @@ The shown score can be changed from accuracy to other scores via the retractable
 The lines are only plotted for the enabled recommenders.
 
 image::learning_curve_acc.png[500,350,align="center"]
+
+== Accept/reject buttons
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.action-buttons-enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
+It is possible to enable explicit *Accept* and *Reject* buttons in the annotation interface. These
+appear left and right of the suggestion marker as the mouse hovers over the marker.
