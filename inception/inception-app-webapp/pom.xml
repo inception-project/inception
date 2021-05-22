@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.20.0-SNAPSHOT</version>
+    <version>0.21.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -250,6 +250,10 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-imscwb-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
+    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
@@ -335,10 +339,6 @@
       <artifactId>inception-preferences</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
-    </dependency>
 
     <!-- UIMA DEPENDENCIES -->
     <dependency>
@@ -568,10 +568,6 @@
       <groupId>org.webjars.bower</groupId>
       <artifactId>jquery.scrollTo</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-kotlin</artifactId>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -601,6 +597,9 @@
           - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
           - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
           -  .setFilenameComparator(java.util.Comparator)'
+          -
+          - Update 2021-05-18: Tried with assembly 3.3.0 and even tried adding plexus-utils 3.3.0
+          -                    as a direct dependency, but both didn't fix the problem.
          -->
         <version>3.1.1</version>
         <executions>
@@ -862,8 +861,6 @@
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>
               <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
-              <!-- Other -->
-              <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

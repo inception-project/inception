@@ -46,10 +46,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
-import mockwebserver3.Dispatcher;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.QueueDispatcher;
+import okhttp3.mockwebserver.RecordedRequest;
 
 public class LappsRecommenderIntegrationTest
 {
@@ -111,9 +111,9 @@ public class LappsRecommenderIntegrationTest
         return recommender;
     }
 
-    private Dispatcher buildDispatcher()
+    private QueueDispatcher buildDispatcher()
     {
-        return new Dispatcher()
+        return new QueueDispatcher()
         {
             @Override
             public MockResponse dispatch(RecordedRequest request)
