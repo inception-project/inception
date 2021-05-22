@@ -17,18 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
-import static ch.rasc.piwik.tracking.QueryParameter.ACTION_NAME;
-import static ch.rasc.piwik.tracking.QueryParameter.HEADER_USER_AGENT;
-import static ch.rasc.piwik.tracking.QueryParameter.USER_ID;
-import static ch.rasc.piwik.tracking.QueryParameter.VISITOR_ID;
-import static ch.rasc.piwik.tracking.QueryParameter.VISIT_CUSTOM_VARIABLE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.PROP_VERSION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getVersionProperties;
+import static java.lang.String.format;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.newSetFromMap;
+import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.io.IOException;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,12 +41,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.piwik.java.tracking.CustomVariable;
+import org.piwik.java.tracking.PiwikRequest;
+import org.piwik.java.tracking.PiwikTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -55,22 +66,16 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.session.HttpSessionCreatedEvent;
 
-import com.github.openjson.JSONArray;
-import com.github.openjson.JSONObject;
-
-import ch.rasc.piwik.tracking.PiwikConfig;
-import ch.rasc.piwik.tracking.PiwikRequest;
-import ch.rasc.piwik.tracking.PiwikTracker;
 import de.tudarmstadt.ukp.clarin.webanno.api.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryDetail;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.MatomoTelemetryServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
-import okhttp3.OkHttpClient;
 
 /**
  * <p>
@@ -90,29 +95,26 @@ public class MatomoTelemetrySupportImpl
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final static String TELEMETRY_SERVER_SCHEME = "https";
-    private final static String TELEMETRY_SERVER_HOST = "blinky.ukp.informatik.tu-darmstadt.de";
-    private final static String TELEMETRY_SERVER_PATH = "matomo/piwik.php";
-    private final static String TELEMETRY_SITE_ID = "2";
-    private final static String TELEMETRY_CONTEXT = "https://webanno.github.io/telemetry";
-
     private final InstanceIdentityService identityService;
     private final TelemetryService telemetryService;
     private final UserDao userService;
     private final String applicationName;
     private final SessionRegistry sessionRegistry;
-    private final ScheduledExecutorService scheduler;
+    private final MatomoTelemetryServiceProperties properties;
 
     // Set of all principals that were active in the interval between one PING and the next. Gets
     // cleared when the PING is sent.
     private final Set<Object> activePrincipals = newSetFromMap(new ConcurrentHashMap<>());
 
+    private ScheduledExecutorService scheduler;
+    private boolean trackerInitialized = false;
     private PiwikTracker tracker;
+    // private PiwikConfig config;
 
     @Autowired
     public MatomoTelemetrySupportImpl(TelemetryService aTelemetryService,
             InstanceIdentityService aIdentityService, UserDao aUserDao,
-            SessionRegistry aSessionRegistry,
+            SessionRegistry aSessionRegistry, MatomoTelemetryServiceProperties aMatomoProperties,
             @Value("${spring.application.name}") String aApplicationName)
     {
         telemetryService = aTelemetryService;
@@ -120,40 +122,30 @@ public class MatomoTelemetrySupportImpl
         userService = aUserDao;
         applicationName = aApplicationName;
         sessionRegistry = aSessionRegistry;
+        properties = aMatomoProperties;
+    }
 
-        PiwikConfig config = new PiwikConfig.Builder() //
-                .scheme(TELEMETRY_SERVER_SCHEME) //
-                .host(TELEMETRY_SERVER_HOST) //
-                .path(TELEMETRY_SERVER_PATH) //
-                .addIdSite(TELEMETRY_SITE_ID) //
-                .build();
+    private PiwikTracker getTracker()
+    {
+        if (trackerInitialized) {
+            return tracker;
+        }
 
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-
-        // Pinging at a 29 minute interval allows Matomo to detect continuous activity. Pings are
-        // only send if here are actually active users logged in.
-        scheduler.scheduleAtFixedRate(() -> sendPing(), 29, 29, TimeUnit.MINUTES);
-
-        // Server deployments are expected to run for a very long time. Also, they may be without
-        // any active users for a long time. So we send an alive signal every 24 hours no matter
-        // if any users are actively logged in
-        scheduler.scheduleAtFixedRate(() -> sendAlive(), 24, 24, TimeUnit.HOURS);
+        // This is even set to true of setting up the tracker fails to avoid trying to set up the
+        // tracker over and over again.
+        trackerInitialized = true;
 
         try {
-            SSLContext trustAllSslContext = SSLContext.getInstance("SSL");
-            trustAllSslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .sslSocketFactory(trustAllSslContext.getSocketFactory(),
-                            (X509TrustManager) trustAllCerts[0])
-                    .build();
-
-            tracker = new PiwikTracker(config, client);
+            String url = properties.getServerScheme() + "://" + properties.getServerHost()
+                    + prependIfMissing(properties.getServerPath(), "/");
+            tracker = new SslIgnoringPiwikTracker(url, Duration.of(30, SECONDS));
         }
         catch (Exception e) {
             log.info("Unable to set up telemetry client: {}", e.getMessage());
             tracker = null;
         }
+
+        return tracker;
     }
 
     @Override
@@ -226,7 +218,9 @@ public class MatomoTelemetrySupportImpl
     @Override
     public void destroy() throws Exception
     {
-        scheduler.shutdownNow();
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+        }
     }
 
     @Override
@@ -235,6 +229,19 @@ public class MatomoTelemetrySupportImpl
     public void onApplicationReady(ApplicationReadyEvent aEvent)
     {
         if (isEnabled()) {
+            scheduler = Executors.newSingleThreadScheduledExecutor();
+
+            // Pinging at a 29 minute interval allows Matomo to detect continuous activity. Pings
+            // are
+            // only send if here are actually active users logged in.
+            scheduler.scheduleAtFixedRate(() -> sendPing(), 29, 29, TimeUnit.MINUTES);
+
+            // Server deployments are expected to run for a very long time. Also, they may be
+            // without
+            // any active users for a long time. So we send an alive signal every 24 hours no matter
+            // if any users are actively logged in
+            scheduler.scheduleAtFixedRate(() -> sendAlive(), 24, 24, TimeUnit.HOURS);
+
             sendTelemetry(ACTION_BOOT);
         }
         else {
@@ -263,7 +270,6 @@ public class MatomoTelemetrySupportImpl
         allPrincipals.stream()
                 .flatMap(principal -> sessionRegistry.getAllSessions(principal, false).stream())
                 .forEach(sessionInfo -> activePrincipals.add(sessionInfo.getPrincipal()));
-        ;
     }
 
     private void resetActivePrincipals()
@@ -282,7 +288,7 @@ public class MatomoTelemetrySupportImpl
         }
     }
 
-    private void sendPing()
+    void sendPing()
     {
         if (!isEnabled()) {
             return;
@@ -308,7 +314,7 @@ public class MatomoTelemetrySupportImpl
         sendTelemetry(ACTION_PING);
     }
 
-    private void sendAlive()
+    void sendAlive()
     {
         if (!isEnabled()) {
             return;
@@ -319,41 +325,38 @@ public class MatomoTelemetrySupportImpl
 
     private void sendTelemetry(String aAction)
     {
-        if (tracker == null) {
+        if (getTracker() == null) {
             log.debug("Telemetry unavailable");
             return;
         }
 
-        InstanceIdentity id = identityService.getInstanceIdentity();
+        try {
+            InstanceIdentity id = identityService.getInstanceIdentity();
 
-        UUID uuid = UUID.fromString(id.getId());
+            UUID uuid = UUID.fromString(id.getId());
 
-        JSONObject payload = new JSONObject();
-        payload.put("1", new JSONArray(asList("app", applicationName)));
-        payload.put("2",
-                new JSONArray(asList("version", getVersionProperties().getProperty(PROP_VERSION))));
-        payload.put("3", new JSONArray(
-                asList("activeUsers", String.valueOf(sessionRegistry.getAllPrincipals().size()))));
-        payload.put("4", new JSONArray(
-                asList("enabledUsers", String.valueOf(userService.listEnabledUsers().size()))));
-        payload.put("5", new JSONArray(
-                asList("deploymentMode", telemetryService.getDeploymentMode().toString())));
+            PiwikRequest request = new PiwikRequest(properties.getSiteId(),
+                    new URL(properties.getContext()));
+            request.setHeaderUserAgent(System.getProperty("os.name"));
+            request.setActionName(aAction);
+            request.setVisitorId(format("%016x", uuid.getMostSignificantBits()));
+            request.setUserId(id.getId());
+            request.setVisitCustomVariable(new CustomVariable("app", applicationName), 1);
+            request.setVisitCustomVariable(
+                    new CustomVariable("version", getVersionProperties().getProperty(PROP_VERSION)),
+                    2);
+            request.setVisitCustomVariable(new CustomVariable("activeUsers",
+                    String.valueOf(sessionRegistry.getAllPrincipals().size())), 3);
+            request.setVisitCustomVariable(new CustomVariable("enabledUsers",
+                    String.valueOf(userService.listEnabledUsers().size())), 4);
+            request.setVisitCustomVariable(new CustomVariable("deploymentMode",
+                    telemetryService.getDeploymentMode().toString()), 5);
 
-        PiwikRequest request = PiwikRequest.builder().url(TELEMETRY_CONTEXT)
-                .putParameter(HEADER_USER_AGENT, System.getProperty("os.name"))
-                .putParameter(ACTION_NAME, aAction)
-                .putParameter(VISITOR_ID, Long.toHexString(uuid.getMostSignificantBits()))
-                .putParameter(USER_ID, id.getId())
-                .putParameter(VISIT_CUSTOM_VARIABLE, payload.toString()) //
-                .build();
-
-        boolean success = tracker.send(request);
-
-        if (success) {
+            getTracker().sendRequestAsync(request);
             log.debug("Telemetry sent ({})", aAction);
         }
-        else {
-            log.debug("Unable to reach telemetry server");
+        catch (IOException e) {
+            log.debug("Unable to send telemetry server", e);
         }
     }
 
@@ -469,5 +472,43 @@ public class MatomoTelemetrySupportImpl
     public void rejectAll(MatomoTelemetryTraits aTraits)
     {
         aTraits.setEnabled(false);
+    }
+
+    private class SslIgnoringPiwikTracker
+        extends PiwikTracker
+    {
+        private final Duration timeout;
+        private CloseableHttpAsyncClient asyncClient = null;
+
+        public SslIgnoringPiwikTracker(String aHostUrl, Duration aTimeout)
+        {
+            super(aHostUrl, (int) aTimeout.toMillis());
+            timeout = aTimeout;
+        }
+
+        @Override
+        protected CloseableHttpAsyncClient getHttpAsyncClient()
+        {
+            if (asyncClient != null) {
+                return asyncClient;
+            }
+
+            try {
+                HttpAsyncClientBuilder builder = HttpAsyncClientBuilder.create();
+                builder.setDefaultRequestConfig(RequestConfig.custom() //
+                        .setConnectTimeout((int) timeout.toMillis()) //
+                        .setConnectionRequestTimeout((int) timeout.toMillis()) //
+                        .setSocketTimeout((int) timeout.toMillis()).build());
+                builder.setSSLContext(new SSLContextBuilder()
+                        .loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build());
+                builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+                asyncClient = builder.build();
+            }
+            catch (KeyStoreException | KeyManagementException | NoSuchAlgorithmException e) {
+                throw new IllegalStateException(e);
+            }
+
+            return asyncClient;
+        }
     }
 }
