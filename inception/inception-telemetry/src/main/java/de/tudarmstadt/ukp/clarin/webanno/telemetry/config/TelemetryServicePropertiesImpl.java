@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * This class is exposed as a Spring Component via {@link TelemetryServiceAutoConfiguration}.
+ */
 @ConfigurationProperties("telemetry")
 public class TelemetryServicePropertiesImpl
     implements TelemetryServiceProperties

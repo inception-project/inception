@@ -41,7 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.ui.TelemetryFooterItem;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.ui.TelemetrySettingsInterceptor;
 
 @Configuration
-@EnableConfigurationProperties(TelemetryServicePropertiesImpl.class)
+@EnableConfigurationProperties({ TelemetryServicePropertiesImpl.class,
+        MatomoTelemetryServicePropertiesImpl.class })
 @ConditionalOnProperty(prefix = "telemetry", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class TelemetryServiceAutoConfiguration
 {
@@ -65,11 +66,11 @@ public class TelemetryServiceAutoConfiguration
     @Bean
     public MatomoTelemetrySupport matomoTelemetrySupport(TelemetryService aTelemetryService,
             InstanceIdentityService aIdentityService, UserDao aUserDao,
-            SessionRegistry aSessionRegistry,
+            SessionRegistry aSessionRegistry, MatomoTelemetryServiceProperties aMatomoProperties,
             @Value("${spring.application.name}") String aApplicationName)
     {
         return new MatomoTelemetrySupportImpl(aTelemetryService, aIdentityService, aUserDao,
-                aSessionRegistry, aApplicationName);
+                aSessionRegistry, aMatomoProperties, aApplicationName);
     }
 
     @Bean

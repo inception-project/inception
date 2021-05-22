@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.20.0-SNAPSHOT</version>
+    <version>0.21.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-imls-lapps</artifactId>
@@ -161,21 +161,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-testing</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okio</groupId>
-      <artifactId>okio</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
