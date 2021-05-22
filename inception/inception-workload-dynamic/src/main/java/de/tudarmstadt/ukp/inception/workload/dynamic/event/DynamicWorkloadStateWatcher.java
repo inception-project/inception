@@ -22,9 +22,14 @@ import org.springframework.context.event.EventListener;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 
 /**
- * Watches the document state in of projects using matrix workload.
+ * Watches the state of the annotations and documents in dynamic workload projects.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadStateWatcher}
+ * </p>
  */
 public class DynamicWorkloadStateWatcher
 {
