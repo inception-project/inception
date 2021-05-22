@@ -245,6 +245,10 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-imscwb-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
+    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
@@ -330,10 +334,6 @@
       <artifactId>inception-preferences</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
-    </dependency>
 
     <!-- UIMA DEPENDENCIES -->
     <dependency>
@@ -570,10 +570,6 @@
     <dependency>
       <groupId>org.webjars.bower</groupId>
       <artifactId>jquery.scrollTo</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-kotlin</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -869,8 +865,6 @@
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>
               <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
-              <!-- Other -->
-              <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
