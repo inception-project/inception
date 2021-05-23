@@ -372,12 +372,17 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-workload-dynamic</artifactId>
+        <version>0.21.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-matrix</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-workload-dynamic</artifactId>
+        <artifactId>inception-workload-ui</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1738,8 +1743,9 @@
     <module>inception-doc</module>
     <!-- Workload -->
     <module>inception-workload</module>
-    <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
+    <module>inception-workload-matrix</module>
+    <module>inception-workload-ui</module>
     <!-- Plug-in support -->
     <module>inception-plugin-api</module>
     <module>inception-plugin-manager</module>
