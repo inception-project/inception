@@ -311,7 +311,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload</artifactId>
+      <artifactId>inception-workload-ui</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -806,7 +806,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency -->

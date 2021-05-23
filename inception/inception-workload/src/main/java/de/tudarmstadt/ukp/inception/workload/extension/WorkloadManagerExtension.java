@@ -47,4 +47,16 @@ public interface WorkloadManagerExtension<T>
      * that the project status is reliable.
      */
     ProjectState freshenStatus(Project aProject);
+
+    /**
+     * Indicates whether the current user can access documents in any order or if the workload
+     * manager assigns the order.
+     * 
+     * <b>NOTE:</b> This is currently used to control the visibiltiy of the activities dashlet on on
+     * the project dashboard. A better approach would be to modularize the dashboard and then have
+     * some factory in the workload modules inject the dashlet instead.
+     * 
+     * @param aProject
+     */
+    boolean isDocumentRandomAccessAllowed(Project aProject);
 }
