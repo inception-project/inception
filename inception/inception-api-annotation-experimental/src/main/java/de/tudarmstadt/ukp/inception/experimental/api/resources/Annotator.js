@@ -1086,9 +1086,7 @@ var Annotator = class {
     this.viewPortSize = aViewPortSize;
     onclick = function(aEvent) {
       let elem = aEvent.target;
-      console.log(elem);
       if (elem.tagName === "text") {
-        console.log(elem);
         that.sendSelectAnnotationMessageToServer(new Annotation("test", "TTTT"));
       }
       if (elem.className === "far fa-caret-square-right") {
@@ -1101,7 +1099,7 @@ var Annotator = class {
         that.sendNewViewportMessageToServer(that.viewPortBegin - 1 - that.viewPortSize, that.viewPortBegin - 1);
       }
       if (elem.className === "fas fa-fast-forward") {
-        that.sendNewViewportMessageToServer(100, 1111);
+        that.sendNewViewportMessageToServer(0 - that.viewPortSize, 0);
       }
       if (elem.className === "fas fa-fast-backward") {
         that.sendNewViewportMessageToServer(0, that.viewPortSize);
@@ -1113,8 +1111,6 @@ var Annotator = class {
         that.sendCreateAnnotationMessageToServer(new Annotation("test", "TTTT"));
       }
     };
-    this.document = "Doc4";
-    this.project = "Annotation Study";
     this.connect();
   }
   connect() {
@@ -1122,7 +1118,7 @@ var Annotator = class {
       console.log("You are already connected");
       return;
     }
-    let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/inception_app_webapp_war_exploded/ws";
+    let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/inception_app_webapp_war_exploded/ws-endpoint";
     this.stompClient = Stomp.over(function() {
       return new WebSocket(url);
     });
