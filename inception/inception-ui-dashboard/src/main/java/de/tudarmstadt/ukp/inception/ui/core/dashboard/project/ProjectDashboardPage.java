@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
@@ -26,7 +27,6 @@ import java.util.stream.Collectors;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ActivitiesDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * Project dashboard page
@@ -54,6 +55,7 @@ public class ProjectDashboardPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
+    private @SpringBean WorkloadManagementService workloadService;
 
     public ProjectDashboardPage(final PageParameters aPageParameters)
     {
@@ -69,8 +71,9 @@ public class ProjectDashboardPage
         }
 
         add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
-        add(new CurrentProjectDashlet("currentProjectDashlet", Model.of(getProject())));
-        add(new ActivitiesDashlet("activitiesDashlet", Model.of(getProject())));
+        add(new CurrentProjectDashlet("currentProjectDashlet", getProjectModel()));
+        add(new ActivitiesDashlet("activitiesDashlet", getProjectModel())
+                .add(visibleWhen(this::isActivitiesDashletVisible)));
     }
 
     @Override
@@ -90,5 +93,11 @@ public class ProjectDashboardPage
     {
         return menuItemService.getMenuItems().stream()
                 .filter(item -> item.getPath().matches("/[^/]+")).collect(Collectors.toList());
+    }
+
+    private boolean isActivitiesDashletVisible()
+    {
+        return workloadService.getWorkloadManagerExtension(getProject())
+                .isDocumentRandomAccessAllowed(getProject());
     }
 }
