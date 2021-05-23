@@ -109,6 +109,8 @@ public class WebsocketControllerImpl
         CAS cas = getCasForDocument(data[0], data[1], "Doc4");
 
         NewDocumentMessage newDocumentMessage = new NewDocumentMessage();
+
+        // TODO receive correct new random document as in dynamic workflow
         newDocumentMessage.setName("Doc4");
         String[] sentences = cas.getDocumentText().split("/.");
         StringBuilder sb = new StringBuilder();
@@ -127,19 +129,28 @@ public class WebsocketControllerImpl
         System.out.println("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
         String[] data = purifyData(aMessage.getPayload());
         CAS cas = getCasForDocument(data[0], data[1], data[2]);
-        ViewportMessage viewportMessage = new ViewportMessage(Integer.parseInt(data[3]), Integer.parseInt(data[4]));
+        ViewportMessage viewportMessage = new ViewportMessage(Integer.parseInt(data[3]),
+                Integer.parseInt(data[4]));
         String[] sentences = cas.getDocumentText().split("/.");
         StringBuilder sb = new StringBuilder();
-        if (sentences.length >= Integer.parseInt(data[4])) {
-            for (int i = Integer.parseInt(data[3]); i < Integer.parseInt(data[4]); i++) {
+        if (Integer.parseInt(data[3]) < 0) {
+            for (int i = sentences.length + Integer.parseInt(data[3]); i < sentences.length
+                    - 1; i++) {
                 sb.append(sentences[i]);
             }
-            viewportMessage.setText(sb.toString());
-            String msg = JSONUtil.toJsonString(viewportMessage);
-            simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + data[0], msg);
         } else {
-            System.out.println("Requested sentences do not exist in the document");
+            if (sentences.length >= Integer.parseInt(data[4])) {
+                for (int i = Integer.parseInt(data[3]); i < Integer.parseInt(data[4]); i++) {
+                    sb.append(sentences[i]);
+                }
+            } else {
+                System.out.println("Requested sentences do not exist in the document");
+            }
         }
+        viewportMessage.setText(sb.toString());
+        String msg = JSONUtil.toJsonString(viewportMessage);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + data[0],
+            msg);
     }
 
     @Override
@@ -152,8 +163,7 @@ public class WebsocketControllerImpl
         AnnotationMessage annotationMessage = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_ANNOTATION + data[0],
-                msg);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_ANNOTATION + data[0], msg);
     }
 
     @Override
@@ -168,8 +178,7 @@ public class WebsocketControllerImpl
         AnnotationMessage annotationMessage = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
-        simpMessagingTemplate.convertAndSend(
-            SERVER_SEND_CLIENT_UPDATE_ANNOTATION, msg);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_ANNOTATION, msg);
     }
 
     @Override
@@ -184,9 +193,7 @@ public class WebsocketControllerImpl
         AnnotationMessage annotationMessage = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
-        simpMessagingTemplate.convertAndSend(
-            SERVER_SEND_CLIENT_UPDATE_ANNOTATION,
-                msg);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_ANNOTATION, msg);
 
     }
 
@@ -197,7 +204,8 @@ public class WebsocketControllerImpl
     // --------------- SUPPORT METHODS ---------------- //
 
     @Override
-    public String[] purifyData(String aPayload) {
+    public String[] purifyData(String aPayload)
+    {
         String[] spliced = aPayload.replace("\"", "").replace("{", "").replace("}", "").split(",");
         for (int i = 0; i < spliced.length; i++) {
             spliced[i] = spliced[i].split(":")[1];
