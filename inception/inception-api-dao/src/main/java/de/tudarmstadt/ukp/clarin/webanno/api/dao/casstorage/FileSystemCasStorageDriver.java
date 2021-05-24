@@ -74,7 +74,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public CAS readUnmanagedCas(SourceDocument aDocument, String aUser) throws IOException
+    public CAS readCas(SourceDocument aDocument, String aUser) throws IOException
     {
         File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
         File oldCasFile = new File(casFile.getPath() + ".old");
@@ -123,7 +123,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
+    public void writeCas(SourceDocument aDocument, String aUserName, CAS aCas)
         throws IOException
     {
         long t0 = currentTimeMillis();

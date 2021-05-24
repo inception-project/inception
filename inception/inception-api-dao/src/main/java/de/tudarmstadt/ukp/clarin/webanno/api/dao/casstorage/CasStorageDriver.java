@@ -27,16 +27,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageDriver
 {
-    CAS readUnmanagedCas(SourceDocument aDocument, String aUser) throws IOException;
+    CAS readCas(SourceDocument aDocument, String aUser) throws IOException;
 
-    void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas) throws IOException;
-
-    @Deprecated
-    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
+    void writeCas(SourceDocument aDocument, String aUserName, CAS aCas) throws IOException;
 
     boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException;
 
     boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
 
     Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
+
+    @Deprecated
+    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
 }

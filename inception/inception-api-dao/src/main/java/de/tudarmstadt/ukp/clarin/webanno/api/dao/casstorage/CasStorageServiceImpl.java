@@ -413,7 +413,7 @@ public class CasStorageServiceImpl
                 // check for its existence
                 try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
                     casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
-                            () -> driver.readUnmanagedCas(aDocument, aUsername));
+                            () -> driver.readCas(aDocument, aUsername));
                 }
             }
             else {
@@ -534,7 +534,7 @@ public class CasStorageServiceImpl
                     aDocument.getName(), aDocument.getId(), aUsername,
                     aDocument.getProject().getName(), aDocument.getProject().getId());
 
-            cas = driver.readUnmanagedCas(aDocument, aUsername);
+            cas = driver.readCas(aDocument, aUsername);
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode,
                     ISOLATED_SESSION);
             source = "disk";
@@ -716,7 +716,7 @@ public class CasStorageServiceImpl
         Validate.notBlank(aUser, "User must be specified");
 
         forceActionOnCas(aDocument, aUser, //
-                (doc, user) -> driver.readUnmanagedCas(doc, user),
+                (doc, user) -> driver.readCas(doc, user),
                 (cas) -> schemaService.upgradeCas(cas, aDocument, aUser), //
                 true);
     }
@@ -967,6 +967,6 @@ public class CasStorageServiceImpl
     {
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
-        driver.realWriteCas(aDocument, aUserName, aCas);
+        driver.writeCas(aDocument, aUserName, aCas);
     }
 }
