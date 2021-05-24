@@ -39,9 +39,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.IModelComparator;
 import org.apache.wicket.model.PropertyModel;
 
-import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.Radio;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
@@ -49,6 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsP
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
+import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class RadioGroupStringFeatureEditor
@@ -159,11 +159,11 @@ public class RadioGroupStringFeatureEditor
                 description.add(visibleWhen(() -> isNotBlank(descriptionText)));
 
                 if (isNotBlank(descriptionText)) {
-                    TooltipBehavior tip = new TooltipBehavior();
-                    tip.setOption("autoHide", false);
-                    tip.setOption("showOn", Options.asString("click"));
-                    tip.setOption("content", Options.asString(descriptionText));
-                    description.add(tip);
+                    DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
+                            item.getModel().map(ReorderableTag::getName).getObject(),
+                            descriptionText);
+                    tooltip.setMode(Mode.MARKDOWN);
+                    description.add(tooltip);
                 }
 
                 add(description);

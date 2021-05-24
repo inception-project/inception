@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -105,6 +107,12 @@ public class DynamicWorkloadExtensionImpl
     public String getLabel()
     {
         return "Dynamic assignment";
+    }
+
+    @Override
+    public boolean isDocumentRandomAccessAllowed(Project aProject)
+    {
+        return projectService.hasRole(userRepository.getCurrentUser(), aProject, CURATOR, MANAGER);
     }
 
     @Override
