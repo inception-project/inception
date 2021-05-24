@@ -1080,14 +1080,21 @@ var Annotation = class {
 var Annotator = class {
   constructor(aViewPortSize) {
     this.connected = false;
-    this.editAnnotation = function(aEvent) {
+    this.editAnnotation = function() {
+      this.sendUpateAnnotationMessageToServer();
     };
     const that = this;
     this.viewPortSize = aViewPortSize;
     onclick = function(aEvent) {
       let elem = aEvent.target;
-      if (elem.tagName === "text") {
-        that.sendSelectAnnotationMessageToServer(new Annotation("test", "TTTT"));
+      if (elem.tagName === "rect") {
+        console.log(elem);
+        console.log(elem.attributes);
+        console.log("--------");
+        console.log(elem.parentElement);
+        console.log(elem.parentElement.id);
+        console.log(elem.parentElement.attributes);
+        that.sendSelectAnnotationMessageToServer(new Annotation(elem.attributes[9].nodeValue, "TTTT"));
       }
       if (elem.className === "far fa-caret-square-right") {
         that.sendNewDocumentMessageToServer();
@@ -1131,6 +1138,8 @@ var Annotator = class {
         that.username = header[data];
         break;
       }
+      that.projectID = document.location.href.split("/")[5];
+      that.documentID = document.location.href.split("=")[1].split("&")[0];
       that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function(msg) {
         that.receiveNewDocumentMessageByServer(JSON.parse(msg.body));
       }, {id: "new_document"});
@@ -1154,13 +1163,18 @@ var Annotator = class {
       this.stompClient.deactivate();
     }
   }
+  drawAnnotation(annotations) {
+    for (let annotation in annotations) {
+      console.log(annotation);
+    }
+  }
   unsubscribe(aChannel) {
     this.stompClient.unsubscribe(aChannel);
   }
   sendNewDocumentMessageToServer() {
     let json = {
       username: this.username,
-      project: this.project,
+      project: this.projectID,
       viewPortSize: this.viewPortSize
     };
     this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
@@ -1168,8 +1182,8 @@ var Annotator = class {
   sendNewViewportMessageToServer(aBegin, aEnd) {
     let json = {
       username: this.username,
-      project: this.project,
-      document: this.document,
+      project: this.projectID,
+      document: this.documentID,
       begin: aBegin,
       end: aEnd
     };
@@ -1178,8 +1192,8 @@ var Annotator = class {
   sendSelectAnnotationMessageToServer(aSelectedAnnotation) {
     let json = {
       username: this.username,
-      project: this.project,
-      document: this.document,
+      project: this.projectID,
+      document: this.documentID,
       id: aSelectedAnnotation.id
     };
     this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
@@ -1187,17 +1201,27 @@ var Annotator = class {
   sendCreateAnnotationMessageToServer(aSelectedAnnotation) {
     let json = {
       username: this.username,
-      project: this.project,
-      document: this.document,
+      project: this.projectID,
+      document: this.documentID,
       Annotation: aSelectedAnnotation
     };
     this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
   }
+  sendUpdateAnnotationMessageToServer(aSelectedAnnotation) {
+    let json = {
+      username: this.username,
+      project: this.projectID,
+      document: this.documentID,
+      id: aSelectedAnnotation.id,
+      type: aSelectedAnnotation.type
+    };
+    this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
+  }
   sendDeleteAnnotationMessageToServer(aSelectedAnnotation) {
     let json = {
       username: this.username,
-      project: this.project,
-      document: this.document,
+      project: this.projectID,
+      document: this.documentID,
       id: aSelectedAnnotation.id
     };
     this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
@@ -1207,7 +1231,7 @@ var Annotator = class {
     const that = this;
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
-    this.document = values[0];
+    this.documentID = values[0];
     this.text = values[1];
     for (let i = 0; i <= this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
@@ -1216,19 +1240,38 @@ var Annotator = class {
     this.viewPortBegin = 0;
     this.viewPortEnd = this.viewPortBegin + this.viewPortSize;
     for (let i = this.viewPortBegin; i <= this.viewPortEnd; i++) {
-      this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.project + "/" + this.document + "/" + i, function(msg) {
+      this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + i, function(msg) {
         that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "annotation_update_" + i});
     }
+    if (values[2] != null) {
+      this.drawAnnotation(values[2]);
+    }
+    this.documentID = document.location.href.split("=")[1].split("&")[0];
   }
   receiveNewViewportMessageByServer(aMessage) {
     console.log("RECEIVED VIEWPORT: " + aMessage);
+    let keys = Object.keys(aMessage);
+    let values = keys.map((k) => aMessage[k]);
+    console.log(keys);
+    console.log(values);
+    if (values[2] != null) {
+      this.drawAnnotation(values[2]);
+    }
   }
   receiveSelectedAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED SELECTED ANNOTATION: " + aMessage);
+    let keys = Object.keys(aMessage);
+    let values = keys.map((k) => aMessage[k]);
+    console.log(keys);
+    console.log(values);
   }
   receiveAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED ANNOTATION MESSAGE: " + aMessage);
+    let keys = Object.keys(aMessage);
+    let values = keys.map((k) => aMessage[k]);
+    console.log(keys);
+    console.log(values);
   }
 };
 var annotator = new Annotator(1);

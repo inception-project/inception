@@ -33,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -44,8 +43,8 @@ import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
 @Controller
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
-public class WebsocketControllerImpl
-    implements WebsocketController
+public class AnnotationAPIControllerImpl
+    implements AnnotationAPIController
 {
     private final DocumentService documentService;
     private final ProjectService projectService;
@@ -76,9 +75,9 @@ public class WebsocketControllerImpl
      * -----------------------------------------------------
      **/
 
-    public WebsocketControllerImpl(ProjectService aProjectService, DocumentService aDocumentService,
-            UserDao aUserDao, RepositoryProperties aRepositoryProperties,
-            SimpMessagingTemplate aSimpMessagingTemplate)
+    public AnnotationAPIControllerImpl(ProjectService aProjectService, DocumentService aDocumentService,
+                                       UserDao aUserDao, RepositoryProperties aRepositoryProperties,
+                                       SimpMessagingTemplate aSimpMessagingTemplate)
     {
         this.projectService = aProjectService;
         this.documentService = aDocumentService;
@@ -106,7 +105,7 @@ public class WebsocketControllerImpl
     {
         System.out.println("RECEIVED NEW DOCUMENT BY CLIENT, Message: " + aMessage);
         String[] data = purifyData(aMessage.getPayload());
-        CAS cas = getCasForDocument(data[0], data[1], "Doc4");
+        CAS cas = getCasForDocument(data[0], Long.parseLong(data[1]), 41709);
 
         NewDocumentMessage newDocumentMessage = new NewDocumentMessage();
 
@@ -128,7 +127,7 @@ public class WebsocketControllerImpl
     {
         System.out.println("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
         String[] data = purifyData(aMessage.getPayload());
-        CAS cas = getCasForDocument(data[0], data[1], data[2]);
+        CAS cas = getCasForDocument(data[0], Long.parseLong(data[1]), Long.parseLong(data[2]));
         ViewportMessage viewportMessage = new ViewportMessage(Integer.parseInt(data[3]),
                 Integer.parseInt(data[4]));
         String[] sentences = cas.getDocumentText().split("/.");
@@ -159,7 +158,7 @@ public class WebsocketControllerImpl
     {
         System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
         String[] data = purifyData(aMessage.getPayload());
-        CAS cas = getCasForDocument(data[0], data[1], data[2]);
+        CAS cas = getCasForDocument(data[0], Long.parseLong(data[1]), Long.parseLong(data[2]));
         AnnotationMessage annotationMessage = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         String msg = JSONUtil.toJsonString(annotationMessage);
@@ -172,7 +171,7 @@ public class WebsocketControllerImpl
     {
         System.out.println("RECEIVED NEW ANNOTATION BY CLIENT");
         String[] data = purifyData(aMessage.getPayload());
-        CAS cas = getCasForDocument(data[0], data[1], data[2]);
+        CAS cas = getCasForDocument(data[0], Long.parseLong(data[1]), Long.parseLong(data[2]));
 
         // TODO cas.createAnnotation()
         AnnotationMessage annotationMessage = new AnnotationMessage();
@@ -187,7 +186,7 @@ public class WebsocketControllerImpl
     {
         System.out.println("RECEIVED DELETE ANNOTATION BY CLIENT");
         String[] data = purifyData(aMessage.getPayload());
-        CAS cas = getCasForDocument(data[0], data[1], data[2]);
+        CAS cas = getCasForDocument(data[0], Long.parseLong(data[1]), Long.parseLong(data[2]));
 
         // TODO cas.deleteAnnotation()
         AnnotationMessage annotationMessage = new AnnotationMessage();
@@ -214,13 +213,12 @@ public class WebsocketControllerImpl
     }
 
     @Override
-    public CAS getCasForDocument(String aUser, String aProject, String aDocument)
+    public CAS getCasForDocument(String aUser, long aProject, long aDocument)
     {
         try {
             CasStorageSession.open();
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-            Project project = projectService.getProject(aProject);
-            SourceDocument sourceDocument = documentService.getSourceDocument(project, aDocument);
+            SourceDocument sourceDocument = documentService.getSourceDocument(aProject, aDocument);
             CAS cas = documentService.readAnnotationCas(sourceDocument, aUser);
             CasStorageSession.get().close();
             return cas;

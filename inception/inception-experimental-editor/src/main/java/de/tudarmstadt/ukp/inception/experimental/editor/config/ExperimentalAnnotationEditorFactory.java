@@ -26,13 +26,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalAnnotationEditor;
 
+
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link TypeScriptAnnotationEditorAutoConfiguration#typescriptAnnotationEditorFactory}
+ * {@link ExperimentalAnnotationEditorAutoConfiguration#experimentalAnnotationEditorFactory()}
  * </p>
  */
-public class TypeScriptAnnotationEditorFactory
+public class ExperimentalAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
 

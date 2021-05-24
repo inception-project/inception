@@ -173,6 +173,10 @@
       <artifactId>dkpro-core-tokit-asl</artifactId>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-api-annotation-experimental</artifactId>
+      </dependency>
   </dependencies>
   <build>
     <pluginManagement>

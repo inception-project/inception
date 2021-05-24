@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.uima.cas.CAS;
 import org.springframework.messaging.Message;
 
-public interface WebsocketController
+public interface AnnotationAPIController
 {
     void handleDocumentRequest(Message<String> aMessage) throws IOException;
 
@@ -39,14 +39,14 @@ public interface WebsocketController
      * of the websocket message
      *
      * @param aProject
-     *            string
+     *            long
      * @param aDocument
-     *            string
+     *            long
      * @param aUser
      *            string
      * @return CAS
      */
-    CAS getCasForDocument(String aProject, String aDocument, String aUser);
+    CAS getCasForDocument(String aUser, long aProject, long aDocument);
 
     String[] purifyData(String aPayload);
 }

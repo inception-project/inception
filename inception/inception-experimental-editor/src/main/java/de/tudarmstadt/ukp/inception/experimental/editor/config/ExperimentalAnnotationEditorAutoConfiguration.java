@@ -23,11 +23,17 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConditionalOnProperty(prefix = "ui.experimental", name = "enabled", havingValue = "true")
-public class TypeScriptAnnotationEditorAutoConfiguration
+public class ExperimentalAnnotationEditorAutoConfiguration
 {
     @Bean
-    public TypeScriptAnnotationEditorFactory typescriptAnnotationEditorFactory()
+    public ExperimentalAnnotationEditorFactory experimentalAnnotationEditorFactory()
     {
-        return new TypeScriptAnnotationEditorFactory();
+        return new ExperimentalAnnotationEditorFactory();
+    }
+
+    @Bean
+    public ExperimentalBratEditorFactory experimentalBratEditorFactory()
+    {
+        return new ExperimentalBratEditorFactory();
     }
 }
