@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,7 +41,4 @@ public interface CasStorageDriver
     boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
 
     Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
-
-    @Deprecated
-    File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
 }

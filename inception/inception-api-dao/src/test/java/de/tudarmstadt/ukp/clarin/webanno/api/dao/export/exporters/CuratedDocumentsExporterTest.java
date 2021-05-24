@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -101,12 +103,15 @@ public class CuratedDocumentsExporterTest
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService, properties);
 
-        // documentService.getCasFile() is just a stupid wrapper around storageService.getCasFile()
+        // documentService.exportCas() is just a stupid wrapper around storageService.exportCas()
         // and it is easiest we emulate it here
-        when(documentService.getCasFile(any(), any())).thenAnswer(invocation -> {
-            return casStorageService.getCasFile(invocation.getArgument(0, SourceDocument.class),
-                    invocation.getArgument(1, String.class));
-        });
+        Mockito.doAnswer(invocation -> {
+            casStorageService.exportCas( //
+                    invocation.getArgument(0, SourceDocument.class),
+                    invocation.getArgument(1, String.class),
+                    invocation.getArgument(2, OutputStream.class));
+            return null;
+        }).when(documentService).exportCas(any(), any(), any());
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
         when(documentService.getSourceDocument(any(), any())).then(invocation -> {

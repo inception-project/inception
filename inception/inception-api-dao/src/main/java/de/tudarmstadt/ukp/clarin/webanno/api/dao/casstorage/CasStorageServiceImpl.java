@@ -705,13 +705,6 @@ public class CasStorageServiceImpl
         }
     }
 
-    @Deprecated
-    @Override
-    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
-    {
-        return driver.getCasFile(aDocument, aUser);
-    }
-
     @Override
     public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
         throws IOException

@@ -234,28 +234,29 @@ public class AnnotationDocumentExporter
                     // copy annotation document only for existing users and the state of the
                     // annotation document is not NEW/IGNORE
                     if (usersCache.get(annDoc.getUser()) != null
+                            && documentService.existsCas(annDoc)
                             && !annDoc.getState().equals(AnnotationDocumentState.NEW)
                             && !annDoc.getState().equals(AnnotationDocumentState.IGNORE)) {
+
                         File annSerDir = new File(aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
                                 + srcDoc.getName());
+                        forceMkdir(annSerDir);
+                        try (OutputStream os = new FileOutputStream(
+                                new File(annSerDir, annDoc.getUser() + ".ser"))) {
+                            documentService.exportCas(srcDoc, annDoc.getUser(), os);
+                        }
+
                         File annDocDir = new File(aStage.getAbsolutePath()
                                 + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-
-                        forceMkdir(annSerDir);
-                        forceMkdir(annDocDir);
-
-                        File annSerFile = documentService.getCasFile(srcDoc, annDoc.getUser());
-
                         File annFile = null;
-                        if (annSerFile.exists()) {
+                        try {
                             annFile = importExportService.exportAnnotationDocument(srcDoc,
                                     annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
                                     bulkOperationContext);
-                        }
-
-                        if (annSerFile.exists()) {
-                            copyFileToDirectory(annSerFile, annSerDir);
+                            forceMkdir(annDocDir);
                             copyFileToDirectory(annFile, annDocDir);
+                        }
+                        finally {
                             forceDelete(annFile);
                         }
 

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -136,12 +135,6 @@ public interface CasStorageService
      */
     boolean deleteCas(SourceDocument aDocument, String aUsername)
         throws IOException, CasSessionException;
-
-    /**
-     * @deprecated Scheduled for removal without replacement.
-     */
-    @Deprecated
-    File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
 
     void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
 

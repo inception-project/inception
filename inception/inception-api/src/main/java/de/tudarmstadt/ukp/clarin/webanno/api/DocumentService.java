@@ -329,20 +329,6 @@ public interface DocumentService
 
     boolean existsCas(AnnotationDocument annotationDocument) throws IOException;
 
-    /**
-     * Export a Serialized CAS annotation document from the file system
-     *
-     * @param document
-     *            the source document.
-     * @param user
-     *            the username.
-     * @return the serialized CAS file.
-     * @deprecated Scheduled for removal. To be replaced by a method which takes an
-     *             {@link OutputStream} and then writes the CAS to that stream.
-     */
-    @Deprecated
-    File getCasFile(SourceDocument document, String user) throws IOException;
-
     void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
 
     void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;

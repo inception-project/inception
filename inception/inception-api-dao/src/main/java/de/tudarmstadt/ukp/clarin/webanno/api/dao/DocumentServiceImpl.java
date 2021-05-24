@@ -280,14 +280,6 @@ public class DocumentServiceImpl
         return new File(documentUri, aDocument.getName());
     }
 
-    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
-    // need to be in a transaction here. Avoiding the transaction speeds up the call.
-    @Override
-    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
-    {
-        return casStorageService.getCasFile(aDocument, aUser);
-    }
-
     @Override
     public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
         throws IOException
@@ -905,9 +897,10 @@ public class DocumentServiceImpl
         CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
 
         // Add/update the CAS metadata
-        File casFile = getCasFile(aDocument, aUser.getUsername());
-        if (casFile.exists()) {
-            addOrUpdateCasMetadata(cas, casFile.lastModified(), aDocument, aUser.getUsername());
+        Optional<Long> timestamp = casStorageService.getCasTimestamp(aDocument,
+                aUser.getUsername());
+        if (timestamp.isPresent()) {
+            addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aUser.getUsername());
         }
 
         writeAnnotationCas(cas, aDocument, aUser, false);

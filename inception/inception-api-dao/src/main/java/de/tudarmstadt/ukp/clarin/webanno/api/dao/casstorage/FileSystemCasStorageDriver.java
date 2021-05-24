@@ -328,11 +328,9 @@ public class FileSystemCasStorageDriver
         }
     }
 
-    /**
-     * Method is scheduled to become private.
+    /*
+     * Public for testing
      */
-    @SuppressWarnings("deprecation")
-    @Override
     public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -370,10 +368,7 @@ public class FileSystemCasStorageDriver
         return new File(getAnnotationFolder(aProjectId, aDocumentId), aUser + ".ser");
     }
 
-    /*
-     * For testing
-     */
-    void writeSerializedCas(CAS aCas, File aFile) throws IOException
+    private void writeSerializedCas(CAS aCas, File aFile) throws IOException
     {
         CasPersistenceUtils.writeSerializedCas(aCas, aFile);
     }
