@@ -32,6 +32,7 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.Bootst
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
@@ -66,6 +67,8 @@ public class WorkloadSettingsPanel
         // Basic form
         Form<Void> form = new Form<>("form");
 
+        form.add(new DocLink("workloadHelpLink", "sect_workload"));
+        
         // Dropdown menu
         workloadStrategy = new BootstrapSelect<>("workloadStrategy");
         workloadStrategy

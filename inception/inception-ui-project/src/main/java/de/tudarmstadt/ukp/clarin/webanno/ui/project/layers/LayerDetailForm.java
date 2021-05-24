@@ -90,6 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.Fe
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class LayerDetailForm
     extends Form<AnnotationLayer>
@@ -124,6 +125,10 @@ public class LayerDetailForm
             FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
     {
         super(id, CompoundPropertyModel.of(aSelectedLayer));
+
+        add(new DocLink("propertiesHelpLink", "sect_projects_layers_properties"));
+        add(new DocLink("technicalPropertiesHelpLink", "sect_projects_layers_properties"));
+        add(new DocLink("behavioursHelpLink", "sect_projects_layers_behaviours"));
 
         featureSelectionForm = aFeatureSelectionForm;
         featureDetailForm = aFeatureDetailForm;
