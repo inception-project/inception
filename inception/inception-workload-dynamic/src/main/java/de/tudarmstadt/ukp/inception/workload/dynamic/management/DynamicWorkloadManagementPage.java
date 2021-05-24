@@ -120,6 +120,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
@@ -422,6 +423,8 @@ public class DynamicWorkloadManagementPage
         Form<DynamicWorkloadTraits> settingsForm = new Form<>("settingsForm",
                 new CompoundPropertyModel<>(traits));
         settingsForm.setOutputMarkupId(true);
+
+        settingsForm.add(new DocLink("workflowHelpLink", "sect_dynamic_workload"));
 
         settingsForm.add(new NumberTextField<>("defaultNumberOfAnnotations", Integer.class) //
                 .setMinimum(1) //

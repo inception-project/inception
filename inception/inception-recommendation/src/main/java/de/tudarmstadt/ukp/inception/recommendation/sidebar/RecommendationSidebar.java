@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
@@ -113,6 +114,8 @@ public class RecommendationSidebar
 
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
         form.setOutputMarkupId(true);
+
+        form.add(new DocLink("maxSuggestionsHelpLink", "_recommendation_sidebar"));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class) //
                 .setMinimum(1).setMaximum(10).setStep(1) //
