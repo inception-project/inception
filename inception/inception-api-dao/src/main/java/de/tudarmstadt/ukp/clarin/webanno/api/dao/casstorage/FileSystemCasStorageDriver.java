@@ -388,14 +388,53 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException
+    public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
+        throws IOException
     {
         File casFile = getCasFile(aDocument, aUser);
         if (!casFile.exists()) {
             return Optional.empty();
         }
         else {
-            return Optional.of(casFile.lastModified());
+            return Optional.of(new Metadata(casFile));
+        }
+    }
+
+    public static class Metadata
+        implements CasStorageMetadata
+    {
+        private final long timestamp;
+        private final long size;
+        private final String path;
+
+        public Metadata(File aFile)
+        {
+            timestamp = aFile.lastModified();
+            size = aFile.length();
+            path = aFile.getAbsolutePath();
+        }
+
+        @Override
+        public long getTimestamp()
+        {
+            return timestamp;
+        }
+
+        @Override
+        public long getSize()
+        {
+            return size;
+        }
+
+        @Override
+        public long getVersion()
+        {
+            return timestamp;
+        }
+
+        public String getPath()
+        {
+            return path;
         }
     }
 }

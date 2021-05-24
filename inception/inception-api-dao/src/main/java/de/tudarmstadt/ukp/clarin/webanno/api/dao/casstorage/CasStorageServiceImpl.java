@@ -555,12 +555,11 @@ public class CasStorageServiceImpl
         }
 
         // Add/update the CAS metadata
-        CasMetadataUtils.addOrUpdateCasMetadata(cas,
-                driver.getCasTimestamp(aDocument, aUsername)
-                        .orElseThrow(() -> new IOException(
-                                "Unable to obtain last modified data for annotation document ["
-                                        + aDocument + "] of user [" + aUsername + "]")),
-                aDocument, aUsername);
+        CasMetadataUtils.addOrUpdateCasMetadata(cas, driver.getCasMetadata(aDocument, aUsername)
+                .orElseThrow(() -> new IOException(
+                        "Unable to obtain last modified data for annotation document [" + aDocument
+                                + "] of user [" + aUsername + "]"))
+                .getTimestamp(), aDocument, aUsername);
 
         long duration = currentTimeMillis() - start;
         log.debug("Loaded CAS [{}] [{},{}] from {} in {}ms", cas.hashCode(), aDocument.getId(),
@@ -953,7 +952,7 @@ public class CasStorageServiceImpl
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // for its existence
         try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
-            return driver.getCasTimestamp(aDocument, aUser);
+            return driver.getCasMetadata(aDocument, aUser).map(CasStorageMetadata::getTimestamp);
         }
         catch (IOException e) {
             throw e;

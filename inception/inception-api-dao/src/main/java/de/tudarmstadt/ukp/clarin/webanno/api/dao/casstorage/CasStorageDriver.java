@@ -40,5 +40,6 @@ public interface CasStorageDriver
 
     boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
 
-    Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
+    Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
+        throws IOException;
 }
