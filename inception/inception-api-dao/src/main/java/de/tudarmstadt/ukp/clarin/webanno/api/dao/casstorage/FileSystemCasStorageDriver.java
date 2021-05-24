@@ -30,12 +30,16 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -123,8 +127,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public void writeCas(SourceDocument aDocument, String aUserName, CAS aCas)
-        throws IOException
+    public void writeCas(SourceDocument aDocument, String aUserName, CAS aCas) throws IOException
     {
         long t0 = currentTimeMillis();
 
@@ -336,6 +339,30 @@ public class FileSystemCasStorageDriver
         Validate.notBlank(aUser, "User must be specified");
 
         return getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+    }
+
+    @Override
+    public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
+        throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+
+        try (InputStream is = Files.newInputStream(getCasFile(aDocument, aUser).toPath())) {
+            IOUtils.copyLarge(is, aStream);
+        }
+    }
+
+    @Override
+    public void importCas(SourceDocument aDocument, String aUser, InputStream aStream)
+        throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+
+        try (OutputStream os = Files.newOutputStream(getCasFile(aDocument, aUser).toPath())) {
+            IOUtils.copyLarge(aStream, os);
+        }
     }
 
     private File getCasFile(long aProjectId, long aDocumentId, String aUser) throws IOException

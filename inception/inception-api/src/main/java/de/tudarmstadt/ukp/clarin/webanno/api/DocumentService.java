@@ -343,6 +343,10 @@ public interface DocumentService
     @Deprecated
     File getCasFile(SourceDocument document, String user) throws IOException;
 
+    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
+
+    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
+
     /**
      * Get the annotation document.
      *

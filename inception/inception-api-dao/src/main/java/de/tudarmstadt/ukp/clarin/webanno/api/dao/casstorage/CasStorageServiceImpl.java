@@ -35,6 +35,8 @@ import static org.apache.commons.lang3.ArrayUtils.contains;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -703,10 +705,59 @@ public class CasStorageServiceImpl
         }
     }
 
+    @Deprecated
     @Override
     public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
     {
         return driver.getCasFile(aDocument, aUser);
+    }
+
+    @Override
+    public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
+        throws IOException
+    {
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we export
+        // it, then add this info to a mini-session to ensure that write-access is known
+        try (CasStorageSession session = CasStorageSession.openNested(true)) {
+            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
+
+                driver.exportCas(aDocument, aUser, aStream);
+            }
+            finally {
+                session.remove(aDocument.getId(), aUser);
+            }
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public void importCas(SourceDocument aDocument, String aUser, InputStream aStream)
+        throws IOException
+    {
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we export
+        // it, then add this info to a mini-session to ensure that write-access is known
+        try (CasStorageSession session = CasStorageSession.openNested(true)) {
+            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
+
+                driver.importCas(aDocument, aUser, aStream);
+            }
+            finally {
+                session.remove(aDocument.getId(), aUser);
+            }
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     @Override

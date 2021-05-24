@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -29,7 +31,11 @@ public interface CasStorageDriver
 {
     CAS readCas(SourceDocument aDocument, String aUser) throws IOException;
 
-    void writeCas(SourceDocument aDocument, String aUserName, CAS aCas) throws IOException;
+    void writeCas(SourceDocument aDocument, String aUser, CAS aCas) throws IOException;
+
+    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
+
+    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
 
     boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException;
 
@@ -38,5 +44,5 @@ public interface CasStorageDriver
     Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
 
     @Deprecated
-    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
+    File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
 }

@@ -66,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
@@ -92,6 +91,7 @@ public class CasStorageServiceImplTest
     private AtomicInteger writeCounter = new AtomicInteger(0);
 
     private CasStorageServiceImpl sut;
+    private FileSystemCasStorageDriver driver;
     private RepositoryProperties repositoryProperties;
 
     @TempDir
@@ -114,8 +114,7 @@ public class CasStorageServiceImplTest
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
-                new BackupProperties());
+        driver = new FileSystemCasStorageDriver(repositoryProperties, new BackupProperties());
 
         sut = new CasStorageServiceImpl(driver, null, null, new CasStoragePropertiesImpl());
     }
@@ -245,7 +244,7 @@ public class CasStorageServiceImplTest
         try (CasStorageSession casStorageSession = openNested(true)) {
             CAS mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
 
-            File casFile = sut.getCasFile(doc, user);
+            File casFile = driver.getCasFile(doc, user);
             casFile.setLastModified(casFile.lastModified() + 10_000);
 
             long timestamp = sut.getCasTimestamp(doc, user).get();
@@ -266,7 +265,7 @@ public class CasStorageServiceImplTest
             // Setup fixture
             SourceDocument doc = makeSourceDocument(6l, 6l, "test");
             String user = "test";
-            File casFile = sut.getCasFile(doc, user);
+            File casFile = driver.getCasFile(doc, user);
 
             long casFileSize;
             long casFileLastModified;
@@ -291,7 +290,7 @@ public class CasStorageServiceImplTest
                     .withRootCauseInstanceOf(ClassCastException.class);
 
             assertThat(casFile).exists().hasSize(casFileSize);
-            assertThat(sut.getCasTimestamp(doc, user)).isEqualTo(casFileLastModified);
+            assertThat(sut.getCasTimestamp(doc, user).get()).isEqualTo(casFileLastModified);
             assertThat(new File(casFile.getParentFile(), user + ".ser.old")).doesNotExist();
         }
     }

@@ -289,6 +289,20 @@ public class DocumentServiceImpl
     }
 
     @Override
+    public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
+        throws IOException
+    {
+        casStorageService.exportCas(aDocument, aUser, aStream);
+    }
+
+    @Override
+    public void importCas(SourceDocument aDocument, String aUser, InputStream aStream)
+        throws IOException
+    {
+        casStorageService.importCas(aDocument, aUser, aStream);
+    }
+
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
     {

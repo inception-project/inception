@@ -145,8 +145,8 @@ public class CuratedDocumentsExporterTest
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         sut.importData(importRequest, project, exProject, aZipFile);
 
-        verify(casStorageService, atLeastOnce()).getCasFile(sourceDocCaptor.capture(),
-                usernameCaptor.capture());
+        verify(documentService, atLeastOnce()).importCas(sourceDocCaptor.capture(),
+                usernameCaptor.capture(), any());
 
         List<Pair<SourceDocument, String>> importedCases = new ArrayList<>();
         List<SourceDocument> docs = sourceDocCaptor.getAllValues();

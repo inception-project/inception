@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -140,6 +142,10 @@ public interface CasStorageService
      */
     @Deprecated
     File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
+
+    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
+
+    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
 
     boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
 
