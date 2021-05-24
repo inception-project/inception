@@ -875,7 +875,7 @@
         <artifactId>jquery.scrollTo</artifactId>
         <version>2.1.2</version>
         <exclusions>
-          <!-- Avoid having jquer twice, once via org.webjars and once via org.webjars.bower -->
+          <!-- Avoid having jquery twice, once via org.webjars and once via org.webjars.bower -->
           <exclusion>
             <groupId>org.webjars.bower</groupId>
             <artifactId>jquery</artifactId>
