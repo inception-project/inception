@@ -239,7 +239,7 @@ public class DocumentServiceImpl
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public boolean existsAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
+    public boolean existsCas(AnnotationDocument aAnnotationDocument) throws IOException
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
@@ -253,11 +253,15 @@ public class DocumentServiceImpl
         Validate.notNull(aProject, "Project must be specified");
         Validate.notBlank(aFileName, "File name must be specified");
 
-        String query = String.join("\n", "SELECT COUNT(*)", "FROM SourceDocument",
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM SourceDocument", //
                 "WHERE project = :project AND name =:name ");
 
-        long count = entityManager.createQuery(query, Long.class).setParameter("project", aProject)
-                .setParameter("name", aFileName).getSingleResult();
+        long count = entityManager.createQuery(query, Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("name", aFileName) //
+                .getSingleResult();
 
         return count > 0;
     }
@@ -889,7 +893,7 @@ public class DocumentServiceImpl
         // Add/update the CAS metadata
         File casFile = getCasFile(aDocument, aUser.getUsername());
         if (casFile.exists()) {
-            addOrUpdateCasMetadata(cas, casFile, aDocument, aUser.getUsername());
+            addOrUpdateCasMetadata(cas, casFile.lastModified(), aDocument, aUser.getUsername());
         }
 
         writeAnnotationCas(cas, aDocument, aUser, false);

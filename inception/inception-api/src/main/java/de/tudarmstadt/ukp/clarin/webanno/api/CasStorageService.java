@@ -135,8 +135,10 @@ public interface CasStorageService
     boolean deleteCas(SourceDocument aDocument, String aUsername)
         throws IOException, CasSessionException;
 
-    File getAnnotationFolder(SourceDocument aDocument) throws IOException;
-
+    /**
+     * @deprecated Scheduled for removal without replacement.
+     */
+    @Deprecated
     File getCasFile(SourceDocument aDocument, String aUser) throws IOException;
 
     boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
