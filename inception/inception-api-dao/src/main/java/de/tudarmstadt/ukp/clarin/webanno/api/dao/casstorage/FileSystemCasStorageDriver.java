@@ -56,6 +56,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 public class FileSystemCasStorageDriver
     implements CasStorageDriver
 {
+    public static final String SER_CAS_EXTENSION = ".ser";
+    public static final String OLD_EXTENSION = ".old";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final RepositoryProperties repositoryProperties;
@@ -81,18 +84,18 @@ public class FileSystemCasStorageDriver
     public CAS readCas(SourceDocument aDocument, String aUser) throws IOException
     {
         File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
-        File oldCasFile = new File(casFile.getPath() + ".old");
+        File oldCasFile = new File(casFile.getPath() + OLD_EXTENSION);
 
         String msgOldExists = "";
         if (oldCasFile.exists()) {
             msgOldExists = String.format(
                     "Existance of temporary annotation file [%s] indicates that a previous "
                             + "annotation storage process did not successfully complete. Contact "
-                            + "your server administator and request renaming the '.ser.old' file "
+                            + "your server administator and request renaming the '%s%s' file "
                             + "to '.ser' manually on the command line. Advise the administrator to "
                             + "check for sufficient disk space and that the application has the "
                             + "necessary permissions to save files in its data folder.",
-                    oldCasFile);
+                    oldCasFile, SER_CAS_EXTENSION, OLD_EXTENSION);
         }
 
         CAS cas;
@@ -136,8 +139,8 @@ public class FileSystemCasStorageDriver
                 aDocument.getProject().getName(), aDocument.getProject().getId());
 
         File annotationFolder = getAnnotationFolder(aDocument);
-        File currentVersion = new File(annotationFolder, aUserName + ".ser");
-        File oldVersion = new File(annotationFolder, aUserName + ".ser.old");
+        File currentVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION);
+        File oldVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION + OLD_EXTENSION);
 
         // Check if there was a concurrent change to the file on disk
         if (currentVersion.exists()) {
@@ -221,6 +224,7 @@ public class FileSystemCasStorageDriver
      * @throws IOException
      *             if the folder cannot be created.
      */
+    // Public for testing
     public File getAnnotationFolder(SourceDocument aDocument) throws IOException
     {
         return getAnnotationFolder(aDocument.getProject().getId(), aDocument.getId());
@@ -328,9 +332,7 @@ public class FileSystemCasStorageDriver
         }
     }
 
-    /*
-     * Public for testing
-     */
+    // Public for testing
     public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -365,7 +367,7 @@ public class FileSystemCasStorageDriver
 
     private File getCasFile(long aProjectId, long aDocumentId, String aUser) throws IOException
     {
-        return new File(getAnnotationFolder(aProjectId, aDocumentId), aUser + ".ser");
+        return new File(getAnnotationFolder(aProjectId, aDocumentId), aUser + SER_CAS_EXTENSION);
     }
 
     private void writeSerializedCas(CAS aCas, File aFile) throws IOException
@@ -376,7 +378,7 @@ public class FileSystemCasStorageDriver
     @Override
     public boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException
     {
-        return new File(getAnnotationFolder(aDocument), aUser + ".ser").delete();
+        return new File(getAnnotationFolder(aDocument), aUser + SER_CAS_EXTENSION).delete();
     }
 
     @Override
