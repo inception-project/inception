@@ -85,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnSelectionChangedEvent;
@@ -145,6 +146,8 @@ public class MatrixWorkloadManagementPage
         requireProjectRole(user, CURATOR, MANAGER);
 
         add(new Label("name", project.getName()));
+
+        add(new DocLink("documentStatusHelpLink", "_annotation_state_management"));
 
         add(documentMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode));
 

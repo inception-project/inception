@@ -80,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/agreement")
 public class AgreementPage
@@ -141,6 +142,8 @@ public class AgreementPage
             super(id, CompoundPropertyModel.of(aModel));
 
             setOutputMarkupPlaceholderTag(true);
+
+            add(new DocLink("agreementHelpLink", "sect_monitoring_agreement"));
 
             add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
             traitsContainer.setOutputMarkupPlaceholderTag(true);
