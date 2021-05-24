@@ -217,9 +217,7 @@ $( document ).ready(function() {
                     <div class="form-group form-row">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="workflow" />
-                        <a target="_blank" wicket:message="href:workflow.help.link">
-                          <i class="fas fa-question-circle"></i>
-                        </a>
+                        <a wicket:id="workflowHelpLink"/>
                       </label>
                       <div class="col-sm-5">
                         <select wicket:id="workflowType" data-container="body" class="w-100"/>

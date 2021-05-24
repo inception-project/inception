@@ -871,6 +871,18 @@
         <version>5.15.2</version>
       </dependency>
       <dependency>
+        <groupId>org.webjars.bower</groupId>
+        <artifactId>jquery.scrollTo</artifactId>
+        <version>2.1.2</version>
+        <exclusions>
+          <!-- Avoid having jquery twice, once via org.webjars and once via org.webjars.bower -->
+          <exclusion>
+            <groupId>org.webjars.bower</groupId>
+            <artifactId>jquery</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>bootstrap</artifactId>
         <version>${bootstrap.version}</version>
