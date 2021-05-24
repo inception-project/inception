@@ -193,6 +193,10 @@ public class LoginPage
         @Override
         protected void onSubmit()
         {
+            // The redirect URL is stored in the session, so we have to pick it up before the
+            // session is reset as part of the login.
+            String redirectUrl = getRedirectUrl();
+
             // We only accept users that are not bound to a particular realm (e.g. to a project)
             User user = userRepository.get(username);
             if (user == null || user.getRealm() != null) {
@@ -207,7 +211,7 @@ public class LoginPage
             }
 
             log.debug("Login successful");
-            setDefaultResponsePageIfNecessary(getRedirectUrl());
+            setDefaultResponsePageIfNecessary(redirectUrl);
         }
 
         private void setDefaultResponsePageIfNecessary(String aRedirectUrl)

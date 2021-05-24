@@ -80,6 +80,12 @@ public class MatrixWorkloadExtensionImpl
     }
 
     @Override
+    public boolean isDocumentRandomAccessAllowed(Project aProject)
+    {
+        return true;
+    }
+
+    @Override
     public MatrixWorkloadTrait readTraits(WorkloadManager aWorkloadManager)
     {
         MatrixWorkloadTrait traits = null;

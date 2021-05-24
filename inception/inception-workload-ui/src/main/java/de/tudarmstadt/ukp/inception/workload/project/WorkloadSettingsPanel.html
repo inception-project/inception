@@ -25,9 +25,7 @@
           <div class="form-group form-row">
             <label class="col-sm-4 col-form-label">
               <wicket:message key="workloadType" />
-              <a target="_blank" wicket:message="href:workload.help.link">
-                <i class="fas fa-question-circle"></i>
-              </a>
+              <a wicket:id="workloadHelpLink"/>
             </label>
             <div class="col-sm-8">
               <select wicket:id="workloadStrategy" class="form-control" data-container="body"/>
