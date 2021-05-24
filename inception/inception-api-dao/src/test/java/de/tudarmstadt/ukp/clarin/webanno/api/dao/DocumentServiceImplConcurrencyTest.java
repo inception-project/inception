@@ -144,7 +144,7 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.getCasFile(doc, INITIAL_CAS_PSEUDO_USER)).exists();
+            assertThat(storageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
         }
     }
 
@@ -159,7 +159,7 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.getCasFile(sourceDocument, user.getUsername())).exists();
+            assertThat(storageService.existsCas(sourceDocument, user.getUsername())).isTrue();
         }
     }
 
