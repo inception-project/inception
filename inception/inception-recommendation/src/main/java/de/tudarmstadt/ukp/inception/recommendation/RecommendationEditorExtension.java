@@ -435,17 +435,17 @@ public class RecommendationEditorExtension
             return emptyList();
         }
 
-        List<AnnotationSuggestion> sortedByConfidence = group.get()
+        List<AnnotationSuggestion> sortedByScore = group.get()
                 .bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(), aQuery);
 
         List<VLazyDetailResult> details = new ArrayList<>();
-        for (AnnotationSuggestion ao : sortedByConfidence) {
+        for (AnnotationSuggestion ao : sortedByScore) {
             List<String> items = new ArrayList<>();
-            if (ao.getConfidence() != -1) {
-                items.add(String.format("Confidence: %.2f", ao.getConfidence()));
+            if (ao.getScore() != -1) {
+                items.add(String.format("Score: %.2f", ao.getScore()));
             }
-            if (ao.getConfidenceExplanation().isPresent()) {
-                items.add("Explanation: " + ao.getConfidenceExplanation().get());
+            if (ao.getScoreExplanation().isPresent()) {
+                items.add("Explanation: " + ao.getScoreExplanation().get());
             }
             if (pref.isShowAllPredictions() && !ao.isVisible()) {
                 items.add("Hidden: " + ao.getReasonForHiding());
