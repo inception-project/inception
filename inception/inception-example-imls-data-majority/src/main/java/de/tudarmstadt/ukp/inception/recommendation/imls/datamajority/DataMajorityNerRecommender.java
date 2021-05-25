@@ -120,9 +120,9 @@ public class DataMajorityNerRecommender
 
         String majorityLabel = entry.getKey();
         int numberOfAnnotations = model.values().stream().reduce(Integer::sum).get();
-        double confidence = (float) entry.getValue() / numberOfAnnotations;
+        double score = (float) entry.getValue() / numberOfAnnotations;
 
-        return new DataMajorityModel(majorityLabel, confidence, numberOfAnnotations);
+        return new DataMajorityModel(majorityLabel, score, numberOfAnnotations);
     }
     // end::trainModel[]
 
@@ -169,7 +169,7 @@ public class DataMajorityNerRecommender
             int begin = token.getBegin();
             int end = token.getEnd();
 
-            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.confidence,
+            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.score,
                     aModel.numberOfAnnotations, begin, end);
             result.add(annotation);
         }
@@ -234,14 +234,14 @@ public class DataMajorityNerRecommender
     private static class DataMajorityModel
     {
         private final String majorityLabel;
-        private final double confidence;
+        private final double score;
         private final int numberOfAnnotations;
 
-        private DataMajorityModel(String aMajorityLabel, double aConfidence,
+        private DataMajorityModel(String aMajorityLabel, double aScore,
                 int aNumberOfAnnotations)
         {
             majorityLabel = aMajorityLabel;
-            confidence = aConfidence;
+            score = aScore;
             numberOfAnnotations = aNumberOfAnnotations;
         }
     }
