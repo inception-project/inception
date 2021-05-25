@@ -15,22 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.Duration;
 
-public class PredictionResponse
+public interface ExternalRecommenderProperties
 {
-    @JsonProperty("document")
-    private String document;
+    Duration getConnectTimeout();
 
-    public String getDocument()
-    {
-        return document;
-    }
-
-    public void setDocument(String aDocument)
-    {
-        document = aDocument;
-    }
+    Duration getReadTimeout();
 }

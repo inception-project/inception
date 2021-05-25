@@ -15,7 +15,11 @@
 // limitations under the License.
 
 [[sect_settings_websocket]]
-=== Websocket Settings
+= Websocket Settings
+
+====
+CAUTION: Experimental feature.
+====
 
 You can enable websocket support for your instance which allows to push messages to the client browser. This can e.g. be information for Admin users on recently logged events. 
 
