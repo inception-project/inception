@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -326,18 +327,11 @@ public interface DocumentService
      */
     boolean existsCas(SourceDocument sourceDocument, String username) throws IOException;
 
-    boolean existsAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
+    boolean existsCas(AnnotationDocument annotationDocument) throws IOException;
 
-    /**
-     * Export a Serialized CAS annotation document from the file system
-     *
-     * @param document
-     *            the source document.
-     * @param user
-     *            the username.
-     * @return the serialized CAS file.
-     */
-    File getCasFile(SourceDocument document, String user) throws IOException;
+    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
+
+    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
 
     /**
      * Get the annotation document.
