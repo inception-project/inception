@@ -124,7 +124,7 @@ public class StringMatchingRelationRecommender
                     double totalNumberOfOccurrences = occurrences.size();
 
                     for (String relationLabel : occurrences) {
-                        double confidence = numberOfOccurrencesPerLabel.get(relationLabel)
+                        double score = numberOfOccurrencesPerLabel.get(relationLabel)
                                 / totalNumberOfOccurrences;
                         AnnotationFS prediction = aCas.createAnnotation(predictedType,
                                 governor.getBegin(), governor.getEnd());
@@ -132,7 +132,7 @@ public class StringMatchingRelationRecommender
                         prediction.setFeatureValue(dependentFeature, dependent);
                         prediction.setStringValue(predictedFeature, relationLabel);
                         prediction.setBooleanValue(isPredictionFeature, true);
-                        prediction.setDoubleValue(scoreFeature, confidence);
+                        prediction.setDoubleValue(scoreFeature, score);
                         aCas.addFsToIndexes(prediction);
                     }
                 }

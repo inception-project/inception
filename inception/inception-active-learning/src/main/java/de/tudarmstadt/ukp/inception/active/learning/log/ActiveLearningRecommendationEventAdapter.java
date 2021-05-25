@@ -72,7 +72,7 @@ public class ActiveLearningRecommendationEventAdapter
         details.annotationFeature = aEvent.getAnnotationFeature();
         details.userAction = aEvent.getAction();
         details.currentLabel = aEvent.getCurrentRecommendation().getLabel();
-        details.confidence = aEvent.getCurrentRecommendation().getConfidence();
+        details.score = aEvent.getCurrentRecommendation().getScore();
         details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
 
         List<String> allLabelList = aEvent.getAllRecommendations().stream().map(ao -> ao.getLabel())
@@ -87,7 +87,7 @@ public class ActiveLearningRecommendationEventAdapter
         public String annotationFeature;
         public LearningRecordType userAction;
         public String currentLabel;
-        public double confidence;
+        public double score;
         public long recommenderId;
         public String allLabels;
     }

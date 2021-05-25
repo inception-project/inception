@@ -161,12 +161,12 @@ public class OpenNlpPosRecommender
                     AnnotationFS token = tokenAnnotations.get(i);
                     int begin = token.getBegin();
                     int end = token.getEnd();
-                    double confidence = probabilities[i];
+                    double score = probabilities[i];
 
                     // Create the prediction
                     AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
                     annotation.setStringValue(predictedFeature, label);
-                    annotation.setDoubleValue(scoreFeature, confidence);
+                    annotation.setDoubleValue(scoreFeature, score);
                     annotation.setBooleanValue(isPredictionFeature, true);
                     aCas.addFsToIndexes(annotation);
                 }

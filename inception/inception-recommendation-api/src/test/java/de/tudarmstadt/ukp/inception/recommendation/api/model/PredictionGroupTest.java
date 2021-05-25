@@ -75,15 +75,15 @@ public class PredictionGroupTest
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
 
         assertThat(sut)
-                .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
+                .as("Sorted by score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
 
         assertThat(sut.stream())
-                .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
+                .as("Sorted by score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
 
         assertThat(sut.iterator()).toIterable()
-                .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
+                .as("Sorted by score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
     }
 

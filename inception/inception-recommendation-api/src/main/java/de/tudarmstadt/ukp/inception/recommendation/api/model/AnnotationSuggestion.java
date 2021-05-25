@@ -72,13 +72,13 @@ public abstract class AnnotationSuggestion
     protected final String documentName;
     protected final String label;
     protected final String uiLabel;
-    protected final double confidence;
-    protected final String confidenceExplanation;
+    protected final double score;
+    protected final String scoreExplanation;
     private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
             long aLayerId, String aFeature, String aDocumentName, String aLabel, String aUiLabel,
-            double aConfidence, String aConfidenceExplanation)
+            double aScore, String aScoreExplanation)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -86,8 +86,8 @@ public abstract class AnnotationSuggestion
         layerId = aLayerId;
         feature = aFeature;
         recommenderName = aRecommenderName;
-        confidence = aConfidence;
-        confidenceExplanation = aConfidenceExplanation;
+        score = aScore;
+        scoreExplanation = aScoreExplanation;
         recommenderId = aRecommenderId;
         documentName = aDocumentName;
     }
@@ -100,8 +100,8 @@ public abstract class AnnotationSuggestion
         layerId = aObject.layerId;
         feature = aObject.feature;
         recommenderName = aObject.recommenderName;
-        confidence = aObject.confidence;
-        confidenceExplanation = aObject.confidenceExplanation;
+        score = aObject.score;
+        scoreExplanation = aObject.scoreExplanation;
         recommenderId = aObject.recommenderId;
         documentName = aObject.documentName;
     }
@@ -143,14 +143,14 @@ public abstract class AnnotationSuggestion
         return recommenderName;
     }
 
-    public double getConfidence()
+    public double getScore()
     {
-        return confidence;
+        return score;
     }
 
-    public Optional<String> getConfidenceExplanation()
+    public Optional<String> getScoreExplanation()
     {
-        return Optional.ofNullable(confidenceExplanation);
+        return Optional.ofNullable(scoreExplanation);
     }
 
     public long getRecommenderId()
