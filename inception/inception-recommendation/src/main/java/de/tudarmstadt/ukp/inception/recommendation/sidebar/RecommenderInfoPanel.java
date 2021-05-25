@@ -235,7 +235,7 @@ public class RecommenderInfoPanel
         Collection<SuggestionGroup<SpanSuggestion>> suggestionGroups = predictions
                 .getPredictionsByRecommenderAndDocument(aRecommender, sourceDocumentName).stream()
                 .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f)
-                .filter(s -> s.isVisible() && s.getConfidence() >= pref.getConfidenceThreshold())
+                .filter(s -> s.isVisible() && s.getScore() >= pref.getScoreThreshold())
                 .collect(groupingBy(GroupKey::new, TreeMap::new, SuggestionGroup.collector()))
                 .values();
 

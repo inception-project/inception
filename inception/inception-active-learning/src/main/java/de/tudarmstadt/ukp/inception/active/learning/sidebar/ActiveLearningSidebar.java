@@ -145,7 +145,7 @@ public class ActiveLearningSidebar
     private static final String CID_ANNOTATE_BUTTON = "annotateButton";
     private static final String CID_RECOMMENDATION_COVERED_TEXT_LINK = "recommendationCoveredTextLink";
     private static final String CID_RECOMMENDED_DIFFERENCE = "recommendedDifference";
-    private static final String CID_RECOMMENDED_CONFIDENCE = "recommendedConfidence";
+    private static final String CID_RECOMMENDED_SCORE = "recommendedScore";
     private static final String CID_RECOMMENDED_PREDITION = "recommendedPredition";
     private static final String CID_RECOMMENDATION_FORM = "recommendationForm";
     private static final String CID_LEARN_SKIPPED_ONES = "learnSkippedOnes";
@@ -445,8 +445,8 @@ public class ActiveLearningSidebar
         recommendationForm.add(
                 new Label(CID_RECOMMENDED_PREDITION, LoadableDetachableModel.of(() -> alStateModel
                         .getObject().getSuggestion().map(this::formatLabel).orElse(null))));
-        recommendationForm.add(new Label(CID_RECOMMENDED_CONFIDENCE, () -> alStateModel.getObject()
-                .getSuggestion().map(SpanSuggestion::getConfidence).orElse(null)));
+        recommendationForm.add(new Label(CID_RECOMMENDED_SCORE, () -> alStateModel.getObject()
+                .getSuggestion().map(SpanSuggestion::getScore).orElse(null)));
         recommendationForm.add(new Label(CID_RECOMMENDED_DIFFERENCE, () -> alStateModel.getObject()
                 .getCurrentDifference().map(Delta::getDelta).orElse(null)));
         recommendationForm.add((alStateModel.getObject().getLayer() != null
