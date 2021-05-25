@@ -15,24 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.websocket;
+package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
-import org.springframework.messaging.Message;
 
-public interface AnnotationAPIController
+public interface AnnotationSystemAPI
 {
-    void handleDocumentRequest(Message<String> aMessage) throws IOException;
+    void handleDocument(String[] aData) throws IOException;
 
-    void handleViewportRequest(Message<String> aMessage) throws IOException;
+    void handleViewport(String[] aData) throws IOException;
 
-    void handleSelectAnnotation(Message<String> aMessage) throws IOException;
+    void handleSelectAnnotation(String[] aData) throws IOException;
 
-    void handleNewAnnotation(Message<String> aMessage) throws IOException;
+    void handleCreateAnnotation(String[] aData) throws IOException;
 
-    void handleDeleteAnnotation(Message<String> aMessage) throws IOException;
+    void handleDeleteAnnotation(String[] aData) throws IOException;
 
     /**
      * Returns CAS from websocket message. All three String parameters are contained in the header
@@ -48,5 +47,4 @@ public interface AnnotationAPIController
      */
     CAS getCasForDocument(String aUser, long aProject, long aDocument);
 
-    String[] purifyData(String aPayload);
 }

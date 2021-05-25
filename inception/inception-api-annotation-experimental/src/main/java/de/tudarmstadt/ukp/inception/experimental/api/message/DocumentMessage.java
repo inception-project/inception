@@ -17,40 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.message;
 
-public class ConnectionEstablishedMessage
+public class DocumentMessage
 {
-    private String user;
-    private String document;
-    private String project;
+    private String name;
+    private String viewportText;
 
-    public ConnectionEstablishedMessage(String aUser, String aDocument, String aProject)
+    public String getName()
     {
-        user = aUser;
-        document = aDocument;
-        project = aProject;
+        return name;
     }
 
-    public String getUser() {
-        return user;
+    public void setName(String aName)
+    {
+        name = aName;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public String getViewportText()
+    {
+        return viewportText;
     }
 
-    public String getDocument() {
-        return document;
-    }
-
-    public void setDocument(String document) {
-        this.document = document;
-    }
-
-    public String getProject() {
-        return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
+    public void setViewportText(String aViewportText)
+    {
+        this.viewportText = aViewportText;
     }
 }

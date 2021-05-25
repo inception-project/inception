@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 import {Client, Stomp} from '@stomp/stompjs';
-import {Annotation} from "../common/Annotation";
 
-class Annotator {
+class AnnotationExperienceAPI {
 
     //Websocket and stomp broker
     stompClient: Client;
@@ -53,7 +52,7 @@ class Annotator {
                 console.log(elem.parentElement)
                 console.log(elem.parentElement.id)
                 console.log(elem.parentElement.attributes)
-                that.sendSelectAnnotationMessageToServer(new Annotation(elem.attributes[9].nodeValue, "TTTT"));
+                that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
             }
             // --------- NEXT DOCUMENT ------- //
             if (elem.className === 'far fa-caret-square-right') {
@@ -82,7 +81,7 @@ class Annotator {
         ondblclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             if (elem.tagName === 'text') {
-                that.sendCreateAnnotationMessageToServer(new Annotation("test", "TTTT"));
+                that.sendCreateAnnotationMessageToServer("ID", "TYPE", "SENTENCE_OF_ANNOTATION");
             }
         }
         this.connect();
@@ -161,16 +160,13 @@ class Annotator {
 
     /** ----------- Actions ----------- **/
 
-    drawAnnotation(annotations: Annotation)
+    drawAnnotation()
     {
-        for (let annotation in annotations) {
-            console.log(annotation)
-        }
     }
 
     editAnnotation = function ()
     {
-        this.sendUpateAnnotationMessageToServer();
+
     }
 
     unsubscribe(aChannel: string)
@@ -203,47 +199,49 @@ class Annotator {
         this.stompClient.publish({destination: "/app/new_viewport_by_client", body: JSON.stringify(json)});
     }
 
-    sendSelectAnnotationMessageToServer(aSelectedAnnotation: Annotation)
+    sendSelectAnnotationMessageToServer(aId: string)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            id: aSelectedAnnotation.id
+            id: aId
         };
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendCreateAnnotationMessageToServer(aSelectedAnnotation: Annotation)
+    sendCreateAnnotationMessageToServer(aId : string, aType : string, aViewport: string)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            Annotation: aSelectedAnnotation
+            id: aId,
+            type: aType,
+            viewport: aViewport
         }
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendUpdateAnnotationMessageToServer(aSelectedAnnotation: Annotation)
+    sendUpdateAnnotationMessageToServer(aId : string, aType : string,)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            id: aSelectedAnnotation.id,
-            type: aSelectedAnnotation.type
+            id: aId,
+            type: aType
         }
         this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendDeleteAnnotationMessageToServer(aSelectedAnnotation: Annotation)
+    sendDeleteAnnotationMessageToServer(aId: string)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            id: aSelectedAnnotation.id
+            id: aId,
         }
         this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
     }
@@ -280,7 +278,6 @@ class Annotator {
 
         //Draw the visible annotations
         if (values[2] != null) {
-            this.drawAnnotation(values[2]);
         }
 
         //Remember new documentID from new URL
@@ -299,7 +296,6 @@ class Annotator {
 
         //Draw the visible annotations
         if (values[2] != null) {
-            this.drawAnnotation(values[2]);
         }
     }
 
@@ -324,4 +320,4 @@ class Annotator {
     }
 }
 
-let annotator = new Annotator(1);
+let annotator = new AnnotationExperienceAPI(1);

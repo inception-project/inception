@@ -27,6 +27,8 @@ public class AnnotationMessage
     private List<Range> ranges;
     private String quote;
     private String color;
+    private String type;
+    private String text;
     private boolean delete;
 
     public String getId()
@@ -79,4 +81,21 @@ public class AnnotationMessage
         this.delete = aDelete;
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String aType)
+    {
+        this.type = aType;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
 }

@@ -40,6 +40,6 @@ public class ExperimentalAPIResourceReference extends JavaScriptResourceReferenc
      */
     private ExperimentalAPIResourceReference()
     {
-        super(ExperimentalAPIResourceReference.class, "Annotator.js");
+        super(ExperimentalAPIResourceReference.class, "AnnotationExperienceAPI.js");
     }
 }
