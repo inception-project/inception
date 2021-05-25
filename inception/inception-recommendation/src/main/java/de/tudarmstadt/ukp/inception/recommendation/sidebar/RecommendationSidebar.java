@@ -121,7 +121,7 @@ public class RecommendationSidebar
                 .setMinimum(1).setMaximum(10).setStep(1) //
                 .add(visibleWhen(() -> !form.getModelObject().isShowAllPredictions())));
 
-        form.add(new NumberTextField<Double>("confidenceThreshold", Double.class) //
+        form.add(new NumberTextField<Double>("scoreThreshold", Double.class) //
                 .setStep(0.1d) //
                 .add(visibleWhen(() -> !form.getModelObject().isShowAllPredictions())));
 
