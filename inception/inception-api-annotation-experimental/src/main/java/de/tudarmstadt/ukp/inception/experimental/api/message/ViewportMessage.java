@@ -21,7 +21,7 @@ public class ViewportMessage
 {
     private int begin;
     private int end;
-    private String text;
+    private String[] text;
 
     public ViewportMessage(int aBegin, int aEnd)
     {
@@ -45,11 +45,11 @@ public class ViewportMessage
         this.end = end;
     }
 
-    public String getText() {
+    public String[] getText() {
         return text;
     }
 
-    public void setText(String text) {
+    public void setText(String[] text) {
         this.text = text;
     }
 }

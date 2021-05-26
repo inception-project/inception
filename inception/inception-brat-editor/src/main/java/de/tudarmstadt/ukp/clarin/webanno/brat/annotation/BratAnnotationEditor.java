@@ -202,11 +202,26 @@ public class BratAnnotationEditor
 
         this.experimentalEnabled = aExperimentalEnabled;
 
-        init();
+        requestHandler = new AbstractDefaultAjaxBehavior() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void respond(AjaxRequestTarget aTarget) {
+
+                final IRequestParameters request = getRequest().getPostParameters();
+
+                // Get action from the request
+                String action = request.getParameterValue(PARAM_ACTION).toString();
+                System.out.println(request.getParameterNames());
+                System.out.println(action);
+
+            }
+        };
+
+        add(requestHandler);
     }
 
     public void init() {
-
 
         requestHandler = new AbstractDefaultAjaxBehavior() {
             private static final long serialVersionUID = 1L;

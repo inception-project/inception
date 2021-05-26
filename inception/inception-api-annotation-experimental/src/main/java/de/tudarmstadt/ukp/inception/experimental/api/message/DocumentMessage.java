@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.experimental.api.message;
 public class DocumentMessage
 {
     private String name;
-    private String viewportText;
+    private String [] viewportText;
 
     public String getName()
     {
@@ -32,12 +32,12 @@ public class DocumentMessage
         name = aName;
     }
 
-    public String getViewportText()
+    public String[] getViewportText()
     {
         return viewportText;
     }
 
-    public void setViewportText(String aViewportText)
+    public void setViewportText(String[] aViewportText)
     {
         this.viewportText = aViewportText;
     }

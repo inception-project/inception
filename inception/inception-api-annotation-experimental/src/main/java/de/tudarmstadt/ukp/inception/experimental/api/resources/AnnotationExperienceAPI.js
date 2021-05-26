@@ -1142,6 +1142,17 @@ var AnnotationExperienceAPI = class {
       this.stompClient.deactivate();
     }
   }
+  setVisibleText() {
+    let textDIV = document.getElementById("text");
+    textDIV.innerHTML = "";
+    for (let i = this.viewPortBegin; i <= this.viewPortEnd; i++) {
+      let div = document.createElement("div");
+      let node = document.createElement("sentence");
+      node.innerText = this.text[i] + " ";
+      div.appendChild(node);
+      textDIV.appendChild(div);
+    }
+  }
   drawAnnotation() {
   }
   unsubscribe(aChannel) {
@@ -1209,8 +1220,10 @@ var AnnotationExperienceAPI = class {
     const that = this;
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
+    console.log(values);
     this.documentID = values[0];
     this.text = values[1];
+    this.setVisibleText();
     for (let i = 0; i <= this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
     }
@@ -1230,10 +1243,9 @@ var AnnotationExperienceAPI = class {
     console.log("RECEIVED VIEWPORT: " + aMessage);
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
-    console.log(keys);
     console.log(values);
-    if (values[2] != null) {
-    }
+    this.text = values[2];
+    this.setVisibleText();
   }
   receiveSelectedAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED SELECTED ANNOTATION: " + aMessage);
@@ -1250,4 +1262,4 @@ var AnnotationExperienceAPI = class {
     console.log(values);
   }
 };
-var annotator = new AnnotationExperienceAPI(1);
+var annotator = new AnnotationExperienceAPI(2);

@@ -33,9 +33,8 @@ class AnnotationExperienceAPI {
     viewPortEnd: number;
     viewPortSize: number;
 
-    //Text and annotations shown
-    text: string;
-    annotations: string[];
+    //Text
+    text: String[];
 
     constructor(aViewPortSize: number) {
         const that = this;
@@ -160,6 +159,22 @@ class AnnotationExperienceAPI {
 
     /** ----------- Actions ----------- **/
 
+    setVisibleText()
+    {
+        let textDIV = document.getElementById("text")
+        //Reset previous text
+        textDIV.innerHTML= '';
+
+        //Append new text
+        for (let i = this.viewPortBegin; i <= this.viewPortEnd; i++) {
+            let div = document.createElement("div");
+            let node = document.createElement("sentence");
+            node.innerText = this.text[i] + ' ';
+            div.appendChild(node);
+            textDIV.appendChild(div);
+        }
+    }
+
     drawAnnotation()
     {
     }
@@ -258,8 +273,11 @@ class AnnotationExperienceAPI {
         let keys = Object.keys(aMessage)
         let values = keys.map(k => aMessage[k])
 
+        console.log(values);
+
         this.documentID = values[0];
         this.text = values[1];
+        this.setVisibleText();
 
         //Unsubscribe channels for previous document
         for (let i = 0; i <= this.viewPortSize; i++) {
@@ -291,12 +309,10 @@ class AnnotationExperienceAPI {
         //Parse data
         let keys = Object.keys(aMessage)
         let values = keys.map(k => aMessage[k])
-        console.log(keys)
         console.log(values)
+        this.text = values[2];
+        this.setVisibleText();
 
-        //Draw the visible annotations
-        if (values[2] != null) {
-        }
     }
 
     receiveSelectedAnnotationMessageByServer(aMessage: string)
@@ -320,4 +336,4 @@ class AnnotationExperienceAPI {
     }
 }
 
-let annotator = new AnnotationExperienceAPI(1);
+let annotator = new AnnotationExperienceAPI(2);

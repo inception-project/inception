@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -51,10 +52,9 @@ public class AnnotationSystemAPIImpl
     private final RepositoryProperties repositoryProperties;
     private final AnnotationProcessAPI annotationProcessAPI;
 
-
     public AnnotationSystemAPIImpl(ProjectService aProjectService, DocumentService aDocumentService,
-            UserDao aUserDao, RepositoryProperties aRepositoryProperties,
-            AnnotationProcessAPI aAnnotationProcessAPI)
+                                   UserDao aUserDao, RepositoryProperties aRepositoryProperties,
+                                   AnnotationProcessAPI aAnnotationProcessAPI)
     {
 
         projectService = aProjectService;
@@ -68,15 +68,21 @@ public class AnnotationSystemAPIImpl
     public void handleDocument(String[] aData) throws IOException
     {
         // TODO receive random new document
-        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), 41709);
+        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), 41711);
         DocumentMessage message = new DocumentMessage();
         message.setName("Doc4");
-        String[] sentences = cas.getDocumentText().split("/.");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < Integer.parseInt(aData[2]); i++) {
-            sb.append(sentences[i]);
+        String[] sentences = cas.getDocumentText().split("\\.");
+        ArrayList<String> visibleSentences = new ArrayList<>();
+
+        if (sentences.length < Integer.parseInt(aData[2])) {
+            aData[2] = String.valueOf(sentences.length - 1);
         }
-        message.setViewportText(sb.toString());
+
+        for (int i = 0; i < Integer.parseInt(aData[2]); i++) {
+            visibleSentences.add(sentences[i].replace("\n", ""));
+        }
+
+        message.setViewportText(visibleSentences.toArray(new String[0]));
         annotationProcessAPI.handleSendDocumentRequest(message, aData[0]);
     }
 
@@ -84,27 +90,33 @@ public class AnnotationSystemAPIImpl
     public void handleViewport(String[] aData) throws IOException
     {
         CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
+        if (Integer.parseInt(aData[3]) > 0) {
+            aData[4] = String.valueOf(Math.abs(Integer.parseInt(aData[3])));
+            aData[3] = "0";
+
+        }
         ViewportMessage message = new ViewportMessage(Integer.parseInt(aData[3]),
                 Integer.parseInt(aData[4]));
-        String[] sentences = cas.getDocumentText().split("/.");
-        StringBuilder sb = new StringBuilder();
+        String[] sentences = cas.getDocumentText().split("\\.");
+        ArrayList<String> visibleSentences = new ArrayList<>();
         if (Integer.parseInt(aData[3]) < 0) {
-            for (int i = sentences.length + Integer.parseInt(aData[3]); i < sentences.length
+            for (int i = sentences.length - Integer.parseInt(aData[3]); i < sentences.length
                     - 1; i++) {
-                sb.append(sentences[i]);
+                visibleSentences.add(sentences[i].replace("\n", ""));
             }
         }
         else {
             if (sentences.length >= Integer.parseInt(aData[4])) {
                 for (int i = Integer.parseInt(aData[3]); i < Integer.parseInt(aData[4]); i++) {
-                    sb.append(sentences[i]);
+                    visibleSentences.add(sentences[i].replace("\n", ""));
                 }
             }
             else {
                 System.out.println("Requested sentences do not exist in the document");
+                return;
             }
         }
-        message.setText(sb.toString());
+        message.setText(visibleSentences.toArray(new String[0]));
         annotationProcessAPI.handleSendViewportRequest(message, aData[0]);
 
     }
