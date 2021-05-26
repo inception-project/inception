@@ -69,7 +69,6 @@ public class AnnotationSystemAPIImpl
     {
         // TODO receive random new document
         CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), 41709);
-
         DocumentMessage message = new DocumentMessage();
         message.setName("Doc4");
         String[] sentences = cas.getDocumentText().split("/.");
