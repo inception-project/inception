@@ -1,20 +1,3 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 // node_modules/@stomp/stompjs/esm6/byte.js
 var BYTE = {
   LF: "\n",
@@ -1064,6 +1047,7 @@ var AnnotationExperienceAPI = class {
     };
     const that = this;
     this.viewPortSize = aViewPortSize;
+    this.element = "text";
     onclick = function(aEvent) {
       let elem = aEvent.target;
       if (elem.tagName === "rect") {
@@ -1076,19 +1060,19 @@ var AnnotationExperienceAPI = class {
         that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
       }
       if (elem.className === "far fa-caret-square-right") {
-        that.sendNewDocumentMessageToServer();
+        that.sendDocumentMessageToServer();
       }
       if (elem.className === "fas fa-step-forward") {
-        that.sendNewViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + 1 + that.viewPortSize);
+        that.sendViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + that.viewPortSize);
       }
       if (elem.className === "fas fa-step-backward") {
-        that.sendNewViewportMessageToServer(that.viewPortBegin - 1 - that.viewPortSize, that.viewPortBegin - 1);
+        that.sendViewportMessageToServer(that.viewPortBegin - that.viewPortSize, that.viewPortBegin - 1);
       }
       if (elem.className === "fas fa-fast-forward") {
-        that.sendNewViewportMessageToServer(0 - that.viewPortSize, 0);
+        that.sendViewportMessageToServer(-100, that.viewPortSize);
       }
       if (elem.className === "fas fa-fast-backward") {
-        that.sendNewViewportMessageToServer(0, that.viewPortSize);
+        that.sendViewportMessageToServer(0, that.viewPortSize - 1);
       }
     };
     ondblclick = function(aEvent) {
@@ -1142,12 +1126,13 @@ var AnnotationExperienceAPI = class {
       this.stompClient.deactivate();
     }
   }
-  setVisibleText() {
-    let textDIV = document.getElementById("text");
+  setVisibleText(elementId) {
+    let textDIV = document.getElementById(elementId.toString());
     textDIV.innerHTML = "";
-    for (let i = this.viewPortBegin; i <= this.viewPortEnd; i++) {
+    for (let i = 0; i < this.viewPortSize; i++) {
       let div = document.createElement("div");
       let node = document.createElement("sentence");
+      node.className = "sent";
       node.innerText = this.text[i] + " ";
       div.appendChild(node);
       textDIV.appendChild(div);
@@ -1158,7 +1143,7 @@ var AnnotationExperienceAPI = class {
   unsubscribe(aChannel) {
     this.stompClient.unsubscribe(aChannel);
   }
-  sendNewDocumentMessageToServer() {
+  sendDocumentMessageToServer() {
     let json = {
       username: this.username,
       project: this.projectID,
@@ -1166,7 +1151,11 @@ var AnnotationExperienceAPI = class {
     };
     this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
   }
-  sendNewViewportMessageToServer(aBegin, aEnd) {
+  sendViewportMessageToServer(aBegin, aEnd) {
+    if (aBegin < 0 && aBegin != -100) {
+      aBegin = 0;
+      aEnd = this.viewPortSize - 1;
+    }
     let json = {
       username: this.username,
       project: this.projectID,
@@ -1223,14 +1212,13 @@ var AnnotationExperienceAPI = class {
     console.log(values);
     this.documentID = values[0];
     this.text = values[1];
-    this.setVisibleText();
-    for (let i = 0; i <= this.viewPortSize; i++) {
+    this.setVisibleText(this.element);
+    for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
     }
-    ;
     this.viewPortBegin = 0;
-    this.viewPortEnd = this.viewPortBegin + this.viewPortSize;
-    for (let i = this.viewPortBegin; i <= this.viewPortEnd; i++) {
+    this.viewPortEnd = this.viewPortSize - 1;
+    for (let i = 0; i < this.viewPortSize; i++) {
       this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + i, function(msg) {
         that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "annotation_update_" + i});
@@ -1241,11 +1229,24 @@ var AnnotationExperienceAPI = class {
   }
   receiveNewViewportMessageByServer(aMessage) {
     console.log("RECEIVED VIEWPORT: " + aMessage);
+    const that = this;
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
-    console.log(values);
+    console.log(values[0]);
+    console.log(values[1]);
+    console.log(values[2]);
+    for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
+      this.unsubscribe("annotation_update_" + i.toString());
+    }
+    this.viewPortBegin = values[0];
+    this.viewPortEnd = values[1];
     this.text = values[2];
-    this.setVisibleText();
+    this.setVisibleText(this.element);
+    for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
+      this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + i, function(msg) {
+        that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
+      }, {id: "annotation_update_" + i});
+    }
   }
   receiveSelectedAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED SELECTED ANNOTATION: " + aMessage);

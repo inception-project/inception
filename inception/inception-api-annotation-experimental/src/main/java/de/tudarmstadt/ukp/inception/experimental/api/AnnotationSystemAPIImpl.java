@@ -53,8 +53,8 @@ public class AnnotationSystemAPIImpl
     private final AnnotationProcessAPI annotationProcessAPI;
 
     public AnnotationSystemAPIImpl(ProjectService aProjectService, DocumentService aDocumentService,
-                                   UserDao aUserDao, RepositoryProperties aRepositoryProperties,
-                                   AnnotationProcessAPI aAnnotationProcessAPI)
+            UserDao aUserDao, RepositoryProperties aRepositoryProperties,
+            AnnotationProcessAPI aAnnotationProcessAPI)
     {
 
         projectService = aProjectService;
@@ -70,7 +70,7 @@ public class AnnotationSystemAPIImpl
         // TODO receive random new document
         CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), 41711);
         DocumentMessage message = new DocumentMessage();
-        message.setName("Doc4");
+        message.setId(41711);
         String[] sentences = cas.getDocumentText().split("\\.");
         ArrayList<String> visibleSentences = new ArrayList<>();
 
@@ -90,32 +90,26 @@ public class AnnotationSystemAPIImpl
     public void handleViewport(String[] aData) throws IOException
     {
         CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
-        if (Integer.parseInt(aData[3]) > 0) {
-            aData[4] = String.valueOf(Math.abs(Integer.parseInt(aData[3])));
-            aData[3] = "0";
 
-        }
-        ViewportMessage message = new ViewportMessage(Integer.parseInt(aData[3]),
-                Integer.parseInt(aData[4]));
         String[] sentences = cas.getDocumentText().split("\\.");
         ArrayList<String> visibleSentences = new ArrayList<>();
-        if (Integer.parseInt(aData[3]) < 0) {
-            for (int i = sentences.length - Integer.parseInt(aData[3]); i < sentences.length
-                    - 1; i++) {
+
+        if (aData[3].equals("-100")) {
+            aData[3] = String.valueOf(sentences.length - (Integer.parseInt(aData[4])));
+            aData[4] = String.valueOf(sentences.length - 1);
+        }
+        if (sentences.length > Integer.parseInt(aData[4])) {
+            for (int i = Integer.parseInt(aData[3]); i <= Integer.parseInt(aData[4]); i++) {
                 visibleSentences.add(sentences[i].replace("\n", ""));
             }
         }
         else {
-            if (sentences.length >= Integer.parseInt(aData[4])) {
-                for (int i = Integer.parseInt(aData[3]); i < Integer.parseInt(aData[4]); i++) {
-                    visibleSentences.add(sentences[i].replace("\n", ""));
-                }
-            }
-            else {
-                System.out.println("Requested sentences do not exist in the document");
-                return;
-            }
+            System.out.println("Requested sentences do not exist in the document");
+            return;
         }
+
+        ViewportMessage message = new ViewportMessage(Integer.parseInt(aData[3]),
+                Integer.parseInt(aData[4]));
         message.setText(visibleSentences.toArray(new String[0]));
         annotationProcessAPI.handleSendViewportRequest(message, aData[0]);
 

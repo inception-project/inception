@@ -19,17 +19,17 @@ package de.tudarmstadt.ukp.inception.experimental.api.message;
 
 public class DocumentMessage
 {
-    private String name;
+    private int id;
     private String [] viewportText;
 
-    public String getName()
+    public int getId()
     {
-        return name;
+        return id;
     }
 
-    public void setName(String aName)
+    public void setId(int  aId)
     {
-        name = aName;
+        id = aId;
     }
 
     public String[] getViewportText()
