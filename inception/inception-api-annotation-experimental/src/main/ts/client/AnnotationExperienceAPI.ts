@@ -168,15 +168,39 @@ class AnnotationExperienceAPI {
         let textDIV = document.getElementById(elementId.toString())
         //Reset previous text
         textDIV.innerHTML= '';
+        let k = 0;
 
-        //Append new text
         for (let i = 0; i < this.viewPortSize; i++) {
-            let div = document.createElement("div");
-            let node = document.createElement("sentence");
-            node.className = "sent";
-            node.innerText = this.text[i] + ' ';
-            div.appendChild(node);
-            textDIV.appendChild(div);
+            let words = this.text[i].split(" ");
+            let sentence = document.createElement("div");
+            sentence.className = "sentence";
+            sentence.setAttribute("sentence-id", i.toString());
+
+            for (let j = 0; j <= words.length; j++, k++) {
+                if (j < words.length) {
+                    let text_ = document.createElement("text");
+                    text_.innerText = words[j]
+                    text_.className = "word";
+                    text_.setAttribute("word_id", k.toString());
+                    sentence.appendChild(text_);
+
+                    k++;
+                    let spaceElement = document.createElement("text");
+                    spaceElement.className = "space";
+                    spaceElement.innerText = " ";
+                    spaceElement.setAttribute("word_id", k.toString());
+                    if (j != words.length - 1) {
+                        sentence.appendChild(spaceElement);
+                    }
+                } else {
+                    let fullStopElement = document.createElement("text");
+                    fullStopElement.className = "stop";
+                    fullStopElement.innerText = ".";
+                    fullStopElement.setAttribute("word_id", k.toString());
+                    sentence.appendChild(fullStopElement);
+                }
+            }
+            textDIV.appendChild(sentence);
         }
     }
 

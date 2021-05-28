@@ -130,7 +130,6 @@ public class AnnotationSystemAPIImpl
     public void handleCreateAnnotation(String[] aData) throws IOException
     {
         CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
-
         // TODO createAnnotation
         AnnotationMessage message = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage

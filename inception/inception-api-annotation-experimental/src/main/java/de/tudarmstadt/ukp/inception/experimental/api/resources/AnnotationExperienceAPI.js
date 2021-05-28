@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 // node_modules/@stomp/stompjs/esm6/byte.js
 var BYTE = {
   LF: "\n",
@@ -1129,13 +1146,36 @@ var AnnotationExperienceAPI = class {
   setVisibleText(elementId) {
     let textDIV = document.getElementById(elementId.toString());
     textDIV.innerHTML = "";
+    let k = 0;
     for (let i = 0; i < this.viewPortSize; i++) {
-      let div = document.createElement("div");
-      let node = document.createElement("sentence");
-      node.className = "sent";
-      node.innerText = this.text[i] + " ";
-      div.appendChild(node);
-      textDIV.appendChild(div);
+      let words = this.text[i].split(" ");
+      let sentence = document.createElement("div");
+      sentence.className = "sentence";
+      sentence.setAttribute("sentence-id", i.toString());
+      for (let j = 0; j <= words.length; j++, k++) {
+        if (j < words.length) {
+          let text_ = document.createElement("text");
+          text_.innerText = words[j];
+          text_.className = "word";
+          text_.setAttribute("word_id", k.toString());
+          sentence.appendChild(text_);
+          k++;
+          let spaceElement = document.createElement("text");
+          spaceElement.className = "space";
+          spaceElement.innerText = " ";
+          spaceElement.setAttribute("word_id", k.toString());
+          if (j != words.length - 1) {
+            sentence.appendChild(spaceElement);
+          }
+        } else {
+          let fullStopElement = document.createElement("text");
+          fullStopElement.className = "stop";
+          fullStopElement.innerText = ".";
+          fullStopElement.setAttribute("word_id", k.toString());
+          sentence.appendChild(fullStopElement);
+        }
+      }
+      textDIV.appendChild(sentence);
     }
   }
   drawAnnotation() {

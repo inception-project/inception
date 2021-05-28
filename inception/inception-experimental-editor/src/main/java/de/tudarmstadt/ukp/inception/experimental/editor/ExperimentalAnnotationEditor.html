@@ -17,23 +17,22 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<head>
-    <script>
-        document.querySelectorAll('.sent').forEach(item => {
-            item.addEventListener('dblclick', () => {
-                annotator.sendSelectAnnotationMessageToServer("2")
-            })
-        })
-    </script>
-</head>
 <body>
 <wicket:panel>
     <div class="scrolling flex-content fit-child-loose text-center" style="min-height: unset;">
         <form class="editor">
             <div wicket:id="vis"></div>
-            <div id="text" style="text-align: left">
+            <div id="text" class="text" style="text-align: left">
                 <script>
                     annotator.setVisibleText("text");
+                    document.querySelectorAll('.word').forEach(item => {
+                        item.addEventListener('dblclick', item_ => {
+                            annotator.sendCreateAnnotationMessageToServer(
+                                item_.target.attributes[1].value,
+                                "Chunk",
+                                item_target.parentElement.getAttribute("sentence-id").value)
+                        })
+                    })
                 </script>
             </div>
         </form>
