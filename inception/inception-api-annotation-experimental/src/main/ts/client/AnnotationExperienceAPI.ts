@@ -96,8 +96,8 @@ class AnnotationExperienceAPI {
         }
 
         let url: string = (window.location.protocol.startsWith("https") ? "wss://" : "ws://")
-            + window.location.host
-            + "/inception_app_webapp_war_exploded/ws-endpoint";
+            + window.location.host + "/"
+            + window.location.pathname.split("/")[1] + "/ws-endpoint";
 
         this.stompClient = Stomp.over(function () {
             return new WebSocket(url);
