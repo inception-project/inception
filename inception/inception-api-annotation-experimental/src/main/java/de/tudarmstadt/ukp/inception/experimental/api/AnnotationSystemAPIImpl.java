@@ -98,14 +98,16 @@ public class AnnotationSystemAPIImpl
             aData[3] = String.valueOf(sentences.length - (Integer.parseInt(aData[4])));
             aData[4] = String.valueOf(sentences.length - 1);
         }
-        if (sentences.length > Integer.parseInt(aData[4])) {
+        if (sentences.length >= Integer.parseInt(aData[4])) {
             for (int i = Integer.parseInt(aData[3]); i <= Integer.parseInt(aData[4]); i++) {
                 visibleSentences.add(sentences[i].replace("\n", ""));
             }
         }
         else {
-            System.out.println("Requested sentences do not exist in the document");
-            return;
+            for (int i = sentences.length - (Integer.parseInt(aData[4])
+                    - Integer.parseInt(aData[3])) - 1; i < sentences.length; i++) {
+                visibleSentences.add(sentences[i].replace("\n", ""));
+            }
         }
 
         ViewportMessage message = new ViewportMessage(Integer.parseInt(aData[3]),
@@ -127,8 +129,7 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleCreateAnnotation(String[] aData) throws IOException
-    {
+    public void handleCreateAnnotation(String[] aData) throws IOException {
         CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
         // TODO createAnnotation
         AnnotationMessage message = new AnnotationMessage();

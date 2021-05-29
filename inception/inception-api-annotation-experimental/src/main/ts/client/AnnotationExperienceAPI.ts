@@ -35,58 +35,14 @@ class AnnotationExperienceAPI {
 
     //Text
     text: String[];
+    sentenceNumbers: boolean = false;
 
-    //Div to use for text
-    element: string;
+    //Editor element
+    editor: string = "textarea";
 
     constructor(aViewPortSize: number) {
-        const that = this;
         this.viewPortSize = aViewPortSize;
-        this.element = "text";
 
-        //Click events on annotation page specific items
-        onclick = function (aEvent) {
-            let elem = <Element>aEvent.target;
-
-            if (elem.tagName === 'rect') {
-                console.log(elem)
-                console.log(elem.attributes)
-                console.log("--------")
-                console.log(elem.parentElement)
-                console.log(elem.parentElement.id)
-                console.log(elem.parentElement.attributes)
-                that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
-            }
-            // --------- NEXT DOCUMENT ------- //
-            if (elem.className === 'far fa-caret-square-right') {
-                that.sendDocumentMessageToServer();
-            }
-
-            // ---------- NEW VIEWPORT --------- //
-            if (elem.className === 'fas fa-step-forward') {
-                that.sendViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + that.viewPortSize);
-            }
-
-            if (elem.className === 'fas fa-step-backward') {
-                that.sendViewportMessageToServer(that.viewPortBegin - that.viewPortSize, that.viewPortBegin - 1);
-            }
-
-            //aBegin = null, aEnd = size
-            if (elem.className === 'fas fa-fast-forward') {
-                that.sendViewportMessageToServer(-100, that.viewPortSize);
-            }
-
-            if (elem.className === 'fas fa-fast-backward') {
-                that.sendViewportMessageToServer(0, that.viewPortSize - 1);
-            }
-        }
-
-        ondblclick = function (aEvent) {
-            let elem = <Element>aEvent.target;
-            if (elem.tagName === 'text') {
-                that.sendCreateAnnotationMessageToServer("ID", "TYPE", "SENTENCE_OF_ANNOTATION");
-            }
-        }
         this.connect();
     }
 
@@ -137,6 +93,10 @@ class AnnotationExperienceAPI {
             that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function (msg) {
                 that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
             }, {id: "selected_annotation"});
+
+            //
+            that.registerDefaultActionHandler();
+
         };
 
         // ------ ERROR HANDLING ------ //
@@ -147,6 +107,7 @@ class AnnotationExperienceAPI {
         };
 
         this.stompClient.activate();
+
     }
 
     // ------ DISCONNECT -------- //
@@ -163,26 +124,139 @@ class AnnotationExperienceAPI {
 
     /** ----------- Actions ----------- **/
 
-    setVisibleText(elementId: string)
+    registerOnClickActionHandler(aTagName: string, aAction: string)
     {
-        let textDIV = document.getElementById(elementId.toString())
+        let that = this;
+
+        let elem = document.querySelector("." + aTagName);
+        if (elem !=  null) {
+            //Click events on annotation page specific items
+            switch (aAction) {
+                case "select":
+                    elem.addEventListener("click", () => {
+                        that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
+                    });
+                    break;
+                case "new_document":
+                    elem.addEventListener("click", () => {
+                        that.sendDocumentMessageToServer();
+                    });
+                    break;
+                case "next_sentences":
+                    elem.addEventListener("click", () => {
+                        that.sendViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + that.viewPortSize);
+                    });
+                    break;
+                case "previous_sentences":
+                    elem.addEventListener("click", () => {
+                        that.sendViewportMessageToServer(that.viewPortBegin - that.viewPortSize, that.viewPortBegin - 1);
+                    });
+                    break;
+                case "last_sentences":
+                    //aBegin = -100, aEnd = size
+
+                    elem.addEventListener("click", () => {
+                        that.sendViewportMessageToServer(-100, that.viewPortSize);
+                    });
+                    break;
+                case "first_sentences":
+                    elem.addEventListener("click", () => {
+                        that.sendViewportMessageToServer(0, that.viewPortSize - 1);
+                    });
+                    break;
+                default:
+                    console.error("Can not register single click action, reason: Action-type not found.");
+                    return;
+            }
+
+            console.log("Action: " + aAction + " is registered for elements: " + aTagName)
+        } else {
+            console.error("Can not register single click action, reason: Element not found.");
+        }
+    }
+
+    registerOnDoubleClickActionHandler(aTagName: string, aAction: string)
+    {
+        let that = this;
+
+        ondblclick = function (aEvent) {
+            let elem = <Element>aEvent.target;
+            switch (aAction) {
+                case  "create":
+                    if (elem.className === 'word') {
+                        that.sendCreateAnnotationMessageToServer(elem.getAttribute("word_id"),
+                            document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),
+                            elem.parentElement.getAttribute("sentence-id"));
+                    }
+                    break;
+                default:
+                    console.error("Can not register double click action, reason: Action-type not found.")
+                    return;
+            }
+        }
+
+        console.log("Action: " + aAction + " is registered for elements: " + aTagName)
+    }
+
+    registerDefaultActionHandler()
+    {
+        this.registerOnClickActionHandler("rect", "select");
+        this.registerOnClickActionHandler("fa-caret-square-right", "new_document");
+        this.registerOnClickActionHandler("fa-caret-square-left", "new_document");
+        this.registerOnClickActionHandler("fa-step-forward", "next_sentences");
+        this.registerOnClickActionHandler("fa-step-backward", "previous_sentences");
+        this.registerOnClickActionHandler("fa-fast-forward", "last_sentences");
+        this.registerOnClickActionHandler("fa-fast-backward", "first_sentences");
+
+        this.registerOnDoubleClickActionHandler("word", "create")
+    }
+
+    showText(aElementId: string)
+    {
+        if (this.editor == null) {
+            this.editor = aElementId;
+        }
+        let textArea = document.getElementById(aElementId.toString())
         //Reset previous text
-        textDIV.innerHTML= '';
+        textArea.innerHTML = '';
+
+        //Background
+        let background = document.createElement("g");
+        background.className = "background";
+
+        //Sentencenumbers enabled
+        if (this.sentenceNumbers) {
+            let rect = document.createElement("rect");
+            rect.setAttribute("x", "0");
+            rect.setAttribute("y", "4");
+            rect.setAttribute("width", "1415");
+            rect.setAttribute("height", "20");
+            rect.setAttribute("fill", "#ffffff");
+            background.appendChild(rect)
+            textArea.appendChild(background);
+        } else {
+            textArea.appendChild(background);
+        }
+
         let k = 0;
+
+        let textElement = document.createElement("g");
+        textElement.className = "text";
 
         for (let i = 0; i < this.viewPortSize; i++) {
             let words = this.text[i].split(" ");
-            let sentence = document.createElement("div");
-            sentence.className = "sentence";
+            let sentence = document.createElement("g");
+            sentence.className = "text-row";
+            sentence.style.display = "block";
             sentence.setAttribute("sentence-id", i.toString());
 
             for (let j = 0; j <= words.length; j++, k++) {
                 if (j < words.length) {
-                    let text_ = document.createElement("text");
-                    text_.innerText = words[j]
-                    text_.className = "word";
-                    text_.setAttribute("word_id", k.toString());
-                    sentence.appendChild(text_);
+                    let word = document.createElement("text");
+                    word.innerText = words[j]
+                    word.className = "word";
+                    word.setAttribute("word_id", k.toString());
+                    sentence.appendChild(word);
 
                     k++;
                     let spaceElement = document.createElement("text");
@@ -200,8 +274,20 @@ class AnnotationExperienceAPI {
                     sentence.appendChild(fullStopElement);
                 }
             }
-            textDIV.appendChild(sentence);
+            textElement.appendChild(sentence);
         }
+
+        textArea.appendChild(textElement);
+
+        //Highlighting
+        let highlighting = document.createElement("g");
+        background.className = "highlighting";
+        textArea.appendChild(highlighting);
+    }
+
+    showSentenceNumbers(aSentenceNumbers: boolean)
+    {
+        this.sentenceNumbers = aSentenceNumbers;
     }
 
     drawAnnotation()
@@ -210,6 +296,24 @@ class AnnotationExperienceAPI {
 
     editAnnotation = function ()
     {
+
+    }
+
+    setViewportSize(aSize: number)
+    {
+        this.viewPortSize = aSize;
+        this.sendViewportMessageToServer(this.viewPortBegin, this.viewPortBegin + aSize - 1);
+    }
+
+    refreshEditor()
+    {
+
+        this.showText(this.editor);
+        this.drawAnnotation();
+
+        let editor = document.getElementById("textarea");
+        let content = editor.innerHTML;
+        editor.innerHTML = content;
 
     }
 
@@ -233,7 +337,7 @@ class AnnotationExperienceAPI {
 
     sendViewportMessageToServer(aBegin: number, aEnd: number)
     {
-       if (aBegin < 0 && aBegin != -100) {
+        if (aBegin < 0 && aBegin != -100) {
             aBegin = 0;
             aEnd = this.viewPortSize - 1;
         }
@@ -259,7 +363,7 @@ class AnnotationExperienceAPI {
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendCreateAnnotationMessageToServer(aId : string, aType : string, aViewport: string)
+    sendCreateAnnotationMessageToServer(aId: string, aType: string, aViewport: string)
     {
         let json = {
             username: this.username,
@@ -272,7 +376,7 @@ class AnnotationExperienceAPI {
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendUpdateAnnotationMessageToServer(aId : string, aType : string,)
+    sendUpdateAnnotationMessageToServer(aId: string, aType: string,)
     {
         let json = {
             username: this.username,
@@ -311,7 +415,6 @@ class AnnotationExperienceAPI {
 
         this.documentID = values[0];
         this.text = values[1];
-        this.setVisibleText(this.element);
 
         //Unsubscribe channels for previous document
         for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
@@ -335,6 +438,8 @@ class AnnotationExperienceAPI {
         //Remember new documentID from new URL
         this.documentID = document.location.href.split("=")[1].split("&")[0];
 
+        //Refresh
+        this.refreshEditor();
     }
 
     receiveNewViewportMessageByServer(aMessage: string)
@@ -360,8 +465,6 @@ class AnnotationExperienceAPI {
         this.viewPortBegin = values[0];
         this.viewPortEnd = values[1];
         this.text = values[2];
-        this.setVisibleText(this.element);
-
 
         //Multiple subscriptions due to viewport
         for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
@@ -369,6 +472,9 @@ class AnnotationExperienceAPI {
                 that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
             }, {id: "annotation_update_" + i});
         }
+
+        //Refresh
+        this.refreshEditor();
 
     }
 

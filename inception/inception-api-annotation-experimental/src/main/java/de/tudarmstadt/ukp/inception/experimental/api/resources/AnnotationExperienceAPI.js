@@ -1060,44 +1060,11 @@ Stomp.WebSocketClass = null;
 var AnnotationExperienceAPI = class {
   constructor(aViewPortSize) {
     this.connected = false;
+    this.sentenceNumbers = false;
+    this.editor = "textarea";
     this.editAnnotation = function() {
     };
-    const that = this;
     this.viewPortSize = aViewPortSize;
-    this.element = "text";
-    onclick = function(aEvent) {
-      let elem = aEvent.target;
-      if (elem.tagName === "rect") {
-        console.log(elem);
-        console.log(elem.attributes);
-        console.log("--------");
-        console.log(elem.parentElement);
-        console.log(elem.parentElement.id);
-        console.log(elem.parentElement.attributes);
-        that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
-      }
-      if (elem.className === "far fa-caret-square-right") {
-        that.sendDocumentMessageToServer();
-      }
-      if (elem.className === "fas fa-step-forward") {
-        that.sendViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + that.viewPortSize);
-      }
-      if (elem.className === "fas fa-step-backward") {
-        that.sendViewportMessageToServer(that.viewPortBegin - that.viewPortSize, that.viewPortBegin - 1);
-      }
-      if (elem.className === "fas fa-fast-forward") {
-        that.sendViewportMessageToServer(-100, that.viewPortSize);
-      }
-      if (elem.className === "fas fa-fast-backward") {
-        that.sendViewportMessageToServer(0, that.viewPortSize - 1);
-      }
-    };
-    ondblclick = function(aEvent) {
-      let elem = aEvent.target;
-      if (elem.tagName === "text") {
-        that.sendCreateAnnotationMessageToServer("ID", "TYPE", "SENTENCE_OF_ANNOTATION");
-      }
-    };
     this.connect();
   }
   connect() {
@@ -1129,6 +1096,7 @@ var AnnotationExperienceAPI = class {
       that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function(msg) {
         that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "selected_annotation"});
+      that.registerDefaultActionHandler();
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
@@ -1143,22 +1111,113 @@ var AnnotationExperienceAPI = class {
       this.stompClient.deactivate();
     }
   }
-  setVisibleText(elementId) {
-    let textDIV = document.getElementById(elementId.toString());
-    textDIV.innerHTML = "";
+  registerOnClickActionHandler(aTagName, aAction) {
+    let that = this;
+    let elem = document.querySelector("." + aTagName);
+    if (elem != null) {
+      switch (aAction) {
+        case "select":
+          elem.addEventListener("click", () => {
+            that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
+          });
+          break;
+        case "new_document":
+          elem.addEventListener("click", () => {
+            that.sendDocumentMessageToServer();
+          });
+          break;
+        case "next_sentences":
+          elem.addEventListener("click", () => {
+            that.sendViewportMessageToServer(that.viewPortEnd + 1, that.viewPortEnd + that.viewPortSize);
+          });
+          break;
+        case "previous_sentences":
+          elem.addEventListener("click", () => {
+            that.sendViewportMessageToServer(that.viewPortBegin - that.viewPortSize, that.viewPortBegin - 1);
+          });
+          break;
+        case "last_sentences":
+          elem.addEventListener("click", () => {
+            that.sendViewportMessageToServer(-100, that.viewPortSize);
+          });
+          break;
+        case "first_sentences":
+          elem.addEventListener("click", () => {
+            that.sendViewportMessageToServer(0, that.viewPortSize - 1);
+          });
+          break;
+        default:
+          console.error("Can not register single click action, reason: Action-type not found.");
+          return;
+      }
+      console.log("Action: " + aAction + " is registered for elements: " + aTagName);
+    } else {
+      console.error("Can not register single click action, reason: Element not found.");
+    }
+  }
+  registerOnDoubleClickActionHandler(aTagName, aAction) {
+    let that = this;
+    ondblclick = function(aEvent) {
+      let elem = aEvent.target;
+      switch (aAction) {
+        case "create":
+          if (elem.className === "word") {
+            that.sendCreateAnnotationMessageToServer(elem.getAttribute("word_id"), document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"), elem.parentElement.getAttribute("sentence-id"));
+          }
+          break;
+        default:
+          console.error("Can not register double click action, reason: Action-type not found.");
+          return;
+      }
+    };
+    console.log("Action: " + aAction + " is registered for elements: " + aTagName);
+  }
+  registerDefaultActionHandler() {
+    this.registerOnClickActionHandler("rect", "select");
+    this.registerOnClickActionHandler("fa-caret-square-right", "new_document");
+    this.registerOnClickActionHandler("fa-caret-square-left", "new_document");
+    this.registerOnClickActionHandler("fa-step-forward", "next_sentences");
+    this.registerOnClickActionHandler("fa-step-backward", "previous_sentences");
+    this.registerOnClickActionHandler("fa-fast-forward", "last_sentences");
+    this.registerOnClickActionHandler("fa-fast-backward", "first_sentences");
+    this.registerOnDoubleClickActionHandler("word", "create");
+  }
+  showText(aElementId) {
+    if (this.editor == null) {
+      this.editor = aElementId;
+    }
+    let textArea = document.getElementById(aElementId.toString());
+    textArea.innerHTML = "";
+    let background = document.createElement("g");
+    background.className = "background";
+    if (this.sentenceNumbers) {
+      let rect = document.createElement("rect");
+      rect.setAttribute("x", "0");
+      rect.setAttribute("y", "4");
+      rect.setAttribute("width", "1415");
+      rect.setAttribute("height", "20");
+      rect.setAttribute("fill", "#ffffff");
+      background.appendChild(rect);
+      textArea.appendChild(background);
+    } else {
+      textArea.appendChild(background);
+    }
     let k = 0;
+    let textElement = document.createElement("g");
+    textElement.className = "text";
     for (let i = 0; i < this.viewPortSize; i++) {
       let words = this.text[i].split(" ");
-      let sentence = document.createElement("div");
-      sentence.className = "sentence";
+      let sentence = document.createElement("g");
+      sentence.className = "text-row";
+      sentence.style.display = "block";
       sentence.setAttribute("sentence-id", i.toString());
       for (let j = 0; j <= words.length; j++, k++) {
         if (j < words.length) {
-          let text_ = document.createElement("text");
-          text_.innerText = words[j];
-          text_.className = "word";
-          text_.setAttribute("word_id", k.toString());
-          sentence.appendChild(text_);
+          let word = document.createElement("text");
+          word.innerText = words[j];
+          word.className = "word";
+          word.setAttribute("word_id", k.toString());
+          sentence.appendChild(word);
           k++;
           let spaceElement = document.createElement("text");
           spaceElement.className = "space";
@@ -1175,10 +1234,28 @@ var AnnotationExperienceAPI = class {
           sentence.appendChild(fullStopElement);
         }
       }
-      textDIV.appendChild(sentence);
+      textElement.appendChild(sentence);
     }
+    textArea.appendChild(textElement);
+    let highlighting = document.createElement("g");
+    background.className = "highlighting";
+    textArea.appendChild(highlighting);
+  }
+  showSentenceNumbers(aSentenceNumbers) {
+    this.sentenceNumbers = aSentenceNumbers;
   }
   drawAnnotation() {
+  }
+  setViewportSize(aSize) {
+    this.viewPortSize = aSize;
+    this.sendViewportMessageToServer(this.viewPortBegin, this.viewPortBegin + aSize - 1);
+  }
+  refreshEditor() {
+    this.showText(this.editor);
+    this.drawAnnotation();
+    let editor = document.getElementById("textarea");
+    let content = editor.innerHTML;
+    editor.innerHTML = content;
   }
   unsubscribe(aChannel) {
     this.stompClient.unsubscribe(aChannel);
@@ -1252,7 +1329,6 @@ var AnnotationExperienceAPI = class {
     console.log(values);
     this.documentID = values[0];
     this.text = values[1];
-    this.setVisibleText(this.element);
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
     }
@@ -1266,6 +1342,7 @@ var AnnotationExperienceAPI = class {
     if (values[2] != null) {
     }
     this.documentID = document.location.href.split("=")[1].split("&")[0];
+    this.refreshEditor();
   }
   receiveNewViewportMessageByServer(aMessage) {
     console.log("RECEIVED VIEWPORT: " + aMessage);
@@ -1281,12 +1358,12 @@ var AnnotationExperienceAPI = class {
     this.viewPortBegin = values[0];
     this.viewPortEnd = values[1];
     this.text = values[2];
-    this.setVisibleText(this.element);
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + i, function(msg) {
         that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "annotation_update_" + i});
     }
+    this.refreshEditor();
   }
   receiveSelectedAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED SELECTED ANNOTATION: " + aMessage);

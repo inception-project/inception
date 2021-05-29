@@ -63,7 +63,7 @@ public class AnnotationProcessAPIImpl
     private static final String SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION = "/select_annotation_by_client";
     private static final String SERVER_SEND_CLIENT_SELECTED_ANNOTATION = "/queue/selected_annotation_for_client/";
 
-    private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_by_client/";
+    private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_by_client";
     private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_by_client";
 
     private static final String SERVER_SEND_CLIENT_UPDATE_ANNOTATION = "/topic/annotation_update_for_clients/";
@@ -149,7 +149,7 @@ public class AnnotationProcessAPIImpl
     @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_ANNOTATION)
     public void handleReceiveCreateAnnotation(Message<String> aMessage) throws IOException
     {
-        System.out.println("RECEIVED NEW ANNOTATION BY CLIENT");
+        System.out.println("RECEIVED NEW ANNOTATION BY CLIENT, Message: " + aMessage);
         annotationSystemAPIImpl.handleCreateAnnotation(purifyData(aMessage.getPayload()));
     }
 
