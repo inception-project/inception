@@ -15,22 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.messages;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class PredictionResponse
+public class Document
 {
-    @JsonProperty("document")
-    private String document;
 
-    public String getDocument()
+    private final String xmi;
+    private final long documentId;
+    private final String userId;
+
+    public Document(@JsonProperty(value = "xmi", required = true) String aXmi,
+            @JsonProperty(value = "documentId", required = true) long aDocumentId,
+            @JsonProperty(value = "userId", required = true) String aUserId)
     {
-        return document;
+        xmi = aXmi;
+        documentId = aDocumentId;
+        userId = aUserId;
     }
 
-    public void setDocument(String aDocument)
+    public String getXmi()
     {
-        document = aDocument;
+        return xmi;
     }
+
+    public Long getDocumentId()
+    {
+        return documentId;
+    }
+
+    public String getUserId()
+    {
+        return userId;
+    }
+
 }

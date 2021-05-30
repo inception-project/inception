@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
@@ -27,8 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderProperties;
 
 /**
  * <p>
