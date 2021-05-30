@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config.Exter
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExternalRecommenderAutoConfiguration#externalRecommenderFactory}.
+ * {@link ExternalRecommenderAutoConfiguration#externalRecommenderFactoryV2}.
  * </p>
  */
 public class ExternalRecommenderFactory
@@ -66,7 +66,7 @@ public class ExternalRecommenderFactory
     @Override
     public String getName()
     {
-        return "Remote classifier";
+        return "Remote classifier V2";
     }
 
     @Override
