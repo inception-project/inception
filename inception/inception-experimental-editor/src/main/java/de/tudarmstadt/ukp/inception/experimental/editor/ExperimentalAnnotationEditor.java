@@ -21,7 +21,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -34,17 +33,11 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
 {
     private static final long serialVersionUID = 2983502506977571078L;
 
-    private final WebMarkupContainer vis;
-
-
     public ExperimentalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
                                         final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
 
-        vis = new WebMarkupContainer("vis");
-        vis.setOutputMarkupId(true);
-        add(vis);
 
     }
 
@@ -58,7 +51,7 @@ public class ExperimentalAnnotationEditor extends AnnotationEditorBase
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        aTarget.add(vis);
+
     }
 
 }

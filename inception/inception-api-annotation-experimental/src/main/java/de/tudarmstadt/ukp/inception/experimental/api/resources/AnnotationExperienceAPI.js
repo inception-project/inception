@@ -1060,10 +1060,8 @@ Stomp.WebSocketClass = null;
 var AnnotationExperienceAPI = class {
   constructor(aViewPortSize) {
     this.connected = false;
-    this.sentenceNumbers = false;
+    this.sentenceNumbers = true;
     this.editor = "textarea";
-    this.editAnnotation = function() {
-    };
     this.viewPortSize = aViewPortSize;
     this.connect();
   }
@@ -1096,7 +1094,7 @@ var AnnotationExperienceAPI = class {
       that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function(msg) {
         that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "selected_annotation"});
-      that.registerDefaultActionHandler();
+      that.sendDocumentMessageToServer();
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
@@ -1118,7 +1116,7 @@ var AnnotationExperienceAPI = class {
       switch (aAction) {
         case "select":
           elem.addEventListener("click", () => {
-            that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
+            that.sendSelectAnnotationMessageToServer(elem.getAttribute("annotation-id"));
           });
           break;
         case "new_document":
@@ -1181,6 +1179,7 @@ var AnnotationExperienceAPI = class {
     this.registerOnClickActionHandler("fa-fast-forward", "last_sentences");
     this.registerOnClickActionHandler("fa-fast-backward", "first_sentences");
     this.registerOnDoubleClickActionHandler("word", "create");
+    this.registerOnDoubleClickActionHandler("stop", "create");
   }
   showText(aElementId) {
     if (this.editor == null) {
@@ -1188,19 +1187,13 @@ var AnnotationExperienceAPI = class {
     }
     let textArea = document.getElementById(aElementId.toString());
     textArea.innerHTML = "";
-    let background = document.createElement("g");
-    background.className = "background";
+    let svg = document.createElement("svg");
+    svg.setAttribute("version", "1.2");
+    svg.setAttribute("viewbox", "0 0 1415 " + this.text.length * 20);
+    svg.style.display = "font-size: 100%; width: 1417px; height: 65px";
     if (this.sentenceNumbers) {
-      let rect = document.createElement("rect");
-      rect.setAttribute("x", "0");
-      rect.setAttribute("y", "4");
-      rect.setAttribute("width", "1415");
-      rect.setAttribute("height", "20");
-      rect.setAttribute("fill", "#ffffff");
-      background.appendChild(rect);
-      textArea.appendChild(background);
-    } else {
-      textArea.appendChild(background);
+      svg.appendChild(this.createBackground());
+      svg.appendChild(this.createSentenceNumbers());
     }
     let k = 0;
     let textElement = document.createElement("g");
@@ -1210,41 +1203,96 @@ var AnnotationExperienceAPI = class {
       let sentence = document.createElement("g");
       sentence.className = "text-row";
       sentence.style.display = "block";
-      sentence.setAttribute("sentence-id", i.toString());
+      sentence.setAttribute("sentence-id", (this.viewPortBegin + i).toString());
+      let spaceElement = document.createElement("text");
+      spaceElement.className = "space";
+      spaceElement.innerText = " ";
+      spaceElement.setAttribute("x", "0");
+      spaceElement.setAttribute("y", ((i + 1) * 20 - 5).toString());
+      spaceElement.setAttribute("word_id", k.toString());
+      sentence.appendChild(spaceElement);
+      let xPrev;
+      if (this.sentenceNumbers) {
+        xPrev = 45;
+      } else {
+        xPrev = 4;
+      }
       for (let j = 0; j <= words.length; j++, k++) {
         if (j < words.length) {
           let word = document.createElement("text");
           word.innerText = words[j];
           word.className = "word";
+          word.setAttribute("x", xPrev.toString());
+          word.setAttribute("y", ((i + 1) * 20 - 5).toString());
           word.setAttribute("word_id", k.toString());
+          xPrev += word.innerText.length * 9;
           sentence.appendChild(word);
-          k++;
-          let spaceElement = document.createElement("text");
-          spaceElement.className = "space";
-          spaceElement.innerText = " ";
-          spaceElement.setAttribute("word_id", k.toString());
           if (j != words.length - 1) {
+            spaceElement = document.createElement("text");
+            spaceElement.className = "space";
+            spaceElement.innerText = " ";
+            spaceElement.setAttribute("x", xPrev.toString());
+            spaceElement.setAttribute("y", ((i + 1) * 20 - 5).toString());
+            spaceElement.setAttribute("word_id", k.toString());
+            xPrev += 4;
             sentence.appendChild(spaceElement);
           }
         } else {
           let fullStopElement = document.createElement("text");
           fullStopElement.className = "stop";
           fullStopElement.innerText = ".";
+          fullStopElement.setAttribute("x", (xPrev + 4).toString());
+          fullStopElement.setAttribute("y", ((i + 1) * 20 - 5).toString());
           fullStopElement.setAttribute("word_id", k.toString());
           sentence.appendChild(fullStopElement);
         }
       }
       textElement.appendChild(sentence);
     }
-    textArea.appendChild(textElement);
+    svg.appendChild(textElement);
     let highlighting = document.createElement("g");
-    background.className = "highlighting";
-    textArea.appendChild(highlighting);
+    highlighting.className = "highlighting";
+    svg.appendChild(highlighting);
+    textArea.appendChild(svg);
   }
   showSentenceNumbers(aSentenceNumbers) {
     this.sentenceNumbers = aSentenceNumbers;
+    this.refreshEditor();
+  }
+  createSentenceNumbers() {
+    let sentenceNumbers = document.createElement("g");
+    sentenceNumbers.className = "text";
+    for (let i = 0; i < this.viewPortSize; i++) {
+      let number = document.createElement("text");
+      number.className = "sn";
+      number.innerText = (this.viewPortBegin + i + 1).toString() + ".";
+      number.setAttribute("x", "10");
+      number.setAttribute("y", ((i + 1) * 20 - 5).toString());
+      sentenceNumbers.appendChild(number);
+    }
+    return sentenceNumbers;
+  }
+  createBackground() {
+    let background = document.createElement("g");
+    background.className = "background";
+    for (let i = 0; i < this.viewPortSize; i++) {
+      let rect = document.createElement("rect");
+      rect.setAttribute("x", "0");
+      rect.setAttribute("y", (i * 20).toString());
+      rect.setAttribute("width", "100%");
+      rect.setAttribute("height", "20");
+      if (i % 2 == 0) {
+        rect.setAttribute("fill", "#BBBBBB");
+      } else {
+        rect.setAttribute("fill", "#CCCCCC");
+      }
+      background.appendChild(rect);
+    }
+    return background;
   }
   drawAnnotation() {
+  }
+  editAnnotation() {
   }
   setViewportSize(aSize) {
     this.viewPortSize = aSize;
@@ -1341,8 +1389,8 @@ var AnnotationExperienceAPI = class {
     }
     if (values[2] != null) {
     }
-    this.documentID = document.location.href.split("=")[1].split("&")[0];
     this.refreshEditor();
+    that.registerDefaultActionHandler();
   }
   receiveNewViewportMessageByServer(aMessage) {
     console.log("RECEIVED VIEWPORT: " + aMessage);
@@ -1380,4 +1428,4 @@ var AnnotationExperienceAPI = class {
     console.log(values);
   }
 };
-var annotator = new AnnotationExperienceAPI(2);
+var annotator = new AnnotationExperienceAPI(5);

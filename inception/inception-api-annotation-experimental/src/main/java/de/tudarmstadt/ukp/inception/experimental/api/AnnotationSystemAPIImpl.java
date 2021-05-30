@@ -68,9 +68,9 @@ public class AnnotationSystemAPIImpl
     public void handleDocument(String[] aData) throws IOException
     {
         // TODO receive random new document
-        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), 41711);
+        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), 41714);
         DocumentMessage message = new DocumentMessage();
-        message.setId(41711);
+        message.setId(41714);
         String[] sentences = cas.getDocumentText().split("\\.");
         ArrayList<String> visibleSentences = new ArrayList<>();
 
@@ -104,14 +104,16 @@ public class AnnotationSystemAPIImpl
             }
         }
         else {
-            for (int i = sentences.length - (Integer.parseInt(aData[4])
-                    - Integer.parseInt(aData[3])) - 1; i < sentences.length; i++) {
+            for (int i = sentences.length
+                    - (Integer.parseInt(aData[4]) - Integer.parseInt(aData[3]))
+                    - 1; i < sentences.length; i++) {
                 visibleSentences.add(sentences[i].replace("\n", ""));
             }
         }
 
-        ViewportMessage message = new ViewportMessage(Integer.parseInt(aData[3]),
-                Integer.parseInt(aData[4]));
+        ViewportMessage message = new ViewportMessage(
+                sentences.length - (Integer.parseInt(aData[4]) - Integer.parseInt(aData[3])) - 1,
+                sentences.length - 1);
         message.setText(visibleSentences.toArray(new String[0]));
         annotationProcessAPI.handleSendViewportRequest(message, aData[0]);
 
@@ -129,7 +131,8 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleCreateAnnotation(String[] aData) throws IOException {
+    public void handleCreateAnnotation(String[] aData) throws IOException
+    {
         CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
         // TODO createAnnotation
         AnnotationMessage message = new AnnotationMessage();
