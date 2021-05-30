@@ -62,12 +62,11 @@
             </div>
             <div class="card-body">
               <div class="form-group form-row">
-                <label class="col-sm-3 col-form-label"><wicket:message key="text"/></label>
-                <div class="col-sm-9" style="position: relative; height: 5em;">
+                <div class="col-sm-12 p-0" style="position: relative; height: 5em;">
                   <div class="form-control"
-                    style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;"
+                    style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 5px; right: 5px;"
                     readonly>
-                    <a wicket:id="recommendationCoveredTextLink">
+                    <a wicket:id="recommendationCoveredTextLink" class="small">
                       <wicket:container wicket:id="leftContext"/>
                       <kbd><wicket:container wicket:id="text"/></kbd>
                       <wicket:container wicket:id="rightContext"/>
@@ -75,23 +74,29 @@
                   </div>
                 </div>
               </div>
-              <div class="form-group form-row">
-                <label class="col-sm-3 col-form-label"><wicket:message key="suggestion"/></label>
-                <div class="col-sm-9">
-                  <span class="form-control" wicket:id="recommendedPredition"></span>
+              <div class="feature-editors-sidebar">
+                <div class="form-group form-row">
+                  <label class="feature-editor-label col-form-label">
+                    <wicket:message key="suggestion"/>
+                  </label>
+                  <div class="feature-editor-value">
+                    <span class="form-control" wicket:id="recommendedPredition"></span>
+                  </div>
                 </div>
-              </div>
-              <div class="form-group form-row">
-                <label class="col-sm-3 col-form-label"><wicket:message key="score"/></label>
-                <div class="col-sm-9">
-                  <span class="form-control"> 
-                    <wicket:container wicket:id="recommendedScore"/>
-                    (<wicket:message key="delta"/>
-                    <wicket:container wicket:id="recommendedDifference"/>)
-                  </span>
+                <div class="form-group form-row">
+                  <label class="feature-editor-label col-form-label">
+                    <wicket:message key="score"/>
+                  </label>
+                  <div class="feature-editor-value">
+                    <span class="form-control"> 
+                      <wicket:container wicket:id="recommendedScore"/>
+                      (<wicket:message key="delta"/>
+                      <wicket:container wicket:id="recommendedDifference"/>)
+                    </span>
+                  </div>
                 </div>
+                <div wicket:id="editor"></div>
               </div>
-              <div wicket:id="editor"></div>
             </div>
             <div class="card-footer text-right">
               <input type="submit" class="btn btn-success" wicket:id="annotateButton" value="Annotate"/>
