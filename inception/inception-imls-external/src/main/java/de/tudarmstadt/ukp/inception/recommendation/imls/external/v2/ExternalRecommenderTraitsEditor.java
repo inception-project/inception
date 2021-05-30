@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.net.URI;
+import java.util.Collections;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -32,11 +34,14 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ClassifierInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderV2Api;
 
 public class ExternalRecommenderTraitsEditor
@@ -49,7 +54,9 @@ public class ExternalRecommenderTraitsEditor
     private @SpringBean RecommendationEngineFactory<ExternalRecommenderTraits> toolFactory;
 
     private final ExternalRecommenderTraits traits;
-    private final LambdaAjaxButton<?> checkButton;
+    private final LambdaAjaxButton<?> checkServerConnectionButton;
+    private final LambdaAjaxButton<?> checkClassifierButton;
+    private final BootstrapSelect<ClassifierInfo> classifierInfoSelect;
 
     public ExternalRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
@@ -75,8 +82,18 @@ public class ExternalRecommenderTraitsEditor
         remoteUrl.add(new UrlValidator());
         form.add(remoteUrl);
 
-        checkButton = new LambdaAjaxButton<>("pingButton", this::checkConnection);
-        form.add(checkButton);
+        checkServerConnectionButton = new LambdaAjaxButton<>("checkServerConnection",
+                this::checkServerConnection);
+        form.add(checkServerConnectionButton);
+
+        // TODO: Make combo box
+        classifierInfoSelect = new BootstrapSelect<>("classifierInfo");
+        classifierInfoSelect.setChoiceRenderer(new LambdaChoiceRenderer<>(ClassifierInfo::getName));
+        classifierInfoSelect.setOutputMarkupId(true);
+        form.add(classifierInfoSelect);
+
+        checkClassifierButton = new LambdaAjaxButton<>("checkClassifier", this::checkClassifier);
+        form.add(checkClassifierButton);
 
         CheckBox trainable = new CheckBox("trainable");
         trainable.setOutputMarkupId(true);
@@ -89,7 +106,7 @@ public class ExternalRecommenderTraitsEditor
         add(form);
     }
 
-    private void checkConnection(AjaxRequestTarget aTarget, Form<?> aForm)
+    private void checkServerConnection(AjaxRequestTarget aTarget, Form<?> aForm)
     {
         URI uri = URI.create(traits.getRemoteUrl());
         ExternalRecommenderV2Api api = new ExternalRecommenderV2Api(uri);
@@ -97,13 +114,36 @@ public class ExternalRecommenderTraitsEditor
         String newClass;
         if (api.isReachable()) {
             newClass = "btn btn-success";
+            classifierInfoSelect.setChoices(api.getAvailableClassifiers());
+        }
+        else {
+            newClass = "btn btn-danger";
+            classifierInfoSelect.setChoices(Collections.emptyList());
+        }
+
+        checkServerConnectionButton.add(AttributeModifier.append("class", newClass));
+
+        aTarget.add(checkServerConnectionButton);
+        aTarget.add(classifierInfoSelect);
+    }
+
+    private void checkClassifier(AjaxRequestTarget aTarget, Form<?> aForm)
+    {
+        URI uri = URI.create(traits.getRemoteUrl());
+        ExternalRecommenderV2Api api = new ExternalRecommenderV2Api(uri);
+
+        String newClass;
+        String classifierName = traits.getClassifierInfo().getName();
+        if (isNotEmpty(classifierName) && api.getClassifierInfo(classifierName).isPresent()) {
+            newClass = "btn btn-success";
         }
         else {
             newClass = "btn btn-danger";
         }
 
-        checkButton.add(AttributeModifier.append("class", newClass));
+        checkClassifierButton.add(AttributeModifier.append("class", newClass));
 
-        aTarget.add(checkButton);
+        aTarget.add(checkClassifierButton);
     }
+
 }

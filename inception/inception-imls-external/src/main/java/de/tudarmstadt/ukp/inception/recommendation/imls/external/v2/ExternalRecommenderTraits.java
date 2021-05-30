@@ -19,12 +19,15 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
 
 import java.io.Serializable;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ClassifierInfo;
+
 public class ExternalRecommenderTraits
     implements Serializable
 {
     private static final long serialVersionUID = -3109239605741337123L;
 
-    private String remoteUrl;
+    private String remoteUrl = "http://localhost:8000";
+    private ClassifierInfo classifierInfo;
     private boolean trainable;
 
     public String getRemoteUrl()
@@ -35,6 +38,16 @@ public class ExternalRecommenderTraits
     public void setRemoteUrl(String aRemoteUrl)
     {
         remoteUrl = aRemoteUrl;
+    }
+
+    public ClassifierInfo getClassifierInfo()
+    {
+        return classifierInfo;
+    }
+
+    public void setClassifierInfo(ClassifierInfo aClassifierInfo)
+    {
+        classifierInfo = aClassifierInfo;
     }
 
     public boolean isTrainable()
