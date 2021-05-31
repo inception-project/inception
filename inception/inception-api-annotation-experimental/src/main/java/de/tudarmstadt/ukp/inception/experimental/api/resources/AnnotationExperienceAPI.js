@@ -1289,33 +1289,38 @@ var AnnotationExperienceAPI = class {
     return background;
   }
   drawAnnotation(aAnnotations) {
+    console.log(this.annotations);
     let highlighting = document.createElement("g");
     highlighting.className = "highlighting";
-    let keys = Object.keys(aAnnotations);
-    let values = keys.map((k) => aAnnotations[k]);
-    let offset;
-    if (this.sentenceNumbers) {
-      offset = 45;
+    highlighting.innerHTML = "";
+    if (aAnnotations.length > 0) {
+      let keys = Object.keys(aAnnotations);
+      let values = keys.map((k) => aAnnotations[k]);
+      let offset;
+      if (this.sentenceNumbers) {
+        offset = 45;
+      } else {
+        offset = 4;
+      }
+      for (let val of values) {
+        let annotation = document.createElement("g");
+        annotation.className = "annotation";
+        let rect = document.createElement("rect");
+        rect.setAttribute("x", (Number(val.begin * 8) + offset).toString());
+        rect.setAttribute("y", "0");
+        rect.setAttribute("width", Number(val.word.length * 8).toString());
+        rect.setAttribute("height", "20");
+        rect.setAttribute("id", val.id);
+        rect.setAttribute("type", val.type);
+        rect.setAttribute("fill", this.getColorForAnnotation(val.type));
+        rect.style.opacity = "0.5";
+        annotation.appendChild(rect);
+        highlighting.appendChild(annotation);
+      }
+      return highlighting;
     } else {
-      offset = 4;
+      return highlighting;
     }
-    for (let val of values) {
-      let annotation = document.createElement("g");
-      annotation.className = "annotation";
-      let rect = document.createElement("rect");
-      console.log(val);
-      rect.setAttribute("x", (Number(val.begin * 8) + offset).toString());
-      rect.setAttribute("y", "0");
-      rect.setAttribute("width", Number(val.word.length * 8).toString());
-      rect.setAttribute("height", "20");
-      rect.setAttribute("id", val.id);
-      rect.setAttribute("type", val.type);
-      rect.setAttribute("fill", this.getColorForAnnotation(val.type));
-      rect.style.opacity = "0.5";
-      annotation.appendChild(rect);
-      highlighting.appendChild(annotation);
-    }
-    return highlighting;
   }
   editAnnotation() {
   }
@@ -1413,9 +1418,9 @@ var AnnotationExperienceAPI = class {
     const that = this;
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
-    console.log(values);
     this.documentID = values[0];
     this.text = values[1];
+    this.annotations = [];
     this.annotations = values[2];
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
@@ -1427,9 +1432,6 @@ var AnnotationExperienceAPI = class {
         that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "annotation_update_" + i});
     }
-    if (values[2] != null) {
-      this.drawAnnotation(values[2]);
-    }
     this.refreshEditor();
   }
   receiveNewViewportMessageByServer(aMessage) {
@@ -1437,24 +1439,18 @@ var AnnotationExperienceAPI = class {
     const that = this;
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
-    console.log(values[0]);
-    console.log(values[1]);
-    console.log(values[2]);
-    console.log(values[3]);
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
     }
     this.viewPortBegin = values[0];
     this.viewPortEnd = values[1];
     this.text = values[2];
+    this.annotations = [];
     this.annotations = values[3];
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + i, function(msg) {
         that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "annotation_update_" + i});
-    }
-    if (values[3] != null) {
-      this.drawAnnotation(values[2]);
     }
     this.refreshEditor();
   }
