@@ -93,5 +93,9 @@
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-api-dao</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-review-editor</artifactId>
+        </dependency>
     </dependencies>
 </project>

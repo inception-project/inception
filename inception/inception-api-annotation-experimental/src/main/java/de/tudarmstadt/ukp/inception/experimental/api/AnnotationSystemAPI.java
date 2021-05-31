@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 
@@ -46,5 +47,7 @@ public interface AnnotationSystemAPI
      * @return CAS
      */
     CAS getCasForDocument(String aUser, long aProject, long aDocument);
+
+    List<Annotation> getAnnotations(CAS aCas, long aProject);
 
 }

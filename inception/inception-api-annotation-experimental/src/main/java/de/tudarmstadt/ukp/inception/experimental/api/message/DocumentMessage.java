@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.message;
 
+import java.util.List;
+
+import de.tudarmstadt.ukp.inception.experimental.api.Annotation;
+
 public class DocumentMessage
 {
     private int id;
     private String [] viewportText;
+    private List<Annotation> annotations;
 
     public int getId()
     {
@@ -40,5 +45,15 @@ public class DocumentMessage
     public void setViewportText(String[] aViewportText)
     {
         this.viewportText = aViewportText;
+    }
+
+    public List<Annotation> getAnnotations()
+    {
+        return annotations;
+    }
+
+    public void setAnnotations(List<Annotation> aAnnotations)
+    {
+        annotations = aAnnotations;
     }
 }

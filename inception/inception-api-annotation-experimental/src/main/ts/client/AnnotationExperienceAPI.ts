@@ -36,11 +36,16 @@ class AnnotationExperienceAPI {
     //Text
     text: String[];
     sentenceNumbers: boolean = true;
+    annotations: Object[];
 
     //Editor element
-    editor: string = "textarea";
+    editor: string;
+    lineColorFirst: string = "#BBBBBB";
+    lineColorSecond: string = "#CCCCCC";
 
-    constructor(aViewPortSize: number) {
+
+    constructor(aEditor: string, aViewPortSize: number) {
+        this.editor = aEditor;
         this.viewPortSize = aViewPortSize;
         this.connect();
     }
@@ -61,7 +66,6 @@ class AnnotationExperienceAPI {
             return new WebSocket(url);
         });
 
-        //REQUIRED DUE TO JS SCOPE
         const that = this;
 
         this.stompClient.onConnect = function (frame) {
@@ -92,8 +96,6 @@ class AnnotationExperienceAPI {
             that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function (msg) {
                 that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
             }, {id: "selected_annotation"});
-
-            that.sendDocumentMessageToServer();
 
         };
 
@@ -131,9 +133,9 @@ class AnnotationExperienceAPI {
             //Click events on annotation page specific items
             switch (aAction) {
                 case "select":
-                    elem.addEventListener("click", () => {
-                        that.sendSelectAnnotationMessageToServer(elem.getAttribute("annotation-id"));
-                    });
+                    for (let item of document.getElementsByClassName(aTagName)) {
+                        item.setAttribute("onclick", 'AnnotationExperienceAPI.sendSelectAnnotationMessageToServer(evt.target.attributes[3])');
+                    }
                     break;
                 case "new_document":
                     elem.addEventListener("click", () => {
@@ -175,16 +177,15 @@ class AnnotationExperienceAPI {
 
     registerOnDoubleClickActionHandler(aTagName: string, aAction: string)
     {
-        let that = this;
-
-        ondblclick = function (aEvent) {
-            let elem = <Element>aEvent.target;
+        let elements = document.getElementsByClassName(aTagName);
+        if (elements !=  null) {
             switch (aAction) {
                 case  "create":
-                    if (elem.className === 'word') {
-                        that.sendCreateAnnotationMessageToServer(elem.getAttribute("word_id"),
-                            document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),
-                            elem.parentElement.getAttribute("sentence-id"));
+                    for (let item of elements) {
+                        item.setAttribute("ondblclick",
+                            'annotationExperienceAPI.sendCreateAnnotationMessageToServer(evt.target.attributes[3].value,' +
+                            'document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),' +
+                            'evt.target.parentElement.attributes[1].value)');
                     }
                     break;
                 default:
@@ -198,7 +199,7 @@ class AnnotationExperienceAPI {
 
     registerDefaultActionHandler()
     {
-        this.registerOnClickActionHandler("rect", "select");
+        this.registerOnClickActionHandler("annotation", "select");
         this.registerOnClickActionHandler("fa-caret-square-right", "new_document");
         this.registerOnClickActionHandler("fa-caret-square-left", "new_document");
         this.registerOnClickActionHandler("fa-step-forward", "next_sentences");
@@ -226,8 +227,10 @@ class AnnotationExperienceAPI {
         svg.style.display = "font-size: 100%; width: 1417px; height: 65px";
 
         //Sentencenumbers enabled
+
+        svg.appendChild(this.createBackground());
+
         if (this.sentenceNumbers) {
-            svg.appendChild(this.createBackground());
             svg.appendChild(this.createSentenceNumbers())
         }
 
@@ -297,9 +300,7 @@ class AnnotationExperienceAPI {
 
 
         //Highlighting
-        let highlighting = document.createElement("g");
-        highlighting.className = "highlighting";
-        svg.appendChild(highlighting);
+        svg.appendChild(this.drawAnnotation(this.annotations));
 
         textArea.appendChild(svg);
     }
@@ -323,9 +324,7 @@ class AnnotationExperienceAPI {
             number.setAttribute("y", ((i + 1) * 20 - 5).toString());
             sentenceNumbers.appendChild(number);
         }
-
         return sentenceNumbers;
-
     }
 
     createBackground()
@@ -341,17 +340,52 @@ class AnnotationExperienceAPI {
             rect.setAttribute("width", "100%");
             rect.setAttribute("height", "20");
             if (i % 2 == 0) {
-                rect.setAttribute("fill", "#BBBBBB");
+                rect.setAttribute("fill", this.lineColorFirst);
             } else{
-                rect.setAttribute("fill", "#CCCCCC");
+                rect.setAttribute("fill", this.lineColorSecond);
             }
             background.appendChild(rect);
         }
         return background;
     }
 
-    drawAnnotation()
+    drawAnnotation(aAnnotations: Object[])
     {
+
+        let highlighting = document.createElement("g");
+        highlighting.className = "highlighting";
+
+        //Parse data
+        let keys = Object.keys(aAnnotations)
+        let values = keys.map(k => aAnnotations[k])
+
+        let offset : number;
+        if (this.sentenceNumbers) {
+            offset = 45;
+        } else {
+            offset = 4;
+        }
+
+        for (let val of values) {
+            let annotation = document.createElement("g");
+            annotation.className = "annotation";
+
+            let rect = document.createElement("rect");
+            rect.setAttribute("x", (Number(val.begin * 8) + offset).toString());
+            rect.setAttribute("y", "0");
+            rect.setAttribute("width", (Number(val.word.length * 8).toString()));
+            rect.setAttribute("height", "20");
+            rect.setAttribute("id", val.id);
+            rect.setAttribute("type", val.type);
+            rect.setAttribute("fill", this.getColorForAnnotation(val.type));
+            rect.style.opacity = "0.5";
+
+            annotation.appendChild(rect);
+            highlighting.appendChild(annotation);
+        }
+
+
+        return highlighting;
     }
 
     editAnnotation()
@@ -359,17 +393,38 @@ class AnnotationExperienceAPI {
 
     }
 
+    getColorForAnnotation(type: string)
+    {
+        return "#87CEEB";
+    }
+
+    setLineColors(aLineColorFirst: string, aLineColorSecond: string)
+    {
+        this.lineColorFirst = aLineColorFirst;
+        this.lineColorSecond = aLineColorSecond;
+
+        this.refreshEditor();
+    }
+
+    resetLineColor()
+    {
+        this.lineColorFirst = "#BBBBBB";
+        this.lineColorSecond = "#CCCCCC"
+
+        this.refreshEditor();
+    }
+
     setViewportSize(aSize: number)
     {
         this.viewPortSize = aSize;
-        this.sendViewportMessageToServer(this.viewPortBegin, this.viewPortBegin + aSize - 1);
+        this.viewPortEnd = this.viewPortBegin + aSize - 1;
+        this.sendViewportMessageToServer(this.viewPortBegin, this.viewPortEnd);
     }
 
     refreshEditor()
     {
-
         this.showText(this.editor);
-        this.drawAnnotation();
+        this.drawAnnotation(this.annotations);
 
         let editor = document.getElementById("textarea");
         let content = editor.innerHTML;
@@ -475,6 +530,7 @@ class AnnotationExperienceAPI {
 
         this.documentID = values[0];
         this.text = values[1];
+        this.annotations = values[2];
 
         //Unsubscribe channels for previous document
         for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
@@ -493,13 +549,11 @@ class AnnotationExperienceAPI {
 
         //Draw the visible annotations
         if (values[2] != null) {
+            this.drawAnnotation(values[2])
         }
 
         //Refresh
         this.refreshEditor();
-
-        //
-        that.registerDefaultActionHandler();
     }
 
     receiveNewViewportMessageByServer(aMessage: string)
@@ -516,6 +570,7 @@ class AnnotationExperienceAPI {
         console.log(values[0])
         console.log(values[1])
         console.log(values[2])
+        console.log(values[3])
 
         //Unsubscribe channels for previous document
         for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
@@ -525,12 +580,18 @@ class AnnotationExperienceAPI {
         this.viewPortBegin = values[0];
         this.viewPortEnd = values[1];
         this.text = values[2];
+        this.annotations = values[3];
 
         //Multiple subscriptions due to viewport
         for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
             this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + i, function (msg) {
                 that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
             }, {id: "annotation_update_" + i});
+        }
+
+        //Draw the visible annotations
+        if (values[3] != null) {
+            this.drawAnnotation(values[2])
         }
 
         //Refresh
@@ -559,4 +620,6 @@ class AnnotationExperienceAPI {
     }
 }
 
-let annotator = new AnnotationExperienceAPI(5);
+
+
+let annotationExperienceAPI = new AnnotationExperienceAPI("textarea",5);

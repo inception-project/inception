@@ -1058,10 +1058,12 @@ Stomp.WebSocketClass = null;
 
 // client/AnnotationExperienceAPI.ts
 var AnnotationExperienceAPI = class {
-  constructor(aViewPortSize) {
+  constructor(aEditor, aViewPortSize) {
     this.connected = false;
     this.sentenceNumbers = true;
-    this.editor = "textarea";
+    this.lineColorFirst = "#BBBBBB";
+    this.lineColorSecond = "#CCCCCC";
+    this.editor = aEditor;
     this.viewPortSize = aViewPortSize;
     this.connect();
   }
@@ -1094,7 +1096,6 @@ var AnnotationExperienceAPI = class {
       that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function(msg) {
         that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "selected_annotation"});
-      that.sendDocumentMessageToServer();
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
@@ -1115,9 +1116,9 @@ var AnnotationExperienceAPI = class {
     if (elem != null) {
       switch (aAction) {
         case "select":
-          elem.addEventListener("click", () => {
-            that.sendSelectAnnotationMessageToServer(elem.getAttribute("annotation-id"));
-          });
+          for (let item of document.getElementsByClassName(aTagName)) {
+            item.setAttribute("onclick", "AnnotationExperienceAPI.sendSelectAnnotationMessageToServer(evt.target.attributes[3])");
+          }
           break;
         case "new_document":
           elem.addEventListener("click", () => {
@@ -1154,24 +1155,23 @@ var AnnotationExperienceAPI = class {
     }
   }
   registerOnDoubleClickActionHandler(aTagName, aAction) {
-    let that = this;
-    ondblclick = function(aEvent) {
-      let elem = aEvent.target;
+    let elements = document.getElementsByClassName(aTagName);
+    if (elements != null) {
       switch (aAction) {
         case "create":
-          if (elem.className === "word") {
-            that.sendCreateAnnotationMessageToServer(elem.getAttribute("word_id"), document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"), elem.parentElement.getAttribute("sentence-id"));
+          for (let item of elements) {
+            item.setAttribute("ondblclick", 'annotationExperienceAPI.sendCreateAnnotationMessageToServer(evt.target.attributes[3].value,document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),evt.target.parentElement.attributes[1].value)');
           }
           break;
         default:
           console.error("Can not register double click action, reason: Action-type not found.");
           return;
       }
-    };
+    }
     console.log("Action: " + aAction + " is registered for elements: " + aTagName);
   }
   registerDefaultActionHandler() {
-    this.registerOnClickActionHandler("rect", "select");
+    this.registerOnClickActionHandler("annotation", "select");
     this.registerOnClickActionHandler("fa-caret-square-right", "new_document");
     this.registerOnClickActionHandler("fa-caret-square-left", "new_document");
     this.registerOnClickActionHandler("fa-step-forward", "next_sentences");
@@ -1191,8 +1191,8 @@ var AnnotationExperienceAPI = class {
     svg.setAttribute("version", "1.2");
     svg.setAttribute("viewbox", "0 0 1415 " + this.text.length * 20);
     svg.style.display = "font-size: 100%; width: 1417px; height: 65px";
+    svg.appendChild(this.createBackground());
     if (this.sentenceNumbers) {
-      svg.appendChild(this.createBackground());
       svg.appendChild(this.createSentenceNumbers());
     }
     let k = 0;
@@ -1250,9 +1250,7 @@ var AnnotationExperienceAPI = class {
       textElement.appendChild(sentence);
     }
     svg.appendChild(textElement);
-    let highlighting = document.createElement("g");
-    highlighting.className = "highlighting";
-    svg.appendChild(highlighting);
+    svg.appendChild(this.drawAnnotation(this.annotations));
     textArea.appendChild(svg);
   }
   showSentenceNumbers(aSentenceNumbers) {
@@ -1282,25 +1280,66 @@ var AnnotationExperienceAPI = class {
       rect.setAttribute("width", "100%");
       rect.setAttribute("height", "20");
       if (i % 2 == 0) {
-        rect.setAttribute("fill", "#BBBBBB");
+        rect.setAttribute("fill", this.lineColorFirst);
       } else {
-        rect.setAttribute("fill", "#CCCCCC");
+        rect.setAttribute("fill", this.lineColorSecond);
       }
       background.appendChild(rect);
     }
     return background;
   }
-  drawAnnotation() {
+  drawAnnotation(aAnnotations) {
+    let highlighting = document.createElement("g");
+    highlighting.className = "highlighting";
+    let keys = Object.keys(aAnnotations);
+    let values = keys.map((k) => aAnnotations[k]);
+    let offset;
+    if (this.sentenceNumbers) {
+      offset = 45;
+    } else {
+      offset = 4;
+    }
+    for (let val of values) {
+      let annotation = document.createElement("g");
+      annotation.className = "annotation";
+      let rect = document.createElement("rect");
+      console.log(val);
+      rect.setAttribute("x", (Number(val.begin * 8) + offset).toString());
+      rect.setAttribute("y", "0");
+      rect.setAttribute("width", Number(val.word.length * 8).toString());
+      rect.setAttribute("height", "20");
+      rect.setAttribute("id", val.id);
+      rect.setAttribute("type", val.type);
+      rect.setAttribute("fill", this.getColorForAnnotation(val.type));
+      rect.style.opacity = "0.5";
+      annotation.appendChild(rect);
+      highlighting.appendChild(annotation);
+    }
+    return highlighting;
   }
   editAnnotation() {
   }
+  getColorForAnnotation(type) {
+    return "#87CEEB";
+  }
+  setLineColors(aLineColorFirst, aLineColorSecond) {
+    this.lineColorFirst = aLineColorFirst;
+    this.lineColorSecond = aLineColorSecond;
+    this.refreshEditor();
+  }
+  resetLineColor() {
+    this.lineColorFirst = "#BBBBBB";
+    this.lineColorSecond = "#CCCCCC";
+    this.refreshEditor();
+  }
   setViewportSize(aSize) {
     this.viewPortSize = aSize;
-    this.sendViewportMessageToServer(this.viewPortBegin, this.viewPortBegin + aSize - 1);
+    this.viewPortEnd = this.viewPortBegin + aSize - 1;
+    this.sendViewportMessageToServer(this.viewPortBegin, this.viewPortEnd);
   }
   refreshEditor() {
     this.showText(this.editor);
-    this.drawAnnotation();
+    this.drawAnnotation(this.annotations);
     let editor = document.getElementById("textarea");
     let content = editor.innerHTML;
     editor.innerHTML = content;
@@ -1377,6 +1416,7 @@ var AnnotationExperienceAPI = class {
     console.log(values);
     this.documentID = values[0];
     this.text = values[1];
+    this.annotations = values[2];
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
     }
@@ -1388,9 +1428,9 @@ var AnnotationExperienceAPI = class {
       }, {id: "annotation_update_" + i});
     }
     if (values[2] != null) {
+      this.drawAnnotation(values[2]);
     }
     this.refreshEditor();
-    that.registerDefaultActionHandler();
   }
   receiveNewViewportMessageByServer(aMessage) {
     console.log("RECEIVED VIEWPORT: " + aMessage);
@@ -1400,16 +1440,21 @@ var AnnotationExperienceAPI = class {
     console.log(values[0]);
     console.log(values[1]);
     console.log(values[2]);
+    console.log(values[3]);
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.unsubscribe("annotation_update_" + i.toString());
     }
     this.viewPortBegin = values[0];
     this.viewPortEnd = values[1];
     this.text = values[2];
+    this.annotations = values[3];
     for (let i = this.viewPortBegin; i < this.viewPortBegin + this.viewPortSize; i++) {
       this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + i, function(msg) {
         that.receiveAnnotationMessageByServer(JSON.parse(msg.body));
       }, {id: "annotation_update_" + i});
+    }
+    if (values[3] != null) {
+      this.drawAnnotation(values[2]);
     }
     this.refreshEditor();
   }
@@ -1428,4 +1473,4 @@ var AnnotationExperienceAPI = class {
     console.log(values);
   }
 };
-var annotator = new AnnotationExperienceAPI(5);
+var annotationExperienceAPI = new AnnotationExperienceAPI("textarea", 5);

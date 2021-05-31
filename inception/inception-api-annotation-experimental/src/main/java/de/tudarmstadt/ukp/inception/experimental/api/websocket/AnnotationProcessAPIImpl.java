@@ -27,6 +27,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -71,7 +72,8 @@ public class AnnotationProcessAPIImpl
     public AnnotationProcessAPIImpl(ProjectService aProjectService,
             DocumentService aDocumentService, UserDao aUserDao,
             RepositoryProperties aRepositoryProperties,
-            SimpMessagingTemplate aSimpMessagingTemplate)
+            SimpMessagingTemplate aSimpMessagingTemplate,
+            AnnotationSchemaService annotationSchemaService)
     {
         this.projectService = aProjectService;
         this.documentService = aDocumentService;
@@ -79,7 +81,7 @@ public class AnnotationProcessAPIImpl
         this.repositoryProperties = aRepositoryProperties;
         this.simpMessagingTemplate = aSimpMessagingTemplate;
         this.annotationSystemAPIImpl = new AnnotationSystemAPIImpl(aProjectService,
-                aDocumentService, aUserDao, aRepositoryProperties, this);
+                aDocumentService, aUserDao, aRepositoryProperties, this, annotationSchemaService);
     }
 
     // ----------- ERROR HANDLER ------------- //
