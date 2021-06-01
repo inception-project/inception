@@ -81,7 +81,7 @@ public class SpanSuggestionVisibilityCalculationTests
 
         layer = new AnnotationLayer();
         layer.setName(neName);
-        layer.setId(new Long(42));
+        layer.setId(42l);
         layerId = layer.getId();
 
         project = new Project();

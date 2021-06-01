@@ -43,7 +43,7 @@
         <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
           <span class="flex-content no-data-notice" wicket:id="noRecommenders">no Recommenders</span>
         
-          <div class="card" wicket:enclosure="noRecommendationLabel">
+          <div class="card mt-3" wicket:enclosure="noRecommendationLabel">
             <div class="card-body">
               <span class="no-data-notice" wicket:id="noRecommendationLabel"></span>
             </div>
@@ -60,7 +60,7 @@
             <div class="card-header small">
               <wicket:message key="recommendation"/>
             </div>
-            <div class="card-body">
+            <div class="card-body  pb-1">
               <div class="form-group form-row">
                 <div class="col-sm-12 p-0" style="position: relative; height: 5em;">
                   <div class="form-control"
@@ -90,15 +90,17 @@
                   <div class="feature-editor-value">
                     <span class="form-control"> 
                       <wicket:container wicket:id="recommendedScore"/>
+                      <span class="float-right small text-muted">
                       (<wicket:message key="delta"/>
                       <wicket:container wicket:id="recommendedDifference"/>)
+                      </span>
                     </span>
                   </div>
                 </div>
                 <div wicket:id="editor"></div>
               </div>
             </div>
-            <div class="card-footer text-right">
+            <div class="card-footer flex-h-container btn-group">
               <input type="submit" class="btn btn-success" wicket:id="annotateButton" value="Annotate"/>
               <input type="button" class="btn btn-danger" wicket:id="rejectButton" value="Reject"/>
               <input type="button" class="btn btn-warning" wicket:id="skipButton" value="Skip"/>
