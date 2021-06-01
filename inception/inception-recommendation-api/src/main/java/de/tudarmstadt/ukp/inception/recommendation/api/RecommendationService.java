@@ -173,6 +173,8 @@ public interface RecommendationService
 
     void clearState(String aUsername);
 
+    void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument);
+
     void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument);
 

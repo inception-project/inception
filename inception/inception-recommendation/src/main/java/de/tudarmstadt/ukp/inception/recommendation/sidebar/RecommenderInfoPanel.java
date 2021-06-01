@@ -116,7 +116,7 @@ public class RecommenderInfoPanel
                         state.add(AttributeAppender.append("class", "badge-success"));
                     }
                     else {
-                        state.add(new Icon("state", FontAwesome5IconType.stop_circle_s));
+                        state.add(new Icon("icon", FontAwesome5IconType.stop_circle_s));
                         state.add(AttributeModifier.replace("title",
                                 evalRec.getDeactivationReason()));
                         state.add(AttributeModifier.append("style", "; cursor: help"));
@@ -124,7 +124,7 @@ public class RecommenderInfoPanel
                     }
                 }
                 else {
-                    state.add(new Icon("state", FontAwesome5IconType.hourglass_half_s));
+                    state.add(new Icon("icon", FontAwesome5IconType.hourglass_half_s));
                     state.add(AttributeAppender.append("class", "badge-light"));
                 }
                 item.add(state);
