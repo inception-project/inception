@@ -130,6 +130,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
@@ -286,6 +287,17 @@ public class RecommendationServiceImpl
         RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
             return new ArrayList<>(state.getEvaluatedRecommenders().get(aLayer));
+        }
+    }
+
+    @Override
+    public Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser,
+            Recommender aRecommender)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        synchronized (state) {
+            return state.getEvaluatedRecommenders().get(aRecommender.getLayer()).stream()
+                    .filter(r -> r.getRecommender().equals(aRecommender)).findAny();
         }
     }
 
@@ -642,10 +654,23 @@ public class RecommendationServiceImpl
             // i.e. we do not start it here.
             Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
+
+            RecommendationState state = getState(aUser, aProject);
+            synchronized (state) {
+                state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
+                state.setPredictionsSinceLastEvaluation(0);
+            }
         }
         else {
             Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
+
+            RecommendationState state = getState(aUser, aProject);
+            synchronized (state) {
+                int predictions = state.getPredictionsSinceLastEvaluation() + 1;
+                state.setPredictionsSinceLastEvaluation(predictions);
+                state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - predictions - 1);
+            }
         }
     }
 
@@ -958,6 +983,8 @@ public class RecommendationServiceImpl
         private Predictions activePredictions;
         private Predictions incomingPredictions;
         private boolean predictForAllDocuments;
+        private int predictionsSinceLastEvaluation;
+        private int predictionsUntilNextEvaluation;
 
         {
             preferences = new Preferences();
@@ -994,6 +1021,26 @@ public class RecommendationServiceImpl
         public MultiValuedMap<AnnotationLayer, EvaluatedRecommender> getEvaluatedRecommenders()
         {
             return evaluatedRecommenders;
+        }
+
+        public void setPredictionsSinceLastEvaluation(int aPredictionsSinceLastEvaluation)
+        {
+            predictionsSinceLastEvaluation = aPredictionsSinceLastEvaluation;
+        }
+
+        public int getPredictionsSinceLastEvaluation()
+        {
+            return predictionsSinceLastEvaluation;
+        }
+
+        public void setPredictionsUntilNextEvaluation(int aPredictionsUntilNextEvaluation)
+        {
+            predictionsUntilNextEvaluation = aPredictionsUntilNextEvaluation;
+        }
+
+        public int getPredictionsUntilNextEvaluation()
+        {
+            return predictionsUntilNextEvaluation;
         }
 
         public void setEvaluatedRecommenders(AnnotationLayer aLayer,
@@ -2012,5 +2059,15 @@ public class RecommendationServiceImpl
         return recommenders.stream() //
                 .filter(rec -> getRecommenderFactory(rec).isPresent()) //
                 .count();
+    }
+
+    @Override
+    public Progress getProgressTowardsNextEvaluation(User aUser, Project aProject)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aProject);
+        synchronized (state) {
+            return new Progress(state.getPredictionsSinceLastEvaluation(),
+                    state.getPredictionsUntilNextEvaluation());
+        }
     }
 }
