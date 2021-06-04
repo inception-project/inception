@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static java.util.stream.Collectors.groupingBy;
+import static org.apache.commons.lang3.StringUtils.repeat;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -56,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
@@ -64,6 +67,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -83,11 +87,26 @@ public class RecommenderInfoPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
 
+    private ModalDialog detailsDialog;
+
     public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
 
         setOutputMarkupId(true);
+
+        User user = aModel.getObject().getUser();
+
+        detailsDialog = new BootstrapModalDialog("detailsDialog").trapFocus().closeOnEscape()
+                .closeOnClick();
+        add(detailsDialog);
+
+        add(new Label("progress", LoadableDetachableModel.of(() -> {
+            Progress p = recommendationService.getProgressTowardsNextEvaluation(user,
+                    aModel.getObject().getProject());
+            return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
+                    + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
+        })).setEscapeModelStrings(false));
 
         WebMarkupContainer recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);
@@ -99,12 +118,9 @@ public class RecommenderInfoPanel
             @Override
             protected void populateItem(ListItem<Recommender> item)
             {
-                User user = userService.getCurrentUser();
                 Recommender recommender = item.getModelObject();
-                List<EvaluatedRecommender> recommenders = recommendationService
-                        .getEvaluatedRecommenders(user, recommender.getLayer());
-                Optional<EvaluatedRecommender> evaluatedRecommender = recommenders.stream()
-                        .filter(r -> r.getRecommender().equals(recommender)).findAny();
+                Optional<EvaluatedRecommender> evaluatedRecommender = recommendationService
+                        .getEvaluatedRecommender(user, recommender);
                 item.add(new Label("name", recommender.getName()));
 
                 WebMarkupContainer state = new WebMarkupContainer("state");
@@ -129,20 +145,6 @@ public class RecommenderInfoPanel
                 }
                 item.add(state);
 
-                item.add(new LambdaAjaxLink("acceptBest",
-                        _tgt -> actionAcceptBest(_tgt, recommender))
-                                .setVisible(evaluatedRecommender.map(EvaluatedRecommender::isActive)
-                                        .orElse(false)));
-
-                AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
-                        LoadableDetachableModel.of(() -> exportModelName(recommender)),
-                        LoadableDetachableModel.of(() -> exportModel(user, recommender)));
-                exportModel.add(visibleWhen(
-                        () -> recommendationService.getRecommenderFactory(recommender).isPresent()
-                                && recommendationService.getRecommenderFactory(recommender).get()
-                                        .isModelExportSupported()));
-                item.add(exportModel);
-
                 Optional<EvaluationResult> evalResult = evaluatedRecommender
                         .map(EvaluatedRecommender::getEvaluationResult);
                 WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
@@ -158,6 +160,30 @@ public class RecommenderInfoPanel
                         evalResult.map(EvaluationResult::computePrecisionScore).orElse(0.0d)));
                 resultsContainer.add(new Label("recall",
                         evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
+                resultsContainer.add(new Label("sampleUnit",
+                        evalResult.map(EvaluationResult::getSampleUnit).orElse("")));
+                resultsContainer.add(new Label("trainingSampleCount",
+                        evalResult.map(EvaluationResult::getTrainingSetSize).orElse(0)));
+                resultsContainer.add(new Label("testSampleCount",
+                        evalResult.map(EvaluationResult::getTestSetSize).orElse(0)));
+
+                resultsContainer.add(new LambdaAjaxLink("acceptBest",
+                        _tgt -> actionAcceptBest(_tgt, recommender))
+                                .setVisible(evaluatedRecommender.map(EvaluatedRecommender::isActive)
+                                        .orElse(false)));
+
+                resultsContainer.add(new LambdaAjaxLink("showDetails",
+                        _tgt -> actionShowDetails(_tgt, recommender)));
+
+                AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
+                        LoadableDetachableModel.of(() -> exportModelName(recommender)),
+                        LoadableDetachableModel.of(() -> exportModel(user, recommender)));
+                exportModel.add(visibleWhen(
+                        () -> recommendationService.getRecommenderFactory(recommender).isPresent()
+                                && recommendationService.getRecommenderFactory(recommender).get()
+                                        .isModelExportSupported()));
+                resultsContainer.add(exportModel);
+
                 item.add(resultsContainer);
 
                 item.add(new WebMarkupContainer("noEvaluationMessage")
@@ -211,6 +237,16 @@ public class RecommenderInfoPanel
     public void onRenderAnnotations(PredictionsSwitchedEvent aEvent)
     {
         aEvent.getRequestHandler().add(this);
+    }
+
+    private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)
+    {
+        RecommenderStatusDetailPanel panel = new RecommenderStatusDetailPanel(
+                ModalDialog.CONTENT_ID,
+                LoadableDetachableModel.of(() -> recommendationService
+                        .getEvaluatedRecommender(userService.getCurrentUser(), aRecommender).get())
+                        .map(EvaluatedRecommender::getEvaluationResult));
+        detailsDialog.open(panel, aTarget);
     }
 
     private void actionAcceptBest(AjaxRequestTarget aTarget, Recommender aRecommender)

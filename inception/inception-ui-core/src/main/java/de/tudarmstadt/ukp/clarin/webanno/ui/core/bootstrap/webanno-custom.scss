@@ -161,6 +161,7 @@ span.form-control {
 .flex-tile-container { display: flex; flex-flow: row wrap; }
 .flex-tile { box-sizing: border-box; flex: 1; flex-basis: 30em; }
 
+.no-scrolling { overflow: unset !important; } 
 .scrolling { overflow: auto; }
 .v-scrolling { overflow-y: auto; }
 .h-scrolling { overflow-x: auto; }

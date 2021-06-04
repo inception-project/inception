@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -66,6 +67,9 @@ public class OpenNlpNerRecommender
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
 
     private static final String NO_NE_TAG = "O";
+
+    private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
+    private static final Class<Token> DATAPOINT_UNIT = Token.class;
 
     private final OpenNlpNerRecommenderTraits traits;
 
@@ -119,7 +123,7 @@ public class OpenNlpNerRecommender
 
         NameFinderME finder = new NameFinderME(model);
 
-        Type sentenceType = getType(aCas, Sentence.class);
+        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
         Type tokenType = getType(aCas, Token.class);
         Type predictedType = getPredictedType(aCas);
 
@@ -128,13 +132,13 @@ public class OpenNlpNerRecommender
         Feature scoreFeature = getScoreFeature(aCas);
 
         int predictionCount = 0;
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
+        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
+            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
             String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
                     .toArray(String[]::new);
 
@@ -196,7 +200,8 @@ public class OpenNlpNerRecommender
         final int minTestSetSize = 2;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
             if ((getRecommender().getThreshold() <= 0.0d)) {
-                return new EvaluationResult();
+                return new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                        SAMPLE_UNIT.getSimpleName());
             }
 
             String info = String.format(
@@ -204,8 +209,8 @@ public class OpenNlpNerRecommender
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
 
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
-                    trainRatio);
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -232,11 +237,10 @@ public class OpenNlpNerRecommender
             Span[] goldNames = sample.getNames();
 
             labelPairs.addAll(determineLabelsForASentence(sentence, predictedNames, goldNames));
-
         }
 
-        return labelPairs.stream().collect(
-                EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
+        return labelPairs.stream().collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
     }
 
     /**
@@ -301,18 +305,18 @@ public class OpenNlpNerRecommender
         List<NameSample> nameSamples = new ArrayList<>();
 
         casses: for (CAS cas : aCasses) {
-            Type sentenceType = getType(cas, Sentence.class);
+            Type sampleUnitType = getType(cas, SAMPLE_UNIT);
             Type tokenType = getType(cas, Token.class);
 
-            for (AnnotationFS sentence : cas.<Annotation> select(sentenceType)) {
+            for (AnnotationFS sampleUnit : cas.<Annotation> select(sampleUnitType)) {
                 if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }
 
                 Collection<Annotation> tokens = cas.<Annotation> select(tokenType)
-                        .coveredBy(sentence).asList();
+                        .coveredBy(sampleUnit).asList();
 
-                NameSample nameSample = createNameSample(cas, sentence, tokens);
+                NameSample nameSample = createNameSample(cas, sampleUnit, tokens);
                 if (nameSample.getNames().length > 0) {
                     nameSamples.add(nameSample);
                 }
@@ -322,22 +326,22 @@ public class OpenNlpNerRecommender
         return nameSamples;
     }
 
-    private NameSample createNameSample(CAS aCas, AnnotationFS aSentence,
+    private NameSample createNameSample(CAS aCas, AnnotationFS aSampleUnit,
             Collection<? extends AnnotationFS> aTokens)
     {
         String[] tokenTexts = aTokens.stream().map(AnnotationFS::getCoveredText)
                 .toArray(String[]::new);
-        Span[] annotatedSpans = extractAnnotatedSpans(aCas, aSentence, aTokens);
+        Span[] annotatedSpans = extractAnnotatedSpans(aCas, aSampleUnit, aTokens);
         return new NameSample(tokenTexts, annotatedSpans, true);
     }
 
-    private Span[] extractAnnotatedSpans(CAS aCas, AnnotationFS aSentence,
+    private Span[] extractAnnotatedSpans(CAS aCas, AnnotationFS aSampleUnit,
             Collection<? extends AnnotationFS> aTokens)
     {
         // Create spans from target annotations
         Type annotationType = getType(aCas, layerName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);
-        List<AnnotationFS> annotations = selectCovered(annotationType, aSentence);
+        List<AnnotationFS> annotations = selectCovered(annotationType, aSampleUnit);
 
         if (annotations.isEmpty()) {
             return new Span[0];
