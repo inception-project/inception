@@ -115,7 +115,7 @@ public class CasMetadataUtils
                 .orElse(-1l);
     }
 
-    public static void addOrUpdateCasMetadata(CAS aCas, File aCasFile, SourceDocument aDocument,
+    public static void addOrUpdateCasMetadata(CAS aCas, long aTimeStamp, SourceDocument aDocument,
             String aUsername)
         throws IOException
     {
@@ -123,9 +123,9 @@ public class CasMetadataUtils
         // and wait for the next regular CAS upgrade before we include this data.
         if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
             LOG.info(
-                    "Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
+                    "Annotation file of user [{}] for document [{}]({}) in project [{}]({}) "
                             + "does not support CASMetadata yet - not adding",
-                    aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
+                    aUsername, aDocument.getName(), aDocument.getId(),
                     aDocument.getProject().getName(), aDocument.getProject().getId());
             return;
         }
@@ -164,9 +164,9 @@ public class CasMetadataUtils
         }
 
         if (cmd.getType().getFeatureByBaseName("lastChangedOnDisk") != null) {
-            FSUtil.setFeature(cmd, "lastChangedOnDisk", aCasFile.lastModified());
+            FSUtil.setFeature(cmd, "lastChangedOnDisk", aTimeStamp);
             LOG.trace("CAS [{}] for [{}]@[{}]({}): set lastChangedOnDisk: {}", aCas.hashCode(),
-                    aUsername, aDocument.getName(), aDocument.getId(), aCasFile.lastModified());
+                    aUsername, aDocument.getName(), aDocument.getId(), aTimeStamp);
         }
 
         aCas.addFsToIndexes(cmd);

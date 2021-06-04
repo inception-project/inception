@@ -22,13 +22,20 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recomm
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
@@ -41,6 +48,7 @@ import org.apache.uima.util.TypeSystemUtil;
 import org.apache.uima.util.XMLSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,12 +65,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Metadata;
 
 public class ExternalRecommender
     extends RecommendationEngine
@@ -70,27 +78,22 @@ public class ExternalRecommender
     public static final Key<Boolean> KEY_TRAINING_COMPLETE = new Key<>("training_complete");
 
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
-    private static final MediaType JSON = MediaType.parse("application/json");
 
     private static final int HTTP_TOO_MANY_REQUESTS = 429;
+    private static final int HTTP_BAD_REQUEST = 400;
 
-    private static final long CONNECT_TIMEOUT = 30;
-    private static final long WRITE_TIMEOUT = 30;
-    private static final long READ_TIMEOUT = 30;
-
-    private final Recommender recommender;
+    private final ExternalRecommenderProperties properties;
     private final ExternalRecommenderTraits traits;
-    private final OkHttpClient client;
+    private final HttpClient client;
 
-    public ExternalRecommender(Recommender aRecommender, ExternalRecommenderTraits aTraits)
+    public ExternalRecommender(ExternalRecommenderProperties aProperties, Recommender aRecommender,
+            ExternalRecommenderTraits aTraits)
     {
         super(aRecommender);
 
-        recommender = aRecommender;
+        properties = aProperties;
         traits = aTraits;
-        client = new OkHttpClient.Builder().connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
-                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS).build();
+        client = HttpClient.newBuilder().connectTimeout(properties.getConnectTimeout()).build();
     }
 
     @Override
@@ -129,26 +132,26 @@ public class ExternalRecommender
 
         trainingRequest.setDocuments(documents);
 
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder().addPathSegment("train")
-                .build();
-        RequestBody body = RequestBody.create(JSON, toJson(trainingRequest));
-        Request request = new Request.Builder().url(url).post(body).build();
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("train")) //
+                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+                .timeout(properties.getReadTimeout())
+                .POST(BodyPublishers.ofString(toJson(trainingRequest), UTF_8)).build();
 
-        try (Response response = sendRequest(request)) {
-            if (response.code() == HTTP_TOO_MANY_REQUESTS) {
-                LOG.info("External recommender is already training");
-            }
-            // If the response indicates that the request was not successful,
-            // then it does not make sense to go on and try to decode the XMI
-            else if (!response.isSuccessful()) {
-                int code = response.code();
-                String responseBody = getResponseBody(response);
-                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-                throw new RecommendationException(msg);
-            }
-
-            aContext.put(KEY_TRAINING_COMPLETE, true);
+        HttpResponse<String> response = sendRequest(request);
+        if (response.statusCode() == HTTP_TOO_MANY_REQUESTS) {
+            LOG.info("External recommender is already training");
         }
+        // If the response indicates that the request was not successful,
+        // then it does not make sense to go on and try to decode the XMI
+        else if (response.statusCode() >= HTTP_BAD_REQUEST) {
+            String responseBody = getResponseBody(response);
+            String msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
+                    responseBody);
+            throw new RecommendationException(msg);
+        }
+
+        aContext.put(KEY_TRAINING_COMPLETE, true);
     }
 
     @Override
@@ -163,29 +166,29 @@ public class ExternalRecommender
         // Fill in metadata
         predictionRequest.setMetadata(buildMetadata(aCas));
 
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder().addPathSegment("predict")
-                .build();
-        RequestBody body = RequestBody.create(JSON, toJson(predictionRequest));
-        Request request = new Request.Builder().url(url).post(body).build();
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
+                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+                .timeout(properties.getReadTimeout()) //
+                .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)).build();
 
-        try (Response response = sendRequest(request)) {
-            // If the response indicates that the request was not successful,
-            // then it does not make sense to go on and try to decode the XMI
-            if (!response.isSuccessful()) {
-                int code = response.code();
-                String responseBody = getResponseBody(response);
-                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-                throw new RecommendationException(msg);
-            }
+        HttpResponse<String> response = sendRequest(request);
+        // If the response indicates that the request was not successful,
+        // then it does not make sense to go on and try to decode the XMI
+        if (response.statusCode() >= HTTP_BAD_REQUEST) {
+            String responseBody = getResponseBody(response);
+            String msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
+                    responseBody);
+            throw new RecommendationException(msg);
+        }
 
-            PredictionResponse predictionResponse = deserializePredictionResponse(response);
+        PredictionResponse predictionResponse = deserializePredictionResponse(response);
 
-            try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
-                XmiCasDeserializer.deserialize(is, WebAnnoCasUtil.getRealCas(aCas), true);
-            }
-            catch (SAXException | IOException e) {
-                throw new RecommendationException("Error while deserializing CAS!", e);
-            }
+        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
+            XmiCasDeserializer.deserialize(is, WebAnnoCasUtil.getRealCas(aCas), true);
+        }
+        catch (SAXException | IOException e) {
+            throw new RecommendationException("Error while deserializing CAS!", e);
         }
     }
 
@@ -245,12 +248,12 @@ public class ExternalRecommender
                 layer.isCrossSentence());
     }
 
-    private PredictionResponse deserializePredictionResponse(Response response)
+    private PredictionResponse deserializePredictionResponse(HttpResponse<String> response)
         throws RecommendationException
     {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            return objectMapper.readValue(response.body().byteStream(), PredictionResponse.class);
+            return objectMapper.readValue(response.body(), PredictionResponse.class);
         }
         catch (IOException e) {
             throw new RecommendationException("Error while deserializing prediction response!", e);
@@ -267,28 +270,23 @@ public class ExternalRecommender
         }
     }
 
-    private Response sendRequest(Request aRequest) throws RecommendationException
+    private HttpResponse<String> sendRequest(HttpRequest aRequest) throws RecommendationException
     {
         try {
-            return client.newCall(aRequest).execute();
+            return client.send(aRequest, BodyHandlers.ofString(UTF_8));
         }
-        catch (IOException e) {
+        catch (IOException | InterruptedException e) {
             throw new RecommendationException("Error while sending request!", e);
         }
     }
 
-    private String getResponseBody(Response response) throws RecommendationException
+    private String getResponseBody(HttpResponse<String> response) throws RecommendationException
     {
-        try {
-            if (response.body() != null) {
-                return response.body().string();
-            }
-            else {
-                return "";
-            }
+        if (response.body() != null) {
+            return response.body();
         }
-        catch (IOException e) {
-            throw new RecommendationException("Error while reading response body!", e);
+        else {
+            return "";
         }
     }
 

@@ -31,7 +31,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -43,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDet
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
@@ -59,10 +57,18 @@ public class RecommendationRelationRenderer
     implements RecommendationTypeRenderer
 {
     private final RelationAdapter typeAdapter;
+    private final RecommendationService recommendationService;
+    private final AnnotationSchemaService annotationService;
+    private final FeatureSupportRegistry fsRegistry;
 
-    public RecommendationRelationRenderer(RelationAdapter aTypeAdapter)
+    public RecommendationRelationRenderer(RelationAdapter aTypeAdapter,
+            RecommendationService aRecommendationService,
+            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
         typeAdapter = aTypeAdapter;
+        recommendationService = aRecommendationService;
+        annotationService = aAnnotationService;
+        fsRegistry = aFsRegistry;
     }
 
     /**
@@ -73,21 +79,16 @@ public class RecommendationRelationRenderer
      *            The CAS object containing annotations
      * @param vdoc
      *            A VDocument containing annotations for the given layer
-     * @param aState
-     *            Data model for brat annotations
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, AnnotationLayer aLayer,
-            RecommendationService aRecommendationService,
-            LearningRecordService learningRecordService, AnnotationSchemaService aAnnotationService,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService,
-            int aWindowBeginOffset, int aWindowEndOffset)
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, int aWindowBeginOffset,
+            int aWindowEndOffset)
     {
-        if (aCas == null || aRecommendationService == null) {
+        if (aCas == null || recommendationService == null) {
             return;
         }
 
-        Predictions predictions = aRecommendationService.getPredictions(aState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
 
         // No recommendations available at all
@@ -95,11 +96,13 @@ public class RecommendationRelationRenderer
             return;
         }
 
+        AnnotationLayer layer = typeAdapter.getLayer();
+
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElseGet(() -> getDocumentTitle(aCas));
         SuggestionDocumentGroup<RelationSuggestion> groupedPredictions = predictions
-                .getGroupedPredictions(RelationSuggestion.class, sourceDocumentName, aLayer,
+                .getGroupedPredictions(RelationSuggestion.class, sourceDocumentName, layer,
                         aWindowBeginOffset, aWindowEndOffset);
 
         // No recommendations to render for this layer
@@ -107,20 +110,19 @@ public class RecommendationRelationRenderer
             return;
         }
 
-        aRecommendationService.calculateRelationSuggestionVisibility(aCas,
-                aState.getUser().getUsername(), aLayer, groupedPredictions, aWindowBeginOffset,
+        recommendationService.calculateRelationSuggestionVisibility(aCas,
+                aState.getUser().getUsername(), layer, groupedPredictions, aWindowBeginOffset,
                 aWindowEndOffset);
 
-        Preferences pref = aRecommendationService.getPreferences(aState.getUser(),
-                aLayer.getProject());
+        Preferences pref = recommendationService.getPreferences(aState.getUser(),
+                layer.getProject());
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        Type type = CasUtil.getType(aCas, aLayer.getName());
-        Type attachType = CasUtil.getType(aCas, aLayer.getAttachType().getName());
+        Type attachType = CasUtil.getType(aCas, layer.getAttachType().getName());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        Map<String, AnnotationFeature> features = aAnnotationService.listSupportedFeatures(aLayer)
+        Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
                 .stream()
                 .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
@@ -150,14 +152,14 @@ public class RecommendationRelationRenderer
                 // Retrieve the UI display label for the given feature value
                 AnnotationFeature feature = features.get(suggestion.getFeature());
 
-                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature).orElseThrow();
+                FeatureSupport<?> featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                 String annotation = featureSupport.renderFeatureValue(feature,
                         suggestion.getLabel());
 
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(suggestion.getFeature(), annotation);
 
-                VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
+                VArc arc = new VArc(layer, suggestion.getVID(), bratTypeName, new VID(source),
                         new VID(target), "\uD83E\uDD16 " + suggestion.getUiLabel(),
                         featureAnnotation, COLOR);
 

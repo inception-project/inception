@@ -25,7 +25,9 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 
 @Configuration
@@ -33,12 +35,19 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 public class CasStorageServiceAutoConfiguration
 {
     @Bean(CasStorageService.SERVICE_NAME)
-    public CasStorageService casStorageService(@Autowired(required = false) CasDoctor aCasDoctor,
+    public CasStorageService casStorageService(CasStorageDriver aDriver,
+            @Autowired(required = false) CasDoctor aCasDoctor,
             @Autowired(required = false) AnnotationSchemaService aSchemaService,
-            RepositoryProperties aRepositoryProperties, CasStorageProperties aCasStorageProperties,
+            CasStorageProperties aCasStorageProperties)
+    {
+        return new CasStorageServiceImpl(aDriver, aCasDoctor, aSchemaService,
+                aCasStorageProperties);
+    }
+
+    @Bean
+    CasStorageDriver fileSystemCasStorageDriver(RepositoryProperties aRepositoryProperties,
             BackupProperties aBackupProperties)
     {
-        return new CasStorageServiceImpl(aCasDoctor, aSchemaService, aRepositoryProperties,
-                aCasStorageProperties, aBackupProperties);
+        return new FileSystemCasStorageDriver(aRepositoryProperties, aBackupProperties);
     }
 }
