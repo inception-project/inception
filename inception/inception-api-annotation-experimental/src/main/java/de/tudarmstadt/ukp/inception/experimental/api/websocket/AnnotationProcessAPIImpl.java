@@ -27,6 +27,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
+import com.google.gson.Gson;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -35,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIImpl;
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
@@ -43,12 +46,10 @@ import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 public class AnnotationProcessAPIImpl
     implements AnnotationProcessAPI
 {
-    private final DocumentService documentService;
-    private final ProjectService projectService;
-    private final UserDao userDao;
-    private final RepositoryProperties repositoryProperties;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final AnnotationSystemAPIImpl annotationSystemAPIImpl;
+
+    private final Gson gson = new Gson();
 
     /**
      * ----------------- PUB / SUB CHANNELS ---------------
@@ -75,10 +76,6 @@ public class AnnotationProcessAPIImpl
             SimpMessagingTemplate aSimpMessagingTemplate,
             AnnotationSchemaService annotationSchemaService)
     {
-        this.projectService = aProjectService;
-        this.documentService = aDocumentService;
-        this.userDao = aUserDao;
-        this.repositoryProperties = aRepositoryProperties;
         this.simpMessagingTemplate = aSimpMessagingTemplate;
         this.annotationSystemAPIImpl = new AnnotationSystemAPIImpl(aProjectService,
                 aDocumentService, aUserDao, aRepositoryProperties, this, annotationSchemaService);
@@ -101,7 +98,7 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveDocumentRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW DOCUMENT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleDocument(purifyData(aMessage.getPayload()));
+        annotationSystemAPIImpl.handleDocument(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
     }
 
     @Override
@@ -118,7 +115,7 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveViewportRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleViewport(purifyData(aMessage.getPayload()));
+        annotationSystemAPIImpl.handleViewport(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
     }
 
     @Override
@@ -135,7 +132,7 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveSelectAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleSelectAnnotation(purifyData(aMessage.getPayload()));
+        annotationSystemAPIImpl.handleSelectAnnotation(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
     }
 
     @Override
@@ -152,7 +149,7 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveCreateAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW ANNOTATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleCreateAnnotation(purifyData(aMessage.getPayload()));
+        annotationSystemAPIImpl.handleCreateAnnotation(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
     }
 
     @Override
@@ -160,7 +157,7 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveDeleteAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED DELETE ANNOTATION BY CLIENT");
-        annotationSystemAPIImpl.handleDeleteAnnotation(purifyData(aMessage.getPayload()));
+        annotationSystemAPIImpl.handleDeleteAnnotation(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
     }
 
     @Override
@@ -171,16 +168,5 @@ public class AnnotationProcessAPIImpl
         System.out.println("SENDING NOW ANNOTATION UPDATE TO CLIENTS");
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/"
                 + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aAnnotationMessage));
-    }
-
-    // --------------- SUPPORT METHODS ---------------- //
-    @Override
-    public String[] purifyData(String aPayload)
-    {
-        String[] spliced = aPayload.replace("\"", "").replace("{", "").replace("}", "").split(",");
-        for (int i = 0; i < spliced.length; i++) {
-            spliced[i] = spliced[i].split(":")[1];
-        }
-        return spliced;
     }
 }

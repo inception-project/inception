@@ -49,6 +49,4 @@ public interface AnnotationProcessAPI
     void handleSendUpdateAnnotation(AnnotationMessage aAnnotationMessage, String aProjectID,
             String aDocumentID, String aViewport)
         throws IOException;
-
-    String[] purifyData(String aPayload);
 }

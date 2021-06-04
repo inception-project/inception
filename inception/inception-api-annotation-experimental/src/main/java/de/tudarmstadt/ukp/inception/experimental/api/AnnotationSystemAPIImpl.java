@@ -22,6 +22,7 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
@@ -77,99 +79,106 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleDocument(String[] aData) throws IOException
+    public void handleDocument(ClientMessage aClientMessage) throws IOException
     {
         // TODO receive random new document
-        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), 41714);
+        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
+                41714);
+
         DocumentMessage message = new DocumentMessage();
         message.setId(41714);
-        String[] sentences = cas.getDocumentText().split("\\.");
+        String[] tokens = cas.getDocumentText().split(" ");
+
         ArrayList<String> visibleSentences = new ArrayList<>();
 
-        if (sentences.length < Integer.parseInt(aData[2])) {
-            aData[2] = String.valueOf(sentences.length - 1);
-        }
-
-        for (int i = 0; i < Integer.parseInt(aData[2]); i++) {
-            visibleSentences.add(sentences[i].replace("\n", ""));
+        for (int i = 0; i < aClientMessage.getViewport().length; i++) {
+            visibleSentences.addAll(Arrays.asList(tokens).subList(aClientMessage.getViewport()[i][0], aClientMessage.getViewport()[i][1]));
+            visibleSentences.add("||");
         }
 
         message.setViewportText(visibleSentences.toArray(new String[0]));
 
-        message.setAnnotations(getAnnotations(cas, Long.parseLong(aData[1])));
+        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
 
-        annotationProcessAPI.handleSendDocumentRequest(message, aData[0]);
+        annotationProcessAPI.handleSendDocumentRequest(message, aClientMessage.getUsername());
     }
 
     @Override
-    public void handleViewport(String[] aData) throws IOException
+    public void handleViewport(ClientMessage aClientMessage) throws IOException
     {
-        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
+        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
+                aClientMessage.getDocument());
 
-        String[] sentences = cas.getDocumentText().split("\\.");
+        String[] tokens = cas.getDocumentText().split(" ");
+        for (int i = 0; i < tokens.length; i++) {
+            System.out.println(tokens[i]);
+        }
         ArrayList<String> visibleSentences = new ArrayList<>();
 
         ViewportMessage message = null;
 
-        if (aData[3].equals("-100")) {
-            aData[3] = String.valueOf(sentences.length - (Integer.parseInt(aData[4])));
-            aData[4] = String.valueOf(sentences.length - 1);
-        }
-        if (sentences.length >= Integer.parseInt(aData[4])) {
-            for (int i = Integer.parseInt(aData[3]); i <= Integer.parseInt(aData[4]); i++) {
-                visibleSentences.add(sentences[i].replace("\n", ""));
-            }
-            message = new ViewportMessage(Integer.parseInt(aData[3]), (Integer.parseInt(aData[4])));
-        }
-        else {
-            for (int i = sentences.length
-                    - (Integer.parseInt(aData[4]) - Integer.parseInt(aData[3]))
-                    - 1; i < sentences.length; i++) {
-                visibleSentences.add(sentences[i].replace("\n", ""));
-                message = new ViewportMessage(sentences.length
-                        - (Integer.parseInt(aData[4]) - Integer.parseInt(aData[3])) - 1,
-                        sentences.length - 1);
-            }
-        }
+        /*
+         * if (aData[3].equals("-100")) { aData[3] = String.valueOf(sentences.length -
+         * (Integer.parseInt(aData[4]))); aData[4] = String.valueOf(sentences.length - 1); } if
+         * (sentences.length >= Integer.parseInt(aData[4])) { for (int i =
+         * Integer.parseInt(aData[3]); i <= Integer.parseInt(aData[4]); i++) {
+         * visibleSentences.add(sentences[i].replace("\n", "")); } message = new
+         * ViewportMessage(Integer.parseInt(aData[3]), (Integer.parseInt(aData[4]))); } else { for
+         * (int i = sentences.length - (Integer.parseInt(aData[4]) - Integer.parseInt(aData[3])) -
+         * 1; i < sentences.length; i++) { visibleSentences.add(sentences[i].replace("\n", ""));
+         * message = new ViewportMessage(sentences.length - (Integer.parseInt(aData[4]) -
+         * Integer.parseInt(aData[3])) - 1, sentences.length - 1); } }
+         * 
+         */
 
         message.setText(visibleSentences.toArray(new String[0]));
-        message.setAnnotations(getAnnotations(cas, Long.parseLong(aData[1])));
+        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
 
-        annotationProcessAPI.handleSendViewportRequest(message, aData[0]);
+        annotationProcessAPI.handleSendViewportRequest(message, aClientMessage.getUsername());
 
     }
 
     @Override
-    public void handleSelectAnnotation(String[] aData) throws IOException
+    public void handleSelectAnnotation(ClientMessage aClientMessage) throws IOException
     {
-        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
-        AnnotationFS annotation = selectAnnotationByAddr(cas, Integer.parseInt(aData[3]));
+        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
+                aClientMessage.getDocument());
+
+        AnnotationFS annotation = selectAnnotationByAddr(cas,
+                aClientMessage.getAnnotationAddress());
         AnnotationMessage message = new AnnotationMessage();
         message.setType(annotation.getType().getShortName());
         message.setText(annotation.getCoveredText());
-        annotationProcessAPI.handleSendSelectAnnotation(message, aData[0]);
+        annotationProcessAPI.handleSendSelectAnnotation(message, aClientMessage.getUsername());
     }
 
     @Override
-    public void handleCreateAnnotation(String[] aData) throws IOException
+    public void handleCreateAnnotation(ClientMessage aClientMessage) throws IOException
     {
-        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
+        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
+                aClientMessage.getDocument());
+
         // TODO createAnnotation
         AnnotationMessage message = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
-        annotationProcessAPI.handleSendUpdateAnnotation(message, aData[1], aData[2], "1");
+        annotationProcessAPI.handleSendUpdateAnnotation(message,
+                String.valueOf(aClientMessage.getProject()),
+                String.valueOf(aClientMessage.getDocument()), "1");
     }
 
     @Override
-    public void handleDeleteAnnotation(String[] aData) throws IOException
+    public void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException
     {
-        CAS cas = getCasForDocument(aData[0], Long.parseLong(aData[1]), Long.parseLong(aData[2]));
+        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
+                aClientMessage.getDocument());
 
         // TODO deleteAnnotation
         AnnotationMessage message = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         message.setDelete(true);
-        annotationProcessAPI.handleSendUpdateAnnotation(message, aData[1], aData[2], "1");
+        annotationProcessAPI.handleSendUpdateAnnotation(message,
+                String.valueOf(aClientMessage.getProject()),
+                String.valueOf(aClientMessage.getDocument()), "1");
     }
 
     @Override

@@ -20,19 +20,20 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 import java.io.IOException;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 import org.apache.uima.cas.CAS;
 
 public interface AnnotationSystemAPI
 {
-    void handleDocument(String[] aData) throws IOException;
+    void handleDocument(ClientMessage aClientMessage) throws IOException;
 
-    void handleViewport(String[] aData) throws IOException;
+    void handleViewport(ClientMessage aClientMessage) throws IOException;
 
-    void handleSelectAnnotation(String[] aData) throws IOException;
+    void handleSelectAnnotation(ClientMessage aClientMessage) throws IOException;
 
-    void handleCreateAnnotation(String[] aData) throws IOException;
+    void handleCreateAnnotation(ClientMessage aClientMessage) throws IOException;
 
-    void handleDeleteAnnotation(String[] aData) throws IOException;
+    void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException;
 
     /**
      * Returns CAS from websocket message. All three String parameters are contained in the header
