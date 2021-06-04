@@ -18,6 +18,10 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
+  <div wicket:id="detailsDialog"/>
+  <div class="text-center pb-2">
+    <span wicket:id="progress"></span>
+  </div>
   <div wicket:id="recommenderContainer" class="flex-v-container flex-gutter flex-only-internal-gutter">
     <div wicket:id="recommender" class="card">
       <div class="card-header small">
@@ -28,39 +32,51 @@
       </div>
       <div class="card-body" wicket:enclosure="noEvaluationMessage">
         <div wicket:id="noEvaluationMessage" class="small no-data-notice">
-          Always active. Evaluation disabled.
+          No evaluation results available.
         </div>
       </div>
-      <div wicket:id="resultsContainer" class="card-body small flex-h-container p-0">
-        <div class="d-flex flex-fill flex-column px-2 pt-2 border-right">
-          <div class="d-flex flex-row">
-            <label>F1</label>
-            <span wicket:id="f1Score" class="flex-grow-1 text-right"/>
+      <div wicket:id="resultsContainer" class="card-body small p-0">
+        <div class="d-flex flex-row p-2 border-bottom">
+          <span wicket:id="sampleUnit" title="Sample granularity"/>
+          <span class="flex-grow-1 text-right">
+            <span title="Sample count in training set"><i class="fas fa-brain text-muted"/>&nbsp;<span wicket:id="trainingSampleCount"/></span>
+            <span title="Sample count in evaluation set"><i class="fas fa-vial text-muted pl-2"/>&nbsp;<span wicket:id="testSampleCount"/></span>
+          </span>
+        </div>
+        <div class="flex-h-container">
+          <div class="d-flex flex-fill flex-column px-2 pt-2 border-right">
+            <div class="d-flex flex-row">
+              <label>F1</label>
+              <span wicket:id="f1Score" class="flex-grow-1 text-right"/>
+            </div>
+            <div class="d-flex flex-row">
+              <label>Accuracy</label>
+              <span wicket:id="accuracy" class="flex-grow-1 text-right"/>
+            </div>
           </div>
-          <div class="d-flex flex-row">
-            <label>Accuracy</label>
-            <span wicket:id="accuracy" class="flex-grow-1 text-right"/>
+          <div class="d-flex flex-fill flex-column px-2 pt-2 ">
+            <div class="d-flex flex-row">
+              <label>Precision</label>
+              <span wicket:id="precision" class="flex-grow-1 text-right"/>
+            </div>
+            <div class="d-flex flex-row">
+              <label>Recall</label>
+              <span wicket:id="recall" class="flex-grow-1 text-right"/>
+            </div>
           </div>
         </div>
-        <div class="d-flex flex-fill flex-column px-2 pt-2">
-          <div class="d-flex flex-row">
-            <label>Precision</label>
-            <span wicket:id="precision" class="flex-grow-1 text-right"/>
-          </div>
-          <div class="d-flex flex-row">
-            <label>Recall</label>
-            <span wicket:id="recall" class="flex-grow-1 text-right"/>
-          </div>
+        <div class="card-footer actions text-right">
+          <button wicket:id="exportModel" class="btn btn-sm btn-secondary">
+            <i class="fas fa-download"/>
+          </button>
+          <button wicket:id="showDetails" class="btn btn-sm btn-secondary">
+            <i class="fas fa-table"/>
+          </button>
+          <button wicket:id="acceptBest" class="btn btn-sm btn-success">
+            <i class="fas fa-check"/>&nbsp;
+            Accept best
+          </button>
         </div>
-      </div>
-      <div class="card-footer actions text-right">
-        <button wicket:id="exportModel" class="btn btn-sm btn-secondary">
-          <i class="fas fa-download"></i>
-        </button>
-        <button wicket:id="acceptBest" class="btn btn-sm btn-success">
-          <i class="fas fa-check"></i>&nbsp;
-          Accept best
-        </button>
       </div>
       <div class="clearfix"></div>
     </div>

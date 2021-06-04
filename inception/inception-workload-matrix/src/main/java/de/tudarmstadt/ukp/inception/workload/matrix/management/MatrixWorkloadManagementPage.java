@@ -415,7 +415,7 @@ public class MatrixWorkloadManagementPage
                 ANNOTATOR);
 
         Map<String, User> annotatorIndex = new HashMap<>();
-        annotators.forEach(annotator -> annotatorIndex.put(annotator.getUsername(), annotator));
+        annotators.forEach(annotator -> annotatorIndex.put(annotator.getUiName(), annotator));
 
         Set<User> selectedUserObjects = new HashSet<>();
         selectedUsers.getObject()

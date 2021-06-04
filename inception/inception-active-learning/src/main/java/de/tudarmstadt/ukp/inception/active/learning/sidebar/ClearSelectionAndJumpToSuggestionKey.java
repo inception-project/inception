@@ -15,30 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.event;
+package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.MetaDataKey;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-
-public class PredictionsSwitchedEvent
+public class ClearSelectionAndJumpToSuggestionKey
+    extends MetaDataKey<Boolean>
 {
-    private final AjaxRequestTarget requestHandler;
-    private final AnnotatorState state;
-
-    public PredictionsSwitchedEvent(AjaxRequestTarget aTarget, AnnotatorState aState)
-    {
-        requestHandler = aTarget;
-        state = aState;
-    }
-
-    public AjaxRequestTarget getRequestHandler()
-    {
-        return requestHandler;
-    }
-
-    public AnnotatorState getState()
-    {
-        return state;
-    }
+    private static final long serialVersionUID = -4244853609075676915L;
+    public final static ClearSelectionAndJumpToSuggestionKey INSTANCE = new ClearSelectionAndJumpToSuggestionKey();
 }

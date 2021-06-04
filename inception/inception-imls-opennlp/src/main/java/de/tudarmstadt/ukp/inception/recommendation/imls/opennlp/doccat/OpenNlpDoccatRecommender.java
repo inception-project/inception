@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -65,6 +66,9 @@ public class OpenNlpDoccatRecommender
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpDoccatRecommender.class);
 
     private static final String NO_CATEGORY = "<NO_CATEGORY>";
+
+    private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
+    private static final Class<Sentence> DATAPOINT_UNIT = Sentence.class;
 
     private final OpenNlpDoccatRecommenderTraits traits;
 
@@ -119,7 +123,7 @@ public class OpenNlpDoccatRecommender
 
         DocumentCategorizerME finder = new DocumentCategorizerME(model);
 
-        Type sentenceType = getType(aCas, Sentence.class);
+        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
         Type predictedType = getPredictedType(aCas);
         Type tokenType = getType(aCas, Token.class);
         Feature scoreFeature = getScoreFeature(aCas);
@@ -127,21 +131,21 @@ public class OpenNlpDoccatRecommender
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
+        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
+            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
             String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
                     .toArray(String[]::new);
 
             double[] outcome = finder.categorize(tokens);
             String label = finder.getBestCategory(outcome);
 
-            AnnotationFS annotation = aCas.createAnnotation(predictedType, sentence.getBegin(),
-                    sentence.getEnd());
+            AnnotationFS annotation = aCas.createAnnotation(predictedType, sampleUnit.getBegin(),
+                    sampleUnit.getEnd());
             annotation.setStringValue(predictedFeature, label);
             annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
             annotation.setBooleanValue(isPredictionFeature, true);
@@ -186,7 +190,8 @@ public class OpenNlpDoccatRecommender
         final int minTestSetSize = 2;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
             if ((getRecommender().getThreshold() <= 0.0d)) {
-                return new EvaluationResult();
+                return new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                        SAMPLE_UNIT.getSimpleName());
             }
 
             String info = String.format(
@@ -194,8 +199,8 @@ public class OpenNlpDoccatRecommender
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
 
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
-                    trainRatio);
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -212,7 +217,8 @@ public class OpenNlpDoccatRecommender
         EvaluationResult result = testSet.stream()
                 .map(sample -> new LabelPair(sample.getCategory(),
                         doccat.getBestCategory(doccat.categorize(sample.getText()))))
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio,
+                .collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                        SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio,
                         NO_CATEGORY));
 
         return result;
@@ -222,13 +228,13 @@ public class OpenNlpDoccatRecommender
     {
         List<DocumentSample> samples = new ArrayList<>();
         casses: for (CAS cas : aCasses) {
-            Type sentenceType = getType(cas, Sentence.class);
+            Type sampleUnitType = getType(cas, SAMPLE_UNIT);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+            Map<AnnotationFS, List<AnnotationFS>> sampleUnits = indexCovered(cas, sampleUnitType,
                     tokenType);
-            for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
-                AnnotationFS sentence = e.getKey();
+            for (Entry<AnnotationFS, List<AnnotationFS>> e : sampleUnits.entrySet()) {
+                AnnotationFS sampleUnit = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
                 String[] tokenTexts = tokens.stream().map(AnnotationFS::getCoveredText)
                         .toArray(String[]::new);
@@ -236,7 +242,7 @@ public class OpenNlpDoccatRecommender
                 Type annotationType = getType(cas, layerName);
                 Feature feature = annotationType.getFeatureByBaseName(featureName);
 
-                for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
+                for (AnnotationFS annotation : selectCovered(annotationType, sampleUnit)) {
                     if (samples.size() >= traits.getTrainingSetSizeLimit()) {
                         break casses;
                     }

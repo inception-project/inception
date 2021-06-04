@@ -15,30 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.event;
+package de.tudarmstadt.ukp.clarin.webanno.support.bootstrap;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.extensions.ajax.markup.html.modal.theme.DefaultTheme;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-
-public class PredictionsSwitchedEvent
+/**
+ * Variation of the Wicket {@link ModalDialog} which resolves a few CSS clashes with Bootstrap 4.
+ */
+public class BootstrapModalDialog
+    extends ModalDialog
 {
-    private final AjaxRequestTarget requestHandler;
-    private final AnnotatorState state;
+    private static final long serialVersionUID = -7136680114981428314L;
 
-    public PredictionsSwitchedEvent(AjaxRequestTarget aTarget, AnnotatorState aState)
+    public BootstrapModalDialog(String aId)
     {
-        requestHandler = aTarget;
-        state = aState;
-    }
-
-    public AjaxRequestTarget getRequestHandler()
-    {
-        return requestHandler;
-    }
-
-    public AnnotatorState getState()
-    {
-        return state;
+        super(aId);
+        add(new DefaultTheme());
     }
 }

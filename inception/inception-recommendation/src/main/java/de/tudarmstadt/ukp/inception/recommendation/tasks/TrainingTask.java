@@ -270,7 +270,7 @@ public class TrainingTask
                 return;
             }
 
-            PredictionTask predictionTask = new PredictionTask(user, getProject(),
+            PredictionTask predictionTask = new PredictionTask(user,
                     String.format("TrainingTask %s complete", getId()), currentDocument);
             predictionTask.inheritLog(logMessages);
             schedulingService.enqueue(predictionTask);
