@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
@@ -93,6 +94,8 @@ public interface RecommendationService
             List<EvaluatedRecommender> selectedClassificationTools);
 
     List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer);
+
+    Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser, Recommender aRecommender);
 
     List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
@@ -173,6 +176,8 @@ public interface RecommendationService
 
     void clearState(String aUsername);
 
+    void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument);
+
     void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument);
 
@@ -189,4 +194,6 @@ public interface RecommendationService
      * Retrieve the total amount of enabled recommenders
      */
     long countEnabledRecommenders();
+
+    Progress getProgressTowardsNextEvaluation(User aUser, Project aProject);
 }

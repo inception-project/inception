@@ -302,18 +302,24 @@ public class MtasUimaParser
                 AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
                         adapter.getTargetFeatureName(), AnnotationFS.class);
 
+                // If the relation layer uses an attach-feature, index the annotation
+                // referenced by that feature
+                if (layer.getAttachFeature() != null) {
+                    if (sourceFs != null) {
+                        sourceFs = FSUtil.getFeature(sourceFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                    }
+
+                    if (targetFs != null) {
+                        targetFs = FSUtil.getFeature(targetFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                    }
+                }
+
                 if (sourceFs != null && targetFs != null &&
                 // MTAS cannot index zero-width annotations, so we skip them here.
                         sourceFs.getBegin() != sourceFs.getEnd()
                         && targetFs.getBegin() != targetFs.getEnd()) {
-                    // If the relation layer uses an attach-feature, index the annotation
-                    // referenced by that feature
-                    if (layer.getAttachFeature() != null) {
-                        sourceFs = FSUtil.getFeature(sourceFs, layer.getAttachFeature().getName(),
-                                AnnotationFS.class);
-                        targetFs = FSUtil.getFeature(targetFs, layer.getAttachFeature().getName(),
-                                AnnotationFS.class);
-                    }
 
                     Range range = getRange(targetFs);
 
