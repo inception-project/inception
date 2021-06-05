@@ -37,7 +37,9 @@ import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -197,9 +199,10 @@ public class AnnotationDocumentExporter
                 File targetDir = new File(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName());
                 forceMkdir(targetDir);
 
-                File initialCasFile = documentService.getCasFile(srcDoc, INITIAL_CAS_PSEUDO_USER);
-
-                copyFileToDirectory(initialCasFile, targetDir);
+                try (OutputStream os = new FileOutputStream(
+                        new File(targetDir, INITIAL_CAS_PSEUDO_USER + ".ser"))) {
+                    documentService.exportCas(srcDoc, INITIAL_CAS_PSEUDO_USER, os);
+                }
 
                 log.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
                         + "] for source document [" + srcDoc.getId() + "] in project ["
@@ -231,28 +234,29 @@ public class AnnotationDocumentExporter
                     // copy annotation document only for existing users and the state of the
                     // annotation document is not NEW/IGNORE
                     if (usersCache.get(annDoc.getUser()) != null
+                            && documentService.existsCas(annDoc)
                             && !annDoc.getState().equals(AnnotationDocumentState.NEW)
                             && !annDoc.getState().equals(AnnotationDocumentState.IGNORE)) {
+
                         File annSerDir = new File(aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
                                 + srcDoc.getName());
+                        forceMkdir(annSerDir);
+                        try (OutputStream os = new FileOutputStream(
+                                new File(annSerDir, annDoc.getUser() + ".ser"))) {
+                            documentService.exportCas(srcDoc, annDoc.getUser(), os);
+                        }
+
                         File annDocDir = new File(aStage.getAbsolutePath()
                                 + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-
-                        forceMkdir(annSerDir);
-                        forceMkdir(annDocDir);
-
-                        File annSerFile = documentService.getCasFile(srcDoc, annDoc.getUser());
-
                         File annFile = null;
-                        if (annSerFile.exists()) {
+                        try {
                             annFile = importExportService.exportAnnotationDocument(srcDoc,
                                     annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
                                     bulkOperationContext);
-                        }
-
-                        if (annSerFile.exists()) {
-                            copyFileToDirectory(annSerFile, annSerDir);
+                            forceMkdir(annDocDir);
                             copyFileToDirectory(annFile, annDocDir);
+                        }
+                        finally {
                             forceDelete(annFile);
                         }
 

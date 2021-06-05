@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_String_relation_recommender]]
-=== String Matching Recommender for Relations Settings
+= String Matching Recommender for Relations Settings
 
 You can enable the String recommender for relations in your {product-name} instance.
 

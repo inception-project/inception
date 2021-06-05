@@ -165,7 +165,7 @@ the score through the UIMA feature obtained by calling `getScoreExplanationFeatu
 include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=predict2]
 ----
 
-We use the dummy score here from the training as the confidence.
+We use the dummy score here from the training as the recommender score.
 
 === Evaluating
 

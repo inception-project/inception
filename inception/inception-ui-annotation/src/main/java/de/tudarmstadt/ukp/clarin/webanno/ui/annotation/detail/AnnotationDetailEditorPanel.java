@@ -614,6 +614,9 @@ public abstract class AnnotationDetailEditorPanel
         editorPage.ensureIsEditable();
 
         AnnotatorState state = getModelObject();
+        if (!state.getSelection().isSet()) {
+            return;
+        }
 
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span

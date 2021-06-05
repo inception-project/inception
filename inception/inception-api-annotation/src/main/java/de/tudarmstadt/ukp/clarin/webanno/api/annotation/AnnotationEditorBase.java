@@ -133,6 +133,10 @@ public abstract class AnnotationEditorBase
 
                 render(_target);
             }));
+
+            if (getModelObject().getDocument() != null) {
+                extensionRegistry.fireRenderRequested(getModelObject());
+            }
         }
         catch (IllegalStateException e) {
             LOG.warn("Cannot request editor rendering anymore - request is already frozen");
@@ -148,12 +152,12 @@ public abstract class AnnotationEditorBase
 
     protected VDocument render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset)
     {
+        AnnotatorState state = getModelObject();
+
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset, aCas, getLayersToRender());
 
-        // Fire render event into backend
-        extensionRegistry.fireRender(aCas, getModelObject(), vdoc, aWindowBeginOffset,
-                aWindowEndOffset);
+        extensionRegistry.fireRender(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
 
         // Fire render event into UI
         Page page = null;
@@ -161,7 +165,6 @@ public abstract class AnnotationEditorBase
         if (handler.isPresent()) {
             page = (Page) handler.get().getPage();
         }
-        ;
 
         if (page == null) {
             page = getPage();
@@ -172,8 +175,6 @@ public abstract class AnnotationEditorBase
                         getModelObject(), vdoc));
 
         if (isHighlightEnabled()) {
-            AnnotatorState state = getModelObject();
-
             // Disabling for 3.3.0 by default per #406
             // FIXME: should be enabled by default and made optional per #606
             // if (state.getFocusUnitIndex() > 0) {

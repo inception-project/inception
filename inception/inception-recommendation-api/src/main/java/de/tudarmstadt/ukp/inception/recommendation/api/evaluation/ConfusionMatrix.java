@@ -28,21 +28,26 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 public class ConfusionMatrix
     implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -5181354025073954428L;
+
     /**
      * Stores number of predicted labels for each gold label
      */
-    private Object2IntOpenHashMap<ConfMatrixKey> confusionMatrix;
-    private Set<String> labels;
+    private final Object2IntOpenHashMap<ConfMatrixKey> confusionMatrix;
+    private final Set<String> labels;
+    private final String unit;
     private int total;
 
-    public ConfusionMatrix()
+    public ConfusionMatrix(String aUnit)
     {
         confusionMatrix = new Object2IntOpenHashMap<>();
         labels = new LinkedHashSet<>();
+        unit = aUnit;
+    }
+
+    public String getUnit()
+    {
+        return unit;
     }
 
     public int getEntryCount(String aPredictedLabel, String aGoldLabel)
@@ -61,20 +66,20 @@ public class ConfusionMatrix
      */
     public void incrementCounts(String aPredictedLabel, String aGoldLabel)
     {
+        total++;
         labels.add(aGoldLabel);
         labels.add(aPredictedLabel);
+        confusionMatrix.addTo(new ConfMatrixKey(aGoldLabel, aPredictedLabel), 1);
 
-        total++;
-
-        // annotated pair is true positive
-        if (aGoldLabel.equals(aPredictedLabel)) {
-            confusionMatrix.addTo(new ConfMatrixKey(aGoldLabel, aGoldLabel), 1);
-        }
-        else {
-            // annotated pair is false negative for gold class = annotated pair is false
-            // positive for predicted class
-            confusionMatrix.addTo(new ConfMatrixKey(aGoldLabel, aPredictedLabel), 1);
-        }
+        // // annotated pair is true positive
+        // if (aGoldLabel.equals(aPredictedLabel)) {
+        // confusionMatrix.addTo(new ConfMatrixKey(aGoldLabel, aGoldLabel), 1);
+        // }
+        // else {
+        // // annotated pair is false negative for gold class = annotated pair is false
+        // // positive for predicted class
+        // confusionMatrix.addTo(new ConfMatrixKey(aGoldLabel, aPredictedLabel), 1);
+        // }
     }
 
     public int getTotal()
@@ -130,12 +135,10 @@ public class ConfusionMatrix
     protected class ConfMatrixKey
         implements Serializable
     {
-        /**
-         * 
-         */
         private static final long serialVersionUID = 7241471544567740440L;
-        private String predictedLabel;
-        private String goldLabel;
+
+        private final String predictedLabel;
+        private final String goldLabel;
 
         public ConfMatrixKey(String aGoldLabel, String aPredictedLabel)
         {
@@ -171,5 +174,4 @@ public class ConfusionMatrix
             return goldLabel;
         }
     }
-
 }

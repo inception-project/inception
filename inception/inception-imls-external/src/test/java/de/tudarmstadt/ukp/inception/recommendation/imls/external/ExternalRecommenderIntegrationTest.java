@@ -63,6 +63,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderPropertiesImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import okhttp3.mockwebserver.MockResponse;
@@ -98,7 +102,7 @@ public class ExternalRecommenderIntegrationTest
         context = new RecommenderContext();
 
         traits = new ExternalRecommenderTraits();
-        sut = new ExternalRecommender(recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
 
         remoteRecommender = new RemoteStringMatchingNerRecommender(recommender);
 
