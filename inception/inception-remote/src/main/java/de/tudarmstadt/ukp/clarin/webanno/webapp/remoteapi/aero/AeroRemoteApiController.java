@@ -585,7 +585,7 @@ public class AeroRemoteApiController
             // Check if the format is supported
             FormatSupport format = importExportService.getWritableFormatById(formatId)
                     .orElseThrow(() -> new UnsupportedFormatException(
-                            "Format [%s] cannot be exported. Exportable formats are %s.", aFormat,
+                            "Format [%s] cannot be exported. Exportable formats are %s.", formatId,
                             importExportService.getWritableFormats().stream()
                                     .map(FormatSupport::getId).sorted().collect(Collectors.toList())
                                     .toString()));
@@ -903,11 +903,12 @@ public class AeroRemoteApiController
         }
 
         // Determine the format
-        FormatSupport format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
-            LOG.info("[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
-                    doc.getName(), formatId);
-            return new WebAnnoTsv3FormatSupport();
-        });
+        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                .orElseThrow(() -> new UnsupportedFormatException(
+                        "Format [%s] is not writable. Acceptable formats are %s.", formatId,
+                        importExportService.getWritableFormats().stream() //
+                                .map(FormatSupport::getId) //
+                                .sorted().collect(Collectors.toList())));
 
         // In principle we don't need this call - but it makes sure that we check that the
         // annotation document entry is actually properly set up in the database.
