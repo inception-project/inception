@@ -21,13 +21,24 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.Fix
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.Fixtures.loadSmallDocument;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FormatConverterTest
 {
+
+    private final String NER = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
+    private final String VALUE = "value";
 
     private FormatConverter sut;
 
@@ -44,16 +55,32 @@ public class FormatConverterTest
     }
 
     @Test
-    public void testFromCas() throws Exception
+    public void testDocumentFromCas() throws Exception
     {
         CAS cas = loadSmallCas();
         Document expected = loadSmallDocument();
 
-        Document document = sut.fromCas(cas, 23,
-                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value");
+        Document document = sut.documentFromCas(cas,
+                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value", 23);
 
         assertThat(document).isEqualTo(expected);
-
     }
 
+    @Test
+    public void testLoadDocumentIntoCas() throws Exception
+    {
+        CAS cas = JCasFactory.createJCas().getCas();
+        Document document = loadSmallDocument();
+        sut.loadIntoCas(document, NER, VALUE, cas);
+
+        Type targetType = CasUtil.getAnnotationType(cas, NER);
+        Feature feature = targetType.getFeatureByBaseName(VALUE);
+
+        List<AnnotationFS> result = new ArrayList<>(CasUtil.select(cas, targetType));
+
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).getFeatureValueAsString(feature)).isEqualTo("PER");
+        assertThat(result.get(1).getFeatureValueAsString(feature)).isEqualTo("OTH");
+        assertThat(result.get(2).getFeatureValueAsString(feature)).isEqualTo("OTH");
+    }
 }

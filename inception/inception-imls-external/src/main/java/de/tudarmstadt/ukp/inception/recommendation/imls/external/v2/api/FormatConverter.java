@@ -35,8 +35,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class FormatConverter
 {
+    public static final String SENTENCE_LAYER = "f.value";
+    public static final String TOKEN_LAYER = "t.span_annotation";
+    public static final String TARGET_LAYER = "t.span_annotation";
+    public static final String TARGET_FEATURE = "f.value";
 
-    public Document fromCas(CAS aCas, int aVersion, String aLayerName, String aFeatureName)
+    public Document documentFromCas(CAS aCas, String aLayerName, String aFeatureName, long aVersion)
     {
         String text = aCas.getDocumentText();
         Map<String, List<Annotation>> annotations = new HashMap<>();
@@ -47,7 +51,7 @@ public class FormatConverter
         for (AnnotationFS sentence : CasUtil.select(aCas, sentenceType)) {
             sentences.add(new Annotation(sentence.getBegin(), sentence.getEnd()));
         }
-        annotations.put("t.sentence", sentences);
+        annotations.put(SENTENCE_LAYER, sentences);
 
         // Add tokens
         Type tokenType = CasUtil.getAnnotationType(aCas, Token.class);
@@ -55,7 +59,7 @@ public class FormatConverter
         for (AnnotationFS token : CasUtil.select(aCas, tokenType)) {
             tokens.add(new Annotation(token.getBegin(), token.getEnd()));
         }
-        annotations.put("t.token", tokens);
+        annotations.put(TOKEN_LAYER, tokens);
 
         // Add targets
         Type targetType = CasUtil.getAnnotationType(aCas, aLayerName);
@@ -63,16 +67,24 @@ public class FormatConverter
         List<Annotation> targets = new ArrayList<>();
         for (AnnotationFS target : CasUtil.select(aCas, targetType)) {
             String featureValue = target.getFeatureValueAsString(feature);
-            Map<String, Object> featureValues = singletonMap("f.value", featureValue);
+            Map<String, String> featureValues = singletonMap(TARGET_FEATURE, featureValue);
             targets.add(new Annotation(target.getBegin(), target.getEnd(), featureValues));
         }
-        annotations.put("t.span_annotation", targets);
+        annotations.put(TARGET_LAYER, targets);
 
         return new Document(text, annotations, aVersion);
     }
 
-    public CAS toCas(Document aDocument)
+    public void loadIntoCas(Document aDocument, String aLayerName, String aFeatureName, CAS aCas)
     {
-        return null;
+        Type targetType = CasUtil.getAnnotationType(aCas, aLayerName);
+        Feature feature = targetType.getFeatureByBaseName(aFeatureName);
+
+        for (Annotation annotation : aDocument.getAnnotations().get(TARGET_LAYER)) {
+            AnnotationFS fs = aCas.createAnnotation(targetType, annotation.getBegin(),
+                    annotation.getEnd());
+            fs.setStringValue(feature, annotation.getFeatures().get(TARGET_FEATURE));
+            aCas.addFsToIndexes(fs);
+        }
     }
 }

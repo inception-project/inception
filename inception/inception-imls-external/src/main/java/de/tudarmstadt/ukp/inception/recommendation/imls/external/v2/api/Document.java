@@ -29,11 +29,11 @@ public class Document
 {
     private final String text;
     private final Map<String, List<Annotation>> annotations;
-    private final int version;
+    private final long version;
 
     public Document(@JsonProperty("text") String aText,
             @JsonProperty("annotations") Map<String, List<Annotation>> aAnnotations,
-            @JsonProperty("version") int aVersion)
+            @JsonProperty("version") long aVersion)
     {
         text = aText;
         annotations = aAnnotations;
@@ -60,7 +60,7 @@ public class Document
         return annotations;
     }
 
-    public int getVersion()
+    public long getVersion()
     {
         return version;
     }

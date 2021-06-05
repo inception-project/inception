@@ -51,8 +51,8 @@ public class ExternalRecommenderV2ApiTest
     {
         FormatConverter converter = new FormatConverter();
         CAS cas = loadAlaskaCas();
-        Document request = converter.fromCas(cas, 0,
-                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value");
+        Document request = converter.documentFromCas(cas,
+                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value", 0);
 
         Document response = sut.predict("spacy_ner", "test_model", request);
 

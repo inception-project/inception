@@ -29,10 +29,10 @@ public class Annotation
 {
     private final int begin;
     private final int end;
-    private final Map<String, Object> features;
+    private final Map<String, String> features;
 
     public Annotation(@JsonProperty("begin") int aBegin, @JsonProperty("end") int aEnd,
-            @JsonProperty("features") Map<String, Object> aFeatures)
+            @JsonProperty("features") Map<String, String> aFeatures)
     {
         begin = aBegin;
         end = aEnd;
@@ -65,7 +65,7 @@ public class Annotation
         return end;
     }
 
-    public Map<String, Object> getFeatures()
+    public Map<String, String> getFeatures()
     {
         return features;
     }
