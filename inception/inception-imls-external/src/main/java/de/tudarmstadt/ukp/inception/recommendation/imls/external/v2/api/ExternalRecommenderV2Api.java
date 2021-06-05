@@ -22,11 +22,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -118,21 +120,34 @@ public class ExternalRecommenderV2Api
         }
     }
 
-    public Document predict(String aClassifierId, String aModelId, Document aDocument)
-        throws IOException, InterruptedException
+    public Optional<Document> predict(String aClassifierId, String aModelId, Document aDocument)
     {
-        String urlString = String.format("/classifier/%s/%s/predict", aClassifierId, aModelId);
+        String urlString = String.format("/classifier/%s/%s/predict", aClassifierId,
+                URLEncoder.encode(aModelId, StandardCharsets.UTF_8));
         URI url = URI.create(remoteUrl + urlString);
-        HttpRequest request = HttpRequest.newBuilder() //
-                .uri(url) //
-                .header("Content-Type", "application/json") //
-                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aDocument))) //
-                .build();
 
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-        LOG.info("Predicting finished with status code [{}]", response.statusCode());
+        try {
+            HttpRequest request = HttpRequest.newBuilder() //
+                    .uri(url) //
+                    .header("Content-Type", "application/json") //
+                    .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aDocument))) //
+                    .build();
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            LOG.info("Predicting finished with status code [{}]", response.statusCode());
 
-        return JSONUtil.fromJsonString(Document.class, response.body());
+            if (response.statusCode() == 200) {
+                Document result = JSONUtil.fromJsonString(Document.class, response.body());
+                return Optional.of(result);
+            }
+            else {
+                LOG.error("Error while predicting: {}", response.body());
+            }
+        }
+        catch (IOException | InterruptedException e) {
+            LOG.error("Error while predicting", e);
+        }
+
+        return Optional.empty();
     }
 
 }

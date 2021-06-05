@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static java.util.Collections.singletonMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +37,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class FormatConverter
 {
-    public static final String SENTENCE_LAYER = "f.value";
-    public static final String TOKEN_LAYER = "t.span_annotation";
+    public static final String SENTENCE_LAYER = "t.sentence";
+    public static final String TOKEN_LAYER = "t.token";
     public static final String TARGET_LAYER = "t.span_annotation";
     public static final String TARGET_FEATURE = "f.value";
 
@@ -79,11 +81,17 @@ public class FormatConverter
     {
         Type targetType = CasUtil.getAnnotationType(aCas, aLayerName);
         Feature feature = targetType.getFeatureByBaseName(aFeatureName);
+        Feature isPredicted = targetType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
-        for (Annotation annotation : aDocument.getAnnotations().get(TARGET_LAYER)) {
-            AnnotationFS fs = aCas.createAnnotation(targetType, annotation.getBegin(),
-                    annotation.getEnd());
-            fs.setStringValue(feature, annotation.getFeatures().get(TARGET_FEATURE));
+        List<Annotation> annotations = aDocument.getAnnotations().getOrDefault(TARGET_LAYER,
+                Collections.emptyList());
+        for (Annotation annotation : annotations) {
+            int begin = annotation.getBegin();
+            int end = annotation.getEnd();
+            AnnotationFS fs = aCas.createAnnotation(targetType, begin, end);
+            String featureValue = annotation.getFeatures().get(TARGET_FEATURE);
+            fs.setStringValue(feature, featureValue);
+            fs.setBooleanValue(isPredicted, true);
             aCas.addFsToIndexes(fs);
         }
     }

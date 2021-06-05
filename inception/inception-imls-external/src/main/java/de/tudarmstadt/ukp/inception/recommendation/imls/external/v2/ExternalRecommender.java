@@ -21,15 +21,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
-import org.apache.uima.fit.util.JCasUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -45,6 +44,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config.Exter
 public class ExternalRecommender
     extends RecommendationEngine
 {
+    private final static Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
+
     public static final RecommenderContext.Key<Boolean> KEY_TRAINING_COMPLETE = new RecommenderContext.Key<>(
             "training_complete");
 
@@ -73,24 +74,32 @@ public class ExternalRecommender
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
         CAS cas = getRealCas(aCas);
+
+        if (aContext.getUser().isEmpty()) {
+            LOG.warn("No user found in context, skipping predictions...");
+            return;
+        }
+
+        String userName = aContext.getUser().get().getUsername();
+        long version = 0;
+
         FormatConverter converter = new FormatConverter();
         String layerName = recommender.getLayer().getName();
         String featureName = recommender.getFeature().getName();
         String projectName = recommender.getProject().getName();
-        CASMetadata metadata = getCasMetadata(cas);
-        String userName = getCasMetadata(cas).getUsername();
-        long version = metadata.getLastChangedOnDisk();
 
-        Document document = converter.documentFromCas(cas, layerName, featureName, version);
+        Document request = converter.documentFromCas(cas, layerName, featureName, version);
 
-        try {
-            api.predict(projectName, userName, document);
+        String modelName = projectName + "_" + userName + "_" + recommender.getName();
+
+        String classifierName = traits.getClassifierInfo().getName();
+        Optional<Document> response = api.predict(classifierName, modelName, request);
+        if (response.isEmpty()) {
+            LOG.error("Could not obtain predictions, skipping...");
+            return;
         }
-        catch (IOException | InterruptedException e) {
-            throw new RecommendationException("Error while predicting!", e);
-        }
 
-        converter.loadIntoCas(document, layerName, featureName, cas);
+        converter.loadIntoCas(response.get(), layerName, featureName, cas);
     }
 
     @Override
@@ -131,13 +140,4 @@ public class ExternalRecommender
         }
     }
 
-    private CASMetadata getCasMetadata(CAS aCas) throws RecommendationException
-    {
-        try {
-            return JCasUtil.selectSingle(aCas.getJCas(), CASMetadata.class);
-        }
-        catch (CASException | IllegalArgumentException e) {
-            throw new RecommendationException("Error while reading CAS metadata!", e);
-        }
-    }
 }
