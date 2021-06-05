@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recomm
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -35,7 +34,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +65,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Metadata;
 
 public class ExternalRecommender
     extends RecommendationEngine
@@ -78,19 +82,18 @@ public class ExternalRecommender
     private static final int HTTP_TOO_MANY_REQUESTS = 429;
     private static final int HTTP_BAD_REQUEST = 400;
 
-    private static final long CONNECT_TIMEOUT = 30;
-    private static final long READ_TIMEOUT = 30;
-
+    private final ExternalRecommenderProperties properties;
     private final ExternalRecommenderTraits traits;
     private final HttpClient client;
 
-    public ExternalRecommender(Recommender aRecommender, ExternalRecommenderTraits aTraits)
+    public ExternalRecommender(ExternalRecommenderProperties aProperties, Recommender aRecommender,
+            ExternalRecommenderTraits aTraits)
     {
         super(aRecommender);
 
+        properties = aProperties;
         traits = aTraits;
-        client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT, SECONDS))
-                .build();
+        client = HttpClient.newBuilder().connectTimeout(properties.getConnectTimeout()).build();
     }
 
     @Override
@@ -132,7 +135,7 @@ public class ExternalRecommender
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("train")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
-                .timeout(Duration.of(READ_TIMEOUT, SECONDS))
+                .timeout(properties.getReadTimeout())
                 .POST(BodyPublishers.ofString(toJson(trainingRequest), UTF_8)).build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -166,7 +169,7 @@ public class ExternalRecommender
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
-                .timeout(Duration.of(READ_TIMEOUT, SECONDS)) //
+                .timeout(properties.getReadTimeout()) //
                 .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)).build();
 
         HttpResponse<String> response = sendRequest(request);

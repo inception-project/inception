@@ -15,22 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-public class PredictionResponse
+public interface CasStorageMetadata
 {
-    @JsonProperty("document")
-    private String document;
+    long getVersion();
 
-    public String getDocument()
-    {
-        return document;
-    }
+    long getTimestamp();
 
-    public void setDocument(String aDocument)
-    {
-        document = aDocument;
-    }
+    long getSize();
 }

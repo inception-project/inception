@@ -56,9 +56,10 @@ public class TokenWrappingPagingStrategy
             AnnotationFS currentToken = tokenIterator.next();
 
             String gap = aCas.getDocumentText().substring(currentUnitEnd, currentToken.getBegin());
+            int gapStart = currentUnitEnd;
             int lineBreakIndex = gap.indexOf("\n");
             while (lineBreakIndex > -1) {
-                currentUnitEnd = currentUnitEnd + lineBreakIndex;
+                currentUnitEnd = gapStart + lineBreakIndex;
                 units.add(new Unit(units.size() + 1, currentUnitStart, currentUnitEnd));
                 currentUnitStart = currentUnitEnd + 1; // +1 because of the line break character
                 lineBreakIndex = gap.indexOf("\n", lineBreakIndex + 1);

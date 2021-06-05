@@ -15,7 +15,11 @@
 // limitations under the License.
 
 [[sect_settings_versioning]]
-=== Versioning Settings
+= Versioning Settings
+
+====
+CAUTION: Experimental feature.
+====
 
 You can enable versioning for projects in your {product-name} instance.
 Project managers can create snapshots of all documents in the project as well as its layer configuration via the versioning panel.

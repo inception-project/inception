@@ -21,10 +21,10 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -84,13 +84,14 @@ public class ActiveLearningServiceImpl
         Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
 
         if (predictions == null) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         Map<String, SuggestionDocumentGroup<SpanSuggestion>> recommendationsMap = predictions
                 .getPredictionsForWholeProject(SpanSuggestion.class, aLayer, documentService);
 
-        return recommendationsMap.values().stream().flatMap(docMap -> docMap.stream())
+        return recommendationsMap.values().stream() //
+                .flatMap(docMap -> docMap.stream()) //
                 .collect(toList());
     }
 
@@ -170,8 +171,8 @@ public class ActiveLearningServiceImpl
                 (getRecommendationsFromRecommendationService - startTimer));
 
         // remove duplicate recommendations
-        suggestions = suggestions.stream().map(it -> removeDuplicateRecommendations(it))
-                .collect(Collectors.toList());
+        suggestions = suggestions.stream() //
+                .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
         long removeDuplicateRecommendation = System.currentTimeMillis();
         log.trace("Removing duplicate recommendations costs {} ms.",
                 (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));

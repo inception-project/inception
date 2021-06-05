@@ -31,11 +31,11 @@ public class RelationSuggestion
 
     public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, int aSourceBegin, int aSourceEnd,
-            int aTargetBegin, int aTargetEnd, String aLabel, String aUiLabel, double aConfidence,
-            String aConfidenceExplanation)
+            int aTargetBegin, int aTargetEnd, String aLabel, String aUiLabel, double aScore,
+            String aScoreExplanation)
     {
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
-                aUiLabel, aConfidence, aConfidenceExplanation);
+                aUiLabel, aScore, aScoreExplanation);
 
         position = new RelationPosition(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
     }
@@ -85,9 +85,8 @@ public class RelationSuggestion
                 .append("feature", feature).append("documentName", documentName)
                 .append("position", position) //
                 .append("windowBegin", getWindowBegin()).append("windowEnd", getWindowEnd()) //
-                .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
-                .append("confindenceExplanation", confidenceExplanation)
-                .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())
-                .toString();
+                .append("label", label).append("uiLabel", uiLabel).append("score", score)
+                .append("confindenceExplanation", scoreExplanation).append("visible", isVisible())
+                .append("reasonForHiding", getReasonForHiding()).toString();
     }
 }
