@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
@@ -58,17 +56,17 @@ public class ProjectDashboardPage
     private @SpringBean MenuItemRegistry menuItemService;
 
     private DashboardMenu menu;
-    
+
     public ProjectDashboardPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
         User currentUser = userRepository.getCurrentUser();
-        
+
         if (!userRepository.isAdministrator(currentUser)) {
             requireProjectRole(currentUser);
         }
-                
+
         setStatelessHint(true);
         setVersioned(false);
 
@@ -79,12 +77,6 @@ public class ProjectDashboardPage
             setResponsePage(LoginPage.class);
         }
 
-        // if not either a curator or annotator, display warning message
-        if (!annotationEnabeled(projectService, user)
-                && !curationEnabeled(projectService, user)) {
-            info("You are not member of any projects to annotate or curate");
-        }
-
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         add(menu);
 
@@ -92,10 +84,11 @@ public class ProjectDashboardPage
         add(new ActivitiesDashlet("activitiesDashlet", Model.of(getProject())));
     }
 
-    public void setModel(IModel<Project> aModel) {
+    public void setModel(IModel<Project> aModel)
+    {
         setDefaultModel(aModel);
     }
-    
+
     private List<MenuItem> getMenuItems()
     {
         return menuItemService.getMenuItems().stream()
