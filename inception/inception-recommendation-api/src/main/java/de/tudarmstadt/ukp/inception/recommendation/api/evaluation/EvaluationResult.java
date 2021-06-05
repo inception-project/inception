@@ -39,8 +39,9 @@ public class EvaluationResult
 {
     private static final long serialVersionUID = 5842125748342833451L;
 
-    private final int trainingSetSize;
-    private final int testSetSize;
+    private final String sampleUnit;
+    private final int trainSampleCount;
+    private final int testSampleCount;
 
     /**
      * Rate of this training data compared to all training data
@@ -58,31 +59,40 @@ public class EvaluationResult
 
     public EvaluationResult()
     {
+        this(null, null);
+    }
+
+    public EvaluationResult(String aDatapointUnit, String aSampleUnit)
+    {
+        sampleUnit = aSampleUnit;
         ignoreLabels = new LinkedHashSet<>();
-        confusionMatrix = new ConfusionMatrix();
-        trainingSetSize = 0;
-        testSetSize = 0;
+        confusionMatrix = new ConfusionMatrix(aDatapointUnit);
+        trainSampleCount = 0;
+        testSampleCount = 0;
         trainingDataRatio = 0.0;
     }
 
-    public EvaluationResult(ConfusionMatrix aConfMatrix, int aTrainSetSize, int aTestSetSize,
-            double aTrainDataPercentage, Set<String> aIgnoreLabels)
+    public EvaluationResult(ConfusionMatrix aConfMatrix, String aSampleUnit, int aTrainSampleCount,
+            int aTestSampleCount, double aTrainDataPercentage, Set<String> aIgnoreLabels)
     {
         ignoreLabels = new LinkedHashSet<>();
         ignoreLabels.addAll(aIgnoreLabels);
 
         confusionMatrix = aConfMatrix;
-        trainingSetSize = aTrainSetSize;
-        testSetSize = aTestSetSize;
+        sampleUnit = aSampleUnit;
+        trainSampleCount = aTrainSampleCount;
+        testSampleCount = aTestSampleCount;
         trainingDataRatio = aTrainDataPercentage;
     }
 
-    public EvaluationResult(int aTrainSetSize, int aTestSetSize, double aTrainDataPercentage)
+    public EvaluationResult(String aDatapointUnit, String aSampleUnit, int aTrainSampleCount,
+            int aTestSampleCount, double aTrainDataPercentage)
     {
         ignoreLabels = new HashSet<>();
-        confusionMatrix = new ConfusionMatrix();
-        trainingSetSize = aTrainSetSize;
-        testSetSize = aTestSetSize;
+        confusionMatrix = new ConfusionMatrix(aDatapointUnit);
+        sampleUnit = aSampleUnit;
+        trainSampleCount = aTrainSampleCount;
+        testSampleCount = aTestSampleCount;
         trainingDataRatio = aTrainDataPercentage;
     }
 
@@ -207,6 +217,11 @@ public class EvaluationResult
         return (precision > 0 || recall > 0) ? 2 * precision * recall / (precision + recall) : 0;
     }
 
+    public String getSampleUnit()
+    {
+        return sampleUnit;
+    }
+
     /**
      * Get the size of the training data used in the recommender evaluation.
      * 
@@ -214,7 +229,7 @@ public class EvaluationResult
      */
     public int getTrainingSetSize()
     {
-        return trainingSetSize;
+        return trainSampleCount;
     }
 
     /**
@@ -224,12 +239,17 @@ public class EvaluationResult
      */
     public int getTestSetSize()
     {
-        return testSetSize;
+        return testSampleCount;
     }
 
     public double getTrainDataRatio()
     {
         return trainingDataRatio;
+    }
+
+    public Set<String> getIgnoreLabels()
+    {
+        return ignoreLabels;
     }
 
     public void setEvaluationSkipped(boolean aSkipVal)
@@ -264,7 +284,12 @@ public class EvaluationResult
         confusionMatrix = aConfusionMatrix;
     }
 
-    public static EvaluationResultCollector collector()
+    public ConfusionMatrix getConfusionMatrix()
+    {
+        return confusionMatrix;
+    }
+
+    public static EvaluationResultCollector toEvaluationResult()
     {
         return new EvaluationResultCollector();
     }
@@ -276,43 +301,51 @@ public class EvaluationResult
         return result;
     }
 
-    public static EvaluationResultCollector collector(int aTrainSetSize, int aTestSetSize,
-            double aTrainDataPercentage, String... aIgnoreLabels)
+    public static EvaluationResultCollector toEvaluationResult(String aDatapointUnit,
+            String aSampleUnit, int aTrainSetSize, int aTestSetSize, double aTrainDataPercentage,
+            String... aIgnoreLabels)
     {
-        return new EvaluationResultCollector(aTrainSetSize, aTestSetSize, aTrainDataPercentage,
-                aIgnoreLabels);
+        return new EvaluationResultCollector(aDatapointUnit, aSampleUnit, aTrainSetSize,
+                aTestSetSize, aTrainDataPercentage, aIgnoreLabels);
     }
 
     public static class EvaluationResultCollector
         implements Collector<LabelPair, ConfusionMatrix, EvaluationResult>
     {
         private final Set<String> ignoreLabels;
-        private final int testSize;
-        private final int trainSize;
-        private final double trainDataRatio;
+        private final int testSampleCount;
+        private final int trainSampleCount;
+        private final String sampleUnit;
+        private final double trainTestSampleRatio;
+        private final String datapointUnit;
 
-        public EvaluationResultCollector(int aTrainSetSize, int aTestSetSize,
-                double aTrainDataPercentage, String... aIgnoreLabels)
+        public EvaluationResultCollector(String aDatapointUnit, String aSampleUnit,
+                int aTrainSampleCount, int aTestSampleCount, double aTrainTestSampleRatio,
+                String... aIgnoreLabels)
         {
             ignoreLabels = new HashSet<>();
-            testSize = aTestSetSize;
-            trainSize = aTrainSetSize;
-            trainDataRatio = aTrainDataPercentage;
+            datapointUnit = aDatapointUnit;
+            sampleUnit = aSampleUnit;
+            testSampleCount = aTestSampleCount;
+            trainSampleCount = aTrainSampleCount;
+            trainTestSampleRatio = aTrainTestSampleRatio;
             Collections.addAll(ignoreLabels, aIgnoreLabels);
         }
 
         public EvaluationResultCollector()
         {
             ignoreLabels = new HashSet<>();
-            testSize = 0;
-            trainSize = 0;
-            trainDataRatio = 0;
+            datapointUnit = "";
+            sampleUnit = "";
+            testSampleCount = 0;
+            trainSampleCount = 0;
+            trainTestSampleRatio = 0;
         }
 
         @Override
         public Supplier<ConfusionMatrix> supplier()
         {
-            return ConfusionMatrix::new;
+            return () -> new ConfusionMatrix(datapointUnit);
         }
 
         @Override
@@ -334,8 +367,8 @@ public class EvaluationResult
         @Override
         public Function<ConfusionMatrix, EvaluationResult> finisher()
         {
-            return confMatrix -> new EvaluationResult(confMatrix, trainSize, testSize,
-                    trainDataRatio, ignoreLabels);
+            return confMatrix -> new EvaluationResult(confMatrix, sampleUnit, trainSampleCount,
+                    testSampleCount, trainTestSampleRatio, ignoreLabels);
         }
 
         @Override

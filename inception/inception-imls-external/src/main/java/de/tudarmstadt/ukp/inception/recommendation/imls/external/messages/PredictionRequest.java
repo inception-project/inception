@@ -15,20 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
-
-import java.util.List;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TrainingRequest
-{
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Metadata;
 
+public class PredictionRequest
+{
     @JsonProperty("typeSystem")
     private String typeSystem;
 
-    @JsonProperty("documents")
-    private List<Document> documents;
+    @JsonProperty("document")
+    private Document document;
 
     @JsonProperty("metadata")
     private Metadata metadata;
@@ -43,14 +43,14 @@ public class TrainingRequest
         typeSystem = aTypeSystem;
     }
 
-    public List<Document> getDocuments()
+    public Document getDocument()
     {
-        return documents;
+        return document;
     }
 
-    public void setDocuments(List<Document> aDocuments)
+    public void setDocument(Document aDocument)
     {
-        documents = aDocuments;
+        document = aDocument;
     }
 
     public Metadata getMetadata()

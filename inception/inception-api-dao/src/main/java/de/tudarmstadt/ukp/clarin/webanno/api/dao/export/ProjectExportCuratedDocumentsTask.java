@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -156,11 +159,12 @@ public class ProjectExportCuratedDocumentsTask
             if ((aIncludeInProgress
                     && SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
                     || SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                File curationCasFile = documentService.getCasFile(sourceDocument,
-                        WebAnnoConst.CURATION_USER);
-                if (curationCasFile.exists()) {
+                if (documentService.existsCas(sourceDocument, CURATION_USER)) {
                     // Copy CAS - this is used when importing the project again
-                    FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
+                    try (OutputStream os = new FileOutputStream(
+                            new File(curationDir, CURATION_USER + ".ser"))) {
+                        documentService.exportCas(sourceDocument, CURATION_USER, os);
+                    }
 
                     // Copy secondary export format for convenience - not used during import
                     try {

@@ -15,39 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.Duration;
 
-public class Document
+public interface ExternalRecommenderProperties
 {
+    Duration getConnectTimeout();
 
-    private final String xmi;
-    private final long documentId;
-    private final String userId;
-
-    public Document(@JsonProperty(value = "xmi", required = true) String aXmi,
-            @JsonProperty(value = "documentId", required = true) long aDocumentId,
-            @JsonProperty(value = "userId", required = true) String aUserId)
-    {
-        xmi = aXmi;
-        documentId = aDocumentId;
-        userId = aUserId;
-    }
-
-    public String getXmi()
-    {
-        return xmi;
-    }
-
-    public Long getDocumentId()
-    {
-        return documentId;
-    }
-
-    public String getUserId()
-    {
-        return userId;
-    }
-
+    Duration getReadTimeout();
 }

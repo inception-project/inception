@@ -214,7 +214,7 @@ public class ProjectCasDoctorPanel
 
             // Repair regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
-                if (documentService.existsAnnotationCas(ad)) {
+                if (documentService.existsCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
@@ -305,7 +305,7 @@ public class ProjectCasDoctorPanel
 
             // Check regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
-                if (documentService.existsAnnotationCas(ad)) {
+                if (documentService.existsCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {

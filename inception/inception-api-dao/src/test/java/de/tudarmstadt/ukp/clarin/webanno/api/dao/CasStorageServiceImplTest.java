@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -90,6 +91,7 @@ public class CasStorageServiceImplTest
     private AtomicInteger writeCounter = new AtomicInteger(0);
 
     private CasStorageServiceImpl sut;
+    private FileSystemCasStorageDriver driver;
     private RepositoryProperties repositoryProperties;
 
     @TempDir
@@ -112,8 +114,9 @@ public class CasStorageServiceImplTest
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        sut = new CasStorageServiceImpl(null, null, repositoryProperties,
-                new CasStoragePropertiesImpl(), new BackupProperties());
+        driver = new FileSystemCasStorageDriver(repositoryProperties, new BackupProperties());
+
+        sut = new CasStorageServiceImpl(driver, null, null, new CasStoragePropertiesImpl());
     }
 
     @Test
@@ -127,7 +130,6 @@ public class CasStorageServiceImplTest
             String user = "test";
 
             sut.writeCas(doc, templateCas.getCas(), user);
-            assertThat(sut.getCasFile(doc, user)).exists();
             assertThat(sut.existsCas(doc, user)).isTrue();
 
             // Actual test
@@ -135,7 +137,6 @@ public class CasStorageServiceImplTest
             assertThat(cas.getDocumentText()).isEqualTo(templateCas.getDocumentText());
 
             sut.deleteCas(doc, user);
-            assertThat(sut.getCasFile(doc, user)).doesNotExist();
             assertThat(sut.existsCas(doc, user)).isFalse();
             assertThat(casStorageSession.contains(cas)).isFalse();
         }
@@ -183,7 +184,6 @@ public class CasStorageServiceImplTest
             assertThat(cas.getDocumentText()).isEqualTo(text);
 
             sut.deleteCas(doc, user);
-            assertThat(sut.getCasFile(doc, user)).doesNotExist();
             assertThat(sut.existsCas(doc, user)).isFalse();
         }
     }
@@ -235,25 +235,26 @@ public class CasStorageServiceImplTest
         // Setup fixture
         SourceDocument doc = makeSourceDocument(5l, 5l, "test");
         String user = "test";
-        File casFile = sut.getCasFile(doc, user);
 
         try (CasStorageSession session = openNested(true)) {
             createCasFile(doc, user, "This is a test");
-            assertThat(casFile).exists();
+            assertThat(sut.existsCas(doc, user)).isTrue();
         }
 
         try (CasStorageSession casStorageSession = openNested(true)) {
             CAS mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
 
+            File casFile = driver.getCasFile(doc, user);
             casFile.setLastModified(casFile.lastModified() + 10_000);
-            long timestamp = casFile.lastModified();
+
+            long timestamp = sut.getCasTimestamp(doc, user).get();
 
             assertThatExceptionOfType(IOException.class)
                     .isThrownBy(() -> sut.writeCas(doc, mainCas, user))
                     .withMessageContaining("concurrent modification");
 
-            assertThat(casFile).exists();
-            assertThat(casFile.lastModified()).isEqualTo(timestamp);
+            assertThat(sut.existsCas(doc, user)).isTrue();
+            assertThat(sut.getCasTimestamp(doc, user).get()).isEqualTo(timestamp);
         }
     }
 
@@ -264,14 +265,14 @@ public class CasStorageServiceImplTest
             // Setup fixture
             SourceDocument doc = makeSourceDocument(6l, 6l, "test");
             String user = "test";
-            File casFile = sut.getCasFile(doc, user);
+            File casFile = driver.getCasFile(doc, user);
 
             long casFileSize;
             long casFileLastModified;
 
             try (CasStorageSession session = openNested(true)) {
                 createCasFile(doc, user, "This is a test");
-                assertThat(casFile).exists();
+                assertThat(sut.existsCas(doc, user)).isTrue();
                 casFileSize = casFile.length();
                 casFileLastModified = casFile.lastModified();
             }
@@ -289,7 +290,7 @@ public class CasStorageServiceImplTest
                     .withRootCauseInstanceOf(ClassCastException.class);
 
             assertThat(casFile).exists().hasSize(casFileSize);
-            assertThat(casFile.lastModified()).isEqualTo(casFileLastModified);
+            assertThat(sut.getCasTimestamp(doc, user).get()).isEqualTo(casFileLastModified);
             assertThat(new File(casFile.getParentFile(), user + ".ser.old")).doesNotExist();
         }
     }
@@ -657,7 +658,6 @@ public class CasStorageServiceImplTest
     {
         JCas casTemplate = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> makeCas(text),
                 EXCLUSIVE_WRITE_ACCESS).getJCas();
-        assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
 
         return casTemplate;
