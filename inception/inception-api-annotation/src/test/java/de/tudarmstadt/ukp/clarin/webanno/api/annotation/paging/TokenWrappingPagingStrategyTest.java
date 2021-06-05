@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -29,7 +31,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class TokenWrappingPagingStrategyTest
 {
     @Test
-    public void test() throws Exception
+    public void thatMultipleConsecutiveLineBreaksWork() throws Exception
     {
         TokenWrappingPagingStrategy sut = new TokenWrappingPagingStrategy(120);
 
@@ -49,5 +51,65 @@ public class TokenWrappingPagingStrategyTest
                         "", //
                         "", //
                         "Power");
+    }
+
+    @Test
+    public void thatLinesOfDifferntLenghtsWork() throws Exception
+    {
+        TokenWrappingPagingStrategy sut = new TokenWrappingPagingStrategy(10);
+
+        JCas jcas = JCasFactory.createJCas();
+        JCasBuilder builder = new JCasBuilder(jcas);
+        builder.add(StringUtils.repeat("a", 20), Token.class);
+        builder.add("\n");
+        builder.add(StringUtils.repeat("b", 15), Token.class);
+        builder.add("\n");
+        builder.add(StringUtils.repeat("c", 11), Token.class);
+        builder.add("\n");
+        builder.add(StringUtils.repeat("d", 10), Token.class);
+        builder.add("\n");
+        builder.add(StringUtils.repeat("e", 9), Token.class);
+        builder.add("\n");
+        builder.add(StringUtils.repeat("f", 1), Token.class);
+        builder.add("\n");
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas())) //
+                .extracting( //
+                        Unit::getBegin, //
+                        Unit::getEnd, //
+                        u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd())) //
+                .containsExactly( //
+                        tuple(0, 20, "aaaaaaaaaaaaaaaaaaaa"), //
+                        tuple(21, 36, "bbbbbbbbbbbbbbb"), //
+                        tuple(37, 48, "ccccccccccc"), //
+                        tuple(49, 59, "dddddddddd"), //
+                        tuple(60, 69, "eeeeeeeee"), //
+                        tuple(70, 71, "f"));
+    }
+
+    @Test
+    public void thatWrappingWork() throws Exception
+    {
+        TokenWrappingPagingStrategy sut = new TokenWrappingPagingStrategy(11);
+
+        JCas jcas = JCasFactory.createJCas();
+        JCasBuilder builder = new JCasBuilder(jcas);
+        for (int n = 0; n < 10; n++) {
+            builder.add(StringUtils.repeat("a", 3), Token.class);
+            builder.add(" ");
+        }
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas())) //
+                .extracting( //
+                        Unit::getBegin, //
+                        Unit::getEnd, //
+                        u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd())) //
+                .containsExactly( //
+                        tuple(0, 11, "aaa aaa aaa"), //
+                        tuple(12, 23, "aaa aaa aaa"), //
+                        tuple(24, 35, "aaa aaa aaa"), //
+                        tuple(36, 39, "aaa"));
     }
 }
