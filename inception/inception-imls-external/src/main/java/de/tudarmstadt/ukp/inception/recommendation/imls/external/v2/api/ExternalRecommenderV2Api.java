@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
@@ -36,22 +38,22 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+
 public class ExternalRecommenderV2Api
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommenderV2Api.class);
 
     private final HttpClient client;
     private final String remoteUrl;
-    private final Duration connectionTimeout;
 
-    public ExternalRecommenderV2Api(URI aRemoteUrl, Duration aConnectionTimeout)
+    public ExternalRecommenderV2Api(URI aRemoteUrl, Duration aTimeout)
     {
         remoteUrl = StringUtils.removeEnd(aRemoteUrl.toString(), "/");
-        connectionTimeout = aConnectionTimeout;
 
         client = HttpClient.newBuilder() //
                 .version(HttpClient.Version.HTTP_1_1) //
-                .connectTimeout(aConnectionTimeout).build();
+                .connectTimeout(aTimeout).build();
     }
 
     public ExternalRecommenderV2Api(URI aRemoteUrl)
@@ -115,4 +117,22 @@ public class ExternalRecommenderV2Api
             return Optional.empty();
         }
     }
+
+    public Document predict(String aClassifierId, String aModelId, Document aDocument)
+        throws IOException, InterruptedException
+    {
+        String urlString = String.format("/classifier/%s/%s/predict", aClassifierId, aModelId);
+        URI url = URI.create(remoteUrl + urlString);
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(url) //
+                .header("Content-Type", "application/json") //
+                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aDocument))) //
+                .build();
+
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        LOG.info("Predicting finished with status code [{}]", response.statusCode());
+
+        return JSONUtil.fromJsonString(Document.class, response.body());
+    }
+
 }

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,44 +25,49 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Document
+public class Annotation
 {
-    private final String text;
-    private final Map<String, List<Annotation>> annotations;
-    private final int version;
+    private final int begin;
+    private final int end;
+    private final Map<String, Object> features;
 
-    public Document(@JsonProperty("text") String aText,
-            @JsonProperty("annotations") Map<String, List<Annotation>> aAnnotations,
-            @JsonProperty("version") int aVersion)
+    public Annotation(@JsonProperty("begin") int aBegin, @JsonProperty("end") int aEnd,
+            @JsonProperty("features") Map<String, Object> aFeatures)
     {
-        text = aText;
-        annotations = aAnnotations;
-        version = aVersion;
+        begin = aBegin;
+        end = aEnd;
+        features = aFeatures != null ? aFeatures : Collections.emptyMap();
+    }
+
+    public Annotation(int aBegin, int aEnd)
+
+    {
+        this(aBegin, aEnd, Collections.emptyMap());
     }
 
     @Override
     public String toString()
     {
         return new ToStringBuilder(this) //
-                .append("text", text) //
-                .append("annotations", annotations) //
-                .append("version", version) //
+                .append("begin", begin) //
+                .append("end", end) //
+                .append("features", features) //
                 .toString();
     }
 
-    public String getText()
+    public int getBegin()
     {
-        return text;
+        return begin;
     }
 
-    public Map<String, List<Annotation>> getAnnotations()
+    public int getEnd()
     {
-        return annotations;
+        return end;
     }
 
-    public int getVersion()
+    public Map<String, Object> getFeatures()
     {
-        return version;
+        return features;
     }
 
     @Override
@@ -72,14 +77,14 @@ public class Document
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        Document document = (Document) o;
-        return getVersion() == document.getVersion() && getText().equals(document.getText())
-                && getAnnotations().equals(document.getAnnotations());
+        Annotation that = (Annotation) o;
+        return getBegin() == that.getBegin() && getEnd() == that.getEnd()
+                && getFeatures().equals(that.getFeatures());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getText(), getAnnotations(), getVersion());
+        return Objects.hash(getBegin(), getEnd(), getFeatures());
     }
 }
