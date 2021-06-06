@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 public abstract class VMarker
 {
+    public static final String EDITED = "edited";
     public static final String FOCUS = "focus";
     public static final String MATCH_FOCUS = "matchfocus";
     public static final String MATCH = "match";
