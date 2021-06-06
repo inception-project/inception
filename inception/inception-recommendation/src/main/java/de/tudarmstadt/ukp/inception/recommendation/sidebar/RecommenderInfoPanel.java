@@ -277,9 +277,17 @@ public class RecommenderInfoPanel
 
         int accepted = 0;
         int skippedDueToConflict = 0;
+        int skippedDueToScoreTie = 0;
         for (SuggestionGroup<SpanSuggestion> suggestionGroup : suggestionGroups) {
             // We only want to accept the best suggestions
-            SpanSuggestion suggestion = suggestionGroup.bestSuggestions(pref).get(0);
+            List<SpanSuggestion> suggestions = suggestionGroup.bestSuggestions(pref);
+            if (suggestions.size() > 1
+                    && suggestions.get(0).getScore() == suggestions.get(1).getScore()) {
+                skippedDueToScoreTie++;
+                continue;
+            }
+
+            SpanSuggestion suggestion = suggestions.get(0);
 
             try {
                 // Upsert an annotation based on the suggestion
@@ -327,6 +335,13 @@ public class RecommenderInfoPanel
 
         if (skippedDueToConflict > 0) {
             warn(String.format("Skipped %d suggestions due to conflicts", skippedDueToConflict));
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+
+        if (skippedDueToScoreTie > 0) {
+            warn(String.format(
+                    "Skipped %d suggestions due to score ties - annotate more, then retry",
+                    skippedDueToScoreTie));
             aTarget.addChildren(getPage(), IFeedback.class);
         }
 
