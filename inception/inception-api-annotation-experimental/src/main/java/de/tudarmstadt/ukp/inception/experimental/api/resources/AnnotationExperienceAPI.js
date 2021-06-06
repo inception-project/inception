@@ -1067,12 +1067,6 @@ var AnnotationExperienceAPI = class {
     onclick = function(aEvent) {
       let elem = aEvent.target;
       if (elem.tagName === "rect") {
-        console.log(elem);
-        console.log(elem.attributes);
-        console.log("--------");
-        console.log(elem.parentElement);
-        console.log(elem.parentElement.id);
-        console.log(elem.parentElement.attributes);
         that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
       }
       if (elem.className === "far fa-caret-square-right") {
@@ -1097,16 +1091,14 @@ var AnnotationExperienceAPI = class {
         that.sendCreateAnnotationMessageToServer("ID", "TYPE", "SENTENCE_OF_ANNOTATION");
       }
     };
-    this.connect();
   }
   connect() {
     if (this.connected) {
       console.log("You are already connected");
       return;
     }
-    let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/ws-endpoint";
     this.stompClient = Stomp.over(function() {
-      return new WebSocket(url);
+      return new WebSocket(localStorage.getItem("url"));
     });
     const that = this;
     this.stompClient.onConnect = function(frame) {

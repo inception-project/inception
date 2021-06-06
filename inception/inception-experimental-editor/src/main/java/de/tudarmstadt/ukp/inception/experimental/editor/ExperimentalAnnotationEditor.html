@@ -22,6 +22,12 @@
     <div class="scrolling flex-content fit-child-loose text-center" style="min-height: unset;">
         <form class="editor">
             <div wicket:id="vis"></div>
+            <button onclick="annotator.connect(); return false;">
+                Connect
+            </button>
+            <button onclick="annotator.disconnect();return false;">
+                Disconnect
+            </button>
         </form>
     </div>
 </wicket:panel>

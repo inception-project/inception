@@ -4085,6 +4085,8 @@ Util.profileStart('before render');
               span.comment && span.comment.type,
               span.normalizations]);
 // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
+console.log(span);
+console.log(span.actionButtons);
           if (span.actionButtons) {
             dispatcher.post('displaySpanButtons', [evt, target, span.id]);
           }

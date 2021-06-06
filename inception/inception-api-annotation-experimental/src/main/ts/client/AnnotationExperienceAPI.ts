@@ -46,12 +46,6 @@ class AnnotationExperienceAPI {
             let elem = <Element>aEvent.target;
 
             if (elem.tagName === 'rect') {
-                console.log(elem)
-                console.log(elem.attributes)
-                console.log("--------")
-                console.log(elem.parentElement)
-                console.log(elem.parentElement.id)
-                console.log(elem.parentElement.attributes)
                 that.sendSelectAnnotationMessageToServer(elem.attributes[9].nodeValue);
             }
             // --------- NEXT DOCUMENT ------- //
@@ -84,7 +78,6 @@ class AnnotationExperienceAPI {
                 that.sendCreateAnnotationMessageToServer("ID", "TYPE", "SENTENCE_OF_ANNOTATION");
             }
         }
-        this.connect();
     }
 
 
@@ -95,11 +88,8 @@ class AnnotationExperienceAPI {
             return;
         }
 
-        let url: string = (window.location.protocol.startsWith("https") ? "wss://" : "ws://")
-            + window.location.host + "/ws-endpoint";
-
         this.stompClient = Stomp.over(function () {
-            return new WebSocket(url);
+            return new WebSocket(localStorage.getItem("url"));
         });
 
         //REQUIRED DUE TO JS SCOPE

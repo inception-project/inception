@@ -30,10 +30,4 @@ public class ExperimentalAnnotationEditorAutoConfiguration
     {
         return new ExperimentalAnnotationEditorFactory();
     }
-
-    @Bean
-    public ExperimentalBratEditorFactory experimentalBratEditorFactory()
-    {
-        return new ExperimentalBratEditorFactory();
-    }
 }
