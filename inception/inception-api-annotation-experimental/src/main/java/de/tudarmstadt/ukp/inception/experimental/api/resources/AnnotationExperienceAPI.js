@@ -1104,7 +1104,7 @@ var AnnotationExperienceAPI = class {
       console.log("You are already connected");
       return;
     }
-    let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/" + window.location.pathname.split("/")[1] + "/ws-endpoint";
+    let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/ws-endpoint";
     this.stompClient = Stomp.over(function() {
       return new WebSocket(url);
     });
