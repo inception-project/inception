@@ -44,9 +44,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -289,6 +291,21 @@ public class ProjectServiceImpl
         return entityManager.createQuery(query, ProjectPermission.class) //
                 .setParameter("user", aUser.getUsername()) //
                 .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<ProjectPermission> listProjectPermissions(User aUser)
+    {
+        String query = String.join("\n", //
+                "FROM ProjectPermission ", //
+                "WHERE user =:user ", //
+                "ORDER BY project.name, level");
+
+        return entityManager.createQuery(query, ProjectPermission.class) //
+                .setParameter("user", aUser.getUsername()) //
                 .setHint(CACHEABLE, true) //
                 .getResultList();
     }
@@ -607,6 +624,31 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
+    public Map<Project, Set<PermissionLevel>> listAccessibleProjectsWithPermissions(User aUser)
+    {
+        Map<Project, Set<PermissionLevel>> result = new LinkedHashMap<>();
+
+        // Admins have access to any project, but they may not have actual roles in them, so we
+        // add all the projects without roles and then fill in any roles later
+        if (userRepository.isAdministrator(aUser)) {
+            for (Project project : listProjects()) {
+                result.computeIfAbsent(project, _p -> new LinkedHashSet<>());
+            }
+        }
+
+        List<ProjectPermission> permissionAssignments = listProjectPermissions(aUser);
+        for (ProjectPermission perm : permissionAssignments) {
+            Set<PermissionLevel> levels = result.computeIfAbsent(perm.getProject(),
+                    _p -> new HashSet<>());
+            levels.add(perm.getLevel());
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional
     public List<Project> listManageableProjects(User user)
     {
         List<Project> allowedProject = new ArrayList<>();

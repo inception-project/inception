@@ -33,10 +33,14 @@ import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
@@ -74,7 +78,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
@@ -113,8 +116,8 @@ public class ProjectsOverviewPage
     private WebMarkupContainer projectListContainer;
     private WebMarkupContainer roleFilters;
     private IModel<Set<PermissionLevel>> activeRoleFilters;
-    private IModel<List<Project>> allAccessibleProjects;
-    private IModel<List<Project>> filteredProjects;
+    private IModel<List<ProjectEntry>> allAccessibleProjects;
+    private IModel<List<ProjectEntry>> filteredProjects;
     private IModel<User> currentUser;
     private ConfirmationDialog confirmLeaveDialog;
     private Label emptyListLabel;
@@ -124,8 +127,7 @@ public class ProjectsOverviewPage
     public ProjectsOverviewPage()
     {
         currentUser = LoadableDetachableModel.of(userRepository::getCurrentUser);
-        allAccessibleProjects = LoadableDetachableModel
-                .of(() -> projectService.listAccessibleProjects(currentUser.getObject()));
+        allAccessibleProjects = LoadableDetachableModel.of(this::loadProjects);
         filteredProjects = allAccessibleProjects.map(_projects -> filterByRoles(_projects));
         activeRoleFilters = Model.ofSet(new HashSet<>());
 
@@ -198,9 +200,9 @@ public class ProjectsOverviewPage
             return;
         }
 
-        List<Project> projects = allAccessibleProjects.getObject();
+        List<ProjectEntry> projects = allAccessibleProjects.getObject();
         if (projects.size() == 1) {
-            Project onlyAccessibleProject = projects.get(0);
+            Project onlyAccessibleProject = projects.get(0).getProject();
             throw new RestartResponseException(ProjectDashboardPage.class, new PageParameters()
                     .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, onlyAccessibleProject.getId()));
         }
@@ -271,26 +273,28 @@ public class ProjectsOverviewPage
 
     private WebMarkupContainer createProjectList()
     {
-        ListView<Project> listview = new ListView<Project>(MID_PROJECT, filteredProjects)
+        ListView<ProjectEntry> listview = new ListView<ProjectEntry>(MID_PROJECT, filteredProjects)
         {
             private static final long serialVersionUID = -755155675319764642L;
 
             @Override
-            protected void populateItem(ListItem<Project> aItem)
+            protected void populateItem(ListItem<ProjectEntry> aItem)
             {
-                PageParameters pageParameters = new PageParameters().add(
-                        ProjectDashboardPage.PAGE_PARAM_PROJECT, aItem.getModelObject().getId());
+                Project project = aItem.getModelObject().getProject();
+
+                PageParameters pageParameters = new PageParameters()
+                        .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
-                        () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                        () -> project.getCreated(), "yyyy-MM-dd");
                 addActionsDropdown(aItem);
                 aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
-                Label projectId = new Label(MID_ID, () -> aItem.getModelObject().getId());
+                Label projectId = new Label(MID_ID, () -> project.getId());
                 projectId.add(visibleWhen(
                         () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
                 aItem.add(projectId);
@@ -301,7 +305,7 @@ public class ProjectsOverviewPage
                     @Override
                     protected Set<String> update(Set<String> aClasses)
                     {
-                        if (highlightedProjects.contains(aItem.getModelObject().getId())) {
+                        if (highlightedProjects.contains(project.getId())) {
                             aClasses.add("border border-primary");
                         }
                         else {
@@ -320,19 +324,17 @@ public class ProjectsOverviewPage
         return projectList;
     }
 
-    private void addActionsDropdown(ListItem<Project> aItem)
+    private void addActionsDropdown(ListItem<ProjectEntry> aItem)
     {
-        Project currentProject = aItem.getModelObject();
+        ProjectEntry projectEntry = aItem.getModelObject();
+        Project project = projectEntry.getProject();
 
         WebMarkupContainer container = new WebMarkupContainer("actionDropdown");
 
         LambdaAjaxLink leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
-                _target -> actionConfirmLeaveProject(_target, aItem));
-        boolean hasProjectPermissions = !projectService
-                .listProjectPermissionLevel(currentUser.getObject(), currentProject).isEmpty();
-
-        leaveProjectLink.add(LambdaBehavior.visibleWhen(() -> hasProjectPermissions
-                && !projectService.isManager(currentProject, currentUser.getObject())));
+                _target -> actionConfirmLeaveProject(_target, project));
+        leaveProjectLink.add(visibleWhen(() -> !projectEntry.getLevels().isEmpty()
+                && !projectEntry.getLevels().contains(MANAGER)));
 
         container.add(leaveProjectLink);
 
@@ -346,20 +348,19 @@ public class ProjectsOverviewPage
         aItem.add(container);
     }
 
-    private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, ListItem<Project> aItem)
+    private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, Project aProject)
     {
-        Project currentProject = aItem.getModelObject();
         confirmLeaveDialog.setConfirmAction((_target) -> {
-            projectService.listProjectPermissionLevel(currentUser.getObject(), currentProject)
-                    .stream().forEach(projectService::removeProjectPermission);
+            projectService.listProjectPermissionLevel(currentUser.getObject(), aProject).stream()
+                    .forEach(projectService::removeProjectPermission);
             _target.add(projectListContainer);
             _target.addChildren(getPage(), IFeedback.class);
-            success("You are no longer a member of project [" + currentProject.getName() + "]");
+            success("You are no longer a member of project [" + aProject.getName() + "]");
         });
         confirmLeaveDialog.show(aTarget);
     }
 
-    private WebMarkupContainer createRoleFilters(IModel<List<Project>> aAccessibleProjects)
+    private WebMarkupContainer createRoleFilters(IModel<List<ProjectEntry>> aAccessibleProjects)
     {
         ListView<PermissionLevel> listview = new ListView<PermissionLevel>(MID_ROLE_FILTER,
                 asList(PermissionLevel.values()))
@@ -391,17 +392,16 @@ public class ProjectsOverviewPage
         return container;
     }
 
-    private ListView<ProjectPermission> createRoleBadges(Project aProject)
+    private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
     {
-        return new ListView<ProjectPermission>(MID_ROLE,
-                projectService.listProjectPermissionLevel(currentUser.getObject(), aProject))
+        return new ListView<PermissionLevel>(MID_ROLE, aProjectEntry.getLevels())
         {
             private static final long serialVersionUID = -96472758076828409L;
 
             @Override
-            protected void populateItem(ListItem<ProjectPermission> aItem)
+            protected void populateItem(ListItem<PermissionLevel> aItem)
             {
-                PermissionLevel level = aItem.getModelObject().getLevel();
+                PermissionLevel level = aItem.getModelObject();
                 aItem.add(new Label(MID_LABEL, getString(
                         Classes.simpleName(level.getDeclaringClass()) + '.' + level.toString())));
             }
@@ -422,15 +422,16 @@ public class ProjectsOverviewPage
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private List<Project> filterByRoles(List<Project> aAccessibleProjects)
+    private List<ProjectEntry> filterByRoles(List<ProjectEntry> aAccessibleProjects)
     {
-        return aAccessibleProjects.stream().filter(proj ->
         // If no filters are selected, all projects are listed
-        activeRoleFilters.getObject().isEmpty() ||
+        if (activeRoleFilters.getObject().isEmpty()) {
+            return aAccessibleProjects;
+        }
+
         // ... otherwise only those projects are listed that match the filter
-                projectService.getProjectPermissionLevels(currentUser.getObject(), proj).stream()
-                        .anyMatch(activeRoleFilters.getObject()::contains))
-                .collect(toList());
+        return aAccessibleProjects.stream()
+                .filter(p -> p.hasAllLevels(activeRoleFilters.getObject())).collect(toList());
     }
 
     private void actionCreateProject(AjaxRequestTarget aTarget)
@@ -508,6 +509,83 @@ public class ProjectsOverviewPage
             getSession().success("Project [" + project.getName() + "] successfully imported");
             setResponsePage(ProjectDashboardPage.class, new PageParameters()
                     .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId()));
+        }
+    }
+
+    private List<ProjectEntry> loadProjects()
+    {
+        return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
+                .entrySet().stream() //
+                .map(e -> new ProjectEntry(e.getKey(), e.getValue()))
+                .sorted(comparing(ProjectEntry::getName)) //
+                .collect(toList());
+    }
+
+    private static class ProjectEntry
+        implements Serializable
+    {
+        private static final long serialVersionUID = -5715212313329449759L;
+
+        private final Project project;
+        private final List<PermissionLevel> levels;
+
+        public ProjectEntry(Project aProject, Collection<PermissionLevel> aLevels)
+        {
+            project = aProject;
+            levels = aLevels.stream().sorted(comparing(PermissionLevel::getName)).collect(toList());
+        }
+
+        public String getName()
+        {
+            return project.getName();
+        }
+
+        public Project getProject()
+        {
+            return project;
+        }
+
+        public List<PermissionLevel> getLevels()
+        {
+            return levels;
+        }
+
+        public boolean hasAnyLevel(Set<PermissionLevel> aLevels)
+        {
+            for (PermissionLevel l : levels) {
+                if (aLevels.contains(l)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public boolean hasAllLevels(Set<PermissionLevel> aLevels)
+        {
+            return levels.containsAll(aLevels);
+        }
+
+        @Override
+        public String toString()
+        {
+            return "[" + project.getName() + "]";
+        }
+
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof ProjectEntry)) {
+                return false;
+            }
+            ProjectEntry castOther = (ProjectEntry) other;
+            return new EqualsBuilder().append(project, castOther.project).isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(project).toHashCode();
         }
     }
 }
