@@ -1,4 +1,8 @@
 /*
+ * Copyright 2018
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,30 +19,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.event;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-
-public class PredictionsSwitchedEvent
+public class Progress
 {
-    private final AjaxRequestTarget requestHandler;
-    private final AnnotatorState state;
+    private final int done;
+    private final int todo;
 
-    public PredictionsSwitchedEvent(AjaxRequestTarget aTarget, AnnotatorState aState)
+    public Progress(int aDone, int aTodo)
     {
-        requestHandler = aTarget;
-        state = aState;
+        done = aDone;
+        todo = aTodo;
     }
 
-    public AjaxRequestTarget getRequestHandler()
+    public int getDone()
     {
-        return requestHandler;
+        return done;
     }
 
-    public AnnotatorState getState()
+    public int getTodo()
     {
-        return state;
+        return todo;
+    }
+
+    public float percent()
+    {
+        if ((done + todo) > 0) {
+            return (done / (done + todo)) * 100.0f;
+        }
+        else {
+            return Float.NaN;
+        }
     }
 }

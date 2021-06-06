@@ -547,7 +547,12 @@ public class AnnotationPage
         }
 
         // Update URL for current document
-        updateUrlFragment(aTarget);
+        try {
+            updateUrlFragment(aTarget);
+        }
+        catch (Exception e) {
+            LOG.warn("Unable to request URL fragment update anymore", e);
+        }
     }
 
     @Override
