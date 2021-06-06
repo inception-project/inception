@@ -117,6 +117,7 @@ public class MatrixWorkloadManagementPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationService;
+    private @SpringBean MatrixWorkloadManagementPageMenuItem pageMenuItem;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
     private LambdaAjaxLink toggleBulkChange;
@@ -144,6 +145,11 @@ public class MatrixWorkloadManagementPage
         Project project = getProject();
 
         requireProjectRole(user, CURATOR, MANAGER);
+
+        if (!pageMenuItem.applies(project)) {
+            getSession().error("The project is not configured for static workload management");
+            backToProjectPage();
+        }
 
         add(new Label("name", project.getName()));
 

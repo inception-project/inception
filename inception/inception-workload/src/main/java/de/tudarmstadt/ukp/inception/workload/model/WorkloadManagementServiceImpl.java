@@ -120,6 +120,9 @@ public class WorkloadManagementServiceImpl
                 .setParameter("traits", aManager.getTraits()) //
                 .setParameter("projectID", aManager.getProject()) //
                 .executeUpdate();
+
+        WorkloadManagerExtension<?> ext = getWorkloadManagerExtension(aManager.getProject());
+        ext.recalculate(aManager.getProject());
     }
 
     /**

@@ -86,6 +86,7 @@ public class MatrixWorkloadExtensionImpl
     }
 
     @Override
+    @Transactional
     public MatrixWorkloadTrait readTraits(WorkloadManager aWorkloadManager)
     {
         MatrixWorkloadTrait traits = null;
@@ -106,6 +107,7 @@ public class MatrixWorkloadExtensionImpl
     }
 
     @Override
+    @Transactional
     public void writeTraits(MatrixWorkloadTrait aTrait, Project aProject)
     {
         try {
@@ -117,6 +119,24 @@ public class MatrixWorkloadExtensionImpl
         catch (Exception e) {
             this.log.error("Unable to write traits", e);
         }
+    }
+
+    @Override
+    @Transactional
+    public ProjectState recalculate(Project aProject)
+    {
+        int annotatorCount = projectService.listProjectUsersWithPermissions(aProject).size();
+
+        for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
+            updateDocumentState(doc, annotatorCount);
+        }
+
+        // Refresh the project stats and recalculate them
+        Project project = projectService.getProject(aProject.getId());
+        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        projectService.setProjectState(aProject, stats.getProjectState());
+
+        return project.getState();
     }
 
     @Override

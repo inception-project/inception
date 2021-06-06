@@ -198,6 +198,7 @@ public class DynamicWorkloadManagementPage
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
+    private @SpringBean DynamicWorkloadManagementPageMenuItem pageMenuItem;
 
     public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
     {
@@ -205,7 +206,14 @@ public class DynamicWorkloadManagementPage
 
         requireProjectRole(userRepository.getCurrentUser(), CURATOR, MANAGER);
 
-        currentProject.setObject(getProject());
+        Project project = getProject();
+
+        if (!pageMenuItem.applies(project)) {
+            getSession().error("The project is not configured for dynamic workload management");
+            backToProjectPage();
+        }
+
+        currentProject.setObject(project);
 
         commonInit();
     }
