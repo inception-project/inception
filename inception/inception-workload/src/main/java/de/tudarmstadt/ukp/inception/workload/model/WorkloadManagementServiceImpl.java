@@ -95,6 +95,7 @@ public class WorkloadManagementServiceImpl
     }
 
     @Override
+    @Transactional
     public WorkloadManagerExtension<?> getWorkloadManagerExtension(Project aProject)
     {
         WorkloadManager currentWorkload = loadOrCreateWorkloadManagerConfiguration(aProject);

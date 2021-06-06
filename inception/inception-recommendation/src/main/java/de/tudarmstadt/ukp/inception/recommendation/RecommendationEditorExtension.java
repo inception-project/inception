@@ -376,8 +376,7 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void renderRequested(AnnotatorState aState)
     {
         // do not show predictions during curation or when viewing others' work
         if (!aState.getMode().equals(ANNOTATION)
@@ -397,7 +396,18 @@ public class RecommendationEditorExtension
         if (switched) {
             RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(_target -> _target.getPage().send(_target.getPage(), BREADTH,
-                            new PredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
+                            new PredictionsSwitchedEvent(_target, aState)));
+        }
+    }
+
+    @Override
+    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
+            int aWindowEndOffset)
+    {
+        // do not show predictions during curation or when viewing others' work
+        if (!aState.getMode().equals(ANNOTATION)
+                || !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
+            return;
         }
 
         // Add the suggestions to the visual document

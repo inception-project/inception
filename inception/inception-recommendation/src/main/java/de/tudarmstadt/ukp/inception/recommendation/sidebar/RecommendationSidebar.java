@@ -195,6 +195,7 @@ public class RecommendationSidebar
                 state.getDocument());
         info("Annotation state cleared - re-training from scratch...");
         getAnnotationPage().actionRefreshDocument(aTarget);
+        aTarget.add(recommenderInfos);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 

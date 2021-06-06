@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -51,6 +52,8 @@ public class DataMajorityNerRecommender
     extends RecommendationEngine
 {
     public static final Key<DataMajorityModel> KEY_MODEL = new Key<>("model");
+
+    private static final Class<Token> DATAPOINT_UNIT = Token.class;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -134,7 +137,7 @@ public class DataMajorityNerRecommender
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         // Make the predictions
-        Type tokenType = CasUtil.getAnnotationType(aCas, Token.class);
+        Type tokenType = CasUtil.getAnnotationType(aCas, DATAPOINT_UNIT);
         Collection<AnnotationFS> candidates = CasUtil.select(aCas, tokenType);
         List<Annotation> predictions = predict(candidates, model);
 
@@ -207,7 +210,8 @@ public class DataMajorityNerRecommender
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    getRecommender().getLayer().getUiName(), trainingSetSize, testSetSize,
                     trainRatio);
             result.setEvaluationSkipped(true);
             return result;
@@ -218,7 +222,9 @@ public class DataMajorityNerRecommender
         // evaluation: collect predicted and gold labels for evaluation
         EvaluationResult result = testData.stream()
                 .map(anno -> new LabelPair(anno.label, model.majorityLabel))
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
+                .collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                        getRecommender().getLayer().getUiName(), trainingSetSize, testSetSize,
+                        trainRatio));
 
         return result;
     }
@@ -237,8 +243,7 @@ public class DataMajorityNerRecommender
         private final double score;
         private final int numberOfAnnotations;
 
-        private DataMajorityModel(String aMajorityLabel, double aScore,
-                int aNumberOfAnnotations)
+        private DataMajorityModel(String aMajorityLabel, double aScore, int aNumberOfAnnotations)
         {
             majorityLabel = aMajorityLabel;
             score = aScore;
