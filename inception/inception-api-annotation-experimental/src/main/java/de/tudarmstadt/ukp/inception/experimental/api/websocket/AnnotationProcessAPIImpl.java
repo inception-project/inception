@@ -27,8 +27,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
-import com.google.gson.Gson;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -48,8 +46,6 @@ public class AnnotationProcessAPIImpl
 {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final AnnotationSystemAPIImpl annotationSystemAPIImpl;
-
-    private final Gson gson = new Gson();
 
     /**
      * ----------------- PUB / SUB CHANNELS ---------------
@@ -98,7 +94,9 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveDocumentRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW DOCUMENT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleDocument(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
+        annotationSystemAPIImpl.handleDocument(
+                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
+
     }
 
     @Override
@@ -115,7 +113,8 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveViewportRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleViewport(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
+        annotationSystemAPIImpl.handleViewport(
+                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
     }
 
     @Override
@@ -132,7 +131,8 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveSelectAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleSelectAnnotation(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
+        annotationSystemAPIImpl.handleSelectAnnotation(
+                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
     }
 
     @Override
@@ -149,7 +149,8 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveCreateAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW ANNOTATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleCreateAnnotation(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
+        annotationSystemAPIImpl.handleCreateAnnotation(
+                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
     }
 
     @Override
@@ -157,7 +158,8 @@ public class AnnotationProcessAPIImpl
     public void handleReceiveDeleteAnnotation(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED DELETE ANNOTATION BY CLIENT");
-        annotationSystemAPIImpl.handleDeleteAnnotation(gson.fromJson(aMessage.getPayload(), ClientMessage.class));
+        annotationSystemAPIImpl.handleDeleteAnnotation(
+                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
     }
 
     @Override

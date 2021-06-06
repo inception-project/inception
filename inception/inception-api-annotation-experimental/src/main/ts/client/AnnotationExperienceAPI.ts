@@ -19,7 +19,7 @@ import {Client, Stomp} from '@stomp/stompjs';
 import {AnnotationExperienceAPIVisualization} from "./visualization/AnnotationExperienceAPIVisualization";
 import {AnnotationExperienceAPIActionHandler} from "./actionhandling/AnnotationExperienceAPIActionHandler";
 
-class AnnotationExperienceAPI {
+export class AnnotationExperienceAPI {
 
     //Websocket and stomp broker
     stompClient: Client;
@@ -39,12 +39,12 @@ class AnnotationExperienceAPI {
     //Actionhandler
     actionhandler: AnnotationExperienceAPIActionHandler;
 
-    constructor(aEditor: string, aViewport: number[][]) {
+    constructor(aViewport: number[][]) {
         this.viewport = aViewport;
         this.connect();
 
         //Visualizer
-        this.visualizer = new AnnotationExperienceAPIVisualization(aEditor);
+        this.visualizer = new AnnotationExperienceAPIVisualization();
 
         //ActionHandler
         this.actionhandler = new AnnotationExperienceAPIActionHandler(this);
@@ -135,7 +135,9 @@ class AnnotationExperienceAPI {
         let json = {
             username: this.username,
             project: this.projectID,
+            document: null,
             viewport: this.viewport
+
         };
         this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
     }
@@ -177,9 +179,9 @@ class AnnotationExperienceAPI {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
+            viewport: aViewport,
             id: aId,
-            type: aType,
-            viewport: aViewport
+            type: aType
         }
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
     }
@@ -202,7 +204,7 @@ class AnnotationExperienceAPI {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            id: aId,
+            id: aId
         }
         this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
     }
@@ -235,9 +237,6 @@ class AnnotationExperienceAPI {
                 }, {id: "annotation_update_" + j});
             }
         }
-
-        //Refresh
-        this.visualizer.refreshEditor();
     }
 
     receiveNewViewportMessageByServer(aMessage: string)
@@ -250,8 +249,10 @@ class AnnotationExperienceAPI {
         let keys = Object.keys(aMessage)
         let values = keys.map(k => aMessage[k])
 
-        this.visualizer.setText(values[2]);
-        this.visualizer.setAnnotations(values[3]);
+        console.log(values)
+
+        this.visualizer.setText(values[0]);
+        this.visualizer.setAnnotations(values[1]);
 
 
         //Multiple subscriptions due to viewport
@@ -262,9 +263,6 @@ class AnnotationExperienceAPI {
                 }, {id: "annotation_update_" + j});
             }
         }
-
-        //Refresh
-        this.visualizer.refreshEditor();
     }
 
     receiveSelectedAnnotationMessageByServer(aMessage: string)
@@ -285,13 +283,5 @@ class AnnotationExperienceAPI {
         let values = keys.map(k => aMessage[k])
         console.log(keys)
         console.log(values)
-
-
     }
 }
-
-
-let init : number[][] = [[0,10],[20,30]];
-
-
-let annotationExperienceAPI = new AnnotationExperienceAPI("textarea", init);

@@ -23,39 +23,20 @@ import de.tudarmstadt.ukp.inception.experimental.api.Annotation;
 
 public class ViewportMessage
 {
-    private int begin;
-    private int end;
-    private String[] text;
+    private String[] viewportText;
     private List<Annotation> annotations;
 
-    public ViewportMessage(int aBegin, int aEnd)
+    public ViewportMessage()
     {
-        this.begin = aBegin;
-        this.end = aEnd;
+
     }
 
-    public int getBegin() {
-        return begin;
+    public String[] getViewportText() {
+        return viewportText;
     }
 
-    public void setBegin(int begin) {
-        this.begin = begin;
-    }
-
-    public int getEnd() {
-        return end;
-    }
-
-    public void setEnd(int end) {
-        this.end = end;
-    }
-
-    public String[] getText() {
-        return text;
-    }
-
-    public void setText(String[] text) {
-        this.text = text;
+    public void setViewportText(String[] aViewportText) {
+        this.viewportText = aViewportText;
     }
 
     public List<Annotation> getAnnotations()

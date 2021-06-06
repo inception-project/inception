@@ -49,6 +49,8 @@ public interface AnnotationSystemAPI
      */
     CAS getCasForDocument(String aUser, long aProject, long aDocument);
 
+    String [] getViewportText(ClientMessage aClientMessage, CAS aCas);
+
     List<Annotation> getAnnotations(CAS aCas, long aProject);
 
 }

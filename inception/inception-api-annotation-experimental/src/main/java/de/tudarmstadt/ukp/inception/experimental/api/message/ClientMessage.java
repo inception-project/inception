@@ -7,54 +7,70 @@ public class ClientMessage
     private long document;
     private int[][] viewport;
     private int annotationAddress;
+    private String annotationType;
 
-
-    public ClientMessage(String aUsername, long aProject, int[][] aViewport, long aDocument, int aAnnotationAddress)
+    public ClientMessage()
     {
-        this.username = aUsername;
-        this.project = aProject;
-        this.document = aDocument;
-        this.viewport = aViewport;
-        this.annotationAddress = aAnnotationAddress;
+        //Default
     }
 
-    public String getUsername() {
+    public String getUsername()
+    {
         return username;
     }
 
-    public void setUsername(String username) {
+    public void setUsername(String username)
+    {
         this.username = username;
     }
 
-    public long getProject() {
+    public long getProject()
+    {
         return project;
     }
 
-    public void setProject(long project) {
+    public void setProject(long project)
+    {
         this.project = project;
     }
 
-    public long getDocument() {
+    public long getDocument()
+    {
         return document;
     }
 
-    public void setDocument(long document) {
+    public void setDocument(long document)
+    {
         this.document = document;
     }
 
-    public int[][] getViewport() {
+    public int[][] getViewport()
+    {
         return viewport;
     }
 
-    public void setViewport(int[][] viewport) {
+    public void setViewport(int[][] viewport)
+    {
         this.viewport = viewport;
     }
 
-    public int getAnnotationAddress() {
+    public int getAnnotationAddress()
+    {
         return annotationAddress;
     }
 
-    public void setAnnotationAddress(int annotationAddress) {
+    public void setAnnotationAddress(int annotationAddress)
+    {
         this.annotationAddress = annotationAddress;
+    }
+
+    public String getAnnotationType()
+    {
+        return annotationType;
+    }
+
+    public void setAnnotationType(String annotationType)
+    {
+        this.annotationType = annotationType;
     }
 }

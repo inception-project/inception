@@ -24,29 +24,29 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
+import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalAdvancedEditor;
 
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExperimentalAnnotationEditorAutoConfiguration#experimentalBratEditorFactory()}
+ * {@link ExperimentalAnnotationEditorAutoConfiguration#experimentalAnnotationAdvancedEditorFactory()}
  * </p>
  */
-public class ExperimentalBratEditorFactory
+public class ExperimentalAnnotationAdvancedEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
 
     @Override
     public String getDisplayName()
     {
-        return "Brat experimental editor";
+        return "Experimental Advanced editor";
     }
 
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,true);
+        return new ExperimentalAdvancedEditor(aId, aModel, aActionHandler, aCasProvider);
     }
 }

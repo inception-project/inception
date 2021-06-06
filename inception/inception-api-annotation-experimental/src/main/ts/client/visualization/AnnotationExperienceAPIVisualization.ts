@@ -18,11 +18,11 @@
 export class AnnotationExperienceAPIVisualization {
     //Text
     text: String[];
-    showSentenceNumbers: boolean = true;
+    showSentenceNumbers: boolean = false;
+    showBackground: boolean = false;
     annotations: Object[];
 
     //Editor element
-    editor: string;
     lineColorFirst: string = "#BBBBBB";
     lineColorSecond: string = "#CCCCCC";
 
@@ -30,16 +30,11 @@ export class AnnotationExperienceAPIVisualization {
     viewport: number[][];
     sentenceCount: number;
 
+    //Highlighting
+    highlightingEnabled: boolean = false;
 
-    constructor(aEditor: string) {
-        this.editor = aEditor;
-    }
-
-
-    showText(aElementId: string) {
-        if (this.editor == null) {
-            this.editor = aElementId;
-        }
+    showText(aElementId: string)
+    {
         let textArea = document.getElementById(aElementId.toString())
         //Reset previous text
         textArea.innerHTML = '';
@@ -47,12 +42,12 @@ export class AnnotationExperienceAPIVisualization {
         //SVG element
         let svg = document.createElement("svg");
         svg.setAttribute("version", "1.2");
-        svg.setAttribute("viewbox", "0 0 1415 " + this.text.length * 20);
-        svg.style.display = "font-size: 100%; width: 1417px; height: 65px";
+        svg.setAttribute("viewbox", "0 0 " + textArea.offsetWidth + " " + this.text.length * 20);
+        svg.style.display = "font-size: 100%; width: 100%; height: 100%";
 
-        //Sentencenumbers enabled
-
-        svg.appendChild(this.createBackground());
+        if (this.showBackground) {
+            svg.appendChild(this.createBackground());
+        }
 
         if (this.showSentenceNumbers) {
             svg.appendChild(this.createSentenceNumbers())
@@ -62,6 +57,7 @@ export class AnnotationExperienceAPIVisualization {
 
         let textElement = document.createElement("g");
         textElement.className = "text";
+        textElement.style.display = "font-size: 100%; width: 100%; height: 100%";
 
         let sentences = this.text.join(" ").split("||");
         this.sentenceCount = sentences.length - 1 ;
@@ -86,8 +82,6 @@ export class AnnotationExperienceAPIVisualization {
             } else {
                 xPrev = 4;
             }
-
-            console.log(sentences)
 
             let sent = sentences[i].split(" ");
 
@@ -124,20 +118,29 @@ export class AnnotationExperienceAPIVisualization {
 
 
         //Highlighting
-        svg.appendChild(this.drawAnnotation(this.annotations));
+        if (this.highlightingEnabled) {
+            svg.appendChild(this.drawAnnotation(this.annotations, aElementId));
+        }
 
         textArea.appendChild(svg);
     }
 
-    setShowSentenceNumbers(aShowSentenceNumbers: boolean) {
+    setShowSentenceNumbers(aShowSentenceNumbers: boolean, aEditor: string) {
         this.showSentenceNumbers = aShowSentenceNumbers;
-        this.refreshEditor();
+        this.refreshEditor(aEditor);
+    }
+
+    setHighLighting(aHighlightingEnabled: boolean, aEditor: string)
+    {
+        this.highlightingEnabled = aHighlightingEnabled;
+        this.refreshEditor(aEditor);
     }
 
     createSentenceNumbers() {
         //Sentencenumbers
         let sentenceNumbers = document.createElement("g");
         sentenceNumbers.className = "text";
+        sentenceNumbers.style.display = "font-size: 100%; width: 100%; height: 100%";
 
         for (let i = 0; i < this.sentenceCount; i++) {
             let number = document.createElement("text")
@@ -155,6 +158,7 @@ export class AnnotationExperienceAPIVisualization {
         //Background
         let background = document.createElement("g");
         background.className = "background";
+        background.style.display = "font-size: 100%; width: 100%; height: 100%";
 
         for (let i = 0; i < this.sentenceCount; i++) {
             let rect = document.createElement("rect");
@@ -172,11 +176,14 @@ export class AnnotationExperienceAPIVisualization {
         return background;
     }
 
-    drawAnnotation(aAnnotations: Object[]) {
+    drawAnnotation(aAnnotations: Object[], aEditor: string) {
         let highlighting = document.createElement("g");
         highlighting.className = "highlighting";
+        highlighting.style.display = "font-size: 100%; width: 100%; height: 100%";
 
         highlighting.innerHTML = "";
+
+        let editor = document.createElement(aEditor);
 
         if (aAnnotations.length > 0) {
             //Parse data
@@ -195,7 +202,7 @@ export class AnnotationExperienceAPIVisualization {
                 annotation.className = "annotation";
 
                 let rect = document.createElement("rect");
-                rect.setAttribute("x", (Number(val.begin * 8) + offset).toString());
+                rect.setAttribute("x", (editor.offsetWidth + (Number(val.begin * 8) + offset)).toString());
                 rect.setAttribute("y", "0");
                 rect.setAttribute("width", (Number(val.word.length * 8).toString()));
                 rect.setAttribute("height", "20");
@@ -217,22 +224,22 @@ export class AnnotationExperienceAPIVisualization {
         return "#87CEEB";
     }
 
-    setLineColors(aLineColorFirst: string, aLineColorSecond: string) {
+    setLineColors(aLineColorFirst: string, aLineColorSecond: string, aEditor: string) {
         this.lineColorFirst = aLineColorFirst;
         this.lineColorSecond = aLineColorSecond;
 
-        this.refreshEditor();
+        this.refreshEditor(aEditor);
     }
 
-    resetLineColor() {
+    resetLineColor(aEditor: string) {
         this.lineColorFirst = "#BBBBBB";
         this.lineColorSecond = "#CCCCCC"
 
-        this.refreshEditor();
+        this.refreshEditor(aEditor);
     }
 
-    refreshEditor() {
-        this.showText(this.editor);
+    refreshEditor(aEditor: string) {
+        this.showText(aEditor);
         let editor = document.getElementById("textarea");
         let content = editor.innerHTML;
         editor.innerHTML = content;
@@ -246,5 +253,4 @@ export class AnnotationExperienceAPIVisualization {
     setAnnotations(aAnnotations: Object[]) {
         this.annotations = aAnnotations;
     }
-
 }

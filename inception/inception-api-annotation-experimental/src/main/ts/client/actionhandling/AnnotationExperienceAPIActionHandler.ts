@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import {AnnotationExperienceAPI} from "../AnnotationExperienceAPI";
+
 export class AnnotationExperienceAPIActionHandler {
     annotationExperienceAPI: AnnotationExperienceAPI;
 

@@ -87,16 +87,8 @@ public class AnnotationSystemAPIImpl
 
         DocumentMessage message = new DocumentMessage();
         message.setId(41714);
-        String[] tokens = cas.getDocumentText().split(" ");
 
-        ArrayList<String> visibleSentences = new ArrayList<>();
-
-        for (int i = 0; i < aClientMessage.getViewport().length; i++) {
-            visibleSentences.addAll(Arrays.asList(tokens).subList(aClientMessage.getViewport()[i][0], aClientMessage.getViewport()[i][1]));
-            visibleSentences.add("||");
-        }
-
-        message.setViewportText(visibleSentences.toArray(new String[0]));
+        message.setViewportText(getViewportText(aClientMessage, cas));
 
         message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
 
@@ -109,29 +101,10 @@ public class AnnotationSystemAPIImpl
         CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
                 aClientMessage.getDocument());
 
-        String[] tokens = cas.getDocumentText().split(" ");
-        for (int i = 0; i < tokens.length; i++) {
-            System.out.println(tokens[i]);
-        }
-        ArrayList<String> visibleSentences = new ArrayList<>();
+        ViewportMessage message = new ViewportMessage();
 
-        ViewportMessage message = null;
+        message.setViewportText(getViewportText(aClientMessage, cas));
 
-        /*
-         * if (aData[3].equals("-100")) { aData[3] = String.valueOf(sentences.length -
-         * (Integer.parseInt(aData[4]))); aData[4] = String.valueOf(sentences.length - 1); } if
-         * (sentences.length >= Integer.parseInt(aData[4])) { for (int i =
-         * Integer.parseInt(aData[3]); i <= Integer.parseInt(aData[4]); i++) {
-         * visibleSentences.add(sentences[i].replace("\n", "")); } message = new
-         * ViewportMessage(Integer.parseInt(aData[3]), (Integer.parseInt(aData[4]))); } else { for
-         * (int i = sentences.length - (Integer.parseInt(aData[4]) - Integer.parseInt(aData[3])) -
-         * 1; i < sentences.length; i++) { visibleSentences.add(sentences[i].replace("\n", ""));
-         * message = new ViewportMessage(sentences.length - (Integer.parseInt(aData[4]) -
-         * Integer.parseInt(aData[3])) - 1, sentences.length - 1); } }
-         * 
-         */
-
-        message.setText(visibleSentences.toArray(new String[0]));
         message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
 
         annotationProcessAPI.handleSendViewportRequest(message, aClientMessage.getUsername());
@@ -197,6 +170,24 @@ public class AnnotationSystemAPIImpl
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public String[] getViewportText(ClientMessage aClientMessage, CAS aCas)
+    {
+        String[] tokens = aCas.getDocumentText().split(" ");
+
+        ArrayList<String> visibleSentences = new ArrayList<>();
+
+        for (int i = 0; i < aClientMessage.getViewport().length; i++) {
+            visibleSentences.addAll(Arrays.asList(tokens).subList(
+                    aClientMessage.getViewport()[i][0], aClientMessage.getViewport()[i][1]));
+            visibleSentences.add("||");
+        }
+
+        System.out.println(visibleSentences);
+
+        return visibleSentences.toArray(new String[0]);
     }
 
     @Override
