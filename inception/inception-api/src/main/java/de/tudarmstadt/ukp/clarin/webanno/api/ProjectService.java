@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.MDC;
@@ -116,6 +118,8 @@ public interface ProjectService
     List<ProjectPermission> listProjectPermissionLevel(User user, Project project);
 
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
+
+    List<ProjectPermission> listProjectPermissions(User aUser);
 
     void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels);
@@ -286,6 +290,13 @@ public interface ProjectService
      * @return list of projects accessible by the user.
      */
     List<Project> listAccessibleProjects(User aUser);
+
+    /**
+     * List projects accessible by current user
+     *
+     * @return list of projects accessible by the user.
+     */
+    Map<Project, Set<PermissionLevel>> listAccessibleProjectsWithPermissions(User aUser);
 
     /**
      * List projects manageable by current user
