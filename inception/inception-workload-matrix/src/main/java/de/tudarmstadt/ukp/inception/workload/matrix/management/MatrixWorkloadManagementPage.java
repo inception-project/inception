@@ -161,6 +161,8 @@ public class MatrixWorkloadManagementPage
         actionContainer.setOutputMarkupPlaceholderTag(true);
         add(actionContainer);
 
+        actionContainer.add(new LambdaAjaxLink("refresh", this::actionRefresh));
+
         bulkActionDropdown = new WebMarkupContainer("bulkActionDropdown");
         bulkActionDropdown.add(LambdaBehavior.visibleWhen(() -> bulkChangeMode));
         actionContainer.add(bulkActionDropdown);
@@ -225,14 +227,7 @@ public class MatrixWorkloadManagementPage
     private void actionToggleBulkChange(AjaxRequestTarget aTarget)
     {
         bulkChangeMode = !bulkChangeMode;
-        selectedUsers.getObject().clear();
-
-        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> newMatrix = createDocumentMatrix(
-                "documentMatrix", bulkChangeMode);
-        documentMatrix.replaceWith(newMatrix);
-        documentMatrix = newMatrix;
-
-        aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
+        actionRefresh(aTarget);
     }
 
     private void actionBulkResetDocument(AjaxRequestTarget aTarget)
@@ -413,6 +408,18 @@ public class MatrixWorkloadManagementPage
 
         reloadMatrixData();
         aTarget.add(documentMatrix);
+    }
+
+    private void actionRefresh(AjaxRequestTarget aTarget)
+    {
+        selectedUsers.getObject().clear();
+
+        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> newMatrix = createDocumentMatrix(
+                "documentMatrix", bulkChangeMode);
+        documentMatrix.replaceWith(newMatrix);
+        documentMatrix = newMatrix;
+
+        aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
     }
 
     private Collection<AnnotationDocument> selectedAnnotationDocuments()
