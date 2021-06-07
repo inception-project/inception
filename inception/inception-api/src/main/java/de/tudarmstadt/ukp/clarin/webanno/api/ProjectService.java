@@ -67,6 +67,8 @@ public interface ProjectService
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission permission);
 
+    void removeProjectPermission(ProjectPermission projectPermission);
+
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
      *
@@ -145,13 +147,9 @@ public interface ProjectService
     List<User> listProjectUsersWithPermissions(Project project, PermissionLevel permissionLevel);
 
     /**
-     * remove a user permission from the project
-     *
-     * @param projectPermission
-     *            The ProjectPermission to be removed
+     * Removes all permissions for the given user to the given proejct.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProjectPermission(ProjectPermission projectPermission);
+    void leaveProject(User aObject, Project aProject);
 
     /**
      * list Projects which contain with those annotation documents state is finished

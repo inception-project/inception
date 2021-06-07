@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
@@ -75,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -161,6 +163,9 @@ public class ProjectServiceImpl
 
             log.info("Created permission [{}] for user [{}] on project {}", aPermission.getLevel(),
                     aPermission.getUser(), aPermission.getProject());
+
+            applicationEventPublisher.publishEvent(new ProjectPermissionsChangedEvent(this,
+                    aPermission.getProject(), asList(aPermission), emptyList()));
         }
     }
 
@@ -363,29 +368,56 @@ public class ProjectServiceImpl
     public void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels)
     {
-        Set<PermissionLevel> levelsToBeGranted = new HashSet<>(aLevels);
-        List<ProjectPermission> permissions = new ArrayList<>();
-        try {
-            permissions.addAll(listProjectPermissionLevel(aUser, aProject));
-        }
-        catch (NoResultException e) {
-            // Nothing to do
-        }
-
-        // Remove permissions that no longer exist
-        for (ProjectPermission permission : permissions) {
-            if (!aLevels.contains(permission.getLevel())) {
-                removeProjectPermission(permission);
+        try (var logCtx = withProjectLogger(aProject)) {
+            Set<PermissionLevel> levelsToBeGranted = new HashSet<>(aLevels);
+            List<ProjectPermission> permissions = new ArrayList<>();
+            try {
+                permissions.addAll(listProjectPermissionLevel(aUser, aProject));
             }
-            else {
-                levelsToBeGranted.remove(permission.getLevel());
+            catch (NoResultException e) {
+                // Nothing to do
             }
-        }
 
-        // Grant new permissions
-        for (PermissionLevel level : levelsToBeGranted) {
-            createProjectPermission(new ProjectPermission(aProject, aUser.getUsername(), level));
+            // Remove permissions that no longer exist
+            List<ProjectPermission> revokedPermissions = new ArrayList<>();
+            for (ProjectPermission permission : permissions) {
+                if (!aLevels.contains(permission.getLevel())) {
+                    revokedPermissions.add(permission);
+
+                    entityManager.remove(permission);
+
+                    log.info("Removed permission [{}] for user [{}] on project {}",
+                            permission.getLevel(), permission.getUser(), permission.getProject());
+                }
+                else {
+                    levelsToBeGranted.remove(permission.getLevel());
+                }
+            }
+
+            // Grant new permissions
+            List<ProjectPermission> grantedPermissions = new ArrayList<>();
+            for (PermissionLevel level : levelsToBeGranted) {
+                ProjectPermission permission = new ProjectPermission(aProject, aUser.getUsername(),
+                        level);
+
+                grantedPermissions.add(permission);
+
+                entityManager.persist(permission);
+
+                log.info("Created permission [{}] for user [{}] on project {}", level, aUser,
+                        aProject);
+            }
+
+            applicationEventPublisher.publishEvent(new ProjectPermissionsChangedEvent(this,
+                    aProject, grantedPermissions, revokedPermissions));
         }
+    }
+
+    @Override
+    @Transactional
+    public void leaveProject(User aObject, Project aProject)
+    {
+        setProjectPermissionLevels(aObject, aProject, emptyList());
     }
 
     @Override
@@ -585,6 +617,9 @@ public class ProjectServiceImpl
 
             log.info("Removed permission [{}] for user [{}] on project {}", aPermission.getLevel(),
                     aPermission.getUser(), aPermission.getProject());
+
+            applicationEventPublisher.publishEvent(new ProjectPermissionsChangedEvent(this,
+                    aPermission.getProject(), emptyList(), asList(aPermission)));
         }
     }
 

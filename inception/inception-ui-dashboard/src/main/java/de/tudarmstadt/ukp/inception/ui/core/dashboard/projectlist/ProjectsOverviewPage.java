@@ -351,8 +351,7 @@ public class ProjectsOverviewPage
     private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, Project aProject)
     {
         confirmLeaveDialog.setConfirmAction((_target) -> {
-            projectService.listProjectPermissionLevel(currentUser.getObject(), aProject).stream()
-                    .forEach(projectService::removeProjectPermission);
+            projectService.leaveProject(currentUser.getObject(), aProject);
             _target.add(projectListContainer);
             _target.addChildren(getPage(), IFeedback.class);
             success("You are no longer a member of project [" + aProject.getName() + "]");
