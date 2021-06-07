@@ -15,32 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.event;
+package de.tudarmstadt.ukp.inception.workload.event;
 
 import static java.time.Duration.ofSeconds;
 
 import java.util.Objects;
 
-import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-public class UpdateProjectStateTask
+public class RecalculateProjectStateTask
     extends DebouncingTask
 {
-    private @PersistenceContext EntityManager entityManager;
     private @Autowired ProjectService projectService;
-    private @Autowired DocumentService documentService;
+    private @Autowired WorkloadManagementService workloadService;
 
-    public UpdateProjectStateTask(Project aProject, String aTrigger)
+    public RecalculateProjectStateTask(Project aProject, String aTrigger)
     {
         super(aProject, aTrigger, ofSeconds(3));
     }
@@ -59,9 +56,8 @@ public class UpdateProjectStateTask
             return;
         }
 
-        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
-
-        projectService.setProjectState(project, stats.getProjectState());
+        WorkloadManagerExtension<?> ext = workloadService.getWorkloadManagerExtension(project);
+        ext.recalculate(project);
     }
 
     @Override
@@ -73,7 +69,7 @@ public class UpdateProjectStateTask
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        UpdateProjectStateTask task = (UpdateProjectStateTask) o;
+        RecalculateProjectStateTask task = (RecalculateProjectStateTask) o;
         return getProject().equals(task.getProject());
     }
 
