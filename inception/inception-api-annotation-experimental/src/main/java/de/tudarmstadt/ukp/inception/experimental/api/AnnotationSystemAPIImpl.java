@@ -90,7 +90,9 @@ public class AnnotationSystemAPIImpl
 
         message.setViewportText(getViewportText(aClientMessage, cas));
 
-        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
+        message.setOffsets(getOffsets(aClientMessage, cas));
+
+        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject(),  message.getViewportText()));
 
         annotationProcessAPI.handleSendDocumentRequest(message, aClientMessage.getUsername());
     }
@@ -105,7 +107,9 @@ public class AnnotationSystemAPIImpl
 
         message.setViewportText(getViewportText(aClientMessage, cas));
 
-        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
+        message.setOffsets(getOffsets(aClientMessage, cas));
+
+        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject(), message.getViewportText()));
 
         annotationProcessAPI.handleSendViewportRequest(message, aClientMessage.getUsername());
 
@@ -175,7 +179,8 @@ public class AnnotationSystemAPIImpl
     @Override
     public String[] getViewportText(ClientMessage aClientMessage, CAS aCas)
     {
-        String[] tokens = aCas.getDocumentText().split(" ");
+        String[] tokens = aCas.getDocumentText()
+            .replace("\n", "").split(" ");
 
         ArrayList<String> visibleSentences = new ArrayList<>();
 
@@ -185,13 +190,38 @@ public class AnnotationSystemAPIImpl
             visibleSentences.add("||");
         }
 
-        System.out.println(visibleSentences);
-
         return visibleSentences.toArray(new String[0]);
     }
 
     @Override
-    public List<Annotation> getAnnotations(CAS aCas, long aProject)
+    public int[][] getOffsets(ClientMessage aClientMessage, CAS aCas)
+    {
+        int[][] offset = new int[aClientMessage.getViewport().length][2];
+
+        String[] tokens = aCas.getDocumentText()
+            .replace("\n", "").split(" ");
+
+
+        for (int i = 0; i < aClientMessage.getViewport().length; i++) {
+            int begin = aClientMessage.getViewport()[i][0];
+            int end = aClientMessage.getViewport()[i][1];
+            int beginOffset = 0;
+
+            for (int j = 0; j < begin; j++) {
+                beginOffset += tokens[j].length();
+            }
+            offset[i][0] = beginOffset;
+            int endOffset = beginOffset;
+            for (int j = begin; j < end; j++) {
+                endOffset += tokens[j].length();
+            }
+            offset[i][1] = endOffset;
+        }
+        return offset;
+    }
+
+    @Override
+    public List<Annotation> getAnnotations(CAS aCas, long aProject, String[] visibleSentences)
     {
         List<AnnotationListItem> items = new ArrayList<>();
         List<AnnotationLayer> metadataLayers = annotationService

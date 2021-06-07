@@ -51,6 +51,8 @@ public interface AnnotationSystemAPI
 
     String [] getViewportText(ClientMessage aClientMessage, CAS aCas);
 
-    List<Annotation> getAnnotations(CAS aCas, long aProject);
+    int[][] getOffsets(ClientMessage aClientMessage, CAS aCas);
+
+    List<Annotation> getAnnotations(CAS aCas, long aProject, String[] visibleSentences);
 
 }

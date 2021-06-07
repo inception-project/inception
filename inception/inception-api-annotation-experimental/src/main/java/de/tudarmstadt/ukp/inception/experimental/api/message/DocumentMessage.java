@@ -26,6 +26,7 @@ public class DocumentMessage
     private int id;
     private String [] viewportText;
     private List<Annotation> annotations;
+    private int[][] offsets;
 
     public int getId()
     {
@@ -55,5 +56,15 @@ public class DocumentMessage
     public void setAnnotations(List<Annotation> aAnnotations)
     {
         annotations = aAnnotations;
+    }
+
+    public int[][] getOffsets()
+    {
+        return offsets;
+    }
+
+    public void setOffsets(int[][] aOffsets)
+    {
+        offsets = aOffsets;
     }
 }

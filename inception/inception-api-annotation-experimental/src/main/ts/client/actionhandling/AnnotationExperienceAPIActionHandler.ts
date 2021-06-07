@@ -81,12 +81,27 @@ export class AnnotationExperienceAPIActionHandler {
     }
 
     registerDefaultActionHandler() {
-        this.registerOnClickActionHandler("annotation", "select", null);
-        this.registerOnClickActionHandler("fa-caret-square-right", "new_document", null);
-        this.registerOnClickActionHandler("fa-caret-square-left", "new_document", null);
-        this.registerOnClickActionHandler("fa-step-forward", "viewport", [[0, 10], [50, 100]]);
+        //Click events on annotation page specific items
+        let that = this;
+        onclick = function (aEvent) {
+            let elem = <Element>aEvent.target;
 
-        this.registerOnDoubleClickActionHandler("word", "create")
-        this.registerOnDoubleClickActionHandler("stop", "create")
+            if (elem.tagName === 'rect') {
+                that.annotationExperienceAPI.sendSelectAnnotationMessageToServer(elem.id);
+            }
+            if (elem.className === 'far fa-caret-square-right') {
+                that.annotationExperienceAPI.sendDocumentMessageToServer();
+            }
+        }
+
+        ondblclick = function (aEvent) {
+            let elem = <Element>aEvent.target;
+            if (elem.tagName === 'text') {
+                that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(
+                    "wordID",
+                    document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),
+                    "");
+            }
+        }
     }
 }

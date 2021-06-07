@@ -1,20 +1,3 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var __defProp = Object.defineProperty;
 var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
 var __export = (target, all) => {
@@ -1161,7 +1144,7 @@ var AnnotationExperienceAPIVisualization = class {
   }
   createSentenceNumbers() {
     let sentenceNumbers = document.createElement("g");
-    sentenceNumbers.className = "text";
+    sentenceNumbers.className = "tspan";
     sentenceNumbers.style.display = "font-size: 100%; width: 100%; height: 100%";
     for (let i = 0; i < this.sentenceCount; i++) {
       let number = document.createElement("text");
@@ -1199,35 +1182,40 @@ var AnnotationExperienceAPIVisualization = class {
     highlighting.innerHTML = "";
     let editor = document.createElement(aEditor);
     if (aAnnotations.length > 0) {
-      let keys = Object.keys(aAnnotations);
-      let values = keys.map((k) => aAnnotations[k]);
       let offset;
       if (this.showSentenceNumbers) {
         offset = 45;
       } else {
         offset = 4;
       }
-      for (let val of values) {
-        let annotation = document.createElement("g");
-        annotation.className = "annotation";
-        let rect = document.createElement("rect");
-        rect.setAttribute("x", (editor.offsetWidth + (Number(val.begin * 8) + offset)).toString());
-        rect.setAttribute("y", "0");
-        rect.setAttribute("width", Number(val.word.length * 8).toString());
-        rect.setAttribute("height", "20");
-        rect.setAttribute("id", val.id);
-        rect.setAttribute("type", val.type);
-        rect.setAttribute("fill", this.getColorForAnnotation(val.type));
-        rect.style.opacity = "0.5";
-        annotation.appendChild(rect);
-        highlighting.appendChild(annotation);
+      let sentences = this.text.join(" ").split("||");
+      this.sentenceCount = sentences.length - 1;
+      for (let i = 0; i < this.sentenceCount; i++) {
+        let text_row = document.createElement("g");
+        text_row.className = "text-row";
+        text_row.style.display = "block";
+        for (let annotation of this.annotations) {
+          if (annotation.begin >= this.offsets[i][0] && annotation.end <= this.offsets[i][1]) {
+            let rect = document.createElement("rect");
+            rect.setAttribute("x", (editor.offsetWidth + (Number(annotation.begin * 8) + offset)).toString());
+            rect.setAttribute("y", (i * 20).toString());
+            rect.setAttribute("width", Number(annotation.word.length * 8).toString());
+            rect.setAttribute("height", "20");
+            rect.setAttribute("id", annotation.id);
+            rect.setAttribute("type", annotation.type);
+            rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
+            rect.style.opacity = "0.5";
+            text_row.appendChild(rect);
+          }
+        }
+        highlighting.appendChild(text_row);
       }
       return highlighting;
     } else {
       return highlighting;
     }
   }
-  getColorForAnnotation(type) {
+  getColorForAnnotation(aType) {
     return "#87CEEB";
   }
   setLineColors(aLineColorFirst, aLineColorSecond, aEditor) {
@@ -1242,7 +1230,7 @@ var AnnotationExperienceAPIVisualization = class {
   }
   refreshEditor(aEditor) {
     this.showText(aEditor);
-    let editor = document.getElementById("textarea");
+    let editor = document.getElementById(aEditor);
     let content = editor.innerHTML;
     editor.innerHTML = content;
   }
@@ -1251,6 +1239,9 @@ var AnnotationExperienceAPIVisualization = class {
   }
   setAnnotations(aAnnotations) {
     this.annotations = aAnnotations;
+  }
+  setOffsets(aOffsets) {
+    this.offsets = aOffsets;
   }
 };
 
@@ -1305,12 +1296,22 @@ var AnnotationExperienceAPIActionHandler = class {
     console.log("Action: " + aAction + " is registered for elements: " + aTagName);
   }
   registerDefaultActionHandler() {
-    this.registerOnClickActionHandler("annotation", "select", null);
-    this.registerOnClickActionHandler("fa-caret-square-right", "new_document", null);
-    this.registerOnClickActionHandler("fa-caret-square-left", "new_document", null);
-    this.registerOnClickActionHandler("fa-step-forward", "viewport", [[0, 10], [50, 100]]);
-    this.registerOnDoubleClickActionHandler("word", "create");
-    this.registerOnDoubleClickActionHandler("stop", "create");
+    let that = this;
+    onclick = function(aEvent) {
+      let elem = aEvent.target;
+      if (elem.tagName === "rect") {
+        that.annotationExperienceAPI.sendSelectAnnotationMessageToServer(elem.id);
+      }
+      if (elem.className === "far fa-caret-square-right") {
+        that.annotationExperienceAPI.sendDocumentMessageToServer();
+      }
+    };
+    ondblclick = function(aEvent) {
+      let elem = aEvent.target;
+      if (elem.tagName === "text") {
+        that.annotationExperienceAPI.sendCreateAnnotationMessageToServer("wordID", document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"), "");
+      }
+    };
   }
 };
 
@@ -1328,7 +1329,7 @@ var AnnotationExperienceAPI = class {
       console.log("You are already connected");
       return;
     }
-    let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/ws-endpoint";
+    let url = (window.location.protocol.startsWith("https") ? "wss://" : "ws://") + window.location.host + "/inception_app_webapp_war_exploded/ws-endpoint";
     this.stompClient = Stomp.over(function() {
       return new WebSocket(url);
     });
@@ -1393,6 +1394,7 @@ var AnnotationExperienceAPI = class {
       }
     }
     this.viewport = aViewport;
+    this.visualizer.viewport = aViewport;
     this.stompClient.publish({destination: "/app/new_viewport_by_client", body: JSON.stringify(json)});
   }
   sendSelectAnnotationMessageToServer(aId) {
@@ -1404,13 +1406,13 @@ var AnnotationExperienceAPI = class {
     };
     this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
   }
-  sendCreateAnnotationMessageToServer(aId, aType, aViewport) {
+  sendCreateAnnotationMessageToServer(aWordId, aType, aViewport) {
     let json = {
       username: this.username,
       project: this.projectID,
       document: this.documentID,
+      wordId: aWordId,
       viewport: aViewport,
-      id: aId,
       type: aType
     };
     this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
@@ -1439,11 +1441,10 @@ var AnnotationExperienceAPI = class {
     const that = this;
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
-    console.log(keys);
-    console.log(values);
     this.documentID = values[0];
     this.visualizer.setText(values[1]);
     this.visualizer.setAnnotations(values[2]);
+    this.visualizer.setOffsets(values[3]);
     for (let i = 0; i < this.viewport.length; i++) {
       for (let j = this.viewport[i][0]; j < this.viewport[i][1]; j++) {
         this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + j, function(msg) {
@@ -1457,9 +1458,9 @@ var AnnotationExperienceAPI = class {
     const that = this;
     let keys = Object.keys(aMessage);
     let values = keys.map((k) => aMessage[k]);
-    console.log(values);
     this.visualizer.setText(values[0]);
     this.visualizer.setAnnotations(values[1]);
+    this.visualizer.setOffsets(values[2]);
     for (let i = 0; i < this.viewport.length; i++) {
       for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
         this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + j, function(msg) {

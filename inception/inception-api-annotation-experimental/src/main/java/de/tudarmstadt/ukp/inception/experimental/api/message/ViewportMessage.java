@@ -25,6 +25,7 @@ public class ViewportMessage
 {
     private String[] viewportText;
     private List<Annotation> annotations;
+    private int[][] offsets;
 
     public ViewportMessage()
     {
@@ -47,5 +48,15 @@ public class ViewportMessage
     public void setAnnotations(List<Annotation> aAnnotations)
     {
         annotations = aAnnotations;
+    }
+
+    public int[][] getOffsets()
+    {
+        return offsets;
+    }
+
+    public void setOffsets(int[][] aOffsets)
+    {
+        offsets = aOffsets;
     }
 }

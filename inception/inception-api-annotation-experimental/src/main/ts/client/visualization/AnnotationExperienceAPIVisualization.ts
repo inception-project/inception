@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Annotation} from "../util/Annotation";
+
 export class AnnotationExperienceAPIVisualization {
     //Text
     text: String[];
     showSentenceNumbers: boolean = false;
     showBackground: boolean = false;
-    annotations: Object[];
+    annotations: Annotation[];
 
     //Editor element
     lineColorFirst: string = "#BBBBBB";
@@ -28,6 +30,7 @@ export class AnnotationExperienceAPIVisualization {
 
     //Viewport
     viewport: number[][];
+    offsets: number[][];
     sentenceCount: number;
 
     //Highlighting
@@ -139,7 +142,7 @@ export class AnnotationExperienceAPIVisualization {
     createSentenceNumbers() {
         //Sentencenumbers
         let sentenceNumbers = document.createElement("g");
-        sentenceNumbers.className = "text";
+        sentenceNumbers.className = "tspan";
         sentenceNumbers.style.display = "font-size: 100%; width: 100%; height: 100%";
 
         for (let i = 0; i < this.sentenceCount; i++) {
@@ -186,9 +189,6 @@ export class AnnotationExperienceAPIVisualization {
         let editor = document.createElement(aEditor);
 
         if (aAnnotations.length > 0) {
-            //Parse data
-            let keys = Object.keys(aAnnotations)
-            let values = keys.map(k => aAnnotations[k])
 
             let offset: number;
             if (this.showSentenceNumbers) {
@@ -197,60 +197,83 @@ export class AnnotationExperienceAPIVisualization {
                 offset = 4;
             }
 
-            for (let val of values) {
-                let annotation = document.createElement("g");
-                annotation.className = "annotation";
+            let sentences = this.text.join(" ").split("||");
+            this.sentenceCount = sentences.length - 1 ;
 
-                let rect = document.createElement("rect");
-                rect.setAttribute("x", (editor.offsetWidth + (Number(val.begin * 8) + offset)).toString());
-                rect.setAttribute("y", "0");
-                rect.setAttribute("width", (Number(val.word.length * 8).toString()));
-                rect.setAttribute("height", "20");
-                rect.setAttribute("id", val.id);
-                rect.setAttribute("type", val.type);
-                rect.setAttribute("fill", this.getColorForAnnotation(val.type));
-                rect.style.opacity = "0.5";
 
-                annotation.appendChild(rect);
-                highlighting.appendChild(annotation);
+            for (let i = 0; i < this.sentenceCount; i++) {
+
+                let text_row = document.createElement("g");
+                text_row.className = "text-row";
+                text_row.style.display = "block";
+
+                for (let annotation of this.annotations) {
+
+                    if ((annotation.begin >= this.offsets[i][0]) && (annotation.end <= this.offsets[i][1])) {
+
+                        let rect = document.createElement("rect");
+                        rect.setAttribute("x", (editor.offsetWidth + (Number(annotation.begin * 8) + offset)).toString());
+                        rect.setAttribute("y", (i * 20).toString());
+                        rect.setAttribute("width", (Number(annotation.word.length * 8).toString()));
+                        rect.setAttribute("height", "20");
+                        rect.setAttribute("id", annotation.id);
+                        rect.setAttribute("type", annotation.type);
+                        rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
+                        rect.style.opacity = "0.5";
+                        text_row.appendChild(rect);
+                    }
+                }
+                highlighting.appendChild(text_row);
             }
+
+
             return highlighting;
         } else {
             return highlighting;
         }
     }
 
-    getColorForAnnotation(type: string) {
+    getColorForAnnotation(aType: string)
+    {
         return "#87CEEB";
     }
 
-    setLineColors(aLineColorFirst: string, aLineColorSecond: string, aEditor: string) {
+    setLineColors(aLineColorFirst: string, aLineColorSecond: string, aEditor: string)
+    {
         this.lineColorFirst = aLineColorFirst;
         this.lineColorSecond = aLineColorSecond;
 
         this.refreshEditor(aEditor);
     }
 
-    resetLineColor(aEditor: string) {
+    resetLineColor(aEditor: string)
+    {
         this.lineColorFirst = "#BBBBBB";
         this.lineColorSecond = "#CCCCCC"
 
         this.refreshEditor(aEditor);
     }
 
-    refreshEditor(aEditor: string) {
+    refreshEditor(aEditor: string)
+    {
         this.showText(aEditor);
-        let editor = document.getElementById("textarea");
+        let editor = document.getElementById(aEditor);
         let content = editor.innerHTML;
         editor.innerHTML = content;
-
     }
 
-    setText(aText: string[]) {
+    setText(aText: string[])
+    {
         this.text = aText;
     }
 
-    setAnnotations(aAnnotations: Object[]) {
+    setAnnotations(aAnnotations: Annotation[])
+    {
         this.annotations = aAnnotations;
+    }
+
+    setOffsets(aOffsets: number[][])
+    {
+        this.offsets = aOffsets;
     }
 }

@@ -59,7 +59,7 @@ export class AnnotationExperienceAPI {
         }
 
         let url: string = (window.location.protocol.startsWith("https") ? "wss://" : "ws://")
-            + window.location.host + "/ws-endpoint";
+            + window.location.host + "/inception_app_webapp_war_exploded/ws-endpoint";
 
         this.stompClient = Stomp.over(function () {
             return new WebSocket(url);
@@ -157,6 +157,7 @@ export class AnnotationExperienceAPI {
         }
 
         this.viewport = aViewport;
+        this.visualizer.viewport = aViewport;
 
         this.stompClient.publish({destination: "/app/new_viewport_by_client", body: JSON.stringify(json)});
     }
@@ -172,14 +173,14 @@ export class AnnotationExperienceAPI {
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendCreateAnnotationMessageToServer(aId: string, aType: string, aViewport: string)
+    sendCreateAnnotationMessageToServer(aWordId: string, aType: string, aViewport: string)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
+            wordId: aWordId,
             viewport: aViewport,
-            id: aId,
             type: aType
         }
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
@@ -221,12 +222,10 @@ export class AnnotationExperienceAPI {
         let keys = Object.keys(aMessage)
         let values = keys.map(k => aMessage[k])
 
-        console.log(keys)
-        console.log(values)
-
         this.documentID = values[0];
         this.visualizer.setText(values[1]);
         this.visualizer.setAnnotations(values[2]);
+        this.visualizer.setOffsets(values[3]);
 
         //Multiple subscriptions due to viewport
         for (let i = 0; i < this.viewport.length; i++) {
@@ -248,11 +247,9 @@ export class AnnotationExperienceAPI {
         let keys = Object.keys(aMessage)
         let values = keys.map(k => aMessage[k])
 
-        console.log(values)
-
         this.visualizer.setText(values[0]);
         this.visualizer.setAnnotations(values[1]);
-
+        this.visualizer.setOffsets(values[2])
 
         //Multiple subscriptions due to viewport
         for (let i = 0; i < this.viewport.length; i++) {
