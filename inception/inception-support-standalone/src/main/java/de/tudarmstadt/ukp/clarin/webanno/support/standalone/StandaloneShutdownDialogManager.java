@@ -38,7 +38,6 @@ import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -253,11 +252,10 @@ public class StandaloneShutdownDialogManager
                     }
                 }
 
-                Process proc = new ProcessBuilder(cmdTokens) //
+                new ProcessBuilder(cmdTokens) //
                         .redirectOutput(INHERIT) //
                         .redirectError(INHERIT) //
                         .start();
-                proc.waitFor(5, TimeUnit.SECONDS);
 
                 return;
             }
