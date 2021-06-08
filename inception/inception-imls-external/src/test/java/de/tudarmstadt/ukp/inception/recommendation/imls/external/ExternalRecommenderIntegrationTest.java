@@ -25,6 +25,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
@@ -62,12 +63,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderPropertiesImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
-import mockwebserver3.Dispatcher;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.QueueDispatcher;
+import okhttp3.mockwebserver.RecordedRequest;
 
 public class ExternalRecommenderIntegrationTest
 {
@@ -97,7 +102,7 @@ public class ExternalRecommenderIntegrationTest
         context = new RecommenderContext();
 
         traits = new ExternalRecommenderTraits();
-        sut = new ExternalRecommender(recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
 
         remoteRecommender = new RemoteStringMatchingNerRecommender(recommender);
 
@@ -254,9 +259,9 @@ public class ExternalRecommenderIntegrationTest
         return recommender;
     }
 
-    private Dispatcher buildDispatcher()
+    private QueueDispatcher buildDispatcher()
     {
-        return new Dispatcher()
+        return new QueueDispatcher()
         {
             @Override
             public MockResponse dispatch(RecordedRequest request)

@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -108,6 +110,13 @@ public class DynamicWorkloadExtensionImpl
     }
 
     @Override
+    public boolean isDocumentRandomAccessAllowed(Project aProject)
+    {
+        return projectService.hasRole(userRepository.getCurrentUser(), aProject, CURATOR, MANAGER);
+    }
+
+    @Override
+    @Transactional
     public DynamicWorkloadTraits readTraits(WorkloadManager aWorkloadManager)
     {
         DynamicWorkloadTraits traits = null;
@@ -127,6 +136,7 @@ public class DynamicWorkloadExtensionImpl
     }
 
     @Override
+    @Transactional
     public void writeTraits(DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
@@ -192,6 +202,26 @@ public class DynamicWorkloadExtensionImpl
 
     @Override
     @Transactional
+    public ProjectState recalculate(Project aProject)
+    {
+        WorkloadManager currentWorkload = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(aProject);
+        DynamicWorkloadTraits traits = readTraits(currentWorkload);
+
+        for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
+            updateDocumentState(doc, traits.getDefaultNumberOfAnnotations());
+        }
+
+        // Refresh the project stats and recalculate them
+        Project project = projectService.getProject(aProject.getId());
+        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        projectService.setProjectState(aProject, stats.getProjectState());
+
+        return project.getState();
+    }
+
+    @Override
+    @Transactional
     public ProjectState freshenStatus(Project aProject)
     {
         WorkloadManager currentWorkload = workloadManagementService
@@ -199,7 +229,8 @@ public class DynamicWorkloadExtensionImpl
         DynamicWorkloadTraits traits = readTraits(currentWorkload);
 
         // If the duration is not positive, then we can already stop here
-        if (!traits.getAbandonationTimeout().negated().isNegative()) {
+        if (traits.getAbandonationTimeout().isZero()
+                || traits.getAbandonationTimeout().isNegative()) {
             return projectService.getProject(aProject.getId()).getState();
         }
 

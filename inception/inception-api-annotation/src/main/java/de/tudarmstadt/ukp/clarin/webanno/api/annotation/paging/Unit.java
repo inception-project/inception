@@ -88,6 +88,12 @@ public class Unit
     }
 
     @Override
+    public String toString()
+    {
+        return "[" + begin + ":" + end + "]";
+    }
+
+    @Override
     public boolean equals(final Object other)
     {
         if (!(other instanceof Unit)) {

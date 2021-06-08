@@ -29,7 +29,10 @@ import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +40,6 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -120,10 +122,12 @@ public class CuratedDocumentsExporter
             if ((aRequest.isIncludeInProgress()
                     && CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
                     || CURATION_FINISHED.equals(sourceDocument.getState())) {
-                File curationCasFile = documentService.getCasFile(sourceDocument, CURATION_USER);
-                if (curationCasFile.exists()) {
+                if (documentService.existsCas(sourceDocument, CURATION_USER)) {
                     // Copy CAS - this is used when importing the project again
-                    copyFileToDirectory(curationCasFile, curationCasDir);
+                    try (OutputStream os = new FileOutputStream(
+                            new File(curationDir, CURATION_USER + ".ser"))) {
+                        documentService.exportCas(sourceDocument, CURATION_USER, null);
+                    }
 
                     // Determine which format to use for export
                     String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
@@ -210,9 +214,10 @@ public class CuratedDocumentsExporter
                 continue;
             }
             SourceDocument sourceDocument = documentService.getSourceDocument(aProject, fileName);
-            File annotationFilePath = documentService.getCasFile(sourceDocument, username);
 
-            FileUtils.copyInputStreamToFile(aZip.getInputStream(entry), annotationFilePath);
+            try (InputStream is = aZip.getInputStream(entry)) {
+                documentService.importCas(sourceDocument, username, is);
+            }
 
             log.info("Imported curation document content for user [" + username
                     + "] for source document [" + sourceDocument.getId() + "] in project ["

@@ -96,6 +96,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublishe
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
@@ -172,6 +173,8 @@ public class ProjectLayersPanel
         public LayerSelectionPane(String id, IModel<AnnotationLayer> aModel)
         {
             super(id, aModel);
+
+            add(new DocLink("helpLinkLayers", "sect_projects_layers"));
 
             add(new LambdaAjaxLink("create", _target -> {
                 AnnotationLayer layer = new AnnotationLayer();
@@ -491,6 +494,8 @@ public class ProjectLayersPanel
             super(id, aModel);
 
             setOutputMarkupPlaceholderTag(true);
+
+            add(new DocLink("featuresHelpLink", "sect_projects_layers_features"));
 
             add(new ListChoice<AnnotationFeature>("feature")
             {

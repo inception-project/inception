@@ -19,14 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
 /**
  * Type Adapters for span, arc, and chain annotations
@@ -44,12 +38,7 @@ public interface RecommendationTypeRenderer
      *            The CAS object containing annotations
      * @param aVdoc
      *            A VDocument containing annotations for the given layer
-     * @param aBratAnnotatorModel
-     *            Data model for brat annotations
      */
-    void render(CAS aCas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
-            AnnotationLayer aLayer, RecommendationService aRecService,
-            LearningRecordService aLearningRecordService,
-            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-            DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset);
+    void render(CAS aCas, VDocument aVdoc, AnnotatorState aState, int aWindowBeginOffset,
+            int aWindowEndOffset);
 }

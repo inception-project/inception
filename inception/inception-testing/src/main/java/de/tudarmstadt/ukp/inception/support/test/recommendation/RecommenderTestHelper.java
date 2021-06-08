@@ -54,8 +54,8 @@ public class RecommenderTestHelper
 
         TypeSystemDescription tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
         TypeDescription typeDescription = tsd.getType(aTypeName);
-        typeDescription.addFeature(scoreFeatureName, "Confidence feature", TYPE_NAME_DOUBLE);
-        typeDescription.addFeature(scoreExplanationFeatureName, "Confidence explanation feature",
+        typeDescription.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
+        typeDescription.addFeature(scoreExplanationFeatureName, "Score explanation feature",
                 TYPE_NAME_STRING);
         typeDescription.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
 

@@ -120,6 +120,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
@@ -197,6 +198,7 @@ public class DynamicWorkloadManagementPage
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
+    private @SpringBean DynamicWorkloadManagementPageMenuItem pageMenuItem;
 
     public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
     {
@@ -204,7 +206,14 @@ public class DynamicWorkloadManagementPage
 
         requireProjectRole(userRepository.getCurrentUser(), CURATOR, MANAGER);
 
-        currentProject.setObject(getProject());
+        Project project = getProject();
+
+        if (!pageMenuItem.applies(project)) {
+            getSession().error("The project is not configured for dynamic workload management");
+            backToProjectPage();
+        }
+
+        currentProject.setObject(project);
 
         commonInit();
     }
@@ -422,6 +431,8 @@ public class DynamicWorkloadManagementPage
         Form<DynamicWorkloadTraits> settingsForm = new Form<>("settingsForm",
                 new CompoundPropertyModel<>(traits));
         settingsForm.setOutputMarkupId(true);
+
+        settingsForm.add(new DocLink("workflowHelpLink", "sect_dynamic_workload"));
 
         settingsForm.add(new NumberTextField<>("defaultNumberOfAnnotations", Integer.class) //
                 .setMinimum(1) //

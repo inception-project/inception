@@ -45,6 +45,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
+import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -220,11 +221,11 @@ public class LoadingSplashScreen
                 msg.append("It appears the network port " + applicationName
                         + " is trying to use is already being used by another application.\nMaybe "
                         + "you have already started " + applicationName + " before?\n");
+                msg.append("\n");
             }
 
-            msg.append("\n");
             msg.append("Error type: " + getRootCause(aEvent.getException()).getClass() + "\n");
-            msg.append("Error message: " + rootCauseMsg);
+            msg.append("Error message: " + WordUtils.wrap(rootCauseMsg, 80));
 
             return msg.toString();
         }

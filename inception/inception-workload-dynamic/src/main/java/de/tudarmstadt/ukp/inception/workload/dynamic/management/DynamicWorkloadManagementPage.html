@@ -66,8 +66,10 @@ $( document ).ready(function() {
               <button
                 class="btn btn-action btn-secondary dropdown-toggle flex-content"
                 type="button" data-toggle="dropdown">
-                <i class="fas fa-filter"></i>&nbsp;
-                <wicket:message key="Filter" />
+                <i class="fas fa-filter"></i>
+                <span class="d-none d-lg-inline">
+                  &nbsp;<wicket:message key="Filter" />
+                </span>
               </button> 
               <form wicket:id="searchForm" class="dropdown-menu shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
                 style="min-width: 600px;">
@@ -131,8 +133,10 @@ $( document ).ready(function() {
               <button
                 class="btn btn-action btn-secondary dropdown-toggle flex-content dd-annotator"
                 type="button" data-toggle="dropdown">
-                <i class="fas fa-user"></i>&nbsp;
-                <wicket:message key="Annotators" />
+                <i class="fas fa-user"></i>
+                <span class="d-none d-lg-inline">
+                  &nbsp;<wicket:message key="Annotators" />
+                </span>
               </button>
               <form wicket:id="userForm" class="dropdown-menu shadow-lg pt-0 pb-0 ddUserForm" role="menu"
                 style="width: 800px; height: 385px;">
@@ -195,8 +199,10 @@ $( document ).ready(function() {
             <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
               <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
                 type="button" data-toggle="dropdown">
-                <i class="fas fa-cog"></i>&nbsp;
-                <wicket:message key="settings" />
+                <i class="fas fa-cog"></i>
+                <span class="d-none d-lg-inline">
+                  &nbsp;<wicket:message key="settings" />
+                </span>
               </button>
               <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu"
                 style="min-width: 600px;">
@@ -217,9 +223,7 @@ $( document ).ready(function() {
                     <div class="form-group form-row">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="workflow" />
-                        <a target="_blank" wicket:message="href:workflow.help.link">
-                          <i class="fas fa-question-circle"></i>
-                        </a>
+                        <a wicket:id="workflowHelpLink"/>
                       </label>
                       <div class="col-sm-5">
                         <select wicket:id="workflowType" data-container="body" class="w-100"/>
@@ -270,8 +274,10 @@ $( document ).ready(function() {
               </div>
             </span>
             <button wicket:id="refresh" class="btn btn-action btn-secondary">
-              <i class="fas fa-redo"></i>&nbsp;
-              <wicket:message key="refresh" />
+              <i class="fas fa-redo"></i>
+              <span class="d-none d-lg-inline">
+                &nbsp;<wicket:message key="refresh" />
+              </span>
             </button>
           </div>
           <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">

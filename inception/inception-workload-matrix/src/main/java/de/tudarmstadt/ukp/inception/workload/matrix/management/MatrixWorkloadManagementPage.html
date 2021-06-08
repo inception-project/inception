@@ -42,10 +42,14 @@
           <div class="flex-content card" style="min-height: 220px;">
             <div class="card-header">
               <wicket:message key="document_status" />
-              <a target="_blank" wicket:message="href:document_status.help.link">
-                <i class="fas fa-question-circle"></i>
-              </a>
+              <a wicket:id="documentStatusHelpLink"/>
               <div wicket:id="actionContainer" class="actions">
+                <button wicket:id="refresh" class="btn btn-action btn-secondary">
+                  <i class="fas fa-redo"></i>
+                  <span class="d-none d-lg-inline">
+                    &nbsp;<wicket:message key="refresh" />
+                  </span>
+                </button>
                 <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="btn-group" role="group">
                     <button class="btn btn-secondary btn-action" type="button">

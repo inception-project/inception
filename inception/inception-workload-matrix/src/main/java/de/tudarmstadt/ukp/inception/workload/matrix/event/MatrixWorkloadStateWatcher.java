@@ -20,11 +20,17 @@ package de.tudarmstadt.ukp.inception.workload.matrix.event;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.workload.event.RecalculateProjectStateTask;
+import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 
 /**
- * Watches the state of the annotations and documents.
+ * Watches the state of the annotations and documents in matrix projects.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkloadStateWatcher}
+ * </p>
  */
 public class MatrixWorkloadStateWatcher
 {
@@ -36,14 +42,16 @@ public class MatrixWorkloadStateWatcher
     }
 
     @EventListener
-    public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
+    public void onProjectPermissionsChangedEvent(ProjectPermissionsChangedEvent aEvent)
     {
-        recalculateDocumentState(aEvent.getAnnotationDocument());
+        schedulingService.enqueue(new RecalculateProjectStateTask(aEvent.getProject(),
+                "onProjectPermissionsChangedEvent"));
     }
 
-    private void recalculateDocumentState(AnnotationDocument aAnnotationDocument)
+    @EventListener
+    public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
     {
-        schedulingService.enqueue(new MatrixWorkloadUpdateDocumentStateTask(
-                aAnnotationDocument.getDocument(), getClass().getSimpleName()));
+        schedulingService.enqueue(new MatrixWorkloadUpdateDocumentStateTask(aEvent.getDocument(),
+                getClass().getSimpleName()));
     }
 }

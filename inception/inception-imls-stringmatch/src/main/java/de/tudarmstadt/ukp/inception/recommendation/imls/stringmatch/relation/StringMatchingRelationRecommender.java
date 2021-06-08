@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -58,7 +59,10 @@ public class StringMatchingRelationRecommender
     public static final Key<MultiValuedMap<Pair<String, String>, String>> KEY_MODEL = new Key<>(
             "model");
 
+    private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final StringMatchingRelationRecommenderTraits traits;
 
     public StringMatchingRelationRecommender(Recommender aRecommender,
@@ -92,7 +96,7 @@ public class StringMatchingRelationRecommender
         MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
-        Type sentenceType = getType(aCas, Sentence.class);
+        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
 
         Type predictedType = getPredictedType(aCas);
         Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
@@ -103,8 +107,8 @@ public class StringMatchingRelationRecommender
         Feature attachFeature = getAttachFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
-            Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sentence);
+        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
+            Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sampleUnit);
             for (AnnotationFS governor : baseAnnotations) {
                 for (AnnotationFS dependent : baseAnnotations) {
 
@@ -124,7 +128,7 @@ public class StringMatchingRelationRecommender
                     double totalNumberOfOccurrences = occurrences.size();
 
                     for (String relationLabel : occurrences) {
-                        double confidence = numberOfOccurrencesPerLabel.get(relationLabel)
+                        double score = numberOfOccurrencesPerLabel.get(relationLabel)
                                 / totalNumberOfOccurrences;
                         AnnotationFS prediction = aCas.createAnnotation(predictedType,
                                 governor.getBegin(), governor.getEnd());
@@ -132,7 +136,7 @@ public class StringMatchingRelationRecommender
                         prediction.setFeatureValue(dependentFeature, dependent);
                         prediction.setStringValue(predictedFeature, relationLabel);
                         prediction.setBooleanValue(isPredictionFeature, true);
-                        prediction.setDoubleValue(scoreFeature, confidence);
+                        prediction.setDoubleValue(scoreFeature, score);
                         aCas.addFsToIndexes(prediction);
                     }
                 }
@@ -176,7 +180,7 @@ public class StringMatchingRelationRecommender
         final int minTestSetSize = 1;
         if (trainingData.size() < minTrainingSetSize || testData.size() < minTestSetSize) {
             if ((getRecommender().getThreshold() <= 0.0d)) {
-                return new EvaluationResult();
+                return new EvaluationResult(layerName, SAMPLE_UNIT.getSimpleName());
             }
 
             String info = String.format(
@@ -184,8 +188,8 @@ public class StringMatchingRelationRecommender
                     trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),
                     (minTrainingSetSize + minTestSetSize));
             log.info(info);
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
-                    trainRatio);
+            EvaluationResult result = new EvaluationResult(layerName, SAMPLE_UNIT.getSimpleName(),
+                    trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -198,7 +202,8 @@ public class StringMatchingRelationRecommender
         return testData.stream()
                 .flatMap(t -> model.get(Pair.of(t.governor, t.label)).stream()
                         .map(prediction -> new LabelPair(t.label, prediction)))
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
+                .collect(toEvaluationResult(layerName, SAMPLE_UNIT.getSimpleName(), trainingSetSize,
+                        testSetSize, trainRatio));
     }
 
     private List<Triple> getTrainingData(List<CAS> aCasses)

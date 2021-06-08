@@ -116,7 +116,6 @@
     <jena.version>3.17.0</jena.version>
 
     <servlet-api.version>4.0.1</servlet-api.version>
-    <okhttp.version>5.0.0-alpha.2</okhttp.version>
 
     <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
     <asciidoctor.version>2.3.0</asciidoctor.version>
@@ -125,6 +124,7 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.12.3</jackson.version>
+    <okhttp.version>4.9.1</okhttp.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
@@ -275,18 +275,18 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.awaitility</groupId>
-      <artifactId>awaitility</artifactId>
+      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -372,12 +372,17 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-workload-dynamic</artifactId>
+        <version>0.21.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-matrix</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-workload-dynamic</artifactId>
+        <artifactId>inception-workload-ui</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -681,6 +686,11 @@
         <artifactId>inception-versioning</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-websocket</artifactId>
+        <version>0.21.0-SNAPSHOT</version>
+      </dependency>
 
       <!-- Testing -->
 
@@ -704,7 +714,6 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
         <version>${mockito.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.assertj</groupId>
@@ -713,15 +722,18 @@
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>mockwebserver3</artifactId>
+        <artifactId>mockwebserver</artifactId>
         <version>${okhttp.version}</version>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-          </exclusion>
-        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okio</groupId>
+        <artifactId>okio</artifactId>
+        <version>2.10.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>
@@ -864,6 +876,18 @@
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
         <version>5.15.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.bower</groupId>
+        <artifactId>jquery.scrollTo</artifactId>
+        <version>2.1.2</version>
+        <exclusions>
+          <!-- Avoid having jquery twice, once via org.webjars and once via org.webjars.bower -->
+          <exclusion>
+            <groupId>org.webjars.bower</groupId>
+            <artifactId>jquery</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.webjars</groupId>
@@ -1438,16 +1462,6 @@
         <version>1.6</version>
       </dependency>
       <dependency>
-        <groupId>com.squareup.okio</groupId>
-        <artifactId>okio</artifactId>
-        <version>2.10.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>${okhttp.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
         <version>2.8.0</version>
@@ -1588,11 +1602,6 @@
         <groupId>org.webjars.npm</groupId>
         <artifactId>kinetic</artifactId>
         <version>5.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>jquery.scrollTo</artifactId>
-        <version>2.1.2</version>
       </dependency>
 
       <dependency>
@@ -1741,8 +1750,9 @@
     <module>inception-doc</module>
     <!-- Workload -->
     <module>inception-workload</module>
-    <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
+    <module>inception-workload-matrix</module>
+    <module>inception-workload-ui</module>
     <!-- Plug-in support -->
     <module>inception-plugin-api</module>
     <module>inception-plugin-manager</module>
@@ -1756,6 +1766,7 @@
     <module>inception-docker</module>
     <!-- Versioning -->
     <module>inception-versioning</module>
+    <module>inception-websocket</module>
   </modules>
 
   <build>
@@ -1839,7 +1850,6 @@
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
-            <dependency>commons-logging:commons-logging</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
@@ -1861,7 +1871,9 @@
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
-            <dependency>com.squareup.okhttp3:mockwebserver3</dependency>
+            <dependency>com.squareup.okhttp3:mockwebserver</dependency>
+            <dependency>com.squareup.okhttp3:okhttp</dependency>
+            <dependency>com.squareup.okio:okio</dependency>
             <dependency>org.awaitility:awaitility</dependency>
             <dependency>org.springframework:spring-test</dependency>
           </ignoredDependencies>
@@ -1871,6 +1883,9 @@
             <!--
               - Required to use the dependency plugin on newer Java versions.
               - See: https://issues.apache.org/jira/browse/MDEP-613
+              -
+              - Updating to more recent versions doesn't work because we get a 
+              - "Unsupported api 524288" error in inception-boot-loader
             -->
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-dependency-analyzer</artifactId>

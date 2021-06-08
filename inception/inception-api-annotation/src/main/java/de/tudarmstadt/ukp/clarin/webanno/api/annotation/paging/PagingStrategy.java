@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
+import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
@@ -117,8 +117,10 @@ public interface PagingStrategy
 
     default List<Unit> unitsStartingAtOffset(CAS aCas, int aOffset, int aCount)
     {
-        return units(aCas).stream().filter(unit -> unit.getBegin() >= aOffset).limit(aCount)
-                .collect(Collectors.toList());
+        return units(aCas).stream() //
+                .filter(unit -> unit.getBegin() >= aOffset) //
+                .limit(aCount) //
+                .collect(toList());
     }
 
     /**

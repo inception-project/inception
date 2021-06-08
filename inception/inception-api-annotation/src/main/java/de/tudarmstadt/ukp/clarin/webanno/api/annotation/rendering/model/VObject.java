@@ -37,6 +37,7 @@ public abstract class VObject
     private String label;
     private int equivalenceSet;
     private boolean visible = true;
+    private boolean actionButtons;
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
     {
@@ -136,5 +137,15 @@ public abstract class VObject
     public void setVisible(boolean aVisible)
     {
         visible = aVisible;
+    }
+
+    public boolean isActionButtons()
+    {
+        return actionButtons;
+    }
+
+    public void setActionButtons(boolean aActionButtons)
+    {
+        actionButtons = aActionButtons;
     }
 }
