@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -135,35 +136,24 @@ public class SpanRenderer
             return null;
         }
 
+        Optional<VRange> range = VRange.clippedRange(aWindowBegin, aWindowEnd, aFS);
+
+        if (!range.isPresent()) {
+            return null;
+        }
+
         List<VObject> spansAndSlots = new ArrayList<>();
 
         SpanAdapter typeAdapter = getTypeAdapter();
         String uiTypeName = typeAdapter.getEncodedTypeName();
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        int begin = limitToBounds(aFS.getBegin(), aWindowBegin, aWindowEnd) - aWindowBegin;
-        int end = limitToBounds(aFS.getEnd(), aWindowBegin, aWindowEnd) - aWindowBegin;
-
-        VRange range = new VRange(begin, end);
-        VSpan span = new VSpan(typeAdapter.getLayer(), aFS, uiTypeName, range, labelFeatures);
+        VSpan span = new VSpan(typeAdapter.getLayer(), aFS, uiTypeName, range.get(), labelFeatures);
         spansAndSlots.add(span);
 
         renderSlots(aFS, spansAndSlots);
 
         return spansAndSlots;
-    }
-
-    private int limitToBounds(int aValue, int aMin, int aMax)
-    {
-        if (aValue < aMin) {
-            return aMin;
-        }
-
-        if (aValue > aMax) {
-            return aMax;
-        }
-
-        return aValue;
     }
 
     private void renderSlots(AnnotationFS aFS, List<VObject> aSpansAndSlots)

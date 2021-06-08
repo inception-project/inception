@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -119,6 +120,13 @@ public class RecommendationSpanRenderer
         for (SuggestionGroup<SpanSuggestion> suggestionGroup : groups) {
             // Render annotations for each label
             for (SpanSuggestion ao : suggestionGroup.bestSuggestions(pref)) {
+                Optional<VRange> range = VRange.clippedRange(aWindowBeginOffset, aWindowEndOffset,
+                        ao.getBegin(), ao.getEnd());
+
+                if (!range.isPresent()) {
+                    continue;
+                }
+
                 VID vid = ao.getVID();
 
                 // Here, we generate a visual suggestion representation based on the first
@@ -133,10 +141,8 @@ public class RecommendationSpanRenderer
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(ao.getFeature(), annotation);
 
-                VSpan v = new VSpan(aLayer, vid, bratTypeName,
-                        new VRange(ao.getBegin() - aWindowBeginOffset,
-                                ao.getEnd() - aWindowBeginOffset),
-                        featureAnnotation, COLOR);
+                VSpan v = new VSpan(aLayer, vid, bratTypeName, range.get(), featureAnnotation,
+                        COLOR);
                 v.addLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                 v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
                 vdoc.add(v);

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -147,13 +148,17 @@ public class ChainRenderer
 
                 // Render span
                 {
+                    Optional<VRange> range = VRange.clippedRange(aPageBegin, aPageEnd, linkFs);
+
+                    if (!range.isPresent()) {
+                        continue;
+                    }
+
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
-                    VRange offsets = new VRange(linkFs.getBegin() - aPageBegin,
-                            linkFs.getEnd() - aPageBegin);
 
-                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, bratLabelText);
+                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName,
+                            range.get(), colorIndex, bratLabelText);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
 
