@@ -21,7 +21,7 @@ It excludes special cases and details due to simplicity and focuses on the first
 You are already in the User Guide document.
 The main documentation of this User Guide starts right after the _Getting Started_ section: <<sect_core_funct, Core Functionalities>>.
 
-For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[tutorial videos] e.g. covering an https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=1[Introduction], an https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=2[Overview], https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3[Recommender Basics] and https://www.youtube.com/watch?v=p5SQq5W1rQI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=4[Entity Linking].
+For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[tutorial videos^] e.g. covering an https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=1[Introduction^], an https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=2[Overview^], https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3[Recommender Basics^] and https://www.youtube.com/watch?v=p5SQq5W1rQI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=4[Entity Linking^].
 _Getting Started_ will refer to them wherever it might be helpful.
 
 NOTE: *Boxes:* In _Getting Started_, these boxes provide additional information.
@@ -38,7 +38,7 @@ After the <<Introduction>>, _Getting Started_ leads you to using {product-name} 
 
 == What can {product-name} be used for?
 
-For a first impression on what {product-name} is, you may want to watch our https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=1[introduction video].
+For a first impression on what {product-name} is, you may want to watch our https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=1[introduction video^].
 
 {product-name} is a *text-annotation environment* useful for various kinds of annotation tasks on written text.
 Annotations are usually used for linguistic and/or machine learning concerns. {product-name} is a web application in which several users can work on the same annotation project and it can contain several annotation projects at a time.
@@ -72,9 +72,9 @@ For details on any other topic like Corpus Creation or the like, see the main do
 
 * For many questions, you find answers in the *main documentation*: <<sect_core_funct, Core Functionalities>>.
 
-* Consider our *Google group* https://groups.google.com/forum/#!forum/inception-users[inception users] and *mailing list*: inception-users@googlegroups.com
+* Consider our *Google group* https://groups.google.com/forum/#!forum/inception-users[inception users^] and *mailing list*: inception-users@googlegroups.com
 
-* You can also open an issue on https://github.com/inception-project/inception/issues[*Github*].
+* You can also open an issue on https://github.com/inception-project/inception/issues[*Github*^].
 
 == See our documentation for further reading
 
@@ -85,19 +85,19 @@ If it does not answer your questions, don't hesitate to contact us (see <<Do you
 
 NOTE: *User Guide-Shortcuts:* Whenever you find a *blue question mark* sign in the {product-name} application, you may click on it to be linked to the respective section of the User Guide.
 
-* *Admin Guide*: For information on how to set up {product-name} for a group of users on a server and more installation details, see the https://inception-project.github.io/documentation/latest/admin-guide[Admin Guide].
+* *Admin Guide*: For information on how to set up {product-name} for a group of users on a server and more installation details, see the https://inception-project.github.io/documentation/latest/admin-guide[Admin Guide^].
 
 * *Developer Guide*: {product-name} is open source.
-So if you would like to develop for it, the https://inception-project.github.io/documentation/latest/developer-guide[Developer Guide] might be interesting for you.
+So if you would like to develop for it, the https://inception-project.github.io/documentation/latest/developer-guide[Developer Guide^] might be interesting for you.
 
-All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
+All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage^].
 
 = Installing and starting {product-name}
 
 == Installing Java
 
 In order to run {product-name}, you need to have Java installed in version 8 or higher.
-If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK].
+If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java^] or link:https://adoptopenjdk.net[OpenJDK^].
 Both work perfectly fine so you can choose either of them.
 
 == Download and start {product-name}
@@ -105,7 +105,7 @@ Both work perfectly fine so you can choose either of them.
 In this section, we will download, open and log in to {product-name}.
 After, we will download and import an Example Project:
 
-*Step 1 - Download:* Download the .jar-file from our https://inception-project.github.io/downloads/[website] by clicking on _INCEpTION x.xx.x (executable JAR)_ (instead of "`x.xx.x`", there will be the number of the last release).
+*Step 1 - Download:* Download the .jar-file from our https://inception-project.github.io/downloads/[website^] by clicking on _INCEpTION x.xx.x (executable JAR)_ (instead of "`x.xx.x`", there will be the number of the last release).
 Wait a minute until it has been fully downloaded.
 That is, until the name of the downloaded folder ends on “.jar“, not on “.jar.part“ anymore.
 
@@ -152,20 +152,20 @@ image::getting_started_login.png[align="center"]
 
 NOTE: {product-name} is designed for the browsers *Chrome, Safari and Firefox*.
 It does work in other browsers as well but for these three, we can support you best.
-For more installation details, see the https://inception-project.github.io/documentation/latest/admin-guide[Admin Guide].
+For more installation details, see the https://inception-project.github.io/documentation/latest/admin-guide[Admin Guide^].
 
 == Download and import an Example Project
 
 In order to understand what you read in this guide, it makes sense to have an annotation project to look at and click through.
 We created several example projects for you to play with.
-You find them in the section https://inception-project.github.io/example-projects/[Example Projects] on our website.
+You find them in the section https://inception-project.github.io/example-projects/[Example Projects^] on our website.
 
 [.right]
 image::getting_started_download_example_project.png[width=400]
 
 
 *Step 1 - Download:* For this guide, we use the _Interactive Concept Linking_ project.
-Please download it from the https://inception-project.github.io/example-projects/[Example Projects] section on our website and save it without extracting it first.
+Please download it from the https://inception-project.github.io/example-projects/[Example Projects^] section on our website and save it without extracting it first.
 It consists of two documents about pets.
 The first one contains some annotations as an example, the second one is meant to be your playground.
 It has originally been created for concept linking annotation but in every project, you can create any kind of annotations.
@@ -207,7 +207,7 @@ There are more optional elements such as tagsets, document repositories etc. but
 * Optional: *Recommenders* to automatically suggest annotations
 * Optional: *Guidelines* for you and your team
 
-For a quick overview on the settings, you might want to watch our tutorial video https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[Overview].
+For a quick overview on the settings, you might want to watch our tutorial video https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[Overview^].
 As for all topics of _Getting Started_, you will find more details on each of them in the main documentation on <<sect_core_funct, {product-name}'s Core Functionalities>>.
 
 The _Settings_ provide a tab for each of these elements.
@@ -261,7 +261,7 @@ image::getting_started_users.png[align="center"]
 - Agreement +
 - Evaluation
 
-|Project Manager |- annotate +
+|Manager |- annotate +
 - curate +
 - create projects +
 - add new documents +
@@ -315,7 +315,7 @@ NOTE: *Feature Types:* The tags of your tagset must always fit the type of the f
 The feature type defines what type of information the feature can be, for example "`Primitive: Integer`" for whole numbers, "`Primitive: Float`" for decimals; "`Primitive: Boolean`" for a true/false label only; the most common one "`Primitive: String`" for text labels or "`KB: Concept/Instance/Property`" if the feature shall link to a knowledge base.
 There are more types for features but these are the most important ones for you to know. +
 Changing the type does only work for custom features, not for built-in features.
-In order to do so, scroll in the _Feature Details_ panel until you see the field _Type_ and select the type of your choice.
+In order to do so, scroll in the _Feature Details_ panel (in the _Layers_ tab) until you see the field _Type_ and select the type of your choice.
 If a tagset shall be linked to a feature, they must have the same type.
 For more details, see the <<Features>> in the main documentation.
 +
@@ -361,7 +361,7 @@ image::getting_started_tagset_use.png[align="center"]
 ** For more details on Tagsets, see the main documentation, <<Tagsets>>.
 
 ** _Note_: Tagsets can be changed and deleted.
-But the annotations they have been used for will remain with the same tag though.* Other than the built-in layers, built-in tagsets can also be deleted.
+But the annotations they have been used for will remain with the same tag though. Other than the built-in layers, built-in tagsets can also be deleted.
 
 NOTE: *Saving:* Some steps, like annotations, are saved automatically in {product-name}.
 Others need to be saved manually.
@@ -392,7 +392,7 @@ This is a page different from the one in the project settings where you can modi
 image::getting_started_kb_page.png[align="center"]
 +
 
-** *For details* on knowledge bases, see our main documentation on <<Knowledge Base>>s, or our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s../[tutorial video “Overview“] mentioning knowledge bases.
+** *For details* on knowledge bases, see our main documentation on <<Knowledge Base>>s, or our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s../[tutorial video “Overview“^] mentioning knowledge bases.
 
 ** If you like to explore a knowledge base check the example project we have downloaded and imported before.
 It contains a small knowledge base, too.
@@ -402,13 +402,13 @@ It contains a small knowledge base, too.
 They learn from what the user annotates and give suggestions.
 For details on how to _use_ recommenders, see our main documentation on xref:sect_annotation_recommendation[Recommenders] in the Annotation section.
 For details on _how to create and adjust_ them, see xref:sect_projects_recommendation[Recommenders] in the Projects section.
-Or check the https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3/[tutorial video “Recommender Basics”].
+Or check the https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3/[tutorial video “Recommender Basics”^].
 
 image::getting_started_recommenders.png[align="center"]
 
 * In the *Guidelines* section, you may import files with annotation guidelines.
 There is no automatic correction or warning from {product-name} if guidelines are violated but it is a short way for every user in the project to read and check the team guidelines while working.
-On the annotation page (→ _Dashboard_ → _Annotation_ → open any document), annotators can quickly look them up by clicking on the guidelines button on the top which looks like a book.
+On the annotation page (→ _Dashboard_ → _Annotation_ → open any document), annotators can quickly look them up by clicking on the guidelines button on the top which looks like a book (this button only appears if at least one guideline was imported).
 
 image::getting_started_guidelines.png[align="center"]
 
@@ -494,7 +494,7 @@ In case you want to have some theory and background knowledge first, we recommen
 *Create your first annotations*
 
 This will lead you step by step.
-You also may want to watch our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[tutorial video „Overview“] on how to create annotations.
+You also may want to watch our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[tutorial video „Overview“^] on how to create annotations.
 We will create a Named Entity annotation which tells whether a mention is a person (PER), location (LOC), organization (ORG) or other (OTH):
 
 NOTE: *Creating your own Projects:* In this guide, we will use our example project.
@@ -586,30 +586,3 @@ For further reading and more details, we recommend the <<sect_core_funct, main d
 
 Do not hesitate to xref:do_you_have_questions_or_feedback[contact us] if you struggle, have any questions or special requirements.
 We wish you success with your projects and you are welcome to let us know what you are working on.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
