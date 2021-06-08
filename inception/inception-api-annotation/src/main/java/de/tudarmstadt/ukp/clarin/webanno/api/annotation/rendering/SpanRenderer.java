@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static java.util.Collections.emptyList;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +33,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.text.AnnotationPredicates;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
@@ -102,9 +103,14 @@ public class SpanRenderer
         // Index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
 
-        List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
+        List<AnnotationFS> annotations = aCas.select(type).coveredBy(0, aWindowEnd)
+                .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)
+                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
+                .collect(toList());
+
+        // List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
-            for (VObject vobj : render(fs, aFeatures, aWindowBegin)) {
+            for (VObject vobj : render(fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 aResponse.add(vobj);
 
                 if (vobj instanceof VSpan) {
@@ -123,7 +129,7 @@ public class SpanRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+            int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return null;
@@ -135,13 +141,29 @@ public class SpanRenderer
         String uiTypeName = typeAdapter.getEncodedTypeName();
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        VRange range = new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin);
+        int begin = limitToBounds(aFS.getBegin(), aWindowBegin, aWindowEnd) - aWindowBegin;
+        int end = limitToBounds(aFS.getEnd(), aWindowBegin, aWindowEnd) - aWindowBegin;
+
+        VRange range = new VRange(begin, end);
         VSpan span = new VSpan(typeAdapter.getLayer(), aFS, uiTypeName, range, labelFeatures);
         spansAndSlots.add(span);
 
         renderSlots(aFS, spansAndSlots);
 
         return spansAndSlots;
+    }
+
+    private int limitToBounds(int aValue, int aMin, int aMax)
+    {
+        if (aValue < aMin) {
+            return aMin;
+        }
+
+        if (aValue > aMax) {
+            return aMax;
+        }
+
+        return aValue;
     }
 
     private void renderSlots(AnnotationFS aFS, List<VObject> aSpansAndSlots)
