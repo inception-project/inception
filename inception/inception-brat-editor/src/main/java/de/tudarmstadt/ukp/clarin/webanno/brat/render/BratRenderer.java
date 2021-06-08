@@ -178,7 +178,7 @@ public class BratRenderer
                     labelText = "◁ " + labelText;
                 }
 
-                if (vspan.getRanges().get(vspan.getRanges().size()).isClippedAtEnd()) {
+                if (vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd()) {
                     labelText = labelText + " ▷";
                 }
 
