@@ -511,9 +511,8 @@ var Visualizer = (function($, window, undefined) {
             } else {
               var eventDesc = data.eventDescs[marked[0]];
               if (eventDesc) { // relation
-                var relArc = eventDesc.roles[0];
                 $.each(data.spans[eventDesc.triggerId].outgoing, function(arcNo, arc) {
-                  if (arc.target == relArc.targetId && arc.type == relArc.type) {
+                  if (arc.eventDescId == marked[0]) {
                     arc.marked = markedType;
                   }
                 });
