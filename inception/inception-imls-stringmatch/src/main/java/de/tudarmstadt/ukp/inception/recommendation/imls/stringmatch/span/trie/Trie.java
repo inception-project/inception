@@ -193,7 +193,7 @@ public class Trie<V>
             last = cur;
         }
 
-        return match != null ? new MatchedNode(match, i) : null;
+        return match != null ? new MatchedNode(match, i - offset) : null;
     }
 
     /**
@@ -265,7 +265,7 @@ public class Trie<V>
         }
 
         if (match != null && acceptedKeyChars == match.level) {
-            return new MatchedNode(match, i);
+            return new MatchedNode(match, i - offset);
         }
 
         return null;
