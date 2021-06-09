@@ -227,10 +227,10 @@ public class StringMatchingRecommender
             List<Annotation> tokens = aCas.<Annotation> select(tokenType).coveredBy(sampleUnit)
                     .asList();
             for (Annotation token : tokens) {
-                Trie<DictEntry>.Node node = aDict.getNode(text, token.getBegin());
-                if (node != null) {
+                Trie<DictEntry>.MatchedNode match = aDict.getNode(text, token.getBegin());
+                if (match != null) {
                     int begin = token.getBegin();
-                    int end = begin + node.level;
+                    int end = begin + match.matchLength;
 
                     // If the end is not in the same sentence as the start, skip
                     if (requireSingleSentence && !(end <= sampleUnit.getEnd())) {
@@ -243,7 +243,7 @@ public class StringMatchingRecommender
                         continue;
                     }
 
-                    for (LabelStats lc : node.value.getBest(maxRecommendations)) {
+                    for (LabelStats lc : match.node.value.getBest(maxRecommendations)) {
                         String label = lc.getLabel();
                         // check instance equality to avoid collision with user labels
                         if (label == UNKNOWN_LABEL) {
@@ -339,13 +339,15 @@ public class StringMatchingRecommender
         List<LabelPair> labelPairs = new ArrayList<>();
         for (Sample sample : testSet) {
             for (TokenSpan token : sample.getTokens()) {
-                Trie<DictEntry>.Node node = dict.getNode(sample.getText(), token.getBegin());
+                Trie<DictEntry>.MatchedNode match = dict.getNode(sample.getText(),
+                        token.getBegin());
                 int begin = token.getBegin();
                 int end = token.getEnd();
 
                 String predictedLabel = NO_LABEL;
-                if (node != null && sample.hasTokenEndingAt(token.getBegin() + node.level)) {
-                    List<LabelStats> labelStats = node.value.getBest(1);
+                if (match != null
+                        && sample.hasTokenEndingAt(token.getBegin() + match.matchLength)) {
+                    List<LabelStats> labelStats = match.node.value.getBest(1);
                     if (!labelStats.isEmpty()) {
                         predictedLabel = labelStats.get(0).getLabel();
                     }

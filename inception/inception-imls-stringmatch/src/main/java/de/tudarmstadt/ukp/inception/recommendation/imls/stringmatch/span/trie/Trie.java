@@ -39,6 +39,18 @@ public class Trie<V>
     private int size = 0;
     private KeySanitizerFactory sanitizerFactory;
 
+    public class MatchedNode
+    {
+        public final Node node;
+        public final int matchLength;
+
+        public MatchedNode(Trie<V>.Node aNode, int aMatchLength)
+        {
+            node = aNode;
+            matchLength = aMatchLength;
+        }
+    }
+
     public class Node
     {
         final Map<Character, Node> children;
@@ -141,7 +153,7 @@ public class Trie<V>
      *            the offset.
      * @return the node.
      */
-    public Node getNode(final CharSequence key, final int offset)
+    public MatchedNode getNode(final CharSequence key, final int offset)
     {
         // offset outside range
         if (offset > key.length() - 1) {
@@ -149,7 +161,7 @@ public class Trie<V>
         }
 
         if (key.length() == 0) {
-            return root;
+            return new MatchedNode(root, 0);
         }
 
         KeySanitizer sanitizer = null;
@@ -158,7 +170,8 @@ public class Trie<V>
         }
         Node last = root;
         Node match = null;
-        for (int i = offset; i < key.length(); i++) {
+        int i = offset;
+        for (; i < key.length(); i++) {
             char k = key.charAt(i);
 
             if (sanitizer != null) {
@@ -180,7 +193,7 @@ public class Trie<V>
             last = cur;
         }
 
-        return match;
+        return match != null ? new MatchedNode(match, i) : null;
     }
 
     /**
@@ -191,7 +204,7 @@ public class Trie<V>
      *            the key.
      * @return the node.
      */
-    public Node getNode(final CharSequence key)
+    public MatchedNode getNode(final CharSequence key)
     {
         return getNode(key, 0, key.length());
     }
@@ -210,7 +223,7 @@ public class Trie<V>
      *            the length to match.
      * @return the node.
      */
-    private Node get_node(final CharSequence key, final int offset, final int length)
+    private MatchedNode get_node(final CharSequence key, final int offset, final int length)
     {
         // offset or length outside range
         if ((offset > key.length() - 1) || (offset + length > key.length())) {
@@ -218,7 +231,7 @@ public class Trie<V>
         }
 
         if (key.length() == 0) {
-            return root;
+            return new MatchedNode(root, 0);
         }
 
         KeySanitizer sanitizer = null;
@@ -228,7 +241,8 @@ public class Trie<V>
         Node last = root;
         Node match = null;
         int acceptedKeyChars = 0;
-        for (int i = offset; i < offset + length; i++) {
+        int i = offset;
+        for (i = offset; i < offset + length; i++) {
             char k = key.charAt(i);
 
             if (sanitizer != null) {
@@ -251,7 +265,7 @@ public class Trie<V>
         }
 
         if (match != null && acceptedKeyChars == match.level) {
-            return match;
+            return new MatchedNode(match, i);
         }
 
         return null;
@@ -269,14 +283,14 @@ public class Trie<V>
      *            the length.
      * @return the node.
      */
-    public Node getNode(final CharSequence key, final int offset, final int length)
+    public MatchedNode getNode(final CharSequence key, final int offset, final int length)
     {
         if (key == null) {
             return null;
         }
 
-        final Node match = get_node(key, offset, length);
-        return ((match != null) && match.set) ? match : null;
+        final MatchedNode match = get_node(key, offset, length);
+        return ((match != null) && match.node.set) ? match : null;
     }
 
     public boolean containsKey(final Object key)
@@ -318,7 +332,7 @@ public class Trie<V>
             return false;
         }
 
-        final Node match = get_node(prefix, offset, length);
+        final MatchedNode match = get_node(prefix, offset, length);
         return match != null;
     }
 
@@ -333,9 +347,9 @@ public class Trie<V>
             return null;
         }
 
-        final Node n = getNode((CharSequence) key);
+        final MatchedNode n = getNode((CharSequence) key);
 
-        return (n == null) ? null : n.value;
+        return (n == null) ? null : n.node.value;
     }
 
     public boolean isEmpty()
