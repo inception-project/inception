@@ -82,7 +82,7 @@ public class StandaloneShutdownDialogManager
     @Value("${spring.application.name}")
     private String applicationName;
 
-    @Value("${commands.open-browser}")
+    @Value("${commands.open-browser:}")
     private String openBrowserCommand;
 
     private int port = -1;
