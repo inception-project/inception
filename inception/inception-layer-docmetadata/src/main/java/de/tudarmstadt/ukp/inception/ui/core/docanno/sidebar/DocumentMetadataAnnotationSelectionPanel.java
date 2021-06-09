@@ -125,23 +125,33 @@ public class DocumentMetadataAnnotationSelectionPanel
         username = aUsername;
         jcasProvider = aCasProvider;
         project = aProject;
-        selectedLayer = Model.of();
+        selectedLayer = Model.of(listMetadataLayers().stream().findFirst().orElse(null));
+        IModel<List<AnnotationLayer>> availableLayersModel = LoadableDetachableModel
+                .of(this::listMetadataLayers);
         actionHandler = aActionHandler;
         state = aState;
+
+        add(new WebMarkupContainer("noLayersWarning").add(visibleWhen(
+                () -> availableLayersModel.map(List::isEmpty).orElse(true).getObject())));
+
+        WebMarkupContainer content = new WebMarkupContainer("content");
+        content.add(visibleWhen(
+                () -> !availableLayersModel.map(List::isEmpty).orElse(true).getObject()));
+        add(content);
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
         annotationsContainer.setOutputMarkupId(true);
         annotationsContainer.add(createAnnotationList());
-        add(annotationsContainer);
+        content.add(annotationsContainer);
 
         DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>(CID_LAYER);
         layer.setModel(selectedLayer);
-        layer.setChoices(this::listMetadataLayers);
+        layer.setChoices(availableLayersModel);
         layer.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layer.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-        add(layer);
+        content.add(layer);
 
-        add(new LambdaAjaxLink(CID_CREATE, this::actionCreate));
+        content.add(new LambdaAjaxLink(CID_CREATE, this::actionCreate));
     }
 
     public Project getModelObject()
