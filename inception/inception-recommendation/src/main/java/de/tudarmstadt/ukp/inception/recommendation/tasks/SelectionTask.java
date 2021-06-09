@@ -210,7 +210,7 @@ public class SelectionTask
 
                         double score = result.computeF1Score();
 
-                        Double threshold = recommender.getThreshold();
+                        double threshold = recommender.getThreshold();
                         boolean activated;
                         if (score >= threshold) {
                             activated = true;
