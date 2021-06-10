@@ -483,10 +483,17 @@ public class BratAnnotationEditor
             CAS aCas, VID paramId)
         throws IOException, AnnotationException
     {
-        AnnotationFS originFs = selectAnnotationByAddr(aCas,
-                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
-        AnnotationFS targetFs = selectAnnotationByAddr(aCas,
-                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
+        VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
+        VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
+
+        if (origin.isSynthetic() || target.isSynthetic()) {
+            error("Relations cannot be created from/to synthetic annotations");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return null;
+        }
+
+        AnnotationFS originFs = selectAnnotationByAddr(aCas, origin.getId());
+        AnnotationFS targetFs = selectAnnotationByAddr(aCas, target.getId());
 
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
