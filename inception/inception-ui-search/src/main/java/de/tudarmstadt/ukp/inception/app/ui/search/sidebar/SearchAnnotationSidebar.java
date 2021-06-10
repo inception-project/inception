@@ -478,6 +478,7 @@ public class SearchAnnotationSidebar
 
     public void actionApplyToSelectedResults(AjaxRequestTarget aTarget, Operation aConsumer)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
         if (VID.NONE_ID.equals(getModelObject().getSelection().getAnnotation())) {
             error("No annotation selected. Please select an annotation first");
         }
@@ -578,7 +579,6 @@ public class SearchAnnotationSidebar
     {
         AnnotatorState state = getModelObject();
         AnnotationLayer layer = aAdapter.getLayer();
-        List<FeatureState> featureStates = state.getFeatureStates();
 
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
         AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
@@ -602,6 +602,7 @@ public class SearchAnnotationSidebar
             }
             catch (AnnotationException e) {
                 aBulkResult.conflict++;
+                return;
             }
         }
         else {
@@ -609,11 +610,12 @@ public class SearchAnnotationSidebar
         }
 
         // set values for all features according to current state
+        int addr = getAddr(annoFS);
+        List<FeatureState> featureStates = state.getFeatureStates();
         for (FeatureState featureState : featureStates) {
             Object featureValue = featureState.value;
             AnnotationFeature feature = featureState.feature;
             if (featureValue != null) {
-                int addr = getAddr(annoFS);
                 aAdapter.setFeatureValue(aDocument, currentUser.getUsername(), aCas, addr, feature,
                         featureValue);
             }
