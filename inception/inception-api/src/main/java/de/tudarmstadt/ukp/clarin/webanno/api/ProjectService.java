@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.MDC;
@@ -64,6 +66,8 @@ public interface ProjectService
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission permission);
+
+    void removeProjectPermission(ProjectPermission projectPermission);
 
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
@@ -117,6 +121,8 @@ public interface ProjectService
 
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
 
+    List<ProjectPermission> listProjectPermissions(User aUser);
+
     void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels);
 
@@ -141,13 +147,9 @@ public interface ProjectService
     List<User> listProjectUsersWithPermissions(Project project, PermissionLevel permissionLevel);
 
     /**
-     * remove a user permission from the project
-     *
-     * @param projectPermission
-     *            The ProjectPermission to be removed
+     * Removes all permissions for the given user to the given proejct.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProjectPermission(ProjectPermission projectPermission);
+    void leaveProject(User aObject, Project aProject);
 
     /**
      * list Projects which contain with those annotation documents state is finished
@@ -286,6 +288,13 @@ public interface ProjectService
      * @return list of projects accessible by the user.
      */
     List<Project> listAccessibleProjects(User aUser);
+
+    /**
+     * List projects accessible by current user
+     *
+     * @return list of projects accessible by the user.
+     */
+    Map<Project, Set<PermissionLevel>> listAccessibleProjectsWithPermissions(User aUser);
 
     /**
      * List projects manageable by current user
