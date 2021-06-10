@@ -24,9 +24,8 @@ import de.tudarmstadt.ukp.inception.experimental.api.Annotation;
 public class DocumentMessage
 {
     private int id;
-    private String [] viewportText;
+    private Character[] viewportText;
     private List<Annotation> annotations;
-    private int[][] offsets;
 
     public int getId()
     {
@@ -38,12 +37,12 @@ public class DocumentMessage
         id = aId;
     }
 
-    public String[] getViewportText()
+    public Character[] getViewportText()
     {
         return viewportText;
     }
 
-    public void setViewportText(String[] aViewportText)
+    public void setViewportText(Character[] aViewportText)
     {
         this.viewportText = aViewportText;
     }
@@ -58,13 +57,4 @@ public class DocumentMessage
         annotations = aAnnotations;
     }
 
-    public int[][] getOffsets()
-    {
-        return offsets;
-    }
-
-    public void setOffsets(int[][] aOffsets)
-    {
-        offsets = aOffsets;
-    }
 }

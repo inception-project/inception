@@ -17,14 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.message;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Range;
-
 public class AnnotationMessage
 {
     private String id;
-    private List<Range> ranges;
+    private int begin;
+    private int end;
     private String quote;
     private String color;
     private String type;
@@ -41,14 +38,24 @@ public class AnnotationMessage
         id = aId;
     }
 
-    public List<Range> getRanges()
+    public int getBegin()
     {
-        return ranges;
+        return begin;
     }
 
-    public void setRanges(List<Range> aRanges)
+    public void setBegin(int aBegin)
     {
-        ranges = aRanges;
+        begin = aBegin;
+    }
+
+    public int getEnd()
+    {
+        return end;
+    }
+
+    public void setEnd(int aEnd)
+    {
+        end = aEnd;
     }
 
     public String getQuote()

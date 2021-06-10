@@ -85,7 +85,7 @@ export class AnnotationExperienceAPIActionHandler {
         let that = this;
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
-
+            console.log(elem)
             if (elem.tagName === 'rect') {
                 that.annotationExperienceAPI.sendSelectAnnotationMessageToServer(elem.id);
             }
@@ -96,11 +96,16 @@ export class AnnotationExperienceAPIActionHandler {
 
         ondblclick = function (aEvent) {
             let elem = <Element>aEvent.target;
-            if (elem.tagName === 'text') {
+            console.log(elem)
+            if (elem.className === 'char') {
                 that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(
-                    "wordID",
-                    document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),
-                    "");
+                    elem.attributes[2].value, elem.attributes[2].value,
+                    document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"));
+            }
+
+            if (elem.tagName === 'rect') {
+                console.log(elem)
+                that.annotationExperienceAPI.sendDeleteAnnotationMessageToServer(elem.id);
             }
         }
     }

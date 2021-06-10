@@ -20,8 +20,9 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 import java.io.IOException;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 
 public interface AnnotationSystemAPI
 {
@@ -49,10 +50,8 @@ public interface AnnotationSystemAPI
      */
     CAS getCasForDocument(String aUser, long aProject, long aDocument);
 
-    String [] getViewportText(ClientMessage aClientMessage, CAS aCas);
+    Character[] getViewportText(ClientMessage aClientMessage, CAS aCas);
 
-    int[][] getOffsets(ClientMessage aClientMessage, CAS aCas);
-
-    List<Annotation> getAnnotations(CAS aCas, long aProject, String[] visibleSentences);
+    List<Annotation> getAnnotations(CAS aCas, long aProject);
 
 }

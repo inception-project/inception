@@ -17,11 +17,10 @@
  */
 import {Annotation} from "../util/Annotation";
 
+
 export class AnnotationExperienceAPIVisualization {
     //Text
     text: String[];
-    showSentenceNumbers: boolean = false;
-    showBackground: boolean = false;
     annotations: Annotation[];
 
     //Editor element
@@ -29,41 +28,44 @@ export class AnnotationExperienceAPIVisualization {
     lineColorSecond: string = "#CCCCCC";
 
     //Viewport
-    viewport: number[][];
-    offsets: number[][];
     sentenceCount: number;
+    viewport: number[][];
 
-    //Highlighting
-    highlightingEnabled: boolean = false;
+    //Additional drawing
+    showHighlighting: boolean = false;
+    showSentenceNumbers: boolean = false;
+    showBackground: boolean = false;
 
-    showText(aElementId: string)
-    {
+    showText(aElementId: string) {
         let textArea = document.getElementById(aElementId.toString())
         //Reset previous text
         textArea.innerHTML = '';
 
+        //Sentences
+        let sentences = this.text.join("").split("|");
+        this.sentenceCount = sentences.length - 1;
+
         //SVG element
         let svg = document.createElement("svg");
         svg.setAttribute("version", "1.2");
-        svg.setAttribute("viewbox", "0 0 " + textArea.offsetWidth + " " + this.text.length * 20);
-        svg.style.display = "font-size: 100%; width: 100%; height: 100%";
+        svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.sentenceCount * 20);
+        svg.style.fontSize="100%";
+        svg.style.width="100%";
+        svg.style.height="100%";
 
         if (this.showBackground) {
-            svg.appendChild(this.createBackground());
+            svg.appendChild(this.drawBackground());
         }
 
         if (this.showSentenceNumbers) {
-            svg.appendChild(this.createSentenceNumbers())
+            svg.appendChild(this.drawSentenceNumbers())
         }
 
         let k = 0;
 
         let textElement = document.createElement("g");
         textElement.className = "text";
-        textElement.style.display = "font-size: 100%; width: 100%; height: 100%";
 
-        let sentences = this.text.join(" ").split("||");
-        this.sentenceCount = sentences.length - 1 ;
 
         for (let i = 0; i < sentences.length; i++) {
             let sentence = document.createElement("g");
@@ -71,14 +73,6 @@ export class AnnotationExperienceAPIVisualization {
             sentence.style.display = "block";
             sentence.setAttribute("sentence-id", (i + 1).toString());
 
-            let spaceElement = document.createElement("text");
-            spaceElement.className = "space";
-            spaceElement.innerText = " ";
-            spaceElement.setAttribute("x", "0");
-            spaceElement.setAttribute("y", ((i + 1) * 20 - 5).toString());
-            spaceElement.setAttribute("word_id", k.toString());
-
-            sentence.appendChild(spaceElement);
             let xPrev: number;
             if (this.showSentenceNumbers) {
                 xPrev = 45;
@@ -86,33 +80,20 @@ export class AnnotationExperienceAPIVisualization {
                 xPrev = 4;
             }
 
-            let sent = sentences[i].split(" ");
+            for (let j = 0; j < sentences[i].length; j++, k++) {
 
-            for (let j = 0; j < sent.length; j++, k++) {
-
-                if (sent[j] === "||") {
+                if (sentences[i][j] === "|") {
                     break;
                 }
 
-                let word = document.createElement("text");
-                word.innerText = sent[j]
-                word.className = "word";
-                word.setAttribute("x", xPrev.toString());
-                word.setAttribute("y", ((i + 1) * 20 - 5).toString());
-                word.setAttribute("word_id", k.toString());
-                xPrev += word.innerText.length * 9;
-                sentence.appendChild(word);
-
-                if (j != this.text.length - 1) {
-                    spaceElement = document.createElement("text");
-                    spaceElement.className = "space";
-                    spaceElement.innerText = " ";
-                    spaceElement.setAttribute("x", xPrev.toString());
-                    spaceElement.setAttribute("y", ((i + 1) * 20 - 5).toString());
-                    spaceElement.setAttribute("word_id", k.toString());
-                    xPrev += 4;
-                    sentence.appendChild(spaceElement);
-                }
+                let char = document.createElement("text");
+                char.innerText = sentences[i][j];
+                char.className = "char";
+                char.setAttribute("x", xPrev.toString());
+                char.setAttribute("y", ((i + 1) * 20 - 5).toString());
+                char.setAttribute("char_pos", (this.viewport[i][0] + j).toString());
+                xPrev += 9;
+                sentence.appendChild(char);
             }
             textElement.appendChild(sentence);
         }
@@ -121,29 +102,41 @@ export class AnnotationExperienceAPIVisualization {
 
 
         //Highlighting
-        if (this.highlightingEnabled) {
+        if (this.showHighlighting) {
             svg.appendChild(this.drawAnnotation(this.annotations, aElementId));
         }
 
         textArea.appendChild(svg);
     }
 
-    setShowSentenceNumbers(aShowSentenceNumbers: boolean, aEditor: string) {
-        this.showSentenceNumbers = aShowSentenceNumbers;
-        this.refreshEditor(aEditor);
+    drawBackground() {
+        //Background
+        let background = document.createElement("g");
+        background.className = "background";
+        background.innerHTML = "";
+
+        for (let i = 0; i < this.sentenceCount; i++) {
+            let rect = document.createElement("rect");
+            rect.setAttribute("x", "0");
+            rect.setAttribute("y", (i * 20).toString());
+            rect.setAttribute("width", "100%");
+            rect.setAttribute("height", "20");
+            if (i % 2 == 0) {
+                rect.setAttribute("fill", this.lineColorFirst);
+            } else {
+                rect.setAttribute("fill", this.lineColorSecond);
+            }
+            background.appendChild(rect);
+        }
+        return background;
     }
 
-    setHighLighting(aHighlightingEnabled: boolean, aEditor: string)
-    {
-        this.highlightingEnabled = aHighlightingEnabled;
-        this.refreshEditor(aEditor);
-    }
-
-    createSentenceNumbers() {
+    drawSentenceNumbers() {
         //Sentencenumbers
         let sentenceNumbers = document.createElement("g");
-        sentenceNumbers.className = "tspan";
-        sentenceNumbers.style.display = "font-size: 100%; width: 100%; height: 100%";
+        sentenceNumbers.className = "sentence-numbers";
+        sentenceNumbers.style.display = "block";
+        sentenceNumbers.innerHTML = "";
 
         for (let i = 0; i < this.sentenceCount; i++) {
             let number = document.createElement("text")
@@ -157,36 +150,10 @@ export class AnnotationExperienceAPIVisualization {
 
     }
 
-    createBackground() {
-        //Background
-        let background = document.createElement("g");
-        background.className = "background";
-        background.style.display = "font-size: 100%; width: 100%; height: 100%";
-
-        for (let i = 0; i < this.sentenceCount; i++) {
-            let rect = document.createElement("rect");
-            rect.setAttribute("x", "0");
-            rect.setAttribute("y", (i * 20).toString());
-            rect.setAttribute("width", "100%");
-            rect.setAttribute("height", "20");
-            if (i % 2 == 0) {
-                rect.setAttribute("fill", this.lineColorFirst);
-            } else{
-                rect.setAttribute("fill", this.lineColorSecond);
-            }
-            background.appendChild(rect);
-        }
-        return background;
-    }
-
-    drawAnnotation(aAnnotations: Object[], aEditor: string) {
+    drawAnnotation(aAnnotations: Annotation[], aEditor: string) {
         let highlighting = document.createElement("g");
         highlighting.className = "highlighting";
-        highlighting.style.display = "font-size: 100%; width: 100%; height: 100%";
-
         highlighting.innerHTML = "";
-
-        let editor = document.createElement(aEditor);
 
         if (aAnnotations.length > 0) {
 
@@ -198,82 +165,96 @@ export class AnnotationExperienceAPIVisualization {
             }
 
             let sentences = this.text.join(" ").split("||");
-            this.sentenceCount = sentences.length - 1 ;
+            this.sentenceCount = sentences.length - 1;
+            let i = 0;
 
+            console.log(document.getElementsByClassName("text-row"))
 
-            for (let i = 0; i < this.sentenceCount; i++) {
-
+            for (let sent of document.getElementsByClassName("text-row")) {
+                console.log("SENT: " + i)
                 let text_row = document.createElement("g");
-                text_row.className = "text-row";
+                text_row.className = "annotation";
                 text_row.style.display = "block";
 
                 for (let annotation of this.annotations) {
 
-                    if ((annotation.begin >= this.offsets[i][0]) && (annotation.end <= this.offsets[i][1])) {
+                    let begin: string;
+                    let end: string;
 
-                        let rect = document.createElement("rect");
-                        rect.setAttribute("x", (editor.offsetWidth + (Number(annotation.begin * 8) + offset)).toString());
-                        rect.setAttribute("y", (i * 20).toString());
-                        rect.setAttribute("width", (Number(annotation.word.length * 8).toString()));
-                        rect.setAttribute("height", "20");
-                        rect.setAttribute("id", annotation.id);
-                        rect.setAttribute("type", annotation.type);
-                        rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
-                        rect.style.opacity = "0.5";
-                        text_row.appendChild(rect);
+                    for (let char of sent.children) {
+                        if (annotation.begin.toString() === char.getAttribute("char_pos")) {
+                            begin = char.getAttribute("x");
+                            continue;
+                        }
+
+                        if (annotation.end.toString() === char.getAttribute("char_pos")) {
+                            end = char.getAttribute("x")
+                            let rect = document.createElement("rect");
+                            rect.setAttribute("x", (document.getElementById(aEditor).offsetWidth + Number(begin) + offset).toString());
+                            rect.setAttribute("y", (i * 20).toString());
+                            rect.setAttribute("width", (Number(end) - Number(begin)).toString());
+                            rect.setAttribute("height", "20");
+                            rect.setAttribute("id", annotation.id);
+                            rect.setAttribute("type", annotation.type);
+                            rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
+                            rect.style.opacity = "0.5";
+                            text_row.appendChild(rect);
+                            break;
+                        }
                     }
                 }
+
                 highlighting.appendChild(text_row);
+                i++;
             }
-
-
             return highlighting;
         } else {
             return highlighting;
         }
     }
 
-    getColorForAnnotation(aType: string)
-    {
+    getColorForAnnotation(aType: string) {
         return "#87CEEB";
     }
 
-    setLineColors(aLineColorFirst: string, aLineColorSecond: string, aEditor: string)
-    {
+    setLineColors(aLineColorFirst: string, aLineColorSecond: string, aEditor: string) {
         this.lineColorFirst = aLineColorFirst;
         this.lineColorSecond = aLineColorSecond;
 
         this.refreshEditor(aEditor);
     }
 
-    resetLineColor(aEditor: string)
-    {
+    resetLineColor(aEditor: string) {
         this.lineColorFirst = "#BBBBBB";
         this.lineColorSecond = "#CCCCCC"
 
         this.refreshEditor(aEditor);
     }
 
-    refreshEditor(aEditor: string)
-    {
+    refreshEditor(aEditor: string) {
         this.showText(aEditor);
-        let editor = document.getElementById(aEditor);
-        let content = editor.innerHTML;
-        editor.innerHTML = content;
     }
 
-    setText(aText: string[])
-    {
+    setText(aText: string[]) {
         this.text = aText;
     }
 
-    setAnnotations(aAnnotations: Annotation[])
-    {
+    setAnnotations(aAnnotations: Annotation[]) {
         this.annotations = aAnnotations;
     }
 
-    setOffsets(aOffsets: number[][])
-    {
-        this.offsets = aOffsets;
+    setShowHighlighting(aShowHighlighting: boolean, aEditor: string) {
+        this.showHighlighting = aShowHighlighting;
+        this.refreshEditor(aEditor);
+    }
+
+    setShowSentenceNumbers(aShowSentenceNumbers: boolean, aEditor: string) {
+        this.showSentenceNumbers = aShowSentenceNumbers;
+        this.refreshEditor(aEditor);
+    }
+
+    setShowHighLighting(aHighlightingEnabled: boolean, aEditor: string) {
+        this.showHighlighting = aHighlightingEnabled;
+        this.showText(aEditor);
     }
 }

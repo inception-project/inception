@@ -30,17 +30,13 @@ export class AnnotationExperienceAPI {
     projectID: string;
     documentID: string;
 
-    //Viewport
-    viewport: number[][];
-
     //Visualizer
     visualizer: AnnotationExperienceAPIVisualization;
 
     //Actionhandler
     actionhandler: AnnotationExperienceAPIActionHandler;
 
-    constructor(aViewport: number[][]) {
-        this.viewport = aViewport;
+    constructor() {
         this.connect();
 
         //Visualizer
@@ -134,10 +130,28 @@ export class AnnotationExperienceAPI {
         let json = {
             username: this.username,
             project: this.projectID,
-            document: null,
-            viewport: this.viewport
+            viewport: [[0,20],[21,33],[37,50]]
 
         };
+
+
+        this.visualizer.viewport = json.viewport;
+
+        this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
+    }
+
+    sendDocumentMessageToServer(aUsername: string, aDocument: string)
+    {
+        let json = {
+            username: aUsername,
+            project: this.projectID,
+            document: aDocument,
+            viewport: [[0,20],[21,33],[37,50]]
+        };
+
+
+        this.visualizer.viewport = json.viewport;
+
         this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
     }
 
@@ -150,13 +164,15 @@ export class AnnotationExperienceAPI {
             viewport: aViewport
         };
 
+        /* TODO adapt to char array
         for (let i = 0; i < this.viewport.length; i++) {
             for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
                 this.unsubscribe("annotation_update_" + j.toString());
             }
         }
 
-        this.viewport = aViewport;
+         */
+
         this.visualizer.viewport = aViewport;
 
         this.stompClient.publish({destination: "/app/new_viewport_by_client", body: JSON.stringify(json)});
@@ -168,19 +184,19 @@ export class AnnotationExperienceAPI {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            id: aId
+            annotationAddress: aId
         };
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendCreateAnnotationMessageToServer(aWordId: string, aType: string, aViewport: string)
+    sendCreateAnnotationMessageToServer(begin: string, end: string, aType: string)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            wordId: aWordId,
-            viewport: aViewport,
+            annotationOffsetBegin: begin,
+            annotationOffsetEnd: end,
             type: aType
         }
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
@@ -192,8 +208,8 @@ export class AnnotationExperienceAPI {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            id: aId,
-            type: aType
+            annotationAddress: aId,
+            annotationType: aType
         }
         this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
     }
@@ -204,7 +220,7 @@ export class AnnotationExperienceAPI {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            id: aId
+            annotationAddress: aId
         }
         this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
     }
@@ -217,7 +233,6 @@ export class AnnotationExperienceAPI {
 
         const that = this;
 
-
         //Parse data
         let keys = Object.keys(aMessage)
         let values = keys.map(k => aMessage[k])
@@ -225,8 +240,8 @@ export class AnnotationExperienceAPI {
         this.documentID = values[0];
         this.visualizer.setText(values[1]);
         this.visualizer.setAnnotations(values[2]);
-        this.visualizer.setOffsets(values[3]);
 
+        /* TODO due to new char offset
         //Multiple subscriptions due to viewport
         for (let i = 0; i < this.viewport.length; i++) {
             for (let j = this.viewport[i][0]; j < this.viewport[i][1]; j++) {
@@ -235,6 +250,8 @@ export class AnnotationExperienceAPI {
                 }, {id: "annotation_update_" + j});
             }
         }
+
+         */
     }
 
     receiveNewViewportMessageByServer(aMessage: string)
@@ -249,8 +266,8 @@ export class AnnotationExperienceAPI {
 
         this.visualizer.setText(values[0]);
         this.visualizer.setAnnotations(values[1]);
-        this.visualizer.setOffsets(values[2])
 
+        /* TODO due to char offset
         //Multiple subscriptions due to viewport
         for (let i = 0; i < this.viewport.length; i++) {
             for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
@@ -259,6 +276,8 @@ export class AnnotationExperienceAPI {
                 }, {id: "annotation_update_" + j});
             }
         }
+
+         */
     }
 
     receiveSelectedAnnotationMessageByServer(aMessage: string)

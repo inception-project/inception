@@ -8,6 +8,9 @@ public class ClientMessage
     private int[][] viewport;
     private int annotationAddress;
     private String annotationType;
+    private int annotationOffsetBegin;
+    private int annotationOffsetEnd;
+
 
     public ClientMessage()
     {
@@ -72,5 +75,25 @@ public class ClientMessage
     public void setAnnotationType(String annotationType)
     {
         this.annotationType = annotationType;
+    }
+
+    public int getAnnotationOffsetBegin()
+    {
+        return annotationOffsetBegin;
+    }
+
+    public void setAnnotationOffsetBegin(int aAnnotationOffsetBegin)
+    {
+        annotationOffsetBegin = aAnnotationOffsetBegin;
+    }
+
+    public int getAnnotationOffsetEnd()
+    {
+        return annotationOffsetEnd;
+    }
+
+    public void setAnnotationOffsetEnd(int aAannotationOffsetEnd)
+    {
+        annotationOffsetEnd = aAannotationOffsetEnd;
     }
 }

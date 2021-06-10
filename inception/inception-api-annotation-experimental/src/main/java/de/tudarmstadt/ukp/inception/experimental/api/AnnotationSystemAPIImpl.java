@@ -18,11 +18,11 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static java.lang.Math.toIntExact;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -79,22 +79,37 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleDocument(ClientMessage aClientMessage) throws IOException
+    public void handleDocument(ClientMessage aClientMessage)
     {
-        // TODO receive random new document
-        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
-                41714);
+        try {
+            CAS cas;
 
-        DocumentMessage message = new DocumentMessage();
-        message.setId(41714);
+            DocumentMessage message = new DocumentMessage();
 
-        message.setViewportText(getViewportText(aClientMessage, cas));
+            if (aClientMessage.getDocument() == 0L) {
+                // TODO receive random new document
+                cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
+                    41714);
+                message.setId(41714);
+            }
+            else {
+                cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
+                    aClientMessage.getDocument());
 
-        message.setOffsets(getOffsets(aClientMessage, cas));
+                message.setId(toIntExact(documentService
+                    .getSourceDocument(aClientMessage.getProject(), aClientMessage.getDocument())
+                    .getId()));
+            }
 
-        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject(),  message.getViewportText()));
+            message.setViewportText(getViewportText(aClientMessage, cas));
 
-        annotationProcessAPI.handleSendDocumentRequest(message, aClientMessage.getUsername());
+            message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
+
+            annotationProcessAPI.handleSendDocumentRequest(message, aClientMessage.getUsername());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -107,9 +122,7 @@ public class AnnotationSystemAPIImpl
 
         message.setViewportText(getViewportText(aClientMessage, cas));
 
-        message.setOffsets(getOffsets(aClientMessage, cas));
-
-        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject(), message.getViewportText()));
+        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
 
         annotationProcessAPI.handleSendViewportRequest(message, aClientMessage.getUsername());
 
@@ -120,10 +133,13 @@ public class AnnotationSystemAPIImpl
     {
         CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
                 aClientMessage.getDocument());
-
         AnnotationFS annotation = selectAnnotationByAddr(cas,
                 aClientMessage.getAnnotationAddress());
         AnnotationMessage message = new AnnotationMessage();
+        message.setId(String.valueOf(annotation._id()));
+        message.setBegin(annotation.getBegin());
+        message.setEnd(annotation.getEnd());
+
         message.setType(annotation.getType().getShortName());
         message.setText(annotation.getCoveredText());
         annotationProcessAPI.handleSendSelectAnnotation(message, aClientMessage.getUsername());
@@ -136,8 +152,9 @@ public class AnnotationSystemAPIImpl
                 aClientMessage.getDocument());
 
         // TODO createAnnotation
-        AnnotationMessage message = new AnnotationMessage();
+        // cas.createAnnotation(aClientMessage.getAnnotationType(),)
         // TODO retrieve desired content and fill AnnotationMessage
+        AnnotationMessage message = new AnnotationMessage();
         annotationProcessAPI.handleSendUpdateAnnotation(message,
                 String.valueOf(aClientMessage.getProject()),
                 String.valueOf(aClientMessage.getDocument()), "1");
@@ -150,6 +167,7 @@ public class AnnotationSystemAPIImpl
                 aClientMessage.getDocument());
 
         // TODO deleteAnnotation
+        // cas.remo
         AnnotationMessage message = new AnnotationMessage();
         // TODO retrieve desired content and fill AnnotationMessage
         message.setDelete(true);
@@ -172,56 +190,31 @@ public class AnnotationSystemAPIImpl
         }
         catch (Exception e) {
             e.printStackTrace();
+            CasStorageSession.get().close();
             return null;
         }
     }
 
     @Override
-    public String[] getViewportText(ClientMessage aClientMessage, CAS aCas)
+    public Character[] getViewportText(ClientMessage aClientMessage, CAS aCas)
     {
-        String[] tokens = aCas.getDocumentText()
-            .replace("\n", "").split(" ");
+        char[] characterText = aCas.getDocumentText().replace("\n", "").toCharArray();
 
-        ArrayList<String> visibleSentences = new ArrayList<>();
+        ArrayList<Character> visibleSentences = new ArrayList<>();
 
         for (int i = 0; i < aClientMessage.getViewport().length; i++) {
-            visibleSentences.addAll(Arrays.asList(tokens).subList(
-                    aClientMessage.getViewport()[i][0], aClientMessage.getViewport()[i][1]));
-            visibleSentences.add("||");
+            for (int j = aClientMessage.getViewport()[i][0]; j < aClientMessage
+                    .getViewport()[i][1]; j++) {
+                visibleSentences.add(characterText[j]);
+            }
+            visibleSentences.add('|');
         }
 
-        return visibleSentences.toArray(new String[0]);
+        return visibleSentences.toArray(new Character[0]);
     }
 
     @Override
-    public int[][] getOffsets(ClientMessage aClientMessage, CAS aCas)
-    {
-        int[][] offset = new int[aClientMessage.getViewport().length][2];
-
-        String[] tokens = aCas.getDocumentText()
-            .replace("\n", "").split(" ");
-
-
-        for (int i = 0; i < aClientMessage.getViewport().length; i++) {
-            int begin = aClientMessage.getViewport()[i][0];
-            int end = aClientMessage.getViewport()[i][1];
-            int beginOffset = 0;
-
-            for (int j = 0; j < begin; j++) {
-                beginOffset += tokens[j].length();
-            }
-            offset[i][0] = beginOffset;
-            int endOffset = beginOffset;
-            for (int j = begin; j < end; j++) {
-                endOffset += tokens[j].length();
-            }
-            offset[i][1] = endOffset;
-        }
-        return offset;
-    }
-
-    @Override
-    public List<Annotation> getAnnotations(CAS aCas, long aProject, String[] visibleSentences)
+    public List<Annotation> getAnnotations(CAS aCas, long aProject)
     {
         List<AnnotationListItem> items = new ArrayList<>();
         List<AnnotationLayer> metadataLayers = annotationService
