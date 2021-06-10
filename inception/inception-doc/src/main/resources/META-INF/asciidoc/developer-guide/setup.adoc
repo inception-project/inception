@@ -236,6 +236,8 @@ repository root and run
 
 Alternatively, you can run the `clean` and `install` Maven goals from IntelliJ manually.
 
+If you get an error that the command line is too long, please go to `Run -> Edit Configurations -> Modify Options -> Shorten Command Line` in IntelliJ IDEA and select the option `@argfile (Java 9+) - java @argfile className [args]`.
+
 === Checkstyle and Formatting
 
 We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
