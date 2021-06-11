@@ -69,8 +69,11 @@ public class AnnotationStateList
                         .map(AnnotationDocumentState::symbol) //
                         .orElse(NEW.symbol());
                 Label stateLabel = new Label("stateSymbol");
-                Duration idleTime = between(row.getTimestamp().toInstant(), now());
-                if (!aAbandonationTimeout.isZero() && !aAbandonationTimeout.isNegative()
+                Duration idleTime = row.getTimestamp() != null
+                        ? between(row.getTimestamp().toInstant(), now())
+                        : null;
+                if (idleTime != null && !aAbandonationTimeout.isZero()
+                        && !aAbandonationTimeout.isNegative()
                         && idleTime.compareTo(aAbandonationTimeout) > 0) {
                     labelModel = labelModel
                             .map(_label -> "<i class=\"fas fa-user-clock\"></i> " + _label);

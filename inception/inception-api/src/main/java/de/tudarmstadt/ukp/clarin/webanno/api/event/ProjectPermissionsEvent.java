@@ -15,38 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
-import java.io.Serializable;
+import org.springframework.context.ApplicationEvent;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ExternalRecommenderTraits
-    implements Serializable
+public abstract class ProjectPermissionsEvent
+    extends ApplicationEvent
 {
-    private static final long serialVersionUID = -3109239605741337123L;
+    private static final long serialVersionUID = 7855947621810920967L;
 
-    private String remoteUrl;
-    private boolean trainable;
+    private final Project project;
 
-    public String getRemoteUrl()
+    public ProjectPermissionsEvent(Object aSource, Project aProject)
     {
-        return remoteUrl;
+        super(aSource);
+        project = aProject;
     }
 
-    public void setRemoteUrl(String aRemoteUrl)
+    public Project getProject()
     {
-        remoteUrl = aRemoteUrl;
-    }
-
-    public boolean isTrainable()
-    {
-        return trainable;
-    }
-
-    public void setTrainable(boolean aTrainable)
-    {
-        trainable = aTrainable;
+        return project;
     }
 }

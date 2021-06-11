@@ -25,6 +25,8 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.Lapp
 
 import org.apache.wicket.model.IModel;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -42,6 +44,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRe
  * {@link LappsGridRecommenderAutoConfiguration#lappsGridRecommenderFactory()}.
  * </p>
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LappsGridRecommenderFactory
     extends RecommendationEngineFactoryImplBase<LappsGridRecommenderTraits>
 {
