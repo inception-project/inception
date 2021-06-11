@@ -119,49 +119,55 @@ export class AnnotationExperienceAPI {
         }
     }
 
-    editAnnotation()
-    {
-
+    editAnnotation(aId: string, aAnnotationType: string) {
+        let json = {
+            username: this.username,
+            project: this.projectID,
+            document: this.documentID,
+            annotationAddress: aId,
+            annotationType: aAnnotationType
+        };
+        this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
 
 
-    sendDocumentMessageToServer()
+    sendDocumentMessageToServer(aOffset: number[][], aOffsetType: string)
     {
         let json = {
             username: this.username,
             project: this.projectID,
-            viewport: [[0,20],[21,33],[37,50]]
-
+            viewport: aOffset,
+            offsetType: aOffsetType
         };
-
 
         this.visualizer.viewport = json.viewport;
 
         this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
     }
 
-    sendDocumentMessageToServer(aUsername: string, aDocument: string)
+    sendDocumentMessageToServer(aUsername: string, aDocument: string, aOffset: number[][], aOffsetType: string)
     {
         let json = {
             username: aUsername,
             project: this.projectID,
             document: aDocument,
-            viewport: [[0,20],[21,33],[37,50]]
+            viewport: aOffset,
+            offsetType: aOffsetType
         };
-
 
         this.visualizer.viewport = json.viewport;
 
         this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
     }
 
-    sendViewportMessageToServer(aViewport: number[][])
+    sendViewportMessageToServer(aViewport: number[][], aOffsetType: string)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
-            viewport: aViewport
+            viewport: aViewport,
+            offsetType: aOffsetType
         };
 
         /* TODO adapt to char array
@@ -189,7 +195,7 @@ export class AnnotationExperienceAPI {
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendCreateAnnotationMessageToServer(begin: string, end: string, aType: string)
+    sendCreateAnnotationMessageToServer(begin: string, end: string, aAnnotationType: string)
     {
         let json = {
             username: this.username,
@@ -197,19 +203,19 @@ export class AnnotationExperienceAPI {
             document: this.documentID,
             annotationOffsetBegin: begin,
             annotationOffsetEnd: end,
-            type: aType
+            annotationType: aAnnotationType
         }
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
     }
 
-    sendUpdateAnnotationMessageToServer(aId: string, aType: string,)
+    sendUpdateAnnotationMessageToServer(aId: string, aAnnotationType: string,)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
             annotationAddress: aId,
-            annotationType: aType
+            annotationType: aAnnotationType
         }
         this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
     }

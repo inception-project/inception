@@ -40,12 +40,12 @@ export class AnnotationExperienceAPIActionHandler {
                     break;
                 case "new_document":
                     elem.addEventListener("click", () => {
-                        that.annotationExperienceAPI.sendDocumentMessageToServer();
+                        //that.annotationExperienceAPI.sendDocumentMessageToServer();
                     });
                     break;
                 case "viewport":
                     elem.addEventListener("click", () => {
-                        that.annotationExperienceAPI.sendViewportMessageToServer(aViewport);
+                        //that.annotationExperienceAPI.sendViewportMessageToServer(aViewport);
                     });
                     break;
                 default:
@@ -90,14 +90,14 @@ export class AnnotationExperienceAPIActionHandler {
                 that.annotationExperienceAPI.sendSelectAnnotationMessageToServer(elem.id);
             }
             if (elem.className === 'far fa-caret-square-right') {
-                that.annotationExperienceAPI.sendDocumentMessageToServer();
+                //that.annotationExperienceAPI.sendDocumentMessageToServer();
             }
         }
 
         ondblclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             console.log(elem)
-            if (elem.className === 'char') {
+            if (elem.tagName === 'text') {
                 that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(
                     elem.attributes[2].value, elem.attributes[2].value,
                     document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"));

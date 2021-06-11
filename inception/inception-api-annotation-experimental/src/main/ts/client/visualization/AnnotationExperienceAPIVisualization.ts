@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import {Annotation} from "../util/Annotation";
-
+import {AnnotationType} from "../util/AnnotationTypes";
 
 export class AnnotationExperienceAPIVisualization {
     //Text
@@ -32,9 +32,9 @@ export class AnnotationExperienceAPIVisualization {
     viewport: number[][];
 
     //Additional drawing
-    showHighlighting: boolean = false;
-    showSentenceNumbers: boolean = false;
-    showBackground: boolean = false;
+    showHighlighting: boolean = true;
+    showSentenceNumbers: boolean = true;
+    showBackground: boolean = true;
 
     showText(aElementId: string) {
         let textArea = document.getElementById(aElementId.toString())
@@ -46,12 +46,10 @@ export class AnnotationExperienceAPIVisualization {
         this.sentenceCount = sentences.length - 1;
 
         //SVG element
-        let svg = document.createElement("svg");
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("version", "1.2");
         svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.sentenceCount * 20);
-        svg.style.fontSize="100%";
-        svg.style.width="100%";
-        svg.style.height="100%";
+        svg.setAttribute("style","font-size: 100%; width: " + textArea.offsetWidth+ "px; height: " + this.sentenceCount * 20 + "px");
 
         if (this.showBackground) {
             svg.appendChild(this.drawBackground());
@@ -63,14 +61,14 @@ export class AnnotationExperienceAPIVisualization {
 
         let k = 0;
 
-        let textElement = document.createElement("g");
-        textElement.className = "text";
+        let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        textElement.setAttribute("class", "sentences");
+        textElement.style.display = "block";
 
 
         for (let i = 0; i < sentences.length; i++) {
-            let sentence = document.createElement("g");
-            sentence.className = "text-row";
-            sentence.style.display = "block";
+            let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            sentence.setAttribute("class", "text-row");
             sentence.setAttribute("sentence-id", (i + 1).toString());
 
             let xPrev: number;
@@ -86,9 +84,8 @@ export class AnnotationExperienceAPIVisualization {
                     break;
                 }
 
-                let char = document.createElement("text");
-                char.innerText = sentences[i][j];
-                char.className = "char";
+                let char = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                char.textContent = sentences[i][j];
                 char.setAttribute("x", xPrev.toString());
                 char.setAttribute("y", ((i + 1) * 20 - 5).toString());
                 char.setAttribute("char_pos", (this.viewport[i][0] + j).toString());
@@ -101,22 +98,23 @@ export class AnnotationExperienceAPIVisualization {
         svg.appendChild(textElement);
 
 
+        textArea.appendChild(svg);
+
+
         //Highlighting
         if (this.showHighlighting) {
             svg.appendChild(this.drawAnnotation(this.annotations, aElementId));
         }
-
-        textArea.appendChild(svg);
     }
 
     drawBackground() {
         //Background
-        let background = document.createElement("g");
-        background.className = "background";
+        let background = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        background.setAttribute("class","background")
         background.innerHTML = "";
 
         for (let i = 0; i < this.sentenceCount; i++) {
-            let rect = document.createElement("rect");
+            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             rect.setAttribute("x", "0");
             rect.setAttribute("y", (i * 20).toString());
             rect.setAttribute("width", "100%");
@@ -133,15 +131,14 @@ export class AnnotationExperienceAPIVisualization {
 
     drawSentenceNumbers() {
         //Sentencenumbers
-        let sentenceNumbers = document.createElement("g");
-        sentenceNumbers.className = "sentence-numbers";
+        let sentenceNumbers = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        sentenceNumbers.setAttribute("class","sentence_numbers");
         sentenceNumbers.style.display = "block";
         sentenceNumbers.innerHTML = "";
 
         for (let i = 0; i < this.sentenceCount; i++) {
-            let number = document.createElement("text")
-            number.className = "sn";
-            number.innerText = (this.sentenceCount + i + 1).toString() + "."
+            let number = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            number.textContent = (this.sentenceCount + i + 1).toString() + "."
             number.setAttribute("x", "10");
             number.setAttribute("y", ((i + 1) * 20 - 5).toString());
             sentenceNumbers.appendChild(number);
@@ -151,8 +148,9 @@ export class AnnotationExperienceAPIVisualization {
     }
 
     drawAnnotation(aAnnotations: Annotation[], aEditor: string) {
-        let highlighting = document.createElement("g");
-        highlighting.className = "highlighting";
+        let highlighting = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        highlighting.setAttribute("class","annotations")
+        highlighting.style.display = "block";
         highlighting.innerHTML = "";
 
         if (aAnnotations.length > 0) {
@@ -164,33 +162,55 @@ export class AnnotationExperienceAPIVisualization {
                 offset = 4;
             }
 
-            let sentences = this.text.join(" ").split("||");
+            let sentences = this.text.join(" ").split("|");
             this.sentenceCount = sentences.length - 1;
             let i = 0;
 
-            console.log(document.getElementsByClassName("text-row"))
+            let childElement = 0;
 
-            for (let sent of document.getElementsByClassName("text-row")) {
-                console.log("SENT: " + i)
-                let text_row = document.createElement("g");
-                text_row.className = "annotation";
-                text_row.style.display = "block";
+            if (this.showBackground) {
+                childElement++;
+            }
+            if (this.showSentenceNumbers) {
+                childElement++;
+            }
+
+            for (let child of document.getElementById(aEditor).children[0].children[childElement].children) {
+                let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                text_row.setAttribute("class", "span")
+
 
                 for (let annotation of this.annotations) {
+                    console.log(annotation.word)
 
                     let begin: string;
                     let end: string;
+                    let check : boolean = false;
 
-                    for (let char of sent.children) {
+
+                    for (let char of child.children) {
+
+                        let word = "";
+
+                        if (check) {
+                            word = word + char.textContent;
+                            console.log(word)
+                        }
+
                         if (annotation.begin.toString() === char.getAttribute("char_pos")) {
                             begin = char.getAttribute("x");
+                            word += char.textContent;
+                            check = true;
                             continue;
                         }
 
-                        if (annotation.end.toString() === char.getAttribute("char_pos")) {
+
+
+
+                        if (annotation.end.toString() === char.getAttribute("char_pos") && begin != null && word === annotation.word) {
                             end = char.getAttribute("x")
-                            let rect = document.createElement("rect");
-                            rect.setAttribute("x", (document.getElementById(aEditor).offsetWidth + Number(begin) + offset).toString());
+                            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                            rect.setAttribute("x", Number(begin).toString());
                             rect.setAttribute("y", (i * 20).toString());
                             rect.setAttribute("width", (Number(end) - Number(begin)).toString());
                             rect.setAttribute("height", "20");
@@ -214,7 +234,18 @@ export class AnnotationExperienceAPIVisualization {
     }
 
     getColorForAnnotation(aType: string) {
-        return "#87CEEB";
+        switch (aType) {
+            case AnnotationType.POS:
+                return "#0088FF";
+            case AnnotationType.CHUNK:
+                return "#4466AA";
+            case AnnotationType.LEMMA:
+                return "#04CCCC";
+            case AnnotationType.NER:
+                return "#228822";
+            default:
+                return "#AAAAAA";
+        }
     }
 
     setLineColors(aLineColorFirst: string, aLineColorSecond: string, aEditor: string) {

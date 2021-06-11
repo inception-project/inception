@@ -29,6 +29,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.MDC;
+import org.springframework.asm.Type;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -55,8 +56,11 @@ import de.tudarmstadt.ukp.inception.revieweditor.AnnotationListItem;
 public class AnnotationSystemAPIImpl
     implements AnnotationSystemAPI
 {
-    private final AnnotationSchemaService annotationService;
+    private final String OFFSET_TYPE_CHAR = "char";
+    private final String OFFSET_TYPE_WORD = "word";
+    private final String OFFSET_TYPE_SENTENCE = "sentence";
 
+    private final AnnotationSchemaService annotationService;
     private final ProjectService projectService;
     private final DocumentService documentService;
     private final UserDao userDao;
@@ -89,16 +93,16 @@ public class AnnotationSystemAPIImpl
             if (aClientMessage.getDocument() == 0L) {
                 // TODO receive random new document
                 cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
-                    41714);
+                        41714);
                 message.setId(41714);
             }
             else {
                 cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
-                    aClientMessage.getDocument());
+                        aClientMessage.getDocument());
 
-                message.setId(toIntExact(documentService
-                    .getSourceDocument(aClientMessage.getProject(), aClientMessage.getDocument())
-                    .getId()));
+                message.setId(
+                        toIntExact(documentService.getSourceDocument(aClientMessage.getProject(),
+                                aClientMessage.getDocument()).getId()));
             }
 
             message.setViewportText(getViewportText(aClientMessage, cas));
@@ -106,7 +110,8 @@ public class AnnotationSystemAPIImpl
             message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
 
             annotationProcessAPI.handleSendDocumentRequest(message, aClientMessage.getUsername());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -152,7 +157,9 @@ public class AnnotationSystemAPIImpl
                 aClientMessage.getDocument());
 
         // TODO createAnnotation
-        // cas.createAnnotation(aClientMessage.getAnnotationType(),)
+        System.out.println(Type.getType(aClientMessage.getAnnotationType()));
+
+        //cas.createAnnotation(aClientMessage.getAnnotationType()), aClientMessage.getAnnotationOffsetBegin(), aClientMessage.getAnnotationOffsetEnd());
         // TODO retrieve desired content and fill AnnotationMessage
         AnnotationMessage message = new AnnotationMessage();
         annotationProcessAPI.handleSendUpdateAnnotation(message,
@@ -198,19 +205,65 @@ public class AnnotationSystemAPIImpl
     @Override
     public Character[] getViewportText(ClientMessage aClientMessage, CAS aCas)
     {
-        char[] characterText = aCas.getDocumentText().replace("\n", "").toCharArray();
 
         ArrayList<Character> visibleSentences = new ArrayList<>();
 
-        for (int i = 0; i < aClientMessage.getViewport().length; i++) {
-            for (int j = aClientMessage.getViewport()[i][0]; j < aClientMessage
-                    .getViewport()[i][1]; j++) {
-                visibleSentences.add(characterText[j]);
-            }
-            visibleSentences.add('|');
-        }
+        String text = aCas.getDocumentText().replace("\n", "");
 
-        return visibleSentences.toArray(new Character[0]);
+        switch (aClientMessage.getOffsetType()) {
+        case OFFSET_TYPE_CHAR:
+
+            char[] textInChars = aCas.getDocumentText().replace("\n", "").toCharArray();
+
+            for (int i = 0; i < aClientMessage.getViewport().length; i++) {
+                for (int j = aClientMessage.getViewport()[i][0]; j < aClientMessage
+                        .getViewport()[i][1]; j++) {
+                    visibleSentences.add(textInChars[j]);
+                }
+                visibleSentences.add('|');
+            }
+            return visibleSentences.toArray(new Character[0]);
+
+        case OFFSET_TYPE_WORD:
+            String seperatorWord = " ";
+            String[] textInWords = text.split(seperatorWord);
+
+            for (int i = 1; i < textInWords.length; i++) {
+                textInWords[i] = seperatorWord + textInWords[i];
+            }
+
+            for (int i = 0; i < aClientMessage.getViewport().length; i++) {
+                for (int j = aClientMessage.getViewport()[i][0]; j < aClientMessage
+                        .getViewport()[i][1]; j++) {
+                    for (Character c : textInWords[j].toCharArray()) {
+                        visibleSentences.add(c);
+                    }
+                }
+                visibleSentences.add('|');
+            }
+            return visibleSentences.toArray(new Character[0]);
+
+        case OFFSET_TYPE_SENTENCE:
+            String seperatorSentence = "\\.";
+            String[] textInSentences = text.split(seperatorSentence);
+
+            for (int i = 1; i < textInSentences.length; i++) {
+                textInSentences[i] = textInSentences[i] + ".";
+            }
+
+            for (int i = 0; i < aClientMessage.getViewport().length; i++) {
+
+                for (Character c : textInSentences[aClientMessage.getViewport()[i][0]].toCharArray()) {
+                    visibleSentences.add(c);
+                }
+
+                visibleSentences.add('|');
+            }
+            return visibleSentences.toArray(new Character[0]);
+        default:
+            System.err.println("Offset type not found, only: ");
+        }
+        return null;
     }
 
     @Override

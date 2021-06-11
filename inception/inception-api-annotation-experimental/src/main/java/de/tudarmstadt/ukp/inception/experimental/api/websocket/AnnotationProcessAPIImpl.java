@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
@@ -103,7 +104,7 @@ public class AnnotationProcessAPIImpl
     public void handleSendDocumentRequest(DocumentMessage aDocumentMessage, String aUser)
         throws IOException
     {
-        System.out.println("SENDING NOW DOCUMENT UPDATE TO CLIENT " + aUser);
+        System.out.println("SENDING NOW DOCUMENT UPDATE TO CLIENT " + Arrays.toString(aDocumentMessage.getViewportText()));
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_DOCUMENT + aUser,
                 JSONUtil.toJsonString(aDocumentMessage));
     }
@@ -121,7 +122,8 @@ public class AnnotationProcessAPIImpl
     public void handleSendViewportRequest(ViewportMessage aViewportMessage, String aUser)
         throws IOException
     {
-        System.out.println("SENDING NOW VIEWPORT TO CLIENT: " + aUser);
+        System.out.println("SENDING NOW VIEWPORT TO CLIENT: " + Arrays.toString(aViewportMessage.getViewportText()));
+
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + aUser,
                 JSONUtil.toJsonString(aViewportMessage));
     }

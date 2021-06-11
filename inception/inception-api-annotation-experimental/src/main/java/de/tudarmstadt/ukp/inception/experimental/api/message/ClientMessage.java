@@ -10,6 +10,7 @@ public class ClientMessage
     private String annotationType;
     private int annotationOffsetBegin;
     private int annotationOffsetEnd;
+    private String offsetType;
 
 
     public ClientMessage()
@@ -95,5 +96,15 @@ public class ClientMessage
     public void setAnnotationOffsetEnd(int aAannotationOffsetEnd)
     {
         annotationOffsetEnd = aAannotationOffsetEnd;
+    }
+
+    public String getOffsetType()
+    {
+        return offsetType;
+    }
+
+    public void setOffsetType(String aOffsetType)
+    {
+        offsetType = aOffsetType;
     }
 }
