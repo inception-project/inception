@@ -690,15 +690,15 @@ public class AnnotationPage
         Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
                 aUser);
 
+        User user = userRepository.getCurrentUser();
         for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
             DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
             if (e.getValue() != null) {
-                AnnotationDocument adoc = e.getValue();
-                AnnotationDocumentState docState = adoc.getState();
+                AnnotationDocumentState docState = e.getValue().getState();
                 dsd.setColor(docState.getColor());
 
-                boolean userIsSelected = aUser.equals(userRepository.getCurrentUser());
                 // if current user is opening her own docs, don't let her see locked ones
+                boolean userIsSelected = aUser.equals(user);
                 if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
                     continue;
                 }
