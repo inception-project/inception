@@ -197,6 +197,11 @@ public class SlotFeatureSupport
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+
+        if (linkFeature == null) {
+            wrapFeatureValue(aFeature, aFS.getCAS(), null);
+        }
+
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
     }
 
