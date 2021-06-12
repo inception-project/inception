@@ -62,18 +62,11 @@ public class CurationUnitOverviewLink
         final CurationUnit unitState = getModelObject();
         final AnnotatorState state = annotatorState.getObject();
 
+        aTag.append(ATTR_CLASS, unitState.getSentenceState().getCssClass(), " ");
+
         // Is in focus?
         if (unitState.getUnitIndex() == state.getFocusUnitIndex()) {
             aTag.append(ATTR_CLASS, CSS_CLASS_CURRENT, " ");
-        }
-
-        // Agree or disagree?
-        String cC = unitState.getSentenceState().getColor();
-        if (cC != null) {
-            aTag.append(ATTR_CLASS, CSS_CLASS_DISAGREE, " ");
-        }
-        else {
-            aTag.append(ATTR_CLASS, CSS_CLASS_AGREE, " ");
         }
 
         // In range or not?
