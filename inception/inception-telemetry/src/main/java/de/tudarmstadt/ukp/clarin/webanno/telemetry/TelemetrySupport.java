@@ -102,4 +102,8 @@ public interface TelemetrySupport<T>
      * are in sync.
      */
     List<TelemetryDetail> getDetails();
+
+    void acceptAll(T aTraits);
+
+    void rejectAll(T aTraits);
 }

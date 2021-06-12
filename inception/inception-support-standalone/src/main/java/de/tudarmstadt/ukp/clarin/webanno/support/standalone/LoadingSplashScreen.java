@@ -17,48 +17,217 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
+import java.awt.Point;
+import java.awt.SystemTray;
 import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.lang.invoke.MethodHandles;
+import java.net.BindException;
 import java.net.URL;
 import java.util.Optional;
 
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JWindow;
+import javax.swing.JOptionPane;
+
+import org.apache.commons.text.WordUtils;
+import org.slf4j.Logger;
+import org.springframework.boot.context.event.ApplicationFailedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEvent;
 
 public class LoadingSplashScreen
 {
-    public static Optional<JWindow> setupScreen(URL aImage)
+    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
+
+    public static Optional<SplashWindow> setupScreen(URL aSplashScreenImageUrl, URL aIconUrl,
+            String aApplicationName)
     {
         if (GraphicsEnvironment.isHeadless()) {
             return Optional.empty();
         }
 
-        SplashWindow window = new SplashWindow(aImage);
+        SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl, aApplicationName);
         window.setVisible(true);
 
         return Optional.of(window);
     }
 
-    private static class SplashWindow
-        extends JWindow
+    public static Optional<SplashWindow> setupScreen(String aApplicationName)
+    {
+        URL splasHScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
+        URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
+        return setupScreen(splasHScreenImageUrl, iconUrl, aApplicationName);
+    }
+
+    public static class SplashWindow
+        extends JFrame
     {
         private static final long serialVersionUID = 2429606748142131008L;
 
-        public SplashWindow(URL aUrl)
+        private JLabel info;
+        private boolean disposed = false;
+        private String applicationName;
+        private TrayIcon trayIcon;
+
+        public SplashWindow(URL aSplashScreenImageUrl, URL aIconUrl, String aApplicationName)
         {
-            JLabel l = new JLabel(new ImageIcon(aUrl));
-            JLabel info = new JLabel("Application is loading...");
+            applicationName = aApplicationName;
+
+            JLabel l = new JLabel(new ImageIcon(aSplashScreenImageUrl));
             getContentPane().add(l, BorderLayout.CENTER);
+
+            info = new JLabel(applicationName + " is loading...");
             getContentPane().add(info, BorderLayout.SOUTH);
+
+            ImageIcon img = new ImageIcon(aIconUrl);
+            setIconImage(img.getImage());
+
+            setUndecorated(true);
             pack();
+
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             Dimension labelSize = l.getPreferredSize();
             setLocation(screenSize.width / 2 - (labelSize.width / 2),
                     screenSize.height / 2 - (labelSize.height / 2));
+
+            addMouseMotionListener(new MouseMotionListener()
+            {
+                private int mx, my;
+
+                @Override
+                public void mouseMoved(MouseEvent aEvent)
+                {
+                    mx = aEvent.getXOnScreen();
+                    my = aEvent.getYOnScreen();
+                }
+
+                @Override
+                public void mouseDragged(MouseEvent aEvent)
+                {
+                    Point p = SplashWindow.this.getLocation();
+                    p.x += aEvent.getXOnScreen() - mx;
+                    p.y += aEvent.getYOnScreen() - my;
+                    mx = aEvent.getXOnScreen();
+                    my = aEvent.getYOnScreen();
+                    SplashWindow.this.setLocation(p);
+                }
+            });
+
             setVisible(true);
+
+            // Tray
+            if (SystemTray.isSupported()) {
+                try {
+                    trayIcon = StandaloneUserInterface.makeStartupSystemTrayMenu(aApplicationName);
+                }
+                catch (AWTException e) {
+                    LOG.error("Could not add startup menu to tray", e);
+                }
+            }
+        }
+
+        @Override
+        public void dispose()
+        {
+            if (trayIcon != null) {
+                SystemTray.getSystemTray().remove(trayIcon);
+            }
+
+            disposed = true;
+            super.dispose();
+        }
+
+        public boolean isDisposed()
+        {
+            return disposed;
+        }
+
+        public void setInfo(String aInfo)
+        {
+            if (info == null) {
+                return;
+            }
+
+            info.setText(aInfo);
+        }
+
+        public void handleEvent(ApplicationEvent aEvent)
+        {
+            if (aEvent instanceof ApplicationReadyEvent
+                    || aEvent instanceof ShutdownDialogAvailableEvent) {
+                dispose();
+                return;
+            }
+
+            if (!isDisposed()) {
+                setInfo(applicationName + " is loading... - " + aEvent.getClass().getSimpleName());
+            }
+
+            if (aEvent instanceof ApplicationFailedEvent) {
+                ApplicationFailedEvent failEvent = (ApplicationFailedEvent) aEvent;
+
+                JOptionPane pane = new JOptionPane(getErrorMessage(failEvent), ERROR_MESSAGE);
+                pane.addPropertyChangeListener(event -> {
+                    if (JOptionPane.VALUE_PROPERTY.equals(event.getPropertyName())) {
+                        System.exit(0);
+                    }
+                });
+
+                JDialog dialog = pane.createDialog(null, applicationName + " - Error");
+                dialog.setModal(false);
+                dialog.setVisible(true);
+                dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+                dialog.setAlwaysOnTop(true); // bring to front...
+                dialog.setAlwaysOnTop(false); // ... but do not annoy user
+                dialog.requestFocus();
+                dialog.addWindowListener(new WindowAdapter()
+                {
+                    @Override
+                    public void windowClosed(WindowEvent aE)
+                    {
+                        System.exit(0);
+                    }
+                });
+            }
+        }
+
+        public String getErrorMessage(ApplicationFailedEvent aEvent)
+        {
+            if (aEvent.getException() == null) {
+                return "Unknown error";
+            }
+
+            StringBuilder msg = new StringBuilder();
+
+            String rootCauseMsg = getRootCauseMessage(aEvent.getException());
+            Throwable rootCause = getRootCause(aEvent.getException());
+            if (rootCause instanceof BindException || rootCauseMsg.contains("already in use")) {
+                msg.append("It appears the network port " + applicationName
+                        + " is trying to use is already being used by another application.\nMaybe "
+                        + "you have already started " + applicationName + " before?\n");
+                msg.append("\n");
+            }
+
+            msg.append("Error type: " + getRootCause(aEvent.getException()).getClass() + "\n");
+            msg.append("Error message: " + WordUtils.wrap(rootCauseMsg, 80));
+
+            return msg.toString();
         }
     }
 }

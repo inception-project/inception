@@ -427,4 +427,75 @@
         onUpdate="CASCADE" referencedColumnNames="id"
         referencedTableName="annotation_feature" />
   </changeSet>
+
+  <!-- Remove deprecated fields from learning_record -->
+  <changeSet author="INCEpTION Team" id="20210101-1">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="learning_record" columnName="offsetTokenBegin"/>
+    </preConditions>
+    <dropColumn tableName="learning_record" columnName="offsetTokenBegin"/>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210101-2">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="learning_record" columnName="offsetTokenEnd"/>
+    </preConditions>
+    <dropColumn tableName="learning_record" columnName="offsetTokenEnd"/>
+  </changeSet>
+
+  <!-- Rename offset columns -->
+  <changeSet author="INCEpTION Team" id="20210101-3">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="learning_record" columnName="offsetCharacterBegin"/>
+    </preConditions>
+    <renameColumn tableName="learning_record" oldColumnName="offsetCharacterBegin" newColumnName="offsetBegin" columnDataType="INT"/>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210101-4">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="learning_record" columnName="offsetCharacterEnd"/>
+    </preConditions>
+    <renameColumn tableName="learning_record" oldColumnName="offsetCharacterEnd" newColumnName="offsetEnd" columnDataType="INT"/>
+  </changeSet>
+
+  <!-- Add more offset columns -->
+  <changeSet author="INCEpTION Team" id="20210101-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="learning_record" columnName="offsetBegin2"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="learning_record">
+      <column name="offsetBegin2" type="INT" defaultValue="-1">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210101-6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="learning_record" columnName="offsetEnd2"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="learning_record">
+      <column name="offsetEnd2" type="INT" defaultValue="-1">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <!-- Add suggestionType field -->
+  <changeSet author="INCEpTION Team" id="20210101-7">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="learning_record" columnName="suggestionType"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="learning_record">
+      <column name="suggestionType" type="VARCHAR(255)" defaultValue="SPAN">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

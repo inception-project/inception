@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -107,7 +107,7 @@ public class CasMergeTestBase
     protected static final SpanDiffAdapter MULTIVALSPAN_DIFF_ADAPTER = new SpanDiffAdapter(
             "webanno.custom.Multivalspan", "f1", "f2");
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         initMocks(this);

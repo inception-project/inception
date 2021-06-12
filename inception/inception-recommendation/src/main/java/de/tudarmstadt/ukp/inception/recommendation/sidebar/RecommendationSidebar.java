@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
@@ -114,11 +115,13 @@ public class RecommendationSidebar
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
         form.setOutputMarkupId(true);
 
+        form.add(new DocLink("maxSuggestionsHelpLink", "_recommendation_sidebar"));
+
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class) //
                 .setMinimum(1).setMaximum(10).setStep(1) //
                 .add(visibleWhen(() -> !form.getModelObject().isShowAllPredictions())));
 
-        form.add(new NumberTextField<Double>("confidenceThreshold", Double.class) //
+        form.add(new NumberTextField<Double>("scoreThreshold", Double.class) //
                 .setStep(0.1d) //
                 .add(visibleWhen(() -> !form.getModelObject().isShowAllPredictions())));
 
@@ -132,8 +135,8 @@ public class RecommendationSidebar
 
         add(form);
 
-        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
-                .add(visibleWhen(() -> !recommenders.isEmpty())));
+        // add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
+        // .add(visibleWhen(() -> !recommenders.isEmpty())));
 
         recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
@@ -192,6 +195,7 @@ public class RecommendationSidebar
                 state.getDocument());
         info("Annotation state cleared - re-training from scratch...");
         getAnnotationPage().actionRefreshDocument(aTarget);
+        aTarget.add(recommenderInfos);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
@@ -205,7 +209,7 @@ public class RecommendationSidebar
             }
             for (Recommender recommender : recommendationService.listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
-                        .getRecommenderFactory(recommender);
+                        .getRecommenderFactory(recommender).orElse(null);
 
                 // E.g. if the module providing a configured recommender has been disabled but the
                 // recommender is still configured.

@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -32,26 +31,37 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#layerSupportRegistry}.
+ * </p>
+ */
 public class LayerSupportRegistryImpl
     implements LayerSupportRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<LayerSupport> layerSupportsProxy;
+    private final List<LayerSupport<?, ?>> layerSupportsProxy;
 
     private List<LayerSupport> layerSupports;
 
-    private final Map<Long, LayerSupport<?, ?>> supportCache = new HashMap<>();
+    private final LoadingCache<AnnotationLayer, LayerSupport<?, ?>> supportCache;
 
     public LayerSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<LayerSupport> aLayerSupports)
+            @Lazy @Autowired(required = false) List<LayerSupport<?, ?>> aLayerSupports)
     {
         layerSupportsProxy = aLayerSupports;
+
+        supportCache = Caffeine.newBuilder() //
+                .expireAfterAccess(Duration.ofHours(1)) //
+                .build(this::findLayerSupport);
     }
 
     @EventListener
@@ -84,31 +94,30 @@ public class LayerSupportRegistryImpl
         return layerSupports;
     }
 
+    private LayerSupport findLayerSupport(AnnotationLayer aLayer)
+    {
+        for (LayerSupport<?, ?> s : getLayerSupports()) {
+            if (s.accepts(aLayer)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
     @Override
     public LayerSupport getLayerSupport(AnnotationLayer aLayer)
     {
         // This method is called often during rendering, so we try to make it fast by caching
-        // the supports by feature. Since the set of annotation features is relatively stable,
-        // this should not be a memory leak - even if we don't remove entries if annotation
-        // features would be deleted from the DB.
+        // the supports by layer. Since the set of layers is relatively stable, this should not be a
+        // memory leak - even if we don't remove entries if layers would be deleted from the DB.
         LayerSupport support = null;
 
+        // Look for the layer in cache, but only when it has an ID, i.e. it has actually been saved.
         if (aLayer.getId() != null) {
-            support = supportCache.get(aLayer.getId());
+            support = supportCache.get(aLayer);
         }
-
-        if (support == null) {
-            for (LayerSupport<?, ?> s : getLayerSupports()) {
-                if (s.accepts(aLayer)) {
-                    support = s;
-                    if (aLayer.getId() != null) {
-                        // Store feature in the cache, but only when it has an ID, i.e. it has
-                        // actually been saved.
-                        supportCache.put(aLayer.getId(), s);
-                    }
-                    break;
-                }
-            }
+        else {
+            support = findLayerSupport(aLayer);
         }
 
         if (support == null) {

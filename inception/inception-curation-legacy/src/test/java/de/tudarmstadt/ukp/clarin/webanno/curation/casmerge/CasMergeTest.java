@@ -44,7 +44,7 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,9 +63,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.Assertions;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -214,7 +212,8 @@ public class CasMergeTest
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
-        FeatureSupport slotSupport = featureSupportRegistry.getFeatureSupport(slotFeature);
+        FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
+                .orElseThrow();
 
         assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
 
@@ -247,7 +246,8 @@ public class CasMergeTest
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
-        FeatureSupport slotSupport = featureSupportRegistry.getFeatureSupport(slotFeature);
+        FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
+                .orElseThrow();
 
         assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
 
@@ -675,7 +675,4 @@ public class CasMergeTest
         aCas.addFsToIndexes(clickedFs);
         return clickedFs;
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }

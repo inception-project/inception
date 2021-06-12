@@ -148,8 +148,8 @@ public class DocumentMetadataAnnotationDetailPanel
                 final FeatureEditor editor;
 
                 // Look up a suitable editor and instantiate it
-                FeatureSupport featureSupport = featureSupportRegistry
-                        .getFeatureSupport(featureState.feature);
+                FeatureSupport<?> featureSupport = featureSupportRegistry
+                        .findExtension(featureState.feature).orElseThrow();
                 editor = featureSupport.createEditor(CID_EDITOR,
                         DocumentMetadataAnnotationDetailPanel.this, actionHandler,
                         annotationPage.getModel(), item.getModel());

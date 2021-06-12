@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +46,7 @@ public class AnnotationQueueItem
 
     private final SourceDocument sourceDocument;
     private final List<AnnotationDocument> annotationDocuments;
+    private final Duration abandonationTimeout;
     private final Set<String> annotators;
     private SourceDocumentState state;
     private int inProgressCount;
@@ -51,11 +54,13 @@ public class AnnotationQueueItem
     private Date lastUpdated;
 
     public AnnotationQueueItem(SourceDocument aSourceDocument,
-            List<AnnotationDocument> aAnnotationDocuments, int aRequiredAnnotations)
+            List<AnnotationDocument> aAnnotationDocuments, int aRequiredAnnotations,
+            Duration aAbandonationTimeout)
     {
         super();
         sourceDocument = aSourceDocument;
         annotationDocuments = aAnnotationDocuments;
+        abandonationTimeout = aAbandonationTimeout;
 
         annotators = new TreeSet<>();
         for (AnnotationDocument ad : annotationDocuments) {
@@ -76,9 +81,16 @@ public class AnnotationQueueItem
         }
 
         state = sourceDocument.getState();
-        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)
-                && finishedCount >= aRequiredAnnotations) {
-            state = ANNOTATION_FINISHED;
+        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
+            if (finishedCount >= aRequiredAnnotations) {
+                state = ANNOTATION_FINISHED;
+            }
+            else if (finishedCount + inProgressCount == 0) {
+                state = SourceDocumentState.NEW;
+            }
+            else {
+                state = ANNOTATION_IN_PROGRESS;
+            }
         }
     }
 
@@ -175,5 +187,10 @@ public class AnnotationQueueItem
     public Set<String> getAnnotators()
     {
         return annotators;
+    }
+
+    public Duration getAbandonationTimeout()
+    {
+        return abandonationTimeout;
     }
 }

@@ -22,13 +22,21 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRAD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -42,41 +50,43 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -86,24 +96,26 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
-@Component(DocumentService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentServiceAutoConfiguration#documentService}.
+ * </p>
+ */
 public class DocumentServiceImpl
     implements DocumentService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
+    private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final DocumentImportExportService importExportService;
     private final ProjectService projectService;
@@ -113,7 +125,8 @@ public class DocumentServiceImpl
     @Autowired
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
             CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
+            EntityManager aEntityManager)
     {
         repositoryProperties = aRepositoryProperties;
         log.info("Document repository path: " + repositoryProperties.getPath());
@@ -122,15 +135,6 @@ public class DocumentServiceImpl
         importExportService = aImportExportService;
         projectService = aProjectService;
         applicationEventPublisher = aApplicationEventPublisher;
-    }
-
-    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
-            CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
-            EntityManager aEntityManager)
-    {
-        this(aRepositoryProperties, aCasStorageService, aImportExportService, aProjectService,
-                aApplicationEventPublisher);
         entityManager = aEntityManager;
     }
 
@@ -158,15 +162,16 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void createSourceDocument(SourceDocument aDocument)
+    public SourceDocument createSourceDocument(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
         if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
+            return aDocument;
         }
         else {
-            entityManager.merge(aDocument);
+            return entityManager.merge(aDocument);
         }
     }
 
@@ -204,27 +209,22 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
+    public AnnotationDocument createAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
         if (isNull(aAnnotationDocument.getId())) {
             entityManager.persist(aAnnotationDocument);
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aAnnotationDocument.getProject().getId()))) {
-                log.info(
-                        "Created annotation document [{}] for user [{}] for source document "
-                                + "[{}]({}) in project [{}]({})",
-                        aAnnotationDocument.getId(), aAnnotationDocument.getUser(),
-                        aAnnotationDocument.getDocument().getName(),
-                        aAnnotationDocument.getDocument().getId(),
-                        aAnnotationDocument.getProject().getName(),
-                        aAnnotationDocument.getProject().getId());
+            try (var logCtx = withProjectLogger(aAnnotationDocument.getProject())) {
+                log.info("Created annotation document {} in project {}", aAnnotationDocument,
+                        aAnnotationDocument.getProject());
             }
+
+            return aAnnotationDocument;
         }
         else {
-            entityManager.merge(aAnnotationDocument);
+            return entityManager.merge(aAnnotationDocument);
         }
     }
 
@@ -488,6 +488,82 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<SourceDocument> listSourceDocumentsInState(Project aProject,
+            SourceDocumentState... aStates)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aStates, "States must be specified");
+        Validate.notEmpty(aStates, "States must not be an empty list");
+
+        String query = String.join("\n", //
+                "FROM SourceDocument", //
+                "WHERE project =:project", //
+                "AND state IN (:states)", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, SourceDocument.class) //
+                .setParameter("states", asList(aStates)) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationDocument> listAnnotationDocumentsInState(Project aProject,
+            AnnotationDocumentState... aStates)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aStates, "States must be specified");
+        Validate.notEmpty(aStates, "States must not be an empty list");
+
+        if (ArrayUtils.contains(aStates, AnnotationDocumentState.NEW)) {
+            throw new IllegalArgumentException(
+                    "Querying for annotation documents in state NEW because if the state is NEW, "
+                            + "the annotation document entity might not even have been created yet.");
+        }
+
+        String query = String.join("\n", //
+                "FROM AnnotationDocument", //
+                "WHERE project =:project", //
+                "AND state IN (:states)", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, AnnotationDocument.class) //
+                .setParameter("states", asList(aStates)) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> listAnnotationDocumentsWithStateForUser(Project aProject,
+            User aUser, AnnotationDocumentState aState)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aUser, "User must be specified");
+        Validate.notNull(aState, "State must be specified");
+
+        if (aState == AnnotationDocumentState.NEW) {
+            throw new IllegalArgumentException(
+                    "Querying for annotation documents in state NEW because if the state is NEW, "
+                            + "the annotation document entity might not even have been created yet.");
+        }
+
+        String query = String.join("\n", //
+                "FROM AnnotationDocument", //
+                "WHERE user = :user", //
+                "AND project = :project", //
+                "AND state = :state", "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, AnnotationDocument.class) //
+                .setParameter("project", aProject) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("state", aState) //
+                .getResultList();
+    }
+
+    @Override
     @Transactional
     public void removeSourceDocument(SourceDocument aDocument) throws IOException
     {
@@ -512,8 +588,7 @@ public class DocumentServiceImpl
             FileUtils.forceDelete(new File(path));
         }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aDocument.getProject().getId()))) {
+        try (var logCtx = withProjectLogger(aDocument.getProject())) {
             Project project = aDocument.getProject();
             log.info("Removed source document [{}]({}) from project [{}]({})", aDocument.getName(),
                     aDocument.getId(), project.getName(), project.getId());
@@ -562,8 +637,7 @@ public class DocumentServiceImpl
             applicationEventPublisher
                     .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, cas));
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aDocument.getProject().getId()))) {
+            try (var logCtx = withProjectLogger(aDocument.getProject())) {
                 Project project = aDocument.getProject();
                 log.info("Imported source document [{}]({}) to project [{}]({})",
                         aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
@@ -750,15 +824,16 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aUpdateTimestamp)
+            boolean aExplicitAnnotatorUserAction)
         throws IOException
     {
         casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
                 aAnnotationDocument.getUser());
 
-        if (aUpdateTimestamp) {
+        if (aExplicitAnnotatorUserAction) {
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS);
+            setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS,
+                    EXPLICIT_ANNOTATOR_USER_ACTION);
         }
 
         applicationEventPublisher
@@ -782,26 +857,27 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
-            boolean aUpdateTimestamp)
+            boolean aExplicitAnnotatorUserAction)
         throws IOException
     {
         AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
+        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
     }
 
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
-            boolean aUpdateTimestamp)
+            boolean aExplicitAnnotatorUserAction)
         throws IOException
     {
         AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
+        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
     }
 
     @Override
     @Transactional
-    public void resetAnnotationCas(SourceDocument aDocument, User aUser)
+    public void resetAnnotationCas(SourceDocument aDocument, User aUser,
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
@@ -818,7 +894,8 @@ public class DocumentServiceImpl
 
         writeAnnotationCas(cas, aDocument, aUser, false);
 
-        setAnnotationDocumentState(adoc, AnnotationDocumentState.NEW);
+        adoc.setTimestamp(null);
+        setAnnotationDocumentState(adoc, AnnotationDocumentState.NEW, aFlags);
 
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
     }
@@ -936,16 +1013,14 @@ public class DocumentServiceImpl
     {
         // First get the source documents
         List<SourceDocument> sourceDocuments = entityManager
-                .createQuery("FROM SourceDocument " + "WHERE project = (:project)",
-                        SourceDocument.class)
+                .createQuery("FROM SourceDocument WHERE project = (:project)", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
 
         // Next we get all the annotation document records. We can use these to filter out
         // documents which are IGNOREed for given users.
         List<AnnotationDocument> annotationDocuments = entityManager
                 .createQuery(
-                        "FROM AnnotationDocument "
-                                + "WHERE user = (:username) AND project = (:project)",
+                        "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)",
                         AnnotationDocument.class)
                 .setParameter("username", aUser.getUsername()).setParameter("project", aProject)
                 .getResultList();
@@ -966,28 +1041,78 @@ public class DocumentServiceImpl
     }
 
     @Override
-    public int numberOfExpectedAnnotationDocuments(Project aProject)
+    public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
     {
-        // Get all annotators in the project
-        List<String> users = getAllAnnotators(aProject);
-        // Bail out already. HQL doesn't seem to like queries with an empty
-        // parameter right of "in"
-        if (users.isEmpty()) {
-            return 0;
+        Set<String> users = projectService.listProjectUsersWithPermissions(aDocument.getProject())
+                .stream().map(User::getUsername).collect(Collectors.toSet());
+
+        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
+        for (AnnotationDocument aDoc : listAnnotationDocuments(aDocument)) {
+            AtomicLong count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
+            count.incrementAndGet();
+            users.remove(aDoc.getUser());
         }
 
-        int ignored = 0;
-        List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND user in (:users)",
-                        AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("users", users).getResultList();
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
-                ignored++;
-            }
+        counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
+                .addAndGet(users.size());
+
+        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
+        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
+            finalCounts.put(state, 0l);
         }
-        return listSourceDocuments(aProject).size() * users.size() - ignored;
+        for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
+            finalCounts.put(e.getKey(), e.getValue().get());
+        }
+
+        return finalCounts;
+    }
+
+    @Override
+    public SourceDocumentStateStats getSourceDocumentStats(Project aProject)
+    {
+        // This query is better because we do not inject strings into the query string, but it
+        // does not work on HSQLDB (on MySQL it seems to work).
+        // See: https://github.com/webanno/webanno/issues/1011
+        // String query =
+        // "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+        // "COUNT(*) AS num, " +
+        // "SUM(CASE WHEN state = :an THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :af THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
+        // "SUM(CASE WHEN state = :cf THEN 1 ELSE 0 END)) " +
+        // "FROM SourceDocument " +
+        // "WHERE project = :project";
+        //
+        // SourceDocumentStateStats stats = entityManager.createQuery(
+        // query, SourceDocumentStateStats.class)
+        // .setParameter("project", aProject)
+        // .setParameter("an", SourceDocumentState.NEW)
+        // .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
+        // .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
+        // .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
+        // .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
+        // .getSingleResult();
+
+        // @formatter:off
+        String query = 
+                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+                "COUNT(*), " +
+                "SUM(CASE WHEN state = '" + NEW.getId() + "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN (state = '" + ANNOTATION_IN_PROGRESS.getId() + 
+                        "' OR state is NULL) THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + ANNOTATION_FINISHED.getId() + 
+                        "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_IN_PROGRESS.getId() + 
+                        "' THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_FINISHED.getId() + "'  THEN 1 ELSE 0 END)) " +
+                "FROM SourceDocument " + 
+                "WHERE project = :project";
+        // @formatter:on
+
+        return entityManager.createQuery(query, SourceDocumentStateStats.class) //
+                .setParameter("project", aProject) //
+                .getSingleResult();
     }
 
     @Override
@@ -1010,13 +1135,18 @@ public class DocumentServiceImpl
 
     private List<String> getAllAnnotators(Project aProject)
     {
-        String query = String.join("\n", "SELECT DISTINCT p.user",
-                "FROM ProjectPermission p, User u", "WHERE p.project = :project",
-                "  AND p.level   = :level", "  AND p.user    = u.username");
+        String query = String.join("\n", //
+                "SELECT DISTINCT p.user", //
+                "FROM ProjectPermission p, User u", //
+                "WHERE p.project = :project", //
+                "  AND p.level   = :level", //
+                "  AND p.user    = u.username");
 
         // Get all annotators in the project
-        List<String> users = entityManager.createQuery(query, String.class)
-                .setParameter("project", aProject).setParameter("level", ANNOTATOR).getResultList();
+        List<String> users = entityManager.createQuery(query, String.class) //
+                .setParameter("project", aProject) //
+                .setParameter("level", ANNOTATOR) //
+                .getResultList();
 
         return users;
     }
@@ -1024,11 +1154,25 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentState aState)
+            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
         AnnotationDocumentState oldState = aDocument.getState();
 
         aDocument.setState(aState);
+
+        if (aState == AnnotationDocumentState.NEW) {
+            // If a document is reset, the annotator state is cleared
+            aDocument.setAnnotatorState(null);
+        }
+        else if (aState == AnnotationDocumentState.IN_PROGRESS) {
+            // If a manager/curator send the document back to the annotator, the annotator state
+            // is re-set to being in progress
+            aDocument.setAnnotatorState(AnnotationDocumentState.IN_PROGRESS);
+        }
+        else if (asList(aFlags).contains(EXPLICIT_ANNOTATOR_USER_ACTION)) {
+            // Otherwise, the annotator state is only update by explicit annotator actions
+            aDocument.setAnnotatorState(aState);
+        }
 
         createAnnotationDocument(aDocument);
 
@@ -1050,33 +1194,6 @@ public class DocumentServiceImpl
         }
     }
 
-    @Override
-    @Transactional
-    public AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentStateTransition aTransition)
-    {
-        return setAnnotationDocumentState(aDocument,
-                AnnotationDocumentStateTransition.transition(aTransition));
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onDocumentStateChangeEvent(DocumentStateChangedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onAfterDocumentCreatedEvent(AfterDocumentCreatedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
-    {
-        projectService.recalculateProjectState(aEvent.getDocument().getProject());
-    }
-
     @EventListener
     @Transactional
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
@@ -1096,15 +1213,19 @@ public class DocumentServiceImpl
 
         // There should be a cascade-on-delete for annotation documents when the respective
         // source document is deleted, but that is not there at the moment...
-        String deleteAnnotationDocumentsQuery = String.join("\n", "DELETE FROM AnnotationDocument",
+        String deleteAnnotationDocumentsQuery = String.join("\n", //
+                "DELETE FROM AnnotationDocument", //
                 "WHERE project = :project");
-        entityManager.createQuery(deleteAnnotationDocumentsQuery).setParameter("project", project)
+        entityManager.createQuery(deleteAnnotationDocumentsQuery) //
+                .setParameter("project", project) //
                 .executeUpdate();
 
         // Delete all the source documents for the given project
-        String deleteSourceDocumentsQuery = String.join("\n", "DELETE FROM SourceDocument",
+        String deleteSourceDocumentsQuery = String.join("\n", //
+                "DELETE FROM SourceDocument", //
                 "WHERE project = :project");
-        entityManager.createQuery(deleteSourceDocumentsQuery).setParameter("project", project)
+        entityManager.createQuery(deleteSourceDocumentsQuery) //
+                .setParameter("project", project) //
                 .executeUpdate();
 
         // Delete all the source documents files for the given project
@@ -1114,8 +1235,7 @@ public class DocumentServiceImpl
             FastIOUtils.delete(docFolder);
         }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(project.getId()))) {
+        try (var logCtx = withProjectLogger(project)) {
             log.info("Removed all documents from project [{}]({}) being deleted", project.getName(),
                     project.getId());
         }

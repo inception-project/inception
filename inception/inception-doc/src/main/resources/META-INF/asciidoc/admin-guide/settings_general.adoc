@@ -43,5 +43,10 @@
 | Whether the list of users show in the users tab of the project settings is restricted. If this setting is enable, the full name of a user has to be entered into the input field before the user can be added. If this setting is disabled, it is possible to see all enabled users and to add any of them to the project.
 | false
 | true
+
+| commands.open-browser
+| Execute this command instead of the operating-systems's default command to open the browser window when running in standalone mode. `%u` is replaced with the INCEpTION URL.
+| _unset_
+| `/usr/bin/open %u -a "/Applications/Google Chrome.app"`
 |===
 

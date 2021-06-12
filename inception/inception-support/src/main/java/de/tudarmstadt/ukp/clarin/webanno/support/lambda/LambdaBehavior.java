@@ -21,6 +21,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableBiConsumer;
 import org.danekja.java.util.function.serializable.SerializableBooleanSupplier;
 import org.danekja.java.util.function.serializable.SerializableConsumer;
@@ -104,6 +105,34 @@ public class LambdaBehavior
     {
         return visibleWhen(() -> aComponent.getDefaultModel() != null
                 && aComponent.getDefaultModelObject() != null);
+    }
+
+    public static Behavior visibleWhenNot(IModel<Boolean> aPredicate)
+    {
+        return new Behavior()
+        {
+            private static final long serialVersionUID = -1497070163140324582L;
+
+            @Override
+            public void onConfigure(Component aComponent)
+            {
+                aComponent.setVisible(!aPredicate.orElse(false).getObject());
+            }
+        };
+    }
+
+    public static Behavior visibleWhen(IModel<Boolean> aPredicate)
+    {
+        return new Behavior()
+        {
+            private static final long serialVersionUID = -1497070163140324582L;
+
+            @Override
+            public void onConfigure(Component aComponent)
+            {
+                aComponent.setVisible(aPredicate.orElse(false).getObject());
+            }
+        };
     }
 
     public static Behavior visibleWhen(SerializableBooleanSupplier aPredicate)

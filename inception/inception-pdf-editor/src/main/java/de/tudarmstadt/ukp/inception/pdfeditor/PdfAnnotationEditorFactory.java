@@ -47,6 +47,17 @@ public class PdfAnnotationEditorFactory
     }
 
     @Override
+    public int accepts(String aFormat)
+    {
+        switch (aFormat) {
+        case PdfFormatSupport.ID:
+            return PREFERRED;
+        default:
+            return NOT_SUITABLE;
+        }
+    }
+
+    @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {

@@ -62,7 +62,7 @@ html, body {
 .feedback-panel {
   position: fixed;
   bottom: $page-footer-height;
-  z-index: 9999;
+  z-index: 10010;
   min-width: 30%;
   max-height: calc(100vh - $page-footer-height - $page-header-height);
   overflow: auto;
@@ -161,16 +161,10 @@ span.form-control {
 .flex-tile-container { display: flex; flex-flow: row wrap; }
 .flex-tile { box-sizing: border-box; flex: 1; flex-basis: 30em; }
 
+.no-scrolling { overflow: unset !important; } 
 .scrolling { overflow: auto; }
 .v-scrolling { overflow-y: auto; }
 .h-scrolling { overflow-x: auto; }
-
-/* Annotation editor pages - general layout */
-.annotation-editor-container {
-  .collapsed {
-    flex-basis: 39px !important;
-  }
-}
 
 /* Helpers for content which has a hard adjusting to its parents dimensions or which tries to
    control its parents dimensions but shouldn't, e.g SVG or multi-select*/
@@ -440,4 +434,57 @@ div.left-tabpanel div.tab-row a:hover {
   border-top-left-radius: 0px;
   border-bottom-left-radius:  0px;
   border-left: none;
+}
+
+.radio-button-group {
+  .radio-button label {
+    border-radius: 0px 0px 0px 0px;
+    border-bottom-width: 0px;
+  }
+
+  .radio-button:first-child label {
+    border-radius: $btn-border-radius $btn-border-radius 0px 0px;
+  }
+
+  .radio-button:last-child label {
+    border-radius: 0px 0px $btn-border-radius $btn-border-radius;
+    border-bottom-width: 1px;
+  }
+
+  .radio-button:first-child:last-child label {
+    border-radius: $btn-border-radius;
+    border-bottom-width: 1px;
+  }
+}
+
+.radio-button {
+  input[type="radio"] {
+    opacity: 0;
+    position: fixed;
+    width: 0;
+  }
+
+  label {
+    @extend .btn;
+    border: $border-width solid $primary;
+    text-align: left;
+  }
+
+  input[type="radio"]:checked ~ * {
+    color: $component-active-color;
+  }
+
+  input[type="radio"]:checked + label {
+    @include box-shadow($btn-active-box-shadow);
+    background: $component-active-bg;
+    
+    &:focus {
+      @include box-shadow($btn-focus-box-shadow, $btn-active-box-shadow);
+    }
+  }
+
+  input[type="radio"]:focus + label {
+    outline: 0;
+    box-shadow: $btn-focus-box-shadow;
+  }
 }

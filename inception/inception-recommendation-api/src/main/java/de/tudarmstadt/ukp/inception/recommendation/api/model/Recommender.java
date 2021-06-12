@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -268,21 +264,6 @@ public class Recommender
     @Override
     public String toString()
     {
-        final StringBuilder sb = new StringBuilder("Recommender{");
-        sb.append("id=").append(id);
-        sb.append(", project=").append(project);
-        sb.append(", layer=").append(layer);
-        sb.append(", feature='").append(feature).append('\'');
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", tool='").append(tool).append('\'');
-        sb.append(", threshold=").append(threshold);
-        sb.append(", alwaysSelected=").append(alwaysSelected);
-        sb.append(", skipEvaluation=").append(skipEvaluation);
-        sb.append(", enabled=").append(enabled);
-        sb.append(", maxRecommendations=").append(maxRecommendations);
-        sb.append(", statesIgnoredForTraining=").append(statesIgnoredForTraining);
-        sb.append(", traits='").append(traits).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return "[" + name + "](" + id + ")";
     }
 }

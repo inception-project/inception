@@ -103,7 +103,6 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -115,7 +114,6 @@ public class SearchAnnotationSidebar
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean SearchService searchService;
-    private @SpringBean IndexScheduler indexScheduler;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean SearchProperties searchProperties;
@@ -197,7 +195,8 @@ public class SearchAnnotationSidebar
 
         // Add link for re-indexing the project
         searchOptionsPanel.add(new LambdaAjaxLink("reindexProject", t -> {
-            indexScheduler.enqueueReindexTask(getAnnotationPage().getModelObject().getProject());
+            searchService.enqueueReindexTask(getAnnotationPage().getModelObject().getProject(),
+                    "user");
         }));
 
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");

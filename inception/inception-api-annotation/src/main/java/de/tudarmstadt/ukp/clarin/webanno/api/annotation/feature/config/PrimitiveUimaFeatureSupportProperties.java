@@ -25,6 +25,11 @@ import org.springframework.stereotype.Component;
 public class PrimitiveUimaFeatureSupportProperties
 {
     /**
+     * If the tagset is larger than the threshold, a combo-box is used instead of a radio choice.
+     */
+    private int comboBoxThreshold = 6;
+
+    /**
      * If the tagset is larger than the threshold, an auto-complete field is used instead of a
      * standard combobox.
      */
@@ -35,6 +40,16 @@ public class PrimitiveUimaFeatureSupportProperties
      * dropdown menu.
      */
     private int autoCompleteMaxResults = 100;
+
+    public int getComboBoxThreshold()
+    {
+        return comboBoxThreshold;
+    }
+
+    public void setComboBoxThreshold(int aComboBoxThreshold)
+    {
+        comboBoxThreshold = aComboBoxThreshold;
+    }
 
     public int getAutoCompleteThreshold()
     {

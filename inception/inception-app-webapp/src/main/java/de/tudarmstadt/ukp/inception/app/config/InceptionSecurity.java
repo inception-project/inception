@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
@@ -48,6 +49,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
@@ -77,6 +79,7 @@ public class InceptionSecurity
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationProvider authenticationProvider;
     private final UserDao userRepository;
+    private final SessionRegistry sessionRegistry;
 
     // The AuthenticationManager is created by this configuration, yet we also need to access it
     // when constructing the OverridableUserDetailsManager - to break the cyclic dependency, we
@@ -85,13 +88,14 @@ public class InceptionSecurity
     public InceptionSecurity(PasswordEncoder aPasswordEncoder,
             @Lazy AuthenticationManager aAuthenticationManager,
             @Lazy AuthenticationProvider aAuthenticationProvider, DataSource aDataSource,
-            UserDao aUserRepository)
+            SessionRegistry aSessionRegistry, UserDao aUserRepository)
     {
         passwordEncoder = aPasswordEncoder;
         authenticationManager = aAuthenticationManager;
         authenticationProvider = aAuthenticationProvider;
         dataSource = aDataSource;
         userRepository = aUserRepository;
+        sessionRegistry = aSessionRegistry;
     }
 
     @Autowired
@@ -106,6 +110,17 @@ public class InceptionSecurity
     public static class RemoteApiSecurity
         extends WebSecurityConfigurerAdapter
     {
+        private final PasswordEncoder passwordEncoder;
+        private final UserDetailsManager userDetailsService;
+
+        @Autowired
+        public RemoteApiSecurity(PasswordEncoder aPasswordEncoder,
+                UserDetailsManager aUserDetailsService)
+        {
+            passwordEncoder = aPasswordEncoder;
+            userDetailsService = aUserDetailsService;
+        }
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
@@ -113,6 +128,9 @@ public class InceptionSecurity
             aHttp
                 .antMatcher("/api/**")
                 .csrf().disable()
+                // We hard-wire the internal user DB as the authentication provider here because
+                // because the API shouldn't work with external pre-authentication
+                .authenticationProvider(remoteApiAuthenticationProvider())
                 .authorizeRequests()
                     .anyRequest().access("hasAnyRole('ROLE_REMOTE')")
                 .and()
@@ -122,11 +140,19 @@ public class InceptionSecurity
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
             // @formatter:on
         }
+
+        private AuthenticationProvider remoteApiAuthenticationProvider()
+        {
+            DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+            authProvider.setUserDetailsService(userDetailsService);
+            authProvider.setPasswordEncoder(passwordEncoder);
+            return authProvider;
+        }
     }
 
     @Configuration
     @Profile("auto-mode-builtin")
-    public static class WebUiSecurity
+    public class WebUiSecurity
         extends WebSecurityConfigurerAdapter
     {
         // Expose the AuthenticationManager using the legacy bean name that is expected by
@@ -157,7 +183,9 @@ public class InceptionSecurity
                     .antMatchers("/assets/**").permitAll()
                     .antMatchers("/images/**").permitAll()
                     .antMatchers("/resources/**").permitAll()
+                    .antMatchers("/about/**").permitAll()
                     .antMatchers("/wicket/resource/**").permitAll()
+                    .antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll()
                     .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')")
                     .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
                     .antMatchers("/v3/**").access("hasAnyRole('ROLE_REMOTE')")
@@ -171,7 +199,17 @@ public class InceptionSecurity
                             new LoginUrlAuthenticationEntryPoint("/login.html"), 
                             new AntPathRequestMatcher("/**"))
                 .and()
-                    .headers().frameOptions().sameOrigin();
+                    .headers().frameOptions().sameOrigin()
+                .and()
+                .sessionManagement() 
+                    // Configuring an unlimited session per-user maximum as a side-effect registers
+                    // the ConcurrentSessionFilter which checks for valid sessions in the session
+                    // registry. This allows us to indirectly invalidate a server session by marking
+                    // its Spring-security registration as invalid and have Spring Security in turn
+                    // mark the server session as invalid on the next request. This is used e.g. to
+                    // force-sign-out users that are being deleted.
+                    .maximumSessions(-1)
+                    .sessionRegistry(sessionRegistry);
             // @formatter:on
         }
     }
@@ -221,7 +259,17 @@ public class InceptionSecurity
                 .exceptionHandling()
                     .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
                 .and()
-                    .headers().frameOptions().sameOrigin();
+                    .headers().frameOptions().sameOrigin()
+                .and()
+                .sessionManagement() 
+                    // Configuring an unlimited session per-user maximum as a side-effect registers
+                    // the ConcurrentSessionFilter which checks for valid sessions in the session
+                    // registry. This allows us to indirectly invalidate a server session by marking
+                    // its Spring-security registration as invalid and have Spring Security in turn
+                    // mark the server session as invalid on the next request. This is used e.g. to
+                    // force-sign-out users that are being deleted.
+                    .maximumSessions(-1)
+                    .sessionRegistry(sessionRegistry);
             // @formatter:on
         }
     }
@@ -233,7 +281,6 @@ public class InceptionSecurity
         ShibbolethRequestHeaderAuthenticationFilter filter = new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
         filter.setAuthenticationManager(authenticationManager);
-        filter.setUserDetailsManager(userDetailsService());
         filter.setUserRepository(userRepository);
         filter.setExceptionIfHeaderMissing(true);
         return filter;
@@ -243,7 +290,7 @@ public class InceptionSecurity
     @Profile("auto-mode-builtin")
     public DaoAuthenticationProvider internalAuthenticationProvider()
     {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
@@ -267,14 +314,5 @@ public class InceptionSecurity
         manager.setDataSource(dataSource);
         manager.setAuthenticationManager(authenticationManager);
         return manager;
-    }
-
-    // This bean allows the application to access session information. We currently only use this
-    // to display the number of active users in the SystemStatusDashlet. However, the LoginPage
-    // also accesses this bean in order to manually register the session when the user logs in.
-    @Bean
-    public SessionRegistry sessionRegistry()
-    {
-        return new SessionRegistryImpl();
     }
 }

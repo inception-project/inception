@@ -25,7 +25,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,10 +35,9 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
@@ -55,7 +54,7 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 public class LoggedEventExporterTest
 {
-    public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
+    public @TempDir File tempFolder;
 
     private @Mock DocumentService documentService;
     private @Mock EventRepository eventRepository;
@@ -65,16 +64,16 @@ public class LoggedEventExporterTest
 
     private LoggedEventExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
+        openMocks(this);
 
         project = new Project();
-        project.setId(1l);
+        project.setId(1L);
         project.setName("Test Project");
 
-        workFolder = tempFolder.newFolder();
+        workFolder = tempFolder;
 
         when(documentService.listSourceDocuments(any())).thenReturn(documents());
         doAnswer((Answer<SourceDocument>) invocation -> {

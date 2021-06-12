@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -90,13 +91,13 @@ public class TrainingTask
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
             User user = getUser();
 
-            log.debug("[{}][{}]: Starting training for project [{}] triggered by [{}]...", getId(),
+            log.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
                     user.getUsername(), project, getTrigger());
             logMessages.add(info(this, "Starting training triggered by [%s]...", getTrigger()));
 
@@ -155,8 +156,16 @@ public class TrainingTask
                     long startTime = System.currentTimeMillis();
 
                     try {
-                        RecommendationEngineFactory factory = recommendationService
+                        Optional<RecommendationEngineFactory<?>> maybeFactory = recommendationService
                                 .getRecommenderFactory(recommender);
+
+                        if (maybeFactory.isEmpty()) {
+                            log.warn("[{}][{}]: No factory found - skipping recommender",
+                                    user.getUsername(), r.getRecommender().getName());
+                            continue;
+                        }
+
+                        RecommendationEngineFactory<?> factory = maybeFactory.get();
 
                         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                             log.debug(
@@ -261,7 +270,7 @@ public class TrainingTask
                 return;
             }
 
-            PredictionTask predictionTask = new PredictionTask(user, getProject(),
+            PredictionTask predictionTask = new PredictionTask(user,
                     String.format("TrainingTask %s complete", getId()), currentDocument);
             predictionTask.inheritLog(logMessages);
             schedulingService.enqueue(predictionTask);

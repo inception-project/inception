@@ -159,7 +159,8 @@ public class NumberFeatureTraitsEditor
 
     private UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits> getFeatureSupport()
     {
-        return featureSupportRegistry.getFeatureSupport(featureSupportId);
+        return (UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits>) featureSupportRegistry
+                .getExtension(featureSupportId).orElseThrow();
     }
 
     /**

@@ -22,8 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.ConfusionMatrix;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
@@ -32,7 +32,7 @@ public class ConfusionMatrixTest
 {
     private List<LabelPair> instances;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         instances = new ArrayList<>();
@@ -53,7 +53,7 @@ public class ConfusionMatrixTest
                 { "neutral", "neg" }, { "neutral", "neutral" } };
         int[] expectedCounts = { 4, 2, 0, 2, 1, 1, 2, 0, 2 };
 
-        ConfusionMatrix matrix = new ConfusionMatrix();
+        ConfusionMatrix matrix = new ConfusionMatrix("datapointUnit");
         instances.stream().forEach(
                 pair -> matrix.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
 
@@ -66,7 +66,7 @@ public class ConfusionMatrixTest
     @Test
     public void testContainsEntry()
     {
-        ConfusionMatrix matrix = new ConfusionMatrix();
+        ConfusionMatrix matrix = new ConfusionMatrix("datapointUnit");
         instances.stream().forEach(
                 pair -> matrix.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
 
@@ -85,7 +85,7 @@ public class ConfusionMatrixTest
         int[] expectedCounts = { 4, 2, 0, 2, 1, 2, 3, 1, 3 };
         ConfusionMatrix matrix1 = getExampleMatrix(new String[][] { { "neg", "neutral" },
                 { "neutral", "pos" }, { "neutral", "neg" }, { "neutral", "neutral" } });
-        ConfusionMatrix matrix2 = new ConfusionMatrix();
+        ConfusionMatrix matrix2 = new ConfusionMatrix("datapointUnit");
         instances.stream().forEach(
                 pair -> matrix2.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
 
@@ -99,7 +99,7 @@ public class ConfusionMatrixTest
 
     private ConfusionMatrix getExampleMatrix(String[][] aKeys)
     {
-        ConfusionMatrix matrix = new ConfusionMatrix();
+        ConfusionMatrix matrix = new ConfusionMatrix("datapointUnit");
         for (String[] key : aKeys) {
             matrix.incrementCounts(key[1], key[0]);
         }

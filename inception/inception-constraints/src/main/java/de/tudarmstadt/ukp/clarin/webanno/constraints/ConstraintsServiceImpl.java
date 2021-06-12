@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static java.util.Objects.isNull;
 
 import java.io.File;
@@ -38,12 +39,11 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ConstraintsService.SERVICE_NAME)
 public class ConstraintsServiceImpl
@@ -83,17 +82,17 @@ public class ConstraintsServiceImpl
     {
         Validate.notNull(aSet, "Constraints set must be specified");
 
-        if (isNull(aSet.getId())) {
-            entityManager.persist(aSet);
-        }
-        else {
-            entityManager.merge(aSet);
-        }
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aSet.getProject().getId()))) {
-            log.info("Created constraints set [{}] in project [{}]({})", aSet.getName(),
-                    aSet.getProject().getName(), aSet.getProject().getId());
+        try (var logCtx = withProjectLogger(aSet.getProject())) {
+            if (isNull(aSet.getId())) {
+                entityManager.persist(aSet);
+                log.info("Created constraints set [{}] in project {}", aSet.getName(),
+                        aSet.getProject());
+            }
+            else {
+                entityManager.merge(aSet);
+                log.info("Updated constraints set [{}] in project {}", aSet.getName(),
+                        aSet.getProject());
+            }
         }
     }
 
@@ -101,52 +100,47 @@ public class ConstraintsServiceImpl
     @Transactional
     public void removeConstraintSet(ConstraintSet aSet)
     {
-        entityManager.remove(entityManager.merge(aSet));
+        try (var logCtx = withProjectLogger(aSet.getProject())) {
+            entityManager.remove(entityManager.merge(aSet));
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aSet.getProject().getId()))) {
-            log.info("Removed constraints set [{}] in project [{}]({})", aSet.getName(),
-                    aSet.getProject().getName(), aSet.getProject().getId());
+            log.info("Removed constraints set [{}] in project {}", aSet.getName(),
+                    aSet.getProject());
         }
     }
 
     @Override
     public String readConstrainSet(ConstraintSet aSet) throws IOException
     {
-        String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
-                + ConstraintsService.CONSTRAINTS + "/";
-        String filename = aSet.getId() + ".txt";
+        try (var logCtx = withProjectLogger(aSet.getProject())) {
+            String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                    + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
+                    + ConstraintsService.CONSTRAINTS + "/";
+            String filename = aSet.getId() + ".txt";
 
-        String data;
-        try (BOMInputStream is = new BOMInputStream(
-                new FileInputStream(new File(constraintRulesPath, filename)))) {
-            data = IOUtils.toString(is, "UTF-8");
+            String data;
+            try (BOMInputStream is = new BOMInputStream(
+                    new FileInputStream(new File(constraintRulesPath, filename)))) {
+                data = IOUtils.toString(is, "UTF-8");
+            }
+
+            log.debug("Read constraints set [{}] in project {}", aSet.getName(), aSet.getProject());
+
+            return data;
         }
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aSet.getProject().getId()))) {
-            log.info("Read constraints set [{}] in project [{}]({})", aSet.getName(),
-                    aSet.getProject().getName(), aSet.getProject().getId());
-        }
-
-        return data;
     }
 
     @Override
     public void writeConstraintSet(ConstraintSet aSet, InputStream aContent) throws IOException
     {
-        String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
-                + ConstraintsService.CONSTRAINTS + "/";
-        String filename = aSet.getId() + ".txt";
-        FileUtils.forceMkdir(new File(constraintRulesPath));
-        FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
+        try (var logCtx = withProjectLogger(aSet.getProject())) {
+            String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                    + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
+                    + ConstraintsService.CONSTRAINTS + "/";
+            String filename = aSet.getId() + ".txt";
+            FileUtils.forceMkdir(new File(constraintRulesPath));
+            FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aSet.getProject().getId()))) {
-            log.info("Saved constraints set [{}] in project [{}]({})", aSet.getName(),
-                    aSet.getProject().getName(), aSet.getProject().getId());
+            log.info("Saved constraints set [{}] in project {}", aSet.getName(), aSet.getProject());
         }
     }
 
@@ -156,26 +150,22 @@ public class ConstraintsServiceImpl
     @Override
     public File exportConstraintAsFile(ConstraintSet aSet)
     {
-        String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
-                + ConstraintsService.CONSTRAINTS + "/";
-        String filename = aSet.getId() + ".txt";
-        File constraintsFile = new File(constraintRulesPath, filename);
-        if (constraintsFile.exists()) {
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aSet.getProject().getId()))) {
-                log.info("Exported constraints set [{}] from project [{}]({})", aSet.getName(),
-                        aSet.getProject().getName(), aSet.getProject().getId());
+        try (var logCtx = withProjectLogger(aSet.getProject())) {
+            String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                    + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
+                    + ConstraintsService.CONSTRAINTS + "/";
+            String filename = aSet.getId() + ".txt";
+            File constraintsFile = new File(constraintRulesPath, filename);
+            if (constraintsFile.exists()) {
+                log.info("Exported constraints set [{}] from project {}", aSet.getName(),
+                        aSet.getProject());
+                return constraintsFile;
             }
-            return constraintsFile;
-        }
-        else {
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aSet.getProject().getId()))) {
-                log.info("Unable to read constraints set file [{}] in project [{}]({})", filename,
-                        aSet.getProject().getName(), aSet.getProject().getId());
+            else {
+                log.error("Unable to read constraints set file [{}] in project {}", filename,
+                        aSet.getProject());
+                return null;
             }
-            return null;
         }
     }
 
@@ -206,51 +196,53 @@ public class ConstraintsServiceImpl
     @Override
     public ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException
     {
-        ParsedConstraints merged = null;
+        try (var logCtx = withProjectLogger(aProject)) {
+            ParsedConstraints merged = null;
 
-        for (ConstraintSet set : listConstraintSets(aProject)) {
-            String script = readConstrainSet(set);
-            ConstraintsParser parser = new ConstraintsParser(new StringReader(script));
-            ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
-            ParsedConstraints constraints = new ParsedConstraints(astConstraintsSet);
+            for (ConstraintSet set : listConstraintSets(aProject)) {
+                String script = readConstrainSet(set);
+                ConstraintsParser parser = new ConstraintsParser(new StringReader(script));
+                ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
+                ParsedConstraints constraints = new ParsedConstraints(astConstraintsSet);
 
-            if (merged == null) {
-                merged = constraints;
-            }
-            else {
-                // Merge imports
-                for (Entry<String, String> e : constraints.getImports().entrySet()) {
-                    // Check if the value already points to some other feature in previous
-                    // constraint file(s).
-                    if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
-                            .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
-                        // If detected, notify user with proper message and abort merging
-                        String errorMessage = "Conflict detected in imports for key \"" + e.getKey()
-                                + "\", conflicting values are \"" + e.getValue() + "\" & \""
-                                + merged.getImports().get(e.getKey())
-                                + "\". Please contact Project Admin for correcting this."
-                                + "Constraints feature may not work."
-                                + "\nAborting Constraint rules merge!";
-                        throw new ParseException(errorMessage);
+                if (merged == null) {
+                    merged = constraints;
+                }
+                else {
+                    // Merge imports
+                    for (Entry<String, String> e : constraints.getImports().entrySet()) {
+                        // Check if the value already points to some other feature in previous
+                        // constraint file(s).
+                        if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
+                                .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
+                            // If detected, notify user with proper message and abort merging
+                            String errorMessage = "Conflict detected in imports for key \""
+                                    + e.getKey() + "\", conflicting values are \"" + e.getValue()
+                                    + "\" & \"" + merged.getImports().get(e.getKey())
+                                    + "\". Please contact Project Admin for correcting this."
+                                    + "Constraints feature may not work."
+                                    + "\nAborting Constraint rules merge!";
+                            throw new ParseException(errorMessage);
+                        }
+                    }
+                    merged.getImports().putAll(constraints.getImports());
+
+                    // Merge scopes
+                    for (Scope scope : constraints.getScopes()) {
+                        Scope target = merged.getScopeByName(scope.getScopeName());
+                        if (target == null) {
+                            // Scope does not exist yet
+                            merged.getScopes().add(scope);
+                        }
+                        else {
+                            // Scope already exists
+                            target.getRules().addAll(scope.getRules());
+                        }
                     }
                 }
-                merged.getImports().putAll(constraints.getImports());
-
-                // Merge scopes
-                for (Scope scope : constraints.getScopes()) {
-                    Scope target = merged.getScopeByName(scope.getScopeName());
-                    if (target == null) {
-                        // Scope does not exist yet
-                        merged.getScopes().add(scope);
-                    }
-                    else {
-                        // Scope already exists
-                        target.getRules().addAll(scope.getRules());
-                    }
-                }
             }
+
+            return merged;
         }
-
-        return merged;
     }
 }

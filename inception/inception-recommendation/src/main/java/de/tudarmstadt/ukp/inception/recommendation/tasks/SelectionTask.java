@@ -85,7 +85,7 @@ public class SelectionTask
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
@@ -143,8 +143,8 @@ public class SelectionTask
 
                     try {
                         long start = System.currentTimeMillis();
-                        RecommendationEngineFactory factory = recommendationService
-                                .getRecommenderFactory(recommender);
+                        RecommendationEngineFactory<?> factory = recommendationService
+                                .getRecommenderFactory(recommender).orElse(null);
 
                         if (factory == null) {
                             log.error("[{}][{}]: No recommender factory available for [{}]",

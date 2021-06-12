@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_left_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_right_s;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -25,12 +28,10 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.resource.ResourceReference;
-import org.apache.wicket.request.resource.UrlResourceReference;
+import org.apache.wicket.model.LoadableDetachableModel;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
@@ -39,14 +40,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
 {
     private static final long serialVersionUID = -5077247310722334915L;
 
-    private static final UrlResourceReference ICON_EXPANDED = new UrlResourceReference(
-            Url.parse("images/bullet_arrow_left.png")).setContextRelative(true);
-
-    private static final UrlResourceReference ICON_COLLAPSED = new UrlResourceReference(
-            Url.parse("images/bullet_arrow_right.png")).setContextRelative(true);
-
     private boolean expanded = false;
-    private Image icon;
 
     public SidebarTabbedPanel(String aId, List<T> aTabs)
     {
@@ -58,7 +52,8 @@ public class SidebarTabbedPanel<T extends SidebarTab>
 
         LambdaAjaxLink showHideLink = new LambdaAjaxLink("showHideLink", this::showHideAction);
 
-        showHideLink.add(icon = new Image("showHideIcon", ICON_EXPANDED));
+        showHideLink.add(new Icon("showHideIcon",
+                LoadableDetachableModel.of(() -> isExpanded() ? chevron_left_s : chevron_right_s)));
         ((WebMarkupContainer) get("tabs-container")).add(showHideLink);
     }
 
@@ -71,14 +66,6 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     public boolean isExpanded()
     {
         return expanded;
-    }
-
-    @Override
-    protected void onConfigure()
-    {
-        super.onConfigure();
-
-        icon.setImageResourceReference(expanded ? ICON_EXPANDED : ICON_COLLAPSED);
     }
 
     @Override
@@ -102,25 +89,20 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected Component newTitle(String aTitleId, IModel<?> aTitleModel, int aIndex)
     {
         SidebarTab tab = getTabs().get(aIndex);
-        StaticImage image = new StaticImage("image", tab.getIcon());
-        image.add(new AttributeModifier("title", aTitleModel));
-        return image;
+        Icon icon = new Icon("icon", tab.getIcon());
+        icon.add(new AttributeModifier("title", aTitleModel));
+        return icon;
     }
 
-    private static class StaticImage
-        extends Image
+    @Override
+    protected String getSelectedTabCssClass()
     {
-        public StaticImage(String aId, final ResourceReference aResourceReference)
-        {
-            super(aId, aResourceReference);
-        }
+        return "active";
+    }
 
-        private static final long serialVersionUID = 1207122722078977614L;
-
-        @Override
-        protected boolean shouldAddAntiCacheParameter()
-        {
-            return false;
-        }
+    @Override
+    protected String getTabContainerCssClass()
+    {
+        return "nav flex-column dashboard-sidebar collapsed dashboard-sidebar-light border border-left-0";
     }
 }

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,17 +18,18 @@
 
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.reification.Reification.WIKIDATA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-import java.io.IOException;
+import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -48,15 +49,11 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -64,11 +61,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
@@ -83,80 +77,71 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@RunWith(Parameterized.class)
-@Transactional
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false)
+@EnableAutoConfiguration
+@EntityScan({ //
+        "de.tudarmstadt.ukp.inception.kb.model", //
+        "de.tudarmstadt.ukp.clarin.webanno.model" })
 public class KnowledgeBaseServiceImplIntegrationTest
 {
-
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    public File temporaryFolder;
 
     @Autowired
     private TestEntityManager testEntityManager;
 
-    @ClassRule
-    public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
-
-    @Rule
-    public final SpringMethodRule springMethodRule = new SpringMethodRule();
-
     private KnowledgeBaseServiceImpl sut;
     private Project project;
     private KnowledgeBase kb;
-    private Reification reification;
 
     private TestFixtures testFixtures;
 
-    public KnowledgeBaseServiceImplIntegrationTest(Reification aReification)
-    {
-        reification = aReification;
-    }
-
-    @Parameterized.Parameters(name = "Reification = {0}")
     public static Collection<Object[]> data()
     {
         return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
                 .collect(Collectors.toList());
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpOnce()
     {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
-    @Before
-    public void setUp() throws Exception
+    public void setUp(Reification reification) throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
+        repoProps.setPath(temporaryFolder);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
-        kb = buildKnowledgeBase(project, KB_NAME);
+        kb = buildKnowledgeBase(project, KB_NAME, reification);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();
         sut.destroy();
     }
 
-    @Test
     public void thatApplicationContextStarts()
     {
+
     }
 
-    @Test
-    public void registerKnowledgeBase_WithNewKnowledgeBase_ShouldSaveNewKnowledgeBase()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void registerKnowledgeBase_WithNewKnowledgeBase_ShouldSaveNewKnowledgeBase(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -167,9 +152,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isNotNull();
     }
 
-    @Test
-    public void getKnowledgeBaseByName_IfExists_ShouldReturnKnowledgeBase()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getKnowledgeBaseByName_IfExists_ShouldReturnKnowledgeBase(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, kb.getName());
@@ -177,9 +166,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(result).isEqualTo(result);
     }
 
-    @Test
-    public void getKnowledgeBaseByName_IfAbsent_ShouldReturnNone()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getKnowledgeBaseByName_IfAbsent_ShouldReturnNone(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, "Absent KB");
@@ -187,9 +180,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(result).isEmpty();
     }
 
-    @Test
-    public void getKnowledgeBases_WithOneStoredKnowledgeBase_ShouldReturnStoredKnowledgeBase()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getKnowledgeBases_WithOneStoredKnowledgeBase_ShouldReturnStoredKnowledgeBase(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(project);
@@ -199,9 +197,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .contains(kb);
     }
 
-    @Test
-    public void getKnowledgeBases_WithoutKnowledgeBases_ShouldReturnEmptyList()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getKnowledgeBases_WithoutKnowledgeBases_ShouldReturnEmptyList(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         Project project = createProject("Empty project");
 
         List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(project);
@@ -209,26 +212,40 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(knowledgeBases).as("Check that no knowledge base is found").isEmpty();
     }
 
-    @Test
-    public void knowledgeBaseExists_WithExistingKnowledgeBase_ShouldReturnTrue()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void knowledgeBaseExists_WithExistingKnowledgeBase_ShouldReturnTrue(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         assertThat(sut.knowledgeBaseExists(project, kb.getName()))
                 .as("Check that knowledge base with given name already exists").isTrue();
     }
 
-    @Test
-    public void knowledgeBaseExists_WithNonexistentKnowledgeBase_ShouldReturnFalse()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void knowledgeBaseExists_WithNonexistentKnowledgeBase_ShouldReturnFalse(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
 
         assertThat(sut.knowledgeBaseExists(project, kb.getName()))
                 .as("Check that knowledge base with given name does not already exists").isFalse();
     }
 
-    @Test
-    public void updateKnowledgeBase_WithValidValues_ShouldUpdateKnowledgeBase()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateKnowledgeBase_WithValidValues_ShouldUpdateKnowledgeBase(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         kb.setName("New name");
@@ -263,17 +280,27 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("rootConcepts", asList(rootConcept1, rootConcept2));
     }
 
-    @Test
-    public void updateKnowledgeBase_WithUnregisteredKnowledgeBase_ShouldThrowIllegalStateException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateKnowledgeBase_WithUnregisteredKnowledgeBase_ShouldThrowIllegalStateException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         assertThatExceptionOfType(IllegalStateException.class)
                 .as("Check that updating knowledge base requires registration")
                 .isThrownBy(() -> sut.updateKnowledgeBase(kb, sut.getNativeConfig()));
     }
 
-    @Test
-    public void removeKnowledgeBase_WithStoredKnowledgeBase_ShouldDeleteKnowledgeBase()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void removeKnowledgeBase_WithStoredKnowledgeBase_ShouldDeleteKnowledgeBase(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         sut.removeKnowledgeBase(kb);
@@ -282,17 +309,27 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(knowledgeBases).as("Check that the knowledge base has been deleted").hasSize(0);
     }
 
-    @Test
-    public void removeKnowledgeBase_WithUnregisteredKnowledgeBase_ShouldThrowIllegalStateException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void removeKnowledgeBase_WithUnregisteredKnowledgeBase_ShouldThrowIllegalStateException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         assertThatExceptionOfType(IllegalStateException.class)
                 .as("Check that updating knowledge base requires registration")
                 .isThrownBy(() -> sut.removeKnowledgeBase(kb));
     }
 
-    @Test
-    public void clear_WithNonemptyKnowledgeBase_ShouldDeleteAllCustomEntities()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void clear_WithNonemptyKnowledgeBase_ShouldDeleteAllCustomEntities(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, buildConcept());
         sut.createProperty(kb, buildProperty());
@@ -305,9 +342,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(handles).as("Check that no custom entities are found after clearing").isEmpty();
     }
 
-    @Test
-    public void clear_WithNonemptyKnowledgeBase_ShouldNotDeleteImplicitEntities()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void clear_WithNonemptyKnowledgeBase_ShouldNotDeleteImplicitEntities(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, buildConcept());
         sut.createProperty(kb, buildProperty());
@@ -322,9 +364,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .allMatch(this::hasImplicitNamespace);
     }
 
-    @Test
-    public void empty_WithEmptyKnowledgeBase_ShouldReturnTrue()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void empty_WithEmptyKnowledgeBase_ShouldReturnTrue(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         boolean isEmpty = sut.isEmpty(kb);
@@ -332,9 +378,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(isEmpty).as("Check that knowledge base is empty").isTrue();
     }
 
-    @Test
-    public void empty_WithNonemptyKnowledgeBase_ShouldReturnFalse()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void empty_WithNonemptyKnowledgeBase_ShouldReturnFalse(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, buildConcept());
 
@@ -343,9 +393,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(isEmpty).as("Check that knowledge base is not empty").isFalse();
     }
 
-    @Test
-    public void nonempty_WithEmptyKnowledgeBase_ShouldReturnTrue()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void nonempty_WithEmptyKnowledgeBase_ShouldReturnTrue(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         sut.defineBaseProperties(kb);
@@ -360,9 +414,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .contains(expectedProps);
     }
 
-    @Test
-    public void createConcept_WithEmptyIdentifier_ShouldCreateNewConcept()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createConcept_WithEmptyIdentifier_ShouldCreateNewConcept(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -374,9 +432,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", concept.getName());
     }
 
-    @Test
-    public void createConcept_WithCustomBasePrefix_ShouldCreateNewConceptWithCustomPrefix()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createConcept_WithCustomBasePrefix_ShouldCreateNewConceptWithCustomPrefix(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -394,9 +457,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertEquals(customPrefix, savedConceptPrefix);
     }
 
-    @Test
-    public void createConcept_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createConcept_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = new KBConcept();
         concept.setIdentifier("Nonempty Identifier");
 
@@ -408,9 +476,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier must be empty on create");
     }
 
-    @Test
-    public void createConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         kb.setReadOnly(true);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -419,9 +491,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isThrownBy(() -> sut.createConcept(kb, concept));
     }
 
-    @Test
-    public void readConcept_WithExistingConcept_ShouldReturnSavedConcept()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readConcept_WithExistingConcept_ShouldReturnSavedConcept(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
@@ -433,9 +509,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", concept.getName());
     }
 
-    @Test
-    public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         Optional<KBConcept> savedConcept = sut.readConcept(kb,
@@ -444,9 +524,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(savedConcept.isPresent()).as("Check that no concept was read").isFalse();
     }
 
-    @Test
-    public void updateConcept_WithAlteredConcept_ShouldUpdateConcept()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateConcept_WithAlteredConcept_ShouldUpdateConcept(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         sut.createConcept(kb, concept);
@@ -461,10 +545,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", "New name");
     }
 
-    @Test
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
     // TODO: Check whether this is a feature or not
-    public void updateConcept_WithNonexistentConcept_ShouldCreateConcept()
+    public void updateConcept_WithNonexistentConcept_ShouldCreateConcept(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         concept.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -478,9 +566,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", concept.getName());
     }
 
-    @Test
-    public void updateConcept_WithConceptWithBlankIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateConcept_WithConceptWithBlankIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         concept.setIdentifier("");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -491,9 +584,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier cannot be empty on update");
     }
 
-    @Test
-    public void updateConcept_WithConceptWithNullIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateConcept_WithConceptWithNullIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         concept.setIdentifier(null);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -504,9 +602,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier cannot be empty on update");
     }
 
-    @Test
-    public void updateConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
@@ -524,9 +626,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", "Concept name");
     }
 
-    @Test
-    public void deleteConcept_WithConceptReferencedAsObject_ShouldDeleteConceptAndStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteConcept_WithConceptReferencedAsObject_ShouldDeleteConceptAndStatement(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         KBProperty property = buildProperty();
         KBConcept concept = buildConcept();
@@ -550,9 +657,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     }
 
-    @Test
-    public void deleteConcept_WithExistingConcept_ShouldDeleteConcept()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteConcept_WithExistingConcept_ShouldDeleteConcept(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
@@ -564,9 +675,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isFalse();
     }
 
-    @Test
-    public void deleteConcept_WithNonexistentConcept_ShouldNoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteConcept_WithNonexistentConcept_ShouldNoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         concept.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -576,9 +691,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .doesNotThrowAnyException();
     }
 
-    @Test
-    public void deleteConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
@@ -591,9 +710,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(savedConcept.isPresent()).as("Check that concept was not deleted").isTrue();
     }
 
-    @Test
-    public void listConcepts_WithASavedConceptAndNotAll_ShouldFindOneConcept()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listConcepts_WithASavedConceptAndNotAll_ShouldFindOneConcept(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBConcept concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
@@ -606,9 +730,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
-    @Test
-    public void listConcepts_WithNoSavedConceptAndAll_ShouldFindRdfConcepts()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listConcepts_WithNoSavedConceptAndAll_ShouldFindRdfConcepts(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         List<KBHandle> concepts = sut.listAllConcepts(kb, true);
@@ -617,9 +745,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .allMatch(this::hasImplicitNamespace);
     }
 
-    @Test
-    public void createProperty_WithEmptyIdentifier_ShouldCreateNewProperty()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createProperty_WithEmptyIdentifier_ShouldCreateNewProperty(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -634,11 +766,16 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("range", property.getRange());
     }
 
-    @Test
-    public void createProperty_WithCustomBasePrefix_ShouldCreateNewPropertyWithCustomPrefix()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createProperty_WithCustomBasePrefix_ShouldCreateNewPropertyWithCustomPrefix(
+            Reification reification)
+        throws Exception
     {
-        assumeFalse("Wikidata reification has hardcoded property prefix",
-                Reification.WIKIDATA.equals(kb.getReification()));
+        setUp(reification);
+
+        assumeFalse(WIKIDATA.equals(kb.getReification()),
+                "Wikidata reification has hardcoded property prefix");
 
         KBProperty property = buildProperty();
 
@@ -657,9 +794,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertEquals(customPrefix, savedPropertyPrefix);
     }
 
-    @Test
-    public void createProperty_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createProperty_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         property.setIdentifier("Nonempty Identifier");
 
@@ -671,9 +813,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier must be empty on create");
     }
 
-    @Test
-    public void createProperty_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createProperty_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         kb.setReadOnly(true);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -682,9 +828,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isThrownBy(() -> sut.createProperty(kb, property));
     }
 
-    @Test
-    public void readProperty_WithExistingConcept_ShouldReturnSavedProperty()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readProperty_WithExistingConcept_ShouldReturnSavedProperty(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
@@ -699,9 +849,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("range", property.getRange());
     }
 
-    @Test
-    public void readProperty_WithNonexistentProperty_ShouldReturnEmptyResult()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readProperty_WithNonexistentProperty_ShouldReturnEmptyResult(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         Optional<KBProperty> savedProperty = sut.readProperty(kb,
@@ -710,9 +865,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(savedProperty.isPresent()).as("Check that no property was read").isFalse();
     }
 
-    @Test
-    public void updateProperty_WithAlteredProperty_ShouldUpdateProperty()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateProperty_WithAlteredProperty_ShouldUpdateProperty(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
@@ -731,10 +890,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("range", property.getRange());
     }
 
-    @Test
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
     // TODO: Check whether this is a feature or not
-    public void updateProperty_WithNonexistentProperty_ShouldCreateProperty()
+    public void updateProperty_WithNonexistentProperty_ShouldCreateProperty(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         property.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -750,9 +913,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("range", property.getRange());
     }
 
-    @Test
-    public void updateProperty_WithPropertyWithBlankIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateProperty_WithPropertyWithBlankIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         property.setIdentifier("");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -763,9 +931,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier cannot be empty on update");
     }
 
-    @Test
-    public void updateProperty_WithPropertyWithNullIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateProperty_WithPropertyWithNullIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         property.setIdentifier(null);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -776,9 +949,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier cannot be empty on update");
     }
 
-    @Test
-    public void updateProperty_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateProperty_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
@@ -800,9 +977,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("range", "https://test.schema.com/#range");
     }
 
-    @Test
-    public void deleteProperty_WithExistingProperty_ShouldDeleteProperty()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteProperty_WithExistingProperty_ShouldDeleteProperty(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
@@ -814,9 +995,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isFalse();
     }
 
-    @Test
-    public void deleteProperty_WithNotExistingProperty_ShouldNoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteProperty_WithNotExistingProperty_ShouldNoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         property.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -826,9 +1011,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .doesNotThrowAnyException();
     }
 
-    @Test
-    public void deleteProperty_WithReadOnlyKnowledgeBase_ShouldNoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteProperty_WithReadOnlyKnowledgeBase_ShouldNoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
@@ -841,9 +1030,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(savedProperty.isPresent()).as("Check that property was not deleted").isTrue();
     }
 
-    @Test
-    public void listProperties_WithASavedConceptAndNotAll_ShouldFindOneConcept()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listProperties_WithASavedConceptAndNotAll_ShouldFindOneConcept(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBProperty property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
@@ -855,9 +1049,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrProperty("name");
     }
 
-    @Test
-    public void listProperties_WithNoSavedConceptAndAll_ShouldFindRdfConcepts()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listProperties_WithNoSavedConceptAndAll_ShouldFindRdfConcepts(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         List<KBProperty> properties = sut.listProperties(kb, true);
@@ -866,9 +1065,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .allMatch(this::hasImplicitNamespace);
     }
 
-    @Test
-    public void createInstance_WithEmptyIdentifier_ShouldCreateNewInstance()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createInstance_WithEmptyIdentifier_ShouldCreateNewInstance(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -880,9 +1083,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", instance.getName());
     }
 
-    @Test
-    public void createInstance_WithCustomBasePrefix_ShouldCreateNewInstanceWithCustomPrefix()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createInstance_WithCustomBasePrefix_ShouldCreateNewInstanceWithCustomPrefix(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -900,9 +1108,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertEquals(customPrefix, savedInstancePrefix);
     }
 
-    @Test
-    public void createInstance_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createInstance_WithNonemptyIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = new KBInstance();
         instance.setIdentifier("Nonempty Identifier");
 
@@ -914,9 +1127,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier must be empty on create");
     }
 
-    @Test
-    public void createInstance_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void createInstance_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         kb.setReadOnly(true);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -925,9 +1142,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isThrownBy(() -> sut.createInstance(kb, instance));
     }
 
-    @Test
-    public void readInstance_WithExistingInstance_ShouldReturnSavedInstance()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readInstance_WithExistingInstance_ShouldReturnSavedInstance(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
@@ -939,9 +1160,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", instance.getName());
     }
 
-    @Test
-    public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         Optional<KBInstance> savedInstance = sut.readInstance(kb,
@@ -950,9 +1176,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(savedInstance.isPresent()).as("Check that no instance was read").isFalse();
     }
 
-    @Test
-    public void updateInstance_WithAlteredInstance_ShouldUpdateInstance()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateInstance_WithAlteredInstance_ShouldUpdateInstance(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
@@ -967,10 +1197,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", "New name");
     }
 
-    @Test
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
     // TODO: Check whether this is a feature or not
-    public void updateInstance_WithNonexistentInstance_ShouldCreateInstance()
+    public void updateInstance_WithNonexistentInstance_ShouldCreateInstance(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         instance.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -984,9 +1218,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", instance.getName());
     }
 
-    @Test
-    public void updateInstance_WithInstanceWithBlankIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateInstance_WithInstanceWithBlankIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         instance.setIdentifier("");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -997,9 +1236,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier cannot be empty on update");
     }
 
-    @Test
-    public void updateInstance_WithInstanceWithNullIdentifier_ShouldThrowIllegalArgumentException()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateInstance_WithInstanceWithNullIdentifier_ShouldThrowIllegalArgumentException(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         instance.setIdentifier(null);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1010,9 +1254,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .withMessage("Identifier cannot be empty on update");
     }
 
-    @Test
-    public void updateInstance_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void updateInstance_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
@@ -1030,9 +1278,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("name", "Instance name");
     }
 
-    @Test
-    public void deleteInstance_WithExistingInstance_ShouldDeleteInstance()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteInstance_WithExistingInstance_ShouldDeleteInstance(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
@@ -1044,9 +1296,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isFalse();
     }
 
-    @Test
-    public void deleteInstance_WithInstanceReferencedAsObject_ShouldDeleteInstanceAndStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteInstance_WithInstanceReferencedAsObject_ShouldDeleteInstanceAndStatement(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         KBProperty property = buildProperty();
         KBInstance instance2 = buildInstance();
@@ -1070,9 +1327,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     }
 
-    @Test
-    public void deleteInstance_WithNonexistentProperty_ShouldNoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteInstance_WithNonexistentProperty_ShouldNoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         instance.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1082,9 +1343,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .doesNotThrowAnyException();
     }
 
-    @Test
-    public void deleteInstance_WithReadOnlyKnowledgeBase_ShouldNoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteInstance_WithReadOnlyKnowledgeBase_ShouldNoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
@@ -1097,9 +1362,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(savedInstance.isPresent()).as("Check that instance was not deleted").isTrue();
     }
 
-    @Test
-    public void listInstances_WithASavedInstanceAndNotAll_ShouldFindOneInstance()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listInstances_WithASavedInstanceAndNotAll_ShouldFindOneInstance(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBInstance instance = buildInstance();
@@ -1115,9 +1385,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
     }
 
-    @Test
-    public void upsertStatement_WithUnsavedStatement_ShouldCreateStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void upsertStatement_WithUnsavedStatement_ShouldCreateStatement(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1136,9 +1410,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("inferred", false);
     }
 
-    @Test
-    public void upsertStatement_WithExistingStatement_ShouldUpdateStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void upsertStatement_WithExistingStatement_ShouldUpdateStatement(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1159,9 +1437,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("inferred", false);
     }
 
-    @Test
-    public void upsertStatement_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void upsertStatement_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1180,9 +1462,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isEqualTo(statementCountAfterUpsert);
     }
 
-    @Test
-    public void deleteStatement_WithExistingStatement_ShouldDeleteStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteStatement_WithExistingStatement_ShouldDeleteStatement(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1199,9 +1485,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .noneMatch(stmt -> "Test statement".equals(stmt.getValue()));
     }
 
-    @Test
-    public void deleteStatement_WithNonExistentStatement_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteStatement_WithNonExistentStatement_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1213,9 +1503,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThatCode(() -> sut.deleteStatement(kb, statement)).doesNotThrowAnyException();
     }
 
-    @Test
-    public void deleteStatement_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void deleteStatement_WithReadOnlyKnowledgeBase_ShouldDoNothing(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1238,9 +1532,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isEqualTo(statementCountBeforeDeletion);
     }
 
-    @Test
-    public void listStatements_WithExistentStatementAndNotAll_ShouldReturnOnlyThisStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listStatements_WithExistentStatementAndNotAll_ShouldReturnOnlyThisStatement(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1261,9 +1560,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .containsExactlyInAnyOrderElementsOf(statement.getOriginalTriples());
     }
 
-    @Test
-    public void listStatements_WithNonexistentStatementAndAll_ShouldRetuenAllStatements()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listStatements_WithNonexistentStatementAndAll_ShouldRetuenAllStatements(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         sut.createConcept(kb, concept);
@@ -1275,9 +1579,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .allMatch(stmt -> hasImplicitNamespace(stmt.getProperty()));
     }
 
-    @Test
-    public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
@@ -1300,10 +1609,15 @@ public class KnowledgeBaseServiceImplIntegrationTest
                         new KBHandle("http://purl.org/ontology/wo/TaxonRank", "Taxonomic Rank"));
     }
 
-    @Test
-    public void getConceptRoots_WithWildlifeOntologyAndExplicityDefinedConcepts_ShouldReturnRootConcepts()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getConceptRoots_WithWildlifeOntologyAndExplicityDefinedConcepts_ShouldReturnRootConcepts(
+            Reification reification)
         throws Exception
+
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         kb.setDefaultLanguage("en");
         kb.setRootConcepts(asList("http://purl.org/ontology/wo/AnimalIntelligence",
@@ -1321,9 +1635,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .containsExactlyInAnyOrder(expectedLabels);
     }
 
-    @Test
-    public void getConceptRoots_WithSparqlPlayground_ReturnsOnlyRootConcepts() throws Exception
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getConceptRoots_WithSparqlPlayground_ReturnsOnlyRootConcepts(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
         setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL,
@@ -1338,9 +1657,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     }
 
-    @Test
-    public void getChildConcepts_WithSparqlPlayground_ReturnsAnimals() throws Exception
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getChildConcepts_WithSparqlPlayground_ReturnsAnimals(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
         setSchema(kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL,
@@ -1356,9 +1679,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .containsExactlyInAnyOrder(expectedLabels);
     }
 
-    @Test
-    public void getChildConcepts_WithStreams_ReturnsOnlyImmediateChildren() throws Exception
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getChildConcepts_WithStreams_ReturnsOnlyImmediateChildren(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/streams.ttl");
         KBConcept concept = sut.readConcept(kb, "http://mrklie.com/schemas/streams#input", true)
@@ -1376,12 +1703,18 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .containsExactlyInAnyOrder(expectedLabels);
     }
 
-    @Test
-    public void getEnabledKnowledgeBases_WithOneEnabledOneDisabled_ReturnsOnlyEnabledKB()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getEnabledKnowledgeBases_WithOneEnabledOneDisabled_ReturnsOnlyEnabledKB(
+            Reification reification)
+        throws Exception
+
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        KnowledgeBase kb2 = buildKnowledgeBase(project, "TestKB2");
+        KnowledgeBase kb2 = buildKnowledgeBase(project, "TestKB2", reification);
         kb2.setEnabled(false);
         sut.registerKnowledgeBase(kb2, sut.getNativeConfig());
 
@@ -1392,9 +1725,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     }
 
-    @Test
-    public void getEnabledKnowledgeBases_WithoutEnabledKnowledgeBases_ShouldReturnEmptyList()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void getEnabledKnowledgeBases_WithoutEnabledKnowledgeBases_ShouldReturnEmptyList(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         kb.setEnabled(false);
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
@@ -1404,9 +1742,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(knowledgeBases).as("Check that the list is empty").isEmpty();
     }
 
-    @Test
-    public void listStatementsWithPredicateOrObjectReference_WithExistingStatements_ShouldOnlyReturnStatementsWhereIdIsPredOrObj()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void listStatementsWithPredicateOrObjectReference_WithExistingStatements_ShouldOnlyReturnStatementsWhereIdIsPredOrObj(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance subject = buildInstance();
         KBInstance object = buildInstance();
         KBProperty property = buildProperty();
@@ -1437,9 +1780,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     }
 
-    @Test
-    public void thatExistsFindsExistingStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void thatExistsFindsExistingStatement(Reification reification) throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1455,9 +1801,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertTrue(sut.exists(kb, mockStatement));
     }
 
-    @Test
-    public void thatExistsDoesNotFindNonExistingStatement()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void thatExistsDoesNotFindNonExistingStatement(Reification reification) throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
@@ -1472,9 +1821,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertFalse(sut.exists(kb, mockStatement));
     }
 
-    @Test
-    public void thatTheInstanceIsRetrievedInTheCorrectLanguage()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void thatTheInstanceIsRetrievedInTheCorrectLanguage(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         KBInstance germanInstance = buildInstanceWithLanguage("de");
         KBInstance englishInstance = buildInstanceWithLanguage("en");
 
@@ -1493,9 +1846,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isEqualTo("en");
     }
 
-    @Test
-    public void thatTheLanguageOfKbInstanceCanBeModified()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void thatTheLanguageOfKbInstanceCanBeModified(Reification reification) throws Exception
     {
+        setUp(reification);
+
         KBInstance englishInstance = buildInstanceWithLanguage("en");
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1512,9 +1868,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .as("Check that the language has successfully been changed.").isEqualTo("de");
     }
 
-    @Test
-    public void thatTheLanguageOfKbPropertyCanBeModified()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void thatTheLanguageOfKbPropertyCanBeModified(Reification reification) throws Exception
     {
+        setUp(reification);
+
         KBProperty englishProperty = buildPropertyWithLanguage("en");
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1531,9 +1890,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .as("Check that the language has successfully been changed.").isEqualTo("de");
     }
 
-    @Test
-    public void thatTheLanguageOfKbConceptCanBeModified()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void thatTheLanguageOfKbConceptCanBeModified(Reification reification) throws Exception
     {
+        setUp(reification);
+
         KBConcept englishConcept = buildConceptWithLanguage("en");
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1550,9 +1912,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .as("Check that the language has successfully been changed.").isEqualTo("de");
     }
 
-    @Test
-    public void readKnowledgeBaseProfiles_ShouldReturnValidHashMapWithProfiles() throws IOException
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readKnowledgeBaseProfiles_ShouldReturnValidHashMapWithProfiles(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile
                 .readKnowledgeBaseProfiles();
 
@@ -1560,9 +1927,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     }
 
-    @Test
-    public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readKBIdentifiers_ShouldReturnCorrectClassInstances(Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         KBConcept concept = buildConcept();
@@ -1583,18 +1954,28 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isInstanceOf(KBProperty.class);
     }
 
-    @Test
-    public void checkIfKBIsEnabledById_WithExistingAndEnabledKB_ShouldReturnTrue()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void checkIfKBIsEnabledById_WithExistingAndEnabledKB_ShouldReturnTrue(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         String repoId = kb.getRepositoryId();
         assertThat(sut.isKnowledgeBaseEnabled(project, repoId))
                 .as("Check that correct accessibility value is returned for enabled kb ").isTrue();
     }
 
-    @Test
-    public void checkIfKBIsEnabledById_WithDisabledKBAndNonExistingId_ShouldReturnFalse()
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void checkIfKBIsEnabledById_WithDisabledKBAndNonExistingId_ShouldReturnFalse(
+            Reification reification)
+        throws Exception
     {
+        setUp(reification);
+
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         kb.setEnabled(false);
         String repoId = kb.getRepositoryId();
@@ -1614,7 +1995,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name)
+    private KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification)
     {
         return testFixtures.buildKnowledgeBase(project, name, reification);
     }
@@ -1696,9 +2077,6 @@ public class KnowledgeBaseServiceImplIntegrationTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
-            "de.tudarmstadt.ukp.clarin.webanno.model" })
     public static class SpringConfig
     {
         // No content

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
 import static java.util.Arrays.asList;
@@ -56,7 +58,6 @@ import org.apache.wicket.validation.ValidationError;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -413,7 +414,7 @@ public class RecommenderEditorPanel
 
         for (AnnotationLayer layer : annotationSchemaService
                 .listAnnotationLayer(projectModel.getObject())) {
-            if (WebAnnoConst.SPAN_TYPE.equals(layer.getType())
+            if ((SPAN_TYPE.equals(layer.getType()) || RELATION_TYPE.equals(layer.getType()))
                     && !Token.class.getName().equals(layer.getName())) {
                 layers.add(layer);
             }

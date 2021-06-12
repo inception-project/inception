@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
-import static java.util.Arrays.asList;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -31,80 +32,75 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
-import java.util.Collections;
 
-import javax.persistence.EntityManager;
-
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.context.WebApplicationContext;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.OpenCasStorageSessionForRequestFilter;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.config.ProjectExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.config.CurationDocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 
-@RunWith(SpringRunner.class)
 @EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
-@SpringBootTest(webEnvironment = WebEnvironment.MOCK, properties = {
-        "repository.path=target/AeroRemoteApiControllerTest/repository" })
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
+        properties = { //
+                "spring.main.banner-mode=off", //
+                "remote-api.enabled=true", //
+                "repository.path=" + AeroRemoteApiControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
-@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+@Import({ //
+        ProjectExportServiceAutoConfiguration.class, //
+        CurationDocumentServiceAutoConfiguration.class, //
+        TextFormatsAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        SecurityAutoConfiguration.class, //
+        RemoteApiAutoConfiguration.class })
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class AeroRemoteApiControllerTest
 {
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiControllerTest";
+
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     private MockMvc mvc;
 
@@ -114,7 +110,13 @@ public class AeroRemoteApiControllerTest
     // in the DB and clean the test repository once!
     private static boolean initialized = false;
 
-    @Before
+    @BeforeAll
+    public static void setupClass()
+    {
+        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
+    }
+
+    @BeforeEach
     public void setup()
     {
         // @formatter:off
@@ -122,15 +124,14 @@ public class AeroRemoteApiControllerTest
                 .webAppContextSetup(context)
                 .alwaysDo(print())
                 .apply(SecurityMockMvcConfigurers.springSecurity())
+                .addFilters(new LoggingFilter(repositoryProperties.getPath().toString()))
                 .addFilters(new OpenCasStorageSessionForRequestFilter())
                 .build();
         // @formatter:on
 
         if (!initialized) {
-            userRepository.create(new User("admin", Role.ROLE_ADMIN));
+            userRepository.create(new User("admin", ROLE_ADMIN));
             initialized = true;
-
-            FileSystemUtils.deleteRecursively(new File("target/RemoteApiController2Test"));
         }
     }
 
@@ -142,7 +143,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(post(API_BASE + "/projects")
@@ -151,7 +152,7 @@ public class AeroRemoteApiControllerTest
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .param("name", "project1"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("project1"));
         
@@ -159,7 +160,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("project1"));
         // @formatter:on
@@ -173,7 +174,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(multipart(API_BASE + "/projects/1/documents")
@@ -183,7 +184,7 @@ public class AeroRemoteApiControllerTest
                 .param("name", "test.txt")
                 .param("format", "text"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("test.txt"));
      
@@ -191,7 +192,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
@@ -206,7 +207,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(multipart(API_BASE + "/projects/1/documents/1/annotations/admin")
@@ -217,7 +218,7 @@ public class AeroRemoteApiControllerTest
                 .param("format", "text")
                 .param("state", "IN-PROGRESS"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.user").value("admin"))
             .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
             .andExpect(jsonPath("$.body.timestamp").doesNotExist());
@@ -226,7 +227,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].user").value("admin"))
             .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
             .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
@@ -241,7 +242,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
@@ -254,7 +255,7 @@ public class AeroRemoteApiControllerTest
                 .param("format", "text")
                 .param("state", "CURATION-COMPLETE"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body.user").value("CURATION_USER"))
             .andExpect(jsonPath("$.body.state").value("COMPLETE"))
             .andExpect(jsonPath("$.body.timestamp").exists());
@@ -263,7 +264,7 @@ public class AeroRemoteApiControllerTest
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
@@ -280,120 +281,22 @@ public class AeroRemoteApiControllerTest
                 .param("projectId", "1")
                 .param("documentId", "1"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"));
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE));
      
         mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
         // @formatter:on
     }
 
-    @Configuration
+    @SpringBootConfiguration
     public static class TestContext
     {
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
-        private @Autowired EntityManager entityManager;
-
-        @Bean
-        public AeroRemoteApiController remoteApiV2()
-        {
-            return new AeroRemoteApiController();
-        }
-
-        @Bean
-        public ProjectService projectService()
-        {
-            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
-                    repositoryProperties(), null);
-        }
-
-        @Bean
-        public UserDao userRepository()
-        {
-            return new UserDaoImpl();
-        }
-
-        @Bean
-        public DocumentService documentService()
-        {
-            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
-                    importExportService(), projectService(), applicationEventPublisher,
-                    entityManager);
-        }
-
-        @Bean
-        public AnnotationSchemaService annotationService()
-        {
-            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
-                    entityManager);
-        }
-
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry()
-        {
-            return new FeatureSupportRegistryImpl(Collections.emptyList());
-        }
-
-        @Bean
-        public CasStorageService casStorageService()
-        {
-            return new CasStorageServiceImpl(null, null, repositoryProperties(),
-                    new CasStoragePropertiesImpl(), backupProperties());
-        }
-
-        @Bean
-        public DocumentImportExportService importExportService()
-        {
-            DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
-
-            return new DocumentImportExportServiceImpl(repositoryProperties(),
-                    asList(new TextFormatSupport()), casStorageService(), annotationService(),
-                    properties);
-        }
-
-        @Bean
-        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-                AnnotationSchemaService aAnnotationService)
-        {
-            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
-        }
-
-        @Bean
-        public ProjectExportService exportService()
-        {
-            return new ProjectExportServiceImpl(null, null, projectService());
-        }
-
-        @Bean
-        public RepositoryProperties repositoryProperties()
-        {
-            return new RepositoryProperties();
-        }
-
-        @Bean
-        public BackupProperties backupProperties()
-        {
-            return new BackupProperties();
-        }
-
-        @Bean
-        public ApplicationContextProvider contextProvider()
-        {
-            return new ApplicationContextProvider();
-        }
-
-        @Bean
-        public LayerSupportRegistry layerSupportRegistry()
-        {
-            return new LayerSupportRegistryImpl(
-                    asList(new SpanLayerSupport(featureSupportRegistry(), null, null),
-                            new RelationLayerSupport(featureSupportRegistry(), null, null),
-                            new ChainLayerSupport(featureSupportRegistry(), null, null)));
-        }
+        // All handled by auto-config
     }
 }

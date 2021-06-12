@@ -15,4 +15,5 @@ idea/
 *.eml
 */*.eml
 .gradle
-log4j2-dev.xml
+inception/inception-html-editor/src/main/js/annotatorjs/lib
+inception/inception-app-webapp/src/main/resources/log4j2-dev.xml

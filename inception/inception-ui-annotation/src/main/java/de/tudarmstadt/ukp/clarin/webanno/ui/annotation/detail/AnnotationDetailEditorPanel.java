@@ -85,9 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
@@ -97,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -552,12 +548,7 @@ public abstract class AnnotationDetailEditorPanel
 
         if (aTarget != null) {
             refresh(aTarget);
-            // aTarget.add(buttonContainer);
-            // aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
         }
-
-        // Ensure we re-render and update the highlight
-        onChange(aTarget);
     }
 
     @Override
@@ -622,6 +613,9 @@ public abstract class AnnotationDetailEditorPanel
         editorPage.ensureIsEditable();
 
         AnnotatorState state = getModelObject();
+        if (!state.getSelection().isSet()) {
+            return;
+        }
 
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span
@@ -638,7 +632,6 @@ public abstract class AnnotationDetailEditorPanel
 
             if (!originFS.getType().equals(targetFS.getType())) {
                 reset(aTarget);
-                onChange(aTarget);
                 throw new IllegalPlacementException(
                         "Cannot create relation between spans on different layers");
             }
@@ -838,15 +831,9 @@ public abstract class AnnotationDetailEditorPanel
         // Loading feature editor values from CAS
         loadFeatureEditorModels(aTarget);
 
-        // onAnnotate callback
-        onAnnotate(aTarget);
-
         autoScroll(aCas);
 
         getForwardAnnotationTextField().setModelObject(null);
-
-        LOG.trace("onChange()");
-        onChange(aTarget);
 
         // If we created a new annotation, then refresh the available annotation layers in the
         // detail panel.
@@ -1042,9 +1029,6 @@ public abstract class AnnotationDetailEditorPanel
         state.rememberFeatures();
 
         reset(aTarget);
-
-        onChange(aTarget);
-        onDelete(aTarget, fs);
     }
 
     private void deleteAnnotation(CAS aCas, AnnotatorState state, AnnotationFS fs,
@@ -1178,16 +1162,14 @@ public abstract class AnnotationDetailEditorPanel
 
         // in case the user re-reverse it
         state.getSelection().reverseArc();
-
-        onChange(aTarget);
     }
 
     @Override
     public void actionClear(AjaxRequestTarget aTarget) throws AnnotationException
     {
         reset(aTarget);
+
         aTarget.addChildren(getPage(), IFeedback.class);
-        onChange(aTarget);
     }
 
     /**
@@ -1386,37 +1368,9 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    /**
-     * @deprecated Use event listeners for {@link SelectionChangedEvent}, {@link AnnotationEvent},
-     *             {@link FeatureValueUpdatedEvent} and/or {@link AnnotatorViewportChangedEvent}
-     *             instead.
-     */
-    @Deprecated
-    protected void onChange(AjaxRequestTarget aTarget)
-    {
-        // Overriden in CurationPanel
-    }
-
     protected void onAutoForward(AjaxRequestTarget aTarget)
     {
         // Overriden in CurationPanel
-    }
-
-    /**
-     * This is used only on the AutomationPage.
-     * 
-     * @deprecated A reasonable replacement for this should be an event listener for
-     *             {@link AnnotationCreatedEvent}.
-     */
-    @Deprecated
-    protected void onAnnotate(AjaxRequestTarget aTarget)
-    {
-        // Overriden in AutomationPage
-    }
-
-    protected void onDelete(AjaxRequestTarget aTarget, AnnotationFS aFs)
-    {
-        // Overriden in AutomationPage
     }
 
     @SuppressWarnings("unchecked")
@@ -1729,8 +1683,13 @@ public abstract class AnnotationDetailEditorPanel
 
     public void refresh(AjaxRequestTarget aTarget)
     {
-        aTarget.add(layerSelectionPanel, buttonContainer, selectedAnnotationInfoPanel,
-                featureEditorListPanel, relationListPanel);
+        // If the layer selector is de-coupled from the selection, then we leave it in peace
+        if (!getModelObject().getPreferences().isRememberLayer()) {
+            aTarget.add(layerSelectionPanel);
+        }
+
+        aTarget.add(buttonContainer, selectedAnnotationInfoPanel, featureEditorListPanel,
+                relationListPanel);
     }
 
     @OnEvent(stop = true)
@@ -1756,7 +1715,7 @@ public abstract class AnnotationDetailEditorPanel
         AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class).get();
 
         // If "remember layer" is set, the we really just update the selected layer...
-        // we do not touch the selected annotation not the annotation detail panel
+        // we do not touch the selected annotation nor the annotation detail panel
         if (!state.getPreferences().isRememberLayer()) {
 
             // If "remember layer" is not set, then changing the layer means that we

@@ -211,7 +211,8 @@ public class ConceptFeatureTraitsEditor
 
     private ConceptFeatureSupport getFeatureSupport()
     {
-        return featureSupportRegistry.getFeatureSupport(featureSupportId);
+        return (ConceptFeatureSupport) featureSupportRegistry.getExtension(featureSupportId)
+                .orElseThrow();
     }
 
     /**

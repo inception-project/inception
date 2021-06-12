@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.versioning;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -32,18 +31,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.persistence.EntityManager;
-
 import org.apache.uima.cas.CAS;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -51,81 +46,75 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.text.PretokenizedTextFormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
-@RunWith(SpringRunner.class)
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest( //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off", //
+                "repository.path=" + VersioningServiceImplTest.TEST_OUTPUT_FOLDER, //
+                "versioning.enabled=true" })
+@EnableAutoConfiguration
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model",
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+@Import({ //
+        CurationDocumentServiceAutoConfiguration.class, //
+        TextFormatsAutoConfiguration.class, //
+        UimaFormatsAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
+        VersioningServiceAutoConfiguration.class, CasStorageServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, AnnotationSchemaServiceAutoConfiguration.class, //
+        SecurityAutoConfiguration.class })
 public class VersioningServiceImplTest
 {
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/VersioningServiceImplTest";
+
     private @Autowired VersioningService sut;
     private @Autowired TestEntityManager testEntityManager;
-    private @Autowired RepositoryProperties repositoryProperties;
-    private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userDao;
-    private @Autowired DocumentImportExportService importExportService;
     private @Autowired DocumentService documentService;
-
-    @Rule
-    public TemporaryFolder repoDir = new TemporaryFolder();
 
     private Project testProject;
 
-    @Before
-    public void setUp() throws Exception
+    @BeforeAll
+    public static void setupClass()
     {
-        repositoryProperties.setPath(repoDir.getRoot());
-        testProject = new Project("testProject");
-
+        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
     }
 
-    @After
+    @BeforeEach
+    public void setUp()
+    {
+        testProject = new Project("testProject");
+    }
+
+    @AfterEach
     public void tearDown()
     {
         testEntityManager.clear();
@@ -296,134 +285,6 @@ public class VersioningServiceImplTest
         assertThat(sut.repoExists(testProject)).isFalse();
     }
 
-    @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.model",
-            "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-    public static class TestContext
-    {
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
-        private @Autowired EntityManager entityManager;
-
-        @Bean
-        public RepositoryProperties repositoryProperties()
-        {
-            return new RepositoryProperties();
-        }
-
-        @Bean
-        public AnnotationSchemaService annotationSchemaService(
-                LayerSupportRegistry aLayerSupportRegistry,
-                FeatureSupportRegistry aFeatureSupportRegistry)
-        {
-            return new AnnotationSchemaServiceImpl(aLayerSupportRegistry, aFeatureSupportRegistry,
-                    entityManager);
-        }
-
-        @Bean
-        public LayerSupportRegistry layerSupportRegistry(
-                FeatureSupportRegistry aFeatureSupportRegistry)
-        {
-            return new LayerSupportRegistryImpl(
-                    asList(new SpanLayerSupport(aFeatureSupportRegistry, null, null),
-                            new RelationLayerSupport(aFeatureSupportRegistry, null, null),
-                            new ChainLayerSupport(aFeatureSupportRegistry, null, null)));
-        }
-
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry()
-        {
-            return new FeatureSupportRegistryImpl(asList(new NumberFeatureSupport(),
-                    new BooleanFeatureSupport(), new StringFeatureSupport()));
-        }
-
-        @Bean
-        public ProjectService projectService(UserDao aUserDao,
-                RepositoryProperties aRepositoryProperties,
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
-        {
-            return new ProjectServiceImpl(aUserDao, applicationEventPublisher,
-                    aRepositoryProperties, aInitializerProxy);
-        }
-
-        @Bean
-        public UserDao userRepository()
-        {
-            return new UserDaoImpl();
-        }
-
-        @Bean
-        public DocumentService documentService(RepositoryProperties aRepositoryProperties,
-                CasStorageService aCasStorageService,
-                DocumentImportExportService aImportExportService, ProjectService aProjectService,
-                ApplicationEventPublisher aApplicationEventPublisher)
-        {
-            return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
-                    aImportExportService, aProjectService, aApplicationEventPublisher);
-        }
-
-        @Bean
-        public CasStorageService casStorageService(AnnotationSchemaService aAnnotationSchemaService,
-                RepositoryProperties aRepositoryProperties)
-        {
-            return new CasStorageServiceImpl(new CasDoctor(), aAnnotationSchemaService,
-                    aRepositoryProperties, new CasStoragePropertiesImpl(), new BackupProperties());
-        }
-
-        @Bean
-        public DocumentImportExportService importExportService(
-                RepositoryProperties aRepositoryProperties,
-                AnnotationSchemaService aAnnotationSchemaService,
-                CasStorageService aCasStorageService)
-        {
-            DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
-            return new DocumentImportExportServiceImpl(aRepositoryProperties,
-                    List.of(new XmiFormatSupport(), new PretokenizedTextFormatSupport()),
-                    aCasStorageService, aAnnotationSchemaService, properties);
-        }
-
-        @Bean
-        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-                AnnotationSchemaService aAnnotationService)
-        {
-            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
-        }
-
-        @Bean
-        public VersioningService versioningService(RepositoryProperties aRepositoryProperties,
-                AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
-                CurationDocumentService aCurationDocumentService,
-                CasStorageService aCasStorageService, UserDao aUserDao)
-        {
-            return new VersioningServiceImpl(aRepositoryProperties, aAnnotationSchemaService,
-                    aDocumentService, aCurationDocumentService, aCasStorageService, aUserDao);
-        }
-
-        @Lazy
-        @Bean
-        public TokenLayerInitializer TokenLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new TokenLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Lazy
-        @Bean
-        public NamedEntityLayerInitializer namedEntityLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityLayerInitializer(aAnnotationService);
-        }
-
-        @Lazy
-        @Bean
-        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityTagSetInitializer(aAnnotationService);
-        }
-    }
-
     private User addUser(String aUserName)
     {
         User user = new User();
@@ -438,15 +299,6 @@ public class VersioningServiceImplTest
         projectService.createProject(aProject);
         projectService.initializeProject(aProject);
         sut.initializeRepo(aProject);
-    }
-
-    private SourceDocument buildSourceDocument(long aDocumentId)
-    {
-        SourceDocument doc = new SourceDocument();
-        doc.setProject(testProject);
-        doc.setId(aDocumentId);
-
-        return doc;
     }
 
     private File getResource(String aResourceName)
@@ -500,4 +352,9 @@ public class VersioningServiceImplTest
         }
     }
 
+    @SpringBootConfiguration
+    public static class TestContext
+    {
+        // All done via auto-config
+    }
 }

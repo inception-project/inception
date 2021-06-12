@@ -57,8 +57,8 @@ import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -76,7 +76,7 @@ import mtas.search.spans.util.MtasSpanQuery;
 /**
  * The Class MtasSearchTestConsistency.
  */
-@Ignore("Currently does not run because requires INCEpTION running as well")
+@Disabled("Currently does not run because requires INCEpTION running as well")
 public class MtasUimaParserLuceneTest
 {
     /** The Constant FIELD_ID. */

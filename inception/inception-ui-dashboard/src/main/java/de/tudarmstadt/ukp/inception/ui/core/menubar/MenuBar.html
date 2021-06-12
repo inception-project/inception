@@ -56,12 +56,7 @@
         </div>
       
         <div class="nav-item" wicket:enclosure="helpLink">
-          <a class="nav-link" wicket:id="helpLink">
-            <i class="fas fa-question-circle" aria-hidden="true"></i>
-            <span class="nav-link active p-0 d-none d-md-inline">
-              <wicket:message key="page.help" />
-            </span>
-          </a>
+          <a class="nav-link" wicket:id="helpLink"/>
         </div>
   
         <div class="nav-item" wicket:enclosure="adminLink">
@@ -71,6 +66,15 @@
               <wicket:message key="administration" />
             </span>
         	</a>
+        </div>
+
+        <div class="nav-item" wicket:enclosure="swaggerLink">
+          <a class="nav-link" wicket:id="swaggerLink">
+            <i class="fas fa-puzzle-piece" aria-hidden="true"></i>
+            <span class="nav-link active p-0 d-none d-md-inline">
+              <wicket:message key="swagger" />
+            </span>
+          </a>
         </div>
       
         <wicket:enclosure child="logoutPanel">

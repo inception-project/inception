@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -26,12 +28,10 @@
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception</artifactId>
-  <version>0.19.7-SNAPSHOT</version>
+  <version>0.20.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
-  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge
-    Bases
-  </description>
+  <description>INCEpTION provides a semantic annotation platform offering intelligent annotation assistance and knowledge management.</description>
   <url>https://inception-project.github.io</url>
   <inceptionYear>2018</inceptionYear>
 
@@ -65,4 +65,8 @@
   <modules>
     <module>inception</module>
   </modules>
+  <organization>
+    <name>The INCEpTION Project</name>
+    <url>https://inception-project.github.io</url>
+  </organization>
 </project>

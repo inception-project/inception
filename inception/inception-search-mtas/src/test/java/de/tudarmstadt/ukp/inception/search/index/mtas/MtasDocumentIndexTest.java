@@ -18,121 +18,102 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.List;
-
-import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityTagSetInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
-import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
-import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
-import de.tudarmstadt.ukp.inception.search.config.SearchServicePropertiesImpl;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
-import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 
-@RunWith(SpringRunner.class)
 @EnableAutoConfiguration
-@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
-        "de.tudarmstadt.ukp.inception.search.model", "de.tudarmstadt.ukp.inception.kb.model",
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
+        "de.tudarmstadt.ukp.inception.search.model", //
+        "de.tudarmstadt.ukp.inception.kb.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-@TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off", //
+                "repository.path=" + MtasDocumentIndexTest.TEST_OUTPUT_FOLDER })
+// REC: Not particularly clear why Propagation.NEVER is required, but if it is not there, the test
+// waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
+@Import({ //
+        TextFormatsAutoConfiguration.class, //
+        ConllFormatsAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
+        ProjectInitializersAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        SecurityAutoConfiguration.class, //
+        SearchServiceAutoConfiguration.class, //
+        SchedulingServiceAutoConfiguration.class, //
+        MtasDocumentIndexAutoConfiguration.class, //
+        KnowledgeBaseServiceAutoConfiguration.class })
 public class MtasDocumentIndexTest
 {
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/MtasDocumentIndexTest";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired UserDao userRepository;
@@ -140,18 +121,21 @@ public class MtasDocumentIndexTest
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
 
-    @Rule
-    public TestWatcher watcher = new TestWatcher()
+    @BeforeAll
+    public static void setupClass()
     {
-        @Override
-        protected void starting(org.junit.runner.Description aDescription)
-        {
-            String methodName = aDescription.getMethodName();
-            System.out.printf("\n=== " + methodName + " =====================\n");
-        };
-    };
+        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
+    }
 
-    @Before
+    @BeforeEach
+    public void testWatcher(TestInfo aTestInfo)
+    {
+        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        System.out.printf("\n=== %s === %s=====================\n", methodName,
+                aTestInfo.getDisplayName());
+    }
+
+    @BeforeEach
     public void setUp()
     {
         if (!userRepository.exists("admin")) {
@@ -468,209 +452,13 @@ public class MtasDocumentIndexTest
         assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
 
-    @Configuration
+    @SpringBootConfiguration
     public static class TestContext
     {
-        private @Autowired ApplicationEventPublisher applicationEventPublisher;
-        private @Autowired EntityManager entityManager;
-
-        @Rule
-        TemporaryFolder folder;
-
-        @Bean
-        public ProjectService projectService(
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
-        {
-            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
-                    repositoryProperties(), aInitializerProxy);
-        }
-
-        @Bean
-        public PhysicalIndexFactory mtasDocumentIndexFactory(DocumentService aDocumentService,
-                AnnotationSchemaService aSchemaService, RepositoryProperties aRepositoryProperties,
-                FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
-                FeatureSupportRegistry aFeatureSupportRegistry)
-        {
-            return new MtasDocumentIndexFactory(aSchemaService, aDocumentService,
-                    aRepositoryProperties, aFeatureIndexingSupportRegistry,
-                    aFeatureSupportRegistry);
-        }
-
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry()
-        {
-            return new FeatureSupportRegistryImpl(asList(new NumberFeatureSupport(),
-                    new BooleanFeatureSupport(), new StringFeatureSupport()));
-        }
-
-        @Bean
-        public FeatureIndexingSupport primitiveUimaIndexingSupport(
-                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
-        {
-            return new PrimitiveUimaIndexingSupport(aFeatureSupportRegistry);
-        }
-
-        @Bean
-        public FeatureIndexingSupportRegistry featureIndexingSupportRegistry(
-                @Lazy @Autowired(required = false) List<FeatureIndexingSupport> aIndexingSupports)
-        {
-            return new FeatureIndexingSupportRegistryImpl(aIndexingSupports);
-        }
-
-        @Lazy
-        @Bean
-        public NamedEntityLayerInitializer namedEntityLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityLayerInitializer(aAnnotationService);
-        }
-
-        @Lazy
-        @Bean
-        public NamedEntityTagSetInitializer namedEntityTagSetInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationService)
-        {
-            return new NamedEntityTagSetInitializer(aAnnotationService);
-        }
-
-        @Lazy
-        @Bean
-        public PartOfSpeechLayerInitializer partOfSpeechLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new PartOfSpeechLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Lazy
-        @Bean
-        public PartOfSpeechTagSetInitializer partOfSpeechTagSetInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new PartOfSpeechTagSetInitializer(aAnnotationSchemaService);
-        }
-
-        @Lazy
-        @Bean
-        public TokenLayerInitializer TokenLayerInitializer(
-                @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
-        {
-            return new TokenLayerInitializer(aAnnotationSchemaService);
-        }
-
-        @Lazy
-        @Bean
-        public PhysicalIndexRegistry indexRegistry(
-                @Lazy @Autowired(required = false) List<PhysicalIndexFactory> aExtensions)
-        {
-            return new PhysicalIndexRegistryImpl(aExtensions);
-        }
-
-        @Bean
-        public SearchService searchService(DocumentService aDocumentService,
-                ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
-                IndexScheduler aIndexScheduler, SearchServiceProperties aProperties)
-        {
-            return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
-                    aIndexScheduler, aProperties);
-        }
-
-        @Bean
-        public SearchServiceProperties searchServiceProperties()
-        {
-            SearchServicePropertiesImpl properties = new SearchServicePropertiesImpl();
-            properties.setEnabled(true);
-            return properties;
-        }
-
-        @Bean
-        public UserDao userRepository()
-        {
-            return new UserDaoImpl();
-        }
-
-        @Bean
-        public KnowledgeBaseService knowledgeBaseService()
-        {
-            return new KnowledgeBaseServiceImpl(repositoryProperties(), knowledgeBaseProperties());
-        }
-
-        @Bean
-        public IndexScheduler indexScheduler()
-        {
-            return new IndexSchedulerImpl();
-        }
-
-        @Bean
-        public DocumentService documentService(
-                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
-        {
-            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
-                    importExportService(), projectService(aInitializerProxy),
-                    applicationEventPublisher, entityManager);
-        }
-
-        @Bean
-        public AnnotationSchemaService annotationSchemaService()
-        {
-            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
-                    entityManager);
-        }
-
-        @Bean
-        public CasStorageService casStorageService()
-        {
-            return new CasStorageServiceImpl(null, null, repositoryProperties(),
-                    new CasStoragePropertiesImpl(), backupProperties());
-        }
-
-        @Bean
-        public DocumentImportExportService importExportService()
-        {
-            DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
-            return new DocumentImportExportServiceImpl(repositoryProperties(),
-                    asList(new TextFormatSupport(), new Conll2002FormatSupport()),
-                    casStorageService(), annotationSchemaService(), properties);
-        }
-
-        @Bean
-        public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-                AnnotationSchemaService aAnnotationService)
-        {
-            return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService);
-        }
-
-        @Bean
-        public RepositoryProperties repositoryProperties()
-        {
-            return new RepositoryProperties();
-        }
-
-        @Bean
-        public KnowledgeBaseProperties knowledgeBaseProperties()
-        {
-            return new KnowledgeBasePropertiesImpl();
-        }
-
-        @Bean
-        public BackupProperties backupProperties()
-        {
-            return new BackupProperties();
-        }
-
         @Bean
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
-        }
-
-        @Bean
-        public LayerSupportRegistry layerSupportRegistry()
-        {
-            FeatureSupportRegistry fsr = featureSupportRegistry();
-
-            return new LayerSupportRegistryImpl(asList(new SpanLayerSupport(fsr, null, null),
-                    new RelationLayerSupport(fsr, null, null),
-                    new ChainLayerSupport(fsr, null, null)));
         }
     }
 }

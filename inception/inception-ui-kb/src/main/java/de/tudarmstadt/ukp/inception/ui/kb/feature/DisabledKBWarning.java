@@ -29,7 +29,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -40,26 +39,26 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class DisabledKBWarning
     extends Panel
 {
+    private static final long serialVersionUID = -4673760000245492439L;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean KnowledgeBaseService kbService;
 
-    private IModel<ConceptFeatureTraits> featureTraits;
-    private Project project;
+    private final IModel<ConceptFeatureTraits> featureTraits;
+    private final Project project;
 
     public DisabledKBWarning(String aId, IModel<AnnotationFeature> aFeatureModel,
             IModel<ConceptFeatureTraits> aTraitsModel)
     {
-        super(aId);
+        super(aId, aFeatureModel);
 
         AnnotationFeature feature = aFeatureModel.getObject();
         project = feature.getProject();
 
         // If traits are not explicitly given, try to resolve them via featureSupportRegistry
         if (aTraitsModel == null) {
-            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                    .getFeatureSupport(aFeatureModel.getObject());
-            featureTraits = Model.of(fs.readTraits(aFeatureModel.getObject()));
+            featureTraits = Model
+                    .of(featureSupportRegistry.readTraits(feature, ConceptFeatureTraits::new));
         }
         else {
             featureTraits = aTraitsModel;

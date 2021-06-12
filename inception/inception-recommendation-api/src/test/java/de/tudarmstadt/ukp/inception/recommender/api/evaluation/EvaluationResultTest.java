@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommender.api.evaluation;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
@@ -32,7 +33,7 @@ public class EvaluationResultTest
 {
     private List<LabelPair> instances;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         instances = new ArrayList<>();
@@ -49,7 +50,7 @@ public class EvaluationResultTest
     @Test
     public void thatAccuracyWorks()
     {
-        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.toEvaluationResult());
 
         assertThat(calc.computeAccuracyScore()).as("accuracy is correctly calculated")
                 .isEqualTo(4.0 / 9.0);
@@ -58,7 +59,7 @@ public class EvaluationResultTest
     @Test
     public void thatPrecisionWorks()
     {
-        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.toEvaluationResult());
 
         assertThat(calc.computePrecisionScore()).as("precision is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
@@ -67,7 +68,7 @@ public class EvaluationResultTest
     @Test
     public void thatRecallWorks()
     {
-        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.toEvaluationResult());
 
         assertThat(calc.computeRecallScore()).as("recall is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
@@ -76,7 +77,7 @@ public class EvaluationResultTest
     @Test
     public void thatF1Works()
     {
-        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.toEvaluationResult());
 
         assertThat(calc.computeF1Score()).as("f1 is correctly calculated")
                 .isEqualTo(2 * (4.0 / 9.0 * 4.0 / 9.0) / (8.0 / 9.0));
@@ -88,7 +89,7 @@ public class EvaluationResultTest
         double expectedPrec = (4.0 / 5 + 2.0 / 5) * 0.5;
         double expectedRecall = 0.5;
         EvaluationResult calc = instances.stream()
-                .collect(EvaluationResult.collector(0, 0, 0, "PER"));
+                .collect(toEvaluationResult("", "", 0, 0, 0, "PER"));
 
         assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
                 .isEqualTo(2 * expectedPrec * expectedRecall / (expectedPrec + expectedRecall));
@@ -103,14 +104,14 @@ public class EvaluationResultTest
     @Test
     public void thatNumOfLabelsWorks()
     {
-        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
+        EvaluationResult calc = instances.stream().collect(toEvaluationResult());
         assertThat(calc.getNumOfLabels()).as("check num of labels for no ignoreLabel").isEqualTo(3);
 
-        calc = instances.stream().collect(EvaluationResult.collector(0, 0, 0, "PER"));
+        calc = instances.stream().collect(toEvaluationResult("", "", 0, 0, 0, "PER"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for one ignoreLabel")
                 .isEqualTo(2);
 
-        calc = instances.stream().collect(EvaluationResult.collector(0, 0, 0, "PER", "ORG"));
+        calc = instances.stream().collect(toEvaluationResult("", "", 0, 0, 0, "PER", "ORG"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for two ignoreLabel")
                 .isEqualTo(1);
     }
@@ -123,7 +124,8 @@ public class EvaluationResultTest
         newInstances.add(new LabelPair("PART", "ORG"));
         newInstances.add(new LabelPair("PER", "PUNC"));
 
-        EvaluationResult calc = newInstances.stream().collect(EvaluationResult.collector());
+        EvaluationResult calc = newInstances.stream()
+                .collect(EvaluationResult.toEvaluationResult());
 
         assertThat(calc.computeAccuracyScore())
                 .as("accuracy with missing classes is correctly calculated").isEqualTo(2.0 / 5);

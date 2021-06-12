@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static javax.servlet.DispatcherType.ASYNC;
+import static javax.servlet.DispatcherType.FORWARD;
 import static javax.servlet.DispatcherType.REQUEST;
 
 import java.util.EnumSet;
@@ -31,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
 @Configuration
@@ -45,10 +47,8 @@ public class InceptionWebInitializer
     {
         // Make username / repository accessible to logging framework
         FilterRegistration loggingFilter = aServletContext.addFilter("logging",
-                LoggingFilter.class);
-        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
-        loggingFilter.setInitParameter(LoggingFilter.PARAM_REPOSITORY_PATH,
-                repoProperties.getPath().getAbsolutePath().toString());
+                new LoggingFilter(repoProperties.getPath().getAbsolutePath().toString()));
+        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
 
         // Make sure we have one JPA session/transaction per request. Closes session at the
         // end, without this, changed data may not be automatically saved to the DB.

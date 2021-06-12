@@ -41,23 +41,27 @@ import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 import org.mockito.Spy;
+import org.slf4j.MDC;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
@@ -66,11 +70,11 @@ public class DocumentImportExportServiceImplTest
     private CasStorageSession casStorageSession;
     private @Spy AnnotationSchemaService schemaService;
 
-    public @Rule TemporaryFolder testFolder = new TemporaryFolder();
+    public @TempDir File testFolder;
 
     private DocumentImportExportServiceImpl sut;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         openMocks(this);
@@ -81,7 +85,9 @@ public class DocumentImportExportServiceImplTest
         DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
         RepositoryProperties repositoryProperties = new RepositoryProperties();
-        repositoryProperties.setPath(testFolder.newFolder());
+        repositoryProperties.setPath(testFolder);
+
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         CasStorageServiceImpl storageService = new CasStorageServiceImpl(null, null,
                 repositoryProperties, new CasStoragePropertiesImpl(), new BackupProperties());
@@ -104,7 +110,7 @@ public class DocumentImportExportServiceImplTest
         casStorageSession = CasStorageSession.open();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         CasStorageSession.get().close();

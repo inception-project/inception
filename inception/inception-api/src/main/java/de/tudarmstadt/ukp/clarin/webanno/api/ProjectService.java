@@ -17,25 +17,33 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang3.Validate;
+import org.slf4j.MDC;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.MDCContext;
 
 public interface ProjectService
 {
@@ -58,6 +66,8 @@ public interface ProjectService
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission permission);
+
+    void removeProjectPermission(ProjectPermission projectPermission);
 
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
@@ -111,6 +121,8 @@ public interface ProjectService
 
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
 
+    List<ProjectPermission> listProjectPermissions(User aUser);
+
     void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels);
 
@@ -135,13 +147,9 @@ public interface ProjectService
     List<User> listProjectUsersWithPermissions(Project project, PermissionLevel permissionLevel);
 
     /**
-     * remove a user permission from the project
-     *
-     * @param projectPermission
-     *            The ProjectPermission to be removed
+     * Removes all permissions for the given user to the given proejct.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProjectPermission(ProjectPermission projectPermission);
+    void leaveProject(User aObject, Project aProject);
 
     /**
      * list Projects which contain with those annotation documents state is finished
@@ -161,9 +169,9 @@ public interface ProjectService
      *            The {@link Project} object to be created.
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
+     * @return the project;
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
-    void createProject(Project project) throws IOException;
+    Project createProject(Project project) throws IOException;
 
     /**
      * Update a project. This is only necessary when dealing with a detached project entity.
@@ -171,16 +179,18 @@ public interface ProjectService
      * @param project
      *            The {@link Project} object to be updated.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
     void updateProject(Project project);
 
     /**
-     * Update the project state.
+     * Update the project state and issue a {@link ProjectStateChangedEvent} if necessary. Make sure
+     * that the status of the project object is fresh to avoid getting spurious events.
      * 
      * @param aProject
-     *            The {@link Project} to be updated.
+     *            The {@link Project} object to be updated.
+     * @param aState
+     *            the new state.
      */
-    void recalculateProjectState(Project aProject);
+    void setProjectState(Project aProject, ProjectState aState);
 
     /**
      * A method that check is a project exists with the same name already. getSingleResult() fails
@@ -278,6 +288,13 @@ public interface ProjectService
      * @return list of projects accessible by the user.
      */
     List<Project> listAccessibleProjects(User aUser);
+
+    /**
+     * List projects accessible by current user
+     *
+     * @return list of projects accessible by the user.
+     */
+    Map<Project, Set<PermissionLevel>> listAccessibleProjectsWithPermissions(User aUser);
 
     /**
      * List projects manageable by current user
@@ -400,17 +417,6 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
-     *
-     * @param user
-     *            the {@link User} object
-     * @return the roles.
-     * @deprecated use {@link UserDao#listAuthorities(User)}
-     */
-    @Deprecated
-    List<Authority> listAuthorities(User user);
-
-    /**
      * Can the given user access the project setting of <b>some</b> project.
      */
     public boolean managesAnyProject(User user);
@@ -425,21 +431,6 @@ public interface ProjectService
      * @return if the user may update a project.
      */
     boolean isManager(Project aProject, User aUser);
-
-    /**
-     * @deprecated Use {@link #isManager(Project, User)}
-     */
-    @Deprecated
-    default boolean isProjectAdmin(Project aProject, User aUser)
-    {
-        return isManager(aProject, aUser);
-    }
-
-    /**
-     * @deprecated Use {@link #isManager(Project, User)}
-     */
-    @Deprecated
-    boolean isAdmin(Project aProject, User aUser);
 
     /**
      * Determine if the user is a curator or not.
@@ -484,4 +475,13 @@ public interface ProjectService
         throws IOException;
 
     List<ProjectInitializer> listProjectInitializers();
+
+    static MDCContext withProjectLogger(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be given");
+        Validate.notNull(aProject.getId(), "Project must have been saved already");
+        Validate.notNull(MDC.get(KEY_REPOSITORY_PATH), "Repository path must be set in MDC");
+
+        return MDCContext.open().with(KEY_PROJECT_ID, String.valueOf(aProject.getId()));
+    }
 }

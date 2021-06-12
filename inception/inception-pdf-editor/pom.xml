@@ -20,13 +20,10 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.19.7-SNAPSHOT</version>
+    <version>0.20.0-SNAPSHOT</version>
   </parent>
   <name>INCEpTION - Editor - PDF</name>
   <artifactId>inception-pdf-editor</artifactId>
-  <properties>
-    <frontend.install.path>${session.executionRootDirectory}/cache/maven-frontend-plugin</frontend.install.path>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -138,24 +135,7 @@
       <artifactId>fastutil</artifactId>
     </dependency>
 
-    <!-- Testing -->
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-
+    <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-tcf-asl</artifactId>
@@ -167,6 +147,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  
   <build>
     <plugins>
       <plugin>
@@ -213,11 +194,12 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <version>1.6</version>
-          <configuration>
-            <workingDirectory>target/js/pdfanno/</workingDirectory>
-            <installDirectory>${frontend.install.path}</installDirectory>
-          </configuration>
+        <configuration>
+          <workingDirectory>target/js/pdfanno/</workingDirectory>
+          <installDirectory>target/frontend-maven-plugin</installDirectory>
+          <nodeVersion>v11.15.0</nodeVersion>
+          <npmVersion>6.7.0</npmVersion>
+        </configuration>
         <executions>
           <execution>
             <id>install node and npm</id>
@@ -225,10 +207,6 @@
               <goal>install-node-and-npm</goal>
             </goals>
             <phase>generate-resources</phase>
-            <configuration>
-              <nodeVersion>v11.0.0</nodeVersion>
-              <npmVersion>6.4.1</npmVersion>
-            </configuration>
           </execution>
           <execution>
             <id>npm install</id>

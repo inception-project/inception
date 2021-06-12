@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,7 +34,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -68,18 +67,26 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(Project aProject);
 
+    boolean existsEnabledRecommender(Project aProject);
+
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
 
     Optional<Recommender> getEnabledRecommender(long aRecommenderId);
 
     List<Recommender> listEnabledRecommenders(Project aProject);
 
+    List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
+
     /**
      * Returns all annotation layers in the given project which have any enabled recommenders.
      */
     List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
 
-    RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender);
+    /**
+     * This can be empty if e.g. a recommender is only available behind a feature flag that was once
+     * enabled and now is disabled.
+     */
+    Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender);
 
     boolean hasActiveRecommenders(String aUser, Project aProject);
 
@@ -87,6 +94,8 @@ public interface RecommendationService
             List<EvaluatedRecommender> selectedClassificationTools);
 
     List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer);
+
+    Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser, Recommender aRecommender);
 
     List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
@@ -104,7 +113,7 @@ public interface RecommendationService
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists.
-     * 
+     *
      * @param aUser
      *            The owner of the context
      * @param aRecommender
@@ -115,7 +124,7 @@ public interface RecommendationService
 
     /**
      * Publishes a new context for the given recommender.
-     * 
+     *
      * @param aUser
      *            The owner of the context.
      * @param aRecommender
@@ -128,17 +137,22 @@ public interface RecommendationService
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
-     * 
+     *
      * @return the CAS address of the created/updated annotation.
      */
-    public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+    int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
             String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
 
+    int upsertRelationFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            RelationSuggestion aSuggestion)
+        throws AnnotationException;
+
     /**
      * Compute predictions.
-     * 
+     *
      * @param aUser
      *            the user to compute the predictions for.
      * @param aProject
@@ -152,12 +166,17 @@ public interface RecommendationService
     Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments,
             List<SourceDocument> aInherit);
 
-    void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);
+    void calculateSpanSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd);
 
-    List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
+    void calculateRelationSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd);
 
     void clearState(String aUsername);
+
+    void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument);
 
     void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument);
@@ -175,4 +194,6 @@ public interface RecommendationService
      * Retrieve the total amount of enabled recommenders
      */
     long countEnabledRecommenders();
+
+    Progress getProgressTowardsNextEvaluation(User aUser, Project aProject);
 }

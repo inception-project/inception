@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_USERNAME;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.Properties;
 
 import javax.servlet.http.HttpSession;
 
@@ -60,10 +64,8 @@ import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 /**
@@ -77,18 +79,15 @@ public class LoginPage
 {
     private static final long serialVersionUID = -333578034707672294L;
 
-    private static final String ADMIN_DEFAULT_USERNAME = "admin";
-    private static final String ADMIN_DEFAULT_PASSWORD = "admin";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean(required = false) SessionRegistry sessionRegistry;
     private @SpringBean LoginProperties loginProperties;
+    private @SpringBean SecurityProperties securityProperties;
+    private @SpringBean SessionRegistry sessionRegistry;
 
     private LoginForm form;
     private final WebMarkupContainer tooManyUsersLabel;
-    private final Button signInBtn;
 
     public LoginPage()
     {
@@ -96,13 +95,11 @@ public class LoginPage
         setVersioned(false);
 
         add(form = new LoginForm("loginForm"));
-        signInBtn = new Button("signInBtn");
-        signInBtn.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
+        form.add(enabledWhen(() -> !isTooManyUsers()));
+
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
-        tooManyUsersLabel.add(LambdaBehavior.visibleWhen(this::isTooManyUsers));
-        form.add(signInBtn);
+        tooManyUsersLabel.add(visibleWhen(this::isTooManyUsers));
         form.add(tooManyUsersLabel);
-        form.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
 
         redirectIfAlreadyLoggedIn();
 
@@ -112,14 +109,15 @@ public class LoginPage
             admin.setUsername(ADMIN_DEFAULT_USERNAME);
             admin.setPassword(ADMIN_DEFAULT_PASSWORD);
             admin.setEnabled(true);
-            admin.setRoles(EnumSet.of(Role.ROLE_ADMIN, Role.ROLE_USER));
-            userRepository.create(admin);
+            admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER));
 
-            String msg = "No user accounts have been found. An admin account has been created: "
-                    + ADMIN_DEFAULT_USERNAME + "/" + ADMIN_DEFAULT_PASSWORD;
             // We log this as a warning so the message sticks on the screen. Success and info
             // messages are set to auto-close after a short time.
+            String msg = "No user accounts have been found. An admin account has been created: "
+                    + ADMIN_DEFAULT_USERNAME + "/" + ADMIN_DEFAULT_PASSWORD;
             warn(msg);
+
+            userRepository.create(admin);
         }
     }
 
@@ -174,6 +172,7 @@ public class LoginPage
         extends StatelessForm<LoginForm>
     {
         private static final long serialVersionUID = 1L;
+
         private String username;
         private String password;
         private String urlfragment;
@@ -182,34 +181,37 @@ public class LoginPage
         {
             super(id);
             setModel(new CompoundPropertyModel<>(this));
+
             add(new RequiredTextField<String>("username"));
             add(new PasswordTextField("password"));
             add(new HiddenField<>("urlfragment"));
-            Properties settings = SettingsUtil.getSettings();
-            String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
-            add(new Label("loginMessage", loginMessage).setEscapeModelStrings(false)
-                    .add(visibleWhen(() -> isNotBlank(loginMessage))));
+            add(new Button("signInBtn").add(enabledWhen(() -> !isTooManyUsers())));
+            add(new Label("loginMessage", loginProperties.getMessage()).setEscapeModelStrings(false)
+                    .add(visibleWhen(() -> isNotBlank(loginProperties.getMessage()))));
         }
 
         @Override
         protected void onSubmit()
         {
+            // The redirect URL is stored in the session, so we have to pick it up before the
+            // session is reset as part of the login.
             String redirectUrl = getRedirectUrl();
-            AuthenticatedWebSession session = AuthenticatedWebSession.get();
-            if (session.signIn(username, password)) {
-                log.debug("Login successful");
-                if (sessionRegistry != null) {
-                    // Form-based login isn't detected by SessionManagementFilter. Thus handling
-                    // session registration manually here.
-                    HttpSession containerSession = ((ServletWebRequest) RequestCycle.get()
-                            .getRequest()).getContainerRequest().getSession(false);
-                    sessionRegistry.registerNewSession(containerSession.getId(), username);
-                }
-                setDefaultResponsePageIfNecessary(redirectUrl);
-            }
-            else {
+
+            // We only accept users that are not bound to a particular realm (e.g. to a project)
+            User user = userRepository.get(username);
+            if (user == null || user.getRealm() != null) {
                 error("Login failed");
+                return;
             }
+
+            AuthenticatedWebSession session = AuthenticatedWebSession.get();
+            if (!session.signIn(username, password)) {
+                error("Login failed");
+                return;
+            }
+
+            log.debug("Login successful");
+            setDefaultResponsePageIfNecessary(redirectUrl);
         }
 
         private void setDefaultResponsePageIfNecessary(String aRedirectUrl)

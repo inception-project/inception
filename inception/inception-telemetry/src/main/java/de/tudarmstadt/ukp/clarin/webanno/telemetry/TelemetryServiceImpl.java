@@ -46,23 +46,32 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link TelemetryServiceAutoConfiguration#telemetryService}.
+ * </p>
+ */
 public class TelemetryServiceImpl
     implements TelemetryService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private @PersistenceContext EntityManager entityManager;
 
+    private final TelemetryServiceProperties properties;
     private final List<TelemetrySupport> telemetrySupportsProxy;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     private List<TelemetrySupport> telemetrySupports;
 
@@ -73,10 +82,13 @@ public class TelemetryServiceImpl
 
     public TelemetryServiceImpl(
             @Lazy @Autowired(required = false) List<TelemetrySupport> aTelemetrySupports,
-            ApplicationEventPublisher aEventPublisher)
+            ApplicationEventPublisher aEventPublisher, TelemetryServiceProperties aProperties,
+            PlatformTransactionManager aTransactionManager)
     {
         telemetrySupportsProxy = aTelemetrySupports;
         eventPublisher = aEventPublisher;
+        properties = aProperties;
+        transactionTemplate = new TransactionTemplate(aTransactionManager);
     }
 
     @EventListener
@@ -105,6 +117,38 @@ public class TelemetryServiceImpl
         }
 
         telemetrySupports = Collections.unmodifiableList(tsp);
+
+        autoAcceptOrReject();
+    }
+
+    private void autoAcceptOrReject()
+    {
+        if (properties.getAutoRespond() == null) {
+            return;
+        }
+
+        transactionTemplate.executeWithoutResult(transactionStatus -> {
+            List<TelemetrySettings> settingsToSave = new ArrayList<>();
+
+            for (TelemetrySupport support : getTelemetrySupports()) {
+                if (!support.hasValidSettings()) {
+                    TelemetrySettings settings = readOrCreateSettings(support);
+                    Object traits = support.readTraits(settings);
+                    switch (properties.getAutoRespond()) {
+                    case ACCEPT:
+                        support.acceptAll(traits);
+                        break;
+                    case REJECT:
+                        support.rejectAll(traits);
+                        break;
+                    }
+                    support.writeTraits(settings, traits);
+                    settingsToSave.add(settings);
+                }
+            }
+
+            writeAllSettings(settingsToSave);
+        });
     }
 
     /**
@@ -227,7 +271,6 @@ public class TelemetryServiceImpl
         }
     }
 
-    @Transactional
     private void writeSettings(TelemetrySettings aSettings)
     {
         if (isNull(aSettings.getId())) {

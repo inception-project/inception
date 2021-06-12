@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
@@ -69,6 +70,8 @@ public interface Renderer
     void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
 
+    List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin);
+
     FeatureSupportRegistry getFeatureSupportRegistry();
 
     default Map<String, String> renderLabelFeatureValues(TypeAdapter aAdapter, FeatureStructure aFs,
@@ -84,7 +87,7 @@ public interface Renderer
             }
 
             String label = defaultString(
-                    fsr.findExtension(feature).renderFeatureValue(feature, aFs));
+                    fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs));
 
             features.put(feature.getName(), label);
         }
@@ -110,7 +113,7 @@ public interface Renderer
                 tiggerLayerLevelLazyDetails = true;
             }
 
-            details.addAll(fsr.findExtension(feature).getLazyDetails(feature, aFs));
+            details.addAll(fsr.findExtension(feature).orElseThrow().getLazyDetails(feature, aFs));
         }
 
         if (tiggerLayerLevelLazyDetails) {
@@ -150,7 +153,7 @@ public interface Renderer
             }
 
             String text = defaultString(
-                    fsr.findExtension(feature).renderFeatureValue(feature, aFs));
+                    fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs));
 
             details.add(new VLazyDetailResult(feature.getName(), text));
         }

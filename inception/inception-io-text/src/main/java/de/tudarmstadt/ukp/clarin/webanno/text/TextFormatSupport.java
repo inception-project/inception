@@ -27,17 +27,22 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.text.TextReader;
 import org.dkpro.core.io.text.TextWriter;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link TextFormatsAutoConfiguration#textFormatSupport}.
+ * </p>
+ */
 public class TextFormatSupport
     implements FormatSupport
 {
     public static final String ID = "text";
-    public static final String NAME = "Plain text (Unicode / UTF-8)";
+    public static final String NAME = "Plain text";
 
     @Override
     public String getId()

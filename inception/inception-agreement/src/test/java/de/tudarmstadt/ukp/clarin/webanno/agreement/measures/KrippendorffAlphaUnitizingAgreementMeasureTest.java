@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
-import static java.lang.Double.NaN;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
@@ -37,7 +37,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     private KrippendorffAlphaUnitizingAgreementTraits traits;
 
     @Override
-    @Before
+    @BeforeEach
     public void setup()
     {
         super.setup();
@@ -64,7 +64,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
 
         UnitizingAgreementResult result = agreement.getStudy("user1", "user2");
 
-        assertEquals(NaN, result.getAgreement(), 0.000001d);
+        assertThat(result.getAgreement()).isNaN();
     }
 
     @Test
@@ -73,9 +73,9 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
         PairwiseAnnotationResult<UnitizingAgreementResult> agreement = singleNoDifferencesWithAdditionalCasTest(
                 sut);
 
-        assertEquals(NaN, agreement.getStudy("user1", "user2").getAgreement(), 0.01);
-        assertEquals(-4.5d, agreement.getStudy("user1", "user3").getAgreement(), 0.01);
-        assertEquals(-4.5d, agreement.getStudy("user2", "user3").getAgreement(), 0.01);
+        assertThat(agreement.getStudy("user1", "user2").getAgreement()).isNaN();
+        assertThat(agreement.getStudy("user1", "user3").getAgreement()).isEqualTo(-4.5d);
+        assertThat(agreement.getStudy("user2", "user3").getAgreement()).isEqualTo(-4.5d);
     }
 
     @Test

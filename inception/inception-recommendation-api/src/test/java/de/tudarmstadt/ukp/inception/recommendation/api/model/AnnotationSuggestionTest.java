@@ -26,25 +26,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AnnotationSuggestionTest
 {
     @Test
     public void thatEqualsAndHashCodeAndCompareToWorkCorrectly()
     {
-        AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", 1, "value", "doc1",
-                0, 1, "a", "A", "#A", 0.1, "E1");
-        AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", 1, "value", "doc1",
-                0, 1, "b", "B", "#B", 0.2, "E2");
-        AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", 1, "value", "doc1",
-                0, 1, "c", "C", "#C", 0.1, "E1");
-        AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", 1, "value", "doc1",
-                0, 1, "d", "D", "#D", 0.3, "E3");
+        SpanSuggestion rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a",
+                "A", "#A", 0.1, "E1");
+        SpanSuggestion rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b",
+                "B", "#B", 0.2, "E2");
+        SpanSuggestion rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c",
+                "C", "#C", 0.1, "E1");
+        SpanSuggestion rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d",
+                "D", "#D", 0.3, "E3");
 
-        List<AnnotationSuggestion> all = asList(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
-        for (AnnotationSuggestion x : all) {
-            for (AnnotationSuggestion y : all) {
+        List<SpanSuggestion> all = asList(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
+        for (SpanSuggestion x : all) {
+            for (SpanSuggestion y : all) {
                 if (x == y) {
                     assertThat(x).isEqualTo(y);
                     assertThat(y).isEqualTo(x);

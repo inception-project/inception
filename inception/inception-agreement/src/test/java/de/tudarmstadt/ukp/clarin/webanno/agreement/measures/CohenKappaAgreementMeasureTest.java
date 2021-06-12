@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import static java.lang.Double.NaN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
@@ -39,7 +39,7 @@ public class CohenKappaAgreementMeasureTest
     private DefaultAgreementTraits traits;
 
     @Override
-    @Before
+    @BeforeEach
     public void setup()
     {
         super.setup();

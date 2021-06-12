@@ -18,12 +18,10 @@
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -31,17 +29,24 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 
-@Component("curationSidebar")
-@ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CurationServiceAutoConfiguration#curationSidebarFactory}.
+ * </p>
+ */
 public class CurationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
+    private final ProjectService projectService;
 
-    private static final ResourceReference ICON = new PackageResourceReference(
-            CurationSidebarFactory.class, "data_table.png");
-
-    private @Autowired ProjectService projectService;
+    @Autowired
+    public CurationSidebarFactory(ProjectService aProjectService)
+    {
+        projectService = aProjectService;
+    }
 
     @Override
     public String getDisplayName()
@@ -50,9 +55,9 @@ public class CurationSidebarFactory
     }
 
     @Override
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
-        return ICON;
+        return FontAwesome5IconType.clipboard_s;
     }
 
     @Override

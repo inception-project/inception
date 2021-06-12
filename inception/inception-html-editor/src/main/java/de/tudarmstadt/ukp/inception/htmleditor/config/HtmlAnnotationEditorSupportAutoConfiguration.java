@@ -21,7 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.htmleditor.HtmlAnnotationEditorFactory;
+import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 
@@ -33,9 +33,9 @@ import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 public class HtmlAnnotationEditorSupportAutoConfiguration
 {
     @Bean
-    public HtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
+    public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
     {
-        return new HtmlAnnotationEditorFactory();
+        return new AnnotatorJsHtmlAnnotationEditorFactory();
     }
 
     @Bean

@@ -28,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 
@@ -39,9 +38,10 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.tcf.TcfReader;
 import org.dkpro.core.io.text.TextReader;
 import org.dkpro.core.tokit.BreakIteratorSegmenter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
@@ -86,10 +86,10 @@ public class BratRendererTest
 
     private PreRenderer preRenderer;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
-        initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         project = new Project();
 

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -62,9 +64,11 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
+import org.eclipse.rdf4j.repository.base.RepositoryConnectionWrapper;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -101,8 +105,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
@@ -116,6 +120,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.Path;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
@@ -190,6 +195,8 @@ public class KnowledgeBaseServiceImpl
         }
 
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
+        repoManager.setHttpClient(PerThreadSslCheckingHttpClientUtils
+                .newPerThreadSslCheckingHttpClientBuilder().build());
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
     }
 
@@ -423,7 +430,24 @@ public class KnowledgeBaseServiceImpl
     public RepositoryConnection getConnection(KnowledgeBase kb)
     {
         assertRegistration(kb);
-        return repoManager.getRepository(kb.getRepositoryId()).getConnection();
+        Repository repo = repoManager.getRepository(kb.getRepositoryId());
+        return new RepositoryConnectionWrapper(repo, repo.getConnection())
+        {
+            {
+                skipCertificateChecks(kb.isSkipSslValidation());
+            }
+
+            @Override
+            public void close() throws RepositoryException
+            {
+                try {
+                    super.close();
+                }
+                finally {
+                    restoreSslVerification();
+                }
+            };
+        };
     }
 
     @SuppressWarnings("resource")

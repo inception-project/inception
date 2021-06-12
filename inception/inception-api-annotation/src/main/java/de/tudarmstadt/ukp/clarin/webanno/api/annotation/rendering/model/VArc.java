@@ -30,14 +30,28 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class VArc
     extends VObject
 {
-    private final VID source;
-    private final VID target;
+    private VID source;
+    private VID target;
+
+    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
+            FeatureStructure aTargetFS, String aLabelHint)
+    {
+        this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
+                new VID(getAddr(aTargetFS)), aLabelHint, null, null);
+    }
 
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
                 new VID(getAddr(aTargetFS)), null, aFeatures, null);
+    }
+
+    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+            FeatureStructure aTargetFS, String aLabelHint)
+    {
+        this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
+                aLabelHint, null, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
@@ -48,11 +62,26 @@ public class VArc
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+            FeatureStructure aTargetFS, int aEquivalenceSet, String aLabel)
+    {
+        super(aLayer, aVid, aType, aEquivalenceSet, null);
+        setLabelHint(aLabel);
+        source = new VID(getAddr(aSourceFS));
+        target = new VID(getAddr(aTargetFS));
+    }
+
+    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
     {
         super(aLayer, aVid, aType, aEquivalenceSet, aFeatures);
         source = new VID(getAddr(aSourceFS));
         target = new VID(getAddr(aTargetFS));
+    }
+
+    public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
+            String aLabel, String aColor)
+    {
+        this(aLayer, aVid, aType, aSource, aTarget, aLabel, null, aColor);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
@@ -65,9 +94,19 @@ public class VArc
         target = aTarget;
     }
 
+    public void setSource(VID aSource)
+    {
+        source = aSource;
+    }
+
     public VID getSource()
     {
         return source;
+    }
+
+    public void setTarget(VID aTarget)
+    {
+        target = aTarget;
     }
 
     public VID getTarget()

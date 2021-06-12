@@ -33,10 +33,9 @@ import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -44,10 +43,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
@@ -60,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
 public class CuratedDocumentsExporterTest
 {
-    public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
+    public @TempDir File tempFolder;
 
     private RepositoryProperties repositoryProperties;
     private DocumentImportExportService importExportSerivce;
@@ -75,12 +74,12 @@ public class CuratedDocumentsExporterTest
 
     private CuratedDocumentsExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         initMocks(this);
 
-        workFolder = tempFolder.newFolder();
+        workFolder = tempFolder;
 
         project = new Project();
         project.setId(1l);

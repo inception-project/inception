@@ -61,4 +61,6 @@ public interface ExternalSearchService
     String getDocumentFormat(DocumentRepository aRepository, String aCollectionId,
             String aDocumentId)
         throws IOException;
+
+    boolean existsEnabledDocumentRepository(Project aProject);
 }

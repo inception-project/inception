@@ -45,7 +45,7 @@ public class ProjectDocumentRepositoriesMenuItem
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.layer_group_s;
+        return FontAwesome5IconType.database_s;
     }
 
     @Override

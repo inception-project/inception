@@ -57,6 +57,11 @@ public class LambdaAjaxFormSubmittingBehavior
         exceptionHandler = aExceptionHandler;
     }
 
+    public LambdaAjaxFormSubmittingBehavior(String aId)
+    {
+        this(aId, null, null);
+    }
+
     public LambdaAjaxFormSubmittingBehavior(String aId, AjaxCallback aAction)
     {
         this(aId, aAction, null);
@@ -74,7 +79,9 @@ public class LambdaAjaxFormSubmittingBehavior
     public void onSubmit(AjaxRequestTarget aTarget)
     {
         try {
-            action.accept(aTarget);
+            if (action != null) {
+                action.accept(aTarget);
+            }
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

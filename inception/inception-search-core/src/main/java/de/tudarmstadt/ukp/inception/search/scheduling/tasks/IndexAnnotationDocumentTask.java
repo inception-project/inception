@@ -25,23 +25,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * (Re)indexes the annotation document for a specific user.
  */
 public class IndexAnnotationDocumentTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
 
-    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
+    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aAnnotationDocument, aBinaryCas);
+        super(aAnnotationDocument, aTrigger, aBinaryCas);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
@@ -55,7 +57,8 @@ public class IndexAnnotationDocumentTask
             return false;
         }
 
-        return getAnnotationDocument().getId() == aTask.getAnnotationDocument().getId();
+        return getAnnotationDocument().getId() == ((IndexAnnotationDocumentTask) aTask)
+                .getAnnotationDocument().getId();
     }
 
 }
