@@ -37,6 +37,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -274,8 +275,7 @@ public class DocumentMetadataAnnotationSelectionPanel
 
                 DocumentMetadataAnnotationDetailPanel detailPanel = new DocumentMetadataAnnotationDetailPanel(
                         CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
-                        jcasProvider, project, annotationPage, selectionPanel, actionHandler,
-                        state);
+                        jcasProvider, project, annotationPage, actionHandler, state);
                 aItem.add(detailPanel);
 
                 container.add(new AjaxEventBehavior("click")
@@ -310,7 +310,10 @@ public class DocumentMetadataAnnotationSelectionPanel
                 container.setOutputMarkupId(true);
 
                 aItem.add(new LambdaAjaxLink(CID_DELETE,
-                        _target -> actionDelete(_target, detailPanel)));
+                        _target -> actionDelete(_target, detailPanel))
+                                .add(enabledWhen(annotationPage::isEditable))
+                                .add(AttributeAppender.append("class",
+                                        () -> annotationPage.isEditable() ? "" : "disabled")));
 
                 aItem.setOutputMarkupId(true);
             }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
@@ -68,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 public class DocumentMetadataAnnotationDetailPanel
@@ -93,14 +93,12 @@ public class DocumentMetadataAnnotationDetailPanel
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
     private final ListView<FeatureState> featureList;
-    private final DocumentMetadataAnnotationSelectionPanel selectionPanel;
     private final AnnotationActionHandler actionHandler;
     private final AnnotatorState state;
 
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
             IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
             IModel<Project> aProject, AnnotationPage aAnnotationPage,
-            DocumentMetadataAnnotationSelectionPanel aSelectionPanel,
             AnnotationActionHandler aActionHandler, AnnotatorState aState)
     {
         super(aId, aModel);
@@ -112,13 +110,19 @@ public class DocumentMetadataAnnotationDetailPanel
         annotationPage = aAnnotationPage;
         jcasProvider = aCasProvider;
         project = aProject;
-        selectionPanel = aSelectionPanel;
         actionHandler = aActionHandler;
         state = aState;
 
         add(featureList = createFeaturesList());
+    }
 
-        add(LambdaBehavior.visibleWhen(this::isVisible));
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+
+        add(visibleWhen(this::isVisible));
+        setEnabled(annotationPage.isEditable());
     }
 
     public VID getModelObject()
@@ -150,7 +154,7 @@ public class DocumentMetadataAnnotationDetailPanel
                         DocumentMetadataAnnotationDetailPanel.this, actionHandler,
                         annotationPage.getModel(), item.getModel());
 
-                if (!featureState.feature.getLayer().isReadonly() && annotationPage.isEditable()) {
+                if (!featureState.feature.getLayer().isReadonly()) {
                     // Whenever it is updating an annotation, it updates automatically when a
                     // component for the feature lost focus - but updating is for every component
                     // edited LinkFeatureEditors must be excluded because the auto-update will break
