@@ -150,7 +150,7 @@ public class DocumentMetadataAnnotationDetailPanel
                         DocumentMetadataAnnotationDetailPanel.this, actionHandler,
                         annotationPage.getModel(), item.getModel());
 
-                if (!featureState.feature.getLayer().isReadonly()) {
+                if (!featureState.feature.getLayer().isReadonly() && annotationPage.isEditable()) {
                     // Whenever it is updating an annotation, it updates automatically when a
                     // component for the feature lost focus - but updating is for every component
                     // edited LinkFeatureEditors must be excluded because the auto-update will break
@@ -255,6 +255,8 @@ public class DocumentMetadataAnnotationDetailPanel
     private void actionAnnotate(AjaxRequestTarget aTarget)
     {
         try {
+            annotationPage.ensureIsEditable();
+
             // When updating an annotation in the sidebar, we must not force a
             // re-focus after rendering
             getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);

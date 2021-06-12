@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
@@ -151,7 +152,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         layer.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         content.add(layer);
 
-        content.add(new LambdaAjaxLink(CID_CREATE, this::actionCreate));
+        content.add(new LambdaAjaxLink(CID_CREATE, this::actionCreate)
+                .add(enabledWhen(() -> annotationPage.isEditable())));
     }
 
     public Project getModelObject()
@@ -161,23 +163,33 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private void actionCreate(AjaxRequestTarget aTarget) throws AnnotationException, IOException
     {
-        DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
-                .getAdapter(selectedLayer.getObject());
-        CAS cas = jcasProvider.get();
-        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), cas);
+        try {
+            annotationPage.ensureIsEditable();
 
-        createdAnnotationAddress = fs.getAddress();
-        annotationPage.writeEditorCas(cas);
+            DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
+                    .getAdapter(selectedLayer.getObject());
+            CAS cas = jcasProvider.get();
+            AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(),
+                    cas);
 
-        aTarget.add(this);
+            createdAnnotationAddress = fs.getAddress();
+            annotationPage.writeEditorCas(cas);
 
-        findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
+            aTarget.add(this);
+
+            findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
+        }
+        catch (Exception e) {
+            handleException(this, aTarget, e);
+        }
     }
 
     private void actionDelete(AjaxRequestTarget aTarget,
             DocumentMetadataAnnotationDetailPanel aDetailPanel)
     {
         try {
+            annotationPage.ensureIsEditable();
+
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
             FeatureStructure fs = selectFsByAddr(cas, aDetailPanel.getModelObject().getId());
