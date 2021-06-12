@@ -16,6 +16,7 @@ installPrefs inception-active-learning
 installPrefs inception-agreement
 installPrefs inception-api
 installPrefs inception-api-annotation
+installPrefs inception-api-annotation-experimental
 installPrefs inception-api-dao
 installPrefs inception-api-formats
 installPrefs inception-app-webapp
@@ -30,6 +31,7 @@ installPrefs inception-diag
 installPrefs inception-doc
 installPrefs inception-docker
 installPrefs inception-example-imls-data-majority
+installPrefs inception-experimental-editor
 installPrefs inception-export
 installPrefs inception-external-search-core
 installPrefs inception-external-search-elastic

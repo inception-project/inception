@@ -320,6 +320,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-experimental-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-workload-ui</artifactId>
     </dependency>
     <dependency>
@@ -807,6 +811,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-experimental-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
@@ -857,7 +862,7 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
-              <!-- Tutorial Js dependencies -->
+              <!-- Tutorial JS dependencies -->
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>
               <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
