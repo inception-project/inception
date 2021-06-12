@@ -29,46 +29,62 @@
       border-radius: 4px 4px 4px 4px;
       -moz-border-radius: 4px 4px 4px 4px;
       -webkit-border-radius: 4px 4px 4px 4px;
-        margin: 1px 1px;
+      margin: 1px 1px;
       padding: 1px 1px;
       display: inline-block;
-        min-width: 4em;
-        max-width: 7.9em;
+      min-width: 4em;
+      max-width: 7.9em;
       text-align: center;
     }
 
     .curation-sentence-number a {
       display: block;
       text-decoration: none !important;
-      color: black !important;
       border-radius: 4px 4px 4px 4px;
       -moz-border-radius: 4px 4px 4px 4px;
       -webkit-border-radius: 4px 4px 4px 4px;
     }
     
     .hidden-view {
-        background-color: #DFDFDF;
+      background-color: #DFDFDF;
     }
     
     .in-range {
-        border: 1px solid black;
+      border: 1px solid black;
     }
     
     .out-range {
-        border: 1px solid white;
+      border: 1px solid white;
     }
     
     .agree {
-      
+      color: black !important;
+      background-color: #FFFFFF;
+    }
+
+    .curated {
+      color: black !important;
+      background-color: #77dd77;
     }
     
     .disagree {
-        background-color: red;
+      color: black !important;
+      background-color: #FF9999;
+    }
+
+    .stacked {
+      color: white !important;
+      background-color: #800080;
+    }
+
+    .incomplete {
+      color: black !important;
+      background-color: #DDA0DD;
     }
     
     .current {
       box-shadow: 0px 0px 5px 1px rgba(231,166,26,1);
-        border: 1px solid rgba(231,166,26,1);
+      border: 1px solid rgba(231,166,26,1);
     }
   </style>
 </wicket:head>
@@ -80,6 +96,29 @@
         <div class="flex-content card">
           <div class="card-header">
             Sentences
+            <div class="actions">
+              <button wicket:id="refresh" class="btn btn-action btn-secondary">
+                <i class="fas fa-redo"></i>
+                <span class="d-none d-lg-inline">
+                  &nbsp;<wicket:message key="refresh" />
+                </span>
+              </button>
+              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="btn-group" role="group">
+                  <button class="btn btn-secondary btn-action" type="button">
+                    Legend
+                  </button>
+                  <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+                  <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+                    <li class="dropdown-item-text agree">Agreement</li>
+                    <li class="dropdown-item-text curated">Curated</li>
+                    <li class="dropdown-item-text stacked">Stacked annotations</li>
+                    <li class="dropdown-item-text incomplete">Incomplete annotation</li>
+                    <li class="dropdown-item-text disagree">Disagreement</li>
+                  </ul>
+                </span>
+              </span>
+            </div>
           </div>
           <div class="scrolling card-body">
             <div wicket:id="unitOverview" style="border-collapse: collapse;">
