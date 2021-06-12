@@ -133,20 +133,21 @@ public abstract class TypeAdapter_ImplBase
 
     private Object getValue(FeatureStructure fs, AnnotationFeature aFeature)
     {
-        Object value;
-
         Feature f = fs.getType().getFeatureByBaseName(aFeature.getName());
-        if (f.getRange().isPrimitive()) {
-            value = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
-        }
-        else if (FSUtil.isMultiValuedFeature(fs, f)) {
-            value = FSUtil.getFeature(fs, aFeature.getName(), List.class);
-        }
-        else {
-            value = FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
+
+        if (f == null) {
+            return null;
         }
 
-        return value;
+        if (f.getRange().isPrimitive()) {
+            return FSUtil.getFeature(fs, aFeature.getName(), Object.class);
+        }
+
+        if (FSUtil.isMultiValuedFeature(fs, f)) {
+            return FSUtil.getFeature(fs, aFeature.getName(), List.class);
+        }
+
+        return FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
     }
 
     @Override
