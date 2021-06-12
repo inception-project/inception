@@ -143,10 +143,20 @@ public class LinkFeatureEditor
         content.setOutputMarkupId(true);
         add(content);
 
-        content.add(new RefreshingView<LinkWithRoleModel>("slots",
-                PropertyModel.of(getModel(), "value"))
+        IModel<List<LinkWithRoleModel>> slotsModel = getModel() //
+                .map(FeatureState::getValue) //
+                .map(v -> (List<LinkWithRoleModel>) v);
+        content.add(new RefreshingView<LinkWithRoleModel>("slots", slotsModel)
         {
             private static final long serialVersionUID = 5475284956525780698L;
+
+            @Override
+            public void onConfigure()
+            {
+                super.onConfigure();
+                setOutputMarkupPlaceholderTag(true);
+                setVisible(!slotsModel.map(List::isEmpty).orElse(true).getObject());
+            }
 
             @Override
             protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
