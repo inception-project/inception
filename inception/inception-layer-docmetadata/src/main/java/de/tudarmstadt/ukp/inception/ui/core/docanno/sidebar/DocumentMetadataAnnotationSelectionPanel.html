@@ -23,7 +23,7 @@
   </div>
   <div wicket:id="content">
     <div class="card-body flex-grow-0 pb-0">
-      <div class="form-group">
+      <div class="form-group mb-0">
         <div class="input-group">
           <select class="form-control flex-content" wicket:id="layer" data-size="10"></select>
           <div class="input-group-append">
@@ -54,12 +54,12 @@
                   <i class="fas fa-ellipsis-v"></i>
                 </button>
                 <div class="dropdown-menu shadow-lg" role="menu">
-                  <div class="container">
-                    <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
-                      <i class="fas fa-trash"></i>&nbsp;
-                      <wicket:message key="delete"/>
-                    </button>
-                  </div>
+                  <a wicket:id="delete" class="dropdown-item">
+                    <wicket:message key="delete"/>
+                    <span class="float-right badge badge-pill badge-danger">
+                      <i class="fas fa-trash"></i>
+                    </span>
+                  </a>
                 </div>
               </span>
             </div>
