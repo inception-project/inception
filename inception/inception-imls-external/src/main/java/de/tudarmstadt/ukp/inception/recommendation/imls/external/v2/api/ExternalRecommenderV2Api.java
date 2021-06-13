@@ -32,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -102,7 +101,8 @@ public class ExternalRecommenderV2Api
         }
     }
 
-    public Optional<ClassifierInfo> getClassifierInfo(String aClassifierId)
+    public ClassifierInfo getClassifierInfo(String aClassifierId)
+        throws ExternalRecommenderApiException
     {
         URI url = URI.create(remoteUrl + "/classifier/" + aClassifierId);
         HttpRequest request = HttpRequest.newBuilder() //
@@ -112,11 +112,12 @@ public class ExternalRecommenderV2Api
 
         try {
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-            return Optional.of(fromJsonString(ClassifierInfo.class, response.body()));
+            return fromJsonString(ClassifierInfo.class, response.body());
         }
         catch (Exception e) {
-            LOG.warn("Error while getting info for classifier [{}]", url, e);
-            return Optional.empty();
+            String message = String.format("Error while getting info for classifier [%s]", url);
+            LOG.error(message, e);
+            throw new ExternalRecommenderApiException(message, e);
         }
     }
 

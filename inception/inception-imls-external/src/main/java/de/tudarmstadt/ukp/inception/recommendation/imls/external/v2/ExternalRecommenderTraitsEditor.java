@@ -25,6 +25,7 @@ import java.util.Collections;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
@@ -33,6 +34,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -42,11 +45,14 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ClassifierInfo;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderApiException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderV2Api;
 
 public class ExternalRecommenderTraitsEditor
     extends DefaultTrainableRecommenderTraitsEditor
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommenderV2Api.class);
+
     private static final long serialVersionUID = 1677442652521110324L;
 
     private static final String MID_FORM = "form";
@@ -134,16 +140,23 @@ public class ExternalRecommenderTraitsEditor
 
         String newClass;
         String classifierName = traits.getClassifierInfo().getName();
-        if (isNotEmpty(classifierName) && api.getClassifierInfo(classifierName).isPresent()) {
-            newClass = "btn btn-success";
-        }
-        else {
-            newClass = "btn btn-danger";
-        }
 
-        checkClassifierButton.add(AttributeModifier.append("class", newClass));
+        try {
+            api.getClassifierInfo(classifierName);
+            if (isNotEmpty(classifierName)) {
+                newClass = "btn btn-success";
+            }
+            else {
+                newClass = "btn btn-danger";
+            }
 
-        aTarget.add(checkClassifierButton);
+            checkClassifierButton.add(AttributeModifier.append("class", newClass));
+            aTarget.add(checkClassifierButton);
+        }
+        catch (ExternalRecommenderApiException e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
 }
