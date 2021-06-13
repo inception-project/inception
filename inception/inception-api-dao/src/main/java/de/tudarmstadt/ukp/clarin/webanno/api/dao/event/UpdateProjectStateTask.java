@@ -26,7 +26,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -40,7 +39,6 @@ public class UpdateProjectStateTask
     private @PersistenceContext EntityManager entityManager;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
     public UpdateProjectStateTask(Project aProject, String aTrigger)
     {

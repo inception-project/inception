@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -66,6 +67,9 @@ public class OpenNlpPosRecommender
 
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpPosRecommender.class);
     private static final String PAD = "<PAD>";
+
+    private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
+    private static final Class<Token> DATAPOINT_UNIT = Token.class;
 
     private final OpenNlpPosRecommenderTraits traits;
 
@@ -118,7 +122,7 @@ public class OpenNlpPosRecommender
 
         POSTaggerME tagger = new POSTaggerME(model);
 
-        Type sentenceType = getType(aCas, Sentence.class);
+        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
         Type predictedType = getPredictedType(aCas);
         Type tokenType = getType(aCas, Token.class);
 
@@ -127,13 +131,13 @@ public class OpenNlpPosRecommender
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
+        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
+            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
             String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
                     .toArray(String[]::new);
 
@@ -211,7 +215,8 @@ public class OpenNlpPosRecommender
         final int minTestSetSize = 2;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
             if ((getRecommender().getThreshold() <= 0.0d)) {
-                return new EvaluationResult();
+                return new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                        SAMPLE_UNIT.getSimpleName());
             }
 
             String info = String.format(
@@ -220,8 +225,8 @@ public class OpenNlpPosRecommender
                     (minTrainingSetSize + minTestSetSize));
             LOG.info(info);
 
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
-                    trainRatio);
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -248,8 +253,8 @@ public class OpenNlpPosRecommender
             }
         }
 
-        return labelPairs.stream()
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, PAD));
+        return labelPairs.stream().collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio, PAD));
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)
@@ -257,18 +262,18 @@ public class OpenNlpPosRecommender
         List<POSSample> posSamples = new ArrayList<>();
 
         casses: for (CAS cas : aCasses) {
-            Type sentenceType = getType(cas, Sentence.class);
+            Type sampleUnitType = getType(cas, SAMPLE_UNIT);
             Type tokenType = getType(cas, Token.class);
 
-            for (Annotation sentence : cas.<Annotation> select(sentenceType)) {
+            for (Annotation sampleUnit : cas.<Annotation> select(sampleUnitType)) {
                 if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }
 
-                List<Annotation> tokens = cas.<Annotation> select(tokenType).coveredBy(sentence)
+                List<Annotation> tokens = cas.<Annotation> select(tokenType).coveredBy(sampleUnit)
                         .asList();
 
-                createPosSample(cas, sentence, tokens).map(posSamples::add);
+                createPosSample(cas, sampleUnit, tokens).map(posSamples::add);
             }
         }
 

@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ExternalRecommenderTraits
     implements Serializable
 {

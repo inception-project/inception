@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -72,6 +73,9 @@ public class StringMatchingRecommender
 
     private static final String UNKNOWN_LABEL = "unknown";
     private static final String NO_LABEL = "O";
+
+    private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
+    private static final Class<Token> DATAPOINT_UNIT = Token.class;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final StringMatchingRecommenderTraits traits;
@@ -209,7 +213,7 @@ public class StringMatchingRecommender
 
         boolean requireSingleSentence = !getRecommender().getLayer().isCrossSentence();
 
-        Type sentenceType = getType(aCas, Sentence.class);
+        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
         Type tokenType = getType(aCas, Token.class);
 
         List<Sample> data = new ArrayList<>();
@@ -218,18 +222,18 @@ public class StringMatchingRecommender
             text = text.toLowerCase(Locale.ROOT);
         }
 
-        for (Annotation sentence : aCas.<Annotation> select(sentenceType)) {
+        for (Annotation sampleUnit : aCas.<Annotation> select(sampleUnitType)) {
             List<Span> spans = new ArrayList<>();
-            List<Annotation> tokens = aCas.<Annotation> select(tokenType).coveredBy(sentence)
+            List<Annotation> tokens = aCas.<Annotation> select(tokenType).coveredBy(sampleUnit)
                     .asList();
             for (Annotation token : tokens) {
-                Trie<DictEntry>.Node node = aDict.getNode(text, token.getBegin());
-                if (node != null) {
+                Trie<DictEntry>.MatchedNode match = aDict.getNode(text, token.getBegin());
+                if (match != null) {
                     int begin = token.getBegin();
-                    int end = begin + node.level;
+                    int end = begin + match.matchLength;
 
                     // If the end is not in the same sentence as the start, skip
-                    if (requireSingleSentence && !(end <= sentence.getEnd())) {
+                    if (requireSingleSentence && !(end <= sampleUnit.getEnd())) {
                         continue;
                     }
 
@@ -239,7 +243,7 @@ public class StringMatchingRecommender
                         continue;
                     }
 
-                    for (LabelStats lc : node.value.getBest(maxRecommendations)) {
+                    for (LabelStats lc : match.node.value.getBest(maxRecommendations)) {
                         String label = lc.getLabel();
                         // check instance equality to avoid collision with user labels
                         if (label == UNKNOWN_LABEL) {
@@ -304,7 +308,8 @@ public class StringMatchingRecommender
                 // We cannot evaluate, but the user expects to see immediate results from the
                 // gazeteer - so we return with an "unknown" result but without marking it as
                 // skipped so that the selection task allows the recommender to activate.
-                return new EvaluationResult();
+                return new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                        SAMPLE_UNIT.getSimpleName());
             }
 
             String info = String.format(
@@ -312,8 +317,8 @@ public class StringMatchingRecommender
                     trainingSetSize, minTrainingSetSize, testSetSize, minTestSetSize, data.size(),
                     (minTrainingSetSize + minTestSetSize));
             log.info(info);
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
-                    trainRatio);
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -333,15 +338,16 @@ public class StringMatchingRecommender
         // Predict
         List<LabelPair> labelPairs = new ArrayList<>();
         for (Sample sample : testSet) {
-
             for (TokenSpan token : sample.getTokens()) {
-                Trie<DictEntry>.Node node = dict.getNode(sample.getText(), token.getBegin());
+                Trie<DictEntry>.MatchedNode match = dict.getNode(sample.getText(),
+                        token.getBegin());
                 int begin = token.getBegin();
                 int end = token.getEnd();
 
                 String predictedLabel = NO_LABEL;
-                if (node != null && sample.hasTokenEndingAt(token.getBegin() + node.level)) {
-                    List<LabelStats> labelStats = node.value.getBest(1);
+                if (match != null
+                        && sample.hasTokenEndingAt(token.getBegin() + match.matchLength)) {
+                    List<LabelStats> labelStats = match.node.value.getBest(1);
                     if (!labelStats.isEmpty()) {
                         predictedLabel = labelStats.get(0).getLabel();
                     }
@@ -351,12 +357,14 @@ public class StringMatchingRecommender
                 if (coveringSpan.isPresent()) {
                     goldLabel = coveringSpan.get().getLabel();
                 }
-                labelPairs.add(new LabelPair(goldLabel, predictedLabel));
+                labelPairs.add(
+                        new LabelPair(sample.getText().substring(token.getBegin(), token.getEnd()),
+                                goldLabel, predictedLabel));
             }
         }
 
-        return labelPairs.stream().collect(
-                EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
+        return labelPairs.stream().collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio, NO_LABEL));
     }
 
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel)

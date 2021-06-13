@@ -72,7 +72,7 @@ post-process annotations:
 
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/inception-project/inception/blob/master/notebooks/annotations_as_one_sentence_and_label_per_line.ipynb) Export annotations as one sentence per line
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/inception-project/inception/blob/master/notebooks/using_pretokenized_and_preannotated_text.ipynb) Use pre-tokenized and pre-annotated documents in INCEpTION
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/inception-project/inception/blob/master/notebooks/external_recommender.ipynb) Getting Started with External Recommender
+- ... [more Python examples](https://inception-project.github.io/example-projects/python/)
 
 
 ## Do you have questions or feedback?

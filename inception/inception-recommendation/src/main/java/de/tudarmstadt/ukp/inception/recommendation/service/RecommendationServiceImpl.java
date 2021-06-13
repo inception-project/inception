@@ -130,6 +130,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
@@ -286,6 +287,17 @@ public class RecommendationServiceImpl
         RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
             return new ArrayList<>(state.getEvaluatedRecommenders().get(aLayer));
+        }
+    }
+
+    @Override
+    public Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser,
+            Recommender aRecommender)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        synchronized (state) {
+            return state.getEvaluatedRecommenders().get(aRecommender.getLayer()).stream()
+                    .filter(r -> r.getRecommender().equals(aRecommender)).findAny();
         }
     }
 
@@ -466,32 +478,24 @@ public class RecommendationServiceImpl
         String username = aEvent.getAnnotator();
         SourceDocument doc = aEvent.getDocument();
 
-        // If there already is a state, we just re-use it. We only trigger a new training if there
-        // is no state yet.
-        if (!states.containsKey(new RecommendationStateKey(username, project))) {
+        // If there already is a state, we just re-use it. We only trigger a new training if no
+        // predictions object has been created yet.
+        Predictions predictions = getState(username, project).getActivePredictions();
+        if (predictions == null) {
             triggerTrainingAndClassification(username, project, "DocumentOpenedEvent", doc);
-        }
-        else {
-            // If we already trained, predicted only for the last document and open a new
-            // document, we start the predictions so that the user gets recommendations
-            // as quickly as possible without any interaction needed
-            User user = userRepository.get(username);
-            if (user == null) {
-                return;
-            }
-            Predictions predictions = getPredictions(user, project);
-            if (predictions == null
-                    || !predictions.hasRunPredictionOnDocument(aEvent.getDocument())) {
-                log.debug("Starting prediction task after document was opened!");
-                Task task = new PredictionTask(user, project, "DocumentOpenedEvent", doc);
-                schedulingService.enqueue(task);
-            }
+            return;
         }
 
-        // We reset this in case the state was not properly cleared, e.g. the AL session
-        // was started but then the browser closed. Places where it is set include
-        // - ActiveLearningSideBar::moveToNextRecommendation
-        getState(username, project).setPredictForAllDocuments(false);
+        if (predictions.hasRunPredictionOnDocument(aEvent.getDocument())) {
+            log.debug(
+                    "Not starting prediction task after document was opened as we already have predictions");
+            return;
+        }
+
+        // If we already trained, predicted only for the last document and open a new document, we
+        // start the predictions so that the user gets recommendations as quickly as possible
+        // without any interaction needed
+        triggerPrediction(username, "DocumentOpenedEvent", doc);
     }
 
     /*
@@ -600,6 +604,17 @@ public class RecommendationServiceImpl
     }
 
     @Override
+    public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument)
+    {
+        User user = userRepository.get(aUsername);
+        if (user == null) {
+            return;
+        }
+
+        schedulingService.enqueue(new PredictionTask(user, aEventName, aDocument));
+    }
+
+    @Override
     public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument)
     {
@@ -639,10 +654,23 @@ public class RecommendationServiceImpl
             // i.e. we do not start it here.
             Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
+
+            RecommendationState state = getState(aUser, aProject);
+            synchronized (state) {
+                state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
+                state.setPredictionsSinceLastEvaluation(0);
+            }
         }
         else {
             Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
+
+            RecommendationState state = getState(aUser, aProject);
+            synchronized (state) {
+                int predictions = state.getPredictionsSinceLastEvaluation() + 1;
+                state.setPredictionsSinceLastEvaluation(predictions);
+                state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - predictions - 1);
+            }
         }
     }
 
@@ -955,6 +983,8 @@ public class RecommendationServiceImpl
         private Predictions activePredictions;
         private Predictions incomingPredictions;
         private boolean predictForAllDocuments;
+        private int predictionsSinceLastEvaluation;
+        private int predictionsUntilNextEvaluation;
 
         {
             preferences = new Preferences();
@@ -993,6 +1023,26 @@ public class RecommendationServiceImpl
             return evaluatedRecommenders;
         }
 
+        public void setPredictionsSinceLastEvaluation(int aPredictionsSinceLastEvaluation)
+        {
+            predictionsSinceLastEvaluation = aPredictionsSinceLastEvaluation;
+        }
+
+        public int getPredictionsSinceLastEvaluation()
+        {
+            return predictionsSinceLastEvaluation;
+        }
+
+        public void setPredictionsUntilNextEvaluation(int aPredictionsUntilNextEvaluation)
+        {
+            predictionsUntilNextEvaluation = aPredictionsUntilNextEvaluation;
+        }
+
+        public int getPredictionsUntilNextEvaluation()
+        {
+            return predictionsUntilNextEvaluation;
+        }
+
         public void setEvaluatedRecommenders(AnnotationLayer aLayer,
                 Collection<EvaluatedRecommender> aEvaluations)
         {
@@ -1026,11 +1076,6 @@ public class RecommendationServiceImpl
         public boolean switchPredictions()
         {
             if (incomingPredictions != null) {
-                // This can be used for debugging purposes to get a longer history - do not
-                // enable this for production!
-                if (activePredictions != null) {
-                    activePredictions.getLog().forEach(incomingPredictions::log);
-                }
                 activePredictions = incomingPredictions;
                 incomingPredictions = null;
                 return true;
@@ -1748,8 +1793,9 @@ public class RecommendationServiceImpl
             }
 
             // Anything that was not hidden so far might still have been rejected
-            suggestions.values().stream().flatMap(SuggestionGroup::stream)
-                    .filter(AnnotationSuggestion::isVisible)
+            suggestions.values().stream() //
+                    .flatMap(SuggestionGroup::stream) //
+                    .filter(AnnotationSuggestion::isVisible) //
                     .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
                             recordedAnnotations));
         }
@@ -2013,5 +2059,15 @@ public class RecommendationServiceImpl
         return recommenders.stream() //
                 .filter(rec -> getRecommenderFactory(rec).isPresent()) //
                 .count();
+    }
+
+    @Override
+    public Progress getProgressTowardsNextEvaluation(User aUser, Project aProject)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aProject);
+        synchronized (state) {
+            return new Progress(state.getPredictionsSinceLastEvaluation(),
+                    state.getPredictionsUntilNextEvaluation());
+        }
     }
 }
