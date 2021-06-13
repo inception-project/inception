@@ -54,7 +54,7 @@ public class ExternalRecommenderV2ApiTest
         Document request = converter.documentFromCas(cas,
                 "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value", 0);
 
-        Document response = sut.predict("spacy_ner", "test_model", request).get();
+        Document response = sut.predict("spacy_ner", "test_model", request);
 
         System.out.println(JSONUtil.toPrettyJsonString(response));
     }

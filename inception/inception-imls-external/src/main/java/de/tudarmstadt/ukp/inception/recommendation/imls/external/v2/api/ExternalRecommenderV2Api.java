@@ -120,7 +120,8 @@ public class ExternalRecommenderV2Api
         }
     }
 
-    public Optional<Document> predict(String aClassifierId, String aModelId, Document aDocument)
+    public Document predict(String aClassifierId, String aModelId, Document aDocument)
+        throws ExternalRecommenderApiException
     {
         String urlString = String.format("/classifier/%s/%s/predict", aClassifierId,
                 URLEncoder.encode(aModelId, StandardCharsets.UTF_8));
@@ -136,18 +137,18 @@ public class ExternalRecommenderV2Api
             LOG.info("Predicting finished with status code [{}]", response.statusCode());
 
             if (response.statusCode() == 200) {
-                Document result = JSONUtil.fromJsonString(Document.class, response.body());
-                return Optional.of(result);
+                return JSONUtil.fromJsonString(Document.class, response.body());
             }
             else {
-                LOG.error("Error while predicting: {}", response.body());
+                String msg = "Error while predicting: " + response.body();
+                LOG.error(msg);
+                throw new ExternalRecommenderApiException(msg);
             }
         }
         catch (IOException | InterruptedException e) {
             LOG.error("Error while predicting", e);
+            throw new ExternalRecommenderApiException("Error while predicting", e);
         }
-
-        return Optional.empty();
     }
 
 }

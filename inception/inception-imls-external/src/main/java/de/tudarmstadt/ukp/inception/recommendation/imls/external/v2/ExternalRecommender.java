@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recomm
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -37,6 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.Document;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderApiException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderV2Api;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.FormatConverter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config.ExternalRecommenderProperties;
@@ -93,13 +93,14 @@ public class ExternalRecommender
         String modelName = projectName + "_" + userName + "_" + recommender.getName();
 
         String classifierName = traits.getClassifierInfo().getName();
-        Optional<Document> response = api.predict(classifierName, modelName, request);
-        if (response.isEmpty()) {
-            LOG.error("Could not obtain predictions, skipping...");
-            return;
-        }
 
-        converter.loadIntoCas(response.get(), layerName, featureName, cas);
+        try {
+            Document response = api.predict(classifierName, modelName, request);
+            converter.loadIntoCas(response, layerName, featureName, cas);
+        }
+        catch (ExternalRecommenderApiException e) {
+            LOG.error("Could not obtain predictions, skipping...");
+        }
     }
 
     @Override
