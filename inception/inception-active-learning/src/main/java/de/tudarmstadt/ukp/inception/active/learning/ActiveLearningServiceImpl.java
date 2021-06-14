@@ -172,7 +172,8 @@ public class ActiveLearningServiceImpl
 
         // remove duplicate recommendations
         suggestions = suggestions.stream() //
-                .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
+                .map(it -> removeDuplicateRecommendations(it)) //
+                .collect(Collectors.toList());
         long removeDuplicateRecommendation = System.currentTimeMillis();
         log.trace("Removing duplicate recommendations costs {} ms.",
                 (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));

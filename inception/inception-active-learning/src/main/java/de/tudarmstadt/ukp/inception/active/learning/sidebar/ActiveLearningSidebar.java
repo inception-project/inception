@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
@@ -79,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -119,7 +121,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -187,6 +188,7 @@ public class ActiveLearningSidebar
     private Form<Void> recommendationForm;
     private Form<Void> sessionControlForm;
 
+    private AnnotationSuggestion highlightSuggestion;
     private String highlightDocumentName;
     private VID highlightVID;
     private Offset highlightSpan;
@@ -376,6 +378,7 @@ public class ActiveLearningSidebar
         }
 
         LOG.trace("Active learning sidebar set highlight suggestion: {}", aSuggestion);
+        highlightSuggestion = aSuggestion;
         highlightVID = aSuggestion.getVID();
         highlightSpan = new Offset(aSuggestion.getBegin(), aSuggestion.getEnd());
         highlightDocumentName = aSuggestion.getDocumentName();
@@ -384,6 +387,7 @@ public class ActiveLearningSidebar
     private void setActiveLearningHighlight(LearningRecord aRecord)
     {
         LOG.trace("Active learning sidebar set highlight history record: {}", aRecord);
+        highlightSuggestion = null;
         highlightVID = null;
         highlightSpan = new Offset(aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
         highlightDocumentName = aRecord.getSourceDocument().getName();
@@ -398,6 +402,7 @@ public class ActiveLearningSidebar
     private void setActiveLearningHighlight(SourceDocument aDocument, AnnotationFS aAnnotation)
     {
         LOG.trace("Active learning sidebar set highlight annotation: {}", aAnnotation);
+        highlightSuggestion = null;
         highlightVID = new VID(WebAnnoCasUtil.getAddr(aAnnotation));
         highlightSpan = new Offset(aAnnotation.getBegin(), aAnnotation.getEnd());
         highlightDocumentName = aDocument.getName();
@@ -515,7 +520,6 @@ public class ActiveLearningSidebar
     private void actionJumpToSuggestion(AjaxRequestTarget aTarget) throws IOException
     {
         ActiveLearningUserState alState = alStateModel.getObject();
-
         SpanSuggestion suggestion = alState.getSuggestion().get();
 
         if (LOG.isDebugEnabled()) {
@@ -525,6 +529,10 @@ public class ActiveLearningSidebar
                             .stream().findFirst();
             updatedSuggestion.ifPresent(s -> LOG.debug("Update suggestion: {}", s));
         }
+
+        // REC: Potential bug: jumping causes the document to re-renderer and therefore the
+        // predictions to switch. If the suggestion is no longer visible in the switched predictions
+        // (e.g. because it is no longer predicted), then we jump to nothing?
 
         actionShowSelectedDocument(aTarget,
                 documentService.getSourceDocument(this.getModelObject().getProject(),
@@ -602,6 +610,11 @@ public class ActiveLearningSidebar
         featureEditor.setOutputMarkupPlaceholderTag(true);
         featureEditor.add(visibleWhen(() -> alStateModel.getObject().getLayer() != null
                 && alState.getSuggestion().isPresent()));
+
+        // We do not want keybindings in the active learning sidebar
+        featureEditor.visitChildren(KeyBindingsPanel.class,
+                (c, v) -> c.setVisibilityAllowed(false));
+
         return featureEditor;
     }
 
@@ -623,17 +636,25 @@ public class ActiveLearningSidebar
         SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
                 aSuggestion.getDocumentName());
 
-        // Log the action to the learning record
-        learningRecordService.logRecord(sourceDoc, state.getUser().getUsername(), aSuggestion,
-                aAnnotationValue, alState.getLayer(), feat, aUserAction,
-                LearningRecordChangeLocation.AL_SIDEBAR);
-
-        // Send an application event that the suggestion has been rejected
         List<SpanSuggestion> alternativeSuggestions = recommendationService
                 .getPredictions(state.getUser(), state.getProject())
                 .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), alState.getLayer(),
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
 
+        // Log the action to the learning record
+        learningRecordService.logSpanRecord(sourceDoc, state.getUser().getUsername(), aSuggestion,
+                aAnnotationValue, alState.getLayer(), feat, aUserAction, AL_SIDEBAR);
+
+        // If the action was a correction (i.e. suggestion label != annotation value) then generate
+        // a rejection for the original value - we do not want the original value to re-appear
+        if (aUserAction == CORRECTED) {
+            learningRecordService.logSpanRecord(sourceDoc, state.getUser().getUsername(),
+                    aSuggestion, aSuggestion.getLabel(), alState.getLayer(), feat, REJECTED,
+                    AL_SIDEBAR);
+        }
+
+        // Send an application event indicating if the user has accepted/skipped/corrected/rejected
+        // the suggestion
         applicationEventPublisherHolder.get()
                 .publishEvent(new ActiveLearningRecommendationEvent(this, sourceDoc, aSuggestion,
                         state.getUser().getUsername(), alState.getLayer(), aSuggestion.getFeature(),
@@ -655,6 +676,8 @@ public class ActiveLearningSidebar
     private void actionAnnotate(AjaxRequestTarget aTarget, Form<Void> aForm)
         throws IOException, AnnotationException
     {
+        LOG.trace("actionAnnotate()");
+
         AnnotatorState state = getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
 
@@ -683,9 +706,16 @@ public class ActiveLearningSidebar
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No such layer: [" + suggestion.getLayerId() + "]"));
 
-        AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
+        // Log the action to the learning record and immediately hide the suggestion
+        boolean areLabelsEqual = suggestion.labelEquals(selectedValue);
+        writeLearningRecordInDatabaseAndEventLog(suggestion,
+                (areLabelsEqual) ? ACCEPTED : CORRECTED, selectedValue);
+        suggestion.hide((areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
 
+        // Request clearing selection and when onFeatureValueUpdated is triggered as a callback
+        // from the update event created by upsertSpanFeature.
         requestClearningSelectionAndJumpingToSuggestion();
+        AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
         recommendationService.upsertSpanFeature(annotationService, sourceDoc, username, cas, layer,
                 feature, selectedValue, suggestion.getBegin(), suggestion.getEnd());
 
@@ -701,36 +731,43 @@ public class ActiveLearningSidebar
                 state.setAnnotationDocumentTimestamp(diskTimestamp.get());
             }
         }
-
-        boolean areLabelsEqual = suggestion.labelEquals(selectedValue);
-
-        suggestion.hide((areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
-
-        // Log the action to the learning record
-        writeLearningRecordInDatabaseAndEventLog(suggestion,
-                (areLabelsEqual) ? ACCEPTED : CORRECTED, selectedValue);
     }
 
     private void actionSkip(AjaxRequestTarget aTarget)
     {
-        alStateModel.getObject().getSuggestion().ifPresent(rec -> {
-            writeLearningRecordInDatabaseAndEventLog(rec, SKIPPED);
+        LOG.trace("actionSkip()");
+
+        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
+            writeLearningRecordInDatabaseAndEventLog(suggestion, SKIPPED);
             requestClearningSelectionAndJumpingToSuggestion();
+            // activeLearningService.generateNextSuggestion takes care of hiding skipped and
+            // rejected suggestions, so no need to do it here.
+            // updateVisibility(aTarget, suggestion);
             moveToNextSuggestion(aTarget);
         });
     }
 
     private void actionReject(AjaxRequestTarget aTarget)
     {
-        alStateModel.getObject().getSuggestion().ifPresent(rec -> {
-            writeLearningRecordInDatabaseAndEventLog(rec, REJECTED);
+        LOG.trace("actionReject()");
+
+        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
+            writeLearningRecordInDatabaseAndEventLog(suggestion, REJECTED);
             requestClearningSelectionAndJumpingToSuggestion();
+            // activeLearningService.generateNextSuggestion takes care of hiding skipped and
+            // rejected suggestions, so no need to do it here.
+            // updateVisibility(aTarget, suggestion);
             moveToNextSuggestion(aTarget);
         });
     }
 
     private void moveToNextSuggestion(AjaxRequestTarget aTarget)
     {
+        LOG.trace("moveToNextSuggestion()");
+
+        // Ensure that predictions are switched
+        annotationPage.actionRefreshDocument(aTarget);
+
         ActiveLearningUserState alState = alStateModel.getObject();
         AnnotatorState state = getModelObject();
         Project project = state.getProject();
@@ -755,7 +792,7 @@ public class ActiveLearningSidebar
         // If the active suggestion has changed, inform the user
         if (prevSuggestion.isPresent()
                 && !alState.getSuggestion().get().equals(prevSuggestion.get())) {
-            infoOnce(aTarget, "Active learning has moved to next best suggestion.");
+            // infoOnce(aTarget, "Active learning has moved to next best suggestion.");
             LOG.trace("Moving from {} to {}", prevSuggestion.get(), alState.getSuggestion().get());
         }
 
@@ -767,12 +804,10 @@ public class ActiveLearningSidebar
 
         if (shouldBeClearningSelectionAndJumpingToSuggestion()) {
             clearSelectedAnnotationAndJumpToSuggestion(aTarget);
-            info("Clearing and jumping");
-            aTarget.addChildren(getPage(), IFeedback.class);
+            LOG.trace("Clearing and jumping");
         }
         else {
-            info("Not clearing and jumping");
-            aTarget.addChildren(getPage(), IFeedback.class);
+            LOG.trace("Not clearing and jumping");
         }
 
         List<SpanSuggestion> alternativeSuggestions = recommendationService
@@ -1081,6 +1116,8 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
     {
+        LOG.trace("onFeatureValueUpdated()");
+
         // Is active learning on and is any suggestion currently displayed?
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
@@ -1105,6 +1142,8 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onAnnotationDeleted(SpanDeletedEvent aEvent)
     {
+        LOG.trace("onAnnotationDeleted()");
+
         // Is active learning on and is any suggestion currently displayed?
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
@@ -1124,6 +1163,8 @@ public class ActiveLearningSidebar
     private void reactToAnnotationsBeingCreatedOrDeleted(AjaxRequestTarget aTarget,
             AnnotationLayer aLayer, SourceDocument aDocument)
     {
+        LOG.trace("reactToAnnotationsBeingCreatedOrDeleted()");
+
         try {
             User user = getModelObject().getUser();
             Predictions predictions = recommendationService.getPredictions(user,
@@ -1132,6 +1173,10 @@ public class ActiveLearningSidebar
             if (predictions == null) {
                 return;
             }
+
+            // Ensure that the predictions have been switched so we do not update visibility in an
+            // outdated prediction state.
+            annotationPage.actionRefreshDocument(aTarget);
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
             CAS cas = documentService.readAnnotationCas(aDocument, user.getUsername());
@@ -1153,6 +1198,8 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onRecommendationRejectEvent(AjaxRecommendationRejectedEvent aEvent)
     {
+        LOG.trace("onRecommendationRejectEvent()");
+
         AnnotatorState annotatorState = getModelObject();
         AnnotatorState eventState = aEvent.getAnnotatorState();
 
@@ -1202,6 +1249,8 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onRecommendationAcceptEvent(AjaxRecommendationAcceptedEvent aEvent)
     {
+        LOG.trace("onRecommendationAcceptEvent()");
+
         AnnotatorState state = getModelObject();
         Predictions predictions = recommendationService.getPredictions(state.getUser(),
                 state.getProject());
@@ -1252,7 +1301,7 @@ public class ActiveLearningSidebar
 
     private void renderHighlights(VDocument aVDoc)
     {
-        LOG.trace("Active learning sidebar rendering highlights");
+        LOG.trace("Active learning sidebar rendering highlights: {}", highlightSuggestion);
 
         // Clear any highlights that we may have added earlier in the rendering process and
         // recreate them because the VIDs may have changed
@@ -1296,6 +1345,8 @@ public class ActiveLearningSidebar
 
     private void refreshAvailableSuggestions()
     {
+        LOG.trace("refreshAvailableSuggestions()");
+
         AnnotatorState state = getModelObject();
         ActiveLearningUserState alState = alStateModel.getObject();
         alState.setSuggestions(
@@ -1327,7 +1378,7 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
     {
-        LOG.trace("onPredictionsSwitched");
+        LOG.trace("onPredictionsSwitched()");
 
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();
@@ -1350,6 +1401,8 @@ public class ActiveLearningSidebar
 
     private void refreshCurrentSuggestionOrMoveToNextSuggestion(AjaxRequestTarget aTarget)
     {
+        LOG.trace("refreshCurrentSuggestionOrMoveToNextSuggestion()");
+
         // If there is currently a suggestion displayed in the sidebar, we need to check if it
         // is still relevant - if yes, we need to replace it with its current counterpart since.
         // if no counterpart exists in the current suggestions, then we need to load a
