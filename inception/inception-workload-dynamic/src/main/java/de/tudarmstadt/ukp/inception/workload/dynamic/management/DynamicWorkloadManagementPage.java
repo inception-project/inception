@@ -119,6 +119,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
@@ -198,7 +199,7 @@ public class DynamicWorkloadManagementPage
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
-    private @SpringBean DynamicWorkloadManagementPageMenuItem pageMenuItem;
+    private @SpringBean(name = "dynamicWorkloadManagementPageMenuItem") ProjectMenuItem pageMenuItem;
 
     public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
     {
