@@ -193,9 +193,10 @@ public class RecommendationEditorExtension
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         VID recommendationVid = VID.parse(aVID.getExtensionPayload());
-        Optional<SpanSuggestion> prediction = predictions
-                .getPredictionByVID(document, recommendationVid)
-                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
+        Optional<SpanSuggestion> prediction = predictions //
+                .getPredictionByVID(document, recommendationVid) //
+                .filter(f -> f instanceof SpanSuggestion) //
+                .map(f -> (SpanSuggestion) f);
 
         if (prediction.isEmpty()) {
             log.error("Could not find annotation in [{}] with id [{}]", document,
@@ -222,10 +223,11 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
-        learningRecordService.logRecord(document, aState.getUser().getUsername(), suggestion, layer,
-                feature, ACCEPTED, MAIN_EDITOR);
+        learningRecordService.logSpanRecord(document, aState.getUser().getUsername(), suggestion,
+                layer, feature, ACCEPTED, MAIN_EDITOR);
 
-        acceptRecommendation(suggestion, aState, aTarget, aCas, recommendationVid, address);
+        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, recommendationVid,
+                address);
     }
 
     private void actionAcceptRelationRecommendation(AnnotationActionHandler aActionHandler,
@@ -274,14 +276,15 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
-        learningRecordService.logRecord(document, aState.getUser().getUsername(), suggestion, layer,
-                feature, ACCEPTED, MAIN_EDITOR);
+        learningRecordService.logRelationRecord(document, aState.getUser().getUsername(),
+                suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
 
-        acceptRecommendation(suggestion, aState, aTarget, aCas, aVID, address);
+        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, aVID, address);
     }
 
-    private void acceptRecommendation(AnnotationSuggestion aSuggestion, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aSuggestionVID, int aNewAnnotationAddress)
+    private void hideSuggestionAndPublishAceptedEvents(AnnotationSuggestion aSuggestion,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aSuggestionVID,
+            int aNewAnnotationAddress)
     {
         AnnotationLayer layer = annotationService.getLayer(aSuggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
@@ -349,7 +352,7 @@ public class RecommendationEditorExtension
         if (suggestion instanceof SpanSuggestion) {
             SpanSuggestion spanSuggestion = (SpanSuggestion) suggestion;
             // Log the action to the learning record
-            learningRecordService.logRecord(document, aState.getUser().getUsername(),
+            learningRecordService.logSpanRecord(document, aState.getUser().getUsername(),
                     spanSuggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
             // Send an application event that the suggestion has been rejected
@@ -378,6 +381,8 @@ public class RecommendationEditorExtension
     @Override
     public void renderRequested(AnnotatorState aState)
     {
+        log.trace("renderRequested()");
+
         // do not show predictions during curation or when viewing others' work
         if (!aState.getMode().equals(ANNOTATION)
                 || !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
@@ -390,6 +395,7 @@ public class RecommendationEditorExtension
         // expect an update when she makes some interaction, so we piggy-back on this expectation.
         boolean switched = recommendationService.switchPredictions(aState.getUser(),
                 aState.getProject());
+        log.trace("switchPredictions() returned {}", switched);
 
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
