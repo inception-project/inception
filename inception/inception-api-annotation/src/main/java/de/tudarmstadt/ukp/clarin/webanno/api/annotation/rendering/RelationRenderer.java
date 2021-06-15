@@ -94,11 +94,10 @@ public class RelationRenderer
     protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
         RelationAdapter typeAdapter = getTypeAdapter();
-        try {
-            type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
-            spanType = aTypeSystem.getType(typeAdapter.getAttachTypeName());
-        }
-        catch (IllegalArgumentException e) {
+        type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
+        spanType = aTypeSystem.getType(typeAdapter.getAttachTypeName());
+        
+        if (type == null || spanType == null) {
             // If the types are not defined, then we do not need to try and render them because the
             // CAS does not contain any instances of them
             return false;
