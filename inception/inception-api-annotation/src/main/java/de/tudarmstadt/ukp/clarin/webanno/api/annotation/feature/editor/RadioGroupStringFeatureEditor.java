@@ -31,6 +31,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -155,6 +156,8 @@ public class RadioGroupStringFeatureEditor
 
                 String descriptionText = item.getModel().getObject().getDescription();
 
+                Label detail = new Label("detail", item.getModel().map(ReorderableTag::getDetail));
+
                 WebMarkupContainer description = new WebMarkupContainer("description");
                 description.add(visibleWhen(() -> isNotBlank(descriptionText)));
 
@@ -168,7 +171,7 @@ public class RadioGroupStringFeatureEditor
 
                 add(description);
 
-                item.add(radio, label, description);
+                item.add(radio, label, detail, description);
             }
         };
     }

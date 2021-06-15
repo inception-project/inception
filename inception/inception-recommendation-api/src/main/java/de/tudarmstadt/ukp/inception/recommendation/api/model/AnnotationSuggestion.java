@@ -191,6 +191,9 @@ public abstract class AnnotationSuggestion
         if ((hidingFlags & FLAG_TRANSIENT_REJECTED) != 0) {
             sb.append("transient-rejected ");
         }
+        if ((hidingFlags & FLAG_TRANSIENT_CORRECTED) != 0) {
+            sb.append("transient-corrected ");
+        }
         return sb.toString();
     }
 
