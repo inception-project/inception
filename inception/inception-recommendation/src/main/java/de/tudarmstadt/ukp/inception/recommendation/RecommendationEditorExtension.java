@@ -185,9 +185,10 @@ public class RecommendationEditorExtension
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         VID recommendationVid = VID.parse(aVID.getExtensionPayload());
-        Optional<SpanSuggestion> prediction = predictions
-                .getPredictionByVID(document, recommendationVid)
-                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
+        Optional<SpanSuggestion> prediction = predictions //
+                .getPredictionByVID(document, recommendationVid) //
+                .filter(f -> f instanceof SpanSuggestion) //
+                .map(f -> (SpanSuggestion) f);
 
         if (prediction.isEmpty()) {
             log.error("Could not find annotation in [{}] with id [{}]", document,
@@ -214,10 +215,11 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
-        learningRecordService.logSpanRecord(document, aState.getUser().getUsername(), suggestion, layer,
-                feature, ACCEPTED, MAIN_EDITOR);
+        learningRecordService.logSpanRecord(document, aState.getUser().getUsername(), suggestion,
+                layer, feature, ACCEPTED, MAIN_EDITOR);
 
-        acceptRecommendation(suggestion, aState, aTarget, aCas, recommendationVid, address);
+        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, recommendationVid,
+                address);
     }
 
     private void actionAcceptRelationRecommendation(AnnotationActionHandler aActionHandler,
@@ -266,14 +268,15 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
-        learningRecordService.logRelationRecord(document, aState.getUser().getUsername(), suggestion, layer,
-                feature, ACCEPTED, MAIN_EDITOR);
+        learningRecordService.logRelationRecord(document, aState.getUser().getUsername(),
+                suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
 
-        acceptRecommendation(suggestion, aState, aTarget, aCas, aVID, address);
+        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, aVID, address);
     }
 
-    private void acceptRecommendation(AnnotationSuggestion aSuggestion, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aSuggestionVID, int aNewAnnotationAddress)
+    private void hideSuggestionAndPublishAceptedEvents(AnnotationSuggestion aSuggestion,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aSuggestionVID,
+            int aNewAnnotationAddress)
     {
         AnnotationLayer layer = annotationService.getLayer(aSuggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(aSuggestion.getFeature(), layer);

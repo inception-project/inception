@@ -27,6 +27,7 @@ public class ReorderableTag
 
     private final ImmutableTag tag;
     private boolean reordered;
+    private String detail;
 
     public ReorderableTag(ImmutableTag aTag)
     {
@@ -73,6 +74,16 @@ public class ReorderableTag
     public String toString()
     {
         return tag.getName();
+    }
+
+    public String getDetail()
+    {
+        return detail;
+    }
+
+    public void setDetail(String aDetail)
+    {
+        detail = aDetail;
     }
 
     @Override

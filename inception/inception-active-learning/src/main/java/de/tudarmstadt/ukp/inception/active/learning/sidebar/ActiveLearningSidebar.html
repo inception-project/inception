@@ -64,7 +64,7 @@
               <div class="form-group form-row">
                 <div class="col-sm-12 p-0" style="position: relative; height: 5em;">
                   <div class="form-control"
-                    style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 5px; right: 5px;"
+                    style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 0px; right: 0px;"
                     readonly>
                     <a wicket:id="recommendationCoveredTextLink" class="small">
                       <wicket:container wicket:id="leftContext"/>
@@ -101,9 +101,15 @@
               </div>
             </div>
             <div class="card-footer flex-h-container btn-group">
-              <input type="submit" class="btn btn-success" wicket:id="annotateButton" value="Annotate"/>
-              <input type="button" class="btn btn-danger" wicket:id="rejectButton" value="Reject"/>
-              <input type="button" class="btn btn-warning" wicket:id="skipButton" value="Skip"/>
+              <button type="submit" class="btn btn-success" wicket:id="annotateButton" title="Annotate">
+                <i class="far fa-check-circle"/>
+              </button>
+              <button type="button" class="btn btn-danger" wicket:id="rejectButton" title="Reject">
+                <i class="far fa-times-circle"/>
+              </button>
+              <button type="button" class="btn btn-warning" wicket:id="skipButton" title="Skip">
+                <i class="far fa-arrow-alt-circle-right"/>
+              </button>
             </div>
           </form>
   
@@ -112,12 +118,12 @@
             <div class="card-header small">
               <wicket:message key="history"/>
             </div>
-            <div class="scrolling card-body p-0">
+            <div class="scrolling card-body p-0 small">
               <div class="list-group-flush">
                 <div wicket:id="historyListview" class="list-group-item px-2 py-1">
                   <div class="clearfix">
-                    <a wicket:id="removeRecord" class="btn-sm btn-outline-danger float-right" style="white-space:nowrap;">
-                      <i class="fa fa-trash" aria-hidden="true"></i>
+                    <a wicket:id="removeRecord" class="float-right" style="white-space:nowrap;">
+                      <i class="fas fa-times"/>
                     </a>
                     <a wicket:id="jumpToAnnotation"></a>
                   </div>
