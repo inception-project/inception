@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,70 @@ public class ExternalRecommenderV2Api
         }
     }
 
+    // Dataset
+
+    public void createDataset(String aDatasetId) throws ExternalRecommenderApiException
+    {
+        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId);
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(url) //
+                .PUT(BodyPublishers.noBody()) //
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status != 204 && status != 409) {
+                throw errorf("Unexpected status code [%d]: [%s]", status, response.body());
+            }
+        }
+        catch (IOException | InterruptedException e) {
+            throw errorf("Unexpected status code [%d]: [%s]", "Error while creating dataset [%s]",
+                    aDatasetId);
+        }
+    }
+
+    public void deleteDataset(String aDatasetId) throws ExternalRecommenderApiException
+    {
+        throw new NotImplementedException();
+    }
+
+    // Documents
+
+    public DocumentList listDocumentsInDataset(String aDatasetId)
+        throws ExternalRecommenderApiException
+    {
+        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId);
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(url) //
+                .GET() //
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            return fromJsonString(DocumentList.class, response.body());
+        }
+        catch (IOException | InterruptedException e) {
+            String msg = String.format("Error while listing documents for dataset [%s]",
+                    aDatasetId);
+            throw error(msg, e);
+        }
+    }
+
+    public void addDocumentToDataset(String aDatasetId, String aDocumentId, Document aDocument)
+        throws ExternalRecommenderApiException
+    {
+        throw new NotImplementedException();
+    }
+
+    public void deleteDocumentFromDataset(String aDatasetId, String aDocumentId)
+        throws ExternalRecommenderApiException
+    {
+        throw new NotImplementedException();
+    }
+
+    // Classifier
+
     public List<ClassifierInfo> getAvailableClassifiers()
     {
         URI url = URI.create(remoteUrl + "/classifier");
@@ -121,6 +186,12 @@ public class ExternalRecommenderV2Api
         }
     }
 
+    public void trainOnDataset(String aClassifierId, String aModelId, String aDatasetId)
+        throws ExternalRecommenderApiException
+    {
+        throw new NotImplementedException();
+    }
+
     public Document predict(String aClassifierId, String aModelId, Document aDocument)
         throws ExternalRecommenderApiException
     {
@@ -150,6 +221,25 @@ public class ExternalRecommenderV2Api
             LOG.error("Error while predicting", e);
             throw new ExternalRecommenderApiException("Error while predicting", e);
         }
+    }
+
+    private ExternalRecommenderApiException error(String aMessage)
+    {
+        LOG.error(aMessage);
+        return new ExternalRecommenderApiException(aMessage);
+    }
+
+    private ExternalRecommenderApiException errorf(String aFormatString, Object... aArgs)
+    {
+        String message = String.format(aFormatString, aArgs);
+        LOG.error(message);
+        return new ExternalRecommenderApiException(message);
+    }
+
+    private ExternalRecommenderApiException error(String aMessage, Exception aCause)
+    {
+        LOG.error(aMessage, aCause);
+        return new ExternalRecommenderApiException(aMessage, aCause);
     }
 
 }

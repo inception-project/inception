@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.Fixtures.loadAlaskaCas;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.CAS;
 import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
@@ -29,24 +31,88 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
+@Ignore
 public class ExternalRecommenderV2ApiTest
 {
     private ExternalRecommenderV2Api sut;
 
+    private static final String CLASSIFIER_ID = "spacy_ner";
+
     @BeforeEach
-    public void setUp() throws Exception
+    public void setUp()
     {
         sut = new ExternalRecommenderV2Api(URI.create("http://localhost:8000"));
     }
 
     @AfterEach
-    public void tearDown() throws Exception
+    public void tearDown()
     {
         sut = null;
     }
 
+    // Dataset
+
     @Test
-    @Ignore
+    public void testCreateDataset()
+    {
+        throw new NotImplementedException();
+    }
+
+    @Test
+    public void testDeleteDataset()
+    {
+        throw new NotImplementedException();
+    }
+
+    // Documents
+
+    @Test
+    public void testListDocumentsInDataset() throws Exception
+    {
+        String datasetId = "test_dataset";
+        DocumentList result = sut.listDocumentsInDataset(datasetId);
+
+        assertThat(result.getNames()).isNotEmpty();
+        assertThat(result.getNames()).hasSameSizeAs(result.getVersions());
+    }
+
+    @Test
+    public void testAddDocumentToDataset()
+    {
+        throw new NotImplementedException();
+    }
+
+    @Test
+    public void testDeleteDocumentFromDataset()
+    {
+        throw new NotImplementedException();
+    }
+
+    // Classifier
+
+    @Test
+    public void testGetAvailableClassifiers()
+    {
+        throw new NotImplementedException();
+    }
+
+    @Test
+    public void testGetClassifierInfo() throws Exception
+    {
+        ClassifierInfo classifierInfo = sut.getClassifierInfo(CLASSIFIER_ID);
+
+        assertThat(classifierInfo.getName()).isEqualTo(CLASSIFIER_ID);
+    }
+
+    // Train/Predict
+
+    @Test
+    public void testTrainOnDataset()
+    {
+        throw new NotImplementedException();
+    }
+
+    @Test
     public void testPredictDocument() throws Exception
     {
         FormatConverter converter = new FormatConverter();
@@ -54,7 +120,7 @@ public class ExternalRecommenderV2ApiTest
         Document request = converter.documentFromCas(cas,
                 "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value", 0);
 
-        Document response = sut.predict("spacy_ner", "test_model", request);
+        Document response = sut.predict(CLASSIFIER_ID, "test_model", request);
 
         System.out.println(JSONUtil.toPrettyJsonString(response));
     }
