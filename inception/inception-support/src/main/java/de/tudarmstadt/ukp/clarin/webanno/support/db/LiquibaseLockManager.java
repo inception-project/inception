@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.config;
+package de.tudarmstadt.ukp.clarin.webanno.support.db;
 
 import static java.text.DateFormat.SHORT;
 import static java.text.DateFormat.getDateTimeInstance;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.lang3.BooleanUtils.toBoolean;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -45,31 +46,49 @@ public class LiquibaseLockManager
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    public static final String PROP_FORCE_RELEASE_LOCK = "forceReleaseLock";
+
     private final DataSource dataSource;
 
-    public LiquibaseLockManager(DataSource aDataSource) throws LockException
+    public LiquibaseLockManager(DataSource aDataSource)
+        throws LockException, NotLockedException, LockRemovedException
     {
         dataSource = aDataSource;
 
         try {
             List<DatabaseChangeLogLock> locks = listLocks();
-            log.info("Liquibase locks: {}", listLocks());
-            if (!locks.isEmpty()) {
-                DatabaseChangeLogLock lock = locks.get(0);
-                throw new LockException("Could not acquire change log lock. Currently locked by "
-                        + lock.getLockedBy() + " since "
-                        + getDateTimeInstance(SHORT, SHORT).format(lock.getLockGranted()));
+
+            boolean forceRemoveLock = toBoolean(
+                    System.getProperty(PROP_FORCE_RELEASE_LOCK, "false"));
+
+            if (locks.isEmpty() && forceRemoveLock) {
+                throw new NotLockedException(
+                        "The database is not locked. Please remove the argument '-D"
+                                + PROP_FORCE_RELEASE_LOCK + "=true' and restart.");
             }
-            else {
-                throw new LockException(
-                        "Could not acquire change log lock. Currently locked by DUMMY");
+
+            if (!locks.isEmpty()) {
+                if (!forceRemoveLock) {
+                    DatabaseChangeLogLock lock = locks.get(0);
+                    throw new LockException(
+                            "Could not acquire change log lock. Currently locked by "
+                                    + lock.getLockedBy() + " since "
+                                    + getDateTimeInstance(SHORT, SHORT)
+                                            .format(lock.getLockGranted()));
+                }
+
+                forceReleaseLock();
+
+                throw new LockRemovedException(
+                        "The database lock has been removed. Please remove the argument '-D"
+                                + PROP_FORCE_RELEASE_LOCK + "=true' and restart.");
             }
         }
-        catch (LockException e) {
+        catch (LockException | NotLockedException | LockRemovedException e) {
             throw e;
         }
         catch (Exception e) {
-            log.error("Unable to list Liquibase locks: ", e.getMessage());
+            log.error("Unable to list Liquibase locks: ", e.getMessage(), e);
         }
     }
 

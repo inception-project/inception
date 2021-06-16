@@ -28,6 +28,9 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.db.LiquibaseLockManager;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.LockRemovedException;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.NotLockedException;
 import liquibase.exception.LockException;
 import liquibase.integration.spring.SpringLiquibase;
 
@@ -36,7 +39,8 @@ import liquibase.integration.spring.SpringLiquibase;
 public class LiquibaseLockCheckAutoConfiguration
 {
     @Bean
-    public LiquibaseLockManager liquibaseLockCheck(DataSource aDataSource) throws LockException
+    public LiquibaseLockManager liquibaseLockCheck(DataSource aDataSource)
+        throws LockException, NotLockedException, LockRemovedException
     {
         return new LiquibaseLockManager(aDataSource);
     }

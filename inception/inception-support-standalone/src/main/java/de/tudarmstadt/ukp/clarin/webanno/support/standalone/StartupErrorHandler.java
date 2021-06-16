@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.db.LiquibaseLockManager.PROP_FORCE_RELEASE_LOCK;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
@@ -32,6 +33,8 @@ import javax.swing.JOptionPane;
 
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.db.LockRemovedException;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.NotLockedException;
 import liquibase.exception.LockException;
 
 public class StartupErrorHandler
@@ -53,7 +56,7 @@ public class StartupErrorHandler
             }
         });
 
-        JDialog dialog = pane.createDialog(null, applicationName + " - Error");
+        JDialog dialog = pane.createDialog(null, getDialogTitle(aEvent));
         dialog.setModal(false);
         dialog.setVisible(true);
         dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -68,6 +71,17 @@ public class StartupErrorHandler
                 System.exit(0);
             }
         });
+    }
+
+    public String getDialogTitle(ApplicationFailedEvent aEvent)
+    {
+        Throwable rootCause = getRootCause(aEvent.getException());
+
+        if (rootCause instanceof LockRemovedException) {
+            return applicationName + " - Recovery complete";
+        }
+
+        return applicationName + " - Error";
     }
 
     public String getErrorMessage(ApplicationFailedEvent aEvent)
@@ -95,8 +109,21 @@ public class StartupErrorHandler
                     + " are running.\n"
                     + "When you are sure no other instances are running, you can forcibly "
                     + "release the lock by\nrunning " + applicationName
-                    + " ONCE with the parameter '-DforceReleaseLock=true'.");
+                    + " ONCE with the parameter '-D" + PROP_FORCE_RELEASE_LOCK + "=true'.");
             msg.append("\n");
+        }
+
+        if (rootCause instanceof NotLockedException) {
+            msg.append("The database is not locked.\nPlease remove the parameter '-D"
+                    + PROP_FORCE_RELEASE_LOCK + "=true' and restart.");
+            msg.append("\n");
+        }
+
+        if (rootCause instanceof LockRemovedException) {
+            msg.append("The database lock has been removed.\nPlease remove the parameter '-D"
+                    + PROP_FORCE_RELEASE_LOCK + "=true' and restart.");
+            msg.append("\n");
+            return msg.toString();
         }
 
         msg.append("\n");
