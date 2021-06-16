@@ -564,7 +564,7 @@ See section xref:tagsets_in_getting_started[Tagsets] in _Getting Started_ or che
 
 You have almost finished the _Getting Started_.
 One word about the left *Annotation Sidebar*.
-It folds out when clicking on the little arrow on top.
+It folds out when clicking on the little arrow on top. Then you get detailed information about the currently chosen feature of the sidebar.
 
 image::getting_started_Sidebar_closed.png[align="center"]
 
