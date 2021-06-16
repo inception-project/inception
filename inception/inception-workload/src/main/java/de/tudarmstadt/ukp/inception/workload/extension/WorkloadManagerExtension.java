@@ -42,6 +42,13 @@ public interface WorkloadManagerExtension<T>
     void writeTraits(T aTrait, Project aProject);
 
     /**
+     * Ask the workload manager to immediately recalculate the state of all documents in the project
+     * and of the project itself. This is necessary when switching from one workload manager to
+     * another.
+     */
+    ProjectState recalculate(Project aProject);
+
+    /**
      * Ask the workload manager to immediately refresh the state of the documents and overall
      * project. This can be called immediately before fetching the project status in order to ensure
      * that the project status is reliable.

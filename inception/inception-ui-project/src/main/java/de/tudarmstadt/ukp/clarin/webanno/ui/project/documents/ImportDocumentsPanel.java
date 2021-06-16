@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 public class ImportDocumentsPanel
@@ -82,8 +83,8 @@ public class ImportDocumentsPanel
         format = Model.of();
         List<String> readableFormats = listReadableFormats();
         if (!readableFormats.isEmpty()) {
-            if (readableFormats.contains("Plain text")) {
-                format.setObject("Plain text");
+            if (readableFormats.contains(TextFormatSupport.NAME)) {
+                format.setObject(TextFormatSupport.NAME);
             }
             else {
                 format.setObject(readableFormats.get(0));
@@ -98,7 +99,7 @@ public class ImportDocumentsPanel
 
         DropDownChoice<String> formats = new BootstrapSelect<>("format");
         formats.setModel(format);
-        formats.setChoices(LambdaModel.of(this::listReadableFormats));
+        formats.setChoices(LoadableDetachableModel.of(this::listReadableFormats));
         form.add(formats);
 
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
