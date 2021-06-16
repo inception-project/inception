@@ -32,12 +32,17 @@
       </div>
       <div wicket:id="value">
         <div class="radio-button-group">
-          <div wicket:id="radios" class="flex-h-container radio-button">
-            <input wicket:id="radio" type="radio"/>
-            <label wicket:id="label" class="flex-content"/>
-            <span wicket:id="description" class="btn px-0" style="margin-left: -26px; margin-right: 8px; z-index: 10;">
-              <i class="fas fa-info-circle"/>
+          <div wicket:id="radios" class="radio-button" style="position: relative;">
+            <span style="position: absolute; right: 0; z-index: 10;" class="pt-1 pr-1">
+              <span wicket:id="detail" class="badge badge-secondary"/>
+              <span wicket:id="description">
+                <i class="fas fa-info-circle"/>
+              </span>
             </span>
+            <div class="flex-h-container">
+              <input wicket:id="radio" type="radio"/>
+              <label wicket:id="label" class="m-0 flex-content"/>
+            </div>
           </div>
         </div>
       </div>

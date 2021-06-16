@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
@@ -36,6 +37,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -151,7 +153,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         layer.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         content.add(layer);
 
-        content.add(new LambdaAjaxLink(CID_CREATE, this::actionCreate));
+        content.add(new LambdaAjaxLink(CID_CREATE, this::actionCreate)
+                .add(enabledWhen(() -> annotationPage.isEditable())));
     }
 
     public Project getModelObject()
@@ -161,23 +164,33 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private void actionCreate(AjaxRequestTarget aTarget) throws AnnotationException, IOException
     {
-        DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
-                .getAdapter(selectedLayer.getObject());
-        CAS cas = jcasProvider.get();
-        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), cas);
+        try {
+            annotationPage.ensureIsEditable();
 
-        createdAnnotationAddress = fs.getAddress();
-        annotationPage.writeEditorCas(cas);
+            DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
+                    .getAdapter(selectedLayer.getObject());
+            CAS cas = jcasProvider.get();
+            AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(),
+                    cas);
 
-        aTarget.add(annotationsContainer);
+            createdAnnotationAddress = fs.getAddress();
+            annotationPage.writeEditorCas(cas);
 
-        findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
+            aTarget.add(annotationsContainer);
+
+            findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
+        }
+        catch (Exception e) {
+            handleException(this, aTarget, e);
+        }
     }
 
     private void actionDelete(AjaxRequestTarget aTarget,
             DocumentMetadataAnnotationDetailPanel aDetailPanel)
     {
         try {
+            annotationPage.ensureIsEditable();
+
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
             FeatureStructure fs = selectFsByAddr(cas, aDetailPanel.getModelObject().getId());
@@ -262,8 +275,7 @@ public class DocumentMetadataAnnotationSelectionPanel
 
                 DocumentMetadataAnnotationDetailPanel detailPanel = new DocumentMetadataAnnotationDetailPanel(
                         CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
-                        jcasProvider, project, annotationPage, selectionPanel, actionHandler,
-                        state);
+                        jcasProvider, project, annotationPage, actionHandler, state);
                 aItem.add(detailPanel);
 
                 container.add(new AjaxEventBehavior("click")
@@ -298,7 +310,10 @@ public class DocumentMetadataAnnotationSelectionPanel
                 container.setOutputMarkupId(true);
 
                 aItem.add(new LambdaAjaxLink(CID_DELETE,
-                        _target -> actionDelete(_target, detailPanel)));
+                        _target -> actionDelete(_target, detailPanel))
+                                .add(enabledWhen(annotationPage::isEditable))
+                                .add(AttributeAppender.append("class",
+                                        () -> annotationPage.isEditable() ? "" : "disabled")));
 
                 aItem.setOutputMarkupId(true);
             }

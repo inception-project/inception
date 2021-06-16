@@ -38,7 +38,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.refres
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.CURATED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.DISAGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.INCOMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.STACKED;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 
@@ -80,6 +83,7 @@ import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
@@ -93,7 +97,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
@@ -109,6 +112,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
@@ -118,6 +122,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -257,7 +262,19 @@ public class CurationPage
 
         leftSidebar = makeLeftSidebar("leftSidebar");
         leftSidebar.add(curationUnitOverview);
+        leftSidebar.add(new LambdaAjaxLink("refresh", this::actionRefresh));
         add(leftSidebar);
+    }
+
+    private void actionRefresh(AjaxRequestTarget aTarget)
+    {
+        try {
+            curationUnits.setObject(buildUnitOverview(getModelObject()));
+            aTarget.add(leftSidebar);
+        }
+        catch (Exception e) {
+            handleException(aTarget, e);
+        }
     }
 
     private WebMarkupContainer makeLeftSidebar(String aId)
@@ -697,6 +714,8 @@ public class CurationPage
         CAS editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false, false,
                 false);
 
+        casses.put(CURATION_USER, editorCas);
+
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
                 aState.getAnnotationLayers());
 
@@ -716,39 +735,53 @@ public class CurationPage
 
             CurationUnit curationUnit = new CurationUnit(unit.getBegin(), unit.getEnd(), unitIndex);
 
-            if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
-                // Is this confSet a diff due to stacked annotations (with same configuration)?
-                boolean stackedDiff = false;
-
-                stackedDiffSet: for (ConfigurationSet d : diff.getDifferingConfigurationSets()
-                        .values()) {
-                    for (Configuration c : d.getConfigurations()) {
-                        if (c.getCasGroupIds().size() != d.getCasGroupIds().size()) {
-                            stackedDiff = true;
-                            break stackedDiffSet;
-                        }
-                    }
-                }
-
-                if (stackedDiff) {
-                    curationUnit.setState(DISAGREE);
-                }
-                else if (!diff.getIncompleteConfigurationSets().isEmpty()) {
-                    curationUnit.setState(DISAGREE);
-                }
-                else {
-                    curationUnit.setState(AGREE);
-                }
-            }
-            else {
-                curationUnit.setState(AGREE);
-            }
+            curationUnit.setState(calculateState(diff));
 
             curationUnitList.add(curationUnit);
         }
         LOG.debug("Difference calculation completed in {}ms", (currentTimeMillis() - diffStart));
 
         return curationUnitList;
+    }
+
+    private CurationUnitState calculateState(DiffResult diff)
+    {
+        if (!diff.hasDifferences() && diff.getIncompleteConfigurationSets().isEmpty()) {
+            return AGREE;
+        }
+
+        boolean allCurated = true;
+        curatedDiffSet: for (ConfigurationSet d : diff.getDifferingConfigurationSets().values()) {
+            if (!d.getCasGroupIds().contains(WebAnnoConst.CURATION_USER)) {
+                allCurated = false;
+                break curatedDiffSet;
+            }
+        }
+
+        if (allCurated) {
+            return CURATED;
+        }
+
+        // Is this confSet a diff due to stacked annotations (with same configuration)?
+        boolean stackedDiff = false;
+        stackedDiffSet: for (ConfigurationSet d : diff.getDifferingConfigurationSets().values()) {
+            for (String user : d.getCasGroupIds()) {
+                if (d.getConfigurations(user).size() > 1) {
+                    stackedDiff = true;
+                    break stackedDiffSet;
+                }
+            }
+        }
+
+        if (stackedDiff) {
+            return STACKED;
+        }
+
+        if (!diff.getIncompleteConfigurationSets().isEmpty()) {
+            return INCOMPLETE;
+        }
+
+        return DISAGREE;
     }
 
     private Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)

@@ -407,19 +407,6 @@ public class AnnotationPage
         }
     }
 
-    // private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
-    // {
-    // // If the page has loaded and there is no document open yet, show the open-document
-    // // dialog.
-    // if (getModelObject().getDocument() == null) {
-    // actionShowOpenDocumentDialog(aTarget);
-    // }
-    // else {
-    // // Make sure the URL fragement parameters are up-to-date
-    // updateUrlFragment(aTarget);
-    // }
-    // }
-
     @Override
     public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
