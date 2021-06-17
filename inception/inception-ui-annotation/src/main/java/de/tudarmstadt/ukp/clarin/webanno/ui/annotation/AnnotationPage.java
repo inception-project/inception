@@ -323,21 +323,10 @@ public class AnnotationPage
 
         centerArea.addOrReplace(annotationEditor);
 
-        // Give the new editor an opportunity to configure the current paging strategy
+        // Give the new editor an opportunity to configure the current paging strategy,
+        // this does not configure the paging for a document yet
+        // this would require loading the cas which might not have been upgraded yet
         factory.initState(state);
-        if (state.getDocument() != null) {
-            try {
-                state.getPagingStrategy().recalculatePage(state, getEditorCas());
-            }
-            catch (Exception e) {
-                LOG.info("Error reading CAS: {}", e.getMessage());
-                error("Error reading CAS " + e.getMessage());
-                if (aTarget != null) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
-            }
-        }
-
         // Use the proper position labels for the current paging strategy
         centerArea.addOrReplace(
                 state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
@@ -407,19 +396,6 @@ public class AnnotationPage
         }
     }
 
-    // private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
-    // {
-    // // If the page has loaded and there is no document open yet, show the open-document
-    // // dialog.
-    // if (getModelObject().getDocument() == null) {
-    // actionShowOpenDocumentDialog(aTarget);
-    // }
-    // else {
-    // // Make sure the URL fragement parameters are up-to-date
-    // updateUrlFragment(aTarget);
-    // }
-    // }
-
     @Override
     public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
@@ -480,6 +456,17 @@ public class AnnotationPage
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
             createAnnotationEditor(aTarget);
+            // update paging, only do it during document load so we load the cas after it has been upgraded
+            try {
+                state.getPagingStrategy().recalculatePage(state, getEditorCas());
+            }
+            catch (Exception e) {
+                LOG.info("Error reading CAS: {}", e.getMessage());
+                error("Error reading CAS " + e.getMessage());
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
 
             // Initialize the visible content - this has to happen after the annotation editor
             // component has been created because only then the paging strategy is known

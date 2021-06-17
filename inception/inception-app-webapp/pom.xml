@@ -461,10 +461,6 @@
 
     <!-- DATABASE / HIBERNATE -->
 
-    <!-- <dependency> -->
-    <!-- <groupId>org.hibernate</groupId> -->
-    <!-- <artifactId>hibernate-entitymanager</artifactId> -->
-    <!-- </dependency> -->
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
@@ -840,7 +836,6 @@
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
-              <usedDependency>org.liquibase:liquibase-core</usedDependency>
               <usedDependency>org.ehcache:ehcache</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>

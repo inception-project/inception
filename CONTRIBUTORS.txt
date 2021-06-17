@@ -17,6 +17,7 @@ Contributors to the INCEpTION code-base (please update this list)
 Beto Boullosa
 Chaitrali Agashe[@chaitraliagashe]
 Christoph Scheunemann [@christophscheunemann]
+Falko Helm [@Falko1]
 Jan-Christoph Klie [@jcklie]
 Jennifer Chen [@shinyichen]
 Michael Bugert
