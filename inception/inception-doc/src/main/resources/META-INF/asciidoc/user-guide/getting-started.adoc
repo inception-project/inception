@@ -96,7 +96,7 @@ All materials, including this guide, are available via the link:{product-website
 
 == Installing Java
 
-In order to run {product-name}, you need to have Java installed in version 8 or higher.
+In order to run {product-name}, you need to have Java installed in version 11 or higher.
 If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java^] or link:https://adoptopenjdk.net[OpenJDK^].
 Both work perfectly fine so you can choose either of them.
 
