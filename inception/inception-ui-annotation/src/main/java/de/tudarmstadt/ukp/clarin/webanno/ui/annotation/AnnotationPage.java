@@ -319,7 +319,9 @@ public class AnnotationPage
 
         centerArea.addOrReplace(annotationEditor);
 
-        // Give the new editor an opportunity to configure the current paging strategy
+        // Give the new editor an opportunity to configure the current paging strategy,
+        // this does not configure the paging for a document yet
+        // this would require loading the cas which might not have been upgraded yet
         factory.initState(state);
         // Use the proper position labels for the current paging strategy
         centerArea.addOrReplace(
@@ -444,7 +446,7 @@ public class AnnotationPage
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
             createAnnotationEditor(aTarget);
-            // update paging
+            // update paging, only do it during document load so we load the cas after it has been upgraded
             try {
                 state.getPagingStrategy().recalculatePage(state, getEditorCas());
             }
