@@ -26,8 +26,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommender.DictEntry;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.Trie;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.WhitespaceNormalizingSanitizer;
 
 public class TrieTest
 {
@@ -72,11 +70,15 @@ public class TrieTest
     {
         sut = new Trie<DictEntry>(WhitespaceNormalizingSanitizer.factory());
 
-        sut.put("  this is\ta test  .", new DictEntry("exists"));
+        sut.put("  this is\ta test\n  .", new DictEntry("exists"));
 
         System.out.println(sut.keys());
 
         assertThat(sut.getNode("this is a test .")).isNotNull();
+        assertThat(sut.getNode("this is a test .").node.level).isEqualTo(16);
+        assertThat(sut.getNode("this is a test .").matchLength).isEqualTo(16);
         assertThat(sut.getNode("  this is\ta test  .")).isNotNull();
+        assertThat(sut.getNode("  this is\ta test  .").node.level).isEqualTo(16);
+        assertThat(sut.getNode("  this is\ta test  .").matchLength).isEqualTo(19);
     }
 }

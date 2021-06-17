@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
@@ -117,6 +118,7 @@ public class MatrixWorkloadManagementPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationService;
+    private @SpringBean(name = "matrixWorkloadManagementPageMenuItem") ProjectMenuItem pageMenuItem;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
     private LambdaAjaxLink toggleBulkChange;
@@ -145,6 +147,11 @@ public class MatrixWorkloadManagementPage
 
         requireProjectRole(user, CURATOR, MANAGER);
 
+        if (!pageMenuItem.applies(project)) {
+            getSession().error("The project is not configured for static workload management");
+            backToProjectPage();
+        }
+
         add(new Label("name", project.getName()));
 
         add(new DocLink("documentStatusHelpLink", "_annotation_state_management"));
@@ -154,6 +161,8 @@ public class MatrixWorkloadManagementPage
         actionContainer = new WebMarkupContainer("actionContainer");
         actionContainer.setOutputMarkupPlaceholderTag(true);
         add(actionContainer);
+
+        actionContainer.add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
         bulkActionDropdown = new WebMarkupContainer("bulkActionDropdown");
         bulkActionDropdown.add(LambdaBehavior.visibleWhen(() -> bulkChangeMode));
@@ -219,14 +228,7 @@ public class MatrixWorkloadManagementPage
     private void actionToggleBulkChange(AjaxRequestTarget aTarget)
     {
         bulkChangeMode = !bulkChangeMode;
-        selectedUsers.getObject().clear();
-
-        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> newMatrix = createDocumentMatrix(
-                "documentMatrix", bulkChangeMode);
-        documentMatrix.replaceWith(newMatrix);
-        documentMatrix = newMatrix;
-
-        aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
+        actionRefresh(aTarget);
     }
 
     private void actionBulkResetDocument(AjaxRequestTarget aTarget)
@@ -407,6 +409,18 @@ public class MatrixWorkloadManagementPage
 
         reloadMatrixData();
         aTarget.add(documentMatrix);
+    }
+
+    private void actionRefresh(AjaxRequestTarget aTarget)
+    {
+        selectedUsers.getObject().clear();
+
+        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> newMatrix = createDocumentMatrix(
+                "documentMatrix", bulkChangeMode);
+        documentMatrix.replaceWith(newMatrix);
+        documentMatrix = newMatrix;
+
+        aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
     }
 
     private Collection<AnnotationDocument> selectedAnnotationDocuments()

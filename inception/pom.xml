@@ -1603,11 +1603,6 @@
         <artifactId>kinetic</artifactId>
         <version>5.2.0</version>
       </dependency>
-      <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>jquery.scrollTo</artifactId>
-        <version>2.1.2</version>
-      </dependency>
 
       <dependency>
         <groupId>org.mariadb.jdbc</groupId>

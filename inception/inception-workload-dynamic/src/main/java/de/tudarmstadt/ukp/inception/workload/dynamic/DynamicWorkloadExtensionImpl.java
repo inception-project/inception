@@ -116,6 +116,7 @@ public class DynamicWorkloadExtensionImpl
     }
 
     @Override
+    @Transactional
     public DynamicWorkloadTraits readTraits(WorkloadManager aWorkloadManager)
     {
         DynamicWorkloadTraits traits = null;
@@ -135,6 +136,7 @@ public class DynamicWorkloadExtensionImpl
     }
 
     @Override
+    @Transactional
     public void writeTraits(DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
@@ -196,6 +198,26 @@ public class DynamicWorkloadExtensionImpl
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public ProjectState recalculate(Project aProject)
+    {
+        WorkloadManager currentWorkload = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(aProject);
+        DynamicWorkloadTraits traits = readTraits(currentWorkload);
+
+        for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
+            updateDocumentState(doc, traits.getDefaultNumberOfAnnotations());
+        }
+
+        // Refresh the project stats and recalculate them
+        Project project = projectService.getProject(aProject.getId());
+        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        projectService.setProjectState(aProject, stats.getProjectState());
+
+        return project.getState();
     }
 
     @Override
