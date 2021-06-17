@@ -236,6 +236,8 @@ repository root and run
 
 Alternatively, you can run the `clean` and `install` Maven goals from IntelliJ manually.
 
+If you get an error that the command line is too long, please go to `Run -> Edit Configurations -> Modify Options -> Shorten Command Line` in IntelliJ IDEA and select the option `@argfile (Java 9+) - java @argfile className [args]`.
+
 === Checkstyle and Formatting
 
 We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
@@ -281,11 +283,3 @@ To make it usable from Intellij IDEA, you need to build the whole project at lea
 class. If it fails, alter the run configuration and add a new environment variable `INTELLIJ=true`
 and check that the working directory is the {product-name} root directory. The resulting documentation
 will be in `target/doc-out`.
-
-=== Developing INCEpTION and webanno together
-
-INCEpTION builds on WebAnno. Therefore, it can be desirable to work on WebAnno and INCEpTION at the same time
-so that changes in WebAnno are directly visible in your INCEpTION development. For this, check out WebAnno from
-Github. Then, import it as a Maven project: first, open the Maven sidebar on the right. Then, click on the `+`
-and select the WebAnno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
-make sure to check `Always update snapshots`.
