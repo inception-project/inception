@@ -407,22 +407,13 @@ public abstract class AnnotationPageBase
 
     public boolean isEditable()
     {
-        AnnotatorState state = getModelObject();
-
-        if (state.getDocument() == null) {
+        try {
+            ensureIsEditable();
+            return true;
+        }
+        catch (NotEditableException e) {
             return false;
         }
-        // If curating (check mode for curation page and user for curation sidebar),
-        // then it is editable unless the curation is finished
-        if (state.getMode().equals(CURATION)
-                || state.getUser().getUsername().equals(CURATION_USER)) {
-            return !CURATION_FINISHED.equals(state.getDocument().getState());
-        }
-
-        // If annotating normally, then it is editable unless marked as finished and unless
-        // viewing another users annotations
-        return !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername())
-                && !isAnnotationFinished();
     }
 
     public boolean isAnnotationFinished()

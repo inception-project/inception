@@ -110,6 +110,7 @@ import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.util.CodecInfo;
 import mtas.codec.util.CodecUtil;
 import mtas.parser.cql.MtasCQLParser;
+import mtas.parser.cql.ParseException;
 import mtas.search.spans.util.MtasSpanQuery;
 
 /**
@@ -412,11 +413,12 @@ public class MtasDocumentIndex
             }
             mtasSpanQuery = mtasSpanQuery1;
         }
-        catch (IOException e) {
-            throw e;
+        catch (ParseException | Error e) {
+            // The exceptions thrown by the MTAS CQL Parser are inheriting from java.lang.Error...
+            throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
         }
         catch (Exception e) {
-            throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
+            throw e;
         }
 
         IndexSearcher searcher = null;

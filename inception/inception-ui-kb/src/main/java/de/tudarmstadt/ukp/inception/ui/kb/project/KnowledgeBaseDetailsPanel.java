@@ -126,6 +126,8 @@ public class KnowledgeBaseDetailsPanel
             protected void onAfterSubmit(AjaxRequestTarget aTarget)
             {
                 KnowledgeBaseDetailsPanel.this.actionSave(aTarget, form);
+                success("Knowledge base settings saved.");
+                aTarget.addChildren(getPage(), IFeedback.class);
                 applicationEventPublisherHolder.get()
                         .publishEvent(new KnowledgeBaseConfigurationChangedEvent(this,
                                 aKbModel.getObject().getProject()));

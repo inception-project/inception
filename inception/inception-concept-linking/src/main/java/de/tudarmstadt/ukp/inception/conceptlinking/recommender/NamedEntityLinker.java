@@ -146,7 +146,7 @@ public class NamedEntityLinker
     @Override
     public RecommendationEngineCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+        return RecommendationEngineCapability.TRAINING_SUPPORTED;
     }
 
     @Override

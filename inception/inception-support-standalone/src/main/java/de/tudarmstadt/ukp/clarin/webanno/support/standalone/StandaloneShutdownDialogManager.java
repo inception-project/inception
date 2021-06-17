@@ -25,6 +25,7 @@ import static java.awt.Component.CENTER_ALIGNMENT;
 import static java.awt.Desktop.getDesktop;
 import static java.awt.Desktop.isDesktopSupported;
 import static java.awt.EventQueue.invokeLater;
+import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE;
 import static javax.swing.WindowConstants.HIDE_ON_CLOSE;
 
@@ -36,7 +37,6 @@ import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
-import java.io.IOException;
 import java.net.URI;
 
 import javax.swing.BorderFactory;
@@ -47,6 +47,7 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,6 +81,9 @@ public class StandaloneShutdownDialogManager
 
     @Value("${spring.application.name}")
     private String applicationName;
+
+    @Value("${commands.open-browser:}")
+    private String openBrowserCommand;
 
     private int port = -1;
 
@@ -237,9 +241,28 @@ public class StandaloneShutdownDialogManager
     private void actionBrowse()
     {
         try {
+            if (!StringUtils.isBlank(openBrowserCommand)) {
+                String cmd = openBrowserCommand.replace("%u", "http://localhost:" + port);
+
+                String[] cmdTokens = cmd.split("\\s(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+
+                for (int i = 0; i < cmdTokens.length; i++) {
+                    if (cmdTokens[i].startsWith("\"") || cmdTokens[i].endsWith("\"")) {
+                        cmdTokens[i] = StringUtils.substring(cmdTokens[i], 1, -1);
+                    }
+                }
+
+                new ProcessBuilder(cmdTokens) //
+                        .redirectOutput(INHERIT) //
+                        .redirectError(INHERIT) //
+                        .start();
+
+                return;
+            }
+
             Desktop.getDesktop().browse(URI.create("http://localhost:" + port));
         }
-        catch (IOException e) {
+        catch (Exception e) {
             log.error("Unable to open browser", e);
         }
     }

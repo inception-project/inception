@@ -245,8 +245,8 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             for (Entry<Long, List<T>> e : suggestionsByRecommenders.entrySet()) {
                 long recommenderId = e.getKey();
                 // We consider only candidates that are visible
-                List<T> candidates = e.getValue().stream().filter(AnnotationSuggestion::isVisible)
-                        .collect(toList());
+                List<T> candidates = e.getValue().stream() //
+                        .filter(AnnotationSuggestion::isVisible).collect(toList());
                 List<Delta<T>> deltas = new ArrayList<>();
 
                 Iterator<T> i = candidates.iterator();

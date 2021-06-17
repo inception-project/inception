@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
+
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -67,54 +70,53 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
-            AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation)
+    public void logSpanRecord(SourceDocument aDocument, String aUsername,
+            SpanSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
-        logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer, aFeature,
+        logSpanRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer, aFeature,
                 aUserAction, aLocation);
     }
 
     @Transactional
     @Override
-    public void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
-            String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+    public void logSpanRecord(SourceDocument aDocument, String aUsername,
+            SpanSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation)
     {
-        logRecord(aDocument, aUsername, aSuggestion.getBegin(), aSuggestion.getEnd(), -1, -1,
-                SuggestionType.SPAN, aSuggestion.getLabel(), aUserAction, aLayer, aFeature,
-                aSuggestion.getCoveredText(), aAlternativeLabel, aLocation);
+        logRecord(aDocument, aUsername, aSuggestion.getBegin(), aSuggestion.getEnd(), -1, -1, SPAN,
+                aAlternativeLabel, aUserAction, aLayer, aFeature, aSuggestion.getCoveredText(),
+                aLocation);
     }
 
     @Transactional
     @Override
-    public void logRecord(SourceDocument aDocument, String aUsername,
+    public void logRelationRecord(SourceDocument aDocument, String aUsername,
             RelationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
-        logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer, aFeature,
-                aUserAction, aLocation);
+        logRelationRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer,
+                aFeature, aUserAction, aLocation);
     }
 
     @Transactional
     @Override
-    public void logRecord(SourceDocument aDocument, String aUsername,
+    public void logRelationRecord(SourceDocument aDocument, String aUsername,
             RelationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation)
     {
         RelationPosition pos = aSuggestion.getPosition();
         logRecord(aDocument, aUsername, pos.getSourceBegin(), pos.getSourceEnd(),
-                pos.getTargetBegin(), pos.getTargetEnd(), SuggestionType.RELATION,
-                aSuggestion.getLabel(), aUserAction, aLayer, aFeature, "", aAlternativeLabel,
-                aLocation);
+                pos.getTargetBegin(), pos.getTargetEnd(), RELATION, aAlternativeLabel, aUserAction,
+                aLayer, aFeature, "", aLocation);
     }
 
     private void logRecord(SourceDocument aSourceDocument, String aUsername, int aOffsetBegin,
             int aOffsetEnd, int aOffset2Begin, int aOffset2End, SuggestionType aSuggestionType,
             String aLabel, LearningRecordType aUserAction, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, String aCoveredText, String aAlternativeLabel,
-            LearningRecordChangeLocation aLocation)
+            AnnotationFeature aFeature, String aCoveredText, LearningRecordChangeLocation aLocation)
     {
         // It doesn't make any sense at all to have duplicate entries in the learning history,
         // so when adding a new entry, we dump any existing entries which basically are the
@@ -154,7 +156,7 @@ public class LearningRecordServiceImpl
         record.setOffsetBegin2(aOffset2Begin);
         record.setOffsetEnd2(aOffset2End);
         record.setTokenText(aCoveredText);
-        record.setAnnotation(aAlternativeLabel);
+        record.setAnnotation(aLabel);
         record.setLayer(aLayer);
         record.setSuggestionType(aSuggestionType);
         record.setChangeLocation(aLocation);

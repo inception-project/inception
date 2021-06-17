@@ -34,7 +34,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.event.RecalculateProjectStateTask;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 
@@ -53,13 +55,16 @@ public class WorkloadManagementServiceImpl
 
     private final EntityManager entityManager;
     private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
+    private final SchedulingService schedulingService;
 
     @Autowired
     public WorkloadManagementServiceImpl(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint,
+            SchedulingService aSchedulingService)
     {
         entityManager = aEntityManager;
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
+        schedulingService = aSchedulingService;
     }
 
     /**
@@ -120,6 +125,9 @@ public class WorkloadManagementServiceImpl
                 .setParameter("traits", aManager.getTraits()) //
                 .setParameter("projectID", aManager.getProject()) //
                 .executeUpdate();
+
+        schedulingService.enqueue(new RecalculateProjectStateTask(aManager.getProject(),
+                "Workload configuration changed"));
     }
 
     /**
