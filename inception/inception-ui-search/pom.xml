@@ -58,6 +58,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
     </dependency>
+      <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-csv</artifactId>
+          <version>1.8</version>
+      </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
@@ -110,5 +115,53 @@
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
+      <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-csv</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-api</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-test-autoconfigure</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.awaitility</groupId>
+          <artifactId>awaitility</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.assertj</groupId>
+          <artifactId>assertj-core</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-io-conll</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-project</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-project</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-io-text</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-io-text</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-kb</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-search-mtas</artifactId>
+      </dependency>
   </dependencies>
 </project>
