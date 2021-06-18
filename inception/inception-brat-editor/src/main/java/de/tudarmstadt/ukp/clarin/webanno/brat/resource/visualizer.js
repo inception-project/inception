@@ -1762,11 +1762,11 @@ Util.profileStart('chunks');
           var f2 = span.fragments[span.fragments.length - 1];
 
           var x1 = (f1.curly.from + f1.curly.to - f1.width) / 2 -
-              Configuration.visual.margin.x;
+              Configuration.visual.margin.x - (sizes.fragments.height / 2);
           var i1 = f1.chunk.index;
 
           var x2 = (f2.curly.from + f2.curly.to + f2.width) / 2 +
-              Configuration.visual.margin.x;
+              Configuration.visual.margin.x + (sizes.fragments.height / 2);
           var i2 = f2.chunk.index;
 
           // Start from the ground level, going up floor by floor.
@@ -2050,7 +2050,7 @@ Util.profileStart('chunks');
             var by1 = yy - Configuration.visual.margin.y - span.floor;
             var by2 = by1 + bh;
             var poly = [];
-            if (span.clippedAtStart && fragmentNo == 0) {
+            if (span.clippedAtStart && span.fragments[0] == fragment) {
               poly.push([bx1, by2]);
               poly.push([bx1 - bh / 2, (by1 + by2) / 2]);
               poly.push([bx1, by1]);
@@ -2060,7 +2060,7 @@ Util.profileStart('chunks');
               poly.push([bx1, by1]);
             }
 
-            if (span.clippedAtEnd && fragmentNo == chunk.fragments.length - 1) {
+            if (span.clippedAtEnd && span.fragments[span.fragments.length - 1] == fragment) {
               poly.push([bx2, by1]);
               poly.push([bx2 + bh / 2, (by1 + by2) / 2]);
               poly.push([bx2, by2]);
