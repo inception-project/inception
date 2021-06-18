@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 
 public class StaticColoringStrategy
@@ -39,7 +40,7 @@ public class StaticColoringStrategy
             return aVObject.getColorHint();
         }
 
-        if (aVObject.getEquivalenceSet() >= 0) {
+        if (aVObject instanceof VArc && aVObject.getEquivalenceSet() >= 0) {
             // Every chain is supposed to have a different color
             return PALETTE_NORMAL_FILTERED[aVObject.getEquivalenceSet()
                     % PALETTE_NORMAL_FILTERED.length];

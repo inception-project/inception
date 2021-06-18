@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
@@ -46,11 +47,13 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
@@ -61,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  */
+@Order(200)
 public class RelationRenderer
     extends Renderer_ImplBase<RelationAdapter>
 {
@@ -119,6 +123,9 @@ public class RelationRenderer
         }
 
         RelationAdapter typeAdapter = getTypeAdapter();
+        RelationLayerTraits traits = typeAdapter.getTraits(RelationLayerTraits.class)
+                .orElseGet(RelationLayerTraits::new);
+
         Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin, aWindowEnd);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
@@ -127,9 +134,20 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
+        boolean noOverlap = getTypeAdapter().getLayer().getOverlapMode() == NO_OVERLAP;
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
             for (VObject arc : render(fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 if (!(arc instanceof VArc)) {
+                    continue;
+                }
+
+                // If rendering of the relations is disabled, we put the endpoints into equivalence
+                // sets instead.
+                if (noOverlap && !traits.isRenderArcs()) {
+                    aResponse.getSpan(((VArc) arc).getSource())
+                            .setEquivalenceSet(arc.getVid().getId());
+                    aResponse.getSpan(((VArc) arc).getTarget())
+                            .setEquivalenceSet(arc.getVid().getId());
                     continue;
                 }
 

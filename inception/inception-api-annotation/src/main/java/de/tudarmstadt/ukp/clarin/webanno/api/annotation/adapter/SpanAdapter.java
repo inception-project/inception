@@ -37,6 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -59,6 +61,8 @@ public class SpanAdapter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<SpanLayerBehavior> behaviors;
+
+    private AnnotationSchemaService annotationSchemaService;
 
     public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
@@ -184,5 +188,10 @@ public class SpanAdapter
     public void select(AnnotatorState aState, AnnotationFS aAnno)
     {
         aState.getSelection().selectSpan(aAnno);
+    }
+
+    public List<AttachedAnnotation> getAttachedRels(AnnotationFS aAnno)
+    {
+        return annotationSchemaService.getAttachedRels(getLayer(), aAnno);
     }
 }

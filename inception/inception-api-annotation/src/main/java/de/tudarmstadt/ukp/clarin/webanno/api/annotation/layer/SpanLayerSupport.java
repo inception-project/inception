@@ -29,8 +29,6 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,8 +51,6 @@ public class SpanLayerSupport
     extends LayerSupport_ImplBase<SpanAdapter, SpanLayerTraits>
     implements InitializingBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 

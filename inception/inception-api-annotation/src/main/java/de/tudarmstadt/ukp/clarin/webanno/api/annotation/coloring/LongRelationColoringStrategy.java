@@ -17,17 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_TAB20;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 
-public class LabelHashBasedColoringStrategy
+public class LongRelationColoringStrategy
     implements ColoringStrategy
 {
     private final String[] palette;
 
-    public LabelHashBasedColoringStrategy(String... aPalette)
+    public LongRelationColoringStrategy(String... aPalette)
     {
         palette = aPalette;
     }
@@ -39,10 +39,14 @@ public class LabelHashBasedColoringStrategy
             return aVObject.getColorHint();
         }
 
-        if (aVObject instanceof VArc && aVObject.getEquivalenceSet() >= 0) {
-            // Every chain is supposed to have a different color
-            return PALETTE_NORMAL_FILTERED[aVObject.getEquivalenceSet()
-                    % PALETTE_NORMAL_FILTERED.length];
+        if (aVObject instanceof VSpan) {
+            if (aVObject.getEquivalenceSet() >= 0) {
+                // We do not render relation arcs, but have the span in the same color
+                return PALETTE_TAB20[aVObject.getEquivalenceSet() % PALETTE_TAB20.length];
+            }
+            else {
+                return "#ffffff";
+            }
         }
 
         if (aRules != null) {
@@ -66,4 +70,5 @@ public class LabelHashBasedColoringStrategy
         }
         return palette[colorIndex % palette.length];
     }
+
 }

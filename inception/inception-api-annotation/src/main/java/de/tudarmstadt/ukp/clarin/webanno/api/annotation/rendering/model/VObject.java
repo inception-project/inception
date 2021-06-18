@@ -30,12 +30,13 @@ public abstract class VObject
     private final AnnotationLayer layer;
     private final String type;
     private final Map<String, String> features;
-    private final int equivalenceSet;
 
     private VID vid;
     private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
     private String colorHint;
     private String label;
+    private int equivalenceSet;
+    private boolean visible = true;
     private boolean actionButtons;
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
@@ -76,6 +77,11 @@ public abstract class VObject
     public int getEquivalenceSet()
     {
         return equivalenceSet;
+    }
+
+    public void setEquivalenceSet(int aEquivalenceSet)
+    {
+        equivalenceSet = aEquivalenceSet;
     }
 
     public Map<String, String> getFeatures()
@@ -121,6 +127,16 @@ public abstract class VObject
     public String getLabelHint()
     {
         return label;
+    }
+
+    public boolean isVisible()
+    {
+        return visible;
+    }
+
+    public void setVisible(boolean aVisible)
+    {
+        visible = aVisible;
     }
 
     public boolean isActionButtons()

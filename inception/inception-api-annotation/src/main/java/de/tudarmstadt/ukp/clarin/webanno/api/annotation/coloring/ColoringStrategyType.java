@@ -23,7 +23,7 @@ public enum ColoringStrategyType
 
     DYNAMIC("dynamic"), DYNAMIC_PASTELLE("dynamic pastelle"),
 
-    GRAY("static gray"),
+    GRAY("static gray"), LONG_RELATIONS("Long relations"),
 
     LEGACY("legacy");
 

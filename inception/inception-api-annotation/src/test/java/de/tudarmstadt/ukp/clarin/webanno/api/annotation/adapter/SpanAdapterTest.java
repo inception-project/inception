@@ -36,7 +36,9 @@ import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -53,6 +55,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class SpanAdapterTest
 {
+    private AnnotationSchemaService schemaService;
     private LayerSupportRegistry layerSupportRegistry;
     private FeatureSupportRegistry featureSupportRegistry;
     private Project project;
@@ -85,6 +88,7 @@ public class SpanAdapterTest
                 TOKENS, ANY_OVERLAP);
         neLayer.setId(1l);
 
+        schemaService = Mockito.mock(AnnotationSchemaService.class);
         layerSupportRegistry = new LayerSupportRegistryImpl(asList());
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
 

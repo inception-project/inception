@@ -28,7 +28,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanOverlapBehavior;
@@ -47,6 +49,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 public class SpanRendererTest
 {
+    private AnnotationSchemaService schemaService;
     private FeatureSupportRegistry featureSupportRegistry;
     private LayerSupportRegistry layerSupportRegistry;
     private Project project;
@@ -72,6 +75,7 @@ public class SpanRendererTest
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
         layerSupportRegistry = new LayerSupportRegistryImpl(asList());
+        schemaService = Mockito.mock(AnnotationSchemaService.class);
     }
 
     @Test

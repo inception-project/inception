@@ -36,6 +36,7 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 /**
  * Render spans.
  */
+@Order(100)
 public class SpanRenderer
     extends Renderer_ImplBase<SpanAdapter>
 {
