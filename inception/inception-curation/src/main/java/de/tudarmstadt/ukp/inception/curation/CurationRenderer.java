@@ -170,7 +170,7 @@ public class CurationRenderer
                         .createRenderer(layer, () -> layerAllFeatures);
 
                 List<VObject> objects = renderer.render((AnnotationFS) fs, layerSupportedFeatures,
-                        aWindowBeginOffset);
+                        aWindowBeginOffset, aWindowEndOffset);
 
                 for (VObject object : objects) {
                     VID curationVid = new CurationVID(user, object.getVid());
