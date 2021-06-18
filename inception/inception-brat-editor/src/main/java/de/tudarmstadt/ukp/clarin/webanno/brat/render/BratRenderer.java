@@ -181,14 +181,6 @@ public class BratRenderer
 
                 String labelText = getUiLabelText(typeAdapter, vspan);
 
-                if (vspan.getRanges().get(0).isClippedAtBegin()) {
-                    labelText = "◁ " + labelText;
-                }
-
-                if (vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd()) {
-                    labelText = labelText + " ▷";
-                }
-
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
@@ -202,6 +194,12 @@ public class BratRenderer
                     // response for *every annotation on this layer*!)
                     entity.getAttributes().setHoverText("");
                 }
+
+                entity.getAttributes()
+                        .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
+                entity.getAttributes().setClippedAtEnd(
+                        vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+
                 aResponse.addEntity(entity);
 
                 vspan.getLazyDetails().stream()
