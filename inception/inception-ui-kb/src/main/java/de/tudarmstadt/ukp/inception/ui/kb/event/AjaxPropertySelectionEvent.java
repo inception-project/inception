@@ -39,7 +39,7 @@ public class AjaxPropertySelectionEvent
     public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBProperty aNewSelection,
             boolean aRedrawConceptandPropertyListPanels)
     {
-        super(aTarget, aNewSelection.toKBHandle());
+        super(aTarget, aNewSelection != null ? aNewSelection.toKBHandle() : null);
         redrawConceptandPropertyListPanels = aRedrawConceptandPropertyListPanels;
         newSelection = aNewSelection;
     }

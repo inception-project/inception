@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.IteratorUtils.unmodifiableIterator;
 
 import java.util.AbstractCollection;
@@ -24,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 
@@ -49,15 +49,16 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
         addAll(SuggestionGroup.group(aSuggestions));
     }
 
-    @SuppressWarnings("unchecked")
-    /*
+    /**
      * Returns a SuggestionDocumentGroup where only suggestions of type V are added
      */
+    @SuppressWarnings("unchecked")
     public static <V extends AnnotationSuggestion> SuggestionDocumentGroup<V> filter(Class<V> type,
             List<AnnotationSuggestion> aSuggestions)
     {
         List<AnnotationSuggestion> filteredSuggestions = aSuggestions.stream()
-                .filter(type::isInstance).collect(Collectors.toList());
+                .filter(type::isInstance) //
+                .collect(toList());
         return new SuggestionDocumentGroup<V>((List<V>) filteredSuggestions);
     }
 

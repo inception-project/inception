@@ -80,10 +80,11 @@ public class ChainRenderer
     protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
         ChainAdapter typeAdapter = getTypeAdapter();
-        try {
-            chainType = aTypeSystem.getType(typeAdapter.getChainTypeName());
-        }
-        catch (IllegalArgumentException e) {
+        chainType = aTypeSystem.getType(typeAdapter.getChainTypeName());
+        
+        if (chainType == null) {
+            // If the types are not defined, then we do not need to try and render them because the
+            // CAS does not contain any instances of them
             return false;
         }
 

@@ -80,11 +80,10 @@ public class SpanRenderer
     {
         SpanAdapter typeAdapter = getTypeAdapter();
 
-        // Iterate over the span annotations of the current type and render each of them
-        try {
-            type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
-        }
-        catch (IllegalArgumentException e) {
+        type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
+        if (type == null) {
+            // If the types are not defined, then we do not need to try and render them because the
+            // CAS does not contain any instances of them
             return false;
         }
 

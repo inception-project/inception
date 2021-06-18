@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IteratorUtils;
+import org.apache.wicket.Session;
 import org.apache.wicket.markup.repeater.data.IDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -92,7 +93,16 @@ public class SearchResultsProvider
             pagesCacheModel.getObject().putPage(first, count, queryResults);
             return queryResults.iterator();
         }
-        catch (IOException | ExecutionException e) {
+        catch (ExecutionException e) {
+            if (Session.exists()) {
+                Session.get().error(e.getMessage());
+            }
+            return emptyIterator();
+        }
+        catch (IOException e) {
+            if (Session.exists()) {
+                Session.get().error("Unable to retrieve results: " + e.getMessage());
+            }
             LOG.error("Unable to retrieve results", e);
             return emptyIterator();
         }
@@ -110,8 +120,7 @@ public class SearchResultsProvider
                     annotationLayer, annotationFeature);
             return totalResults;
         }
-        catch (IOException | ExecutionException e) {
-            LOG.error("Unable to retrieve results", e);
+        catch (ExecutionException | IOException e) {
             return 0;
         }
     }
