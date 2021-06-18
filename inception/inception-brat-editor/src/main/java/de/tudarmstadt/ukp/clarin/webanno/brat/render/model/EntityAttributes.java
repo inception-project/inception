@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
+import static org.apache.commons.lang3.StringUtils.removeEnd;
+import static org.apache.commons.lang3.StringUtils.removeStart;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,16 +33,21 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.NumericBooleanSerializer;
 @JsonInclude(Include.NON_DEFAULT)
 public class EntityAttributes
 {
+    public static final String VALUE_CLIPPED_AT_START = "s";
+    public static final String VALUE_CLIPPED_AT_END = "e";
+
     public static final String ATTR_LABEL = "l";
     public static final String ATTR_COLOR = "c";
     public static final String ATTR_HOVER_TEXT = "h";
     public static final String ATTR_ACTION_BUTTONS = "a";
+    public static final String ATTR_CLIPPED = "cl";
 
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
     private @JsonProperty(ATTR_HOVER_TEXT) String hoverText;
     @JsonSerialize(using = NumericBooleanSerializer.class)
     private @JsonProperty(ATTR_ACTION_BUTTONS) boolean actionButtons;
+    private @JsonProperty(ATTR_CLIPPED) String clipped;
 
     public void setLabelText(String aLabelText)
     {
@@ -79,5 +87,69 @@ public class EntityAttributes
     public void setActionButtons(Boolean aActionButtons)
     {
         actionButtons = aActionButtons;
+    }
+
+    public void setClippedAtStart(boolean aFlag)
+    {
+        if (clipped == null) {
+            if (!aFlag) {
+                return;
+            }
+
+            clipped = VALUE_CLIPPED_AT_START;
+            return;
+        }
+
+        if (aFlag) {
+            if (clipped.startsWith(VALUE_CLIPPED_AT_START)) {
+                return;
+            }
+
+            clipped = VALUE_CLIPPED_AT_START + clipped;
+        }
+        else {
+            if (!clipped.startsWith(VALUE_CLIPPED_AT_START)) {
+                return;
+            }
+
+            clipped = removeStart(clipped, VALUE_CLIPPED_AT_START);
+        }
+    }
+
+    public void setClippedAtEnd(boolean aFlag)
+    {
+        if (clipped == null) {
+            if (!aFlag) {
+                return;
+            }
+
+            clipped = VALUE_CLIPPED_AT_END;
+            return;
+        }
+
+        if (aFlag) {
+            if (clipped.endsWith(VALUE_CLIPPED_AT_END)) {
+                return;
+            }
+
+            clipped = clipped + VALUE_CLIPPED_AT_END;
+        }
+        else {
+            if (!clipped.endsWith(VALUE_CLIPPED_AT_END)) {
+                return;
+            }
+
+            clipped = removeEnd(clipped, VALUE_CLIPPED_AT_END);
+        }
+    }
+
+    public String getClipped()
+    {
+        return clipped;
+    }
+
+    public void setClipped(String aClipped)
+    {
+        clipped = aClipped;
     }
 }

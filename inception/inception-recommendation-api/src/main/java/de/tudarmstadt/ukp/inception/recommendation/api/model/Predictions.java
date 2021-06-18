@@ -131,6 +131,10 @@ public class Predictions
                 .map(f -> (Entry<ExtendedId, T>) (Entry) f)
                 .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
                 .filter(f -> f.getKey().getLayerId() == aLayer.getId())
+                // .filter(f -> overlapping(f.getValue().getWindowBegin(),
+                // f.getValue().getWindowEnd(),
+                // aWindowBegin == -1 ? 0 : aWindowBegin,
+                // aWindowEnd == -1 ? MAX_VALUE : aWindowEnd))
                 .filter(f -> aWindowBegin == -1 || (f.getValue().getWindowBegin() >= aWindowBegin))
                 .filter(f -> aWindowEnd == -1 || (f.getValue().getWindowEnd() <= aWindowEnd))
                 .sorted(Comparator.comparingInt(e2 -> e2.getValue().getWindowBegin()))
