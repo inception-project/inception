@@ -128,7 +128,7 @@ public class RelationRenderer
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            for (VObject arc : render(fs, aFeatures, aWindowBegin)) {
+            for (VObject arc : render(fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 if (!(arc instanceof VArc)) {
                     continue;
                 }
@@ -169,7 +169,7 @@ public class RelationRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+            int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return Collections.emptyList();
