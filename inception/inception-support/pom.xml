@@ -138,7 +138,7 @@
       <version>1.9.6</version>
     </dependency>
 
-    <!-- Hibernate dependencies -->
+    <!-- Database dependencies -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
@@ -146,6 +146,10 @@
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
     </dependency>
 
     <!-- Jackson dependencies -->

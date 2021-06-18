@@ -53,11 +53,11 @@ public interface LearningRecordService
 
     void deleteById(long id);
 
-    void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aPrediction,
+    void logSpanRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aPrediction,
             AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 
-    void logRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aPrediction,
+    void logRelationRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aPrediction,
             AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 
@@ -66,7 +66,7 @@ public interface LearningRecordService
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
      */
-    void logRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
+    void logSpanRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
             String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
@@ -75,7 +75,7 @@ public interface LearningRecordService
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
      */
-    void logRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aSuggestion,
+    void logRelationRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aSuggestion,
             String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 

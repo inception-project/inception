@@ -20,10 +20,13 @@ package de.tudarmstadt.ukp.inception.active.learning.config;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl;
@@ -47,10 +50,13 @@ public class ActiveLearningAutoConfiguration
     @Bean
     public ActiveLearningService activeLearningService(DocumentService aDocumentService,
             RecommendationService aRecommendationService, UserDao aUserDao,
-            LearningRecordService aLearningHistoryService)
+            LearningRecordService aLearningHistoryService, AnnotationSchemaService aSchemaService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new ActiveLearningServiceImpl(aDocumentService, aRecommendationService, aUserDao,
-                aLearningHistoryService);
+                aLearningHistoryService, aSchemaService, aApplicationEventPublisher,
+                aFeatureSupportRegistry);
     }
 
     @Bean

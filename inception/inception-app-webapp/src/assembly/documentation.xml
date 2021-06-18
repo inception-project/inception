@@ -25,7 +25,7 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
     <dependencySet>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>.</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
       <unpack>true</unpack>
       <scope>compile</scope>
@@ -42,7 +42,7 @@
   <fileSets>
     <fileSet>
       <directory>../inception-example-imls-data-majority/src/main/resources</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>.</outputDirectory>
         <includes>
           <include>**/META-INF/asciidoc/**</include>
         </includes>

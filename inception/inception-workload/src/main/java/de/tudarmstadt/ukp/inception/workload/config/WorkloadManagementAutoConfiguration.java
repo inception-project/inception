@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
@@ -45,9 +46,11 @@ public class WorkloadManagementAutoConfiguration<T>
 
     @Bean
     public WorkloadManagementService workloadManagementService(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint,
+            SchedulingService aSchedulingService)
     {
-        return new WorkloadManagementServiceImpl(aEntityManager, aWorkloadManagerExtensionPoint);
+        return new WorkloadManagementServiceImpl(aEntityManager, aWorkloadManagerExtensionPoint,
+                aSchedulingService);
     }
 
     @Bean
