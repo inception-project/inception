@@ -86,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -170,7 +171,13 @@ public class BratRenderer
                                 aCas.getDocumentText().substring(aState.getWindowBeginOffset(),
                                         aState.getWindowEndOffset()),
                                 range.getBegin(), range.getEnd()).stream())
-                        .collect(toList());
+                        .map(range -> {
+                            int[] span = { range.getBegin(), range.getEnd() };
+                            TrimUtils.trim(aResponse.getText(), span);
+                            range.setBegin(span[0]);
+                            range.setEnd(span[1]);
+                            return range;
+                        }).collect(toList());
 
                 String labelText = getUiLabelText(typeAdapter, vspan);
 
@@ -187,6 +194,12 @@ public class BratRenderer
                     // response for *every annotation on this layer*!)
                     entity.getAttributes().setHoverText("");
                 }
+
+                entity.getAttributes()
+                        .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
+                entity.getAttributes().setClippedAtEnd(
+                        vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+
                 aResponse.addEntity(entity);
 
                 vspan.getLazyDetails().stream()
@@ -301,14 +314,8 @@ public class BratRenderer
             }
 
             split(aResponse.getSentenceOffsets(), fs.getCoveredText(), fs.getBegin() - winBegin,
-                    fs.getEnd() - winBegin).forEach(range -> {
-                        aResponse.addToken(range.getBegin(), range.getEnd());
-                        if (DEBUG) {
-                            aResponse.addEntity(new Entity(new VID(fs), "Token",
-                                    new Offsets(range.getBegin(), range.getEnd()),
-                                    fs.getCoveredText(), "#d9d9d9"));
-                        }
-                    });
+                    fs.getEnd() - winBegin)
+                            .forEach(range -> aResponse.addToken(range.getBegin(), range.getEnd()));
         }
     }
 

@@ -71,6 +71,8 @@ var Visualizer = (function($, window, undefined) {
       this.unsegmentedOffsets = offsets;
       this.offsets = [];
       this.segmentedOffsetsMap = {};
+      this.clippedAtStart = false;
+      this.clippedAtEnd = false;
       // this.unsegmentedOffsets = undefined;
       // this.from = undefined;
       // this.to = undefined;
@@ -616,6 +618,10 @@ var Visualizer = (function($, window, undefined) {
             }
             if (attributes.hasOwnProperty('h')) {
               span.hovertext = attributes.h;
+            }
+            if (attributes.hasOwnProperty('cl') && attributes.cl) {
+              span.clippedAtStart = attributes.cl.startsWith("s");
+              span.clippedAtEnd = attributes.cl.endsWith("e");
             }
           }
 // WEBANNO EXTENSION END
@@ -1756,11 +1762,11 @@ Util.profileStart('chunks');
           var f2 = span.fragments[span.fragments.length - 1];
 
           var x1 = (f1.curly.from + f1.curly.to - f1.width) / 2 -
-              Configuration.visual.margin.x;
+              Configuration.visual.margin.x - (sizes.fragments.height / 2);
           var i1 = f1.chunk.index;
 
           var x2 = (f2.curly.from + f2.curly.to + f2.width) / 2 +
-              Configuration.visual.margin.x;
+              Configuration.visual.margin.x + (sizes.fragments.height / 2);
           var i2 = f2.chunk.index;
 
           // Start from the ground level, going up floor by floor.
@@ -2025,9 +2031,47 @@ Util.profileStart('chunks');
               chunkTo = Math.max(bx + bw + rectShadowSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * rectShadowSize, fragmentHeight);
             }
+            /*
             fragment.rect = svg.rect(fragment.group,
                 bx, by, bw, bh, {
 
+                'class': rectClass,
+                fill: bgColor,
+                stroke: borderColor,
+                rx: Configuration.visual.margin.x,
+                ry: Configuration.visual.margin.y,
+                'data-span-id': span.id,
+                'data-fragment-id': span.segmentedOffsetsMap[fragment.id],
+                'strokeDashArray': span.attributeMerge.dashArray,
+              });*/
+
+            var bx1 = bx;
+            var bx2 = bx1 + bw;
+            var by1 = yy - Configuration.visual.margin.y - span.floor;
+            var by2 = by1 + bh;
+            var poly = [];
+            if (span.clippedAtStart && span.fragments[0] == fragment) {
+              poly.push([bx1, by2]);
+              poly.push([bx1 - bh / 2, (by1 + by2) / 2]);
+              poly.push([bx1, by1]);
+            }
+            else {
+              poly.push([bx1, by2]);
+              poly.push([bx1, by1]);
+            }
+
+            if (span.clippedAtEnd && span.fragments[span.fragments.length - 1] == fragment) {
+              poly.push([bx2, by1]);
+              poly.push([bx2 + bh / 2, (by1 + by2) / 2]);
+              poly.push([bx2, by2]);
+            }
+            else {
+              poly.push([bx2, by1]);
+              poly.push([bx2, by2]);
+            }
+
+            fragment.rect = svg.polygon(fragment.group, poly,
+              {
                 'class': rectClass,
                 fill: bgColor,
                 stroke: borderColor,
