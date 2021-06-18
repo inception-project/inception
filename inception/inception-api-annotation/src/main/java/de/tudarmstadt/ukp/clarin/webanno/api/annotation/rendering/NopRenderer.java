@@ -57,7 +57,7 @@ public class NopRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+            int aWindowBegin, int aWindowEnd)
     {
         return Collections.emptyList();
     }

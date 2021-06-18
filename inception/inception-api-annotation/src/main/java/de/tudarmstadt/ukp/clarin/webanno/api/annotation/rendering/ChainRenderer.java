@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYP
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -138,9 +140,9 @@ public class ChainRenderer
                     break; // Go to next chain
                 }
 
-                // Is link before window? We only need links that being within the window and that
-                // end within the window
-                if (!(linkFs.getBegin() >= aPageBegin) && (linkFs.getEnd() <= aPageEnd)) {
+                // Is not overlapping the viewport? We only need links that are actually visible in
+                // the viewport
+                if (!overlapping(linkFs, aPageBegin, aPageEnd)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -150,13 +152,17 @@ public class ChainRenderer
 
                 // Render span
                 {
+                    Optional<VRange> range = VRange.clippedRange(aPageBegin, aPageEnd, linkFs);
+
+                    if (!range.isPresent()) {
+                        continue;
+                    }
+
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
-                    VRange offsets = new VRange(linkFs.getBegin() - aPageBegin,
-                            linkFs.getEnd() - aPageBegin);
 
-                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, bratLabelText);
+                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName,
+                            range.get(), colorIndex, bratLabelText);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
 
@@ -203,7 +209,7 @@ public class ChainRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+            int aWindowBegin, int aWindowEnd)
     {
         return Collections.emptyList();
     }

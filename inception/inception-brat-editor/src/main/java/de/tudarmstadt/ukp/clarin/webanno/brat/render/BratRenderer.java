@@ -86,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -170,14 +171,20 @@ public class BratRenderer
                                 aCas.getDocumentText().substring(aState.getWindowBeginOffset(),
                                         aState.getWindowEndOffset()),
                                 range.getBegin(), range.getEnd()).stream())
-                        .collect(toList());
+                        .map(range -> {
+                            int[] span = { range.getBegin(), range.getEnd() };
+                            TrimUtils.trim(aResponse.getText(), span);
+                            range.setBegin(span[0]);
+                            range.setEnd(span[1]);
+                            return range;
+                        }).collect(toList());
 
                 String labelText = getUiLabelText(typeAdapter, vspan);
 
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
-                        color);
+                        color, vspan.isActionButtons());
                 if (!layer.isShowTextInHover()) {
                     // If the layer is configured not to display the span text in the popup, then
                     // we simply set the popup to the empty string here.
@@ -188,8 +195,12 @@ public class BratRenderer
                     entity.getAttributes().setHoverText("");
                 }
 
-                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
-                        color, vspan.isActionButtons()));
+                entity.getAttributes()
+                        .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
+                entity.getAttributes().setClippedAtEnd(
+                        vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+
+                aResponse.addEntity(entity);
 
                 vspan.getLazyDetails().stream()
                         .map(d -> new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
@@ -303,14 +314,8 @@ public class BratRenderer
             }
 
             split(aResponse.getSentenceOffsets(), fs.getCoveredText(), fs.getBegin() - winBegin,
-                    fs.getEnd() - winBegin).forEach(range -> {
-                        aResponse.addToken(range.getBegin(), range.getEnd());
-                        if (DEBUG) {
-                            aResponse.addEntity(new Entity(new VID(fs), "Token",
-                                    new Offsets(range.getBegin(), range.getEnd()),
-                                    fs.getCoveredText(), "#d9d9d9"));
-                        }
-                    });
+                    fs.getEnd() - winBegin)
+                            .forEach(range -> aResponse.addToken(range.getBegin(), range.getEnd()));
         }
     }
 
