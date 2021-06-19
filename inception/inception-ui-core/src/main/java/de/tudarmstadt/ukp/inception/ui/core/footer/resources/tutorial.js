@@ -96,20 +96,22 @@ function runRoutines() {
       else if (currentPage == contextPath + "/" && ps == "projectCreated") 
       {
           enjoyhint_instance = new EnjoyHint({
+            onStart: function() {
+              $("[name^='projectImport']").prop("disabled", true);
+              $("[id^='roleFilterLink']").prop("disabled", true);
+            },
             onEnd : function() {
               setCookie(cName, "projectView");
+              $("[name^='projectImport']").prop("disabled", false);
+              $("[id^='roleFilterLink']").prop("disabled", false);
             },
             onSkip : function() {
               setCookie(cName, 'ended');
+              $("[name^='projectImport']").prop("disabled", false);
+              $("[id^='roleFilterLink']").prop("disabled", false);
             }
           });
-          // disable the buttons that should not be clicked during the tutorial
-          if (document.querySelectorAll("[name^='projectImport']").length > 0){
-            document.querySelectorAll("[name^='projectImport']")[0].disabled = true;
-          }
-          document.querySelectorAll("[id^='roleFilterLink']")
-            .forEach(element => element.disabled = true);
-          // run routine
+          
           enjoyhint_script_steps = createFirstPageRoutinePart2();
           enjoyhint_instance.set(enjoyhint_script_steps);
           enjoyhint_instance.runScript();
@@ -262,23 +264,21 @@ function runRoutines() {
 
 function startTutorial() {
   var enjoyhint_instance = new EnjoyHint({
+    onStart: function() {
+      $('.navbar-brand').css('pointer-events', 'none');
+    },
     onEnd : function() {
+      $('.navbar-brand').css('pointer-events', '');
     },
     onSkip : function() {
+      $('.navbar-brand').css('pointer-events', '');
       setCookie(cName, 'ended');
     }
   });
 
-  // disable home link
-  var homeLink = document.querySelector(".navbar-brand");
-  if (homeLink != null){
-    homeLink.style.pointerEvents = 'none';
-  }
   enjoyhint_script_steps = createFirstPageRoutine();
   enjoyhint_instance.set(enjoyhint_script_steps);
-  
   setCookie(cName, 'tutorialStarted');
-
   enjoyhint_instance.runScript();
 }
 
