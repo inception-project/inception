@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -73,12 +74,14 @@ public class AnnotationEditorExtensionRegistryImpl
             AnnotationAwareOrderComparator.sort(exts);
 
             for (AnnotationEditorExtension fs : exts) {
-                log.info("Found annotation editor extension: {}",
+                log.debug("Found annotation editor extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        extensions = Collections.unmodifiableList(exts);
+        log.info("Found [{}] annotation editor extensions", exts.size());
+
+        extensions = unmodifiableList(exts);
     }
 
     @Override

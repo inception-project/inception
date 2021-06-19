@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.stream.Collectors.toList;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
@@ -53,7 +54,6 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -105,7 +105,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -146,8 +145,6 @@ public class KnowledgeBaseServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
     private final File kbRepositoriesRoot;
-
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
 
@@ -197,6 +194,7 @@ public class KnowledgeBaseServiceImpl
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
         repoManager.setHttpClient(PerThreadSslCheckingHttpClientUtils
                 .newPerThreadSslCheckingHttpClientBuilder().build());
+
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
     }
 
@@ -235,8 +233,8 @@ public class KnowledgeBaseServiceImpl
         }
 
         if (!orphanedIDs.isEmpty()) {
-            log.info("Found orphaned KB repositories: {}",
-                    orphanedIDs.stream().sorted().collect(Collectors.toList()));
+            log.info("Found [{}] orphaned KB repositories: {}", orphanedIDs.size(),
+                    orphanedIDs.stream().sorted().collect(toList()));
         }
 
         repoManager.refresh();

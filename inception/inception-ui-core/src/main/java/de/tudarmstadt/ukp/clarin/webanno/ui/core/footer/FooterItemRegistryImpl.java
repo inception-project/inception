@@ -61,9 +61,12 @@ public class FooterItemRegistryImpl
             AnnotationAwareOrderComparator.sort(exts);
 
             for (FooterItem fs : exts) {
-                log.info("Found footer item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                log.debug("Found footer item: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
+
+        log.info("Found [{}] footer items", exts.size());
 
         extensions = Collections.unmodifiableList(exts);
     }
