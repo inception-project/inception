@@ -43,11 +43,13 @@ import javax.swing.SwingConstants;
 
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceSchemaCreatedEvent;
+import org.springframework.boot.availability.AvailabilityChangeEvent;
 import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.boot.context.event.ApplicationStartingEvent;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
@@ -182,6 +184,11 @@ public class LoadingSplashScreen
                 return;
             }
 
+            if (aEvent instanceof AvailabilityChangeEvent) {
+                // We can ignore this one...
+                return;
+            }
+
             if (!isDisposed()) {
                 setInfo(applicationName + " is loading... - " + mapEvent(aEvent));
             }
@@ -220,6 +227,10 @@ public class LoadingSplashScreen
 
             if (aEvent instanceof ContextRefreshedEvent) {
                 return "Context refreshed";
+            }
+
+            if (aEvent instanceof ApplicationStartedEvent) {
+                return "Application started";
             }
 
             if (aEvent instanceof StartupProgressInfoEvent) {
