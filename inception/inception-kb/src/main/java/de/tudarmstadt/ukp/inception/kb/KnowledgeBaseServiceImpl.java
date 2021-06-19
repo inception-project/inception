@@ -106,6 +106,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
@@ -145,6 +146,7 @@ public class KnowledgeBaseServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
     private final File kbRepositoriesRoot;
+    private final KnowledgeBaseProperties properties;
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
 
@@ -152,6 +154,8 @@ public class KnowledgeBaseServiceImpl
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
             KnowledgeBaseProperties aKBProperties)
     {
+        properties = aKBProperties;
+
         Caffeine<QueryKey, List<KBHandle>> cacheBuilder = Caffeine.newBuilder()
                 .maximumWeight(aKBProperties.getCacheSize())
                 .expireAfterAccess(aKBProperties.getCacheExpireDelay())
@@ -235,6 +239,13 @@ public class KnowledgeBaseServiceImpl
         if (!orphanedIDs.isEmpty()) {
             log.info("Found [{}] orphaned KB repositories: {}", orphanedIDs.size(),
                     orphanedIDs.stream().sorted().collect(toList()));
+
+            if (properties.isRemoveOrphansOnStart()) {
+                for (String id : orphanedIDs) {
+                    repoManager.removeRepository(id);
+                    log.info("Deleted orphaned KB repository: {}", id);
+                }
+            }
         }
 
         repoManager.refresh();
@@ -1341,6 +1352,15 @@ public class KnowledgeBaseServiceImpl
         queryCache.asMap().keySet().stream()
                 .filter(key -> key.kb.getProject().equals(aEvent.getProject()))
                 .forEach(key -> queryCache.invalidate(key));
+    }
+
+    @EventListener
+    @Transactional
+    public void onBeforeProjectRemovedEvent(BeforeProjectRemovedEvent aEvent)
+    {
+        for (KnowledgeBase kb : getKnowledgeBases(aEvent.getProject())) {
+            removeKnowledgeBase(kb);
+        }
     }
 
     private static final class QueryKey
