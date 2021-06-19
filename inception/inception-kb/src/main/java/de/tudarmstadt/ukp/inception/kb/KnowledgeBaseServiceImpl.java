@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
@@ -1358,8 +1359,14 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     public void onBeforeProjectRemovedEvent(BeforeProjectRemovedEvent aEvent)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aEvent.getProject())) {
+        Project project = aEvent.getProject();
+
+        for (KnowledgeBase kb : getKnowledgeBases(project)) {
             removeKnowledgeBase(kb);
+        }
+
+        try (var logCtx = withProjectLogger(project)) {
+            log.info("Removed all knowledge bases from project {} being deleted", project);
         }
     }
 
