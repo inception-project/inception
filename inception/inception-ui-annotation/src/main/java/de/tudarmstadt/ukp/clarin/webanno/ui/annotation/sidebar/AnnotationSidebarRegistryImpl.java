@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -64,12 +65,14 @@ public class AnnotationSidebarRegistryImpl
             exts.sort(buildComparator());
 
             for (AnnotationSidebarFactory fs : exts) {
-                log.info("Found annotation sidebar extension: {}",
+                log.debug("Found annotation sidebar extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        extensions = Collections.unmodifiableList(exts);
+        log.info("Found [{}] annotation sidebar extensions", exts.size());
+
+        extensions = unmodifiableList(exts);
     }
 
     @Override

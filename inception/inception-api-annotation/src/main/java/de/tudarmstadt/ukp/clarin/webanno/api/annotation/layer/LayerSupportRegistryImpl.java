@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,13 +80,15 @@ public class LayerSupportRegistryImpl
             AnnotationAwareOrderComparator.sort(lsp);
 
             for (LayerSupport<?, ?> fs : lsp) {
-                log.info("Found layer support: {}",
+                log.debug("Found layer support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
                 fs.setLayerSupportRegistry(this);
             }
         }
 
-        layerSupports = Collections.unmodifiableList(lsp);
+        log.info("Found [{}] layer supports", lsp.size());
+
+        layerSupports = unmodifiableList(lsp);
     }
 
     @Override
