@@ -19,57 +19,8 @@
 <html
     xmlns="http://www.w3.org/1999/xhtml" 
     xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <wicket:head>
-    <script type="text/javascript">
-      function LogoutTimer(sessionTimeout) {
-        var instance = this;
-        
-        var timeout = sessionTimeout;
-        var started = null;
-        var timer = null;
-        
-          this.tick = function() {
-            var remaining = timeout - Math.floor((new Date() - started) / 1000);
-            var remaining2 = Math.max(0, remaining);
-              var min = Math.floor(remaining2 / 60).toString();
-              
-              // Calling text(val) causes a redraw of the browser contents causing constant CPU
-              // load. Only calling the method if the text actually did change avoids this issue.
-              var timerElement = $('#timer');
-              if (timerElement.text() != min) {
-                $('#timer').text(min);
-              }
-              
-              // Wait an additional couple of seconds before reload to avoid reloading before the
-              // server-side session has *really* expired.
-              if (remaining <= -10) {
-                clearInterval(instance.timer);
-                location.reload(true);
-              }
-          };
-              
-          this.start = function() {
-             const TICK_RATE = 1000; // 1 second
-             if (instance.timer) {
-               clearInterval(instance.timer);
-             }
-             started = new Date();
-             instance.timer = setInterval(instance.tick, TICK_RATE);
-             instance.tick();
-          };
-
-        if (typeof Wicket != 'undefined') {
-          instance.start();
-          Wicket.Event.subscribe('/ajax/call/beforeSend', function(attr, xhr, status) {
-            instance.start()
-          });
-        }
-      }
-    </script>
-  </wicket:head>
   <body>
     <wicket:panel>
-    
       <div class="nav-item">
         <a class="nav-link" wicket:id="profile">
         <i class="fas fa-user" aria-hidden="true"></i>
