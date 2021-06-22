@@ -35,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Page;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
+import org.apache.wicket.csp.CSPDirective;
+import org.apache.wicket.csp.CSPDirectiveSrcValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
@@ -84,14 +86,16 @@ public abstract class WicketApplicationBase
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
-        // getCspSettings().blocking().disabled();
-        getCspSettings().reporting().unsafeInline();
-        // getCspSettings().blocking();
+        // This is the line we hopefully eventually want to remove to enable CSP
+        getCspSettings().blocking().disabled();
 
-        // if (DEVELOPMENT == getConfigurationType()) {
-        // getCspSettings().reporting().strict().reportBack();
-        // getCspSettings().reporting().unsafeInline().reportBack();
-        // }
+        if (DEVELOPMENT == getConfigurationType()) {
+            // getCspSettings().reporting().strict().reportBack();
+            // getCspSettings().reporting().unsafeInline().reportBack();
+            getCspSettings().reporting() //
+                    .add(CSPDirective.STYLE_SRC, CSPDirectiveSrcValue.UNSAFE_INLINE) //
+                    .add(CSPDirective.SCRIPT_SRC, CSPDirectiveSrcValue.UNSAFE_EVAL);
+        }
 
         getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING);
         getSecuritySettings().setCrossOriginOpenerPolicyConfiguration(SAME_ORIGIN);
