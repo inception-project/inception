@@ -556,18 +556,6 @@
       <artifactId>inception-curation</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
-      <artifactId>enjoyhint</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>kinetic</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.bower</groupId>
-      <artifactId>jquery.scrollTo</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-kotlin</artifactId>
     </dependency>
