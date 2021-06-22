@@ -37,6 +37,7 @@ import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
@@ -146,6 +147,13 @@ public class LoginPage
 
         aResponse.render(CssHeaderItem
                 .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
+
+        aResponse.render(CssHeaderItem.forReference(LoginPageCssResourceReference.get()));
+
+        // Capture the URL fragment into a hidden form field so we can use it later when
+        // forwarding to the target page after login
+        aResponse.render(OnDomReadyHeaderItem.forScript(
+                "$('#urlfragment').attr('value', unescape(self.document.location.hash.substring(1)));"));
     }
 
     private void redirectIfAlreadyLoggedIn()
