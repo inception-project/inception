@@ -21,8 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.value;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,12 +82,14 @@ public class ValueTypeSupportRegistryImpl
             AnnotationAwareOrderComparator.sort(fsp);
 
             for (ValueTypeSupport fs : fsp) {
-                log.info("Found value type support: {}",
+                log.debug("Found value type support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        valueSupports = Collections.unmodifiableList(fsp);
+        log.info("Found [{}] value type supports", fsp.size());
+
+        valueSupports = unmodifiableList(fsp);
     }
 
     @Override

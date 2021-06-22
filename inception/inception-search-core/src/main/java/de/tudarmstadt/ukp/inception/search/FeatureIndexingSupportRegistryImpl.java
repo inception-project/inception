@@ -21,8 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,12 +79,14 @@ public class FeatureIndexingSupportRegistryImpl
             AnnotationAwareOrderComparator.sort(fsp);
 
             for (FeatureIndexingSupport fs : fsp) {
-                log.info("Found indexing support: {}",
+                log.debug("Found feature indexing support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        indexingSupports = Collections.unmodifiableList(fsp);
+        log.info("Found [{}] feature indexing supports", fsp.size());
+
+        indexingSupports = unmodifiableList(fsp);
     }
 
     @Override

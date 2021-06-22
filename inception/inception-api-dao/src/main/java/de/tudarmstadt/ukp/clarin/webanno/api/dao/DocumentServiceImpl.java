@@ -1247,8 +1247,7 @@ public class DocumentServiceImpl
         }
 
         try (var logCtx = withProjectLogger(project)) {
-            log.info("Removed all documents from project [{}]({}) being deleted", project.getName(),
-                    project.getId());
+            log.info("Removed all documents from project {} being deleted", project);
         }
     }
 
