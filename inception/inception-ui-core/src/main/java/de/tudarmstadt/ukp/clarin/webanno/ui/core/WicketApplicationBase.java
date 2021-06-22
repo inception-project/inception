@@ -22,6 +22,8 @@ import static io.bit3.jsass.OutputStyle.NESTED;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
+import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
+import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -85,6 +87,9 @@ public abstract class WicketApplicationBase
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
         getCspSettings().blocking().disabled();
+
+        getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING);
+        getSecuritySettings().setCrossOriginOpenerPolicyConfiguration(SAME_ORIGIN);
 
         initStatelessChecker();
 
