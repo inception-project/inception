@@ -751,7 +751,7 @@ public class CurationPage
         }
 
         boolean allCurated = true;
-        curatedDiffSet: for (ConfigurationSet d : diff.getDifferingConfigurationSets().values()) {
+        curatedDiffSet: for (ConfigurationSet d : diff.getConfigurationSets()) {
             if (!d.getCasGroupIds().contains(WebAnnoConst.CURATION_USER)) {
                 allCurated = false;
                 break curatedDiffSet;
