@@ -22,6 +22,8 @@ import static io.bit3.jsass.OutputStyle.NESTED;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
+import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
+import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -73,8 +75,6 @@ import io.bit3.jsass.Options;
 public abstract class WicketApplicationBase
     extends WicketBootSecuredWebApplication
 {
-    protected boolean isInitialized = false;
-
     @Override
     protected void init()
     {
@@ -88,23 +88,23 @@ public abstract class WicketApplicationBase
         getCspSettings().reporting().unsafeInline();
         // getCspSettings().blocking();
 
+        // if (DEVELOPMENT == getConfigurationType()) {
+        // getCspSettings().reporting().strict().reportBack();
+        // getCspSettings().reporting().unsafeInline().reportBack();
+        // }
+
+        getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING);
+        getSecuritySettings().setCrossOriginOpenerPolicyConfiguration(SAME_ORIGIN);
+
         initStatelessChecker();
 
-        if (!isInitialized) {
-            initOnce();
-
-            isInitialized = true;
-        }
+        initOnce();
     }
 
     protected void initOnce()
     {
         // Allow nested string resource resolving using "#(key)"
         initNestedStringResourceLoader();
-
-        // // This should avoid some application-reloading while working on I18N
-        // getResourceSettings().setThrowExceptionOnMissingResource(false);
-        // getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
 
         initWebFrameworks();
 
@@ -142,7 +142,7 @@ public abstract class WicketApplicationBase
     {
         SassCompilerOptionsFactory sassOptionsFactory = () -> {
             Options options = new Options();
-            options.setOutputStyle(DEPLOYMENT.equals(getConfigurationType()) ? EXPANDED : NESTED);
+            options.setOutputStyle(DEPLOYMENT == getConfigurationType() ? EXPANDED : NESTED);
             return options;
         };
 
@@ -257,7 +257,7 @@ public abstract class WicketApplicationBase
     protected void initServerTimeReporting()
     {
         Properties settings = SettingsUtil.getSettings();
-        if (!DEVELOPMENT.equals(getConfigurationType())
+        if (DEVELOPMENT != getConfigurationType()
                 && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
             return;
         }
