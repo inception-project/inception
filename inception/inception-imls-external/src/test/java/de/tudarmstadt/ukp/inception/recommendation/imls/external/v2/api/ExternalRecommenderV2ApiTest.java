@@ -21,8 +21,10 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.Fix
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.CAS;
 import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
@@ -39,29 +41,50 @@ public class ExternalRecommenderV2ApiTest
     private static final String CLASSIFIER_ID = "spacy_ner";
 
     @BeforeEach
-    public void setUp()
+    public void setUp() throws Exception
     {
         sut = new ExternalRecommenderV2Api(URI.create("http://localhost:8000"));
+        purgeServer();
     }
 
     @AfterEach
-    public void tearDown()
+    public void tearDown() throws Exception
     {
+        purgeServer();
         sut = null;
     }
 
     // Dataset
 
     @Test
-    public void testCreateDataset()
+    public void testListDatasets() throws Exception
     {
-        throw new NotImplementedException();
+        List<String> datasetNames = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            String name = "test_dataset_" + (i + 1);
+            datasetNames.add(name);
+            sut.createDataset(name);
+        }
+
+        DatasetList result = sut.listDatasets();
+        assertThat(result.getNames()).isEqualTo(datasetNames);
     }
 
     @Test
-    public void testDeleteDataset()
+    public void testCreateDataset() throws Exception
     {
-        throw new NotImplementedException();
+        sut.createDataset("test_dataset");
+        assertThat(sut.listDatasets().getNames()).isEqualTo(List.of("test_dataset"));
+    }
+
+    @Test
+    public void testDeleteDataset() throws Exception
+    {
+        sut.createDataset("test_dataset");
+        assertThat(sut.listDatasets().getNames()).isEqualTo(List.of("test_dataset"));
+
+        sut.deleteDataset("test_dataset");
+        assertThat(sut.listDatasets().getNames()).isEmpty();
     }
 
     // Documents
@@ -70,30 +93,51 @@ public class ExternalRecommenderV2ApiTest
     public void testListDocumentsInDataset() throws Exception
     {
         String datasetId = "test_dataset";
+        sut.createDataset("test_dataset");
+
+        List<String> documentNames = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            String name = "test_document_" + (i + 1);
+            documentNames.add(name);
+            sut.addDocumentToDataset("test_dataset", name, buildAlaskaDocument());
+        }
+
         DocumentList result = sut.listDocumentsInDataset(datasetId);
 
-        assertThat(result.getNames()).isNotEmpty();
+        assertThat(result.getNames()).isEqualTo(documentNames);
         assertThat(result.getNames()).hasSameSizeAs(result.getVersions());
     }
 
     @Test
-    public void testAddDocumentToDataset()
+    public void testAddDocumentToDataset() throws Exception
     {
-        throw new NotImplementedException();
+        String datasetId = "test_dataset";
+        sut.createDataset("test_dataset");
+        sut.addDocumentToDataset("test_dataset", "test_document", buildAlaskaDocument());
+
+        DocumentList result = sut.listDocumentsInDataset(datasetId);
+
+        assertThat(result.getNames()).isEqualTo(List.of("test_document"));
+        assertThat(result.getNames()).hasSameSizeAs(result.getVersions());
     }
 
     @Test
     public void testDeleteDocumentFromDataset()
     {
-        throw new NotImplementedException();
+
     }
 
     // Classifier
 
     @Test
-    public void testGetAvailableClassifiers()
+    public void testGetAvailableClassifiers() throws Exception
     {
-        throw new NotImplementedException();
+        List<ClassifierInfo> availableClassifiers = sut.getAvailableClassifiers();
+        List<String> classifierNames = availableClassifiers.stream() //
+                .map(ClassifierInfo::getName) //
+                .collect(Collectors.toList());
+
+        assertThat(classifierNames).isEqualTo(List.of("sklearn1", "sklearn2", "spacy_ner"));
     }
 
     @Test
@@ -109,19 +153,33 @@ public class ExternalRecommenderV2ApiTest
     @Test
     public void testTrainOnDataset()
     {
-        throw new NotImplementedException();
+        assertThat(false).isTrue();
     }
 
     @Test
     public void testPredictDocument() throws Exception
     {
-        FormatConverter converter = new FormatConverter();
-        CAS cas = loadAlaskaCas();
-        Document request = converter.documentFromCas(cas,
-                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value", 0);
+        Document document = buildAlaskaDocument();
 
-        Document response = sut.predict(CLASSIFIER_ID, "test_model", request);
+        Document response = sut.predict(CLASSIFIER_ID, "test_model", document);
 
         System.out.println(JSONUtil.toPrettyJsonString(response));
+    }
+
+    private void purgeServer() throws Exception
+    {
+        // Delete existing datasets
+        DatasetList datasetList = sut.listDatasets();
+        for (String datasetName : datasetList.getNames()) {
+            sut.deleteDataset(datasetName);
+        }
+    }
+
+    private Document buildAlaskaDocument() throws Exception
+    {
+        FormatConverter converter = new FormatConverter();
+        CAS cas = loadAlaskaCas();
+        return converter.documentFromCas(cas,
+                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity", "value", 0);
     }
 }

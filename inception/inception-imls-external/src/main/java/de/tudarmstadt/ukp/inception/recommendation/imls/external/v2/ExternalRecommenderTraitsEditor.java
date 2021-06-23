@@ -113,6 +113,7 @@ public class ExternalRecommenderTraitsEditor
     }
 
     private void checkServerConnection(AjaxRequestTarget aTarget, Form<?> aForm)
+        throws ExternalRecommenderApiException
     {
         URI uri = URI.create(traits.getRemoteUrl());
         ExternalRecommenderV2Api api = new ExternalRecommenderV2Api(uri);

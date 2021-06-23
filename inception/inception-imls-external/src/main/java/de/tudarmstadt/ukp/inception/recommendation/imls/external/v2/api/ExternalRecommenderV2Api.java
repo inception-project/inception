@@ -30,7 +30,6 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -83,6 +82,28 @@ public class ExternalRecommenderV2Api
 
     // Dataset
 
+    public DatasetList listDatasets() throws ExternalRecommenderApiException
+    {
+        URI url = URI.create(remoteUrl + "/dataset");
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(url) //
+                .GET() //
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status != 200) {
+                throw errorf("listDatasets - Unexpected status code [%d]: [%s]", status,
+                        response.body());
+            }
+            return fromJsonString(DatasetList.class, response.body());
+        }
+        catch (IOException | InterruptedException e) {
+            throw error("Error while listing datasets", e);
+        }
+    }
+
     public void createDataset(String aDatasetId) throws ExternalRecommenderApiException
     {
         URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId);
@@ -95,18 +116,34 @@ public class ExternalRecommenderV2Api
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             int status = response.statusCode();
             if (status != 204 && status != 409) {
-                throw errorf("Unexpected status code [%d]: [%s]", status, response.body());
+                throw errorf("createDataset- Unexpected status code [%d]: [%s]", status,
+                        response.body());
             }
         }
         catch (IOException | InterruptedException e) {
-            throw errorf("Unexpected status code [%d]: [%s]", "Error while creating dataset [%s]",
-                    aDatasetId);
+            throw errorf("Error while creating dataset [%s]", aDatasetId);
         }
     }
 
     public void deleteDataset(String aDatasetId) throws ExternalRecommenderApiException
     {
-        throw new NotImplementedException();
+        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId);
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(url) //
+                .DELETE() //
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status != 204 && status != 404) {
+                throw errorf("deleteDataset - Unexpected status code [%d]: [%s]", status,
+                        response.body());
+            }
+        }
+        catch (IOException | InterruptedException e) {
+            throw errorf("Error while deleting dataset [%s]", aDatasetId);
+        }
     }
 
     // Documents
@@ -134,18 +171,52 @@ public class ExternalRecommenderV2Api
     public void addDocumentToDataset(String aDatasetId, String aDocumentId, Document aDocument)
         throws ExternalRecommenderApiException
     {
-        throw new NotImplementedException();
+        try {
+            URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId + "/" + aDocumentId);
+            HttpRequest request = HttpRequest.newBuilder() //
+                    .uri(url) //
+                    .header("Content-Type", "application/json") //
+                    .PUT(BodyPublishers.ofString(JSONUtil.toJsonString(aDocument))) //
+                    .build();
+
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status != 204) {
+                throw errorf("addDocumentToDataset: Unexpected status code [%d]: [%s]", status,
+                        response.body());
+            }
+        }
+        catch (IOException | InterruptedException e) {
+            throw errorf("Error while adding document [%s] to dataset [%s]", aDocumentId,
+                    aDatasetId);
+        }
     }
 
     public void deleteDocumentFromDataset(String aDatasetId, String aDocumentId)
         throws ExternalRecommenderApiException
     {
-        throw new NotImplementedException();
+        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId + "/" + aDocumentId);
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(url) //
+                .DELETE() //
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status != 204 && status != 404) {
+                throw errorf("deleteDocumentFromDataset - Unexpected status code [%d]: [%s]",
+                        status, response.body());
+            }
+        }
+        catch (IOException | InterruptedException e) {
+            throw errorf("Error while deleting dataset [%s]", aDatasetId);
+        }
     }
 
     // Classifier
 
-    public List<ClassifierInfo> getAvailableClassifiers()
+    public List<ClassifierInfo> getAvailableClassifiers() throws ExternalRecommenderApiException
     {
         URI url = URI.create(remoteUrl + "/classifier");
         HttpRequest request = HttpRequest.newBuilder() //
@@ -161,8 +232,9 @@ public class ExternalRecommenderV2Api
 
         }
         catch (Exception e) {
-            LOG.warn("Error while getting available classifiers [{}]", url, e);
-            return Collections.emptyList();
+            String message = String.format("Error while getting info for classifier [%s]", url);
+            LOG.error(message, e);
+            throw new ExternalRecommenderApiException(message, e);
         }
     }
 
