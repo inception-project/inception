@@ -21,6 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static java.util.Collections.unmodifiableMap;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -76,13 +78,15 @@ public class RecommenderFactoryRegistryImpl
 
         if (extensionsProxy != null) {
             for (RecommendationEngineFactory ext : extensionsProxy) {
-                log.info("Found recommendation engine: {}",
+                log.debug("Found recommendation engine: {}",
                         ClassUtils.getAbbreviatedName(ext.getClass(), 20));
                 exts.put(ext.getId(), ext);
             }
         }
 
-        extensions = Collections.unmodifiableMap(exts);
+        log.info("Found [{}] recommendation engines", exts.size());
+
+        extensions = unmodifiableMap(exts);
     }
 
     @Override

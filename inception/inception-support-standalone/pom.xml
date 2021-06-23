@@ -39,6 +39,11 @@
       <artifactId>commons-text</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+    
 
     <!-- Spring dependencies -->
     <dependency>
@@ -56,6 +61,10 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J/LOG4J -->

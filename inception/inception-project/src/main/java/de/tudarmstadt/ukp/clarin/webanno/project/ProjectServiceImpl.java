@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
@@ -795,7 +796,7 @@ public class ProjectServiceImpl
             Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
             for (ProjectInitializer init : inits) {
                 if (initializerClasses.add(init.getClass())) {
-                    log.info("Found project initializer: {}",
+                    log.debug("Found project initializer: {}",
                             ClassUtils.getAbbreviatedName(init.getClass(), 20));
                 }
                 else {
@@ -806,7 +807,9 @@ public class ProjectServiceImpl
             }
         }
 
-        initializers = Collections.unmodifiableList(inits);
+        log.info("Found [{}] project initializers", inits.size());
+
+        initializers = unmodifiableList(inits);
     }
 
     @Override

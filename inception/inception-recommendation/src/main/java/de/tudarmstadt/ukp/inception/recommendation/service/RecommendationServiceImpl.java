@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentSpanAnnotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
@@ -1075,6 +1074,18 @@ public class RecommendationServiceImpl
 
         public boolean switchPredictions()
         {
+            // If the predictions have already been switch, do not switch again
+            RequestCycle requestCycle = RequestCycle.get();
+            if (requestCycle != null) {
+                Boolean switched = requestCycle.getMetaData(PredictionSwitchPerformedKey.INSTANCE);
+                if (switched != null && switched) {
+                    return false;
+                }
+                // We are not really interested whether an actual switch was performed here, only
+                // whether a switch has already been requested and triggered if applicable
+                requestCycle.setMetaData(PredictionSwitchPerformedKey.INSTANCE, true);
+            }
+
             if (incomingPredictions != null) {
                 activePredictions = incomingPredictions;
                 incomingPredictions = null;
@@ -1304,7 +1315,8 @@ public class RecommendationServiceImpl
                                 // the recommender is still busy
                                 if (activePredictions != null) {
                                     List<AnnotationSuggestion> suggestions = inheritSuggestions(
-                                            recommender, activePredictions, document, username);
+                                            originalCas.get(), recommender, activePredictions,
+                                            document, username);
                                     if (!suggestions.isEmpty()) {
                                         predictions.putPredictions(suggestions);
                                     }
@@ -1331,8 +1343,9 @@ public class RecommendationServiceImpl
                             if (TRAINING_NOT_SUPPORTED.equals(engine.getTrainingCapability())
                                     && activePredictions != null
                                     && activePredictions.hasRunPredictionOnDocument(document)) {
-                                suggestions = inheritSuggestions(engine.getRecommender(),
-                                        activePredictions, document, username);
+                                suggestions = inheritSuggestions(originalCas.get(),
+                                        engine.getRecommender(), activePredictions, document,
+                                        username);
                                 predictions.log(LogMessage.info(r.getRecommender().getName(),
                                         "Inherited [%d] predictions from previous run",
                                         suggestions.size()));
@@ -1343,15 +1356,6 @@ public class RecommendationServiceImpl
                                 predictions.log(LogMessage.info(r.getRecommender().getName(),
                                         "Generated [%d] predictions", suggestions.size()));
                             }
-
-                            // Calculate the visibility of the suggestions. This happens via the
-                            // original CAS which contains only the manually created annotations
-                            // and *not* the suggestions.
-                            SuggestionDocumentGroup<SpanSuggestion> groups = SuggestionDocumentGroup
-                                    .filter(SpanSuggestion.class, suggestions);
-                            calculateSpanSuggestionVisibility(originalCas.get(), username,
-                                    recommender.getLayer(), groups, 0,
-                                    originalCas.get().getDocumentText().length());
 
                             predictions.putPredictions(suggestions);
                         }
@@ -1373,7 +1377,8 @@ public class RecommendationServiceImpl
                             // simply disappear.
                             if (activePredictions != null) {
                                 List<AnnotationSuggestion> suggestions = inheritSuggestions(
-                                        recommender, activePredictions, document, username);
+                                        originalCas.get(), recommender, activePredictions, document,
+                                        username);
                                 if (!suggestions.isEmpty()) {
                                     predictions.putPredictions(suggestions);
                                 }
@@ -1405,8 +1410,9 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private List<AnnotationSuggestion> inheritSuggestions(Recommender aRecommender,
-            Predictions activePredictions, SourceDocument document, String aUsername)
+    private List<AnnotationSuggestion> inheritSuggestions(CAS aOriginalCas,
+            Recommender aRecommender, Predictions activePredictions, SourceDocument document,
+            String aUsername)
     {
         List<AnnotationSuggestion> suggestions = activePredictions
                 .getPredictionsByRecommenderAndDocument(aRecommender, document.getName());
@@ -1418,7 +1424,19 @@ public class RecommendationServiceImpl
                 document.getId(), aRecommender.getProject().getName(),
                 aRecommender.getProject().getId(), suggestions.size());
 
-        suggestions.forEach(s -> s.show(FLAG_ALL));
+        // -----------------------------------------------------------------------------------------
+        // REC: Not really sure if we really have to do this... why can we not simply inherit the
+        // visibility?
+        // // Re-calculate the visibility of the suggestions. This happens via the
+        // // original CAS which contains only the manually created annotations
+        // // and *not* the suggestions.
+        // suggestions.forEach(s -> s.show(FLAG_ALL));
+        // SuggestionDocumentGroup<SpanSuggestion> groups = SuggestionDocumentGroup
+        // .filter(SpanSuggestion.class, suggestions);
+        // calculateSpanSuggestionVisibility(aOriginalCas, aUsername, aRecommender.getLayer(),
+        // groups,
+        // 0, aOriginalCas.getDocumentText().length());
+        // -----------------------------------------------------------------------------------------
 
         return suggestions;
     }
@@ -1439,7 +1457,10 @@ public class RecommendationServiceImpl
                 "ALL", "--", aUsername, document.getName(), document.getId(), aProject.getName(),
                 aProject.getId(), suggestions.size());
 
-        suggestions.forEach(s -> s.show(FLAG_ALL));
+        // -----------------------------------------------------------------------------------------
+        // REC: Do we really have to show all here - after all, we are inheriting?
+        // suggestions.forEach(s -> s.show(FLAG_ALL));
+        // -----------------------------------------------------------------------------------------
 
         return suggestions;
     }
@@ -1458,6 +1479,15 @@ public class RecommendationServiceImpl
         // Extract the suggestions from the data which the recommender has written into the CAS
         List<AnnotationSuggestion> suggestions = extractSuggestions(aUsername, originalCas,
                 predictionCas, document, engine.getRecommender());
+
+        // Calculate the visibility of the suggestions. This happens via the
+        // original CAS which contains only the manually created annotations
+        // and *not* the suggestions.
+        SuggestionDocumentGroup<SpanSuggestion> groups = SuggestionDocumentGroup
+                .filter(SpanSuggestion.class, suggestions);
+        calculateSpanSuggestionVisibility(originalCas, aUsername,
+                engine.getRecommender().getLayer(), groups, 0,
+                originalCas.getDocumentText().length());
 
         return suggestions;
     }
@@ -1662,6 +1692,8 @@ public class RecommendationServiceImpl
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
+        log.trace("calculateSpanSuggestionVisibility()");
+
         Type type = getAnnotationType(aCas, aLayer);
 
         List<AnnotationFS> annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin,
