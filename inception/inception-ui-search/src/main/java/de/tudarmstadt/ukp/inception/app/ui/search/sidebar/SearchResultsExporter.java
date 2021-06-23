@@ -43,11 +43,9 @@ public class SearchResultsExporter
      */
 
     /*
-    public static void export(SearchResultsProviderWrapper aWrapper, String aFilePath)
-    {
-        export(aWrapper.getAllResults(), aFilePath);
-    }
-
+     * public static void export(SearchResultsProviderWrapper aWrapper, String aFilePath) {
+     * export(aWrapper.getAllResults(), aFilePath); }
+     * 
      */
 
     public static void export(List<ResultsGroup> aSearchResults, String aFilePath)

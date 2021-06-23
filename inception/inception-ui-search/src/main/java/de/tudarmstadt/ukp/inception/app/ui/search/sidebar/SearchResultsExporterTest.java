@@ -161,7 +161,7 @@ public class SearchResultsExporterTest
         // resultsWrapper.initializeQuery(user, project, query, sourceDocument, );
         // System.out.println("vor export");
         SearchResultsExporter.export(resultList, TEST_OUTPUT_FOLDER + "\\csv.txt");
-        //SearchResultsExporter.export(mockedWrapper, TEST_OUTPUT_FOLDER + "\\csv2.txt");
+        // SearchResultsExporter.export(mockedWrapper, TEST_OUTPUT_FOLDER + "\\csv2.txt");
         // System.out.println("nach export");
         List<ResultsGroup> reimported = SearchResultsExporter
                 .importCSV(TEST_OUTPUT_FOLDER + "\\csv.txt");

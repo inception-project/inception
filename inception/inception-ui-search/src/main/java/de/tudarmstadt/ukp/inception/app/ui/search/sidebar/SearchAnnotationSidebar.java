@@ -28,12 +28,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -48,22 +44,14 @@ import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextArea;
+import org.apache.wicket.markup.html.form.*;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
-import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.*;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,11 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.*;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -144,6 +128,7 @@ public class SearchAnnotationSidebar
     private final Form<CreateAnnotationsOptions> annotationOptionsForm;
     private final LambdaAjaxLink createOptionsLink;
     private final LambdaAjaxButton<Void> deleteButton;
+
     private final Form<DeleteAnnotationsOptions> deleteOptionsForm;
     private final LambdaAjaxButton<Void> annotateButton;
     private final LambdaAjaxLink deleteOptionsLink;
@@ -168,8 +153,12 @@ public class SearchAnnotationSidebar
         searchForm.add(new TextArea<>("queryInput", targetQuery));
         LambdaAjaxButton<SearchOptions> searchButton = new LambdaAjaxButton<>("search",
                 this::actionSearch);
+        LambdaAjaxButton<SearchOptions> exportButton = new LambdaAjaxButton<>("export",
+                this::actionExport);
+        searchForm.add(exportButton);
         searchForm.add(searchButton);
-        searchForm.setDefaultButton(searchButton);
+        // searchForm.setDefaultButton(searchButton);
+        // searchForm.setDefaultButton()
         mainContainer.add(searchForm);
 
         WebMarkupContainer searchOptionsPanel = new WebMarkupContainer("searchOptionsPanel");
@@ -179,6 +168,7 @@ public class SearchAnnotationSidebar
         groupingFeature = new BootstrapSelect<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
         groupingFeature.setNullValid(true);
+
         searchOptionsPanel.add(groupingFeature);
         searchOptionsPanel.add(createResultsPerPageSelection("itemsPerPage"));
         searchOptionsPanel.add(visibleWhen(() -> searchForm.getModelObject().isVisible()));
@@ -407,6 +397,12 @@ public class SearchAnnotationSidebar
         executeSearchResultsGroupedQuery(aTarget);
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
+    }
+
+    private void actionExport(AjaxRequestTarget aTarget, Form<SearchOptions> aForm)
+    {
+        SearchResultsExporter.export(resultsProvider.getAllResults(),
+                "D:\\Falko\\Documents\\UKP\\csv.txt");
     }
 
     private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
