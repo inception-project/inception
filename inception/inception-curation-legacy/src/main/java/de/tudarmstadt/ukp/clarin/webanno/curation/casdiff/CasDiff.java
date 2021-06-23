@@ -644,13 +644,14 @@ public class CasDiff
         // such as begin, end, etc. Mind that the types may come from different CASes at different
         // levels of upgrading, so it could be that the types actually have slightly different
         // features.
-        List<String> sortedFeatures = Stream
-                .concat(type1.getFeatures().stream().map(Feature::getName),
-                        type2.getFeatures().stream().map(Feature::getName)) //
-                .sorted() //
-                .collect(toList());
         Set<String> labelFeatures = adapter.getLabelFeatures();
-        sortedFeatures.removeIf(f -> !labelFeatures.contains(f));
+        List<String> sortedFeatures = Stream
+                .concat(type1.getFeatures().stream().map(Feature::getShortName),
+                        type2.getFeatures().stream().map(Feature::getShortName)) //
+                .filter(labelFeatures::contains) //
+                .sorted() //
+                .distinct() //
+                .collect(toList());
 
         if (!recurseIntoLinkFeatures) {
             // #1795 Chili REC: We can/should change CasDiff2 such that it does not recurse into
