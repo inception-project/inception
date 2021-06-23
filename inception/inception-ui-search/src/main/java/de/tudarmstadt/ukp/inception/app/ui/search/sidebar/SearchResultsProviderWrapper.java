@@ -17,13 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.wicket.markup.repeater.data.IDataProvider;
-import org.apache.wicket.model.IModel;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -31,6 +24,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
+import org.apache.wicket.markup.repeater.data.IDataProvider;
+import org.apache.wicket.model.IModel;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class SearchResultsProviderWrapper
     implements IDataProvider<ResultsGroup>
