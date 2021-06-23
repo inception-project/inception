@@ -39,7 +39,7 @@ public class FormatConverter
 {
     public static final String SENTENCE_LAYER = "t.sentence";
     public static final String TOKEN_LAYER = "t.token";
-    public static final String TARGET_LAYER = "t.span_annotation";
+    public static final String TARGET_LAYER = "t.annotation";
     public static final String TARGET_FEATURE = "f.value";
 
     public Document documentFromCas(CAS aCas, String aLayerName, String aFeatureName, long aVersion)

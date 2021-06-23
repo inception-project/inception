@@ -28,11 +28,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.List;
+import java.util.StringJoiner;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class ExternalRecommenderV2Api
 
     public boolean isReachable()
     {
-        URI url = URI.create(remoteUrl + "/ping");
+        URI url = urlFor("ping");
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .GET() //
@@ -84,7 +84,7 @@ public class ExternalRecommenderV2Api
 
     public DatasetList listDatasets() throws ExternalRecommenderApiException
     {
-        URI url = URI.create(remoteUrl + "/dataset");
+        URI url = urlFor("dataset");
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .GET() //
@@ -106,7 +106,7 @@ public class ExternalRecommenderV2Api
 
     public void createDataset(String aDatasetId) throws ExternalRecommenderApiException
     {
-        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId);
+        URI url = urlFor("dataset", aDatasetId);
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .PUT(BodyPublishers.noBody()) //
@@ -127,7 +127,7 @@ public class ExternalRecommenderV2Api
 
     public void deleteDataset(String aDatasetId) throws ExternalRecommenderApiException
     {
-        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId);
+        URI url = urlFor("dataset", aDatasetId);
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .DELETE() //
@@ -151,7 +151,7 @@ public class ExternalRecommenderV2Api
     public DocumentList listDocumentsInDataset(String aDatasetId)
         throws ExternalRecommenderApiException
     {
-        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId);
+        URI url = urlFor("dataset", aDatasetId);
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .GET() //
@@ -172,7 +172,7 @@ public class ExternalRecommenderV2Api
         throws ExternalRecommenderApiException
     {
         try {
-            URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId + "/" + aDocumentId);
+            URI url = urlFor("dataset", aDatasetId, aDocumentId);
             HttpRequest request = HttpRequest.newBuilder() //
                     .uri(url) //
                     .header("Content-Type", "application/json") //
@@ -195,7 +195,7 @@ public class ExternalRecommenderV2Api
     public void deleteDocumentFromDataset(String aDatasetId, String aDocumentId)
         throws ExternalRecommenderApiException
     {
-        URI url = URI.create(remoteUrl + "/dataset/" + aDatasetId + "/" + aDocumentId);
+        URI url = urlFor("dataset", aDatasetId, aDocumentId);
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .DELETE() //
@@ -218,7 +218,7 @@ public class ExternalRecommenderV2Api
 
     public List<ClassifierInfo> getAvailableClassifiers() throws ExternalRecommenderApiException
     {
-        URI url = URI.create(remoteUrl + "/classifier");
+        URI url = urlFor("classifier");
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .GET() //
@@ -241,7 +241,7 @@ public class ExternalRecommenderV2Api
     public ClassifierInfo getClassifierInfo(String aClassifierId)
         throws ExternalRecommenderApiException
     {
-        URI url = URI.create(remoteUrl + "/classifier/" + aClassifierId);
+        URI url = urlFor("classifier", aClassifierId);
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(url) //
                 .GET() //
@@ -261,15 +261,29 @@ public class ExternalRecommenderV2Api
     public void trainOnDataset(String aClassifierId, String aModelId, String aDatasetId)
         throws ExternalRecommenderApiException
     {
-        throw new NotImplementedException();
+        URI url = urlFor("classifier", aClassifierId, aModelId, "train", aDatasetId);
+        HttpRequest request = HttpRequest.newBuilder() //
+                .uri(url) //
+                .POST(BodyPublishers.noBody()) //
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status != 202 && status != 429) {
+                throw errorf("trainOnDataset - Unexpected status code [%d]: [%s]", status,
+                        response.body());
+            }
+        }
+        catch (IOException | InterruptedException e) {
+            throw errorf("Error while training on dataset [%s]", aDatasetId);
+        }
     }
 
     public Document predict(String aClassifierId, String aModelId, Document aDocument)
         throws ExternalRecommenderApiException
     {
-        String urlString = String.format("/classifier/%s/%s/predict", aClassifierId,
-                URLEncoder.encode(aModelId, StandardCharsets.UTF_8));
-        URI url = URI.create(remoteUrl + urlString);
+        URI url = urlFor("classifier", aClassifierId, aModelId, "predict");
 
         try {
             HttpRequest request = HttpRequest.newBuilder() //
@@ -312,6 +326,21 @@ public class ExternalRecommenderV2Api
     {
         LOG.error(aMessage, aCause);
         return new ExternalRecommenderApiException(aMessage, aCause);
+    }
+
+    private URI urlFor(String... aParts)
+    {
+        StringJoiner joiner = new StringJoiner("/");
+        for (String part : aParts) {
+            joiner.add(encode(part));
+        }
+
+        return URI.create(remoteUrl + "/" + joiner);
+    }
+
+    private String encode(String aString)
+    {
+        return URLEncoder.encode(aString, Charset.defaultCharset());
     }
 
 }

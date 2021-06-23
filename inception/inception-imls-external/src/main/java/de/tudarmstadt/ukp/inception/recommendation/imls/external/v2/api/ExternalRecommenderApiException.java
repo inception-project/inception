@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+
 public class ExternalRecommenderApiException
-    extends Exception
+    extends RecommendationException
 {
     public ExternalRecommenderApiException(String aMessage)
     {
