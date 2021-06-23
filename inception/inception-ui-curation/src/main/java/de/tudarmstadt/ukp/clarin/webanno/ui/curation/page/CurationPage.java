@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
@@ -848,7 +849,8 @@ public class CurationPage
 
         // We need a modifiable copy of some annotation document which we can use to initialize
         // the curation CAS. This is an exceptional case where BYPASS is the correct choice
-        CAS editorCas = documentService.readAnnotationCas(aTemplate, UNMANAGED_ACCESS);
+        CAS editorCas = documentService.readAnnotationCas(aTemplate.getDocument(),
+                aTemplate.getUser(), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
 
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
                 aState.getAnnotationLayers());

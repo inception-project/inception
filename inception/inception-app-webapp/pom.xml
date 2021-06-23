@@ -848,10 +848,6 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
-              <!-- Tutorial Js dependencies -->
-              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
-              <usedDependency>org.webjars.npm:kinetic</usedDependency>
-              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
               <!-- Other -->
               <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
