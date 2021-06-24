@@ -44,6 +44,8 @@ export class AnnotationExperienceAPI {
 
         //ActionHandler
         this.actionhandler = new AnnotationExperienceAPIActionHandler(this);
+
+        this.actionhandler.registerDefaultActionHandler();
     }
 
 
@@ -91,8 +93,9 @@ export class AnnotationExperienceAPI {
             that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function (msg) {
                 that.receiveSelectedAnnotationMessageByServer(JSON.parse(msg.body));
             }, {id: "selected_annotation"});
-
         };
+
+
 
         // ------ ERROR HANDLING ------ //
 
@@ -102,7 +105,6 @@ export class AnnotationExperienceAPI {
         };
 
         this.stompClient.activate();
-
     }
 
     unsubscribe(aChannel: string)
@@ -119,7 +121,8 @@ export class AnnotationExperienceAPI {
         }
     }
 
-    editAnnotation(aId: string, aAnnotationType: string) {
+    editAnnotation(aId, aAnnotationType)
+    {
         let json = {
             username: this.username,
             project: this.projectID,
@@ -129,9 +132,7 @@ export class AnnotationExperienceAPI {
         };
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
-
-
-    sendDocumentMessageToServer(aOffset: number[][], aOffsetType: string)
+    sendDocumentMessageToServer(aOffset, aOffsetType)
     {
         let json = {
             username: this.username,
@@ -139,13 +140,10 @@ export class AnnotationExperienceAPI {
             viewport: aOffset,
             offsetType: aOffsetType
         };
-
         this.visualizer.viewport = json.viewport;
-
         this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
     }
-
-    sendDocumentMessageToServer(aUsername: string, aDocument: string, aOffset: number[][], aOffsetType: string)
+    sendDocumentMessageToServer(aUsername, aDocument, aOffset, aOffsetType)
     {
         let json = {
             username: aUsername,
@@ -154,13 +152,10 @@ export class AnnotationExperienceAPI {
             viewport: aOffset,
             offsetType: aOffsetType
         };
-
         this.visualizer.viewport = json.viewport;
-
         this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
     }
-
-    sendViewportMessageToServer(aViewport: number[][], aOffsetType: string)
+    sendViewportMessageToServer(aViewport, aOffsetType)
     {
         let json = {
             username: this.username,
@@ -169,22 +164,10 @@ export class AnnotationExperienceAPI {
             viewport: aViewport,
             offsetType: aOffsetType
         };
-
-        /* TODO adapt to char array
-        for (let i = 0; i < this.viewport.length; i++) {
-            for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
-                this.unsubscribe("annotation_update_" + j.toString());
-            }
-        }
-
-         */
-
         this.visualizer.viewport = aViewport;
-
         this.stompClient.publish({destination: "/app/new_viewport_by_client", body: JSON.stringify(json)});
     }
-
-    sendSelectAnnotationMessageToServer(aId: string)
+    sendSelectAnnotationMessageToServer(aId)
     {
         let json = {
             username: this.username,
@@ -194,8 +177,7 @@ export class AnnotationExperienceAPI {
         };
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
-
-    sendCreateAnnotationMessageToServer(begin: string, end: string, aAnnotationType: string)
+    sendCreateAnnotationMessageToServer(begin, end, aAnnotationType)
     {
         let json = {
             username: this.username,
@@ -204,11 +186,10 @@ export class AnnotationExperienceAPI {
             annotationOffsetBegin: begin,
             annotationOffsetEnd: end,
             annotationType: aAnnotationType
-        }
+        };
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
     }
-
-    sendUpdateAnnotationMessageToServer(aId: string, aAnnotationType: string,)
+    sendUpdateAnnotationMessageToServer(aId, aAnnotationType)
     {
         let json = {
             username: this.username,
@@ -216,19 +197,54 @@ export class AnnotationExperienceAPI {
             document: this.documentID,
             annotationAddress: aId,
             annotationType: aAnnotationType
-        }
+        };
         this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
     }
-
-    sendDeleteAnnotationMessageToServer(aId: string)
+    sendDeleteAnnotationMessageToServer(aId)
     {
         let json = {
             username: this.username,
             project: this.projectID,
             document: this.documentID,
             annotationAddress: aId
-        }
+        };
         this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
+    }
+    receiveNewDocumentMessageByServer(aMessage)
+    {
+        console.log("RECEIVED DOCUMENT:");
+        const that = this;
+        let keys = Object.keys(aMessage);
+        let values = keys.map((k) => aMessage[k]);
+        this.documentID = values[0];
+        this.visualizer.setText(values[1]);
+        this.visualizer.setAnnotations(values[2]);
+    }
+    receiveNewViewportMessageByServer(aMessage)
+    {
+        console.log("RECEIVED VIEWPORT");
+        const that = this;
+        let keys = Object.keys(aMessage);
+        let values = keys.map((k) => aMessage[k]);
+        this.visualizer.setText(values[0]);
+        this.visualizer.setAnnotations(values[1]);
+    }
+
+    receiveSelectedAnnotationMessageByServer(aMessage)
+    {
+        console.log("RECEIVED SELECTED ANNOTATION:");
+        let keys = Object.keys(aMessage);
+        let values = keys.map((k) => aMessage[k]);
+        console.log(keys);
+        console.log(values);
+    }
+    receiveAnnotationMessageByServer(aMessage)
+    {
+        console.log("RECEIVED ANNOTATION MESSAGE:");
+        let keys = Object.keys(aMessage);
+        let values = keys.map((k) => aMessage[k]);
+        console.log(keys);
+        console.log(values);
     }
 
     // ---------------- RECEIVE ----------------------- //

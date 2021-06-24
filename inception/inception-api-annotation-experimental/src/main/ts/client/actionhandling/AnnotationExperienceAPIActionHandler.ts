@@ -87,10 +87,13 @@ export class AnnotationExperienceAPIActionHandler {
             let elem = <Element>aEvent.target;
             console.log(elem)
             if (elem.tagName === 'rect') {
-                that.annotationExperienceAPI.sendSelectAnnotationMessageToServer(elem.id);
+
             }
-            if (elem.className === 'far fa-caret-square-right') {
-                //that.annotationExperienceAPI.sendDocumentMessageToServer();
+            if (elem.className === 'fas fa-step-backward') {
+                that.annotationExperienceAPI.visualizer.showText("editor_left");
+            }
+            if (elem.className === 'fas fa-step-forward') {
+                that.annotationExperienceAPI.sendDocumentMessageToServer("admin", "41714", [[30,40],[40,50],[0,10],[17,18],[19,19]],"word")
             }
         }
 

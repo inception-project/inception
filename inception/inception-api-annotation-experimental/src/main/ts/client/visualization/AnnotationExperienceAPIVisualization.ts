@@ -19,6 +19,10 @@ import {Annotation} from "../util/Annotation";
 import {AnnotationType} from "../util/AnnotationTypes";
 
 export class AnnotationExperienceAPIVisualization {
+
+    SENTENCE_OFFSET_WIDTH = 45;
+    CHARACTER_WIDTH = 9;
+
     //Text
     text: String[];
     annotations: Annotation[];
@@ -51,48 +55,46 @@ export class AnnotationExperienceAPIVisualization {
         svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.sentenceCount * 20);
         svg.setAttribute("style","font-size: 100%; width: " + textArea.offsetWidth+ "px; height: " + this.sentenceCount * 20 + "px");
 
+        let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        textElement.setAttribute("class", "sentences");
+        textElement.style.display = "block";
+
+        let xBegin : number = 0;
+
         if (this.showBackground) {
             svg.appendChild(this.drawBackground());
         }
 
         if (this.showSentenceNumbers) {
             svg.appendChild(this.drawSentenceNumbers())
+            textElement.style.width = (svg.width - this.SENTENCE_OFFSET_WIDTH).toString();
+            xBegin = this.SENTENCE_OFFSET_WIDTH;
         }
 
         let k = 0;
 
-        let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        textElement.setAttribute("class", "sentences");
-        textElement.style.display = "block";
-
+        let xPrev: number = xBegin;
 
         for (let i = 0; i < sentences.length; i++) {
+
             let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
             sentence.setAttribute("class", "text-row");
             sentence.setAttribute("sentence-id", (i + 1).toString());
 
-            let xPrev: number;
-            if (this.showSentenceNumbers) {
-                xPrev = 45;
-            } else {
-                xPrev = 4;
-            }
-
             for (let j = 0; j < sentences[i].length; j++, k++) {
-
                 if (sentences[i][j] === "|") {
                     break;
                 }
-
                 let char = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 char.textContent = sentences[i][j];
                 char.setAttribute("x", xPrev.toString());
                 char.setAttribute("y", ((i + 1) * 20 - 5).toString());
                 char.setAttribute("char_pos", (this.viewport[i][0] + j).toString());
-                xPrev += 9;
+                xPrev += this.CHARACTER_WIDTH;
                 sentence.appendChild(char);
             }
             textElement.appendChild(sentence);
+            xPrev = xBegin;
         }
 
         svg.appendChild(textElement);
@@ -179,47 +181,47 @@ export class AnnotationExperienceAPIVisualization {
                 let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 text_row.setAttribute("class", "span")
 
-
                 for (let annotation of this.annotations) {
-                    console.log(annotation.word)
 
                     let begin: string;
                     let end: string;
                     let check : boolean = false;
 
+                    let word : String = "";
+
 
                     for (let char of child.children) {
 
-                        let word = "";
-
-                        if (check) {
-                            word = word + char.textContent;
-                            console.log(word)
-                        }
-
                         if (annotation.begin.toString() === char.getAttribute("char_pos")) {
                             begin = char.getAttribute("x");
-                            word += char.textContent;
+                            word = word.concat(char.textContent);
                             check = true;
                             continue;
                         }
 
+                        if (annotation.end.toString() === char.getAttribute("char_pos")) {
 
+                            if (begin != null && word === annotation.word) {
+                                end = char.getAttribute("x")
+                                let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                                rect.setAttribute("x", Number(begin).toString());
+                                rect.setAttribute("y", (i * 20).toString());
+                                rect.setAttribute("width", (Number(end) - Number(begin)).toString());
+                                rect.setAttribute("height", "20");
+                                rect.setAttribute("id", annotation.id);
+                                rect.setAttribute("type", annotation.type);
+                                rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
+                                rect.style.opacity = "0.5";
+                                text_row.appendChild(rect);
+                                break;
+                            } else {
+                                break;
+                            }
+                        } else {
 
-
-                        if (annotation.end.toString() === char.getAttribute("char_pos") && begin != null && word === annotation.word) {
-                            end = char.getAttribute("x")
-                            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                            rect.setAttribute("x", Number(begin).toString());
-                            rect.setAttribute("y", (i * 20).toString());
-                            rect.setAttribute("width", (Number(end) - Number(begin)).toString());
-                            rect.setAttribute("height", "20");
-                            rect.setAttribute("id", annotation.id);
-                            rect.setAttribute("type", annotation.type);
-                            rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
-                            rect.style.opacity = "0.5";
-                            text_row.appendChild(rect);
-                            break;
+                            if (check) {
+                                word = word.concat(char.textContent);
+                            }
                         }
                     }
                 }

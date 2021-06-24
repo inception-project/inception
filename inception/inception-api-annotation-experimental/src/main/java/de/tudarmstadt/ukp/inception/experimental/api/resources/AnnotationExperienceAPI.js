@@ -1,20 +1,3 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var __defProp = Object.defineProperty;
 var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
 var __export = (target, all) => {
@@ -1076,6 +1059,8 @@ var AnnotationType;
 // client/visualization/AnnotationExperienceAPIVisualization.ts
 var AnnotationExperienceAPIVisualization = class {
   constructor() {
+    this.SENTENCE_OFFSET_WIDTH = 45;
+    this.CHARACTER_WIDTH = 9;
     this.lineColorFirst = "#BBBBBB";
     this.lineColorSecond = "#CCCCCC";
     this.showHighlighting = true;
@@ -1091,26 +1076,24 @@ var AnnotationExperienceAPIVisualization = class {
     svg.setAttribute("version", "1.2");
     svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.sentenceCount * 20);
     svg.setAttribute("style", "font-size: 100%; width: " + textArea.offsetWidth + "px; height: " + this.sentenceCount * 20 + "px");
+    let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    textElement.setAttribute("class", "sentences");
+    textElement.style.display = "block";
+    let xBegin = 0;
     if (this.showBackground) {
       svg.appendChild(this.drawBackground());
     }
     if (this.showSentenceNumbers) {
       svg.appendChild(this.drawSentenceNumbers());
+      textElement.style.width = (svg.width - this.SENTENCE_OFFSET_WIDTH).toString();
+      xBegin = this.SENTENCE_OFFSET_WIDTH;
     }
     let k = 0;
-    let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    textElement.setAttribute("class", "sentences");
-    textElement.style.display = "block";
+    let xPrev = xBegin;
     for (let i = 0; i < sentences.length; i++) {
       let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
       sentence.setAttribute("class", "text-row");
       sentence.setAttribute("sentence-id", (i + 1).toString());
-      let xPrev;
-      if (this.showSentenceNumbers) {
-        xPrev = 45;
-      } else {
-        xPrev = 4;
-      }
       for (let j = 0; j < sentences[i].length; j++, k++) {
         if (sentences[i][j] === "|") {
           break;
@@ -1120,10 +1103,11 @@ var AnnotationExperienceAPIVisualization = class {
         char.setAttribute("x", xPrev.toString());
         char.setAttribute("y", ((i + 1) * 20 - 5).toString());
         char.setAttribute("char_pos", (this.viewport[i][0] + j).toString());
-        xPrev += 9;
+        xPrev += this.CHARACTER_WIDTH;
         sentence.appendChild(char);
       }
       textElement.appendChild(sentence);
+      xPrev = xBegin;
     }
     svg.appendChild(textElement);
     textArea.appendChild(svg);
@@ -1190,35 +1174,38 @@ var AnnotationExperienceAPIVisualization = class {
         let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
         text_row.setAttribute("class", "span");
         for (let annotation of this.annotations) {
-          console.log(annotation.word);
           let begin;
           let end;
           let check = false;
+          let word = "";
           for (let char of child.children) {
-            let word = "";
-            if (check) {
-              word = word + char.textContent;
-              console.log(word);
-            }
             if (annotation.begin.toString() === char.getAttribute("char_pos")) {
               begin = char.getAttribute("x");
-              word += char.textContent;
+              word = word.concat(char.textContent);
               check = true;
               continue;
             }
-            if (annotation.end.toString() === char.getAttribute("char_pos") && begin != null && word === annotation.word) {
-              end = char.getAttribute("x");
-              let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-              rect.setAttribute("x", Number(begin).toString());
-              rect.setAttribute("y", (i * 20).toString());
-              rect.setAttribute("width", (Number(end) - Number(begin)).toString());
-              rect.setAttribute("height", "20");
-              rect.setAttribute("id", annotation.id);
-              rect.setAttribute("type", annotation.type);
-              rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
-              rect.style.opacity = "0.5";
-              text_row.appendChild(rect);
-              break;
+            if (annotation.end.toString() === char.getAttribute("char_pos")) {
+              if (begin != null && word === annotation.word) {
+                end = char.getAttribute("x");
+                let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", Number(begin).toString());
+                rect.setAttribute("y", (i * 20).toString());
+                rect.setAttribute("width", (Number(end) - Number(begin)).toString());
+                rect.setAttribute("height", "20");
+                rect.setAttribute("id", annotation.id);
+                rect.setAttribute("type", annotation.type);
+                rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
+                rect.style.opacity = "0.5";
+                text_row.appendChild(rect);
+                break;
+              } else {
+                break;
+              }
+            } else {
+              if (check) {
+                word = word.concat(char.textContent);
+              }
             }
           }
         }
@@ -1331,9 +1318,12 @@ var AnnotationExperienceAPIActionHandler = class {
       let elem = aEvent.target;
       console.log(elem);
       if (elem.tagName === "rect") {
-        that.annotationExperienceAPI.sendSelectAnnotationMessageToServer(elem.id);
       }
-      if (elem.className === "far fa-caret-square-right") {
+      if (elem.className === "fas fa-step-backward") {
+        that.annotationExperienceAPI.visualizer.showText("editor_left");
+      }
+      if (elem.className === "fas fa-step-forward") {
+        that.annotationExperienceAPI.sendDocumentMessageToServer("admin", "41714", [[30, 40], [40, 50], [0, 10], [17, 18], [19, 19]], "word");
       }
     };
     ondblclick = function(aEvent) {
@@ -1357,6 +1347,7 @@ var AnnotationExperienceAPI = class {
     this.connect();
     this.visualizer = new AnnotationExperienceAPIVisualization();
     this.actionhandler = new AnnotationExperienceAPIActionHandler(this);
+    this.actionhandler.registerDefaultActionHandler();
   }
   connect() {
     if (this.connected) {
@@ -1484,6 +1475,37 @@ var AnnotationExperienceAPI = class {
       annotationAddress: aId
     };
     this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
+  }
+  receiveNewDocumentMessageByServer(aMessage) {
+    console.log("RECEIVED DOCUMENT:");
+    const that = this;
+    let keys = Object.keys(aMessage);
+    let values = keys.map((k) => aMessage[k]);
+    this.documentID = values[0];
+    this.visualizer.setText(values[1]);
+    this.visualizer.setAnnotations(values[2]);
+  }
+  receiveNewViewportMessageByServer(aMessage) {
+    console.log("RECEIVED VIEWPORT");
+    const that = this;
+    let keys = Object.keys(aMessage);
+    let values = keys.map((k) => aMessage[k]);
+    this.visualizer.setText(values[0]);
+    this.visualizer.setAnnotations(values[1]);
+  }
+  receiveSelectedAnnotationMessageByServer(aMessage) {
+    console.log("RECEIVED SELECTED ANNOTATION:");
+    let keys = Object.keys(aMessage);
+    let values = keys.map((k) => aMessage[k]);
+    console.log(keys);
+    console.log(values);
+  }
+  receiveAnnotationMessageByServer(aMessage) {
+    console.log("RECEIVED ANNOTATION MESSAGE:");
+    let keys = Object.keys(aMessage);
+    let values = keys.map((k) => aMessage[k]);
+    console.log(keys);
+    console.log(values);
   }
   receiveNewDocumentMessageByServer(aMessage) {
     console.log("RECEIVED DOCUMENT:");
