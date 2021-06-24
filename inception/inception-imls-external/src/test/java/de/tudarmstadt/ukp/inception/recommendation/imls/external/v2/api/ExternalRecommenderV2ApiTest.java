@@ -36,6 +36,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 @Ignore
 public class ExternalRecommenderV2ApiTest
 {
+
+    /// *********************************************
+    /// In order to run these, you need to start
+    /// scripts/inception_integration_test.py
+    /// in the galahad repository
+    /// *********************************************
+
     private ExternalRecommenderV2Api sut;
 
     private static final String CLASSIFIER_ID = "spacy_ner";
@@ -122,9 +129,15 @@ public class ExternalRecommenderV2ApiTest
     }
 
     @Test
-    public void testDeleteDocumentFromDataset()
+    public void testDeleteDocumentFromDataset() throws Exception
     {
+        sut.createDataset("test_dataset");
+        sut.addDocumentToDataset("test_dataset", "test_document", buildAlaskaDocument());
+        DocumentList result = sut.listDocumentsInDataset("test_dataset");
+        assertThat(result.getNames()).isEqualTo(List.of("test_document"));
 
+        sut.deleteDocumentFromDataset("test_dataset", "test_document");
+        assertThat(sut.listDocumentsInDataset("test_dataset").getNames()).isEmpty();
     }
 
     // Classifier
@@ -151,9 +164,12 @@ public class ExternalRecommenderV2ApiTest
     // Train/Predict
 
     @Test
-    public void testTrainOnDataset()
+    public void testTrainOnDataset() throws Exception
     {
-        assertThat(false).isTrue();
+        sut.createDataset("test_dataset");
+        sut.addDocumentToDataset("test_dataset", "test_document", buildAlaskaDocument());
+
+        sut.trainOnDataset("sklearn1", "test_model", "test_dataset");
     }
 
     @Test

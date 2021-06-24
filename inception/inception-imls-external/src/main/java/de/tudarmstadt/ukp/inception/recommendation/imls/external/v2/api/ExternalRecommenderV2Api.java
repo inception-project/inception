@@ -121,7 +121,7 @@ public class ExternalRecommenderV2Api
             }
         }
         catch (IOException | InterruptedException e) {
-            throw errorf("Error while creating dataset [%s]", aDatasetId);
+            throw errorf("Error while creating dataset [%s]", e, aDatasetId);
         }
     }
 
@@ -142,7 +142,7 @@ public class ExternalRecommenderV2Api
             }
         }
         catch (IOException | InterruptedException e) {
-            throw errorf("Error while deleting dataset [%s]", aDatasetId);
+            throw errorf("Error while deleting dataset [%s]", e, aDatasetId);
         }
     }
 
@@ -162,9 +162,7 @@ public class ExternalRecommenderV2Api
             return fromJsonString(DocumentList.class, response.body());
         }
         catch (IOException | InterruptedException e) {
-            String msg = String.format("Error while listing documents for dataset [%s]",
-                    aDatasetId);
-            throw error(msg, e);
+            throw errorf("Error while listing documents for dataset [%s]", e, aDatasetId);
         }
     }
 
@@ -187,7 +185,7 @@ public class ExternalRecommenderV2Api
             }
         }
         catch (IOException | InterruptedException e) {
-            throw errorf("Error while adding document [%s] to dataset [%s]", aDocumentId,
+            throw errorf("Error while adding document [%s] to dataset [%s]", e, aDocumentId,
                     aDatasetId);
         }
     }
@@ -210,7 +208,8 @@ public class ExternalRecommenderV2Api
             }
         }
         catch (IOException | InterruptedException e) {
-            throw errorf("Error while deleting dataset [%s]", aDatasetId);
+            throw errorf("Error while deleting document [%s] from dataset [%s]", e, aDocumentId,
+                    aDatasetId);
         }
     }
 
@@ -231,10 +230,8 @@ public class ExternalRecommenderV2Api
             });
 
         }
-        catch (Exception e) {
-            String message = String.format("Error while getting info for classifier [%s]", url);
-            LOG.error(message, e);
-            throw new ExternalRecommenderApiException(message, e);
+        catch (IOException | InterruptedException e) {
+            throw error("Error while getting available classifier", e);
         }
     }
 
@@ -252,9 +249,7 @@ public class ExternalRecommenderV2Api
             return fromJsonString(ClassifierInfo.class, response.body());
         }
         catch (Exception e) {
-            String message = String.format("Error while getting info for classifier [%s]", url);
-            LOG.error(message, e);
-            throw new ExternalRecommenderApiException(message, e);
+            throw errorf("Error while getting info for classifier [%s]", e, aClassifierId);
         }
     }
 
@@ -276,7 +271,7 @@ public class ExternalRecommenderV2Api
             }
         }
         catch (IOException | InterruptedException e) {
-            throw errorf("Error while training on dataset [%s]", aDatasetId);
+            throw errorf("Error while training on dataset [%s]", e, aDatasetId);
         }
     }
 
@@ -304,15 +299,8 @@ public class ExternalRecommenderV2Api
             }
         }
         catch (IOException | InterruptedException e) {
-            LOG.error("Error while predicting", e);
-            throw new ExternalRecommenderApiException("Error while predicting", e);
+            throw errorf("Error while predicting [%s] [%s]", e, aClassifierId, aModelId);
         }
-    }
-
-    private ExternalRecommenderApiException error(String aMessage)
-    {
-        LOG.error(aMessage);
-        return new ExternalRecommenderApiException(aMessage);
     }
 
     private ExternalRecommenderApiException errorf(String aFormatString, Object... aArgs)
@@ -320,6 +308,14 @@ public class ExternalRecommenderV2Api
         String message = String.format(aFormatString, aArgs);
         LOG.error(message);
         return new ExternalRecommenderApiException(message);
+    }
+
+    private ExternalRecommenderApiException errorf(String aFormatString, Exception aCause,
+            Object... aArgs)
+    {
+        String message = String.format(aFormatString, aArgs);
+        LOG.error(message);
+        return new ExternalRecommenderApiException(message, aCause);
     }
 
     private ExternalRecommenderApiException error(String aMessage, Exception aCause)
