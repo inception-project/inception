@@ -159,7 +159,8 @@ public class AnnotationSystemAPIImpl
         // TODO createAnnotation
         System.out.println(Type.getType(aClientMessage.getAnnotationType()));
 
-        //cas.createAnnotation(aClientMessage.getAnnotationType()), aClientMessage.getAnnotationOffsetBegin(), aClientMessage.getAnnotationOffsetEnd());
+        // cas.createAnnotation(aClientMessage.getAnnotationType()),
+        // aClientMessage.getAnnotationOffsetBegin(), aClientMessage.getAnnotationOffsetEnd());
         // TODO retrieve desired content and fill AnnotationMessage
         AnnotationMessage message = new AnnotationMessage();
         annotationProcessAPI.handleSendUpdateAnnotation(message,
@@ -253,7 +254,8 @@ public class AnnotationSystemAPIImpl
 
             for (int i = 0; i < aClientMessage.getViewport().length; i++) {
 
-                for (Character c : textInSentences[aClientMessage.getViewport()[i][0]].toCharArray()) {
+                for (Character c : textInSentences[aClientMessage.getViewport()[i][0]]
+                        .toCharArray()) {
                     visibleSentences.add(c);
                 }
 

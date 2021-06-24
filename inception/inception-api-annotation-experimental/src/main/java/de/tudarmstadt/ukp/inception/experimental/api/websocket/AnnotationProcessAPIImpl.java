@@ -104,7 +104,8 @@ public class AnnotationProcessAPIImpl
     public void handleSendDocumentRequest(DocumentMessage aDocumentMessage, String aUser)
         throws IOException
     {
-        System.out.println("SENDING NOW DOCUMENT UPDATE TO CLIENT " + Arrays.toString(aDocumentMessage.getViewportText()));
+        System.out.println("SENDING NOW DOCUMENT UPDATE TO CLIENT "
+                + Arrays.toString(aDocumentMessage.getViewportText()));
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_DOCUMENT + aUser,
                 JSONUtil.toJsonString(aDocumentMessage));
     }
@@ -122,7 +123,8 @@ public class AnnotationProcessAPIImpl
     public void handleSendViewportRequest(ViewportMessage aViewportMessage, String aUser)
         throws IOException
     {
-        System.out.println("SENDING NOW VIEWPORT TO CLIENT: " + Arrays.toString(aViewportMessage.getViewportText()));
+        System.out.println("SENDING NOW VIEWPORT TO CLIENT: "
+                + Arrays.toString(aViewportMessage.getViewportText()));
 
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + aUser,
                 JSONUtil.toJsonString(aViewportMessage));

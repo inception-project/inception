@@ -56,11 +56,8 @@ export class AnnotationExperienceAPI {
             return;
         }
 
-        let url: string = (window.location.protocol.startsWith("https") ? "wss://" : "ws://")
-            + window.location.host + "/inception_app_webapp_war_exploded/ws-endpoint";
-
         this.stompClient = Stomp.over(function () {
-            return new WebSocket(url);
+            return new WebSocket(localStorage.getItem("url"));
         });
 
         const that = this;

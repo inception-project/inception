@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
@@ -56,4 +58,15 @@ public interface ActiveLearningService
 
     Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aUser,
             ActiveLearningUserState aAlState);
+
+    void writeLearningRecordInDatabaseAndEventLog(User aUser, AnnotationLayer aLayer,
+            SpanSuggestion aSuggestion, LearningRecordType aUserAction, String aAnnotationValue);
+
+    void acceptSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion,
+            Object aValue)
+        throws IOException, AnnotationException;
+
+    void rejectSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion);
+
+    void skipSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion);
 }

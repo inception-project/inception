@@ -15,38 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.clarin.webanno.support.db;
 
-import java.io.Serializable;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ExternalRecommenderTraits
-    implements Serializable
+/**
+ * Indicates that the database lock has been removed. Not really an exception but a way to cause the
+ * application to shut down.
+ */
+public class NotLockedException
+    extends Exception
 {
-    private static final long serialVersionUID = -3109239605741337123L;
+    private static final long serialVersionUID = -3218948315544678593L;
 
-    private String remoteUrl;
-    private boolean trainable;
-
-    public String getRemoteUrl()
+    public NotLockedException(String aMessage)
     {
-        return remoteUrl;
-    }
-
-    public void setRemoteUrl(String aRemoteUrl)
-    {
-        remoteUrl = aRemoteUrl;
-    }
-
-    public boolean isTrainable()
-    {
-        return trainable;
-    }
-
-    public void setTrainable(boolean aTrainable)
-    {
-        trainable = aTrainable;
+        super(aMessage);
     }
 }

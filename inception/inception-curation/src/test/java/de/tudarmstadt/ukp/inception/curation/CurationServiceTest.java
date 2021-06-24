@@ -56,7 +56,8 @@ public class CurationServiceTest
 {
     private CurationService sut;
 
-    private @Autowired TestEntityManager testEntityManager;
+    @Autowired
+    private TestEntityManager testEntityManager;
 
     private Project testProject;
     private SourceDocument testDocument;

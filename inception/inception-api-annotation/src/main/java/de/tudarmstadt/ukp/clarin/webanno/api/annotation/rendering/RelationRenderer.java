@@ -94,11 +94,10 @@ public class RelationRenderer
     protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
         RelationAdapter typeAdapter = getTypeAdapter();
-        try {
-            type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
-            spanType = aTypeSystem.getType(typeAdapter.getAttachTypeName());
-        }
-        catch (IllegalArgumentException e) {
+        type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
+        spanType = aTypeSystem.getType(typeAdapter.getAttachTypeName());
+        
+        if (type == null || spanType == null) {
             // If the types are not defined, then we do not need to try and render them because the
             // CAS does not contain any instances of them
             return false;
@@ -129,7 +128,7 @@ public class RelationRenderer
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            for (VObject arc : render(fs, aFeatures, aWindowBegin)) {
+            for (VObject arc : render(fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 if (!(arc instanceof VArc)) {
                     continue;
                 }
@@ -170,7 +169,7 @@ public class RelationRenderer
 
     @Override
     public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin)
+            int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return Collections.emptyList();

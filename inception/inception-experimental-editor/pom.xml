@@ -52,7 +52,19 @@
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-brat-editor</artifactId>
+            <artifactId>inception-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-request</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
     </dependencies>
 </project>

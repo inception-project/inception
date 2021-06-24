@@ -15,38 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.service;
 
-import java.io.Serializable;
+import org.apache.wicket.MetaDataKey;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ExternalRecommenderTraits
-    implements Serializable
+/**
+ * Indicates whether a prediction switch has already been performed during a request. If this is the
+ * case, no second switch should take place.
+ */
+public class PredictionSwitchPerformedKey
+    extends MetaDataKey<Boolean>
 {
-    private static final long serialVersionUID = -3109239605741337123L;
-
-    private String remoteUrl;
-    private boolean trainable;
-
-    public String getRemoteUrl()
-    {
-        return remoteUrl;
-    }
-
-    public void setRemoteUrl(String aRemoteUrl)
-    {
-        remoteUrl = aRemoteUrl;
-    }
-
-    public boolean isTrainable()
-    {
-        return trainable;
-    }
-
-    public void setTrainable(boolean aTrainable)
-    {
-        trainable = aTrainable;
-    }
+    private static final long serialVersionUID = -4244853609075676915L;
+    public final static PredictionSwitchPerformedKey INSTANCE = new PredictionSwitchPerformedKey();
 }
