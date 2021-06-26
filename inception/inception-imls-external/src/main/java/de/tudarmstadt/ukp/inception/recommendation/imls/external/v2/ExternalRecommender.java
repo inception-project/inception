@@ -35,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -80,11 +82,11 @@ public class ExternalRecommender
             return;
         }
 
-        String userName = aContext.getUser().get().getUsername();
-        String projectName = recommender.getProject().getName();
-        String datasetName = buildDatasetName(userName, projectName);
+        User user = aContext.getUser().get();
+        Project project = recommender.getProject();
+        String datasetName = buildDatasetName(project, user);
         String classifierName = buildClassifierName();
-        String modelName = buildModelName(projectName, userName);
+        String modelName = buildModelName(project, user);
 
         api.createDataset(datasetName);
         synchronizeDocuments(aCasses, datasetName);
@@ -168,17 +170,15 @@ public class ExternalRecommender
             return;
         }
 
-        String userName = aContext.getUser().get().getUsername();
         long version = 0;
 
         FormatConverter converter = new FormatConverter();
         String layerName = recommender.getLayer().getName();
         String featureName = recommender.getFeature().getName();
-        String projectName = recommender.getProject().getName();
 
         Document request = converter.documentFromCas(cas, layerName, featureName, version);
 
-        String modelName = buildModelName(projectName, userName);
+        String modelName = buildModelName(recommender.getProject(), aContext.getUser().get());
         String classifierName = traits.getClassifierInfo().getName();
 
         try {
@@ -233,14 +233,14 @@ public class ExternalRecommender
         return traits.getClassifierInfo().getName();
     }
 
-    private String buildModelName(String aProjectName, String aUserName)
+    private String buildModelName(Project aProject, User aUser)
     {
-        return aProjectName + "_" + aUserName + "_" + recommender.getName();
+        return aProject.getId() + "_" + aUser.getUsername() + "_" + recommender.getId();
     }
 
-    private String buildDatasetName(String aProjectName, String aUserName)
+    private String buildDatasetName(Project aProject, User aUser)
     {
-        return aProjectName + "_" + aUserName;
+        return aProject.getId() + "_" + aUser.getUsername();
     }
 
     private String getDocumentName(CAS aCas)

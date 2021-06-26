@@ -85,6 +85,7 @@ public class FormatConverter
 
         List<Annotation> annotations = aDocument.getAnnotations().getOrDefault(TARGET_LAYER,
                 Collections.emptyList());
+
         for (Annotation annotation : annotations) {
             int begin = annotation.getBegin();
             int end = annotation.getEnd();

@@ -159,6 +159,12 @@ public class ExternalRecommenderV2Api
 
         try {
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            int status = response.statusCode();
+
+            if (status != 200) {
+                throw errorf("listDocumentsInDataset: Unexpected status code [%d]: [%s]", status,
+                        response.body());
+            }
             return fromJsonString(DocumentList.class, response.body());
         }
         catch (IOException | InterruptedException e) {
