@@ -266,10 +266,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-plugin-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
@@ -769,6 +765,7 @@
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
