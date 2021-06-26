@@ -28,6 +28,7 @@ public class AnnotationEditorPropertiesImpl
     private int pageSize = 5;
     private boolean autoScroll = true;
     private boolean rememberLayer = false;
+    private boolean forwardAnnotationEnabled = false;
 
     @Override
     public int getPageSize()
@@ -60,5 +61,16 @@ public class AnnotationEditorPropertiesImpl
     public void setRememberLayer(boolean aRememberLayer)
     {
         rememberLayer = aRememberLayer;
+    }
+
+    @Override
+    public boolean isForwardAnnotationEnabled()
+    {
+        return forwardAnnotationEnabled;
+    }
+
+    public void setForwardAnnotationEnabled(boolean aForwardAnnotationEnabled)
+    {
+        forwardAnnotationEnabled = aForwardAnnotationEnabled;
     }
 }
