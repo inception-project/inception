@@ -51,8 +51,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
-import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen.SplashWindow;
@@ -113,15 +111,6 @@ public class INCEpTION
                 return null;
             }
         };
-    }
-
-    @Bean
-    public PluginManager pluginManager()
-    {
-        PluginManagerImpl pluginManager = new PluginManagerImpl(
-                SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
-        return pluginManager;
     }
 
     @Bean
