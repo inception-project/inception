@@ -24,4 +24,6 @@ public interface AnnotationEditorProperties
     boolean isAutoScroll();
 
     boolean isRememberLayer();
+
+    boolean isForwardAnnotationEnabled();
 }
