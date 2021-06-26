@@ -436,13 +436,17 @@ public class ProjectServiceImpl
     public List<User> listProjectUsersWithPermissions(Project aProject,
             PermissionLevel aPermissionLevel)
     {
-        String query = "SELECT DISTINCT u FROM User u, ProjectPermission pp "
-                + "WHERE pp.user = u.username " + "AND pp.project = :project AND pp.level = :level "
-                + "ORDER BY u.username ASC";
-        List<User> users = entityManager.createQuery(query, User.class)
-                .setParameter("project", aProject).setParameter("level", aPermissionLevel)
+        String query = String.join("\n", //
+                "SELECT DISTINCT u FROM User u, ProjectPermission pp ", //
+                "WHERE pp.user = u.username ", //
+                "AND pp.project = :project ", //
+                "AND pp.level = :level ", //
+                "ORDER BY u.username ASC");
+
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("project", aProject) //
+                .setParameter("level", aPermissionLevel) //
                 .getResultList();
-        return users;
     }
 
     @Override
