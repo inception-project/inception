@@ -83,7 +83,7 @@ public class LayerSelectionPanel
     {
         super(aId, new CompoundPropertyModel<>(aModel));
 
-        setOutputMarkupId(true);
+        setOutputMarkupPlaceholderTag(true);
 
         owner = aOwner;
 
