@@ -60,7 +60,7 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>slow</excludedTestCategories>
-    
+
     <junit.version>5.7.1</junit.version>
     <mockito.version>3.8.0</mockito.version>
     <assertj.version>3.19.0</assertj.version>
@@ -833,6 +833,12 @@
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-extensions</artifactId>
         <version>${wicket-bootstrap.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
@@ -891,6 +897,12 @@
         <groupId>org.webjars</groupId>
         <artifactId>bootstrap</artifactId>
         <version>${bootstrap.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.webjars.bower</groupId>
@@ -1595,6 +1607,20 @@
         <groupId>org.webjars.bowergithub.xbsoftware</groupId>
         <artifactId>enjoyhint</artifactId>
         <version>3.1.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.webjars.bowergithub.flesler</groupId>
+            <artifactId>jquery.scrollto</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.webjars.bowergithub.jquery</groupId>
+            <artifactId>jquery-dist</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.webjars.bowergithub.ericdrowell</groupId>
+            <artifactId>kineticjs</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.webjars.npm</groupId>

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
@@ -123,6 +124,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEv
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -145,6 +147,7 @@ public class CurationPage
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean WorkloadManagementService workloadManagementService;
 
     private long currentprojectId;
 
@@ -428,6 +431,11 @@ public class CurationPage
     @Override
     public List<SourceDocument> getListOfDocs()
     {
+        AnnotatorState state = getModelObject();
+        // Since the curatable documents depend on the document state, let's make sure the document
+        // state is up-to-date
+        workloadManagementService.getWorkloadManagerExtension(state.getProject())
+                .freshenStatus(state.getProject());
         return curationDocumentService.listCuratableSourceDocuments(getModelObject().getProject());
     }
 
@@ -450,7 +458,7 @@ public class CurationPage
     @Override
     public CAS getEditorCas() throws IOException
     {
-        AnnotatorState state = CurationPage.this.getModelObject();
+        AnnotatorState state = getModelObject();
 
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
@@ -499,7 +507,7 @@ public class CurationPage
 
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
-            // ANNOTATION_FINISHED
+            // CURATION_FINISHED
             if (!CURATION_FINISHED.equals(state.getDocument().getState())) {
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
@@ -558,9 +566,8 @@ public class CurationPage
                 .listFinishedAnnotationDocuments(state.getDocument());
 
         if (finishedAnnotationDocuments.isEmpty()) {
-            throw new IllegalStateException("This document has the state "
-                    + state.getDocument().getState() + " but "
-                    + "there are no finished annotation documents! This "
+            getSession().error("This document has the state " + state.getDocument().getState()
+                    + " but " + "there are no finished annotation documents! This "
                     + "can for example happen when curation on a document has already started "
                     + "and afterwards all annotators have been remove from the project, have been "
                     + "disabled or if all were put back into " + AnnotationDocumentState.IN_PROGRESS
@@ -570,6 +577,7 @@ public class CurationPage
                     + "administration dashboard and if none of the imported users have been "
                     + "enabled via the users management page after the import (also something "
                     + "that only administrators can do).");
+            backToProjectPage();
         }
 
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
@@ -617,7 +625,9 @@ public class CurationPage
         // Check access to project
         if (project != null
                 && !projectService.isCurator(project, userRepository.getCurrentUser())) {
-            error("You have no permission to access project [" + project.getId() + "]");
+            getSession()
+                    .error("You have no permission to access project [" + project.getId() + "]");
+            backToProjectPage();
             return;
         }
 
@@ -633,6 +643,12 @@ public class CurationPage
         // or a change of focus (or both)
         if (document != null && !document.equals(state.getDocument())) {
             state.setDocument(document, getListOfDocs());
+
+            if (state.getDocumentIndex() == -1) {
+                getSession().error("The document [" + document.getName() + "] is not curatable");
+                backToProjectPage();
+                return;
+            }
         }
     }
 
@@ -693,7 +709,7 @@ public class CurationPage
             User aUser)
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
-        List<SourceDocument> sdocs = curationDocumentService.listCuratableSourceDocuments(aProject);
+        List<SourceDocument> sdocs = getListOfDocs();
 
         for (SourceDocument sourceDocument : sdocs) {
             DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
@@ -848,7 +864,8 @@ public class CurationPage
 
         // We need a modifiable copy of some annotation document which we can use to initialize
         // the curation CAS. This is an exceptional case where BYPASS is the correct choice
-        CAS editorCas = documentService.readAnnotationCas(aTemplate, UNMANAGED_ACCESS);
+        CAS editorCas = documentService.readAnnotationCas(aTemplate.getDocument(),
+                aTemplate.getUser(), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
 
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
                 aState.getAnnotationLayers());
