@@ -15,28 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.storage.config;
+package de.tudarmstadt.ukp.clarin.webanno.plugin.config;
 
-import javax.persistence.EntityManager;
-
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 @Configuration
-public class CurationDocumentServiceAutoConfiguration
+@ConditionalOnProperty(prefix = "plugins", name = "enabled", havingValue = "true", matchIfMissing = false)
+public class PluginManagerAutoConfiguration
 {
-    @Bean(CurationDocumentService.SERVICE_NAME)
-    public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService, ProjectService aProjectService,
-            EntityManager aEntityManager)
+    @Bean
+    public PluginManager pluginManager()
     {
-        return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService,
-                aProjectService, aEntityManager);
+        PluginManagerImpl pluginManager = new PluginManagerImpl(
+                SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
+        return pluginManager;
     }
 }

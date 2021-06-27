@@ -15,24 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
-public interface AnnotationEditorProperties
+import org.apache.wicket.request.resource.CssResourceReference;
+
+public class LoginPageCssResourceReference
+    extends CssResourceReference
 {
-    int getPageSize();
+    private static final long serialVersionUID = 1L;
 
-    boolean isAutoScroll();
-
-    boolean isRememberLayer();
+    private static final LoginPageCssResourceReference INSTANCE = new LoginPageCssResourceReference();
 
     /**
-     * @return whether the "forward annotation" setting is available to annotators.
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
      */
-    boolean isForwardAnnotationEnabled();
+    public static LoginPageCssResourceReference get()
+    {
+        return INSTANCE;
+    }
 
     /**
-     * @return whether the "remember layer" setting is configurable by the user as preference. When
-     *         disabled, {@link #isRememberLayer} always returns true.
+     * Private constructor
      */
-    boolean isRememberLayerEnabled();
+    private LoginPageCssResourceReference()
+    {
+        super(LoginPageCssResourceReference.class, "LoginPage.css");
+    }
 }

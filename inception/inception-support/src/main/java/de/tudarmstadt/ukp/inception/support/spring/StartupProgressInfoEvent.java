@@ -15,24 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
+package de.tudarmstadt.ukp.inception.support.spring;
 
-public interface AnnotationEditorProperties
+import org.springframework.context.ApplicationEvent;
+
+public class StartupProgressInfoEvent
+    extends ApplicationEvent
 {
-    int getPageSize();
+    private static final long serialVersionUID = -5071565761764354387L;
 
-    boolean isAutoScroll();
+    private final String message;
 
-    boolean isRememberLayer();
+    public StartupProgressInfoEvent(Object aSource, String aMessage)
+    {
+        super(aSource);
+        message = aMessage;
+    }
 
-    /**
-     * @return whether the "forward annotation" setting is available to annotators.
-     */
-    boolean isForwardAnnotationEnabled();
-
-    /**
-     * @return whether the "remember layer" setting is configurable by the user as preference. When
-     *         disabled, {@link #isRememberLayer} always returns true.
-     */
-    boolean isRememberLayerEnabled();
+    public String getMessage()
+    {
+        return message;
+    }
 }

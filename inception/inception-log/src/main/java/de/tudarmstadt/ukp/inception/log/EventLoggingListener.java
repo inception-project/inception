@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingProperties;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.support.spring.StartupProgressInfoEvent;
 
 /**
  * <p>
@@ -102,12 +104,14 @@ public class EventLoggingListener
             AnnotationAwareOrderComparator.sort(exts);
 
             for (EventLoggingAdapter<?> fs : exts) {
-                log.info("Found event logging adapter: {}",
+                log.debug("Found event logging adapter: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        adapters = Collections.unmodifiableList(exts);
+        log.info("Found [{}] event logging adapters", exts.size());
+
+        adapters = unmodifiableList(exts);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -138,6 +142,10 @@ public class EventLoggingListener
     @EventListener
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
+        if (aEvent instanceof StartupProgressInfoEvent) {
+            return;
+        }
+
         Optional<EventLoggingAdapter<ApplicationEvent>> adapter = getAdapter(aEvent);
 
         if (adapter.isPresent()) {

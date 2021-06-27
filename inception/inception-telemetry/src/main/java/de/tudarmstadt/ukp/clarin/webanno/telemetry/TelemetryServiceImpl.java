@@ -23,13 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_
 import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR;
 import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR_DOCKER;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.FileUtils.readFileToString;
 
 import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -112,11 +112,13 @@ public class TelemetryServiceImpl
             AnnotationAwareOrderComparator.sort(tsp);
 
             for (TelemetrySupport ts : tsp) {
-                log.info("Found telemetry support: {}", ts.getId());
+                log.debug("Found telemetry support: {}", ts.getId());
             }
         }
 
-        telemetrySupports = Collections.unmodifiableList(tsp);
+        log.info("Found [{}] telemetry supports", tsp.size());
+
+        telemetrySupports = unmodifiableList(tsp);
 
         autoAcceptOrReject();
     }
