@@ -42,76 +42,97 @@ var Visualizer = (function ($, window, undefined) {
   var canvasWidth = 0;
 
   class DocumentData {
-    constructor(text) {
+    text;
+    chunks = [];
+    spans = {};
+    eventDescs = {};
+    sentComment = {};
+    arcs = [];
+    arcById = {};
+    markedSent = {};
+    spanAnnTexts = {};
+    towers = {};
+    // sizes = {};
+
+  constructor(text) {
       this.text = text;
-      this.chunks = [];
-      this.spans = {};
-      this.eventDescs = {};
-      this.sentComment = {};
-      this.arcs = [];
-      this.arcById = {};
-      this.markedSent = {};
-      this.spanAnnTexts = {};
-      this.towers = {};
-      // this.sizes = {};
     }
   }
 
   class Fragment {
-    constructor(id, span, from, to) {
+    id;
+    span;
+    from;
+    to;
+    // towerId = undefined;
+    // drawOrder = undefined;
+
+  constructor(id, span, from, to) {
       this.id = id;
       this.span = span;
       this.from = from;
       this.to = to;
-      // this.towerId = undefined;
-      // this.drawOrder = undefined;
     }
   }
 
   class Span {
+    id;
+    type;
+    totalDist = 0;
+    numArcs = 0;
+    generalType;
+    headFragment = null;
+    unsegmentedOffsets;
+    offsets = [];
+    segmentedOffsetsMap = {};
+    clippedAtStart = false;
+    clippedAtEnd = false;
+    incoming = [];
+    outgoing = [];
+    attributes = {};
+    attributeText = [];
+    attributeCues = {};
+    attributeCueFor = {};
+    attributeMerge = {}; // for box, cross, etc. that are span-global
+    fragments = [];
+    normalizations = [];
+    // from = undefined;
+    // to = undefined;
+    // wholeFrom = undefined;
+    // wholeTo = undefined;
+    // headFragment = undefined;
+    // chunk = undefined;
+    // marked = undefined;
+    // avgDist = undefined;
+    // curly = undefined;
+    // comment = undefined; // { type: undefined, text: undefined };
+    // annotatorNotes = undefined;
+    // drawCurly = undefined;
+    // glyphedLabelText = undefined;
+    // group = undefined;
+    // height = undefined;
+    // highlightPos = undefined;
+    // indexNumber = undefined;
+    // labelText = undefined;
+    // nestingDepth = undefined;
+    // nestingDepthLR = undefined;
+    // nestingDepthRL = undefined;
+    // nestingHeight = undefined;
+    // nestingHeightLR = undefined;
+    // nestingHeightRL = undefined;
+    // rect = undefined;
+    // rectBox = undefined;
+    // refedIndexSum = undefined;
+    // right = undefined;
+    // totaldist = undefined;
+    // width = undefined;
+
     constructor(id, type, offsets, generalType) {
       this.id = id;
       this.type = type;
-      this.totalDist = 0;
-      this.numArcs = 0;
-      this.generalType = generalType;
-      this.headFragment = null;
       this.unsegmentedOffsets = offsets;
-      this.offsets = [];
-      this.segmentedOffsetsMap = {};
-      this.clippedAtStart = false;
-      this.clippedAtEnd = false;
-      // this.unsegmentedOffsets = undefined;
-      // this.from = undefined;
-      // this.to = undefined;
-      // this.wholeFrom = undefined;
-      // this.wholeTo = undefined;
-      // this.headFragment = undefined;
-      // this.chunk = undefined;
-      // this.marked = undefined;
-      // this.avgDist = undefined;
-      // this.curly = undefined;
-      // this.comment = undefined; // { type: undefined, text: undefined };
-      // this.annotatorNotes = undefined;
-      // this.drawCurly = undefined;
-      // this.glyphedLabelText = undefined;
-      // this.group = undefined;
-      // this.height = undefined;
-      // this.highlightPos = undefined;
-      // this.indexNumber = undefined;
-      // this.labelText = undefined;
-      // this.nestingDepth = undefined;
-      // this.nestingDepthLR = undefined;
-      // this.nestingDepthRL = undefined;
-      // this.nestingHeight = undefined;
-      // this.nestingHeightLR = undefined;
-      // this.nestingHeightRL = undefined;
-      // this.rect = undefined;
-      // this.rectBox = undefined;
-      // this.refedIndexSum = undefined;
-      // this.right = undefined;
-      // this.totaldist = undefined;
-      // this.width = undefined;
+      this.generalType = generalType;
+
       this.initContainers();
     }
 
@@ -169,6 +190,19 @@ var Visualizer = (function ($, window, undefined) {
   }
 
   class EventDesc {
+    id;
+    triggerId;
+    roles = [];
+    equiv = false;
+    relation = false;
+    // leftSpans = undefined;
+    // rightSpans = undefined;
+    // annotatorNotes = undefined;
+    // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+    // labelText = undefined;
+    // color = undefined
+    // WEBANNO EXTENSION END
+
     constructor(id, triggerId, roles, klass) {
       this.id = id;
       this.triggerId = triggerId;
@@ -181,45 +215,56 @@ var Visualizer = (function ($, window, undefined) {
       } else if (klass == "relation") {
         this.relation = true;
       }
-      // this.leftSpans = undefined;
-      // this.rightSpans = undefined;
-      // this.annotatorNotes = undefined;
-      // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
-      // this.labelText = undefined;
-      // this.color = undefined
-      // WEBANNO EXTENSION END
     }
   }
 
   class Chunk {
+    index;
+    text;
+    from;
+    to;
+    space;
+    fragments = [];
+    // sentence = undefined;
+    // group = undefined;
+    // highlightGroup = undefined;
+    // markedTextStart = undefined;
+    // markedTextEnd = undefined;
+    // nextSpace = undefined;
+    // right = undefined;
+    // row = undefined;
+    // textX = undefined;
+    // translation = undefined;
+
     constructor(index, text, from, to, space, spans) {
       this.index = index;
       this.text = text;
       this.from = from;
       this.to = to;
       this.space = space;
-      this.fragments = [];
-      // this.sentence = undefined;
-      // this.group = undefined;
-      // this.highlightGroup = undefined;
-      // this.markedTextStart = undefined;
-      // this.markedTextEnd = undefined;
-      // this.nextSpace = undefined;
-      // this.right = undefined;
-      // this.row = undefined;
-      // this.textX = undefined;
-      // this.translation = undefined;
     }
   }
 
   class Arc {
-    constructor(eventDesc, role, dist, eventNo) {
+    origin;
+    target;
+    dist;
+    type;
+    shadowClass;
+    jumpHeight = 0;
+    equiv = false;
+    eventDescId;
+    relation = false;
+    eventDescId;
+    normalizations = [];
+    // marked = undefined;
+
+   constructor(eventDesc, role, dist, eventNo) {
       this.origin = eventDesc.id;
       this.target = role.targetId;
       this.dist = dist;
       this.type = role.type;
       this.shadowClass = eventDesc.shadowClass;
-      this.jumpHeight = 0;
       if (eventDesc.equiv) {
         this.equiv = true;
         this.eventDescId = eventNo;
@@ -228,12 +273,17 @@ var Visualizer = (function ($, window, undefined) {
         this.relation = true;
         this.eventDescId = eventNo;
       }
-      // this.marked = undefined;
-      this.normalizations = [];
     }
   }
 
   class Row {
+    group;
+    background;
+    chunks = [];
+    hasAnnotations = false;
+    maxArcHeight = 0;
+    maxSpanHeight = 0;
+
     constructor(svg) {
       // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       /*
@@ -242,14 +292,14 @@ var Visualizer = (function ($, window, undefined) {
       this.group = svg.group({ 'class': 'row' });
       // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
       this.background = svg.group(this.group);
-      this.chunks = [];
-      this.hasAnnotations = false;
-      this.maxArcHeight = 0;
-      this.maxSpanHeight = 0;
     }
   }
 
   class Measurements {
+    widths;
+    height;
+    y;
+
     constructor(widths, height, y) {
       this.widths = widths;
       this.height = height;
