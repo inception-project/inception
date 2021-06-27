@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 
 import javax.servlet.http.HttpSession;
 
-import org.apache.wicket.ajax.WicketAjaxJQueryResourceReference;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -93,9 +92,8 @@ public class LogoutPanel
         aResponse.render(new PriorityHeaderItem(JavaScriptHeaderItem.forReference(
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference())));
 
-        // We use calls from this library to show the logout timer
-        aResponse.render(new PriorityHeaderItem(
-                JavaScriptHeaderItem.forReference(WicketAjaxJQueryResourceReference.get())));
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(LogoutTimerJavascriptResourceReference.get()));
 
         int timeout = getAutoLogoutTime();
         if (timeout > 0) {

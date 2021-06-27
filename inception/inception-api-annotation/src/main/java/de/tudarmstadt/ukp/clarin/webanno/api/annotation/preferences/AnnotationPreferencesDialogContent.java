@@ -151,6 +151,7 @@ public class AnnotationPreferencesDialogContent
 
         CheckBox rememberCheckbox = new CheckBox("rememberLayer");
         rememberCheckbox.setOutputMarkupId(true);
+        rememberCheckbox.setVisible(annotationEditorProperties.isRememberLayerEnabled());
         form.add(rememberCheckbox);
 
         // Add global read-only coloring strategy combo box

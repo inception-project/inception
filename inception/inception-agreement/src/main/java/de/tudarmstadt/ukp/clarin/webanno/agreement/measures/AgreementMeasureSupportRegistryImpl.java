@@ -66,10 +66,12 @@ public class AgreementMeasureSupportRegistryImpl
             AnnotationAwareOrderComparator.sort(fsp);
 
             for (AgreementMeasureSupport fs : fsp) {
-                log.info("Found agreement measure support: {}",
+                log.debug("Found agreement measure support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
+
+        log.info("Found [{}] agreement measure supports", fsp.size());
 
         agreementMeasures = Collections.unmodifiableList(fsp);
     }

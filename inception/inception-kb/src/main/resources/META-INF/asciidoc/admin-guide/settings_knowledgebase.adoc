@@ -67,6 +67,11 @@ an example of how the parameter can be configured below:
 | time before items are asynchronously refreshed
 | 5m
 | 30m
+
+| knowledge-base.remove-orphans-on-start
+| whether to delete orphaned KBs on start
+| false
+| true
 |===
 
 NOTE: Disabling the knowledge base support will lead to the loss of concept linked features from

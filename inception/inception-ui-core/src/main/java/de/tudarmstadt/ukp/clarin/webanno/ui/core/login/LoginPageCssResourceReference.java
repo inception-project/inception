@@ -15,35 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.kb.config;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
-import java.time.Duration;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-public interface KnowledgeBaseProperties
+public class LoginPageCssResourceReference
+    extends CssResourceReference
 {
-    int getDefaultMaxResults();
+    private static final long serialVersionUID = 1L;
 
-    int getHardMaxResults();
-
-    /**
-     * @return the cache size in terms of KB items that are being cached. A single query may return
-     *         a large number of such items.
-     */
-    long getCacheSize();
+    private static final LoginPageCssResourceReference INSTANCE = new LoginPageCssResourceReference();
 
     /**
-     * @return the time before KB items are dropped from the cache if they have not been accessed
-     *         (in minutes).
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
      */
-    Duration getCacheExpireDelay();
+    public static LoginPageCssResourceReference get()
+    {
+        return INSTANCE;
+    }
 
     /**
-     * @return the time before KB items are asynchronously refreshed (in minutes).
+     * Private constructor
      */
-    Duration getCacheRefreshDelay();
-
-    /**
-     * @return whether do delete orphaned knowledge bases during startup.
-     */
-    boolean isRemoveOrphansOnStart();
+    private LoginPageCssResourceReference()
+    {
+        super(LoginPageCssResourceReference.class, "LoginPage.css");
+    }
 }

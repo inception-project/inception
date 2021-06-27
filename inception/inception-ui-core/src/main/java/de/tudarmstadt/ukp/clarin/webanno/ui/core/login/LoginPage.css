@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<!--
+/*
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
   distributed with this work for additional information
@@ -15,20 +14,27 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<html xmlns:wicket="http://wicket.apache.org">
-<body>
-<wicket:panel>
-  <ul wicket:id="feedbackul" class="feedbackPanel">
-    <li wicket:id="closeAll" class="alert alert-warning">
-      <button class="btn btn-primary" onClick="$('.alert').alert('close')">Dismiss all messages</button>
-      After checking the messages below, you can use this button to dismiss all messages at once.
-    </li>
-    <li wicket:id="messages">
-      <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-      <span wicket:id="message">A message</span>
-    </li>
-  </ul>
-</wicket:panel>
-</body>
-</html>
+*/
+:root {
+  --input-padding-x: 1.5rem;
+  --input-padding-y: 1.5rem;
+}
+
+.login-form {
+  background: white; 
+  padding: 3rem 3rem; 
+  min-width: 440px; 
+  max-width: 30%;
+}
+
+.login-form .form-group input[type=text],input[type=password] {
+  padding: var(--input-padding-y) var(--input-padding-x);
+  border-radius: 2rem;
+}
+
+.login-form .btn-login {
+  font-size: 0.9rem !important;
+  letter-spacing: 0.05rem !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 2rem !important;
+}
