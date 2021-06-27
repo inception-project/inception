@@ -38,28 +38,32 @@ var Visualizer = (function ($, window, undefined) {
   var fontZoom = 100;
   // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
 
-  var DocumentData = function (text) {
-    this.text = text;
-    this.chunks = [];
-    this.spans = {};
-    this.eventDescs = {};
-    this.sentComment = {};
-    this.arcs = [];
-    this.arcById = {};
-    this.markedSent = {};
-    this.spanAnnTexts = {};
-    this.towers = {};
-    // this.sizes = {};
-  };
+  class DocumentData {
+    constructor(text) {
+      this.text = text;
+      this.chunks = [];
+      this.spans = {};
+      this.eventDescs = {};
+      this.sentComment = {};
+      this.arcs = [];
+      this.arcById = {};
+      this.markedSent = {};
+      this.spanAnnTexts = {};
+      this.towers = {};
+      // this.sizes = {};
+    }
+  }
 
-  var Fragment = function (id, span, from, to) {
-    this.id = id;
-    this.span = span;
-    this.from = from;
-    this.to = to;
-    // this.towerId = undefined;
-    // this.drawOrder = undefined;
-  };
+  class Fragment {
+    constructor(id, span, from, to) {
+      this.id = id;
+      this.span = span;
+      this.from = from;
+      this.to = to;
+      // this.towerId = undefined;
+      // this.drawOrder = undefined;
+    }
+  }
 
   var Span = function (id, type, offsets, generalType) {
     this.id = id;
