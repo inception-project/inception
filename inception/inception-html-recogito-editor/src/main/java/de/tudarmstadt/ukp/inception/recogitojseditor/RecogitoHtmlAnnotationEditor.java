@@ -109,6 +109,7 @@ public class RecogitoHtmlAnnotationEditor
         script.append("(function() {\n");
         script.append("  var r = Recogito.init({\n");
         script.append("    content: document.getElementById('" + markupId + "'),\n");
+        script.append("    disableEditor: true,\n");
         script.append("    mode: 'pre'\n");
         script.append("  });\n");
         script.append("\n");
