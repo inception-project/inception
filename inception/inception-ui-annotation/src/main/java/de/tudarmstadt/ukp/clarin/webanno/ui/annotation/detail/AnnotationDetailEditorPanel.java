@@ -94,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -127,6 +128,7 @@ public abstract class AnnotationDetailEditorPanel
     private static final String KEY_ENTER = "13";
 
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     // Top-level containers
     private final LayerSelectionPanel layerSelectionPanel;
@@ -181,6 +183,7 @@ public abstract class AnnotationDetailEditorPanel
     private Component createForwardAnnotationKeySequenceCapturingForm()
     {
         Form<Void> form = new Form<>("forwardForm");
+        form.setVisible(annotationEditorProperties.isForwardAnnotationEnabled());
 
         TextField<String> textfield = new TextField<>("forwardAnno");
         textfield.setModel(Model.of());

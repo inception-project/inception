@@ -40,8 +40,6 @@ public class CurationUnitOverviewLink
 
     private static final String CSS_CLASS_OUT_RANGE = "out-range";
     private static final String CSS_CLASS_IN_RANGE = "in-range";
-    private static final String CSS_CLASS_AGREE = "agree";
-    private static final String CSS_CLASS_DISAGREE = "disagree";
     private static final String CSS_CLASS_CURRENT = "current";
 
     private IModel<AnnotatorState> annotatorState;

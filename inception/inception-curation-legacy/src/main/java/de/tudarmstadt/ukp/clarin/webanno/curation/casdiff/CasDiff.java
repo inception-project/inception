@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -44,6 +45,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -77,8 +79,6 @@ public class CasDiff
     private Map<String, List<CAS>> cases = new LinkedHashMap<>();
 
     private final Map<Position, ConfigurationSet> configSets = new TreeMap<>();
-
-    private final Map<String, String[]> sortedFeaturesCache = new HashMap<>();
 
     private int begin;
 
@@ -633,21 +633,6 @@ public class CasDiff
             return false;
         }
 
-        assert type1.getNumberOfFeatures() == type2.getNumberOfFeatures();
-
-        // Sort features by name to be independent over implementation details that may change the
-        // order of the features as returned from Type.getFeatures().
-        String[] cachedSortedFeatures = sortedFeaturesCache.get(type1.getName());
-        if (cachedSortedFeatures == null) {
-            cachedSortedFeatures = new String[type1.getNumberOfFeatures()];
-            int i = 0;
-            for (Feature f : aFS1.getType().getFeatures()) {
-                cachedSortedFeatures[i] = f.getShortName();
-                i++;
-            }
-            sortedFeaturesCache.put(type1.getName(), cachedSortedFeatures);
-        }
-
         DiffAdapter adapter = typeAdapters.get(type1.getName());
 
         if (adapter == null) {
@@ -656,10 +641,17 @@ public class CasDiff
         }
 
         // Only consider label features. In particular these must not include position features
-        // such as begin, end, etc.
-        List<String> sortedFeatures = new ArrayList<>(asList(cachedSortedFeatures));
+        // such as begin, end, etc. Mind that the types may come from different CASes at different
+        // levels of upgrading, so it could be that the types actually have slightly different
+        // features.
         Set<String> labelFeatures = adapter.getLabelFeatures();
-        sortedFeatures.removeIf(f -> !labelFeatures.contains(f));
+        List<String> sortedFeatures = Stream
+                .concat(type1.getFeatures().stream().map(Feature::getShortName),
+                        type2.getFeatures().stream().map(Feature::getShortName)) //
+                .filter(labelFeatures::contains) //
+                .sorted() //
+                .distinct() //
+                .collect(toList());
 
         if (!recurseIntoLinkFeatures) {
             // #1795 Chili REC: We can/should change CasDiff2 such that it does not recurse into
