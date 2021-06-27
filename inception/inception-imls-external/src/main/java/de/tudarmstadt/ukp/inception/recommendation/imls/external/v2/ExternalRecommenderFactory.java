@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
@@ -27,13 +27,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config.ExternalRecommenderAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config.ExternalRecommenderProperties;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExternalRecommenderAutoConfiguration#externalRecommenderFactory}.
+ * {@link ExternalRecommenderAutoConfiguration#externalRecommenderFactoryV2}.
  * </p>
  */
 public class ExternalRecommenderFactory
@@ -41,7 +41,7 @@ public class ExternalRecommenderFactory
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalClassificationTool";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.ExternalClassificationTool";
 
     private final ExternalRecommenderProperties properties;
 
@@ -66,7 +66,7 @@ public class ExternalRecommenderFactory
     @Override
     public String getName()
     {
-        return "Remote classifier";
+        return "Remote classifier V2";
     }
 
     @Override

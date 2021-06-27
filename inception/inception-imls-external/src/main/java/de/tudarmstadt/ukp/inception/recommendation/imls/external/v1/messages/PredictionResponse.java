@@ -15,38 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ExternalRecommenderTraits
-    implements Serializable
+public class PredictionResponse
 {
-    private static final long serialVersionUID = -3109239605741337123L;
+    @JsonProperty("document")
+    private String document;
 
-    private String remoteUrl;
-    private boolean trainable;
-
-    public String getRemoteUrl()
+    public String getDocument()
     {
-        return remoteUrl;
+        return document;
     }
 
-    public void setRemoteUrl(String aRemoteUrl)
+    public void setDocument(String aDocument)
     {
-        remoteUrl = aRemoteUrl;
-    }
-
-    public boolean isTrainable()
-    {
-        return trainable;
-    }
-
-    public void setTrainable(boolean aTrainable)
-    {
-        trainable = aTrainable;
+        document = aDocument;
     }
 }

@@ -1,2 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderAutoConfiguration
+de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderAutoConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config.ExternalRecommenderAutoConfiguration

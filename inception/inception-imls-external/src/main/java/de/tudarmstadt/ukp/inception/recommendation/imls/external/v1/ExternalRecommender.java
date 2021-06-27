@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
@@ -65,12 +65,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderProperties;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.TrainingRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Metadata;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
 
 public class ExternalRecommender
     extends RecommendationEngine

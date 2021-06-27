@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.model;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
