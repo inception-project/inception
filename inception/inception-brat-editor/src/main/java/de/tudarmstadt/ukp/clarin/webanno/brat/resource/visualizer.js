@@ -54,7 +54,7 @@ var Visualizer = (function ($, window, undefined) {
     towers = {};
     // sizes = {};
 
-  constructor(text) {
+    constructor(text) {
       this.text = text;
     }
   }
@@ -67,7 +67,7 @@ var Visualizer = (function ($, window, undefined) {
     // towerId = undefined;
     // drawOrder = undefined;
 
-  constructor(id, span, from, to) {
+    constructor(id, span, from, to) {
       this.id = id;
       this.span = span;
       this.from = from;
@@ -259,7 +259,7 @@ var Visualizer = (function ($, window, undefined) {
     normalizations = [];
     // marked = undefined;
 
-   constructor(eventDesc, role, dist, eventNo) {
+    constructor(eventDesc, role, dist, eventNo) {
       this.origin = eventDesc.id;
       this.target = role.targetId;
       this.dist = dist;
