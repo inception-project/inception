@@ -1,8 +1,6 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -47,39 +45,45 @@ public class SearchResultsExporter
      * export(aWrapper.getAllResults(), aFilePath); }
      * 
      */
+    // try (CSVPrinter printer = new CSVPrinter(new BufferedWriter(new OutputStreamWriter(out)),
+    // CSVFormat.EXCEL)) {
 
-    public static void export(List<ResultsGroup> aSearchResults, String aFilePath)
+    public static InputStream generateCsv(List<ResultsGroup> aSearchResults) throws IOException
     {
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(aFilePath), CSVFormat.EXCEL)) {
-            printer.printRecord("text", "context left", "context right", "document name");
-            for (int i = 0; i < aSearchResults.size(); i++) {
-                // System.out.println(i);
-                // System.out.println(searchResults.get(i).getResults().size());
-                for (int j = 0; j < aSearchResults.get(i).getResults().size(); j++) {
-                    String text = aSearchResults.get(i).getResults().get(j).getText();
-                    String leftContext = aSearchResults.get(i).getResults().get(j).getLeftContext();
-                    String rightContext = aSearchResults.get(i).getResults().get(j)
-                            .getRightContext();
-                    String documentName = aSearchResults.get(i).getResults().get(j)
-                            .getDocumentTitle();
-                    printer.printRecord(text, leftContext, rightContext, documentName);
-                    // printer.printRecords(searchResults);
-
-                }
-                // blank line after each ResultsGroup
-                printer.println();
-            }
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
+                CSVFormat.RFC4180)) {
+            toCSV(aSearchResults, printer);
         }
-        catch (IOException ex) {
-            ex.printStackTrace();
+
+        return new ByteArrayInputStream(buf.toByteArray());
+    }
+
+    public static void toCSV(List<ResultsGroup> aSearchResults, CSVPrinter aOut) throws IOException
+    {
+        aOut.printRecord("text", "context left", "context right", "document name");
+        for (int i = 0; i < aSearchResults.size(); i++) {
+            // System.out.println(i);
+            // System.out.println(searchResults.get(i).getResults().size());
+            for (int j = 0; j < aSearchResults.get(i).getResults().size(); j++) {
+                String text = aSearchResults.get(i).getResults().get(j).getText();
+                String leftContext = aSearchResults.get(i).getResults().get(j).getLeftContext();
+                String rightContext = aSearchResults.get(i).getResults().get(j).getRightContext();
+                String documentName = aSearchResults.get(i).getResults().get(j).getDocumentTitle();
+                aOut.printRecord(text, leftContext, rightContext, documentName);
+                // printer.printRecords(searchResults);
+
+            }
+            // blank line after each ResultsGroup
+            aOut.println();
         }
     }
 
-    public static List<ResultsGroup> importCSV(String aFilePath)
+    public static List<ResultsGroup> importCSV(String aDataPath)
     {
         List<ResultsGroup> list = new ArrayList<ResultsGroup>();
         try {
-            Reader reader = Files.newBufferedReader(Paths.get(aFilePath));
+            Reader reader = Files.newBufferedReader(Paths.get(aDataPath));
             Iterable<CSVRecord> records = CSVFormat.EXCEL.parse(reader);
 
             int i = 0;

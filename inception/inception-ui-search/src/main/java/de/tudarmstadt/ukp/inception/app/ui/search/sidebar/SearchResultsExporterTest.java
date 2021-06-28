@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -160,13 +163,22 @@ public class SearchResultsExporterTest
 
         // resultsWrapper.initializeQuery(user, project, query, sourceDocument, );
         // System.out.println("vor export");
-        SearchResultsExporter.export(resultList, TEST_OUTPUT_FOLDER + "\\csv.txt");
+        try(OutputStream os = Files.newOutputStream(Paths.get(TEST_OUTPUT_FOLDER + "\\csv.txt"))) {
+            //Do something with is
+
+            //SearchResultsExporter.export(resultList, os);
+        }
         // SearchResultsExporter.export(mockedWrapper, TEST_OUTPUT_FOLDER + "\\csv2.txt");
         // System.out.println("nach export");
         List<ResultsGroup> reimported = SearchResultsExporter
                 .importCSV(TEST_OUTPUT_FOLDER + "\\csv.txt");
         // System.out.println("nach import");
-        SearchResultsExporter.export(reimported, TEST_OUTPUT_FOLDER + "\\rerelease.txt");
+        try(OutputStream os = Files.newOutputStream(Paths.get(TEST_OUTPUT_FOLDER + "\\rerelease.txt"))) {
+            //Do something with is
+
+            //SearchResultsExporter.export(resultList, os);
+        }
+        //SearchResultsExporter.export(reimported, TEST_OUTPUT_FOLDER + "\\rerelease.txt");
         // System.out.println(("nach export2"));
 
         assertEquals(reimported.size(), resultList.size());

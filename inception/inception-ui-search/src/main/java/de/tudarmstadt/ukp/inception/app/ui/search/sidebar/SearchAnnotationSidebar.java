@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -53,6 +54,9 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.*;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.AbstractResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -77,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
@@ -153,11 +158,52 @@ public class SearchAnnotationSidebar
         searchForm.add(new TextArea<>("queryInput", targetQuery));
         LambdaAjaxButton<SearchOptions> searchButton = new LambdaAjaxButton<>("search",
                 this::actionSearch);
-        LambdaAjaxButton<SearchOptions> exportButton = new LambdaAjaxButton<>("export",
-                this::actionExport);
-        searchForm.add(exportButton);
+        // LambdaAjaxButton<SearchOptions> exportButton = new LambdaAjaxButton<>("export",
+        // this::actionExport);
+        // searchForm.add(exportButton);
         searchForm.add(searchButton);
-        // searchForm.setDefaultButton(searchButton);
+
+        /*
+         * 
+         * searchForm.add(new DownloadLink("download", LoadableDetachableModel.of(() ->
+         * getGazeteerFile(gazeteer)), gazeteer.getName()));
+         * 
+         * searchForm.add(new AjaxDownloadLink("export", new
+         * LambdaModel<>(this::getExportLayerFileName).autoDetaching(), this::exportLayer));
+         */
+        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults",
+                this::exportSearchResults);
+        exportButton.add(visibleWhen(() -> groupedSearchResults.getObject() != null
+                && !groupedSearchResults.getObject().isEmpty()));
+        searchForm.add(exportButton);
+
+        // searchForm.add(new AjaxDownloadLink("export", LoadableDetachableModel.of(this::export)));
+
+        /*
+         * Link<Void> streamDownloadLink = new Link<Void>("link3") {
+         * 
+         * @Override public void onClick() {
+         * 
+         * AbstractResourceStreamWriter rstream = new AbstractResourceStreamWriter() {
+         * SearchResultsExporter.export()
+         * 
+         * 
+         * /*
+         * 
+         * @Override public void write(OutputStream output) throws IOException {
+         * output.write(getContent()); }
+         * 
+         * 
+         * };
+         * 
+         * ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(rstream,
+         * "test.csv"); getRequestCycle().scheduleRequestHandlerAfterCurrent(handler); } };
+         * 
+         * add(streamDownloadLink);
+         * 
+         */
+
+        searchForm.setDefaultButton(searchButton);
         // searchForm.setDefaultButton()
         mainContainer.add(searchForm);
 
@@ -399,11 +445,40 @@ public class SearchAnnotationSidebar
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private void actionExport(AjaxRequestTarget aTarget, Form<SearchOptions> aForm)
+    private IResourceStream exportSearchResults()
     {
-        SearchResultsExporter.export(resultsProvider.getAllResults(),
-                "D:\\Falko\\Documents\\UKP\\csv.txt");
+        return new AbstractResourceStream()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public InputStream getInputStream() throws ResourceStreamNotFoundException
+            {
+
+                try {
+                    return SearchResultsExporter.generateCsv(resultsProvider.getAllResults());
+                }
+                catch (Exception e) {
+                    // FIXME Is there some better error handling here?
+                    LOG.error("Unable to generate report", e);
+                    throw new ResourceStreamNotFoundException(e);
+                }
+            }
+
+            @Override
+            public void close() throws IOException
+            {
+                // Nothing to do
+            }
+        };
     }
+    /*
+     * 
+     * private void actionExport(AjaxRequestTarget aTarget, Form<SearchOptions> aForm) { //
+     * SearchResultsExporter.export(resultsProvider.getAllResults(), //
+     * "D:\\Falko\\Documents\\UKP\\csv.txt"); }
+     * 
+     */
 
     private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
