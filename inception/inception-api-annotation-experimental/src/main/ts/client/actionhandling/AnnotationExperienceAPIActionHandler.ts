@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPI} from "../AnnotationExperienceAPI";
+import {AnnotationExperienceAPIImpl} from "../AnnotationExperienceAPI";
 
 export class AnnotationExperienceAPIActionHandler {
-    annotationExperienceAPI: AnnotationExperienceAPI;
+    annotationExperienceAPI: AnnotationExperienceAPIImpl;
 
-    constructor(aAnnotationExperienceAPI: AnnotationExperienceAPI) {
+    constructor(aAnnotationExperienceAPI: AnnotationExperienceAPIImpl) {
         this.annotationExperienceAPI = aAnnotationExperienceAPI;
     }
 
@@ -87,13 +87,8 @@ export class AnnotationExperienceAPIActionHandler {
             let elem = <Element>aEvent.target;
             console.log(elem)
             if (elem.tagName === 'rect') {
-
-            }
-            if (elem.className === 'fas fa-step-backward') {
-                that.annotationExperienceAPI.visualizer.showText("editor_left");
-            }
-            if (elem.className === 'fas fa-step-forward') {
-                that.annotationExperienceAPI.sendDocumentMessageToServer("admin", "41714", [[30,40],[40,50],[0,10],[17,18],[19,19]],"word")
+                //TODO for correct user
+                that.annotationExperienceAPI.sendSelectAnnotationMessageToServer("admin", elem.attributes[4].value)
             }
         }
 

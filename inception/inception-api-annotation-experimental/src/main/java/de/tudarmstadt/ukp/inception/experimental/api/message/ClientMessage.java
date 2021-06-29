@@ -3,6 +3,7 @@ package de.tudarmstadt.ukp.inception.experimental.api.message;
 public class ClientMessage
 {
     private String username;
+    private String clientName;
     private long project;
     private long document;
     private int[][] viewport;
@@ -16,6 +17,14 @@ public class ClientMessage
     public ClientMessage()
     {
         //Default
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
     public String getUsername()

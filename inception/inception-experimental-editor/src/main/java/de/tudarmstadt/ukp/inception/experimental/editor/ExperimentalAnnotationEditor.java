@@ -42,12 +42,11 @@ public class ExperimentalAnnotationEditor
     private static final long serialVersionUID = 2983502506977571078L;
 
     private @SpringBean ServletContext servletContext;
+
     public ExperimentalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-
-
     }
 
     @Override

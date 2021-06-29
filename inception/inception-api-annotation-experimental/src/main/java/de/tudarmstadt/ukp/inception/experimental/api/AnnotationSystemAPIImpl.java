@@ -29,7 +29,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.MDC;
-import org.springframework.asm.Type;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -72,14 +71,12 @@ public class AnnotationSystemAPIImpl
             AnnotationProcessAPI aAnnotationProcessAPI,
             AnnotationSchemaService annotationSchemaService)
     {
-
         projectService = aProjectService;
         documentService = aDocumentService;
         userDao = aUserDao;
         repositoryProperties = aRepositoryProperties;
         annotationProcessAPI = aAnnotationProcessAPI;
         this.annotationService = annotationSchemaService;
-
     }
 
     @Override
@@ -94,22 +91,24 @@ public class AnnotationSystemAPIImpl
                 // TODO receive random new document
                 cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
                         41714);
-                message.setId(41714);
+                message.setDocument(41714);
             }
             else {
                 cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
                         aClientMessage.getDocument());
 
-                message.setId(
+                message.setDocument(
                         toIntExact(documentService.getSourceDocument(aClientMessage.getProject(),
                                 aClientMessage.getDocument()).getId()));
             }
 
             message.setViewportText(getViewportText(aClientMessage, cas));
 
-            message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
+            message.setAnnotations(
+                    filterAnnotations(getAnnotations(cas, aClientMessage.getProject()),
+                            aClientMessage.getViewport()));
 
-            annotationProcessAPI.handleSendDocumentRequest(message, aClientMessage.getUsername());
+            annotationProcessAPI.handleSendDocumentRequest(message, aClientMessage.getClientName());
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -127,9 +126,10 @@ public class AnnotationSystemAPIImpl
 
         message.setViewportText(getViewportText(aClientMessage, cas));
 
-        message.setAnnotations(getAnnotations(cas, aClientMessage.getProject()));
+        message.setAnnotations(filterAnnotations(getAnnotations(cas, aClientMessage.getProject()),
+                aClientMessage.getViewport()));
 
-        annotationProcessAPI.handleSendViewportRequest(message, aClientMessage.getUsername());
+        annotationProcessAPI.handleSendViewportRequest(message, aClientMessage.getClientName());
 
     }
 
@@ -140,14 +140,10 @@ public class AnnotationSystemAPIImpl
                 aClientMessage.getDocument());
         AnnotationFS annotation = selectAnnotationByAddr(cas,
                 aClientMessage.getAnnotationAddress());
-        AnnotationMessage message = new AnnotationMessage();
-        message.setId(String.valueOf(annotation._id()));
-        message.setBegin(annotation.getBegin());
-        message.setEnd(annotation.getEnd());
-
-        message.setType(annotation.getType().getShortName());
-        message.setText(annotation.getCoveredText());
-        annotationProcessAPI.handleSendSelectAnnotation(message, aClientMessage.getUsername());
+        AnnotationMessage message = new AnnotationMessage(String.valueOf(annotation._id()),
+                annotation.getBegin(), annotation.getEnd(), annotation.getType().getShortName(),
+                annotation.getCoveredText());
+        annotationProcessAPI.handleSendSelectAnnotation(message, aClientMessage.getClientName());
     }
 
     @Override
@@ -155,11 +151,8 @@ public class AnnotationSystemAPIImpl
     {
         CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
                 aClientMessage.getDocument());
-
         // TODO createAnnotation
-        System.out.println(Type.getType(aClientMessage.getAnnotationType()));
-
-        // cas.createAnnotation(aClientMessage.getAnnotationType()),
+        // cas.createAnnotation(aClientMessage.getAnnotationType(),
         // aClientMessage.getAnnotationOffsetBegin(), aClientMessage.getAnnotationOffsetEnd());
         // TODO retrieve desired content and fill AnnotationMessage
         AnnotationMessage message = new AnnotationMessage();
@@ -263,7 +256,7 @@ public class AnnotationSystemAPIImpl
             }
             return visibleSentences.toArray(new Character[0]);
         default:
-            System.err.println("Offset type not found, only: ");
+            System.err.println("Offset type not found");
         }
         return null;
     }
@@ -300,5 +293,12 @@ public class AnnotationSystemAPIImpl
         }
 
         return annotations;
+    }
+
+    @Override
+    public List<Annotation> filterAnnotations(List<Annotation> aAnnotations, int[][] aViewport)
+    {
+        // TODO correct filtering
+        return aAnnotations;
     }
 }

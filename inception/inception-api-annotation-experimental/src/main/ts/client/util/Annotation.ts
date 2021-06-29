@@ -6,10 +6,6 @@ export class Annotation
     end: number;
     type: string;
 
-    constructor()
-    {
-    }
-
     constructor(aId: string, aWord: string, aBegin: number, aEnd: number, aType: string)
     {
         this.id = aId;

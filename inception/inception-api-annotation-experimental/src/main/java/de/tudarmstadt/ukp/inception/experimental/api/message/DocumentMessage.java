@@ -23,18 +23,18 @@ import de.tudarmstadt.ukp.inception.experimental.api.Annotation;
 
 public class DocumentMessage
 {
-    private int id;
+    private int document;
     private Character[] viewportText;
     private List<Annotation> annotations;
 
-    public int getId()
+    public int getDocument()
     {
-        return id;
+        return document;
     }
 
-    public void setId(int  aId)
+    public void setDocument(int aDocument)
     {
-        id = aId;
+        document = aDocument;
     }
 
     public Character[] getViewportText()

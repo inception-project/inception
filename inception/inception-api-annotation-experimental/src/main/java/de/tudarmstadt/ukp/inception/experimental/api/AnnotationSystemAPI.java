@@ -54,4 +54,6 @@ public interface AnnotationSystemAPI
 
     List<Annotation> getAnnotations(CAS aCas, long aProject);
 
+    List<Annotation> filterAnnotations(List <Annotation> aAnnotations, int[][] aViewport);
+
 }
