@@ -1913,7 +1913,7 @@ var AnnotatorUI = (function($, window, undefined) {
           
           // If using the selection was not successful, try using the ranges instead. This should
           // work on Firefox.
-          if (anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) {
+          if ((anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) && sel.type != "None") {
             anchorNode = $(sel.getRangeAt(0).startContainer).closest('*[data-chunk-id]');
             anchorOffset = sel.getRangeAt(0).startOffset;
             focusNode = $(sel.getRangeAt(sel.rangeCount - 1).endContainer).closest('*[data-chunk-id]');

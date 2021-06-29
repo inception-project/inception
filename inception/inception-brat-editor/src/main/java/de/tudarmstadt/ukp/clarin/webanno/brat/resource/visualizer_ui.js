@@ -322,7 +322,7 @@ var VisualizerUI = (function ($, window, undefined) {
         // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
         // - Show/hide comments immediately instead of using an animation to avoid costly reflows
         /*
-                                commentPopup.stop(true, true).fadeIn(0);
+        commentPopup.stop(true, true).fadeIn(0);
         */
         commentPopup.show();
         // END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
@@ -341,11 +341,13 @@ var VisualizerUI = (function ($, window, undefined) {
       return Util.cmp(a[2], b[2]);
     }
 
-    var displaySpanComment = function (
-      evt, target, spanId, spanType, mods, spanText, hoverText, commentText, commentType, normalizations) {
+    var displaySpanComment = function (evt, target, spanId, spanType, mods, spanText, hoverText,
+      commentText, commentType, normalizations) {
 
       var immediately = false;
-      var comment = ('<div><span class="comment_type_id_wrapper">' + '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, spanType)) + '</span>' + ' ' + '<span class="comment_id">' + 'ID:' + Util.escapeHTML(spanId) + '</span></span>');
+      var comment = ('<div><span class="comment_type_id_wrapper">' +
+        '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, spanType)) + '</span>' + ' ' +
+        '<span class="comment_id">' + 'ID:' + Util.escapeHTML(spanId) + '</span></span>');
       if (mods.length) {
         comment += '<div>' + Util.escapeHTML(mods.join(', ')) + '</div>';
       }
@@ -379,14 +381,17 @@ var VisualizerUI = (function ($, window, undefined) {
       $.each(normsToQuery, (normNo, norm) => initiateNormalizationAjaxCall(spanId, spanType, norm));
     };
 
-    var displayArcComment = function (
-      evt, target, symmetric, arcId, originSpanId, originSpanType, role, targetSpanId, targetSpanType, commentText, commentType, normalizations) {
+    var displayArcComment = function (evt, target, symmetric, arcId, originSpanId, originSpanType,
+      role, targetSpanId, targetSpanType, commentText, commentType, normalizations) {
       var arcRole = target.attr('data-arc-role');
       // in arrowStr, &#8212 == mdash, &#8594 == Unicode right arrow
       var arrowStr = symmetric ? '&#8212;' : '&#8594;';
       var arcDisplayForm = Util.arcDisplayForm(spanTypes, data.spans[originSpanId].type, arcRole, relationTypesHash);
       var comment = "";
-      comment += ('<span class="comment_type_id_wrapper">' + '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, originSpanType)) + ' ' + arrowStr + ' ' + Util.escapeHTML(arcDisplayForm) + ' ' + arrowStr + ' ' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, targetSpanType)) + '</span>' + '<span class="comment_id">' + (arcId ? 'ID:' + arcId : Util.escapeHTML(originSpanId) + arrowStr + Util.escapeHTML(targetSpanId)) + '</span>' + '</span>');
+      comment += ('<span class="comment_type_id_wrapper">' +
+        '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, originSpanType)) + ' ' + arrowStr + ' ' + Util.escapeHTML(arcDisplayForm) + ' ' + arrowStr + ' ' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, targetSpanType)) + '</span>' +
+        '<span class="comment_id">' + (arcId ? 'ID:' + arcId : Util.escapeHTML(originSpanId) + arrowStr + Util.escapeHTML(targetSpanId)) + '</span>' +
+        '</span>');
       comment += ('<div class="comment_text">' + Util.escapeHTML('"' + data.spans[originSpanId].text + '"') + arrowStr + Util.escapeHTML('"' + data.spans[targetSpanId].text + '"') + '</div>');
 
       // process normalizations

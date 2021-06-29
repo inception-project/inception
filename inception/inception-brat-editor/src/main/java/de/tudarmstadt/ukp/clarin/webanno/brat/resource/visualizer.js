@@ -38,9 +38,11 @@ var Visualizer = (function ($, window, undefined) {
     spanAnnTexts = {};
     towers = {};
     spanDrawOrderPermutation = []
-    // sizes = {};
+    sizes = {};
 
     constructor(text) {
+      Object.seal(this);
+
       this.text = text;
     }
   }
@@ -50,10 +52,33 @@ var Visualizer = (function ($, window, undefined) {
     span;
     from;
     to;
-    // towerId = undefined;
-    // drawOrder = undefined;
+    rectBox;
+    text;
+    chunk;
+    indexNumber;
+    drawOrder;
+    towerId;
+    curly;
+    drawCurly = false;
+    labelText;
+    glyphedLabelText;
+    group;
+    rect;
+    left;
+    right;
+    width;
+    height;
+    nestingHeight;
+    nestingHeightLR;
+    nestingHeightRL;
+    nestingDepth;
+    nestingDepthLR;
+    nestingDepthRL;
+    highlightPos;
 
     constructor(id, span, from, to) {
+      Object.seal(this);
+
       this.id = id;
       this.span = span;
       this.from = from;
@@ -67,7 +92,7 @@ var Visualizer = (function ($, window, undefined) {
     totalDist = 0;
     numArcs = 0;
     generalType;
-    headFragment = null;
+    headFragment = null; // Fragment
     unsegmentedOffsets;
     offsets = [];
     segmentedOffsetsMap = {};
@@ -81,39 +106,22 @@ var Visualizer = (function ($, window, undefined) {
     attributeCueFor = {};
     attributeMerge = {}; // for box, cross, etc. that are span-global
     fragments = [];
+    normalized;
     normalizations = [];
-    // from = undefined;
-    // to = undefined;
-    // wholeFrom = undefined;
-    // wholeTo = undefined;
-    // headFragment = undefined;
-    // chunk = undefined;
-    // marked = undefined;
-    // avgDist = undefined;
-    // curly = undefined;
-    // comment = undefined; // { type: undefined, text: undefined };
-    // annotatorNotes = undefined;
-    // drawCurly = undefined;
-    // glyphedLabelText = undefined;
-    // group = undefined;
-    // height = undefined;
-    // highlightPos = undefined;
-    // indexNumber = undefined;
-    // labelText = undefined;
-    // nestingDepth = undefined;
-    // nestingDepthLR = undefined;
-    // nestingDepthRL = undefined;
-    // nestingHeight = undefined;
-    // nestingHeightLR = undefined;
-    // nestingHeightRL = undefined;
-    // rect = undefined;
-    // rectBox = undefined;
-    // refedIndexSum = undefined;
-    // right = undefined;
-    // totaldist = undefined;
-    // width = undefined;
+    wholeFrom = undefined;
+    wholeTo = undefined;
+    comment = undefined; // { type: undefined, text: undefined };
+    drawCurly = false;
+    labelText;
+    refedIndexSum = undefined;
+    color;
+    shadowClass;
+    floor;
+    marked;
 
     constructor(id, type, offsets, generalType) {
+      Object.seal(this);
+
       this.id = id;
       this.type = type;
       this.unsegmentedOffsets = offsets;
@@ -184,21 +192,18 @@ var Visualizer = (function ($, window, undefined) {
     // leftSpans = undefined;
     // rightSpans = undefined;
     // annotatorNotes = undefined;
-    // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
-    // labelText = undefined;
-    // color = undefined
-    // WEBANNO EXTENSION END
+    labelText = undefined;
+    color = undefined
 
     constructor(id, triggerId, roles, klass) {
+      Object.seal(this);
+      
       this.id = id;
       this.triggerId = triggerId;
-      var roleList = this.roles = [];
-      $.each(roles, (roleNo, role) => roleList.push({ type: role[0], targetId: role[1] }));
-      if (klass == "equiv") {
-        this.equiv = true;
-      } else if (klass == "relation") {
-        this.relation = true;
-      }
+      roles.forEach(role => this.roles.push({ type: role[0], targetId: role[1] }));
+
+      this.equiv = klass == "equiv";
+      this.relation = klass == "relation";
     }
   }
 
@@ -209,18 +214,23 @@ var Visualizer = (function ($, window, undefined) {
     to;
     space;
     fragments = [];
-    // sentence = undefined;
-    // group = undefined;
-    // highlightGroup = undefined;
-    // markedTextStart = undefined;
-    // markedTextEnd = undefined;
-    // nextSpace = undefined;
-    // right = undefined;
-    // row = undefined;
-    // textX = undefined;
-    // translation = undefined;
+    lastSpace;
+    nextSpace;
+    sentence = undefined;
+    group = undefined;
+    highlightGroup = undefined;
+    markedTextStart = undefined;
+    markedTextEnd = undefined;
+    right = undefined;
+    row = undefined;
+    textX = undefined;
+    translation = undefined;
+    firstFragmentIndex;
+    lastFragmentIndex;
 
     constructor(index, text, from, to, space, spans) {
+      Object.seal(this);
+
       this.index = index;
       this.text = text;
       this.from = from;
@@ -241,14 +251,17 @@ var Visualizer = (function ($, window, undefined) {
     relation = false;
     eventDescId;
     normalizations = [];
-    // marked = undefined;
+    marked;
 
     constructor(eventDesc, role, dist, eventNo) {
+      Object.seal(this);
+
       this.origin = eventDesc.id;
       this.target = role.targetId;
       this.dist = dist;
       this.type = role.type;
       this.shadowClass = eventDesc.shadowClass;
+
       if (eventDesc.equiv) {
         this.equiv = true;
         this.eventDescId = eventNo;
@@ -267,15 +280,20 @@ var Visualizer = (function ($, window, undefined) {
     hasAnnotations = false;
     maxArcHeight = 0;
     maxSpanHeight = 0;
+    sentence;
+    index;
+    backgroundIndex;
+    arcs;
+    heightsStart;
+    heightsEnd;
+    heightsAdjust;
+    textY;
+    translation;
 
     constructor(svg) {
-      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      /*
-      this.group = svg.group();
-       */
       this.group = svg.group({ 'class': 'row' });
-      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
       this.background = svg.group(this.group);
+      Object.seal(this);
     }
   }
 
@@ -285,69 +303,13 @@ var Visualizer = (function ($, window, undefined) {
     y;
 
     constructor(widths, height, y) {
+      Object.seal(this);
+
       this.widths = widths;
       this.height = height;
       this.y = y;
     }
   }
-
-  // A naive whitespace tokeniser
-  var tokenise = function (text) {
-    var tokenOffsets = [];
-    var tokenStart = null;
-    var lastCharPos = null;
-
-    for (var i = 0; i < text.length; i++) {
-      var c = text[i];
-      // Have we found the start of a token?
-      if (tokenStart == null && !/\s/.test(c)) {
-        tokenStart = i;
-        lastCharPos = i;
-        // Have we found the end of a token?
-      } else if (/\s/.test(c) && tokenStart != null) {
-        tokenOffsets.push([tokenStart, i]);
-        tokenStart = null;
-        // Is it a non-whitespace character?
-      } else if (!/\s/.test(c)) {
-        lastCharPos = i;
-      }
-    }
-    // Do we have a trailing token?
-    if (tokenStart != null) {
-      tokenOffsets.push([tokenStart, lastCharPos + 1]);
-    }
-
-    return tokenOffsets;
-  };
-
-  // A naive newline sentence splitter
-  var sentenceSplit = function (text) {
-    var sentenceOffsets = [];
-    var sentStart = null;
-    var lastCharPos = null;
-
-    for (var i = 0; i < text.length; i++) {
-      var c = text[i];
-      // Have we found the start of a sentence?
-      if (sentStart == null && !/\s/.test(c)) {
-        sentStart = i;
-        lastCharPos = i;
-        // Have we found the end of a sentence?
-      } else if (c == '\n' && sentStart != null) {
-        sentenceOffsets.push([sentStart, i]);
-        sentStart = null;
-        // Is it a non-whitespace character?
-      } else if (!/\s/.test(c)) {
-        lastCharPos = i;
-      }
-    }
-    // Do we have a trailing sentence without a closing newline?
-    if (sentStart != null) {
-      sentenceOffsets.push([sentStart, lastCharPos + 1]);
-    }
-
-    return sentenceOffsets;
-  };
 
   // Sets default values for a wide range of optional attributes
   var setSourceDataDefaults = function (sourceData) {
@@ -415,6 +377,7 @@ var Visualizer = (function ($, window, undefined) {
 
     svg;
     $svg;
+    $svgDiv;
     _svg;
 
     baseCanvasWidth = 0;
@@ -423,6 +386,7 @@ var Visualizer = (function ($, window, undefined) {
     data = null;
     sourceData = null;
     requestedData = null;
+    renderErrors;
 
     coll = null;
     doc = null;
@@ -430,7 +394,8 @@ var Visualizer = (function ($, window, undefined) {
 
     isRenderRequested;
     drawing = false;
-    redraw = false;  
+    redraw = false;
+    arcDragOrigin;
 
     relationTypesHash;
     isCollectionLoaded = false;
@@ -441,78 +406,89 @@ var Visualizer = (function ($, window, undefined) {
     collapseArcs = false;
     collapseArcSpace = false;
 
+    highlight;
+    highlightArcs;
+    highlightSpans;
+    commentId;
+
+    // OPTIONS
+    roundCoordinates = true; // try to have exact pixel offsets
+    boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
+    highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
+    spaceWidths = {
+      ' ': 4,
+      '\u00a0': 4,
+      '\u200b': 0,
+      '\u3000': 8,
+      '\t': 12,
+      '\n': 4
+    };
+    coloredCurlies = true; // color curlies by box BG
+    arcSlant = 15; //10;
+    minArcSlant = 8;
+    arcHorizontalSpacing = 10; // min space boxes with connecting arc
+    rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
+
+    sentNumMargin = 40;
+    smoothArcCurves = true; // whether to use curves (vs lines) in arcs
+    smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
+    reverseArcControlx = 5; // control point distance for "UFO catchers"
+
+    // "shadow" effect settings (note, error, incompelete)
+    rectShadowSize = 3;
+    rectShadowRounding = 2.5;
+    arcLabelShadowSize = 1;
+    arcLabelShadowRounding = 5;
+    shadowStroke = 2.5; // TODO XXX: this doesn't affect anything..?
+
+    // "marked" effect settings (edited, focus, match)
+    markedSpanSize = 6;
+    markedArcSize = 2;
+    markedArcStroke = 7; // TODO XXX: this doesn't seem to do anything..?
+
+    rowPadding = 2;
+    nestingAdjustYStepSize = 2; // size of height adjust for nested/nesting spans
+    nestingAdjustXStepSize = 1; // size of height adjust for nested/nesting spans
+
+    highlightSpanSequence;
+    highlightArcSequence;
+    highlightTextSequence;
+    highlightDuration = '2s';
+    // different sequence for "mere" matches (as opposed to "focus" and "edited" highlights)
+    highlightMatchSequence = '#FFFF00'; // plain yellow
+
+    fragmentConnectorDashArray = '1,3,3,3';
+    fragmentConnectorColor = '#000000';
+    // END OPTIONS
+
+    commentPrioLevels = [
+      'Unconfirmed', 'Incomplete', 'Warning', 'Error', 'AnnotatorNotes',
+      'AddedAnnotation', 'MissingAnnotation', 'ChangedAnnotation'
+    ];
+
     constructor(dispatcher, svgId) {
+      Object.seal(this);
+
       this.dispatcher = dispatcher;
       this.$svgDiv = $('#' + svgId);
       if (!this.$svgDiv.length) {
         throw Error('Could not find container with id="' + svgId + '"');
       }
-
-      // OPTIONS
-      this.roundCoordinates = true; // try to have exact pixel offsets
-      this.boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
-      this.highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
-      this.spaceWidths = {
-        ' ': 4,
-        '\u00a0': 4,
-        '\u200b': 0,
-        '\u3000': 8,
-        '\t': 12,
-        '\n': 4
-      };
-      this.coloredCurlies = true; // color curlies by box BG
-      this.arcSlant = 15; //10;
-      this.minArcSlant = 8;
-      this.arcHorizontalSpacing = 10; // min space boxes with connecting arc
-      this.rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
-
-      // BEGIN WEBANNO EXTENSION - #361 - Sentence numbers are cropped
-      /*
-            var sentNumMargin = 20;
-      */
-      this.sentNumMargin = 40;
-      // END WEBANNO EXTENSION
-      this.smoothArcCurves = true; // whether to use curves (vs lines) in arcs
-      this.smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
-      this.reverseArcControlx = 5; // control point distance for "UFO catchers"
-
-      // "shadow" effect settings (note, error, incompelete)
-      this.rectShadowSize = 3;
-      this.rectShadowRounding = 2.5;
-      this.arcLabelShadowSize = 1;
-      this.arcLabelShadowRounding = 5;
-      this.shadowStroke = 2.5; // TODO XXX: this doesn't affect anything..?
-
-      // "marked" effect settings (edited, focus, match)
-      this.markedSpanSize = 6;
-      this.markedArcSize = 2;
-      this.markedArcStroke = 7; // TODO XXX: this doesn't seem to do anything..?
-
-      this.rowPadding = 2;
-      this.nestingAdjustYStepSize = 2; // size of height adjust for nested/nesting spans
-      this.nestingAdjustXStepSize = 1; // size of height adjust for nested/nesting spans
-
-      this.highlightSequence = '#FF9632;#FFCC00;#FF9632'; // yellow - deep orange
+      // create the svg wrapper
+      this.$svgDiv = $(this.$svgDiv).hide();
+      this.$svgDiv.svg({
+        onLoad: (_svg) => {
+          this.svg = Visualizer.svg = _svg;
+          this.$svg = $(this.svg._svg);
+          this.triggerRender();
+        }
+      });
 
       //var highlightSequence = '#FFFC69;#FFCC00;#FFFC69'; // a bit toned town
-      this.highlightSpanSequence = this.highlightSequence;
-      this.highlightArcSequence = this.highlightSequence;
-      this.highlightTextSequence = this.highlightSequence;
-      this.highlightDuration = '2s';
-      // different sequence for "mere" matches (as opposed to "focus" and
-      // "edited" highlights)
-      this.highlightMatchSequence = '#FFFF00'; // plain yellow
-
-      this.fragmentConnectorDashArray = '1,3,3,3';
-      this.fragmentConnectorColor = '#000000';
-      // END OPTIONS
-
-      // var commentPrioLevels = ['Unconfirmed', 'Incomplete', 'Warning', 'Error', 'AnnotatorNotes'];
-      // XXX Might need to be tweaked - inserted diff levels
-      this.commentPrioLevels = [
-        'Unconfirmed', 'Incomplete', 'Warning', 'Error', 'AnnotatorNotes',
-        'AddedAnnotation', 'MissingAnnotation', 'ChangedAnnotation'
-      ];
+      var highlightSequence = '#FF9632;#FFCC00;#FF9632'; // yellow - deep orange
+      this.highlightSpanSequence = highlightSequence;
+      this.highlightArcSequence = highlightSequence;
+      this.highlightTextSequence = highlightSequence;
 
       this.arcDragOrigin = null; // TODO
 
@@ -521,13 +497,6 @@ var Visualizer = (function ($, window, undefined) {
         annotationFileNotFound: true,
         isDirectoryError: true
       };
-
-      this.highlight;
-      this.highlightArcs;
-      this.highlightSpans;
-      this.commentId;
-
-      this.$svgDiv = $(this.$svgDiv).hide();
 
       this.registerHandlers(this.$svgDiv, [
         'mouseover', 'mouseout', 'mousemove', 'mouseup', 'mousedown',
@@ -544,25 +513,12 @@ var Visualizer = (function ($, window, undefined) {
         'resize'
       ]);
 
-      // create the svg wrapper
-      this.$svgDiv.svg({
-        onLoad: (_svg) => {
-          this.svg = Visualizer.svg = _svg;
-          this.$svg = $(this.svg._svg);
-          this.triggerRender();
-        }
-      });
-
       dispatcher.
         on('collectionChanged', this, this.collectionChanged).
         on('collectionLoaded', this, this.collectionLoaded).
         on('renderData', this, this.renderData).
-        // BEGIN WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
         on('rerender', this, this.rerender).
-        // END WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
-        // BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
         on('renderDataPatch', this, this.renderDataPatch).
-        // END WEBANNO EXTENSION - #790 - Differential updates for brat view 
         on('triggerRender', this, this.triggerRender).
         on('requestRenderData', this, this.requestRenderData).
         on('isReloadOkay', this, this.isReloadOkay).
@@ -577,9 +533,9 @@ var Visualizer = (function ($, window, undefined) {
         on('mouseout', this, this.onMouseOut);
     }
 
-    rowBBox(span) {
-      var box = $.extend({}, span.rectBox); // clone
-      var chunkTranslation = span.chunk.translation;
+    rowBBox(fragment) {
+      var box = $.extend({}, fragment.rectBox); // clone
+      var chunkTranslation = fragment.chunk.translation;
       box.x += chunkTranslation.x;
       box.y += chunkTranslation.y;
       return box;
@@ -3401,8 +3357,8 @@ var Visualizer = (function ($, window, undefined) {
           var left = span.fragments[connectorNo];
           var right = span.fragments[connectorNo + 1];
 
-          var leftBox = rowBBox(left);
-          var rightBox = rowBBox(right);
+          var leftBox = this.rowBBox(left);
+          var rightBox = this.rowBBox(right);
           var leftRow = left.chunk.row.index;
           var rightRow = right.chunk.row.index;
 
@@ -3411,26 +3367,14 @@ var Visualizer = (function ($, window, undefined) {
             if (row.chunks.length) {
               row.hasAnnotations = true;
 
-              // WEBANNO EXTENSION BEGIN - RTL support - split fragments connector line
-              /*
-              if (rowIndex == leftRow) {
-                from = leftBox.x + leftBox.width;
-              } else {
-                from = this.sentNumMargin;
-              }
-
-              if (rowIndex == rightRow) {
-                to = rightBox.x;
-              } else {
-                to = this.canvasWidth - 2 * Configuration.visual.margin.y;
-              }
-              */
+              var from;
               if (rowIndex == leftRow) {
                 from = this.rtlmode ? leftBox.x : leftBox.x + leftBox.width;
               } else {
                 from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin;
               }
 
+              var to;
               if (rowIndex == rightRow) {
                 to = this.rtlmode ? rightBox.x + rightBox.width : rightBox.x;
               } else {
@@ -3445,8 +3389,8 @@ var Visualizer = (function ($, window, undefined) {
 
               var path = this.svg.createPath().move(from, height).line(to, height);
               this.svg.path(row.arcs, path, {
-                style: 'stroke: ' + fragmentConnectorColor,
-                'strokeDashArray': fragmentConnectorDashArray
+                style: 'stroke: ' + this.fragmentConnectorColor,
+                'strokeDashArray': this.fragmentConnectorDashArray
               });
             }
           } // rowIndex
@@ -4176,32 +4120,31 @@ var Visualizer = (function ($, window, undefined) {
       }, 0);
     }
 
-    // BEGIN WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
     rerender() {
-      this.dispatcher.post('startedRendering', [coll, doc, args]);
+      this.dispatcher.post('startedRendering', [this.coll, this.doc, this.args]);
       this.dispatcher.post('spin');
-      //setTimeout(function() {
       try {
-        this.renderDataReal(sourceData);
+        this.renderDataReal(this.sourceData);
       } catch (e) {
         // We are sure not to be drawing anymore, reset the state
         this.drawing = false;
         // TODO: Hook printout into dispatch elsewhere?
         console.warn('Rendering terminated due to: ' + e, e.stack);
-        this.dispatcher.post('renderError: Fatal', [sourceData, e]);
+        this.dispatcher.post('renderError: Fatal', [this.sourceData, e]);
       }
       this.dispatcher.post('unspin');
-      //}, 0);
     }
-    // END WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
 
-    // BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
+    /**
+     * Differential updates for brat view.
+     * 
+     * @param {*} patchData 
+     */
     renderDataPatch(patchData) {
       Util.profileEnd('invoke getDocument');
-      sourceData = jsonpatch.applyPatch(sourceData, patchData).newDocument;
-      rerender();
+      this.sourceData = jsonpatch.applyPatch(this.sourceData, patchData).newDocument;
+      this.rerender();
     }
-    // END WEBANNO EXTENSION - #790 - Differential updates for brat view 
 
     renderDocument() {
       Util.profileStart('invoke getDocument');
@@ -4272,8 +4215,6 @@ var Visualizer = (function ($, window, undefined) {
           span.normalizations
         ]);
         // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
-        console.log(span);
-        console.log(span.actionButtons);
         if (span.actionButtons) {
           this.dispatcher.post('displaySpanButtons', [evt, target, span.id]);
         }
@@ -4325,7 +4266,7 @@ var Visualizer = (function ($, window, undefined) {
 
           // BEGIN WEBANNO EXTENSION - #246 - Highlighting in curation confused
           /*
-          highlightArcs = $svg.
+          this.highlightArcs = $svg.
               find(equivSelector.join(', ')).
               parent().
               add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector).
@@ -4642,6 +4583,64 @@ var Visualizer = (function ($, window, undefined) {
     }
   }
   // WEBANNO EXTENSION END - RTL - Need to find scrollable ancestor
+
+  // A naive whitespace tokeniser
+  var tokenise = function (text) {
+    var tokenOffsets = [];
+    var tokenStart = null;
+    var lastCharPos = null;
+
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      // Have we found the start of a token?
+      if (tokenStart == null && !/\s/.test(c)) {
+        tokenStart = i;
+        lastCharPos = i;
+        // Have we found the end of a token?
+      } else if (/\s/.test(c) && tokenStart != null) {
+        tokenOffsets.push([tokenStart, i]);
+        tokenStart = null;
+        // Is it a non-whitespace character?
+      } else if (!/\s/.test(c)) {
+        lastCharPos = i;
+      }
+    }
+    // Do we have a trailing token?
+    if (tokenStart != null) {
+      tokenOffsets.push([tokenStart, lastCharPos + 1]);
+    }
+
+    return tokenOffsets;
+  };
+
+  // A naive newline sentence splitter
+  var sentenceSplit = function (text) {
+    var sentenceOffsets = [];
+    var sentStart = null;
+    var lastCharPos = null;
+
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      // Have we found the start of a sentence?
+      if (sentStart == null && !/\s/.test(c)) {
+        sentStart = i;
+        lastCharPos = i;
+        // Have we found the end of a sentence?
+      } else if (c == '\n' && sentStart != null) {
+        sentenceOffsets.push([sentStart, i]);
+        sentStart = null;
+        // Is it a non-whitespace character?
+      } else if (!/\s/.test(c)) {
+        lastCharPos = i;
+      }
+    }
+    // Do we have a trailing sentence without a closing newline?
+    if (sentStart != null) {
+      sentenceOffsets.push([sentStart, lastCharPos + 1]);
+    }
+
+    return sentenceOffsets;
+  };
 
   return Visualizer;
 })(jQuery, window);
