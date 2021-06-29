@@ -311,7 +311,9 @@ var Visualizer = (function ($, window, undefined) {
     }
   }
 
-  // Sets default values for a wide range of optional attributes
+  /**
+   * Sets default values for a wide range of optional attributes.
+   */ 
   var setSourceDataDefaults = function (sourceData) {
     // The following are empty lists if not set
     $.each([
@@ -341,6 +343,7 @@ var Visualizer = (function ($, window, undefined) {
     if (sourceData.sentence_offsets === undefined) {
       sourceData.sentence_offsets = sentenceSplit(sourceData.text);
     }
+
     // Similarily we fall back on whitespace tokenisation
     if (sourceData.token_offsets === undefined) {
       sourceData.token_offsets = tokenise(sourceData.text);
@@ -707,12 +710,12 @@ var Visualizer = (function ($, window, undefined) {
       // collect annotation data
       $.each(this.sourceData.entities, (entityNo, entity) => {
         // offsets given as array of (start, end) pairs
-        var span =
-          //      (id,        type,      offsets,   generalType)
-          new Span(entity[0], entity[1], entity[2], 'entity');
+        //                 (id,        type,      offsets,   generalType)
+        let span = new Span(entity[0], entity[1], entity[2], 'entity');
+
         // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually + #587 Customize mouse hover text
         if (entity[3]) {
-          var attributes = entity[3];
+          let attributes = entity[3];
           if (attributes.hasOwnProperty('l')) {
             span.labelText = attributes.l;
           }
@@ -731,6 +734,7 @@ var Visualizer = (function ($, window, undefined) {
           }
         }
         // WEBANNO EXTENSION END
+        
         span.splitMultilineOffsets(this.data.text);
         this.data.spans[entity[0]] = span;
       });
@@ -2840,6 +2844,7 @@ var Visualizer = (function ($, window, undefined) {
             }
           });
         }
+
         // last fall back on unnumbered type if not found in full
         if (!arcDesc && noNumArcType && noNumArcType != arc.type &&
           spanDesc && spanDesc.arcs) {
@@ -2849,6 +2854,7 @@ var Visualizer = (function ($, window, undefined) {
             }
           });
         }
+
         // empty default
         if (!arcDesc) {
           arcDesc = {};
