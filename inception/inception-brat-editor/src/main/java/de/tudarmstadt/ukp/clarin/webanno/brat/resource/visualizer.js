@@ -43,18 +43,23 @@
 var Visualizer = (function ($, window, undefined) {
   var svg;
 
+  /**
+   * Document data prepared for rendering. The JSON data we get from the server is converted into
+   * this pre-rendering representation which already determines e.g. the draw orders and such but
+   * which doesn't yet create the actual SVG representation.
+   */
   class DocumentData {
-    text;
-    chunks = [];
-    spans = {};
-    eventDescs = {};
-    sentComment = {};
-    arcs = [];
+    /** @type {String} */ text;
+    /** @type {Chunk} */ chunks = [];
+    /** @type {Object.<string, Span>} */ spans = {};
+    /** @type {EventDesc} */ eventDescs = {};
+    /** @type {Arc} */arcs = [];
     arcById = {};
+    sentComment = {};
     markedSent = {};
     spanAnnTexts = {};
     towers = {};
-    spanDrawOrderPermutation = []
+    /** @type {Array.<*>} */ spanDrawOrderPermutation = []
     sizes = {};
 
     constructor(text) {
@@ -65,10 +70,10 @@ var Visualizer = (function ($, window, undefined) {
   }
 
   class Fragment {
-    id;
-    span;
-    from;
-    to;
+    /** @type {Number} */ id;
+    /** @type {Span} */ span;
+    /** @type {Number} */ from;
+    /** @type {Number} */ to;
     rectBox;
     text;
     chunk;
@@ -76,8 +81,8 @@ var Visualizer = (function ($, window, undefined) {
     drawOrder;
     towerId;
     curly;
-    drawCurly = false;
-    labelText;
+    /** @type {Boolean} */ drawCurly = false;
+    /** @type {String} */ labelText;
     glyphedLabelText;
     group;
     rect;
@@ -93,6 +98,12 @@ var Visualizer = (function ($, window, undefined) {
     nestingDepthRL;
     highlightPos;
 
+    /**
+     * @param {Number} id 
+     * @param {Span} span 
+     * @param {Number} from 
+     * @param {Number} to 
+     */
     constructor(id, span, from, to) {
       Object.seal(this);
 
@@ -102,6 +113,10 @@ var Visualizer = (function ($, window, undefined) {
       this.to = to;
     }
 
+    /**
+     * @param {Fragment} a 
+     * @param {Fragment} b 
+     */
     static compare(a, b) {
       var tmp;
       var aSpan = a.span;
@@ -118,11 +133,13 @@ var Visualizer = (function ($, window, undefined) {
       if (tmp) {
         return tmp < 0 ? -1 : 1;
       }
+
       // spans with more arcs go last
       tmp = aSpan.numArcs - bSpan.numArcs;
       if (tmp) {
         return tmp < 0 ? -1 : 1;
       }
+
       // compare the span widths,
       // put wider on bottom so they don't mess with arcs, or shorter
       // on bottom if there are no arcs.
@@ -132,13 +149,16 @@ var Visualizer = (function ($, window, undefined) {
       if (aSpan.numArcs == 0 && bSpan.numArcs == 0) {
         tmp = -tmp;
       }
+
       if (tmp) {
         return tmp < 0 ? 1 : -1;
       }
+
       tmp = aSpan.refedIndexSum - bSpan.refedIndexSum;
       if (tmp) {
         return tmp < 0 ? -1 : 1;
       }
+
       // if no other criterion is found, sort by type to maintain
       // consistency
       // TODO: isn't there a cmp() in JS?
@@ -154,11 +174,11 @@ var Visualizer = (function ($, window, undefined) {
 
   class Span {
     id;
-    type;
-    totalDist = 0;
+    /** @type {String} */ type;
+    /** @type {Number} */ totalDist = 0;
     numArcs = 0;
     generalType;
-    headFragment = null; // Fragment
+    /** @type {Fragment} */ headFragment = null;
     unsegmentedOffsets;
     offsets = [];
     segmentedOffsetsMap = {};
@@ -178,13 +198,21 @@ var Visualizer = (function ($, window, undefined) {
     wholeTo = undefined;
     comment = undefined; // { type: undefined, text: undefined };
     drawCurly = false;
-    labelText;
+    /** @type {String} */ labelText;
     refedIndexSum = undefined;
     color;
     shadowClass;
     floor;
     marked;
+    avgDist;
+    /** @type {String} */ text;
 
+    /**
+     * @param {*} id 
+     * @param {String} type 
+     * @param {Array.<Array.<Number>>} offsets 
+     * @param {String} generalType 
+     */
     constructor(id, type, offsets, generalType) {
       Object.seal(this);
 
@@ -203,7 +231,7 @@ var Visualizer = (function ($, window, undefined) {
       this.attributeText = [];
       this.attributeCues = {};
       this.attributeCueFor = {};
-      this.attributeMerge = {}; // for box, cross, etc. that are span-global
+      this.attributeMerge = {};
       this.fragments = [];
       this.normalizations = [];
     }
@@ -253,6 +281,47 @@ var Visualizer = (function ($, window, undefined) {
       span.segmentedOffsetsMap = this.segmentedOffsetsMap;
       return span;
     }
+
+    buildFragments() {
+      $.each(this.offsets, (offsetsNo, offsets) => {
+        let from = parseInt(offsets[0], 10);
+        let to = parseInt(offsets[1], 10);
+        let fragment = new Fragment(offsetsNo, this, from, to);
+        this.fragments.push(fragment);
+      });
+
+      // ensure ascending order
+      this.fragments.sort(Span.midpointComparator);
+      this.wholeFrom = this.fragments[0].from;
+      this.wholeTo = this.fragments[this.fragments.length - 1].to;
+      this.headFragment = this.fragments[(true) ? this.fragments.length - 1 : 0];
+    }
+
+    /**
+     * @param {Span} a 
+     * @param {Span} b 
+     */
+    static compare(a, b) {
+      var aSpan = this.data.spans[a];
+      var bSpan = this.data.spans[b];
+      var tmp = aSpan.headFragment.from + aSpan.headFragment.to - bSpan.headFragment.from - bSpan.headFragment.to;
+      if (tmp) {
+        return tmp < 0 ? -1 : 1;
+      }
+      return 0;
+    }
+
+    /**
+     * @param {Span} a 
+     * @param {Span} b 
+     */
+    static midpointComparator = (a, b) => {
+      let tmp = a.from + a.to - b.from - b.to;
+      if (!tmp) {
+        return 0;
+      }
+      return tmp < 0 ? -1 : 1;
+    };
   }
 
   class EventDesc {
@@ -261,15 +330,15 @@ var Visualizer = (function ($, window, undefined) {
     roles = [];
     equiv = false;
     relation = false;
-    // leftSpans = undefined;
-    // rightSpans = undefined;
-    // annotatorNotes = undefined;
+    leftSpans = undefined;
+    rightSpans = undefined;
+    annotatorNotes = undefined;
     labelText = undefined;
     color = undefined
 
     constructor(id, triggerId, roles, klass) {
       Object.seal(this);
-      
+
       this.id = id;
       this.triggerId = triggerId;
       roles.map(role => this.roles.push({ type: role[0], targetId: role[1] }));
@@ -321,7 +390,6 @@ var Visualizer = (function ($, window, undefined) {
     equiv = false;
     eventDescId;
     relation = false;
-    eventDescId;
     normalizations = [];
     marked;
 
@@ -385,7 +453,7 @@ var Visualizer = (function ($, window, undefined) {
 
   /**
    * Sets default values for a wide range of optional attributes.
-   */ 
+   */
   var setSourceDataDefaults = function (sourceData) {
     // The following are empty lists if not set
     $.each([
@@ -394,7 +462,6 @@ var Visualizer = (function ($, window, undefined) {
       'entities',
       'equivs',
       'events',
-      'modifications',
       'normalizations',
       'relations',
       'triggers',
@@ -442,44 +509,37 @@ var Visualizer = (function ($, window, undefined) {
 
   class Visualizer {
     dispatcher;
-    // WEBANNO EXTENSION BEGIN - RTL support - DEV mode switch
-    rtlmode = false;
-    // WEBANNO EXTENSION END
 
-    // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+    rtlmode = false;
     fontZoom = 100;
-    // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
 
     svg;
     $svg;
     $svgDiv;
     _svg;
+    highlightGroup;
 
     baseCanvasWidth = 0;
     canvasWidth = 0;
-  
-    data = null;
+
+    /** @type {DocumentData} */ data = null;
     sourceData = null;
     requestedData = null;
-    renderErrors;
 
     coll = null;
     doc = null;
     args = null;
 
-    isRenderRequested;
+    isRenderRequested = false;
     drawing = false;
     redraw = false;
     arcDragOrigin;
 
-    relationTypesHash;
+    spanTypes = {};
+    relationTypesHash = {};
+    entityAttributeTypes = {};
+    eventAttributeTypes = {};
     isCollectionLoaded = false;
-    entityAttributeTypes = null;
-    eventAttributeTypes = null;
-    spanTypes = null;
-    highlightGroup;
-    collapseArcs = false;
-    collapseArcSpace = false;
 
     markedText = [];
     highlight;
@@ -488,6 +548,8 @@ var Visualizer = (function ($, window, undefined) {
     commentId;
 
     // OPTIONS
+    collapseArcs = false;
+    collapseArcSpace = false;
     roundCoordinates = true; // try to have exact pixel offsets
     boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
     highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
@@ -542,14 +604,22 @@ var Visualizer = (function ($, window, undefined) {
       'AddedAnnotation', 'MissingAnnotation', 'ChangedAnnotation'
     ];
 
+    renderErrors = {
+      unableToReadTextFile: true,
+      annotationFileNotFound: true,
+      isDirectoryError: true
+    };
+
     constructor(dispatcher, svgId) {
       Object.seal(this);
 
       this.dispatcher = dispatcher;
       this.$svgDiv = $('#' + svgId);
+
       if (!this.$svgDiv.length) {
         throw Error('Could not find container with id="' + svgId + '"');
       }
+
       // create the svg wrapper
       this.$svgDiv = $(this.$svgDiv).hide();
       this.$svgDiv.svg({
@@ -566,14 +636,6 @@ var Visualizer = (function ($, window, undefined) {
       this.highlightArcSequence = highlightSequence;
       this.highlightTextSequence = highlightSequence;
 
-      this.arcDragOrigin = null; // TODO
-
-      this.renderErrors = {
-        unableToReadTextFile: true,
-        annotationFileNotFound: true,
-        isDirectoryError: true
-      };
-
       this.registerHandlers(this.$svgDiv, [
         'mouseover', 'mouseout', 'mousemove', 'mouseup', 'mousedown',
         'dragstart', 'dblclick', 'click',
@@ -589,7 +651,7 @@ var Visualizer = (function ($, window, undefined) {
         'resize'
       ]);
 
-      dispatcher.
+      this.dispatcher.
         on('collectionChanged', this, this.collectionChanged).
         on('collectionLoaded', this, this.collectionLoaded).
         on('renderData', this, this.renderData).
@@ -674,12 +736,12 @@ var Visualizer = (function ($, window, undefined) {
             }
           });
           return;
-        } 
-        
+        }
+
         if (marked.length == 2) {
           this.markedText.push([parseInt(marked[0], 10), parseInt(marked[1], 10), markedType]);
           return;
-        } 
+        }
 
         let span = this.data.spans[marked[0]];
         if (span) {
@@ -705,7 +767,7 @@ var Visualizer = (function ($, window, undefined) {
           });
           return;
         }
-        
+
         // try for trigger
         $.each(this.data.eventDescs, (eventDescNo, eventDesc) => {
           if (eventDesc.triggerId == marked[0]) {
@@ -740,21 +802,132 @@ var Visualizer = (function ($, window, undefined) {
       this.setMarked('match'); // set by search process, other (non-focused) match
     }
 
-    applyNormalizations() {
-      this.sourceData.normalizations.map(norm => {
-        var target = norm[0];
-        var refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
-        var refid = norm.length > 2 ? norm[2] : "";
-        var reftext = norm.length > 3 ? norm[3] : null;
+    /**
+     * Calculate average arc distances. Average distance of arcs (0 for no arcs).
+     * 
+     * @param {Span[]} spans
+     */
+    calculateAverageArcDistances(spans) {
+      spans.map(span => span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0);
+    }
 
-        var span = this.data.spans[target];
+    /**
+     * Collect fragment texts into span texts
+     * 
+     * @param {Span[]} spans
+     */
+    collectFragmentTextsIntoSpanTexts(spans) {
+      spans.map(span => {
+        let fragmentTexts = [];
+        span.fragments && span.fragments.map(fragment => fragmentTexts.push(fragment.text));
+        span.text = fragmentTexts.join('');
+      });
+    }
+
+    /**
+     * @param {Object.<*,Span>} spans 
+     * @returns list of span IDs in the order they should be drawn.
+     */
+    determineDrawOrder(spans) {
+      let spanDrawOrderPermutation = Object.keys(spans);
+      spanDrawOrderPermutation.sort((a, b) => {
+        var spanA = spans[a];
+        var spanB = spans[b];
+
+        // We're jumping all over the chunks, but it's enough that we're doing everything inside
+        // each chunk in the right order. Should it become necessary to actually do these in
+        // linear order, put in a similar condition for spanX.headFragment.chunk.index; but it 
+        // should not be needed.
+        var tmp = spanA.headFragment.drawOrder - spanB.headFragment.drawOrder;
+        if (tmp) {
+          return tmp < 0 ? -1 : 1;
+        }
+
+        return 0;
+      });
+      return spanDrawOrderPermutation;
+    }
+
+    organizeFragmentsIntoTowers(sortedFragments) {
+      var lastFragment = null;
+      var towerId = -1;
+
+      sortedFragments.map(fragment => {
+        if (!lastFragment || (lastFragment.from != fragment.from || lastFragment.to != fragment.to)) {
+          towerId++;
+        }
+        fragment.towerId = towerId;
+        lastFragment = fragment;
+      });
+    }
+
+    applyMarkedTextToChunks(markedText, chunks) {
+      let numChunks = chunks.length;
+      // note the location of marked text with respect to chunks
+      let startChunk = 0;
+      let currentChunk;
+      $.each(markedText, (textNo, textPos) => {
+        let from = textPos[0];
+        let to = textPos[1];
+        let markedType = textPos[2];
+
+        if (from < 0)
+          from = 0;
+        if (to < 0)
+          to = 0;
+        if (to >= this.data.text.length)
+          to = this.data.text.length - 1;
+        if (from > to)
+          from = to;
+
+        while (startChunk < numChunks) {
+          let chunk = chunks[startChunk];
+          if (from <= chunk.to) {
+            chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
+            break;
+          }
+          startChunk++;
+        }
+
+        if (startChunk == numChunks) {
+          this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
+          return;
+        }
+
+        currentChunk = startChunk;
+        while (currentChunk < numChunks) {
+          let chunk = chunks[currentChunk];
+          if (to <= chunk.to) {
+            chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
+            break;
+          }
+          currentChunk++;
+        }
+
+        if (currentChunk == numChunks) {
+          this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
+          let chunk = chunks[chunks.length - 1];
+          chunk.markedTextEnd.push([textNo, false, chunk.text.length]);
+          return;
+        }
+      }); // markedText
+    }
+
+    applyNormalizations(normalizations) {
+      normalizations.map(norm => {
+        let target = norm[0];
+        let refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
+        let refid = norm.length > 2 ? norm[2] : "";
+        let reftext = norm.length > 3 ? norm[3] : null;
+
+        let span = this.data.spans[target];
         if (span) {
           span.normalizations.push([refdb, refid, reftext]);
           span.normalized = 'Normalized';
           return;
         }
 
-        var arc = this.data.arcById[target];
+        let arc = this.data.arcById[target];
         if (arc) {
           arc.normalizations.push([refdb, refid, reftext]);
           arc.normalized = "Normalized";
@@ -765,67 +938,14 @@ var Visualizer = (function ($, window, undefined) {
       });
     }
 
-    assignArcsToSpans() {
-      Object.entries(this.data.eventDescs).map(([eventNo, eventDesc]) => {
-        let origin = this.data.spans[eventDesc.id];
-        if (!origin) {
-          // TODO: include missing trigger ID in error message
-          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
-          return;
-        }
+    buildSpansFromEntities(documentText, entities) {
+      let spans = {};
+      entities.map(entity => {
+        let id = entity[0];
+        let type = entity[1];
+        let offsets = entity[2]; // offsets given as array of (start, end) pairs
+        let span = new Span(id, type, offsets, 'entity');
 
-        let here = origin.headFragment.from + origin.headFragment.to;
-        eventDesc.roles.map(role => {
-          let target = this.data.spans[role.targetId];
-          if (!target) {
-            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
-            return;
-          }
-
-          let there = target.headFragment.from + target.headFragment.to;
-          let dist = Math.abs(here - there);
-          let arc = new Arc(eventDesc, role, dist, eventNo);
-          
-          origin.totalDist += dist;
-          origin.numArcs++;
-          target.totalDist += dist;
-          target.numArcs++;
-
-          this.data.arcs.push(arc);
-          target.incoming.push(arc);
-          origin.outgoing.push(arc);
-          this.data.arcById[arc.eventDescId] = arc;
-        }); // roles
-      }); // eventDescs
-    }
-
-    setData(_sourceData) {
-      this.sourceData = _sourceData;
-
-      // WEBANNO EXTENSION BEGIN - RTL support - mode switch
-      this.rtlmode = this.sourceData.rtl_mode;
-      // WEBANNO EXTENSION END
-      // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
-      this.fontZoom = this.sourceData.font_zoom;
-      // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
-      // WEBANNO EXTENSION BEGIN - #406 - Sharable link for annotation documents  
-      this.args = this.sourceData.args;
-      // WEBANNO EXTENSION END - #406 - Sharable link for annotation documents  
-
-      if (!this.args) {
-        this.args = {};
-      }
-
-      this.dispatcher.post('newSourceData', [this.sourceData]);
-      this.data = new DocumentData(this.sourceData.text);
-
-      // collect annotation data
-      $.each(this.sourceData.entities, (entityNo, entity) => {
-        // offsets given as array of (start, end) pairs
-        //                 (id,        type,      offsets,   generalType)
-        let span = new Span(entity[0], entity[1], entity[2], 'entity');
-
-        // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually + #587 Customize mouse hover text
         if (entity[3]) {
           let attributes = entity[3];
           if (attributes.hasOwnProperty('l')) {
@@ -845,100 +965,83 @@ var Visualizer = (function ($, window, undefined) {
             span.clippedAtEnd = attributes.cl.endsWith("e");
           }
         }
-        // WEBANNO EXTENSION END
 
-        span.splitMultilineOffsets(this.data.text);
-        this.data.spans[entity[0]] = span;
+        span.splitMultilineOffsets(documentText);
+
+        spans[id] = span;
       });
 
-      var triggerHash = {};
-      $.each(this.sourceData.triggers, (triggerNo, trigger) => {
+      return spans;
+    }
+
+    buildSpansFromTriggers(triggers) {
+      let triggerHash = {};
+      triggers.map(trigger => {
         //                        (id,         type,       offsets,    generalType)
         var triggerSpan = new Span(trigger[0], trigger[1], trigger[2], 'trigger');
+
         triggerSpan.splitMultilineOffsets(data.text);
+
         triggerHash[trigger[0]] = [triggerSpan, []]; // triggerSpan, eventlist
       });
+      return triggerHash;
+    }
 
-      $.each(this.sourceData.events, (eventNo, eventRow) => {
-        var eventDesc = this.data.eventDescs[eventRow[0]] =
-          //           (id,          triggerId,   roles,        klass)
-          new EventDesc(eventRow[0], eventRow[1], eventRow[2]);
-        var trigger = triggerHash[eventDesc.triggerId];
-        var span = trigger[0].copy(eventDesc.id);
+    buildEventDescsFromTriggers(triggerHash) {
+      this.sourceData.events.map(eventRow => {
+        let id = eventRow[0];
+        let triggerId = eventRow[1];
+        let roles = eventRow[2]
+
+        let eventDesc = this.data.eventDescs[id] = new EventDesc(id, triggerId, roles);
+        let trigger = triggerHash[eventDesc.triggerId];
+        let span = trigger[0].copy(eventDesc.id);
         trigger[1].push(span);
         this.data.spans[eventDesc.id] = span;
       });
+    }
 
-      // XXX modifications: delete later
-      $.each(this.sourceData.modifications, (modNo, mod) => {
-        // mod: [id, spanId, modification]
-        if (!this.data.spans[mod[2]]) {
-          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Event ' + mod[2] + ' (referenced from modification ' + mod[0] + ') does not occur in document ' + this.data.document + '<br/>(please correct the source data)', 'error', 5]]]);
-          return;
-        }
-        this.data.spans[mod[2]][mod[1]] = true;
-      });
+    splitSpansIntoFragments(spans) {
+      spans.map(span => span.buildFragments());
+    }
 
-      var midpointComparator = (a, b) => {
-        var tmp = a.from + a.to - b.from - b.to;
-        if (!tmp)
-          return 0;
-        return tmp < 0 ? -1 : 1;
-      };
-
-      // split spans into span fragments (for discontinuous spans)
-      $.each(this.data.spans, (spanNo, span) => {
-        $.each(span.offsets, (offsetsNo, offsets) => {
-          var from = parseInt(offsets[0], 10);
-          var to = parseInt(offsets[1], 10);
-          var fragment = new Fragment(offsetsNo, span, from, to);
-          span.fragments.push(fragment);
-        });
-        // ensure ascending order
-        span.fragments.sort(midpointComparator);
-        span.wholeFrom = span.fragments[0].from;
-        span.wholeTo = span.fragments[span.fragments.length - 1].to;
-        span.headFragment = span.fragments[(true) ? span.fragments.length - 1 : 0]; // TODO configurable!
-      });
-
-      var spanComparator = (a, b) => {
-        var aSpan = this.data.spans[a];
-        var bSpan = this.data.spans[b];
-        var tmp = aSpan.headFragment.from + aSpan.headFragment.to - bSpan.headFragment.from - bSpan.headFragment.to;
-        if (tmp) {
-          return tmp < 0 ? -1 : 1;
-        }
-        return 0;
-      };
-
-      $.each(this.sourceData.equivs, (equivNo, equiv) => {
+    buildEventDescsFromEquivs(equivs, spans, eventDescs) {
+      $.each(equivs, (equivNo, equiv) => {
         // equiv: ['*', 'Equiv', spanId...]
         equiv[0] = "*" + equivNo;
-        var equivSpans = equiv.slice(2);
-        var okEquivSpans = [];
+        let equivSpans = equiv.slice(2);
+        let okEquivSpans = [];
+
         // collect the equiv spans in an array
-        $.each(equivSpans, (equivSpanNo, equivSpan) => {
-          if (this.data.spans[equivSpan])
+        equivSpans.map(equivSpan => {
+          if (spans[equivSpan]) {
             okEquivSpans.push(equivSpan);
+          }
           // TODO: #404, inform the user with a message?
         });
+
         // sort spans in the equiv by their midpoint
-        okEquivSpans.sort(spanComparator);
+        okEquivSpans.sort(Span.compare);
+
         // generate the arcs
         var len = okEquivSpans.length;
         for (var i = 1; i < len; i++) {
-          var eventDesc = this.data.eventDescs[equiv[0] + '*' + i] =
-            //           (id,                  triggerId,           roles,                         klass)
-            new EventDesc(okEquivSpans[i - 1], okEquivSpans[i - 1], [[equiv[1], okEquivSpans[i]]], 'equiv');
+          let id = okEquivSpans[i - 1];
+          let tiggerId = okEquivSpans[i - 1];
+          let roles = [[equiv[1], okEquivSpans[i]]];
+          let eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, 'equiv');
           eventDesc.leftSpans = okEquivSpans.slice(0, i);
           eventDesc.rightSpans = okEquivSpans.slice(i);
         }
       });
+    }
 
-      $.each(this.sourceData.relations, (relNo, rel) => {
+    buildEventDescsFromRelations(relations, eventDescs) {
+      relations.map(rel => {
         // rel[2] is args, rel[2][a][0] is role and rel[2][a][1] is value for a in (0,1)
         var argsDesc = this.relationTypesHash[rel[1]];
         argsDesc = argsDesc && argsDesc.args;
+
         var t1, t2;
         if (argsDesc) {
           // sort the arguments according to the config
@@ -952,121 +1055,135 @@ var Visualizer = (function ($, window, undefined) {
           t1 = rel[2][0][1];
           t2 = rel[2][1][1];
         }
-        //                                          (id, triggerId, roles,   klass)
-        this.data.eventDescs[rel[0]] = new EventDesc(t1, t1, [[rel[1], t2]], 'relation');
-        // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
-        if (rel[3]) {
-          this.data.eventDescs[rel[0]].labelText = rel[3];
-        }
-        if (rel[4]) {
-          this.data.eventDescs[rel[0]].color = rel[4];
-        }
-        // WEBANNO EXTENSION END
-      });
 
-      // attributes
-      $.each(this.sourceData.attributes, (attrNo, attr) => {
+        //                                (id, triggerId, roles,   klass)
+        eventDescs[rel[0]] = new EventDesc(t1, t1, [[rel[1], t2]], 'relation');
+
+        if (rel[3]) {
+          eventDescs[rel[0]].labelText = rel[3];
+        }
+
+        if (rel[4]) {
+          eventDescs[rel[0]].color = rel[4];
+        }
+      });
+    }
+
+    assignAttributesToSpans(attributes, spans) {
+      attributes.map(attr => {
         // attr: [id, name, spanId, value, cueSpanId
         // TODO: might wish to check what's appropriate for the type
         // instead of using the first attribute def found
-        var attrType = (eventAttributeTypes[attr[1]] ||
-          entityAttributeTypes[attr[1]]);
-        var attrValue = attrType && attrType.values[attrType.bool || attr[3]];
-        var span = this.data.spans[attr[2]];
+        let attrType = (this.eventAttributeTypes[attr[1]] ||
+          this.entityAttributeTypes[attr[1]]);
+        let attrValue = attrType && attrType.values[attrType.bool || attr[3]];
+        let span = spans[attr[2]];
+
         if (!span) {
           this.dispatcher.post('messages', [[['Annotation ' + attr[2] + ', referenced from attribute ' + attr[0] + ', does not exist.', 'error']]]);
           return;
         }
-        var valText = (attrValue && attrValue.name) || attr[3];
-        var attrText = attrType
+
+        let valText = (attrValue && attrValue.name) || attr[3];
+        let attrText = attrType
           ? (attrType.bool ? attrType.name : (attrType.name + ': ' + valText))
           : (attr[3] == true ? attr[1] : attr[1] + ': ' + attr[3]);
         span.attributeText.push(attrText);
         span.attributes[attr[1]] = attr[3];
+
         if (attr[4]) { // cue
           span.attributeCues[attr[1]] = attr[4];
-          var cueSpan = this.data.spans[attr[4]];
-          cueSpan.attributeCueFor[this.data.spans[1]] = attr[2];
+          let cueSpan = spans[attr[4]];
+          cueSpan.attributeCueFor[spans[1]] = attr[2];
           cueSpan.cue = 'CUE'; // special css type
         }
+
         $.extend(span.attributeMerge, attrValue);
       });
+    }
 
-      // comments
+    assignComments(triggerHash) {
       this.sourceData.comments.map(comment => {
         // comment: [entityId, type, text]
         // TODO error handling
         // sentence id: ['sent', sentId]
         if (comment[0] instanceof Array && comment[0][0] == 'sent') {
           // sentence comment
-          var sent = comment[0][1];
-          var text = comment[2];
+          let sent = comment[0][1];
+          let text = comment[2];
           if (this.data.sentComment[sent]) {
             text = this.data.sentComment[sent].text + '<br/>' + text;
           }
           this.data.sentComment[sent] = { type: comment[1], text: text };
-        } else {
-          var id = comment[0];
-          var trigger = triggerHash[id];
-          var eventDesc = this.data.eventDescs[id];
-          var commentEntities = trigger
-            ? trigger[1] // trigger: [span, ...]
-            : id in this.data.spans
-              ? [this.data.spans[id]] // span: [span]
-              : id in this.data.eventDescs
-                ? [this.data.eventDescs[id]] // arc: [eventDesc]
-                : [];
-          commentEntities.map(entity => {
-            // if duplicate comment for entity:
-            // overwrite type, concatenate comment with a newline
-            if (!entity.comment) {
-              entity.comment = { type: comment[1], text: comment[2] };
-            } else {
-              entity.comment.type = comment[1];
-              entity.comment.text += "\n" + comment[2];
-            }
-            // partially duplicate marking of annotator note comments
-            if (comment[1] == "AnnotatorNotes") {
-              entity.annotatorNotes = comment[2];
-            }
-            // prioritize type setting when multiple comments are present
-            if (this.commentPriority(comment[1]) > this.commentPriority(entity.shadowClass)) {
-              entity.shadowClass = comment[1];
-            }
-          });
+          return;
         }
-      });
 
-      // prepare span boundaries for token containment testing
-      var sortedFragments = [];
-      $.each(this.data.spans, function (spanNo, span) {
-        $.each(span.fragments, function (fragmentNo, fragment) {
-          sortedFragments.push(fragment);
+        let id = comment[0];
+        let trigger = triggerHash[id];
+        let commentEntities = trigger
+          ? trigger[1] // trigger: [span, ...]
+          : id in this.data.spans
+            ? [this.data.spans[id]] // span: [span]
+            : id in this.data.eventDescs
+              ? [this.data.eventDescs[id]] // arc: [eventDesc]
+              : [];
+
+        commentEntities.map(entity => {
+          // if duplicate comment for entity:
+          // overwrite type, concatenate comment with a newline
+          if (!entity.comment) {
+            entity.comment = { type: comment[1], text: comment[2] };
+          } else {
+            entity.comment.type = comment[1];
+            entity.comment.text += "\n" + comment[2];
+          }
+
+          // partially duplicate marking of annotator note comments
+          if (comment[1] == "AnnotatorNotes") {
+            entity.annotatorNotes = comment[2];
+          }
+
+          // prioritize type setting when multiple comments are present
+          if (this.commentPriority(comment[1]) > this.commentPriority(entity.shadowClass)) {
+            entity.shadowClass = comment[1];
+          }
         });
       });
-      // sort fragments by beginning, then by end
+    }
+
+    buildSortedFragments() {
+      var sortedFragments = [];
+
+      Object.values(this.data.spans).map(span => span.fragments.map(
+        fragment => sortedFragments.push(fragment)));
+
       sortedFragments.sort(function (a, b) {
-        var x = a.from;
-        var y = b.from;
+        let x = a.from;
+        let y = b.from;
         if (x == y) {
           x = a.to;
           y = b.to;
         }
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
       });
-      var currentFragmentId = 0;
-      var startFragmentId = 0;
-      var numFragments = sortedFragments.length;
-      var lastTo = 0;
-      var firstFrom = null;
-      var chunkNo = 0;
-      var space;
-      var chunk = null;
 
-      // token containment testing (chunk recognition)
-      this.sourceData.token_offsets.map(offset => {
-        var from = offset[0];
-        var to = offset[1];
+      return sortedFragments;
+    }
+
+    buildChunksFromTokenOffsets(tokenOffsets, sortedFragments) {
+      let currentFragmentId = 0;
+      let startFragmentId = 0;
+      let numFragments = sortedFragments.length;
+      let lastTo = 0;
+      let firstFrom = null;
+      let chunkNo = 0;
+      let space;
+      let chunk = null;
+      let chunks = [];
+
+      tokenOffsets.map(offset => {
+        let from = offset[0];
+        let to = offset[1];
         if (firstFrom === null) {
           firstFrom = from;
         }
@@ -1088,63 +1205,43 @@ var Visualizer = (function ($, window, undefined) {
 
         // otherwise, create the chunk found so far
         space = this.data.text.substring(lastTo, firstFrom);
-        var text = this.data.text.substring(firstFrom, to);
+        let text = this.data.text.substring(firstFrom, to);
         if (chunk) {
           chunk.nextSpace = space;
         }
         //               (index,     text, from,      to, space) {
         chunk = new Chunk(chunkNo++, text, firstFrom, to, space);
         chunk.lastSpace = space;
-        this.data.chunks.push(chunk);
+        chunks.push(chunk);
         lastTo = to;
         firstFrom = null;
       });
 
-      var numChunks = chunkNo;
+      return chunks;
+    }
 
-      // find sentence boundaries in relation to chunks
-      chunkNo = 0;
-      // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
-      /*
-              var sentenceNo = 0;
-              var pastFirst = false;
-              $.each(sourceData.sentence_offsets, function() {
-                var from = this[0];
-                if (chunkNo >= numChunks) return false;
-                if (data.chunks[chunkNo].from > from) return;
-                var chunk;
-                while (chunkNo < numChunks && (chunk = data.chunks[chunkNo]).from < from) {
-                  chunkNo++;
-                }
-                chunkNo++;
-                if (pastFirst && from <= chunk.from) {
-                  var numNL = chunk.space.split("\n").length - 1;
-                  if (!numNL) numNL = 1;
-                  sentenceNo += numNL;
-                  chunk.sentence = sentenceNo;
-                } else {
-                  pastFirst = true;
-                }
-              });
-      */
-      var sentenceNo = this.sourceData.sentence_number_offset - 1;
+    assignSentenceNumbersToChunks(firstSentence, sentenceOffsets, chunks) {
+      let numChunks = chunks.length;
+      let chunkNo = 0;
+      let sentenceNo = firstSentence;
 
-      this.sourceData.sentence_offsets.map(offset => {
-        var from = offset[0];
-        var to = offset[1];
-        var chunk;
+      sentenceOffsets.map(offset => {
+        let from = offset[0];
+        let to = offset[1];
 
         // Skip all chunks that belonged to the previous sentence
-        while (chunkNo < numChunks && (chunk = this.data.chunks[chunkNo]).from < from) {
+        let chunk;
+        while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < from) {
           chunkNo++;
         }
 
         // No more chunks
-        if (chunkNo >= numChunks)
+        if (chunkNo >= numChunks) {
           return false;
+        }
 
         // If the current chunk is not within the current sentence, then it was an empty sentence
-        if (this.data.chunks[chunkNo].from >= to) {
+        if (chunks[chunkNo].from >= to) {
           sentenceNo++;
           return;
         }
@@ -1155,11 +1252,11 @@ var Visualizer = (function ($, window, undefined) {
         // increase chunkNo counter for next seek iteration
         chunkNo++;
       });
-      // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
+    }
 
-      // assign fragments to appropriate chunks
-      var currentChunkId = 0;
-      var chunk;
+    assignFragmentsToChunks(sortedFragments) {
+      let currentChunkId = 0;
+      let chunk;
       sortedFragments.map(fragment => {
         while (fragment.to > (chunk = this.data.chunks[currentChunkId]).to) {
           currentChunkId++;
@@ -1168,34 +1265,107 @@ var Visualizer = (function ($, window, undefined) {
         fragment.text = chunk.text.substring(fragment.from - chunk.from, fragment.to - chunk.from);
         fragment.chunk = chunk;
       });
+    }
 
-      // assign arcs to spans; calculate arc distances
-      this.assignArcsToSpans();
+    /**
+     * Builds the args based on the EventDescs and links them up to the spans.
+     * 
+     * Side effects:
+     * - Fields on spans are changed: totalDist, numArcs, outgoing, incoming
+     * - data.arcById index is populated.
+     */
+    assignArcsToSpans(eventDescs, spans) {
+      let arcs = [];
 
-      // normalizations
-      this.applyNormalizations();
+      Object.entries(eventDescs).map(([eventNo, eventDesc]) => {
+        let origin = spans[eventDesc.id];
 
-      // highlighting
+        if (!origin) {
+          // TODO: include missing trigger ID in error message
+          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+          return;
+        }
+
+        let here = origin.headFragment.from + origin.headFragment.to;
+        eventDesc.roles.map(role => {
+          let target = spans[role.targetId];
+          if (!target) {
+            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+            return;
+          }
+
+          let there = target.headFragment.from + target.headFragment.to;
+          let dist = Math.abs(here - there);
+          let arc = new Arc(eventDesc, role, dist, eventNo);
+
+          origin.totalDist += dist;
+          origin.numArcs++;
+          origin.outgoing.push(arc);
+
+          target.totalDist += dist;
+          target.numArcs++;
+          target.incoming.push(arc);
+
+          arcs.push(arc);
+          this.data.arcById[arc.eventDescId] = arc;
+        }); // roles
+      }); // eventDescs
+
+      return arcs;
+    }
+
+    /**
+     * Populates the "data" field based on the "sourceData" JSON that we recieved from the server.
+     * 
+     * @param {*} sourceData 
+     */
+    setData(sourceData) {
+      this.sourceData = sourceData;
+      this.rtlmode = this.sourceData.rtl_mode;
+      this.fontZoom = this.sourceData.font_zoom;
+      this.args = this.sourceData.args ?? {};
+
+      this.dispatcher.post('newSourceData', [this.sourceData]);
+
+      this.data = new DocumentData(this.sourceData.text);
+
+      // collect annotation data
+      this.data.spans = this.buildSpansFromEntities(this.data.text, this.sourceData.entities);
+
+      // REC 2021-06-29: Not sure if we need this at all since INCEpTION only uses "entities" and
+      // doesn't do brat-style events/trigger. We prepare spans-with-slots on the server side
+      // already and render them as brat-entities and brat-relations
+      var triggerHash = this.buildSpansFromTriggers(this.sourceData.triggers);
+      this.buildEventDescsFromTriggers(triggerHash);
+
+      // split spans into span fragments (for discontinuous spans)
+      this.splitSpansIntoFragments(Object.values(this.data.spans));
+      this.buildEventDescsFromEquivs(this.sourceData.equivs, this.data.spans, this.data.eventDescs);
+      this.buildEventDescsFromRelations(this.sourceData.relations, this.data.eventDescs);
+      this.assignAttributesToSpans(this.sourceData.attributes, this.data.spans);
+      this.assignComments(triggerHash);
+
+      // prepare span boundaries for token containment testing
+      // sort fragments by beginning, then by end
+      var sortedFragments = this.buildSortedFragments();
+
+      // token containment testing (chunk recognition)
+      this.data.chunks = this.buildChunksFromTokenOffsets(this.sourceData.token_offsets, sortedFragments);
+
+      this.assignSentenceNumbersToChunks(this.sourceData.sentence_number_offset - 1,
+        this.sourceData.sentence_offsets, this.data.chunks);
+      this.assignFragmentsToChunks(sortedFragments);
+      this.data.arcs = this.assignArcsToSpans(this.data.eventDescs, this.data.spans);
+      this.applyNormalizations(this.sourceData.normalizations);
       this.applyHighlighting();
 
-      Object.entries(this.data.spans).map(span => {
-        // calculate average arc distances
-        // average distance of arcs (0 for no arcs)
-        span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0;
+      this.calculateAverageArcDistances(Object.values(this.data.spans));
 
-        // collect fragment texts into span texts
-        let fragmentTexts = [];
-        span.fragments && span.fragments.map(fragment => {
-          // TODO heuristics
-          fragmentTexts.push(fragment.text);
-        });
-        span.text = fragmentTexts.join('');
-      }); // data.spans
+      this.collectFragmentTextsIntoSpanTexts(Object.values(this.data.spans));
 
       for (var i = 0; i < 2; i++) {
         // preliminary sort to assign heights for basic cases
-        // (first round) and cases resolved in the previous
-        // round(s).
+        // (first round) and cases resolved in the previous round(s).
         this.data.chunks.map(chunk => {
           // sort and then re-number
           chunk.fragments.sort(Fragment.compare);
@@ -1203,11 +1373,10 @@ var Visualizer = (function ($, window, undefined) {
         });
 
         // nix the sums, so we can sum again
-        $.each(this.data.spans, (spanNo, span) => span.refedIndexSum = 0);
+        Object.values(this.data.spans).map(span => span.refedIndexSum = 0);
 
-        // resolved cases will now have indexNumber set
-        // to indicate their relative order. Sum those for referencing cases
-        // for use in iterative resorting
+        // resolved cases will now have indexNumber set to indicate their relative order. Sum those
+        // for referencing cases for use in iterative resorting
         this.data.arcs.map(arc => {
           this.data.spans[arc.origin].refedIndexSum += this.data.spans[arc.target].headFragment.indexNumber;
         });
@@ -1223,39 +1392,12 @@ var Visualizer = (function ($, window, undefined) {
         chunk.fragments.map((fragment, fragmentNo) => fragment.drawOrder = fragmentNo);
       });
 
-      this.data.spanDrawOrderPermutation = Object.keys(this.data.spans);
-      this.data.spanDrawOrderPermutation.sort((a, b) => {
-        var spanA = this.data.spans[a];
-        var spanB = this.data.spans[b];
+      this.data.spanDrawOrderPermutation = this.determineDrawOrder(this.data.spans);
 
-        // We're jumping all over the chunks, but it's enough that
-        // we're doing everything inside each chunk in the right
-        // order. should it become necessary to actually do these in
-        // linear order, put in a similar condition for
-        // spanX.headFragment.chunk.index; but it should not be
-        // needed.
-        var tmp = spanA.headFragment.drawOrder - spanB.headFragment.drawOrder;
-        if (tmp) {
-          return tmp < 0 ? -1 : 1;
-        }
-
-        return 0;
-      });
-
-      // resort the spans for linear order by center
-      sortedFragments.sort(midpointComparator);
-
+      // resort the spans for linear order by center so we can organize them into towers
+      sortedFragments.sort(Span.midpointComparator);
       // sort fragments into towers, calculate average arc distances
-      var lastFragment = null;
-      var towerId = -1;
-      $.each(sortedFragments, function (i, fragment) {
-        if (!lastFragment || (lastFragment.from != fragment.from || lastFragment.to != fragment.to)) {
-          towerId++;
-        }
-        fragment.towerId = towerId;
-        lastFragment = fragment;
-      }); // sortedFragments
-
+      this.organizeFragmentsIntoTowers(sortedFragments);
 
       // find curlies (only the first fragment drawn in a tower)
       this.data.spanDrawOrderPermutation.map(spanId => {
@@ -1272,7 +1414,7 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       var spanAnnTexts = {};
-      $.each(this.data.chunks, (chunkNo, chunk) => {
+      this.data.chunks.map(chunk => {
         chunk.markedTextStart = [];
         chunk.markedTextEnd = [];
 
@@ -1373,53 +1515,10 @@ var Visualizer = (function ($, window, undefined) {
         }); // chunk.fragments
       }); // chunks
 
-      var numChunks = this.data.chunks.length;
-      // note the location of marked text with respect to chunks
-      var startChunk = 0;
-      var currentChunk;
       // sort by "from"; we don't need to sort by "to" as well,
       // because unlike spans, chunks are disjunct
       this.markedText.sort((a, b) => Util.cmp(a[0], b[0]));
-      $.each(this.markedText, (textNo, textPos) => {
-        var from = textPos[0];
-        var to = textPos[1];
-        var markedType = textPos[2];
-        if (from < 0)
-          from = 0;
-        if (to < 0)
-          to = 0;
-        if (to >= this.data.text.length)
-          to = this.data.text.length - 1;
-        if (from > to)
-          from = to;
-        while (startChunk < numChunks) {
-          var chunk = this.data.chunks[startChunk];
-          if (from <= chunk.to) {
-            chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
-            break;
-          }
-          startChunk++;
-        }
-        if (startChunk == numChunks) {
-          this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
-          return;
-        }
-        currentChunk = startChunk;
-        while (currentChunk < numChunks) {
-          var chunk = this.data.chunks[currentChunk];
-          if (to <= chunk.to) {
-            chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
-            break;
-          }
-          currentChunk++;
-        }
-        if (currentChunk == numChunks) {
-          this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
-          var chunk = this.data.chunks[this.data.chunks.length - 1];
-          chunk.markedTextEnd.push([textNo, false, chunk.text.length]);
-          return;
-        }
-      }); // markedText
+      this.applyMarkedTextToChunks(this.markedText, this.data.chunks);
 
       this.dispatcher.post('dataReady', [this.data]);
     }
@@ -1666,7 +1765,7 @@ var Visualizer = (function ($, window, undefined) {
             from: Math.min(startPos, endPos),
             to: Math.max(startPos, endPos)
           };
-          // WEBANNO EXTENSION END              
+          // WEBANNO EXTENSION END
         } else { // it's markedText [id, start?, char#, offset]
           if (fragment[2] < 0)
             fragment[2] = 0;
@@ -1782,8 +1881,6 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     renderDataReal(sourceData) {
-      var that = this;
-
       Util.profileEnd('before render');
       Util.profileStart('render');
       Util.profileStart('init');
@@ -2017,7 +2114,7 @@ var Visualizer = (function ($, window, undefined) {
         span.floor = carpet + thisCurlyHeight;
       });
 
-      $.each(this.data.chunks, (chunkNo, chunk) =>{
+      $.each(this.data.chunks, (chunkNo, chunk) => {
         var spaceWidth = 0;
         if (chunk.lastSpace) {
           // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
@@ -2127,8 +2224,8 @@ var Visualizer = (function ($, window, undefined) {
           var rectClass = 'span_' + (span.cue || span.type) + ' span_default'; // TODO XXX first part unneeded I think; remove
 
           // attach e.g. "False_positive" into the type
-          if (span.comment && span.comment.type) { 
-            rectClass += ' ' + span.comment.type; 
+          if (span.comment && span.comment.type) {
+            rectClass += ' ' + span.comment.type;
           }
 
           // inner coordinates of fragment (excluding margins)
@@ -2153,19 +2250,6 @@ var Visualizer = (function ($, window, undefined) {
               rx: this.markedSpanSize,
               ry: this.markedSpanSize,
             });
-            // WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
-            /*
-                          svg.other(markedRect, 'animate', {
-                            'data-type': span.marked,
-                            attributeName: 'fill',
-                            values: (span.marked == 'match'? highlightMatchSequence
-                                      : highlightSpanSequence),
-                            dur: highlightDuration,
-                            repeatCount: 'indefinite',
-                            begin: 'indefinite'
-                          });
-            */
-            // WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
           }
           // BEGIN WEBANNO EXTENSION - Issue #273 - Layout doesn't space out labels sufficiently 
           // Nicely spread out labels/text and leave space for mark highlight such that adding
@@ -2795,7 +2879,7 @@ var Visualizer = (function ($, window, undefined) {
           return tmp < 0 ? -1 : 1;
         // if equal, then those where heights of the targets are smaller
         tmp = this.data.spans[a.origin].headFragment.height + this.data.spans[a.target].headFragment.height -
-        this.data.spans[b.origin].headFragment.height - this.data.spans[b.target].headFragment.height;
+          this.data.spans[b.origin].headFragment.height - this.data.spans[b.target].headFragment.height;
         if (tmp)
           return tmp < 0 ? -1 : 1;
         // if equal, then those with the lower origin
@@ -2843,7 +2927,7 @@ var Visualizer = (function ($, window, undefined) {
           markerUnits: 'strokeWidth',
           'class': 'drag_fill',
         });
-        this.svg.polyline(arrowhead, [[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]);
+      this.svg.polyline(arrowhead, [[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]);
       var arcDragArc = this.svg.path(this.svg.createPath(), {
         markerEnd: 'url(#drag_arrow)',
         'class': 'drag_stroke',
@@ -3148,7 +3232,7 @@ var Visualizer = (function ($, window, undefined) {
               height: sizes.arcs.height,
             };
             if (arc.marked) {
-              var markedRect = this.svg.rect(shadowGroup,
+              this.svg.rect(shadowGroup,
                 textBox.x - this.markedArcSize, textBox.y - this.markedArcSize,
                 textBox.width + 2 * this.markedArcSize, textBox.height + 2 * this.markedArcSize, {
                 filter: 'url(#Gaussian_Blur)',
@@ -3156,19 +3240,6 @@ var Visualizer = (function ($, window, undefined) {
                 rx: this.markedArcSize,
                 ry: this.markedArcSize,
               });
-              // WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
-              /*
-              this.svg.other(markedRect, 'animate', {
-                'data-type': arc.marked,
-                attributeName: 'fill',
-                values: (arc.marked == 'match' ? highlightMatchSequence
-                          : highlightArcSequence),
-                dur: highlightDuration,
-                repeatCount: 'indefinite',
-                begin: 'indefinite'
-              });
-              */
-              // WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
             }
             if (arc.shadowClass) {
               this.svg.rect(shadowGroup,
@@ -3287,19 +3358,6 @@ var Visualizer = (function ($, window, undefined) {
                 strokeWidth: this.markedArcStroke,
                 'strokeDashArray': dashArray,
               });
-              // WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
-              /*
-              this.svg.other(markedRect, 'animate', {
-                'data-type': arc.marked,
-                attributeName: 'fill',
-                values: (arc.marked == 'match' ? highlightMatchSequence
-                          : highlightArcSequence),
-                dur: highlightDuration,
-                repeatCount: 'indefinite',
-                begin: 'indefinite'
-              });
-              */
-              // WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
             }
             if (arc.shadowClass) {
               this.svg.path(shadowGroup, path, {
@@ -3594,7 +3652,7 @@ var Visualizer = (function ($, window, undefined) {
               box.x - rectShadowSize, box.y - rectShadowSize,
               box.width + 2 * rectShadowSize, box.height + 2 * rectShadowSize, {
               */
-                this.rtlmode ? box.x + rowPadding + rectShadowSize : box.x - rectShadowSize,
+              this.rtlmode ? box.x + rowPadding + rectShadowSize : box.x - rectShadowSize,
               box.y - rectShadowSize,
               box.width + 2 * rectShadowSize,
               box.height + 2 * rectShadowSize,
@@ -4157,7 +4215,7 @@ var Visualizer = (function ($, window, undefined) {
           this.dispatcher.post('unknownError', [sourceData.exception]);
         }
         return;
-      } 
+      }
 
       // Fill in default values that don't necessarily go over the protocol
       if (sourceData) {
@@ -4181,9 +4239,14 @@ var Visualizer = (function ($, window, undefined) {
       }, 0);
     }
 
+    /**
+     * Re-render using the known source data. This is necessary if the source data has changed e.g.
+     * due to a partial update from the server.
+     */
     rerender() {
       this.dispatcher.post('startedRendering', [this.coll, this.doc, this.args]);
       this.dispatcher.post('spin');
+
       try {
         this.renderDataReal(this.sourceData);
       } catch (e) {
@@ -4193,6 +4256,7 @@ var Visualizer = (function ($, window, undefined) {
         console.warn('Rendering terminated due to: ' + e, e.stack);
         this.dispatcher.post('renderError: Fatal', [this.sourceData, e]);
       }
+
       this.dispatcher.post('unspin');
     }
 
@@ -4222,21 +4286,22 @@ var Visualizer = (function ($, window, undefined) {
     triggerRender() {
       if (this.svg && ((this.isRenderRequested && this.isCollectionLoaded) || this.requestedData)) {
         this.isRenderRequested = false;
+
         if (this.requestedData) {
-
           Util.profileClear();
           Util.profileStart('before render');
-
           this.renderData(requestedData);
-        } else if (this.doc.length) {
+          return;
+        }
 
+        if (this.doc.length) {
           Util.profileClear();
           Util.profileStart('before render');
-
           this.renderDocument();
-        } else {
-          this.dispatcher.post(0, 'renderError:noFileSpecified');
+          return;
         }
+
+        this.dispatcher.post(0, 'renderError:noFileSpecified');
       }
     }
 
@@ -4249,10 +4314,10 @@ var Visualizer = (function ($, window, undefined) {
       this.isCollectionLoaded = false;
     }
 
-    gotCurrent(_coll, _doc, _args, reloadData) {
-      this.coll = _coll;
-      this.doc = _doc;
-      this.args = _args;
+    gotCurrent(coll, doc, args, reloadData) {
+      this.coll = coll;
+      this.doc = doc;
+      this.args = args;
 
       if (reloadData) {
         this.isRenderRequested = true;
@@ -4320,8 +4385,8 @@ var Visualizer = (function ($, window, undefined) {
               spans[arc.origin] = true;
             }
           };
-          $.each(span.incoming, (arcNo, arc) =>  addArcAndSpan(arc, arc.origin));
-          $.each(span.outgoing, (arcNo, arc) =>  addArcAndSpan(arc, arc.target));
+          $.each(span.incoming, (arcNo, arc) => addArcAndSpan(arc, arc.origin));
+          $.each(span.outgoing, (arcNo, arc) => addArcAndSpan(arc, arc.target));
           var equivSelector = [];
           $.each(equivs, (equiv, dummy) => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
 
