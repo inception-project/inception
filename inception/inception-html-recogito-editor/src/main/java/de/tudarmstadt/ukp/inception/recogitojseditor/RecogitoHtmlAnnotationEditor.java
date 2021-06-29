@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.removeStart;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -108,6 +109,7 @@ public class RecogitoHtmlAnnotationEditor
         script.append("(function() {\n");
         script.append("  var r = Recogito.init({\n");
         script.append("    content: document.getElementById('" + markupId + "'),\n");
+        script.append("    disableEditor: true,\n");
         script.append("    mode: 'pre'\n");
         script.append("  });\n");
         script.append("\n");
@@ -214,8 +216,8 @@ public class RecogitoHtmlAnnotationEditor
         private void select(AjaxRequestTarget aTarget)
             throws JsonParseException, JsonMappingException, IOException
         {
-            VID paramId = VID
-                    .parse(getRequest().getRequestParameters().getParameterValue("id").toString());
+            VID paramId = VID.parse(removeStart(
+                    getRequest().getRequestParameters().getParameterValue("id").toString(), "#"));
 
             try {
                 CAS cas = getCasProvider().get();
