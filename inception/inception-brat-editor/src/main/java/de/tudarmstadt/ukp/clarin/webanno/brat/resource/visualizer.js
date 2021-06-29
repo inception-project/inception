@@ -1,4 +1,21 @@
 /*
+ * ## INCEpTION ##
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  * ## brat ##
  * Copyright (C) 2010-2012 The brat contributors, all rights reserved.
  * 
@@ -84,6 +101,55 @@ var Visualizer = (function ($, window, undefined) {
       this.from = from;
       this.to = to;
     }
+
+    static compare(a, b) {
+      var tmp;
+      var aSpan = a.span;
+      var bSpan = b.span;
+
+      // spans with more fragments go first
+      tmp = aSpan.fragments.length - bSpan.fragments.length;
+      if (tmp) {
+        return tmp < 0 ? 1 : -1;
+      }
+
+      // longer arc distances go last
+      tmp = aSpan.avgDist - bSpan.avgDist;
+      if (tmp) {
+        return tmp < 0 ? -1 : 1;
+      }
+      // spans with more arcs go last
+      tmp = aSpan.numArcs - bSpan.numArcs;
+      if (tmp) {
+        return tmp < 0 ? -1 : 1;
+      }
+      // compare the span widths,
+      // put wider on bottom so they don't mess with arcs, or shorter
+      // on bottom if there are no arcs.
+      var ad = a.to - a.from;
+      var bd = b.to - b.from;
+      tmp = ad - bd;
+      if (aSpan.numArcs == 0 && bSpan.numArcs == 0) {
+        tmp = -tmp;
+      }
+      if (tmp) {
+        return tmp < 0 ? 1 : -1;
+      }
+      tmp = aSpan.refedIndexSum - bSpan.refedIndexSum;
+      if (tmp) {
+        return tmp < 0 ? -1 : 1;
+      }
+      // if no other criterion is found, sort by type to maintain
+      // consistency
+      // TODO: isn't there a cmp() in JS?
+      if (aSpan.type < bSpan.type) {
+        return -1;
+      } else if (aSpan.type > bSpan.type) {
+        return 1;
+      }
+
+      return 0;
+    }
   }
 
   class Span {
@@ -146,11 +212,11 @@ var Visualizer = (function ($, window, undefined) {
       this.segmentedOffsetsMap = {};
 
       for (var fi = 0, nfi = 0; fi < this.unsegmentedOffsets.length; fi++) {
-        var begin = this.unsegmentedOffsets[fi][0];
-        var end = this.unsegmentedOffsets[fi][1];
+        let begin = this.unsegmentedOffsets[fi][0];
+        const end = this.unsegmentedOffsets[fi][1];
 
         for (var ti = begin; ti < end; ti++) {
-          var c = text.charAt(ti);
+          const c = text.charAt(ti);
           if (c == '\n' || c == '\r') {
             if (begin !== null) {
               this.offsets.push([begin, ti]);
@@ -170,8 +236,14 @@ var Visualizer = (function ($, window, undefined) {
       }
     }
 
+    /**
+     * Create a partial copy of the span with a new ID.
+     * 
+     * @param {String} id 
+     * @returns the copy.
+     */
     copy(id) {
-      var span = $.extend(new Span(), this); // clone
+      let span = $.extend(new Span(), this); // clone
       span.id = id;
       // protect from shallow copy
       span.initContainers();
@@ -200,7 +272,7 @@ var Visualizer = (function ($, window, undefined) {
       
       this.id = id;
       this.triggerId = triggerId;
-      roles.forEach(role => this.roles.push({ type: role[0], targetId: role[1] }));
+      roles.map(role => this.roles.push({ type: role[0], targetId: role[1] }));
 
       this.equiv = klass == "equiv";
       this.relation = klass == "relation";
@@ -409,6 +481,7 @@ var Visualizer = (function ($, window, undefined) {
     collapseArcs = false;
     collapseArcSpace = false;
 
+    markedText = [];
     highlight;
     highlightArcs;
     highlightSpans;
@@ -544,12 +617,18 @@ var Visualizer = (function ($, window, undefined) {
       return box;
     }
 
+    /**
+     * Get the priority of the given comment class.
+     * 
+     * @param {String} commentClass
+     * @returns a numerical value representing the priority.
+     */
     commentPriority(commentClass) {
       if (commentClass === undefined) {
         return -1;
       }
 
-      var len = this.commentPrioLevels.length;
+      const len = this.commentPrioLevels.length;
       for (var i = 0; i < len; i++) {
         if (commentClass.indexOf(this.commentPrioLevels[i]) != -1) {
           return i;
@@ -567,19 +646,26 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     setMarked(markedType) {
-      $.each(args[markedType] || [], (markedNo, marked) => {
+      if (!this.args[markedType]) {
+        return;
+      }
+
+      this.args[markedType].map(marked => {
         if (marked[0] == 'sent') {
           data.markedSent[marked[1]] = true;
-        } else if (marked[0] == 'equiv') { // [equiv, Equiv, T1]
+          return;
+        }
+
+        if (marked[0] == 'equiv') { // [equiv, Equiv, T1]
           $.each(sourceData.equivs, (equivNo, equiv) => {
             if (equiv[1] == marked[1]) {
-              var len = equiv.length;
+              let len = equiv.length;
               for (var i = 2; i < len; i++) {
                 if (equiv[i] == marked[2]) {
                   // found it
                   len -= 3;
                   for (var i = 1; i <= len; i++) {
-                    var arc = this.data.eventDescs[equiv[0] + "*" + i].equivArc;
+                    let arc = this.data.eventDescs[equiv[0] + "*" + i].equivArc;
                     arc.marked = markedType;
                   }
                   return; // next equiv
@@ -587,37 +673,45 @@ var Visualizer = (function ($, window, undefined) {
               }
             }
           });
-        } else if (marked.length == 2) {
-          markedText.push([parseInt(marked[0], 10), parseInt(marked[1], 10), markedType]);
-        } else {
-          var span = this.data.spans[marked[0]];
-          if (span) {
-            if (marked.length == 3) { // arc
-              $.each(span.outgoing, (arcNo, arc) => {
-                if (arc.target == marked[2] && arc.type == marked[1]) {
-                  arc.marked = markedType;
-                }
-              });
-            } else { // span
-              span.marked = markedType;
-            }
-          } else {
-            var eventDesc = this.data.eventDescs[marked[0]];
-            if (eventDesc) { // relation
-              $.each(this.data.spans[eventDesc.triggerId].outgoing, (arcNo, arc) => {
-                if (arc.eventDescId == marked[0]) {
-                  arc.marked = markedType;
-                }
-              });
-            } else { // try for trigger
-              $.each(this.data.eventDescs, (eventDescNo, eventDesc) => {
-                if (eventDesc.triggerId == marked[0]) {
-                  this.data.spans[eventDesc.id].marked = markedType;
-                }
-              });
-            }
+          return;
+        } 
+        
+        if (marked.length == 2) {
+          this.markedText.push([parseInt(marked[0], 10), parseInt(marked[1], 10), markedType]);
+          return;
+        } 
+
+        let span = this.data.spans[marked[0]];
+        if (span) {
+          if (marked.length == 3) { // arc
+            $.each(span.outgoing, (arcNo, arc) => {
+              if (arc.target == marked[2] && arc.type == marked[1]) {
+                arc.marked = markedType;
+              }
+            });
+          } else { // span
+            span.marked = markedType;
           }
+
+          return;
         }
+
+        let eventDesc = this.data.eventDescs[marked[0]];
+        if (eventDesc) { // relation
+          $.each(this.data.spans[eventDesc.triggerId].outgoing, (arcNo, arc) => {
+            if (arc.eventDescId == marked[0]) {
+              arc.marked = markedType;
+            }
+          });
+          return;
+        }
+        
+        // try for trigger
+        $.each(this.data.eventDescs, (eventDescNo, eventDesc) => {
+          if (eventDesc.triggerId == marked[0]) {
+            this.data.spans[eventDesc.id].marked = markedType;
+          }
+        });
       });
     }
 
@@ -638,53 +732,71 @@ var Visualizer = (function ($, window, undefined) {
       }
     };
 
-    fragmentComparator(a, b) {
-      var tmp;
-      var aSpan = a.span;
-      var bSpan = b.span;
+    applyHighlighting() {
+      this.markedText = [];
+      this.setMarked('edited'); // set by editing process
+      this.setMarked('focus'); // set by URL
+      this.setMarked('matchfocus'); // set by search process, focused match
+      this.setMarked('match'); // set by search process, other (non-focused) match
+    }
 
-      // spans with more fragments go first
-      tmp = aSpan.fragments.length - bSpan.fragments.length;
-      if (tmp) {
-        return tmp < 0 ? 1 : -1;
-      }
+    applyNormalizations() {
+      this.sourceData.normalizations.map(norm => {
+        var target = norm[0];
+        var refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
+        var refid = norm.length > 2 ? norm[2] : "";
+        var reftext = norm.length > 3 ? norm[3] : null;
 
-      // longer arc distances go last
-      tmp = aSpan.avgDist - bSpan.avgDist;
-      if (tmp) {
-        return tmp < 0 ? -1 : 1;
-      }
-      // spans with more arcs go last
-      tmp = aSpan.numArcs - bSpan.numArcs;
-      if (tmp) {
-        return tmp < 0 ? -1 : 1;
-      }
-      // compare the span widths,
-      // put wider on bottom so they don't mess with arcs, or shorter
-      // on bottom if there are no arcs.
-      var ad = a.to - a.from;
-      var bd = b.to - b.from;
-      tmp = ad - bd;
-      if (aSpan.numArcs == 0 && bSpan.numArcs == 0) {
-        tmp = -tmp;
-      }
-      if (tmp) {
-        return tmp < 0 ? 1 : -1;
-      }
-      tmp = aSpan.refedIndexSum - bSpan.refedIndexSum;
-      if (tmp) {
-        return tmp < 0 ? -1 : 1;
-      }
-      // if no other criterion is found, sort by type to maintain
-      // consistency
-      // TODO: isn't there a cmp() in JS?
-      if (aSpan.type < bSpan.type) {
-        return -1;
-      } else if (aSpan.type > bSpan.type) {
-        return 1;
-      }
+        var span = this.data.spans[target];
+        if (span) {
+          span.normalizations.push([refdb, refid, reftext]);
+          span.normalized = 'Normalized';
+          return;
+        }
 
-      return 0;
+        var arc = this.data.arcById[target];
+        if (arc) {
+          arc.normalizations.push([refdb, refid, reftext]);
+          arc.normalized = "Normalized";
+          return;
+        }
+
+        this.dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]]);
+      });
+    }
+
+    assignArcsToSpans() {
+      Object.entries(this.data.eventDescs).map(([eventNo, eventDesc]) => {
+        let origin = this.data.spans[eventDesc.id];
+        if (!origin) {
+          // TODO: include missing trigger ID in error message
+          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+          return;
+        }
+
+        let here = origin.headFragment.from + origin.headFragment.to;
+        eventDesc.roles.map(role => {
+          let target = this.data.spans[role.targetId];
+          if (!target) {
+            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+            return;
+          }
+
+          let there = target.headFragment.from + target.headFragment.to;
+          let dist = Math.abs(here - there);
+          let arc = new Arc(eventDesc, role, dist, eventNo);
+          
+          origin.totalDist += dist;
+          origin.numArcs++;
+          target.totalDist += dist;
+          target.numArcs++;
+
+          this.data.arcs.push(arc);
+          target.incoming.push(arc);
+          origin.outgoing.push(arc);
+          this.data.arcById[arc.eventDescId] = arc;
+        }); // roles
+      }); // eventDescs
     }
 
     setData(_sourceData) {
@@ -734,7 +846,7 @@ var Visualizer = (function ($, window, undefined) {
           }
         }
         // WEBANNO EXTENSION END
-        
+
         span.splitMultilineOffsets(this.data.text);
         this.data.spans[entity[0]] = span;
       });
@@ -881,7 +993,7 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       // comments
-      this.sourceData.comments.forEach(comment => {
+      this.sourceData.comments.map(comment => {
         // comment: [entityId, type, text]
         // TODO error handling
         // sentence id: ['sent', sentId]
@@ -904,7 +1016,7 @@ var Visualizer = (function ($, window, undefined) {
               : id in this.data.eventDescs
                 ? [this.data.eventDescs[id]] // arc: [eventDesc]
                 : [];
-          commentEntities.forEach(entity => {
+          commentEntities.map(entity => {
             // if duplicate comment for entity:
             // overwrite type, concatenate comment with a newline
             if (!entity.comment) {
@@ -952,7 +1064,7 @@ var Visualizer = (function ($, window, undefined) {
       var chunk = null;
 
       // token containment testing (chunk recognition)
-      this.sourceData.token_offsets.forEach(offset => {
+      this.sourceData.token_offsets.map(offset => {
         var from = offset[0];
         var to = offset[1];
         if (firstFrom === null) {
@@ -1017,7 +1129,7 @@ var Visualizer = (function ($, window, undefined) {
       */
       var sentenceNo = this.sourceData.sentence_number_offset - 1;
 
-      this.sourceData.sentence_offsets.forEach(offset => {
+      this.sourceData.sentence_offsets.map(offset => {
         var from = offset[0];
         var to = offset[1];
         var chunk;
@@ -1048,7 +1160,7 @@ var Visualizer = (function ($, window, undefined) {
       // assign fragments to appropriate chunks
       var currentChunkId = 0;
       var chunk;
-      sortedFragments.forEach(fragment => {
+      sortedFragments.map(fragment => {
         while (fragment.to > (chunk = this.data.chunks[currentChunkId]).to) {
           currentChunkId++;
         }
@@ -1058,76 +1170,22 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       // assign arcs to spans; calculate arc distances
-      Object.entries(this.data.eventDescs).forEach(([eventNo, eventDesc]) => {
-        var dist = 0;
-        var origin = this.data.spans[eventDesc.id];
-        if (!origin) {
-          // TODO: include missing trigger ID in error message
-          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
-          return;
-        }
-
-        var here = origin.headFragment.from + origin.headFragment.to;
-        eventDesc.roles.forEach(role => {
-          var target = this.data.spans[role.targetId];
-          if (!target) {
-            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
-            return;
-          }
-          var there = target.headFragment.from + target.headFragment.to;
-          var dist = Math.abs(here - there);
-          var arc = new Arc(eventDesc, role, dist, eventNo);
-          origin.totalDist += dist;
-          origin.numArcs++;
-          target.totalDist += dist;
-          target.numArcs++;
-          this.data.arcs.push(arc);
-          target.incoming.push(arc);
-          origin.outgoing.push(arc);
-          this.data.arcById[arc.eventDescId] = arc;
-        }); // roles
-      }); // eventDescs
-
+      this.assignArcsToSpans();
 
       // normalizations
-      this.sourceData.normalizations.forEach(norm => {
-        var target = norm[0];
-        var refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
-        var refid = norm.length > 2 ? norm[2] : "";
-        var reftext = norm.length > 3 ? norm[3] : null;
-
-        var span = this.data.spans[target];
-        if (span) {
-          span.normalizations.push([refdb, refid, reftext]);
-          span.normalized = 'Normalized';
-          return;
-        }
-
-        var arc = this.data.arcById[target];
-        if (arc) {
-          arc.normalizations.push([refdb, refid, reftext]);
-          arc.normalized = "Normalized";
-          return;
-        }
-
-        this.dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]]);
-      });
+      this.applyNormalizations();
 
       // highlighting
-      var markedText = [];
-      this.setMarked('edited'); // set by editing process
-      this.setMarked('focus'); // set by URL
-      this.setMarked('matchfocus'); // set by search process, focused match
-      this.setMarked('match'); // set by search process, other (non-focused) match
+      this.applyHighlighting();
 
-      Object.entries(this.data.spans).forEach(span => {
+      Object.entries(this.data.spans).map(span => {
         // calculate average arc distances
         // average distance of arcs (0 for no arcs)
         span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0;
 
         // collect fragment texts into span texts
-        var fragmentTexts = [];
-        span.fragments && span.fragments.forEach(fragment => {
+        let fragmentTexts = [];
+        span.fragments && span.fragments.map(fragment => {
           // TODO heuristics
           fragmentTexts.push(fragment.text);
         });
@@ -1138,33 +1196,31 @@ var Visualizer = (function ($, window, undefined) {
         // preliminary sort to assign heights for basic cases
         // (first round) and cases resolved in the previous
         // round(s).
-        this.data.chunks.forEach(chunk => {
+        this.data.chunks.map(chunk => {
           // sort and then re-number
-          chunk.fragments.sort(this.fragmentComparator);
-          chunk.fragments.forEach((fragment, fragmentNo) => fragment.indexNumber = fragmentNo);
+          chunk.fragments.sort(Fragment.compare);
+          chunk.fragments.map((fragment, fragmentNo) => fragment.indexNumber = fragmentNo);
         });
 
         // nix the sums, so we can sum again
-        $.each(this.data.spans, function (spanNo, span) {
-          span.refedIndexSum = 0;
-        });
+        $.each(this.data.spans, (spanNo, span) => span.refedIndexSum = 0);
 
         // resolved cases will now have indexNumber set
         // to indicate their relative order. Sum those for referencing cases
         // for use in iterative resorting
-        this.data.arcs.forEach(arc => {
+        this.data.arcs.map(arc => {
           this.data.spans[arc.origin].refedIndexSum += this.data.spans[arc.target].headFragment.indexNumber;
         });
       }
 
       // Final sort of fragments in chunks for drawing purposes
       // Also identify the marked text boundaries regarding chunks
-      this.data.chunks.forEach(chunk => {
+      this.data.chunks.map(chunk => {
         // and make the next sort take this into account. Note that this will
         // now resolve first-order dependencies between sort orders but not
         // second-order or higher.
-        chunk.fragments.sort(this.fragmentComparator);
-        chunk.fragments.forEach((fragment, fragmentNo) => fragment.drawOrder = fragmentNo);
+        chunk.fragments.sort(Fragment.compare);
+        chunk.fragments.map((fragment, fragmentNo) => fragment.drawOrder = fragmentNo);
       });
 
       this.data.spanDrawOrderPermutation = Object.keys(this.data.spans);
@@ -1202,10 +1258,10 @@ var Visualizer = (function ($, window, undefined) {
 
 
       // find curlies (only the first fragment drawn in a tower)
-      this.data.spanDrawOrderPermutation.forEach(spanId => {
+      this.data.spanDrawOrderPermutation.map(spanId => {
         var span = this.data.spans[spanId];
 
-        span.fragments.forEach(fragment => {
+        span.fragments.map(fragment => {
           if (!this.data.towers[fragment.towerId]) {
             this.data.towers[fragment.towerId] = [];
             fragment.drawCurly = true;
@@ -1323,8 +1379,8 @@ var Visualizer = (function ($, window, undefined) {
       var currentChunk;
       // sort by "from"; we don't need to sort by "to" as well,
       // because unlike spans, chunks are disjunct
-      markedText.sort((a, b) => Util.cmp(a[0], b[0]));
-      $.each(markedText, (textNo, textPos) => {
+      this.markedText.sort((a, b) => Util.cmp(a[0], b[0]));
+      $.each(this.markedText, (textNo, textPos) => {
         var from = textPos[0];
         var to = textPos[1];
         var markedType = textPos[2];
@@ -1419,7 +1475,7 @@ var Visualizer = (function ($, window, undefined) {
     getTextAndSpanTextMeasurements() {
       // get the span text sizes
       var chunkTexts = {}; // set of span texts
-      this.data.chunks.forEach(chunk => {
+      this.data.chunks.map(chunk => {
         chunk.row = undefined; // reset
         if (!chunkTexts.hasOwnProperty(chunk.text)) {
           chunkTexts[chunk.text] = [];
@@ -2611,10 +2667,9 @@ var Visualizer = (function ($, window, undefined) {
           */
           textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
           // WEBANNO EXTENSION END
-          var startDesc = openTextHighlights[textDesc[0]];
+          let startDesc = openTextHighlights[textDesc[0]];
           delete openTextHighlights[textDesc[0]];
-          markedRow = [row, startDesc[3], textDesc[3], startDesc[4]];
-          textMarkedRows.push(markedRow);
+          textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]]);
         });
 
         // XXX check this - is it used? should it be lastRow?
@@ -3229,7 +3284,7 @@ var Visualizer = (function ($, window, undefined) {
             if (arc.marked) {
               this.svg.path(shadowGroup, path, {
                 'class': 'shadow_EditHighlight_arc',
-                strokeWidth: markedArcStroke,
+                strokeWidth: this.markedArcStroke,
                 'strokeDashArray': dashArray,
               });
               // WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
@@ -3339,14 +3394,14 @@ var Visualizer = (function ($, window, undefined) {
             if (arc.marked) {
               this.svg.path(shadowGroup, path, {
                 'class': 'shadow_EditHighlight_arc',
-                strokeWidth: markedArcStroke,
+                strokeWidth: this.markedArcStroke,
                 'strokeDashArray': dashArray,
               });
             }
             if (shadowGroup) {
               this.svg.path(shadowGroup, path, {
                 'class': 'shadow_' + arc.shadowClass,
-                strokeWidth: shadowStroke,
+                strokeWidth: this.shadowStroke,
                 'strokeDashArray': dashArray,
               });
             }
@@ -4362,7 +4417,7 @@ var Visualizer = (function ($, window, undefined) {
       target.removeClass('badTarget');
       this.dispatcher.post('hideComment');
       if (this.highlight) {
-        this.highlight.forEach((h) => this.svg.remove(h));
+        this.highlight.map((h) => this.svg.remove(h));
         this.highlight = undefined;
       }
       if (this.highlightSpans) {
