@@ -158,53 +158,15 @@ public class SearchAnnotationSidebar
         searchForm.add(new TextArea<>("queryInput", targetQuery));
         LambdaAjaxButton<SearchOptions> searchButton = new LambdaAjaxButton<>("search",
                 this::actionSearch);
-        // LambdaAjaxButton<SearchOptions> exportButton = new LambdaAjaxButton<>("export",
-        // this::actionExport);
-        // searchForm.add(exportButton);
         searchForm.add(searchButton);
+        searchForm.setDefaultButton(searchButton);
 
-        /*
-         * 
-         * searchForm.add(new DownloadLink("download", LoadableDetachableModel.of(() ->
-         * getGazeteerFile(gazeteer)), gazeteer.getName()));
-         * 
-         * searchForm.add(new AjaxDownloadLink("export", new
-         * LambdaModel<>(this::getExportLayerFileName).autoDetaching(), this::exportLayer));
-         */
         AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults",
                 this::exportSearchResults);
         exportButton.add(visibleWhen(() -> groupedSearchResults.getObject() != null
                 && !groupedSearchResults.getObject().isEmpty()));
         searchForm.add(exportButton);
 
-        // searchForm.add(new AjaxDownloadLink("export", LoadableDetachableModel.of(this::export)));
-
-        /*
-         * Link<Void> streamDownloadLink = new Link<Void>("link3") {
-         * 
-         * @Override public void onClick() {
-         * 
-         * AbstractResourceStreamWriter rstream = new AbstractResourceStreamWriter() {
-         * SearchResultsExporter.export()
-         * 
-         * 
-         * /*
-         * 
-         * @Override public void write(OutputStream output) throws IOException {
-         * output.write(getContent()); }
-         * 
-         * 
-         * };
-         * 
-         * ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(rstream,
-         * "test.csv"); getRequestCycle().scheduleRequestHandlerAfterCurrent(handler); } };
-         * 
-         * add(streamDownloadLink);
-         * 
-         */
-
-        searchForm.setDefaultButton(searchButton);
-        // searchForm.setDefaultButton()
         mainContainer.add(searchForm);
 
         WebMarkupContainer searchOptionsPanel = new WebMarkupContainer("searchOptionsPanel");
@@ -460,7 +422,7 @@ public class SearchAnnotationSidebar
                 }
                 catch (Exception e) {
                     // FIXME Is there some better error handling here?
-                    LOG.error("Unable to generate report", e);
+                    LOG.error("Unable to generate search results csv", e);
                     throw new ResourceStreamNotFoundException(e);
                 }
             }
@@ -472,13 +434,6 @@ public class SearchAnnotationSidebar
             }
         };
     }
-    /*
-     * 
-     * private void actionExport(AjaxRequestTarget aTarget, Form<SearchOptions> aForm) { //
-     * SearchResultsExporter.export(resultsProvider.getAllResults(), //
-     * "D:\\Falko\\Documents\\UKP\\csv.txt"); }
-     * 
-     */
 
     private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
