@@ -215,13 +215,21 @@ public abstract class AnnotationPageBase
     public boolean actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
         if (!Objects.equals(aDocument.getId(), getModelObject().getDocument().getId())) {
-            getModelObject().setDocument(aDocument, getListOfDocs());
+            List<SourceDocument> docs = getListOfDocs();
+            if (!docs.contains(aDocument)) {
+                error("The document [" + aDocument.getName() + "] is not accessible");
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+                return false;
+            }
+
+            getModelObject().setDocument(aDocument, docs);
             actionLoadDocument(aTarget);
             return true;
         }
-        else {
-            return false;
-        }
+
+        return false;
     }
 
     /**

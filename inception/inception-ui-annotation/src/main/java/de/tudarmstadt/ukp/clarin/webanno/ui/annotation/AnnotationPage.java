@@ -127,33 +127,6 @@ public class AnnotationPage
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
 
-    // public AnnotationPage()
-    // {
-    // super();
-    // LOG.debug("Setting up annotation page without parameters");
-    //
-    // setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-    // // Ensure that a user is set
-    // getModelObject().setUser(userRepository.getCurrentUser());
-    //
-    // Map<String, StringValue> fragmentParameters = Session.get()
-    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-    // StringValue focus = StringValue.valueOf(0);
-    // if (fragmentParameters != null) {
-    // // Clear the URL fragment parameters - we only use them once!
-    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-    //
-    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-    // StringValue projectName = fragmentParameters.get(PAGE_PARAM_PROJECT_NAME);
-    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-    // StringValue name = fragmentParameters.get(PAGE_PARAM_DOCUMENT_NAME);
-    // focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-    //
-    // handleParameters(project, projectName, document, name, focus, false);
-    // }
-    // commonInit(focus);
-    // }
-
     public AnnotationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -323,21 +296,10 @@ public class AnnotationPage
 
         centerArea.addOrReplace(annotationEditor);
 
-        // Give the new editor an opportunity to configure the current paging strategy
+        // Give the new editor an opportunity to configure the current paging strategy,
+        // this does not configure the paging for a document yet
+        // this would require loading the cas which might not have been upgraded yet
         factory.initState(state);
-        if (state.getDocument() != null) {
-            try {
-                state.getPagingStrategy().recalculatePage(state, getEditorCas());
-            }
-            catch (Exception e) {
-                LOG.info("Error reading CAS: {}", e.getMessage());
-                error("Error reading CAS " + e.getMessage());
-                if (aTarget != null) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
-            }
-        }
-
         // Use the proper position labels for the current paging strategy
         centerArea.addOrReplace(
                 state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
@@ -467,6 +429,18 @@ public class AnnotationPage
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
             createAnnotationEditor(aTarget);
+            // update paging, only do it during document load so we load the cas after it has been
+            // upgraded
+            try {
+                state.getPagingStrategy().recalculatePage(state, getEditorCas());
+            }
+            catch (Exception e) {
+                LOG.info("Error reading CAS: {}", e.getMessage());
+                error("Error reading CAS " + e.getMessage());
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
 
             // Initialize the visible content - this has to happen after the annotation editor
             // component has been created because only then the paging strategy is known
@@ -671,9 +645,8 @@ public class AnnotationPage
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
 
-        // Remove from the list source documents that are in IGNORE state OR
-        // that do not have at least one annotation document marked as
-        // finished for curation dialog
+        // FIXME: This should be changed to call getListOfDocs or getListOfDocs should base on
+        // this call - in any case, the selection/filtering code should only be there once
         Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
                 aUser);
 

@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.storage;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -36,11 +39,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * <p>
@@ -54,14 +59,17 @@ public class CurationDocumentServiceImpl
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
+    private final ProjectService projectService;
 
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService, EntityManager aEntityManager)
+            AnnotationSchemaService aAnnotationService, ProjectService aProjectService,
+            EntityManager aEntityManager)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         entityManager = aEntityManager;
+        projectService = aProjectService;
     }
 
     @Override
@@ -102,15 +110,28 @@ public class CurationDocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        List<SourceDocument> docs = entityManager
-                .createQuery(
-                        "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
-                                + "WHERE adoc.project = :project AND adoc.state = (:state) "
-                                + "AND adoc.document.trainingDocument = false",
-                        SourceDocument.class)
-                .setParameter("project", aProject)
-                .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
+        // Get all annotators in the project
+        List<User> users = projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR);
+        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
+        if (users.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String query = String.join("\n", //
+                "SELECT DISTINCT adoc.document", //
+                "FROM AnnotationDocument AS adoc ", //
+                "WHERE adoc.project = :project", //
+                "AND user in (:users)", //
+                "AND adoc.state = (:state) ", //
+                "AND adoc.document.trainingDocument = false");
+
+        List<SourceDocument> docs = entityManager.createQuery(query, SourceDocument.class) //
+                .setParameter("project", aProject) //
+                .setParameter("users", users.stream().map(User::getUsername).collect(toList())) //
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getResultList();
         docs.sort(SourceDocument.NAME_COMPARATOR);
+
         return docs;
     }
 

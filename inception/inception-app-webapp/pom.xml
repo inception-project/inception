@@ -67,6 +67,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-tagsets</artifactId>
     </dependency>
 
@@ -262,10 +266,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-plugin-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
@@ -457,10 +457,6 @@
 
     <!-- DATABASE / HIBERNATE -->
 
-    <!-- <dependency> -->
-    <!-- <groupId>org.hibernate</groupId> -->
-    <!-- <artifactId>hibernate-entitymanager</artifactId> -->
-    <!-- </dependency> -->
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
@@ -553,20 +549,8 @@
       </dependency>
     -->
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-curation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
-      <artifactId>enjoyhint</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>kinetic</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.bower</groupId>
-      <artifactId>jquery.scrollTo</artifactId>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-kotlin</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -781,6 +765,7 @@
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
@@ -835,7 +820,6 @@
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
-              <usedDependency>org.liquibase:liquibase-core</usedDependency>
               <usedDependency>org.ehcache:ehcache</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
@@ -857,10 +841,8 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
-              <!-- Tutorial Js dependencies -->
-              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
-              <usedDependency>org.webjars.npm:kinetic</usedDependency>
-              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
+              <!-- Other -->
+              <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
