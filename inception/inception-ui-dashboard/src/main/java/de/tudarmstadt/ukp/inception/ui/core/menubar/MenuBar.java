@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutProperties;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPage;
@@ -67,6 +68,7 @@ public class MenuBar
 
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
+    private @SpringBean LogoutProperties logoutProperties;
 
     private IModel<User> user;
     private IModel<Project> project;
@@ -87,7 +89,7 @@ public class MenuBar
         project = LoadableDetachableModel.of(() -> findParent(ProjectContext.class)) //
                 .map(ProjectContext::getProject);
 
-        add(new LogoutPanel("logoutPanel", user));
+        add(new LogoutPanel("logoutPanel", user, logoutProperties));
 
         helpLink = new DocLink(CID_HELP_LINK, USER_GUIDE, new ResourceModel("page.help.link", ""));
         helpLink.setBody(Model.of("<i class=\"fas fa-question-circle\"></i>"

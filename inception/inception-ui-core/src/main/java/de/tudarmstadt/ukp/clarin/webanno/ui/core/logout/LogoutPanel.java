@@ -36,6 +36,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -53,9 +54,13 @@ public class LogoutPanel
 {
     private static final long serialVersionUID = 3725185820083021070L;
 
-    public LogoutPanel(String id, IModel<User> aUser)
+    private final LogoutProperties logoutProperties;
+
+    public LogoutPanel(String id, IModel<User> aUser, LogoutProperties aLogoutProperties)
     {
         super(id, aUser);
+
+        logoutProperties = aLogoutProperties;
 
         add(new LambdaStatelessLink("logout", this::actionLogout));
 
@@ -108,7 +113,13 @@ public class LogoutPanel
     private void actionLogout()
     {
         ApplicationSession.get().signOut();
-        setResponsePage(getApplication().getHomePage());
+
+        if (logoutProperties.getLogoutUrl().isPresent()) {
+            throw new RedirectToUrlException(logoutProperties.getLogoutUrl().get());
+        }
+        else {
+            setResponsePage(getApplication().getHomePage());
+        }
     }
 
     /**
