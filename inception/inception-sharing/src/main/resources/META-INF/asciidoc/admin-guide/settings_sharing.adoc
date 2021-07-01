@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_sharing]]
-=== Invite Links Settings
+= Invite Links Settings
 
 You can enable invite links for your {product-name} instance. This will allow project managers to 
 generate invite links for their project which will expire automatically after one year or at a 
