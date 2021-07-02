@@ -55,13 +55,14 @@ public class LogoutPanel
 {
     private static final long serialVersionUID = 3725185820083021070L;
 
-    private final PreauthenticationProperties logoutProperties;
+    private final PreauthenticationProperties preauthenticationProperties;
 
-    public LogoutPanel(String id, IModel<User> aUser, PreauthenticationProperties aLogoutProperties)
+    public LogoutPanel(String id, IModel<User> aUser,
+            PreauthenticationProperties aPreauthenticationProperties)
     {
         super(id, aUser);
 
-        logoutProperties = aLogoutProperties;
+        preauthenticationProperties = aPreauthenticationProperties;
 
         add(new LambdaStatelessLink("logout", this::actionLogout));
 
@@ -115,8 +116,8 @@ public class LogoutPanel
     {
         ApplicationSession.get().signOut();
 
-        if (logoutProperties.getLogoutUrl().isPresent()) {
-            throw new RedirectToUrlException(logoutProperties.getLogoutUrl().get());
+        if (preauthenticationProperties.getLogoutUrl().isPresent()) {
+            throw new RedirectToUrlException(preauthenticationProperties.getLogoutUrl().get());
         }
         else {
             setResponsePage(getApplication().getHomePage());
