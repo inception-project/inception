@@ -201,6 +201,7 @@
               <configuration>
                 <excludes combine.children="append">
                   <exclude>src/main/js/recogito-js/**/*</exclude>
+                  <exclude>src/main/js/recogito-js-upstream/**/*</exclude>
                   <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>

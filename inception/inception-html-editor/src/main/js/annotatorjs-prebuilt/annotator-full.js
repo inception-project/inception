@@ -1,12 +1,12 @@
 /*
-** Annotator v1.2.10-dev-inception-app-0.16.1-200-g7395de0fb
+** Annotator v1.2.10-dev-inception-0.20.0-rc-3-4-gf93e13d1f8
 ** https://github.com/okfn/annotator/
 **
-** Copyright 2020, the Annotator project contributors.
+** Copyright 2021, the Annotator project contributors.
 ** Dual licensed under the MIT and GPLv3 licenses.
 ** https://github.com/okfn/annotator/blob/master/LICENSE
 **
-** Built at: 2020-09-27 16:46:03Z
+** Built at: 2021-07-01 20:16:17Z
  */
 
 
@@ -3257,5 +3257,4 @@
 }).call(this);
 
 //
-//
-//# sourceMappingURL=annotator-full.min.map
+//# sourceMappingURL=annotator-full.map
