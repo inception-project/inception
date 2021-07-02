@@ -23,11 +23,15 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -35,7 +39,10 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -65,18 +72,23 @@ public class AnnotationSystemAPIImpl
     private final UserDao userDao;
     private final RepositoryProperties repositoryProperties;
     private final AnnotationProcessAPI annotationProcessAPI;
+    private final AnnotationSystemAPIService annotationSystemAPIService;
+
+    private @SpringBean FeatureSupport featureSupport;
 
     public AnnotationSystemAPIImpl(ProjectService aProjectService, DocumentService aDocumentService,
             UserDao aUserDao, RepositoryProperties aRepositoryProperties,
             AnnotationProcessAPI aAnnotationProcessAPI,
-            AnnotationSchemaService annotationSchemaService)
+            AnnotationSchemaService aAnnotationSchemaService,
+            AnnotationSystemAPIService aAnnotationSystemAPIService)
     {
         projectService = aProjectService;
         documentService = aDocumentService;
         userDao = aUserDao;
         repositoryProperties = aRepositoryProperties;
         annotationProcessAPI = aAnnotationProcessAPI;
-        this.annotationService = annotationSchemaService;
+        annotationService = aAnnotationSchemaService;
+        annotationSystemAPIService = aAnnotationSystemAPIService;
     }
 
     @Override
@@ -149,32 +161,102 @@ public class AnnotationSystemAPIImpl
     @Override
     public void handleCreateAnnotation(ClientMessage aClientMessage) throws IOException
     {
-        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
-                aClientMessage.getDocument());
-        // TODO createAnnotation
-        // cas.createAnnotation(aClientMessage.getAnnotationType(),
-        // aClientMessage.getAnnotationOffsetBegin(), aClientMessage.getAnnotationOffsetEnd());
-        // TODO retrieve desired content and fill AnnotationMessage
-        AnnotationMessage message = new AnnotationMessage();
-        annotationProcessAPI.handleSendUpdateAnnotation(message,
+        try {
+            CasStorageSession.open();
+
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            SourceDocument sourceDocument = documentService
+                    .getSourceDocument(aClientMessage.getProject(), aClientMessage.getDocument());
+
+            CAS cas = documentService.readAnnotationCas(sourceDocument,
+                    aClientMessage.getUsername());
+
+            Type type = null;
+            for (Iterator<Feature> it = cas.getTypeSystem().getFeatures(); it.hasNext();) {
+
+                Feature s = it.next();
+                if (s.getDomain().getShortName().equals(aClientMessage.getAnnotationType())) {
+                    type = s.getDomain();
+
+                }
+            }
+
+
+            TypeAdapter adapter = annotationService
+                    .getAdapter(annotationSystemAPIService.getAnnotationLayer(type.getName()));
+            AnnotationFS newAnnotation = null;
+            if (adapter instanceof SpanAdapter) {
+                newAnnotation = ((SpanAdapter) adapter).add(
+                        documentService.getSourceDocument(aClientMessage.getProject(),
+                                aClientMessage.getDocument()),
+                        aClientMessage.getUsername(), cas,
+                        aClientMessage.getAnnotationOffsetBegin(),
+                        aClientMessage.getAnnotationOffsetEnd());
+            }
+
+            //TODO more adapater instances
+
+            CasStorageSession.get().close();
+
+            AnnotationMessage message = new AnnotationMessage();
+            message.setAnnotationAddress(String.valueOf(newAnnotation.getAddress()));
+            message.setAnnotationOffsetBegin(newAnnotation.getBegin());
+            message.setAnnotationOffsetEnd(newAnnotation.getEnd());
+            message.setAnnotationText(newAnnotation.getCoveredText());
+            message.setAnnotationType(newAnnotation.getType().getShortName());
+            annotationProcessAPI.handleSendUpdateAnnotation(message,
                 String.valueOf(aClientMessage.getProject()),
-                String.valueOf(aClientMessage.getDocument()), "1");
+                String.valueOf(aClientMessage.getDocument()), String.valueOf(message.getAnnotationOffsetBegin()));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
-    public void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException
-    {
-        CAS cas = getCasForDocument(aClientMessage.getUsername(), aClientMessage.getProject(),
-                aClientMessage.getDocument());
+    public void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException {
+        try {
+            CasStorageSession.open();
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            SourceDocument sourceDocument = documentService
+                .getSourceDocument(aClientMessage.getProject(), aClientMessage.getDocument());
 
-        // TODO deleteAnnotation
-        // cas.remo
-        AnnotationMessage message = new AnnotationMessage();
-        // TODO retrieve desired content and fill AnnotationMessage
-        message.setDelete(true);
-        annotationProcessAPI.handleSendUpdateAnnotation(message,
+            CAS cas = documentService.readAnnotationCas(sourceDocument,
+                aClientMessage.getUsername());
+            Type type = null;
+            for (Iterator<Feature> it = cas.getTypeSystem().getFeatures(); it.hasNext(); ) {
+
+                Feature s = it.next();
+                if (s.getDomain().getShortName().equals(aClientMessage.getAnnotationType())) {
+                    type = s.getDomain();
+                }
+            }
+
+            TypeAdapter adapter = annotationService
+                .getAdapter(annotationSystemAPIService.getAnnotationLayer(type.getName()));
+
+
+            AnnotationMessage message = new AnnotationMessage();
+            message.setAnnotationOffsetBegin(selectAnnotationByAddr(cas,
+                aClientMessage.getAnnotationAddress()).getBegin());
+            message.setAnnotationAddress(String.valueOf(aClientMessage.getAnnotationAddress()));
+            message.setDelete(true);
+
+            adapter.delete(documentService.getSourceDocument(aClientMessage.getProject(),
+                aClientMessage.getDocument()),
+                aClientMessage.getUsername(), cas,
+                VID.parse(String.valueOf(aClientMessage.getAnnotationAddress())));
+            CasStorageSession.get().close();
+
+
+            annotationProcessAPI.handleSendUpdateAnnotation(message,
                 String.valueOf(aClientMessage.getProject()),
-                String.valueOf(aClientMessage.getDocument()), "1");
+                String.valueOf(aClientMessage.getDocument()), String.valueOf(message.getAnnotationOffsetBegin()));
+
+        }  catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -186,6 +268,7 @@ public class AnnotationSystemAPIImpl
             SourceDocument sourceDocument = documentService.getSourceDocument(aProject, aDocument);
 
             CAS cas = documentService.readAnnotationCas(sourceDocument, aUser);
+
             CasStorageSession.get().close();
             return cas;
         }
@@ -194,6 +277,26 @@ public class AnnotationSystemAPIImpl
             CasStorageSession.get().close();
             return null;
         }
+    }
+
+    @Override
+    public void updateCAS(String aUser, long aProject, long aDocument, CAS aCas)
+    {
+        try {
+            CasStorageSession.open();
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            SourceDocument sourceDocument = documentService.getSourceDocument(aProject, aDocument);
+
+            documentService.writeAnnotationCas(aCas, documentService.getAnnotationDocument(
+                    documentService.getSourceDocument(aProject, aDocument), aUser), true);
+            ;
+            CasStorageSession.get().close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            CasStorageSession.get().close();
+        }
+
     }
 
     @Override
@@ -266,7 +369,7 @@ public class AnnotationSystemAPIImpl
     {
         List<AnnotationListItem> items = new ArrayList<>();
         List<AnnotationLayer> metadataLayers = annotationService
-                .listAnnotationLayer(projectService.getProject(aProject));
+            .listAnnotationLayer(projectService.getProject(aProject));
 
         for (AnnotationLayer layer : metadataLayers) {
             if (layer.getUiName().equals("Token")) {
@@ -286,10 +389,10 @@ public class AnnotationSystemAPIImpl
 
         for (AnnotationListItem annotationListItem : items) {
             AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
-                    annotationListItem.getAddr());
+                annotationListItem.getAddr());
             annotations.add(new Annotation(annotation._id(), annotation.getCoveredText(),
-                    annotation.getBegin(), annotation.getEnd(),
-                    annotation.getType().getShortName()));
+                annotation.getBegin(), annotation.getEnd(),
+                annotation.getType().getShortName()));
         }
 
         return annotations;

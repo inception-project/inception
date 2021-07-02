@@ -97,8 +97,7 @@ export class AnnotationExperienceAPIActionHandler {
             console.log(elem)
             if (elem.tagName === 'text') {
                 that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(
-                    elem.attributes[2].value, elem.attributes[2].value,
-                    document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"));
+                    elem.attributes[2].value, elem.attributes[2].value,"NamedEntity");
             }
 
             if (elem.tagName === 'rect') {

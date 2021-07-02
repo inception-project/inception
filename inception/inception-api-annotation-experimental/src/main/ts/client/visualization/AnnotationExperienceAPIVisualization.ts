@@ -17,15 +17,14 @@
  */
 import {Annotation} from "../util/Annotation";
 import {AnnotationType} from "../util/AnnotationTypes";
+import {AnnotationExperienceAPI} from "../AnnotationExperienceAPI";
 
 export class AnnotationExperienceAPIVisualization {
 
+    annotationExperienceAPI : AnnotationExperienceAPI;
+
     SENTENCE_OFFSET_WIDTH = 45;
     CHARACTER_WIDTH = 9;
-
-    //Text
-    text: String[];
-    annotations: Annotation[];
 
     //Editor element
     lineColorFirst: string = "#BBBBBB";
@@ -33,12 +32,16 @@ export class AnnotationExperienceAPIVisualization {
 
     //Viewport
     sentenceCount: number;
-    viewport: number[][];
 
     //Additional drawing
     showHighlighting: boolean = true;
     showSentenceNumbers: boolean = true;
     showBackground: boolean = true;
+
+    constructor( aAnnotationExperience : AnnotationExperienceAPI)
+    {
+        this.annotationExperienceAPI = aAnnotationExperience;
+    }
 
     showText(aElementId: string) {
         let textArea = document.getElementById(aElementId.toString())
@@ -46,7 +49,7 @@ export class AnnotationExperienceAPIVisualization {
         textArea.innerHTML = '';
 
         //Sentences
-        let sentences = this.text.join("").split("|");
+        let sentences = this.annotationExperienceAPI.text.join("").split("|");
         this.sentenceCount = sentences.length - 1;
 
         //SVG element
@@ -89,7 +92,7 @@ export class AnnotationExperienceAPIVisualization {
                 char.textContent = sentences[i][j];
                 char.setAttribute("x", xPrev.toString());
                 char.setAttribute("y", ((i + 1) * 20 - 5).toString());
-                char.setAttribute("char_pos", (this.viewport[i][0] + j).toString());
+                char.setAttribute("char_pos", (this.annotationExperienceAPI.viewport[i][0] + j).toString());
                 xPrev += this.CHARACTER_WIDTH;
                 sentence.appendChild(char);
             }
@@ -105,7 +108,7 @@ export class AnnotationExperienceAPIVisualization {
 
         //Highlighting
         if (this.showHighlighting) {
-            svg.appendChild(this.drawAnnotation(this.annotations, aElementId));
+            svg.appendChild(this.drawAnnotation(this.annotationExperienceAPI.annotations, aElementId));
         }
     }
 
@@ -164,7 +167,7 @@ export class AnnotationExperienceAPIVisualization {
                 offset = 4;
             }
 
-            let sentences = this.text.join(" ").split("|");
+            let sentences = this.annotationExperienceAPI.text.join(" ").split("|");
             this.sentenceCount = sentences.length - 1;
             let i = 0;
 
@@ -181,7 +184,7 @@ export class AnnotationExperienceAPIVisualization {
                 let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 text_row.setAttribute("class", "span")
 
-                for (let annotation of this.annotations) {
+                for (let annotation of this.annotationExperienceAPI.annotations) {
 
                     let begin: string;
                     let end: string;
@@ -266,14 +269,6 @@ export class AnnotationExperienceAPIVisualization {
 
     refreshEditor(aEditor: string) {
         this.showText(aEditor);
-    }
-
-    setText(aText: string[]) {
-        this.text = aText;
-    }
-
-    setAnnotations(aAnnotations: Annotation[]) {
-        this.annotations = aAnnotations;
     }
 
     setShowHighlighting(aShowHighlighting: boolean, aEditor: string) {

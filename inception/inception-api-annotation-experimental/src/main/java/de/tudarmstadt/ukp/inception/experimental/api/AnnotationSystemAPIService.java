@@ -15,28 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Annotation} from "./Annotation";
+package de.tudarmstadt.ukp.inception.experimental.api;
 
-export class ServerMessage
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+
+public interface AnnotationSystemAPIService
 {
-    document : number;
-    viewport :number[][];
-    viewportText : string[];
-    offsetType : string;
-
-    annotations : Annotation [];
-
-    annotationAddress : number;
-    annotationType : string;
-    annotationOffsetBegin : number;
-    annotationOffsetEnd : number;
-    annotationText : string;
-
-    delete : boolean;
-    edit: boolean;
-
-    constructor()
-    {
-    }
-
+    AnnotationLayer getAnnotationLayer(String aName);
 }

@@ -27,13 +27,15 @@ public class AnnotationMessage
     private String annotationType;
     private String annotationText;
     private boolean delete;
+    private boolean edit;
 
     public AnnotationMessage()
     {
-        //DEFAULT
+        // DEFAULT
     }
 
-    public AnnotationMessage(String aAnnotationAddress, int aAnnotationOffsetBegin, int aAnnotationOffsetEnd, String aAnnotationType, String aAnnotationText)
+    public AnnotationMessage(String aAnnotationAddress, int aAnnotationOffsetBegin,
+            int aAnnotationOffsetEnd, String aAnnotationType, String aAnnotationText)
     {
         annotationAddress = aAnnotationAddress;
         annotationOffsetBegin = aAnnotationOffsetBegin;
@@ -42,43 +44,53 @@ public class AnnotationMessage
         annotationText = aAnnotationText;
     }
 
-    public String getAnnotationAddress() {
+    public String getAnnotationAddress()
+    {
         return annotationAddress;
     }
 
-    public void setAnnotationAddress(String annotationAddress) {
+    public void setAnnotationAddress(String annotationAddress)
+    {
         this.annotationAddress = annotationAddress;
     }
 
-    public int getAnnotationOffsetBegin() {
+    public int getAnnotationOffsetBegin()
+    {
         return annotationOffsetBegin;
     }
 
-    public void setAnnotationOffsetBegin(int annotationOffsetBegin) {
+    public void setAnnotationOffsetBegin(int annotationOffsetBegin)
+    {
         this.annotationOffsetBegin = annotationOffsetBegin;
     }
 
-    public int getAnnotationOffsetEnd() {
+    public int getAnnotationOffsetEnd()
+    {
         return annotationOffsetEnd;
     }
 
-    public void setAnnotationOffsetEnd(int annotationOffsetEnd) {
+    public void setAnnotationOffsetEnd(int annotationOffsetEnd)
+    {
         this.annotationOffsetEnd = annotationOffsetEnd;
     }
 
-    public String getAnnotationType() {
+    public String getAnnotationType()
+    {
         return annotationType;
     }
 
-    public void setAnnotationType(String annotationType) {
+    public void setAnnotationType(String annotationType)
+    {
         this.annotationType = annotationType;
     }
 
-    public String getAnnotationText() {
+    public String getAnnotationText()
+    {
         return annotationText;
     }
 
-    public void setAnnotationText(String annotationText) {
+    public void setAnnotationText(String annotationText)
+    {
         this.annotationText = annotationText;
     }
 
@@ -112,4 +124,13 @@ public class AnnotationMessage
         this.delete = aDelete;
     }
 
+    public boolean isEdit()
+    {
+        return edit;
+    }
+
+    public void setEdit(boolean edit)
+    {
+        this.edit = edit;
+    }
 }

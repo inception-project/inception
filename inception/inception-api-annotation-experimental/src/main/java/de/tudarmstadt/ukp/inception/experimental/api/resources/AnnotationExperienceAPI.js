@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 var __defProp = Object.defineProperty;
 var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
 var __export = (target, all) => {
@@ -1058,7 +1075,7 @@ var AnnotationType;
 
 // client/visualization/AnnotationExperienceAPIVisualization.ts
 var AnnotationExperienceAPIVisualization = class {
-  constructor() {
+  constructor(aAnnotationExperience) {
     this.SENTENCE_OFFSET_WIDTH = 45;
     this.CHARACTER_WIDTH = 9;
     this.lineColorFirst = "#BBBBBB";
@@ -1066,11 +1083,12 @@ var AnnotationExperienceAPIVisualization = class {
     this.showHighlighting = true;
     this.showSentenceNumbers = true;
     this.showBackground = true;
+    this.annotationExperienceAPI = aAnnotationExperience;
   }
   showText(aElementId) {
     let textArea = document.getElementById(aElementId.toString());
     textArea.innerHTML = "";
-    let sentences = this.text.join("").split("|");
+    let sentences = this.annotationExperienceAPI.text.join("").split("|");
     this.sentenceCount = sentences.length - 1;
     let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("version", "1.2");
@@ -1102,7 +1120,7 @@ var AnnotationExperienceAPIVisualization = class {
         char.textContent = sentences[i][j];
         char.setAttribute("x", xPrev.toString());
         char.setAttribute("y", ((i + 1) * 20 - 5).toString());
-        char.setAttribute("char_pos", (this.viewport[i][0] + j).toString());
+        char.setAttribute("char_pos", (this.annotationExperienceAPI.viewport[i][0] + j).toString());
         xPrev += this.CHARACTER_WIDTH;
         sentence.appendChild(char);
       }
@@ -1112,7 +1130,7 @@ var AnnotationExperienceAPIVisualization = class {
     svg.appendChild(textElement);
     textArea.appendChild(svg);
     if (this.showHighlighting) {
-      svg.appendChild(this.drawAnnotation(this.annotations, aElementId));
+      svg.appendChild(this.drawAnnotation(this.annotationExperienceAPI.annotations, aElementId));
     }
   }
   drawBackground() {
@@ -1160,7 +1178,7 @@ var AnnotationExperienceAPIVisualization = class {
       } else {
         offset = 4;
       }
-      let sentences = this.text.join(" ").split("|");
+      let sentences = this.annotationExperienceAPI.text.join(" ").split("|");
       this.sentenceCount = sentences.length - 1;
       let i = 0;
       let childElement = 0;
@@ -1173,7 +1191,7 @@ var AnnotationExperienceAPIVisualization = class {
       for (let child of document.getElementById(aEditor).children[0].children[childElement].children) {
         let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
         text_row.setAttribute("class", "span");
-        for (let annotation of this.annotations) {
+        for (let annotation of this.annotationExperienceAPI.annotations) {
           let begin;
           let end;
           let check = false;
@@ -1243,12 +1261,6 @@ var AnnotationExperienceAPIVisualization = class {
   }
   refreshEditor(aEditor) {
     this.showText(aEditor);
-  }
-  setText(aText) {
-    this.text = aText;
-  }
-  setAnnotations(aAnnotations) {
-    this.annotations = aAnnotations;
   }
   setShowHighlighting(aShowHighlighting, aEditor) {
     this.showHighlighting = aShowHighlighting;
@@ -1325,7 +1337,7 @@ var AnnotationExperienceAPIActionHandler = class {
       let elem = aEvent.target;
       console.log(elem);
       if (elem.tagName === "text") {
-        that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(elem.attributes[2].value, elem.attributes[2].value, document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"));
+        that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(elem.attributes[2].value, elem.attributes[2].value, "NamedEntity");
       }
       if (elem.tagName === "rect") {
         console.log(elem);
@@ -1339,65 +1351,16 @@ var AnnotationExperienceAPIActionHandler = class {
 var ServerMessage = class {
   constructor() {
   }
-  get document() {
-    return this._document;
-  }
-  set document(value) {
-    this._document = value;
-  }
-  get viewport() {
-    return this._viewport;
-  }
-  set viewport(value) {
-    this._viewport = value;
-  }
-  get viewportText() {
-    return this._viewportText;
-  }
-  set viewportText(value) {
-    this._viewportText = value;
-  }
-  get offsetType() {
-    return this._offsetType;
-  }
-  set offsetType(value) {
-    this._offsetType = value;
-  }
-  get annotations() {
-    return this._annotations;
-  }
-  set annotations(value) {
-    this._annotations = value;
-  }
-  get annotationAddress() {
-    return this._annotationAddress;
-  }
-  set annotationAddress(value) {
-    this._annotationAddress = value;
-  }
-  get annotationType() {
-    return this._annotationType;
-  }
-  set annotationType(value) {
-    this._annotationType = value;
-  }
-  get annotationOffsetBegin() {
-    return this._annotationOffsetBegin;
-  }
-  set annotationOffsetBegin(value) {
-    this._annotationOffsetBegin = value;
-  }
-  get annotationOffsetEnd() {
-    return this._annotationOffsetEnd;
-  }
-  set annotationOffsetEnd(value) {
-    this._annotationOffsetEnd = value;
-  }
-  get annotationText() {
-    return this._annotationText;
-  }
-  set annotationText(value) {
-    this._annotationText = value;
+};
+
+// client/util/Annotation.ts
+var Annotation = class {
+  constructor(aId, aWord, aBegin, aEnd, aType) {
+    this.id = aId;
+    this.word = aWord;
+    this.begin = aBegin;
+    this.end = aEnd;
+    this.type = aType;
   }
 };
 
@@ -1406,7 +1369,7 @@ var AnnotationExperienceAPIImpl = class {
   constructor() {
     this.connected = false;
     this.connect();
-    this.visualizer = new AnnotationExperienceAPIVisualization();
+    this.visualizer = new AnnotationExperienceAPIVisualization(this);
     this.actionhandler = new AnnotationExperienceAPIActionHandler(this);
     this.actionhandler.registerDefaultActionHandler();
   }
@@ -1424,18 +1387,18 @@ var AnnotationExperienceAPIImpl = class {
       const header = frame.headers;
       let data;
       for (data in header) {
-        that.username = header[data];
+        that.client = header[data];
         break;
       }
       that.projectID = document.location.href.split("/")[5];
       that.documentID = document.location.href.split("=")[1].split("&")[0];
-      that.stompClient.subscribe("/queue/new_document_for_client/" + that.username, function(msg) {
+      that.stompClient.subscribe("/queue/new_document_for_client/" + that.client, function(msg) {
         that.receiveNewDocumentMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
       }, {id: "new_document"});
-      that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.username, function(msg) {
+      that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.client, function(msg) {
         that.receiveNewViewportMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
       }, {id: "new_viewport"});
-      that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.username, function(msg) {
+      that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.client, function(msg) {
         that.receiveSelectedAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
       }, {id: "selected_annotation"});
     };
@@ -1457,42 +1420,41 @@ var AnnotationExperienceAPIImpl = class {
   }
   editAnnotation(aId, aAnnotationType) {
     let json = {
-      username: this.username,
-      clientName: this.username,
+      username: this.client,
+      clientName: this.client,
       project: this.projectID,
       document: this.documentID,
       annotationAddress: aId,
       annotationType: aAnnotationType
     };
-    this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
   }
   sendDocumentMessageToServer(aUsername, aDocument, aOffset, aOffsetType) {
     let json = {
-      clientName: this.username,
+      clientName: this.client,
       username: aUsername,
       project: this.projectID,
       document: aDocument,
       viewport: aOffset,
       offsetType: aOffsetType
     };
-    this.visualizer.viewport = json.viewport;
+    this.viewport = json.viewport;
     this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
   }
   sendViewportMessageToServer(aUsername, aViewport, aOffsetType) {
     let json = {
-      clientName: this.username,
+      clientName: this.client,
       username: aUsername,
       project: this.projectID,
       document: this.documentID,
       viewport: aViewport,
       offsetType: aOffsetType
     };
-    this.visualizer.viewport = aViewport;
+    this.viewport = aViewport;
     this.stompClient.publish({destination: "/app/new_viewport_by_client", body: JSON.stringify(json)});
   }
   sendSelectAnnotationMessageToServer(aUsername, aId) {
     let json = {
-      clientName: this.username,
+      clientName: this.client,
       username: aUsername,
       project: this.projectID,
       document: this.documentID,
@@ -1500,20 +1462,20 @@ var AnnotationExperienceAPIImpl = class {
     };
     this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
   }
-  sendCreateAnnotationMessageToServer(begin, end, aAnnotationType) {
+  sendCreateAnnotationMessageToServer(aUsername, aDocument, aBegin, aEnd, aAnnotationType) {
     let json = {
-      username: this.username,
+      username: aUsername,
       project: this.projectID,
       document: this.documentID,
-      annotationOffsetBegin: begin,
-      annotationOffsetEnd: end,
+      annotationOffsetBegin: aBegin,
+      annotationOffsetEnd: aEnd,
       annotationType: aAnnotationType
     };
     this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
   }
   sendUpdateAnnotationMessageToServer(aId, aAnnotationType) {
     let json = {
-      username: this.username,
+      username: this.client,
       project: this.projectID,
       document: this.documentID,
       annotationAddress: aId,
@@ -1521,34 +1483,65 @@ var AnnotationExperienceAPIImpl = class {
     };
     this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
   }
-  sendDeleteAnnotationMessageToServer(aId) {
+  sendDeleteAnnotationMessageToServer(aId, aAnnotationType) {
     let json = {
-      username: this.username,
+      username: this.client,
       project: this.projectID,
       document: this.documentID,
-      annotationAddress: aId
+      annotationAddress: aId,
+      annotationType: aAnnotationType
     };
     this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
   }
   receiveNewDocumentMessageByServer(aMessage) {
     console.log("RECEIVED DOCUMENT");
     console.log(aMessage);
+    console.log("---------");
+    console.log(this.viewport);
+    const that = this;
     this.documentID = aMessage.document.toString();
-    this.visualizer.setText(aMessage.viewportText);
-    this.visualizer.setAnnotations(aMessage.annotations);
+    this.text = aMessage.viewportText;
+    this.annotations = aMessage.annotations;
+    for (let i = 0; i < this.viewport.length; i++) {
+      for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
+        this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + j, function(msg) {
+          that.receiveAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+        }, {id: "annotation_update_" + j});
+      }
+    }
   }
   receiveNewViewportMessageByServer(aMessage) {
     console.log("RECEIVED VIEWPORT");
     console.log(aMessage);
-    this.visualizer.setText(aMessage.viewportText);
-    this.visualizer.setAnnotations(aMessage.annotations);
+    const that = this;
+    this.text = aMessage.viewportText;
+    this.annotations = aMessage.annotations;
+    for (let i = 0; i < aMessage.viewport.length; i++) {
+      for (let j = aMessage.viewport[i][0]; j <= aMessage.viewport[i][1]; j++) {
+        this.stompClient.subscribe("/topic/annotation_update_for_clients/" + this.projectID + "/" + this.documentID + "/" + j, function(msg) {
+          that.receiveAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+        }, {id: "annotation_update_" + j});
+      }
+    }
   }
   receiveSelectedAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED SELECTED ANNOTATION");
     console.log(aMessage);
+    this.selectedAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType);
   }
   receiveAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED ANNOTATION MESSAGE");
     console.log(aMessage);
+    if (aMessage.delete) {
+      this.annotations.forEach((item, index) => {
+        if (item.id.toString() === aMessage.annotationAddress.toString()) {
+          this.annotations.splice(index, 1);
+        }
+      });
+    } else if (aMessage.edit) {
+    } else {
+      let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType);
+      this.annotations.push(newAnnotation);
+    }
   }
 };

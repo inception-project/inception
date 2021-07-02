@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIImpl;
+import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIService;
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
@@ -71,11 +72,13 @@ public class AnnotationProcessAPIImpl
             DocumentService aDocumentService, UserDao aUserDao,
             RepositoryProperties aRepositoryProperties,
             SimpMessagingTemplate aSimpMessagingTemplate,
-            AnnotationSchemaService annotationSchemaService)
+            AnnotationSchemaService aAnnotationSchemaService,
+            AnnotationSystemAPIService aAnnotationSystemAPIService)
     {
         this.simpMessagingTemplate = aSimpMessagingTemplate;
         this.annotationSystemAPIImpl = new AnnotationSystemAPIImpl(aProjectService,
-                aDocumentService, aUserDao, aRepositoryProperties, this, annotationSchemaService);
+                aDocumentService, aUserDao, aRepositoryProperties, this, aAnnotationSchemaService,
+                aAnnotationSystemAPIService);
     }
 
     // ----------- ERROR HANDLER ------------- //
@@ -171,7 +174,8 @@ public class AnnotationProcessAPIImpl
             String aDocumentID, String aViewport)
         throws IOException
     {
-        System.out.println("SENDING NOW ANNOTATION UPDATE TO CLIENTS");
+        System.out.println("SENDING NOW ANNOTATION UPDATE TO CLIENTS to: " + SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/"
+                            + aDocumentID + "/" + aViewport);
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/"
                 + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aAnnotationMessage));
     }

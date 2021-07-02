@@ -56,4 +56,5 @@ public interface AnnotationSystemAPI
 
     List<Annotation> filterAnnotations(List <Annotation> aAnnotations, int[][] aViewport);
 
+    void updateCAS(String aUser, long aProject, long aDocument,CAS aCas);
 }

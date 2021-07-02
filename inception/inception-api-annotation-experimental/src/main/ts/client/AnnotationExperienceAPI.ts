@@ -1,7 +1,25 @@
-import {Stomp} from "@stomp/stompjs";
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import {ServerMessage} from "./util/ServerMessage";
 
 export interface AnnotationExperienceAPI {
+
+    //TODO Type safety
 
     unsubscribe(aChannel: string);
 
@@ -16,11 +34,11 @@ export interface AnnotationExperienceAPI {
 
     sendSelectAnnotationMessageToServer(aUsername, aId);
 
-    sendCreateAnnotationMessageToServer(begin, end, aAnnotationType);
+    sendCreateAnnotationMessageToServer(aUsername, aDocument, begin, end, aAnnotationType);
 
     sendUpdateAnnotationMessageToServer(aId, aAnnotationType);
 
-    sendDeleteAnnotationMessageToServer(aId);
+    sendDeleteAnnotationMessageToServer(aId : string, aAnnotationType: string);
 
 
     receiveNewDocumentMessageByServer(aMessage: ServerMessage);
