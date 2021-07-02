@@ -15,29 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
+package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import java.util.Optional;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-@Component
-@ConfigurationProperties("auth")
-public class LogoutPropertiesImpl
-    implements LogoutProperties
+public interface PreauthenticationProperties
 {
-    private String logoutUrl;
+    Optional<String> getLogoutUrl();
 
-    public Optional<String> getLogoutUrl()
-    {
-        return Optional.ofNullable(logoutUrl);
-    }
-
-    @Override
-    public void setLogoutUrl(String aLogoutUrl)
-    {
-        logoutUrl = aLogoutUrl;
-    }
+    void setLogoutUrl(String aLogoutUrl);
 
 }

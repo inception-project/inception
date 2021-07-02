@@ -40,6 +40,7 @@ import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
@@ -54,9 +55,9 @@ public class LogoutPanel
 {
     private static final long serialVersionUID = 3725185820083021070L;
 
-    private final LogoutProperties logoutProperties;
+    private final PreauthenticationProperties logoutProperties;
 
-    public LogoutPanel(String id, IModel<User> aUser, LogoutProperties aLogoutProperties)
+    public LogoutPanel(String id, IModel<User> aUser, PreauthenticationProperties aLogoutProperties)
     {
         super(id, aUser);
 
