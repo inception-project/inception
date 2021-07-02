@@ -36,9 +36,11 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
@@ -53,9 +55,14 @@ public class LogoutPanel
 {
     private static final long serialVersionUID = 3725185820083021070L;
 
-    public LogoutPanel(String id, IModel<User> aUser)
+    private final PreauthenticationProperties preauthenticationProperties;
+
+    public LogoutPanel(String id, IModel<User> aUser,
+            PreauthenticationProperties aPreauthenticationProperties)
     {
         super(id, aUser);
+
+        preauthenticationProperties = aPreauthenticationProperties;
 
         add(new LambdaStatelessLink("logout", this::actionLogout));
 
@@ -108,7 +115,13 @@ public class LogoutPanel
     private void actionLogout()
     {
         ApplicationSession.get().signOut();
-        setResponsePage(getApplication().getHomePage());
+
+        if (preauthenticationProperties.getLogoutUrl().isPresent()) {
+            throw new RedirectToUrlException(preauthenticationProperties.getLogoutUrl().get());
+        }
+        else {
+            setResponsePage(getApplication().getHomePage());
+        }
     }
 
     /**
