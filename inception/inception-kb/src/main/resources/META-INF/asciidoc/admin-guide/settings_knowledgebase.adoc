@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_knowledge-base]]
-=== Knowledge Base Settings
+= Knowledge Base Settings
 
 This section describes the global settings related to the knowledge base module.
 

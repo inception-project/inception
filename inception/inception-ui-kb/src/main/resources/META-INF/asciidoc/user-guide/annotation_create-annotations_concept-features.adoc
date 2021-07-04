@@ -13,3 +13,10 @@ then you can write `Obama :: president`. A case-insensitive matching is being us
 Depending on the knowledge base and full-text mode being used, there may be fuzzy matching. To
 filter the candidate list down to those candidates which contain a particular substring, put
 double quotes around the query, e.g. `"County Carlow"`. A case-insensitive matching is being used.
+
+.IRI matching
+You can enter a full concept IRI to directly link to a particular concept. Note that searching by
+IRIs by substrings or short forms is not possible. The entire IRI as used by the knowledge base must
+be entered. This allows linking to concepts which have no label - however, it is quite inconvenient.
+It is much more convenient if you can ensure that your knowledge base offers labels for all its
+concepts.
