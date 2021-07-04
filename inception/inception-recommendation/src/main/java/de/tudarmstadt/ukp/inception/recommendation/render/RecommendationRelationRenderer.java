@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -161,8 +162,15 @@ public class RecommendationRelationRenderer
                         new VID(target), "\uD83E\uDD16 " + suggestion.getUiLabel(),
                         featureAnnotation, COLOR);
 
-                arc.addLazyDetails(featureSupport.getLazyDetails(feature, suggestion.getLabel()));
-                arc.addLazyDetail(new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
+                List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
+                        suggestion.getLabel());
+                if (lazyDetails.isEmpty()) {
+                    arc.addLazyDetails(lazyDetails);
+                }
+                else {
+                    arc.addLazyDetail(
+                            new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
+                }
 
                 vdoc.add(arc);
             }
