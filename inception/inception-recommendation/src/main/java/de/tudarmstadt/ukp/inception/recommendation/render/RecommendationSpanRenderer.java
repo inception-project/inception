@@ -146,7 +146,7 @@ public class RecommendationSpanRenderer
                         COLOR);
                 List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
                         ao.getLabel());
-                if (lazyDetails.isEmpty()) {
+                if (!lazyDetails.isEmpty()) {
                     v.addLazyDetails(lazyDetails);
                 }
                 else {

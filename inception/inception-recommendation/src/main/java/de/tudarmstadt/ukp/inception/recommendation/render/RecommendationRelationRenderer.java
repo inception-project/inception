@@ -164,7 +164,7 @@ public class RecommendationRelationRenderer
 
                 List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
                         suggestion.getLabel());
-                if (lazyDetails.isEmpty()) {
+                if (!lazyDetails.isEmpty()) {
                     arc.addLazyDetails(lazyDetails);
                 }
                 else {
