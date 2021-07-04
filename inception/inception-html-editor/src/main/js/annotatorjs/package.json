@@ -26,7 +26,8 @@
   },
   "scripts": {
     "start": "node ./tools/serve",
-    "test": "make REPORTER=spec test"
+    "test": "make REPORTER=spec test",
+    "build": "make"
   },
   "dependencies": {
     "coffee": "^5.4.0"

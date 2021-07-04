@@ -522,7 +522,7 @@ public class Tsv3XDeserializer
             fses.forEach(cas::addFsToIndexes);
         }
         catch (Exception e) {
-            throw new IOException("Unable to parse line as [" + state + "]: [" + line + "]");
+            throw new IOException("Unable to parse line as [" + state + "]: [" + line + "]", e);
         }
     }
 
