@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
@@ -88,9 +89,11 @@ public class AnnotationSchemaServiceAutoConfiguration
     }
 
     @Bean
-    public StringFeatureSupport stringFeaturesupport()
+    public StringFeatureSupport stringFeaturesupport(
+            PrimitiveUimaFeatureSupportProperties aProperties,
+            AnnotationSchemaService aSchemaService)
     {
-        return new StringFeatureSupport();
+        return new StringFeatureSupport(aProperties, aSchemaService);
     }
 
     @Bean

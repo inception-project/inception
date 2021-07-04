@@ -32,7 +32,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -80,9 +79,8 @@ public class StringFeatureSupport
         this(new PrimitiveUimaFeatureSupportProperties(), null);
     }
 
-    @Autowired
     public StringFeatureSupport(PrimitiveUimaFeatureSupportProperties aProperties,
-            @Autowired(required = false) AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService)
     {
         properties = aProperties;
         schemaService = aSchemaService;
