@@ -29,8 +29,12 @@ import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -45,14 +49,22 @@ import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.*;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
-import org.apache.wicket.model.*;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -75,7 +87,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
-import de.tudarmstadt.ukp.clarin.webanno.model.*;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -161,7 +177,7 @@ public class SearchAnnotationSidebar
         searchForm.add(searchButton);
         searchForm.setDefaultButton(searchButton);
 
-        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults",
+        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults.txt",
                 this::exportSearchResults);
         exportButton.add(visibleWhen(() -> groupedSearchResults.getObject() != null
                 && !groupedSearchResults.getObject().isEmpty()));
@@ -416,13 +432,13 @@ public class SearchAnnotationSidebar
             @Override
             public InputStream getInputStream() throws ResourceStreamNotFoundException
             {
-
+                SearchResultsExporter exporter = new SearchResultsExporter();
                 try {
-                    return SearchResultsExporter.generateCsv(resultsProvider.getAllResults());
+                    return exporter.generateCsv(resultsProvider.getAllResults());
                 }
                 catch (Exception e) {
-                    // FIXME Is there some better error handling here?
                     LOG.error("Unable to generate search results csv", e);
+                    error("Error: " + e.getMessage());
                     throw new ResourceStreamNotFoundException(e);
                 }
             }
