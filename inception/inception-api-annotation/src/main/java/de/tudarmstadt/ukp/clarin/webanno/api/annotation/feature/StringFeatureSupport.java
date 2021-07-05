@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@code AnnotationServiceAutoConfiguration#stringFeatureSupport}.
+ * {@code AnnotationSchemaServiceAutoConfiguration#stringFeatureSupport}.
  * </p>
  */
 public class StringFeatureSupport
