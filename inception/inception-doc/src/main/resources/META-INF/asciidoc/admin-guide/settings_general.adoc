@@ -48,5 +48,9 @@
 | Execute this command instead of the operating-systems's default command to open the browser window when running in standalone mode. `%u` is replaced with the INCEpTION URL.
 | _unset_
 | `/usr/bin/open %u -a "/Applications/Google Chrome.app"`
-|===
 
+| plugins.enabled
+| Whether to enable the ability to install plugins into {product-name}
+| false
+| true
+|===

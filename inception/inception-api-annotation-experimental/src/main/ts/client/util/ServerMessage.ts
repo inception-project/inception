@@ -35,6 +35,8 @@ export class ServerMessage
     delete : boolean;
     edit: boolean;
 
+    errorMessage: string;
+
     constructor()
     {
     }

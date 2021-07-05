@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.message.ErrorMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
 import de.tudarmstadt.ukp.inception.revieweditor.AnnotationListItem;
@@ -92,8 +94,7 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleDocument(ClientMessage aClientMessage)
-    {
+    public void handleDocument(ClientMessage aClientMessage) throws IOException {
         try {
             CAS cas;
 
@@ -124,6 +125,7 @@ public class AnnotationSystemAPIImpl
         }
         catch (Exception e) {
             e.printStackTrace();
+            createErrorMessage(e.getMessage(), aClientMessage.getClientName());
         }
 
     }
@@ -210,6 +212,7 @@ public class AnnotationSystemAPIImpl
         }
         catch (Exception e) {
             e.printStackTrace();
+            createErrorMessage(e.getMessage(), aClientMessage.getClientName());
         }
 
     }
@@ -256,6 +259,7 @@ public class AnnotationSystemAPIImpl
 
         }  catch (Exception e) {
             e.printStackTrace();
+            createErrorMessage(e.getMessage(), aClientMessage.getClientName());
         }
     }
 
@@ -403,5 +407,12 @@ public class AnnotationSystemAPIImpl
     {
         // TODO correct filtering
         return aAnnotations;
+    }
+
+    @Override
+    public void createErrorMessage(String aMessage, String aUser) throws IOException
+    {
+        annotationProcessAPI.handleSendErrorMessage(new ErrorMessage(aMessage), aUser);
+
     }
 }

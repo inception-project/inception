@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIService;
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.message.ErrorMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
 @Controller
@@ -52,8 +53,6 @@ public class AnnotationProcessAPIImpl
     /**
      * ----------------- PUB / SUB CHANNELS ---------------
      **/
-    private static final String SERVER_SEND_CLIENT_CONNECTION_MESSAGE = "/queue/connection_message/";
-
     private static final String SERVER_RECEIVE_CLIENT_NEW_DOCUMENT = "/new_document_by_client";
     private static final String SERVER_SEND_CLIENT_NEW_DOCUMENT = "/queue/new_document_for_client/";
 
@@ -67,6 +66,8 @@ public class AnnotationProcessAPIImpl
     private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_by_client";
 
     private static final String SERVER_SEND_CLIENT_UPDATE_ANNOTATION = "/topic/annotation_update_for_clients/";
+
+    private static final String SERVER_SEND_CLIENT_ERROR_MESSAGE = "/queue/error_message/";
 
     public AnnotationProcessAPIImpl(ProjectService aProjectService,
             DocumentService aDocumentService, UserDao aUserDao,
@@ -178,5 +179,14 @@ public class AnnotationProcessAPIImpl
                             + aDocumentID + "/" + aViewport);
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/"
                 + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aAnnotationMessage));
+    }
+
+    @Override
+    public void handleSendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException
+    {
+        System.out.println("SENDING NOW ERROR MESSAGE TO CLIENT: " + aUser);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_ERROR_MESSAGE + aUser,
+            JSONUtil.toJsonString(aErrorMessage));
+
     }
 }

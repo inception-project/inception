@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
 
@@ -32,9 +33,10 @@ public class CurationDocumentServiceAutoConfiguration
 {
     @Bean(CurationDocumentService.SERVICE_NAME)
     public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService, EntityManager aEntityManager)
+            AnnotationSchemaService aAnnotationService, ProjectService aProjectService,
+            EntityManager aEntityManager)
     {
         return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService,
-                aEntityManager);
+                aProjectService, aEntityManager);
     }
 }

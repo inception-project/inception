@@ -1401,6 +1401,9 @@ var AnnotationExperienceAPIImpl = class {
       that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.client, function(msg) {
         that.receiveSelectedAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
       }, {id: "selected_annotation"});
+      that.stompClient.subscribe("/queue/error_for_client/" + that.client, function(msg) {
+        that.receiveErrorMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+      }, {id: "error_message"});
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
@@ -1543,5 +1546,10 @@ var AnnotationExperienceAPIImpl = class {
       let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType);
       this.annotations.push(newAnnotation);
     }
+  }
+  receiveErrorMessageByServer(aMessage) {
+    console.log("RECEIVED ERROR MESSAGE");
+    console.log(aMessage);
+    console.log(aMessage.errorMessage);
   }
 };

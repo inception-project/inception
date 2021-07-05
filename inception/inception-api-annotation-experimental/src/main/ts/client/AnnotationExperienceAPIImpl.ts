@@ -91,7 +91,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             that.projectID = document.location.href.split("/")[5];
             that.documentID = document.location.href.split("=")[1].split("&")[0];
 
-            // ------ DEFINE SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
+            // ------ DEFINE STANDARD SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
 
             that.stompClient.subscribe("/queue/new_document_for_client/" + that.client, function (msg) {
                 that.receiveNewDocumentMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
@@ -104,10 +104,14 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.client, function (msg) {
                 that.receiveSelectedAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
             }, {id: "selected_annotation"});
+
+            that.stompClient.subscribe("/queue/error_for_client/" + that.client, function (msg) {
+                that.receiveErrorMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+            }, {id: "error_message"});
         };
 
 
-        // ------ ERROR HANDLING ------ //
+        // ------ STOMP ERROR HANDLING ------ //
 
         this.stompClient.onStompError = function (frame) {
             console.log('Broker reported error: ' + frame.headers['message']);
@@ -291,5 +295,14 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType)
             this.annotations.push(newAnnotation)
         }
+    }
+
+    receiveErrorMessageByServer(aMessage: ServerMessage)
+    {
+        console.log('RECEIVED ERROR MESSAGE');
+        console.log(aMessage);
+
+        console.log(aMessage.errorMessage)
+
     }
 }

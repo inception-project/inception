@@ -466,8 +466,7 @@ public class DocumentServiceImpl
 
         // Get all annotators in the project
         List<String> users = getAllAnnotators(aDocument.getProject());
-        // Bail out already. HQL doesn't seem to like queries with an empty
-        // parameter right of "in"
+        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
             return new ArrayList<>();
         }
@@ -1247,8 +1246,7 @@ public class DocumentServiceImpl
         }
 
         try (var logCtx = withProjectLogger(project)) {
-            log.info("Removed all documents from project [{}]({}) being deleted", project.getName(),
-                    project.getId());
+            log.info("Removed all documents from project {} being deleted", project);
         }
     }
 
