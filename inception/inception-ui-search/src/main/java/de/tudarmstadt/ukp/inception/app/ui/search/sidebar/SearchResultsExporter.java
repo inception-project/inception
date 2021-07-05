@@ -43,7 +43,7 @@ public class SearchResultsExporter
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
-                CSVFormat.RFC4180)) {
+                CSVFormat.EXCEL)) {
             toCSV(aSearchResults, printer);
         }
 
@@ -76,7 +76,7 @@ public class SearchResultsExporter
     {
         List<ResultsGroup> list = new ArrayList<ResultsGroup>();
         Reader reader = Files.newBufferedReader(aDataPath);
-        Iterable<CSVRecord> records = CSVFormat.RFC4180.parse(reader);
+        Iterable<CSVRecord> records = CSVFormat.EXCEL.parse(reader);
 
         int i = 0;
         List<SearchResult> inCurrentGroup = new ArrayList<SearchResult>();

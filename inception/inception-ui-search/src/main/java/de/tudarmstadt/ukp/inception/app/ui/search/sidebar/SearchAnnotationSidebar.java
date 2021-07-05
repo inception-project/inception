@@ -177,7 +177,7 @@ public class SearchAnnotationSidebar
         searchForm.add(searchButton);
         searchForm.setDefaultButton(searchButton);
 
-        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults.txt",
+        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults.csv",
                 this::exportSearchResults);
         exportButton.add(visibleWhen(() -> groupedSearchResults.getObject() != null
                 && !groupedSearchResults.getObject().isEmpty()));
