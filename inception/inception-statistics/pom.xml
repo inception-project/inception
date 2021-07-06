@@ -26,9 +26,166 @@
     <artifactId>inception-statistics</artifactId>
     <name>INCEpTION - Statistics</name>
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimaj-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimafit-core</artifactId>
+        </dependency>
+
+        <!-- TEST DEPENDENCIES -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Versioning Dependencies-->
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-model-export</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-ui-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-api-dao</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-api-annotation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-project</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-curation-legacy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-export</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-io-xmi</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimaj-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>javax.persistence-api</artifactId>
+        </dependency>
+
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <!-- Wicket -->
+        <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-spring</artifactId>
+        </dependency>
+
+        <!-- DEPENDENCIES FOR TESTING -->
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-io-text</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test-autoconfigure</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
