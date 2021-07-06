@@ -31,7 +31,10 @@ create their own projects.
 Since the default administrator user is not created in pre-authentication, it is useful to also
 declare at least one user as an administrator. This is done through the property 
 `auth.user.<username>.roles` where `<username>` must be replaced with the name of the user.
-The example below shows how the user *Franz* is given administrator permissions. 
+The example below shows how the user *Franz* is given administrator permissions.
+
+In order to log out, one can specify an URL to redirect to after the session is cleared on the side
+of {product-name}.
 
 .Example: Authenticate using the `remote_user` header, new users can create projects, user *Franz* is always admin.
 ----
@@ -70,10 +73,16 @@ NOTE: The roles added through `auth.user.<username>.roles` properties are *not* 
 | _<none>_
 | ROLE_PROJECT_CREATOR
 
+| auth.preauth.logoutUrl
+| URL to call after logging out to also sign out of external authentication
+| _<none>_
+| https://your-idp.com/Shibboleth.sso/Logout
+
 | auth.user._<username>_.roles
 | Extra roles for user (comma separated)
 | _<none>_
 | ROLE_ADMIN
+
 |===
 
       

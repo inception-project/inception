@@ -86,7 +86,7 @@
           content: 'content', // Element id or DOM node to attach to
           locale: 'auto',
       	  widgets: [
-            'COMMENT',
+            { widget: 'COMMENT' },
             { widget: 'TAG', vocabulary: [ 'Place', 'Person', 'Event', 'Organization', 'Animal' ] }
           ],
           relationVocabulary: [ 'isRelated', 'isPartOf', 'isSameAs ']
