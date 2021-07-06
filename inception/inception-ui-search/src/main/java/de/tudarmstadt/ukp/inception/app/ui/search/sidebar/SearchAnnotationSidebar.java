@@ -45,7 +45,10 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
+import org.apache.wicket.ajax.markup.html.navigation.paging.AjaxPagingNavigator;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -222,7 +225,7 @@ public class SearchAnnotationSidebar
         searchOptions.getObject().setItemsPerPage(searchProperties.getPageSizes()[0]);
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
         resultsGroupContainer.add(searchResultGroups);
-        PagingNavigator pagingNavigator = new PagingNavigator("pagingNavigator",
+        PagingNavigator pagingNavigator = new AjaxPagingNavigator("pagingNavigator",
                 searchResultGroups);
         pagingNavigator.add(visibleWhen(() -> groupedSearchResults.getObject() != null
                 && !groupedSearchResults.getObject().isEmpty()));
@@ -293,6 +296,15 @@ public class SearchAnnotationSidebar
 
         setChangeAnnotationsElementsEnabled(
                 !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername()));
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        // CSS
+        aResponse.render(CssHeaderItem.forReference(SearchAnnotationSidebarCssReference.get()));
     }
 
     private void setChangeAnnotationsElementsEnabled(boolean aEnabled)

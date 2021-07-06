@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.ArrayList;
@@ -152,21 +155,35 @@ public class SchedulingServiceImpl
     @Override
     public synchronized void enqueue(Task aTask)
     {
-        if (containsMatchingTask(enqueuedTasks, aTask)) {
-            Task previousTask = enqueuedTasks.set(enqueuedTasks.indexOf(aTask), aTask);
-            log.debug("Equivalent task already queued - updated queue: [{}] replaced with [{}]",
-                    previousTask, aTask);
-            return;
+        // Check if the incoming task should be discarded
+        for (Task enqueuedTask : enqueuedTasks) {
+            if (matchTask(aTask, enqueuedTask) == DISCARD_OR_QUEUE_THIS) {
+                log.debug("Matching task already queued - keeping existing: [{}] and discarding "
+                        + "incoming [{}]", enqueuedTask, aTask);
+                return;
+            }
         }
 
+        // Check if any existing tasks should be replaced with the new incoming task (i.e. the
+        // incoming task supersedes them).
+        List<Task> tasksToUnqueue = new ArrayList<>();
+        for (Task enqueuedTask : enqueuedTasks) {
+            if (matchTask(aTask, enqueuedTask) == UNQUEUE_EXISTING_AND_QUEUE_THIS) {
+                tasksToUnqueue.add(enqueuedTask);
+                log.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
+                        + "incoming [{}]", enqueuedTask, aTask);
+            }
+        }
+        enqueuedTasks.removeAll(tasksToUnqueue);
+
         if (containsMatchingTask(getScheduledTasks(), aTask)) {
-            log.debug("Equivalent task already scheduled - adding to queue: [{}]", aTask);
+            log.debug("Matching task already scheduled - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
 
         if (containsMatchingTask(getRunningTasks(), aTask)) {
-            log.debug("Equivalent task already running - adding to queue: [{}]", aTask);
+            log.debug("Matching task already running - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
@@ -182,10 +199,19 @@ public class SchedulingServiceImpl
         logState();
     }
 
+    private MatchResult matchTask(Task aTask, Task aEnqueueTask)
+    {
+        if (aTask instanceof MatchableTask) {
+            return ((MatchableTask) aTask).matches(aEnqueueTask);
+        }
+
+        return aTask.equals(aEnqueueTask) ? UNQUEUE_EXISTING_AND_QUEUE_THIS : NO_MATCH;
+    }
+
     private boolean containsMatchingTask(Collection<Task> aTasks, Task aTask)
     {
         if (aTask instanceof MatchableTask) {
-            return aTasks.stream().anyMatch(((MatchableTask) aTask)::matches);
+            return aTasks.stream().anyMatch(t -> ((MatchableTask) aTask).matches(t) != NO_MATCH);
         }
 
         return aTasks.contains(aTask);
