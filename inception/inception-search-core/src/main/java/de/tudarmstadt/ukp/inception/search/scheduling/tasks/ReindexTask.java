@@ -21,6 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
+
 import java.io.IOException;
 
 import org.slf4j.Logger;
@@ -28,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
@@ -59,12 +63,17 @@ public class ReindexTask
     }
 
     @Override
-    public boolean matches(Task aTask)
+    public MatchResult matches(Task aTask)
     {
-        if (!(aTask instanceof ReindexTask)) {
-            return false;
+        // If a re-indexing task for a project is coming in, we can throw out any scheduled tasks
+        // for re-indexing and for indexing individual source/annotation documents in the project.
+        if (aTask instanceof ReindexTask || aTask instanceof IndexSourceDocumentTask
+                || aTask instanceof IndexAnnotationDocumentTask) {
+            if (getProject().getId() == aTask.getProject().getId()) {
+                return UNQUEUE_EXISTING_AND_QUEUE_THIS;
+            }
         }
 
-        return getProject().getId() == aTask.getProject().getId();
+        return NO_MATCH;
     }
 }
