@@ -1794,6 +1794,8 @@
         <!-- Versioning -->
         <module>inception-versioning</module>
         <module>inception-websocket</module>
+        <module>inception-statistics</module>
+
     </modules>
 
     <build>
