@@ -2,21 +2,20 @@
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
   distributed with this work for additional information
-  regarding copyright ownership.  The Technische Universität Darmstadt 
+  regarding copyright ownership.  The Technische Universität Darmstadt
   licenses this file to you under the Apache License, Version 2.0 (the
   "License"); you may not use this file except in compliance
   with the License.
-   
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -65,6 +64,10 @@
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-ui-curation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-curation</artifactId>
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -196,7 +199,6 @@
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-versioning</artifactId>
         </dependency>
-
         <!-- STATISTICS -->
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -266,10 +268,6 @@
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-plugin-manager</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-plugin-api</artifactId>
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -464,10 +462,6 @@
 
         <!-- DATABASE / HIBERNATE -->
 
-        <!-- <dependency> -->
-        <!-- <groupId>org.hibernate</groupId> -->
-        <!-- <artifactId>hibernate-entitymanager</artifactId> -->
-        <!-- </dependency> -->
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
@@ -560,20 +554,8 @@
           </dependency>
         -->
         <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-curation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.bowergithub.xbsoftware</groupId>
-            <artifactId>enjoyhint</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>kinetic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>jquery.scrollTo</artifactId>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
     </dependencies>
     <build>
@@ -581,14 +563,12 @@
             <!--
               This module has a slight complex setup to allow making it work in a command line build
               as well as in an m2e build.
-
               The general procedure is:
               1) generate asciidoc HTML (also PDF when on the command line)
               2) sync generated HTML + images to a proper package under src/main/resources
               This is the reason why src/main/resources is excluded from version control
               3) let Maven pick up the stuff from src/main/resources and make it available to m2e
               workspace builds or package it into a JAR
-
               When running in m2e, building of PDFs is skipped.
               Mind that rebuilding of HTML from asciidoc works in Eclipse only on an explicit project clean.
               There is no incremental build!
@@ -694,7 +674,7 @@
                         <configuration>
                             <target>
                                 <delete includeemptydirs="true" failonerror="false">
-                                    <fileset dir="src/main/resources/public/doc" includes="**/*"/>
+                                    <fileset dir="src/main/resources/public/doc" includes="**/*" />
                                 </delete>
                             </target>
                         </configuration>
@@ -707,7 +687,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <mkdir dir="src/main/resources/public/doc"/>
+                                <mkdir dir="src/main/resources/public/doc" />
 
                                 <!--
                                   It is important that we SYNC here instead of delete/copy, otherwise we may run into
@@ -715,23 +695,18 @@
                                 -->
                                 <sync todir="src/main/resources/public/doc">
                                     <fileset dir="target/generated-docs">
-                                        <include name="**/*.html"/>
-                                        <include name="**/*.png"/>
-                                        <include name="**/*.jpg"/>
+                                        <include name="**/*.html" />
+                                        <include name="**/*.png" />
+                                        <include name="**/*.jpg" />
                                     </fileset>
                                 </sync>
 
                                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
-                                    <include name="**/*.html"/>
-                                    <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
-                                                   value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js"/>
-                                    <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js"
-                                                   value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js"/>
-                                    <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-                                                   value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js"/>
-                                    <replacefilter
-                                        token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
-                                        value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js"/>
+                                    <include name="**/*.html" />
+                                    <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                                    <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                                    <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                                    <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
                                 </replace>
 
                             </target>
@@ -747,9 +722,7 @@
                     <artifactId>asciidoctor-maven-plugin</artifactId>
                     <version>${asciidoctor.plugin.version}</version>
                     <configuration>
-                        <sourceDirectory>
-                            target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc
-                        </sourceDirectory>
+                        <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
                         <attributes>
                             <doctype>book</doctype>
                             <toclevels>8</toclevels>
@@ -790,14 +763,13 @@
                             <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-ui-project</ignoredDependency>
                         </ignoredDependencies>
                         <ignoredUsedUndeclaredDependencies>
-                            <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core
-                            </ignoredUsedUndeclaredDependency>
+                            <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
                         </ignoredUsedUndeclaredDependencies>
                         <usedDependencies>
                             <!-- INCEpTION backend modules - used via Spring -->
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
-                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata
-                            </usedDependency>
+                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>
+                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
@@ -807,15 +779,11 @@
                             <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
                             <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
-                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search
-                            </usedDependency>
+                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
-                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-elastic
-                            </usedDependency>
-                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-solr
-                            </usedDependency>
-                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation
-                            </usedDependency>
+                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-elastic</usedDependency>
+                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-solr</usedDependency>
+                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
@@ -834,8 +802,7 @@
                             <!-- INCEpTION annotation editor modules - used via Spring -->
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
-                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor
-                            </usedDependency>
+                            <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
                             <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
                             <!-- INCEpTION IO Modules - used via Spring -->
@@ -856,7 +823,6 @@
                             <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
                             <usedDependency>mysql:mysql-connector-java</usedDependency>
                             <usedDependency>org.hsqldb:hsqldb</usedDependency>
-                            <usedDependency>org.liquibase:liquibase-core</usedDependency>
                             <usedDependency>org.ehcache:ehcache</usedDependency>
                             <!-- Logging - used via reflection / optional -->
                             <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
@@ -866,10 +832,8 @@
                             <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
                             <usedDependency>commons-logging:commons-logging</usedDependency>
                             <!-- Themes -->
-                            <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap
-                            </usedDependency>
-                            <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness
-                            </usedDependency>
+                            <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
+                            <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
                             <!-- Wicket plugins -->
                             <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
                             <usedDependency>org.mozilla:rhino-runtime</usedDependency>
@@ -880,10 +844,8 @@
                             <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
                             <usedDependency>org.springframework:spring-webmvc</usedDependency>
                             <usedDependency>org.springframework:spring-expression</usedDependency>
-                            <!-- Tutorial Js dependencies -->
-                            <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
-                            <usedDependency>org.webjars.npm:kinetic</usedDependency>
-                            <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
+                            <!-- Other -->
+                            <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
                         </usedDependencies>
                     </configuration>
                 </plugin>
@@ -922,7 +884,7 @@
                                                 </goals>
                                             </pluginExecutionFilter>
                                             <action>
-                                                <execute/>
+                                                <execute />
                                             </action>
                                         </pluginExecution>
                                         <pluginExecution>
@@ -935,7 +897,7 @@
                                                 </goals>
                                             </pluginExecutionFilter>
                                             <action>
-                                                <execute/>
+                                                <execute />
                                             </action>
                                         </pluginExecution>
                                         <pluginExecution>
@@ -948,7 +910,7 @@
                                                 </goals>
                                             </pluginExecutionFilter>
                                             <action>
-                                                <execute/>
+                                                <execute />
                                             </action>
                                         </pluginExecution>
                                         <pluginExecution>
@@ -961,7 +923,7 @@
                                                 </goals>
                                             </pluginExecutionFilter>
                                             <action>
-                                                <execute/>
+                                                <execute />
                                             </action>
                                         </pluginExecution>
                                     </pluginExecutions>
@@ -997,8 +959,7 @@
                                 </goals>
                                 <configuration>
                                     <executable>true</executable>
-                                    <layoutFactory
-                                        implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory"/>
+                                    <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
                                     <!--
                                       We want the original file to be the WAR and the repackaged all-inclusive runnable
                                       thing with the embedded Tomcat to be the JAR.
@@ -1028,8 +989,7 @@
                                 </goals>
                                 <configuration>
                                     <target>
-                                        <move file="target/${project.artifactId}-${project.version}-standalone.war"
-                                              tofile="target/${project.artifactId}-${project.version}-standalone.jar"/>
+                                        <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
                                     </target>
                                 </configuration>
                             </execution>
