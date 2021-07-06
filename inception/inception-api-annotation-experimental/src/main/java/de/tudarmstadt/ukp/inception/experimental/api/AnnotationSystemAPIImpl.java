@@ -56,7 +56,6 @@ public class AnnotationSystemAPIImpl
             UserDao aUserDao, RepositoryProperties aRepositoryProperties,
             AnnotationProcessAPI aAnnotationProcessAPI)
     {
-
         projectService = aProjectService;
         documentService = aDocumentService;
         userDao = aUserDao;
