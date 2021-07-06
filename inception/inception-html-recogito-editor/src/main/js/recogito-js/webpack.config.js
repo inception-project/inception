@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const APP_DIR = fs.realpathSync(process.cwd());
@@ -20,7 +21,10 @@ module.exports = {
   performance: {
     hints: false
   },
-  optimization: { },
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin()],
+  },
   resolve: {
     extensions: ['.js', '.jsx'],
     alias: {

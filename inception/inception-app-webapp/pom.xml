@@ -846,8 +846,6 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
-              <!-- Spring Web MVC data conversion -->
-              <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
               <!-- Other -->
               <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
