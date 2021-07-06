@@ -110,11 +110,45 @@
                   </button>
                   <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
                   <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
-                    <li class="dropdown-item-text agree">Agreement</li>
-                    <li class="dropdown-item-text curated">Curated</li>
-                    <li class="dropdown-item-text stacked">Stacked annotations</li>
-                    <li class="dropdown-item-text incomplete">Incomplete annotation</li>
-                    <li class="dropdown-item-text disagree">Disagreement</li>
+                    <li class="dropdown-item-text agree">
+                      <span class="badge badge-pill">&nbsp;</span>
+                      Agreement
+                      <div class="small text-muted ml-4">
+                        There is no disagreement between annotators. There is nothing to
+                        curate.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill curated">&nbsp;</span>
+                      Curated
+                      <div class="small text-muted ml-4">
+                        For every position any annotator has annotated, the is a corresponding 
+                        annotation at the same position in the curator's document.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill stacked">&nbsp;</span>
+                      Stacked annotations
+                      <div class="small text-muted ml-4">
+                        A single annotator has made multiple annotations of the same layer at a
+                        given position.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill incomplete">&nbsp;</span>
+                      Incomplete annotation
+                      <div class="small text-muted ml-4">
+                        A position has been annoated by some annotators but not by all.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill disagree">&nbsp;</span>
+                      Disagreement
+                      <div class="small text-muted ml-4">
+                        Multiple annotators have annotated a position, but different labels were
+                        assigned.
+                      </div>
+                    </li>
                   </ul>
                 </span>
               </span>
@@ -142,7 +176,7 @@
               <div wicket:id="annotationEditor" class="text-center flex-content flex-v-container"/>
             </div>
           </div>
-          <div wicket:id="annotatorsPanel"/>
+          <div wicket:id="annotatorsPanel" class="pt-2"/>
         </div>
       </div>
 

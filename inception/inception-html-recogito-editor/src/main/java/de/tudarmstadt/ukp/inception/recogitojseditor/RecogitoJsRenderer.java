@@ -33,10 +33,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTr
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotation;
+import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationBodyItem;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationTarget;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 
@@ -51,7 +53,7 @@ public class RecogitoJsRenderer
         coloringService = aColoringService;
         annotationService = aAnnotationService;
     }
-    
+
     public WebAnnotations render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
             ColoringStrategy aColoringStrategy)
     {
@@ -81,15 +83,35 @@ public class RecogitoJsRenderer
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 WebAnnotation anno = new WebAnnotation();
-                anno.setId(vspan.getVid().toString());
+                anno.setId("#" + vspan.getVid().toString());
+                anno.setType("Annotation");
                 anno.setTarget(new ArrayList<>());
-                anno.getTarget()
-                        .add(new WebAnnotationTarget(vspan.getRanges().get(0).getBegin(),
-                                vspan.getRanges().get(0).getEnd(), null));
+                anno.getTarget().add(new WebAnnotationTarget(vspan.getRanges().get(0).getBegin(),
+                        vspan.getRanges().get(0).getEnd(), null));
+                annotations.add(anno);
+            }
+
+            for (VArc varc : aVDoc.arcs(layer.getId())) {
+                String labelText = getUiLabelText(typeAdapter, varc);
+                String color = coloringStrategy.getColor(varc, labelText, coloringRules);
+
+                WebAnnotation anno = new WebAnnotation();
+                anno.setMotivation("linking");
+                anno.setType("Annotation");
+                anno.setId("#" + varc.getVid().toString());
+                anno.setTarget(new ArrayList<>());
+                anno.getTarget().add(new WebAnnotationTarget("#" + varc.getSource().toString()));
+                anno.getTarget().add(new WebAnnotationTarget("#" + varc.getTarget().toString()));
+                anno.setBody(new ArrayList<>());
+                WebAnnotationBodyItem body = new WebAnnotationBodyItem();
+                body.setType("TextualBody");
+                body.setPurpose("tagging");
+                body.setValue(labelText);
+                anno.getBody().add(body);
                 annotations.add(anno);
             }
         }
-        
+
         return annotations;
     }
 }

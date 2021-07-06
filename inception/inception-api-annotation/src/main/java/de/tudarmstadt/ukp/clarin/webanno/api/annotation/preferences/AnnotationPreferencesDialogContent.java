@@ -85,6 +85,7 @@ public class AnnotationPreferencesDialogContent
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean UserDao userDao;
     private @SpringBean UserPreferencesService userPreferencesService;
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     private final ModalWindow modalWindow;
     private final Form<Preferences> form;
@@ -151,6 +152,7 @@ public class AnnotationPreferencesDialogContent
 
         CheckBox rememberCheckbox = new CheckBox("rememberLayer");
         rememberCheckbox.setOutputMarkupId(true);
+        rememberCheckbox.setVisible(annotationEditorProperties.isRememberLayerEnabled());
         form.add(rememberCheckbox);
 
         // Add global read-only coloring strategy combo box

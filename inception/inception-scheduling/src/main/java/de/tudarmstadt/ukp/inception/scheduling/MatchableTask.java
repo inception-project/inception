@@ -27,5 +27,5 @@ public interface MatchableTask
      *            the given scheduling task
      * @return whether the given task matches this one
      */
-    boolean matches(Task aTask);
+    MatchResult matches(Task aTask);
 }

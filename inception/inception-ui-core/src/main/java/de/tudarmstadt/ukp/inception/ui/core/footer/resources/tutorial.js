@@ -226,7 +226,8 @@ function runRoutines() {
           },
           onEnd : function() {
             setCookie(cName, "farewell");
-            $('.sidebar-item').css('pointer-events', '');
+            location.reload(); // necessary to cause switch to farewell
+            // $('.sidebar-item').css('pointer-events', '');
           },
           onSkip : function() {
             setCookie(cName, 'ended');

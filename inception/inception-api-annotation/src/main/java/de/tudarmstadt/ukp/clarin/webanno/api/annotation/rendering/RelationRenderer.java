@@ -96,7 +96,7 @@ public class RelationRenderer
         RelationAdapter typeAdapter = getTypeAdapter();
         type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
         spanType = aTypeSystem.getType(typeAdapter.getAttachTypeName());
-        
+
         if (type == null || spanType == null) {
             // If the types are not defined, then we do not need to try and render them because the
             // CAS does not contain any instances of them
@@ -176,8 +176,8 @@ public class RelationRenderer
         }
 
         RelationAdapter typeAdapter = getTypeAdapter();
-        FeatureStructure dependentFs = getGovernorFs(aFS);
-        FeatureStructure governorFs = getDependentFs(aFS);
+        FeatureStructure dependentFs = getDependentFs(aFS);
+        FeatureStructure governorFs = getGovernorFs(aFS);
 
         if (dependentFs == null || governorFs == null) {
             StringBuilder message = new StringBuilder();

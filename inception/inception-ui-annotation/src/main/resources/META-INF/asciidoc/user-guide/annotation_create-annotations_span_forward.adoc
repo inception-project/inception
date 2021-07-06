@@ -18,6 +18,13 @@
 
 = Forward annotation mode
 
+====
+CAUTION: Deprecated feature to be removed in future releases. This feature is disabled by default. 
+To enable it, you can add  `annotation.default-preferences.forward-annotation-enabled=true` to the 
+`settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>). If you rely on this
+feature, please comment on the link:https://github.com/inception-project/inception/issues/2417[deprecation issue].
+====
+
 The **forward annotation** mode is useful for annotation tasks where every single token should be
 receiving an annotation - typical examples are part-of-speech of lemma annotation. When this mode is
 enabled, completing an annotation automatically creates another annotation on the next token.
