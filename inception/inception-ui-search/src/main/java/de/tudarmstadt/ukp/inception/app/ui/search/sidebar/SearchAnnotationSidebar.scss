@@ -15,17 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.scheduling;
+.search-sidebar {
+  .ssb-group-header-control {
+    text-align: center; 
+    width: 15%;
+    line-height: initial;
+    
+    label {
+      margin: 0px;
+    }
+  }
 
-public interface MatchableTask
-{
-    /**
-     * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
-     * the given task.
-     * 
-     * @param aTask
-     *            the given scheduling task
-     * @return whether the given task matches this one
-     */
-    MatchResult matches(Task aTask);
+  .ssb-group-header-title {
+    text-align: left; 
+    padding: 0px; 
+    width: 85%;
+    font-size: 75%;
+    line-height: initial;
+    vertical-align: middle;
+  }
+
+  .ssb-result-control {
+    padding: 0px;
+    text-align: center;
+    
+    label {
+      margin: 0px;
+    }
+  }
+
+  .ssb-result-text {
+    padding: 0px;
+    text-align: center; 
+  }
 }

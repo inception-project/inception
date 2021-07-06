@@ -17,15 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-public interface MatchableTask
+public enum MatchResult
 {
     /**
-     * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
-     * the given task.
-     * 
-     * @param aTask
-     *            the given scheduling task
-     * @return whether the given task matches this one
+     * Task does not match.
      */
-    MatchResult matches(Task aTask);
+    NO_MATCH,
+
+    /**
+     * Unqueue any existing matching tasks. Scheduled and running tasks as left alone. Enqueue the
+     * new task.
+     */
+    UNQUEUE_EXISTING_AND_QUEUE_THIS,
+
+    /**
+     * Discard the incoming task if it matches an already enqueued task. If and matching task is
+     * already scheduled or running, then queue the incoming task.
+     */
+    DISCARD_OR_QUEUE_THIS;
 }
