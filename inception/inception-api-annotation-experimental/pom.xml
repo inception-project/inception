@@ -60,10 +60,6 @@
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-support</artifactId>
         </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-html-editor</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -90,8 +86,36 @@
             <artifactId>spring-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimafit-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>javax.persistence-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+        <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-api-dao</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-review-editor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-scheduling</artifactId>
         </dependency>
     </dependencies>
 </project>

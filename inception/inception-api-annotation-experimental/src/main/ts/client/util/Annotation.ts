@@ -15,29 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export class Annotation
 {
-  "name": "@experimental/ts-Annotation-API",
-  "version": "1.0.0",
-  "description": "A TypeScript API for text annotation",
-  "private": true,
-  "scripts": {
-    "es": "./node_modules/esbuild/bin/esbuild ./client/AnnotationExperienceAPI.ts --format=cjs --bundle --outfile=../java/de/tudarmstadt/ukp/inception/experimental/api/resources/AnnotationExperienceAPI.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
-  "keywords": [
-    "API",
-    "Annotation"
-  ],
-  "external": {},
-  "author": "Christoph Scheunemann",
-  "license": "",
-  "devDependencies": {
-    "@stomp/stompjs": "^6.1.0",
-    "@types/sockjs-client": "^1.5.0",
-    "@types/stompjs": "^2.3.4",
-    "esbuild": "^0.11.16"
-  }
+    id: string;
+    word: string;
+    begin: number;
+    end: number;
+    type: string;
+
+    constructor(aId: string, aWord: string, aBegin: number, aEnd: number, aType: string)
+    {
+        this.id = aId;
+        this.word = aWord;
+        this.begin = aBegin;
+        this.end = aEnd;
+        this.type = aType;
+    }
 }

@@ -15,38 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.message;
+import {Annotation} from "./Annotation";
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.inception.experimental.api.Annotation;
-
-public class ViewportMessage
+export class ServerMessage
 {
-    private Character[] viewportText;
-    private List<Annotation> annotations;
+    document : number;
+    viewport :number[][];
+    viewportText : string[];
+    offsetType : string;
 
-    public ViewportMessage()
+    annotations : Annotation [];
+
+    annotationAddress : number;
+    annotationType : string;
+    annotationOffsetBegin : number;
+    annotationOffsetEnd : number;
+    annotationText : string;
+
+    delete : boolean;
+    edit: boolean;
+
+    errorMessage: string;
+
+    constructor()
     {
-
-    }
-
-    public Character[] getViewportText() {
-        return viewportText;
-    }
-
-    public void setViewportText(Character[] aViewportText) {
-        this.viewportText = aViewportText;
-    }
-
-    public List<Annotation> getAnnotations()
-    {
-        return annotations;
-    }
-
-    public void setAnnotations(List<Annotation> aAnnotations)
-    {
-        annotations = aAnnotations;
     }
 
 }

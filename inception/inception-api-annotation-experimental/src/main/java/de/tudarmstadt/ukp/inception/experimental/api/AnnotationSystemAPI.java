@@ -18,20 +18,23 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
+
 public interface AnnotationSystemAPI
 {
-    void handleDocument(String[] aData) throws IOException;
+    void handleDocument(ClientMessage aClientMessage) throws IOException;
 
-    void handleViewport(String[] aData) throws IOException;
+    void handleViewport(ClientMessage aClientMessage) throws IOException;
 
-    void handleSelectAnnotation(String[] aData) throws IOException;
+    void handleSelectAnnotation(ClientMessage aClientMessage) throws IOException;
 
-    void handleCreateAnnotation(String[] aData) throws IOException;
+    void handleCreateAnnotation(ClientMessage aClientMessage) throws IOException;
 
-    void handleDeleteAnnotation(String[] aData) throws IOException;
+    void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException;
 
     /**
      * Returns CAS from websocket message. All three String parameters are contained in the header
@@ -47,4 +50,13 @@ public interface AnnotationSystemAPI
      */
     CAS getCasForDocument(String aUser, long aProject, long aDocument);
 
+    Character[] getViewportText(ClientMessage aClientMessage, CAS aCas);
+
+    List<Annotation> getAnnotations(CAS aCas, long aProject);
+
+    List<Annotation> filterAnnotations(List <Annotation> aAnnotations, int[][] aViewport);
+
+    void updateCAS(String aUser, long aProject, long aDocument,CAS aCas);
+
+    void createErrorMessage(String aMessage, String aUser) throws IOException;
 }

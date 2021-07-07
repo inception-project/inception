@@ -17,44 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.message;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.inception.experimental.api.Annotation;
-
-public class DocumentMessage
+public class ErrorMessage
 {
-    private int document;
-    private Character[] viewportText;
-    private List<Annotation> annotations;
+    private String errorMessage;
 
-    public int getDocument()
+    public ErrorMessage(String aMessage)
     {
-        return document;
+        errorMessage = aMessage;
+
     }
 
-    public void setDocument(int aDocument)
+    public String getErrormessage()
     {
-        document = aDocument;
+        return errorMessage;
     }
 
-    public Character[] getViewportText()
+    public void setErrorMessage(String aErrormessage)
     {
-        return viewportText;
-    }
 
-    public void setViewportText(Character[] aViewportText)
-    {
-        this.viewportText = aViewportText;
+        errorMessage = aErrormessage;
     }
-
-    public List<Annotation> getAnnotations()
-    {
-        return annotations;
-    }
-
-    public void setAnnotations(List<Annotation> aAnnotations)
-    {
-        annotations = aAnnotations;
-    }
-
 }

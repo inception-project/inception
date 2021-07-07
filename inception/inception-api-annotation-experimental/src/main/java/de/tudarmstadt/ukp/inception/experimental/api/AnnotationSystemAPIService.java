@@ -15,38 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.message;
+package de.tudarmstadt.ukp.inception.experimental.api;
 
-import java.util.List;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-import de.tudarmstadt.ukp.inception.experimental.api.Annotation;
-
-public class ViewportMessage
+public interface AnnotationSystemAPIService
 {
-    private Character[] viewportText;
-    private List<Annotation> annotations;
-
-    public ViewportMessage()
-    {
-
-    }
-
-    public Character[] getViewportText() {
-        return viewportText;
-    }
-
-    public void setViewportText(Character[] aViewportText) {
-        this.viewportText = aViewportText;
-    }
-
-    public List<Annotation> getAnnotations()
-    {
-        return annotations;
-    }
-
-    public void setAnnotations(List<Annotation> aAnnotations)
-    {
-        annotations = aAnnotations;
-    }
-
+    AnnotationLayer getAnnotationLayer(String aName);
 }

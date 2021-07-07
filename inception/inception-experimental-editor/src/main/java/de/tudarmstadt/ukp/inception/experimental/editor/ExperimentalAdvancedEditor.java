@@ -36,15 +36,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.experimental.api.resources.ExperimentalAPIResourceReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
-public class ExperimentalAnnotationEditor
+public class ExperimentalAdvancedEditor
     extends AnnotationEditorBase
 {
-    private static final long serialVersionUID = 2983502506977571078L;
+    private static final long serialVersionUID = -5928851124630974531L;
 
     private @SpringBean ServletContext servletContext;
 
-    public ExperimentalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
+    public ExperimentalAdvancedEditor(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
     }
@@ -54,14 +54,14 @@ public class ExperimentalAnnotationEditor
     {
         super.renderHead(aResponse);
         aResponse.render(JavaScriptHeaderItem
-                .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
+            .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
         aResponse.render(forReference(ExperimentalAPIResourceReference.get()));
     }
 
     private String constructEndpointUrl()
     {
         Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
-                WebsocketConfig.WS_ENDPOINT));
+            WebsocketConfig.WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
         return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
     }
@@ -71,5 +71,4 @@ public class ExperimentalAnnotationEditor
     {
 
     }
-
 }
