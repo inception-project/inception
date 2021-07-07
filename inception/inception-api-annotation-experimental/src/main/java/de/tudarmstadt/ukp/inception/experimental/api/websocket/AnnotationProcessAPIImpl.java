@@ -64,6 +64,7 @@ public class AnnotationProcessAPIImpl
 
     private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_by_client";
     private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_by_client";
+    private static final String SERVER_RECEIVE_CLIENT_UPDATE_ANNOTATION = "update_annotation_by_client";
 
     private static final String SERVER_SEND_CLIENT_UPDATE_ANNOTATION = "/topic/annotation_update_for_clients/";
 
@@ -150,6 +151,16 @@ public class AnnotationProcessAPIImpl
         System.out.println("SENDING NOW ANNOTATION SELECT TO CLIENT: " + aUser);
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_ANNOTATION + aUser,
                 JSONUtil.toJsonString(aAnnotationMessage));
+    }
+
+
+    @Override
+    @MessageMapping(SERVER_RECEIVE_CLIENT_UPDATE_ANNOTATION)
+    public void handleReceiveUpdateAnnotation(Message<String> aMessage) throws IOException
+    {
+        System.out.println("RECEIVED UPDATE ANNOTATION BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleUpdateAnnotation(
+            JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
     }
 
     @Override

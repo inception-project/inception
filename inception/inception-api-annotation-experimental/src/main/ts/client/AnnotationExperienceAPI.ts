@@ -36,7 +36,7 @@ export interface AnnotationExperienceAPI {
 
     sendCreateAnnotationMessageToServer(aUsername, aDocument, begin, end, aAnnotationType);
 
-    sendUpdateAnnotationMessageToServer(aId, aAnnotationType);
+    sendUpdateAnnotationMessageToServer(aUsername, aDocument, aId, aNewAnnotationType, aNewAnnotationFeature)
 
     sendDeleteAnnotationMessageToServer(aId : string, aAnnotationType: string);
 

@@ -1,20 +1,3 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var __defProp = Object.defineProperty;
 var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
 var __export = (target, all) => {
@@ -1355,12 +1338,13 @@ var ServerMessage = class {
 
 // client/util/Annotation.ts
 var Annotation = class {
-  constructor(aId, aWord, aBegin, aEnd, aType) {
+  constructor(aId, aWord, aBegin, aEnd, aType, aFeature) {
     this.id = aId;
     this.word = aWord;
     this.begin = aBegin;
     this.end = aEnd;
     this.type = aType;
+    this.feature = aFeature;
   }
 };
 
@@ -1465,6 +1449,17 @@ var AnnotationExperienceAPIImpl = class {
     };
     this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
   }
+  sendUpdateAnnotationMessageToServer(aUsername, aDocument, aId, aNewAnnotationType, aNewAnnotationFeature) {
+    let json = {
+      username: aUsername,
+      project: this.projectID,
+      document: aDocument,
+      annotationAddress: aId,
+      annotationType: aNewAnnotationType,
+      annotationFeature: aNewAnnotationFeature
+    };
+    this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
+  }
   sendCreateAnnotationMessageToServer(aUsername, aDocument, aBegin, aEnd, aAnnotationType) {
     let json = {
       username: aUsername,
@@ -1475,16 +1470,6 @@ var AnnotationExperienceAPIImpl = class {
       annotationType: aAnnotationType
     };
     this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
-  }
-  sendUpdateAnnotationMessageToServer(aId, aAnnotationType) {
-    let json = {
-      username: this.client,
-      project: this.projectID,
-      document: this.documentID,
-      annotationAddress: aId,
-      annotationType: aAnnotationType
-    };
-    this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
   }
   sendDeleteAnnotationMessageToServer(aId, aAnnotationType) {
     let json = {
@@ -1536,13 +1521,16 @@ var AnnotationExperienceAPIImpl = class {
     console.log("RECEIVED ANNOTATION MESSAGE");
     console.log(aMessage);
     if (aMessage.delete) {
+      console.log("DELETE");
       this.annotations.forEach((item, index) => {
         if (item.id.toString() === aMessage.annotationAddress.toString()) {
           this.annotations.splice(index, 1);
         }
       });
     } else if (aMessage.edit) {
+      console.log("UPDATE");
     } else {
+      console.log("NEW");
       let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType);
       this.annotations.push(newAnnotation);
     }

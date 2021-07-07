@@ -25,6 +25,7 @@ public class AnnotationMessage
     private String quote;
     private String color;
     private String annotationType;
+    private String annotationFeature;
     private String annotationText;
     private boolean delete;
     private boolean edit;
@@ -132,5 +133,15 @@ public class AnnotationMessage
     public void setEdit(boolean edit)
     {
         this.edit = edit;
+    }
+
+    public String getAnnotationFeature()
+    {
+        return annotationFeature;
+    }
+
+    public void setAnnotationFeature(String aAnnotationFeature)
+    {
+        annotationFeature = aAnnotationFeature;
     }
 }

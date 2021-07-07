@@ -43,6 +43,8 @@ public interface AnnotationProcessAPI
     void handleSendSelectAnnotation(AnnotationMessage aAnnotationMessage, String aUser)
         throws IOException;
 
+    void handleReceiveUpdateAnnotation(Message<String> aMessage) throws IOException;
+
     void handleReceiveCreateAnnotation(Message<String> aMessage) throws IOException;
 
     void handleReceiveDeleteAnnotation(Message<String> aMessage) throws IOException;

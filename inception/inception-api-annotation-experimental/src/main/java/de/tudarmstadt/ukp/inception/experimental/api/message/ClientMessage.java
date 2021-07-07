@@ -26,6 +26,7 @@ public class ClientMessage
     private int[][] viewport;
     private int annotationAddress;
     private String annotationType;
+    private String annotationFeature;
     private int annotationOffsetBegin;
     private int annotationOffsetEnd;
     private String offsetType;
@@ -132,5 +133,15 @@ public class ClientMessage
     public void setOffsetType(String aOffsetType)
     {
         offsetType = aOffsetType;
+    }
+
+    public String getAnnotationFeature()
+    {
+        return annotationFeature;
+    }
+
+    public void setAnnotationFeature(String aAnnotationFeature)
+    {
+        annotationFeature = aAnnotationFeature;
     }
 }

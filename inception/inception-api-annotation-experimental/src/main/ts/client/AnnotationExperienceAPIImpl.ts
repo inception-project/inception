@@ -187,6 +187,18 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
     }
 
+    sendUpdateAnnotationMessageToServer(aUsername, aDocument, aId, aNewAnnotationType, aNewAnnotationFeature) {
+        let json = {
+            username: aUsername,
+            project: this.projectID,
+            document: aDocument,
+            annotationAddress: aId,
+            annotationType: aNewAnnotationType,
+            annotationFeature: aNewAnnotationFeature
+        };
+        this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
+    }
+
     sendCreateAnnotationMessageToServer(aUsername, aDocument, aBegin, aEnd, aAnnotationType) {
         let json = {
             username: aUsername,
@@ -197,17 +209,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             annotationType: aAnnotationType
         };
         this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
-    }
-
-    sendUpdateAnnotationMessageToServer(aId, aAnnotationType) {
-        let json = {
-            username: this.client,
-            project: this.projectID,
-            document: this.documentID,
-            annotationAddress: aId,
-            annotationType: aAnnotationType
-        };
-        this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
     }
 
     sendDeleteAnnotationMessageToServer(aId: string, aAnnotationType: string) {
@@ -282,6 +283,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         //TODO Both toString() necessary, but how to do it better?
         //RECEIVED DELETE
         if (aMessage.delete) {
+            console.log("DELETE")
             this.annotations.forEach((item, index) => {
                 if (item.id.toString() === aMessage.annotationAddress.toString()) {
                     this.annotations.splice(index, 1);
@@ -289,9 +291,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             });
             //RECEIVED EDIT
         } else if (aMessage.edit) {
-
+            console.log("UPDATE")
             //RECEIVED NEW ANNOTATION
+
         } else {
+            console.log("NEW")
             let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType)
             this.annotations.push(newAnnotation)
         }

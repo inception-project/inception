@@ -32,6 +32,8 @@ public interface AnnotationSystemAPI
 
     void handleSelectAnnotation(ClientMessage aClientMessage) throws IOException;
 
+    void handleUpdateAnnotation(ClientMessage aClientMessage) throws IOException;
+
     void handleCreateAnnotation(ClientMessage aClientMessage) throws IOException;
 
     void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException;

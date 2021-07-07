@@ -22,13 +22,15 @@ export class Annotation
     begin: number;
     end: number;
     type: string;
+    feature: string;
 
-    constructor(aId: string, aWord: string, aBegin: number, aEnd: number, aType: string)
+    constructor(aId: string, aWord: string, aBegin: number, aEnd: number, aType: string, aFeature: string)
     {
         this.id = aId;
         this.word = aWord;
         this.begin = aBegin;
         this.end = aEnd;
         this.type = aType;
+        this.feature = aFeature;
     }
 }

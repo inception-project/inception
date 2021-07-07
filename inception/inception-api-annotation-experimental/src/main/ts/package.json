@@ -1,0 +1,26 @@
+{
+  "name": "@experimental/ts-Annotation-API",
+  "version": "1.0.0",
+  "description": "A TypeScript API for text annotation",
+  "private": true,
+  "scripts": {
+    "es": "./node_modules/esbuild/bin/esbuild ./client/AnnotationExperienceAPIImpl.ts --format=cjs --target=es6 --bundle --outfile=../java/de/tudarmstadt/ukp/inception/experimental/api/resources/AnnotationExperienceAPI.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "API",
+    "Annotation"
+  ],
+  "external": {},
+  "author": "Christoph Scheunemann",
+  "license": "",
+  "devDependencies": {
+    "@stomp/stompjs": "^6.1.0",
+    "@types/sockjs-client": "^1.5.0",
+    "@types/stompjs": "^2.3.4",
+    "esbuild": "^0.11.16"
+  }
+}
