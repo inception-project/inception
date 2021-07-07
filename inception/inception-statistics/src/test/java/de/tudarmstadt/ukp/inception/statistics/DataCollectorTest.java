@@ -18,32 +18,29 @@
 
 package de.tudarmstadt.ukp.inception.statistics;
 
-import de.tudarmstadt.ukp.inception.statistics.DataCollector;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-
 public class DataCollectorTest
 {
-
-    private static final String DATA_FOLDER = "D:\\Falko\\Documents\\UKP\\Statistics\\Testdaten";
-
+    // must be in scr/test/resources
+    public static final String FILE_NAME = "admin.xmi";
     @Test
     public void testCollectData()
     {
         DataCollector collector = new DataCollector();
         CAS testCas;
         try {
-            testCas = collector.loadCas(DATA_FOLDER + "\\admin.xmi");
+            testCas = collector.loadCas(FILE_NAME);
             System.out.println("nach import");
             collector.collectData(testCas);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        assertEquals(1, 1);
+        assertThat(1).isEqualTo(1);
 
     }
 
