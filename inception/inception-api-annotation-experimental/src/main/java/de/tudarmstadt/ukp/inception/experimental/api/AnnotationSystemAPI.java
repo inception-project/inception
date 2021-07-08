@@ -23,6 +23,9 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 
 public interface AnnotationSystemAPI
 {
@@ -58,7 +61,15 @@ public interface AnnotationSystemAPI
 
     List<Annotation> filterAnnotations(List <Annotation> aAnnotations, int[][] aViewport);
 
-    void updateCAS(String aUser, long aProject, long aDocument,CAS aCas);
-
     void createErrorMessage(String aMessage, String aUser) throws IOException;
+
+    FeatureStructure getFeatureStructure(CAS aCas, long aProject, String aAnnotationType);
+
+    List<Feature> getFeaturesForFeatureStructure(FeatureStructure aFeatureStructure);
+
+    void refreshAnnotationLayers();
+
+    Type getType(CAS aCas, String aAnnotationType);
+
+
 }

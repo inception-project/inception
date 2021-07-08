@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Annotation} from "../util/Annotation";
-import {AnnotationType} from "../util/AnnotationTypes";
-import {AnnotationExperienceAPI} from "../AnnotationExperienceAPI";
+import {Annotation} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/util/Annotation";
+import {AnnotationType} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/util/AnnotationTypes";
+import {AnnotationExperienceAPI} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
 
 export class AnnotationExperienceAPIVisualization {
 
@@ -38,7 +38,7 @@ export class AnnotationExperienceAPIVisualization {
     showSentenceNumbers: boolean = true;
     showBackground: boolean = true;
 
-    constructor( aAnnotationExperience : AnnotationExperienceAPI)
+    constructor(aAnnotationExperience : AnnotationExperienceAPI)
     {
         this.annotationExperienceAPI = aAnnotationExperience;
     }
@@ -248,6 +248,8 @@ export class AnnotationExperienceAPIVisualization {
                 return "#04CCCC";
             case AnnotationType.NER:
                 return "#228822";
+            case AnnotationType.COREFERENCE:
+                return "#934AA1"
             default:
                 return "#AAAAAA";
         }

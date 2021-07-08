@@ -15,22 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.resources;
+package de.tudarmstadt.ukp.inception.experimental.editor.resources;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class ExperimentalAPIResourceReference extends JavaScriptResourceReference
+public class ExperimentalAPIEditorReference extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final ExperimentalAPIResourceReference INSTANCE = new ExperimentalAPIResourceReference();
+    private static final ExperimentalAPIEditorReference INSTANCE = new ExperimentalAPIEditorReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static ExperimentalAPIResourceReference get()
+    public static ExperimentalAPIEditorReference get()
     {
         return INSTANCE;
     }
@@ -38,8 +38,8 @@ public class ExperimentalAPIResourceReference extends JavaScriptResourceReferenc
     /**
      * Private constructor
      */
-    private ExperimentalAPIResourceReference()
+    private ExperimentalAPIEditorReference()
     {
-        super(ExperimentalAPIResourceReference.class, "AnnotationExperienceAPI.js");
+        super(ExperimentalAPIEditorReference.class, "AnnotationExperienceAPIEditor.js");
     }
 }

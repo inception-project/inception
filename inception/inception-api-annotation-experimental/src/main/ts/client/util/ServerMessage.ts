@@ -28,6 +28,7 @@ export class ServerMessage
 
     annotationAddress : number;
     annotationType : string;
+    annotationFeature : string;
     annotationOffsetBegin : number;
     annotationOffsetEnd : number;
     annotationText : string;

@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPIImpl} from "../AnnotationExperienceAPI";
+import {AnnotationExperienceAPI} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
 
 export class AnnotationExperienceAPIActionHandler {
-    annotationExperienceAPI: AnnotationExperienceAPIImpl;
+    annotationExperienceAPI: AnnotationExperienceAPI;
 
-    constructor(aAnnotationExperienceAPI: AnnotationExperienceAPIImpl) {
+    constructor(aAnnotationExperienceAPI: AnnotationExperienceAPI) {
         this.annotationExperienceAPI = aAnnotationExperienceAPI;
     }
 
@@ -95,15 +95,6 @@ export class AnnotationExperienceAPIActionHandler {
         ondblclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             console.log(elem)
-            if (elem.tagName === 'text') {
-                that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(
-                    elem.attributes[2].value, elem.attributes[2].value,"NamedEntity");
-            }
-
-            if (elem.tagName === 'rect') {
-                console.log(elem)
-                that.annotationExperienceAPI.sendDeleteAnnotationMessageToServer(elem.id);
-            }
         }
     }
 }

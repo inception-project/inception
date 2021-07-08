@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 import {Client, Stomp} from '@stomp/stompjs';
-import {AnnotationExperienceAPIVisualization} from "./visualization/AnnotationExperienceAPIVisualization";
-import {AnnotationExperienceAPIActionHandler} from "./actionhandling/AnnotationExperienceAPIActionHandler";
+import {AnnotationExperienceAPIVisualization} from "../../../../../inception-experimental-editor/src/main/java/ts/visualization/AnnotationExperienceAPIVisualization";
+import {AnnotationExperienceAPIActionHandler} from "../../../../../inception-experimental-editor/src/main/java/ts/actionhandling/AnnotationExperienceAPIActionHandler";
 import {ServerMessage} from "./util/ServerMessage";
 import {AnnotationExperienceAPI} from "./AnnotationExperienceAPI"
 import {Annotation} from "./util/Annotation";
@@ -43,22 +43,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     //Viewport
     viewport: number[][];
 
-    //Visualizer
-    readonly visualizer: AnnotationExperienceAPIVisualization;
-
-    //Actionhandler
-    readonly actionhandler: AnnotationExperienceAPIActionHandler;
-
     constructor() {
         this.connect();
-
-        //Visualizer
-        this.visualizer = new AnnotationExperienceAPIVisualization(this);
-
-        //ActionHandler
-        this.actionhandler = new AnnotationExperienceAPIActionHandler(this);
-
-        this.actionhandler.registerDefaultActionHandler();
     }
 
 
@@ -273,7 +259,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     receiveSelectedAnnotationMessageByServer(aMessage: ServerMessage) {
         console.log('RECEIVED SELECTED ANNOTATION');
         console.log(aMessage);
-        this.selectedAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType)
+        this.selectedAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType, aMessage.annotationFeature)
     }
 
     receiveAnnotationMessageByServer(aMessage: ServerMessage) {
@@ -296,13 +282,12 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
         } else {
             console.log("NEW")
-            let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType)
+            let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType, aMessage.annotationFeature)
             this.annotations.push(newAnnotation)
         }
     }
 
-    receiveErrorMessageByServer(aMessage: ServerMessage)
-    {
+    receiveErrorMessageByServer(aMessage: ServerMessage) {
         console.log('RECEIVED ERROR MESSAGE');
         console.log(aMessage);
 

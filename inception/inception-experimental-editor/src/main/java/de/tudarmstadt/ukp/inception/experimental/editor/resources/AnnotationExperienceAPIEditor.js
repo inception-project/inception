@@ -5,14 +5,292 @@ var __export = (target, all) => {
     __defProp(target, name, {get: all[name], enumerable: true});
 };
 
+// ../../../../../inception-api-annotation-experimental/src/main/ts/client/util/AnnotationTypes.ts
+var AnnotationType;
+(function(AnnotationType2) {
+  AnnotationType2["POS"] = "POS";
+  AnnotationType2["NER"] = "NamedEntity";
+  AnnotationType2["LEMMA"] = "Lemma";
+  AnnotationType2["CHUNK"] = "Chunk";
+  AnnotationType2["COREFERENCE"] = "Coreference";
+})(AnnotationType || (AnnotationType = {}));
 
-// node_modules/@stomp/stompjs/esm6/byte.js
+// visualization/AnnotationExperienceAPIVisualization.ts
+var AnnotationExperienceAPIVisualization = class {
+  constructor(aAnnotationExperience) {
+    this.SENTENCE_OFFSET_WIDTH = 45;
+    this.CHARACTER_WIDTH = 9;
+    this.lineColorFirst = "#BBBBBB";
+    this.lineColorSecond = "#CCCCCC";
+    this.showHighlighting = true;
+    this.showSentenceNumbers = true;
+    this.showBackground = true;
+    this.annotationExperienceAPI = aAnnotationExperience;
+  }
+  showText(aElementId) {
+    let textArea = document.getElementById(aElementId.toString());
+    textArea.innerHTML = "";
+    let sentences = this.annotationExperienceAPI.text.join("").split("|");
+    this.sentenceCount = sentences.length - 1;
+    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("version", "1.2");
+    svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.sentenceCount * 20);
+    svg.setAttribute("style", "font-size: 100%; width: " + textArea.offsetWidth + "px; height: " + this.sentenceCount * 20 + "px");
+    let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    textElement.setAttribute("class", "sentences");
+    textElement.style.display = "block";
+    let xBegin = 0;
+    if (this.showBackground) {
+      svg.appendChild(this.drawBackground());
+    }
+    if (this.showSentenceNumbers) {
+      svg.appendChild(this.drawSentenceNumbers());
+      textElement.style.width = (svg.width - this.SENTENCE_OFFSET_WIDTH).toString();
+      xBegin = this.SENTENCE_OFFSET_WIDTH;
+    }
+    let k = 0;
+    let xPrev = xBegin;
+    for (let i = 0; i < sentences.length; i++) {
+      let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      sentence.setAttribute("class", "text-row");
+      sentence.setAttribute("sentence-id", (i + 1).toString());
+      for (let j = 0; j < sentences[i].length; j++, k++) {
+        if (sentences[i][j] === "|") {
+          break;
+        }
+        let char = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        char.textContent = sentences[i][j];
+        char.setAttribute("x", xPrev.toString());
+        char.setAttribute("y", ((i + 1) * 20 - 5).toString());
+        char.setAttribute("char_pos", (this.annotationExperienceAPI.viewport[i][0] + j).toString());
+        xPrev += this.CHARACTER_WIDTH;
+        sentence.appendChild(char);
+      }
+      textElement.appendChild(sentence);
+      xPrev = xBegin;
+    }
+    svg.appendChild(textElement);
+    textArea.appendChild(svg);
+    if (this.showHighlighting) {
+      svg.appendChild(this.drawAnnotation(this.annotationExperienceAPI.annotations, aElementId));
+    }
+  }
+  drawBackground() {
+    let background = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    background.setAttribute("class", "background");
+    background.innerHTML = "";
+    for (let i = 0; i < this.sentenceCount; i++) {
+      let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", "0");
+      rect.setAttribute("y", (i * 20).toString());
+      rect.setAttribute("width", "100%");
+      rect.setAttribute("height", "20");
+      if (i % 2 == 0) {
+        rect.setAttribute("fill", this.lineColorFirst);
+      } else {
+        rect.setAttribute("fill", this.lineColorSecond);
+      }
+      background.appendChild(rect);
+    }
+    return background;
+  }
+  drawSentenceNumbers() {
+    let sentenceNumbers = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    sentenceNumbers.setAttribute("class", "sentence_numbers");
+    sentenceNumbers.style.display = "block";
+    sentenceNumbers.innerHTML = "";
+    for (let i = 0; i < this.sentenceCount; i++) {
+      let number = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      number.textContent = (this.sentenceCount + i + 1).toString() + ".";
+      number.setAttribute("x", "10");
+      number.setAttribute("y", ((i + 1) * 20 - 5).toString());
+      sentenceNumbers.appendChild(number);
+    }
+    return sentenceNumbers;
+  }
+  drawAnnotation(aAnnotations, aEditor) {
+    let highlighting = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    highlighting.setAttribute("class", "annotations");
+    highlighting.style.display = "block";
+    highlighting.innerHTML = "";
+    if (aAnnotations.length > 0) {
+      let offset;
+      if (this.showSentenceNumbers) {
+        offset = 45;
+      } else {
+        offset = 4;
+      }
+      let sentences = this.annotationExperienceAPI.text.join(" ").split("|");
+      this.sentenceCount = sentences.length - 1;
+      let i = 0;
+      let childElement = 0;
+      if (this.showBackground) {
+        childElement++;
+      }
+      if (this.showSentenceNumbers) {
+        childElement++;
+      }
+      for (let child of document.getElementById(aEditor).children[0].children[childElement].children) {
+        let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        text_row.setAttribute("class", "span");
+        for (let annotation of this.annotationExperienceAPI.annotations) {
+          let begin;
+          let end;
+          let check = false;
+          let word = "";
+          for (let char of child.children) {
+            if (annotation.begin.toString() === char.getAttribute("char_pos")) {
+              begin = char.getAttribute("x");
+              word = word.concat(char.textContent);
+              check = true;
+              continue;
+            }
+            if (annotation.end.toString() === char.getAttribute("char_pos")) {
+              if (begin != null && word === annotation.word) {
+                end = char.getAttribute("x");
+                let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", Number(begin).toString());
+                rect.setAttribute("y", (i * 20).toString());
+                rect.setAttribute("width", (Number(end) - Number(begin)).toString());
+                rect.setAttribute("height", "20");
+                rect.setAttribute("id", annotation.id);
+                rect.setAttribute("type", annotation.type);
+                rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
+                rect.style.opacity = "0.5";
+                text_row.appendChild(rect);
+                break;
+              } else {
+                break;
+              }
+            } else {
+              if (check) {
+                word = word.concat(char.textContent);
+              }
+            }
+          }
+        }
+        highlighting.appendChild(text_row);
+        i++;
+      }
+      return highlighting;
+    } else {
+      return highlighting;
+    }
+  }
+  getColorForAnnotation(aType) {
+    switch (aType) {
+      case AnnotationType.POS:
+        return "#0088FF";
+      case AnnotationType.CHUNK:
+        return "#4466AA";
+      case AnnotationType.LEMMA:
+        return "#04CCCC";
+      case AnnotationType.NER:
+        return "#228822";
+      case AnnotationType.COREFERENCE:
+        return "#934AA1";
+      default:
+        return "#AAAAAA";
+    }
+  }
+  setLineColors(aLineColorFirst, aLineColorSecond, aEditor) {
+    this.lineColorFirst = aLineColorFirst;
+    this.lineColorSecond = aLineColorSecond;
+    this.refreshEditor(aEditor);
+  }
+  resetLineColor(aEditor) {
+    this.lineColorFirst = "#BBBBBB";
+    this.lineColorSecond = "#CCCCCC";
+    this.refreshEditor(aEditor);
+  }
+  refreshEditor(aEditor) {
+    this.showText(aEditor);
+  }
+  setShowHighlighting(aShowHighlighting, aEditor) {
+    this.showHighlighting = aShowHighlighting;
+    this.refreshEditor(aEditor);
+  }
+  setShowSentenceNumbers(aShowSentenceNumbers, aEditor) {
+    this.showSentenceNumbers = aShowSentenceNumbers;
+    this.refreshEditor(aEditor);
+  }
+  setShowHighLighting(aHighlightingEnabled, aEditor) {
+    this.showHighlighting = aHighlightingEnabled;
+    this.showText(aEditor);
+  }
+};
+
+// actionhandling/AnnotationExperienceAPIActionHandler.ts
+var AnnotationExperienceAPIActionHandler = class {
+  constructor(aAnnotationExperienceAPI) {
+    this.annotationExperienceAPI = aAnnotationExperienceAPI;
+  }
+  registerOnClickActionHandler(aTagName, aAction, aViewport) {
+    let that = this;
+    let elem = document.querySelector("." + aTagName);
+    if (elem != null) {
+      switch (aAction) {
+        case "select":
+          for (let item of document.getElementsByClassName(aTagName)) {
+            item.setAttribute("onclick", "annotationExperienceAPI.sendSelectAnnotationMessageToServer(evt.target.attributes[3].value)");
+          }
+          break;
+        case "new_document":
+          elem.addEventListener("click", () => {
+          });
+          break;
+        case "viewport":
+          elem.addEventListener("click", () => {
+          });
+          break;
+        default:
+          console.error("Can not register single click action, reason: Action-type not found.");
+          return;
+      }
+      console.log("Action: " + aAction + " is registered for elements: " + aTagName);
+    } else {
+      console.error("Can not register single click action, reason: Element not found.");
+    }
+  }
+  registerOnDoubleClickActionHandler(aTagName, aAction) {
+    let elements = document.getElementsByClassName(aTagName);
+    if (elements != null) {
+      switch (aAction) {
+        case "create":
+          for (let item of elements) {
+            item.setAttribute("ondblclick", 'annotationExperienceAPI.sendCreateAnnotationMessageToServer(evt.target.attributes[3].value,document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),evt.target.parentElement.attributes[1].value)');
+          }
+          break;
+        default:
+          console.error("Can not register double click action, reason: Action-type not found.");
+          return;
+      }
+    }
+    console.log("Action: " + aAction + " is registered for elements: " + aTagName);
+  }
+  registerDefaultActionHandler() {
+    let that = this;
+    onclick = function(aEvent) {
+      let elem = aEvent.target;
+      console.log(elem);
+      if (elem.tagName === "rect") {
+        that.annotationExperienceAPI.sendSelectAnnotationMessageToServer("admin", elem.attributes[4].value);
+      }
+    };
+    ondblclick = function(aEvent) {
+      let elem = aEvent.target;
+      console.log(elem);
+    };
+  }
+};
+
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/byte.js
 var BYTE = {
   LF: "\n",
   NULL: "\0"
 };
 
-// node_modules/@stomp/stompjs/esm6/frame-impl.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/frame-impl.js
 var FrameImpl = class {
   constructor(params) {
     const {command, headers, body, binaryBody, escapeHeaderValues, skipContentLengthHeader} = params;
@@ -119,7 +397,7 @@ var FrameImpl = class {
   }
 };
 
-// node_modules/@stomp/stompjs/esm6/parser.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/parser.js
 var NULL = 0;
 var LF = 10;
 var CR = 13;
@@ -263,7 +541,7 @@ var Parser = class {
   }
 };
 
-// node_modules/@stomp/stompjs/esm6/types.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/types.js
 var StompSocketState;
 (function(StompSocketState2) {
   StompSocketState2[StompSocketState2["CONNECTING"] = 0] = "CONNECTING";
@@ -278,7 +556,7 @@ var ActivationState;
   ActivationState2[ActivationState2["INACTIVE"] = 2] = "INACTIVE";
 })(ActivationState || (ActivationState = {}));
 
-// node_modules/@stomp/stompjs/esm6/versions.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/versions.js
 var Versions = class {
   constructor(versions) {
     this.versions = versions;
@@ -299,7 +577,7 @@ Versions.default = new Versions([
   Versions.V1_2
 ]);
 
-// node_modules/@stomp/stompjs/esm6/augment-websocket.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/augment-websocket.js
 function augmentWebsocket(webSocket, debug) {
   webSocket.terminate = function() {
     const noOp = () => {
@@ -322,7 +600,7 @@ function augmentWebsocket(webSocket, debug) {
   };
 }
 
-// node_modules/@stomp/stompjs/esm6/stomp-handler.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/stomp-handler.js
 var StompHandler = class {
   constructor(_client, _webSocket, config = {}) {
     this._client = _client;
@@ -634,7 +912,7 @@ var StompHandler = class {
   }
 };
 
-// node_modules/@stomp/stompjs/esm6/client.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/client.js
 var __awaiter = function(thisArg, _arguments, P, generator) {
   function adopt(value) {
     return value instanceof P ? value : new P(function(resolve) {
@@ -891,7 +1169,7 @@ var Client = class {
   }
 };
 
-// node_modules/@stomp/stompjs/esm6/compatibility/heartbeat-info.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/compatibility/heartbeat-info.js
 var HeartbeatInfo = class {
   constructor(client) {
     this.client = client;
@@ -910,7 +1188,7 @@ var HeartbeatInfo = class {
   }
 };
 
-// node_modules/@stomp/stompjs/esm6/compatibility/compat-client.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/compatibility/compat-client.js
 var CompatClient = class extends Client {
   constructor(webSocketFactory) {
     super();
@@ -1022,7 +1300,7 @@ var CompatClient = class extends Client {
   }
 };
 
-// node_modules/@stomp/stompjs/esm6/compatibility/stomp.js
+// ../../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/compatibility/stomp.js
 var Stomp = class {
   static client(url, protocols) {
     if (protocols == null) {
@@ -1047,296 +1325,13 @@ var Stomp = class {
 };
 Stomp.WebSocketClass = null;
 
-// client/util/AnnotationTypes.ts
-var AnnotationType;
-(function(AnnotationType2) {
-  AnnotationType2["POS"] = "POS";
-  AnnotationType2["NER"] = "NamedEntity";
-  AnnotationType2["LEMMA"] = "Lemma";
-  AnnotationType2["CHUNK"] = "Chunk";
-})(AnnotationType || (AnnotationType = {}));
-
-// client/visualization/AnnotationExperienceAPIVisualization.ts
-var AnnotationExperienceAPIVisualization = class {
-  constructor(aAnnotationExperience) {
-    this.SENTENCE_OFFSET_WIDTH = 45;
-    this.CHARACTER_WIDTH = 9;
-    this.lineColorFirst = "#BBBBBB";
-    this.lineColorSecond = "#CCCCCC";
-    this.showHighlighting = true;
-    this.showSentenceNumbers = true;
-    this.showBackground = true;
-    this.annotationExperienceAPI = aAnnotationExperience;
-  }
-  showText(aElementId) {
-    let textArea = document.getElementById(aElementId.toString());
-    textArea.innerHTML = "";
-    let sentences = this.annotationExperienceAPI.text.join("").split("|");
-    this.sentenceCount = sentences.length - 1;
-    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("version", "1.2");
-    svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.sentenceCount * 20);
-    svg.setAttribute("style", "font-size: 100%; width: " + textArea.offsetWidth + "px; height: " + this.sentenceCount * 20 + "px");
-    let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    textElement.setAttribute("class", "sentences");
-    textElement.style.display = "block";
-    let xBegin = 0;
-    if (this.showBackground) {
-      svg.appendChild(this.drawBackground());
-    }
-    if (this.showSentenceNumbers) {
-      svg.appendChild(this.drawSentenceNumbers());
-      textElement.style.width = (svg.width - this.SENTENCE_OFFSET_WIDTH).toString();
-      xBegin = this.SENTENCE_OFFSET_WIDTH;
-    }
-    let k = 0;
-    let xPrev = xBegin;
-    for (let i = 0; i < sentences.length; i++) {
-      let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      sentence.setAttribute("class", "text-row");
-      sentence.setAttribute("sentence-id", (i + 1).toString());
-      for (let j = 0; j < sentences[i].length; j++, k++) {
-        if (sentences[i][j] === "|") {
-          break;
-        }
-        let char = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        char.textContent = sentences[i][j];
-        char.setAttribute("x", xPrev.toString());
-        char.setAttribute("y", ((i + 1) * 20 - 5).toString());
-        char.setAttribute("char_pos", (this.annotationExperienceAPI.viewport[i][0] + j).toString());
-        xPrev += this.CHARACTER_WIDTH;
-        sentence.appendChild(char);
-      }
-      textElement.appendChild(sentence);
-      xPrev = xBegin;
-    }
-    svg.appendChild(textElement);
-    textArea.appendChild(svg);
-    if (this.showHighlighting) {
-      svg.appendChild(this.drawAnnotation(this.annotationExperienceAPI.annotations, aElementId));
-    }
-  }
-  drawBackground() {
-    let background = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    background.setAttribute("class", "background");
-    background.innerHTML = "";
-    for (let i = 0; i < this.sentenceCount; i++) {
-      let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("x", "0");
-      rect.setAttribute("y", (i * 20).toString());
-      rect.setAttribute("width", "100%");
-      rect.setAttribute("height", "20");
-      if (i % 2 == 0) {
-        rect.setAttribute("fill", this.lineColorFirst);
-      } else {
-        rect.setAttribute("fill", this.lineColorSecond);
-      }
-      background.appendChild(rect);
-    }
-    return background;
-  }
-  drawSentenceNumbers() {
-    let sentenceNumbers = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    sentenceNumbers.setAttribute("class", "sentence_numbers");
-    sentenceNumbers.style.display = "block";
-    sentenceNumbers.innerHTML = "";
-    for (let i = 0; i < this.sentenceCount; i++) {
-      let number = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      number.textContent = (this.sentenceCount + i + 1).toString() + ".";
-      number.setAttribute("x", "10");
-      number.setAttribute("y", ((i + 1) * 20 - 5).toString());
-      sentenceNumbers.appendChild(number);
-    }
-    return sentenceNumbers;
-  }
-  drawAnnotation(aAnnotations, aEditor) {
-    let highlighting = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    highlighting.setAttribute("class", "annotations");
-    highlighting.style.display = "block";
-    highlighting.innerHTML = "";
-    if (aAnnotations.length > 0) {
-      let offset;
-      if (this.showSentenceNumbers) {
-        offset = 45;
-      } else {
-        offset = 4;
-      }
-      let sentences = this.annotationExperienceAPI.text.join(" ").split("|");
-      this.sentenceCount = sentences.length - 1;
-      let i = 0;
-      let childElement = 0;
-      if (this.showBackground) {
-        childElement++;
-      }
-      if (this.showSentenceNumbers) {
-        childElement++;
-      }
-      for (let child of document.getElementById(aEditor).children[0].children[childElement].children) {
-        let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        text_row.setAttribute("class", "span");
-        for (let annotation of this.annotationExperienceAPI.annotations) {
-          let begin;
-          let end;
-          let check = false;
-          let word = "";
-          for (let char of child.children) {
-            if (annotation.begin.toString() === char.getAttribute("char_pos")) {
-              begin = char.getAttribute("x");
-              word = word.concat(char.textContent);
-              check = true;
-              continue;
-            }
-            if (annotation.end.toString() === char.getAttribute("char_pos")) {
-              if (begin != null && word === annotation.word) {
-                end = char.getAttribute("x");
-                let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                rect.setAttribute("x", Number(begin).toString());
-                rect.setAttribute("y", (i * 20).toString());
-                rect.setAttribute("width", (Number(end) - Number(begin)).toString());
-                rect.setAttribute("height", "20");
-                rect.setAttribute("id", annotation.id);
-                rect.setAttribute("type", annotation.type);
-                rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
-                rect.style.opacity = "0.5";
-                text_row.appendChild(rect);
-                break;
-              } else {
-                break;
-              }
-            } else {
-              if (check) {
-                word = word.concat(char.textContent);
-              }
-            }
-          }
-        }
-        highlighting.appendChild(text_row);
-        i++;
-      }
-      return highlighting;
-    } else {
-      return highlighting;
-    }
-  }
-  getColorForAnnotation(aType) {
-    switch (aType) {
-      case AnnotationType.POS:
-        return "#0088FF";
-      case AnnotationType.CHUNK:
-        return "#4466AA";
-      case AnnotationType.LEMMA:
-        return "#04CCCC";
-      case AnnotationType.NER:
-        return "#228822";
-      default:
-        return "#AAAAAA";
-    }
-  }
-  setLineColors(aLineColorFirst, aLineColorSecond, aEditor) {
-    this.lineColorFirst = aLineColorFirst;
-    this.lineColorSecond = aLineColorSecond;
-    this.refreshEditor(aEditor);
-  }
-  resetLineColor(aEditor) {
-    this.lineColorFirst = "#BBBBBB";
-    this.lineColorSecond = "#CCCCCC";
-    this.refreshEditor(aEditor);
-  }
-  refreshEditor(aEditor) {
-    this.showText(aEditor);
-  }
-  setShowHighlighting(aShowHighlighting, aEditor) {
-    this.showHighlighting = aShowHighlighting;
-    this.refreshEditor(aEditor);
-  }
-  setShowSentenceNumbers(aShowSentenceNumbers, aEditor) {
-    this.showSentenceNumbers = aShowSentenceNumbers;
-    this.refreshEditor(aEditor);
-  }
-  setShowHighLighting(aHighlightingEnabled, aEditor) {
-    this.showHighlighting = aHighlightingEnabled;
-    this.showText(aEditor);
-  }
-};
-
-// client/actionhandling/AnnotationExperienceAPIActionHandler.ts
-var AnnotationExperienceAPIActionHandler = class {
-  constructor(aAnnotationExperienceAPI) {
-    this.annotationExperienceAPI = aAnnotationExperienceAPI;
-  }
-  registerOnClickActionHandler(aTagName, aAction, aViewport) {
-    let that = this;
-    let elem = document.querySelector("." + aTagName);
-    if (elem != null) {
-      switch (aAction) {
-        case "select":
-          for (let item of document.getElementsByClassName(aTagName)) {
-            item.setAttribute("onclick", "annotationExperienceAPI.sendSelectAnnotationMessageToServer(evt.target.attributes[3].value)");
-          }
-          break;
-        case "new_document":
-          elem.addEventListener("click", () => {
-          });
-          break;
-        case "viewport":
-          elem.addEventListener("click", () => {
-          });
-          break;
-        default:
-          console.error("Can not register single click action, reason: Action-type not found.");
-          return;
-      }
-      console.log("Action: " + aAction + " is registered for elements: " + aTagName);
-    } else {
-      console.error("Can not register single click action, reason: Element not found.");
-    }
-  }
-  registerOnDoubleClickActionHandler(aTagName, aAction) {
-    let elements = document.getElementsByClassName(aTagName);
-    if (elements != null) {
-      switch (aAction) {
-        case "create":
-          for (let item of elements) {
-            item.setAttribute("ondblclick", 'annotationExperienceAPI.sendCreateAnnotationMessageToServer(evt.target.attributes[3].value,document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),evt.target.parentElement.attributes[1].value)');
-          }
-          break;
-        default:
-          console.error("Can not register double click action, reason: Action-type not found.");
-          return;
-      }
-    }
-    console.log("Action: " + aAction + " is registered for elements: " + aTagName);
-  }
-  registerDefaultActionHandler() {
-    let that = this;
-    onclick = function(aEvent) {
-      let elem = aEvent.target;
-      console.log(elem);
-      if (elem.tagName === "rect") {
-        that.annotationExperienceAPI.sendSelectAnnotationMessageToServer("admin", elem.attributes[4].value);
-      }
-    };
-    ondblclick = function(aEvent) {
-      let elem = aEvent.target;
-      console.log(elem);
-      if (elem.tagName === "text") {
-        that.annotationExperienceAPI.sendCreateAnnotationMessageToServer(elem.attributes[2].value, elem.attributes[2].value, "NamedEntity");
-      }
-      if (elem.tagName === "rect") {
-        console.log(elem);
-        that.annotationExperienceAPI.sendDeleteAnnotationMessageToServer(elem.id);
-      }
-    };
-  }
-};
-
-// client/util/ServerMessage.ts
+// ../../../../../inception-api-annotation-experimental/src/main/ts/client/util/ServerMessage.ts
 var ServerMessage = class {
   constructor() {
   }
 };
 
-// client/util/Annotation.ts
+// ../../../../../inception-api-annotation-experimental/src/main/ts/client/util/Annotation.ts
 var Annotation = class {
   constructor(aId, aWord, aBegin, aEnd, aType, aFeature) {
     this.id = aId;
@@ -1348,14 +1343,11 @@ var Annotation = class {
   }
 };
 
-// client/AnnotationExperienceAPIImpl.ts
+// ../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPIImpl.ts
 var AnnotationExperienceAPIImpl = class {
   constructor() {
     this.connected = false;
     this.connect();
-    this.visualizer = new AnnotationExperienceAPIVisualization(this);
-    this.actionhandler = new AnnotationExperienceAPIActionHandler(this);
-    this.actionhandler.registerDefaultActionHandler();
   }
   connect() {
     if (this.connected) {
@@ -1515,7 +1507,7 @@ var AnnotationExperienceAPIImpl = class {
   receiveSelectedAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED SELECTED ANNOTATION");
     console.log(aMessage);
-    this.selectedAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType);
+    this.selectedAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType, aMessage.annotationFeature);
   }
   receiveAnnotationMessageByServer(aMessage) {
     console.log("RECEIVED ANNOTATION MESSAGE");
@@ -1531,7 +1523,7 @@ var AnnotationExperienceAPIImpl = class {
       console.log("UPDATE");
     } else {
       console.log("NEW");
-      let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType);
+      let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType, aMessage.annotationFeature);
       this.annotations.push(newAnnotation);
     }
   }
@@ -1541,3 +1533,15 @@ var AnnotationExperienceAPIImpl = class {
     console.log(aMessage.errorMessage);
   }
 };
+
+// AnnotationExperienceAPIEditor.ts
+var AnnotationExperienceAPIEditor = class {
+  constructor() {
+    this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
+    this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIVisualization(this.annotationExperienceAPI);
+    this.annotationExperienceAPIActionHandler = new AnnotationExperienceAPIActionHandler(this.annotationExperienceAPI);
+    this.annotationExperienceAPIActionHandler.registerDefaultActionHandler();
+    this.annotationExperienceAPI.sendDocumentMessageToServer("admin", "41714", [[30, 40], [40, 50], [0, 12], [17, 18], [19, 19]], "WORD");
+  }
+};
+var annotationExperienceAPIEditor = new AnnotationExperienceAPIEditor();

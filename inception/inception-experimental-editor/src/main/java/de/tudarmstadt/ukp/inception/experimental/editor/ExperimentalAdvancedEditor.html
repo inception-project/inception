@@ -20,9 +20,20 @@
 <body>
 <wicket:panel>
     <div class="scrolling flex-content fit-child-loose text-center" style="min-height: unset;">
-        <form class="editor">
+        <form class="editor" onsubmit="return false">
+            <button onclick="annotationExperienceAPIEditor.annotationExperienceAPI.sendDocumentMessageToServer('admin', '41714', [[30,40],[40,50],[0,12],[17,18],[19,19]],'WORD')">
+                New Document
+
+            </button>
+            <button onclick="annotationExperienceAPIEditor.annotationExperienceAPIVisualization.showText('editor_left')">
+                Show text left
+            </button>
             <div id="textarea" class="text" style="text-align: left">
                 <div id="editor_left" style="border: 1px black; float: left; width: 50%">
+                    <script>
+                        annotationExperienceAPIEditor.annotationExperienceAPIVisualization.showText("editor_left");
+                    </script>
+
 
                 </div>
 

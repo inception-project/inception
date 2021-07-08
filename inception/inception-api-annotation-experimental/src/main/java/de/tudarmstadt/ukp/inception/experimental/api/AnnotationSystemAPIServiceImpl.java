@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -54,12 +55,23 @@ public class AnnotationSystemAPIServiceImpl
     {
         try {
             return entityManager
-                .createQuery("SELECT al " + "FROM AnnotationLayer al "
-                    + "WHERE al.name = :name", AnnotationLayer.class)
-                .setParameter("name", aName).getResultList().get(0);
-        }  catch (NoResultException e) {
+                    .createQuery(
+                            "SELECT al " + "FROM AnnotationLayer al " + "WHERE al.name = :name",
+                            AnnotationLayer.class)
+                    .setParameter("name", aName).getResultList().get(0);
+        }
+        catch (NoResultException e) {
             System.err.println("ANNOTATION LAYER NOT FOUND. " + Arrays.toString(e.getStackTrace()));
             return null;
         }
+    }
+
+    @Override
+    @Transactional
+    public List getAllAnnotationLayers()
+    {
+        return entityManager.createQuery("SELECT name " +
+            "FROM AnnotationLayer " +
+            "GROUP BY name").getResultList();
     }
 }

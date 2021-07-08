@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static java.lang.Math.acos;
 import static java.lang.Math.toIntExact;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
@@ -50,11 +51,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.message.*;
+import de.tudarmstadt.ukp.inception.experimental.api.util.AnnotationLayers;
+import de.tudarmstadt.ukp.inception.experimental.api.util.Offsets;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
 import de.tudarmstadt.ukp.inception.revieweditor.AnnotationListItem;
 
@@ -63,10 +62,6 @@ import de.tudarmstadt.ukp.inception.revieweditor.AnnotationListItem;
 public class AnnotationSystemAPIImpl
     implements AnnotationSystemAPI
 {
-    private final String OFFSET_TYPE_CHAR = "char";
-    private final String OFFSET_TYPE_WORD = "word";
-    private final String OFFSET_TYPE_SENTENCE = "sentence";
-
     private final AnnotationSchemaService annotationService;
     private final ProjectService projectService;
     private final DocumentService documentService;
@@ -74,6 +69,9 @@ public class AnnotationSystemAPIImpl
     private final RepositoryProperties repositoryProperties;
     private final AnnotationProcessAPI annotationProcessAPI;
     private final AnnotationSystemAPIService annotationSystemAPIService;
+    private final AnnotationLayers annotationLayers;
+
+    private List<String> annotationLayerList;
 
     private @SpringBean FeatureSupport featureSupport;
 
@@ -90,6 +88,8 @@ public class AnnotationSystemAPIImpl
         annotationProcessAPI = aAnnotationProcessAPI;
         annotationService = aAnnotationSchemaService;
         annotationSystemAPIService = aAnnotationSystemAPIService;
+        annotationLayers = new AnnotationLayers(annotationSystemAPIService);
+        annotationLayerList = annotationLayers.getAnnotationLayers();
     }
 
     @Override
@@ -162,49 +162,21 @@ public class AnnotationSystemAPIImpl
             AnnotationFS annotation = selectAnnotationByAddr(cas,
                     aClientMessage.getAnnotationAddress());
 
-            List<AnnotationLayer> metadataLayers = annotationService
-                    .listAnnotationLayer(projectService.getProject(aClientMessage.getProject()));
-            FeatureStructure newFeatureStructure = null;
-            boolean found = false;
-            for (AnnotationLayer layer : metadataLayers) {
-                if (layer.getUiName().equals("Token")) {
-                    // TODO: exception later when calling renderer.getFeatures "lemma"
-                    continue;
+            System.out.println("FEATURES for Type " + annotation.getType());
+            for (Feature f : getFeaturesForFeatureStructure(getFeatureStructure(cas, aClientMessage.getProject(), aClientMessage.getAnnotationType()))) {
+                System.out.println(f.getDomain());
+                System.out.println(f.getRange());
+                if (f.getRange().getShortName().equals("String")) {
+                    System.out.println(" ----------- ");
                 }
 
-                TypeAdapter adapter = annotationService.getAdapter(layer);
-
-                for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
-                    if (fs.getType().getShortName().equals(aClientMessage.getAnnotationType())) {
-                        System.out.println(fs.getType().getName());
-                        newFeatureStructure = fs;
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) {
-                    break;
-                }
             }
-            Feature newFeature = null;
-            for (Feature f : newFeatureStructure.getType().getFeatures()) {
-                if (f.getDomain().getShortName().equals(aClientMessage.getAnnotationFeature())) {
-                    newFeature = f;
-                    break;
-                }
-            }
-            System.out.println(newFeatureStructure);
-            System.out.println(newFeatureStructure.getType().getShortName());
-            System.out.println(newFeature);
-            System.out.println(newFeature.getDomain());
 
-
-            annotation.setFeatureValue(newFeature, newFeatureStructure);
             AnnotationMessage message = new AnnotationMessage();
             message.setAnnotationAddress(String.valueOf(aClientMessage.getAnnotationAddress()));
             message.setAnnotationType(aClientMessage.getAnnotationType());
-            message.setAnnotationFeature(newFeature.getShortName());
             message.setEdit(true);
+            message.setAnnotationOffsetBegin(annotation.getBegin());
 
             annotationProcessAPI.handleSendUpdateAnnotation(message,
                     String.valueOf(aClientMessage.getProject()),
@@ -230,19 +202,13 @@ public class AnnotationSystemAPIImpl
             CAS cas = documentService.readAnnotationCas(sourceDocument,
                     aClientMessage.getUsername());
 
-            Type type = null;
-            for (Iterator<Feature> it = cas.getTypeSystem().getFeatures(); it.hasNext();) {
-
-                Feature s = it.next();
-                if (s.getDomain().getShortName().equals(aClientMessage.getAnnotationType())) {
-                    type = s.getDomain();
-
-                }
-            }
-
             TypeAdapter adapter = annotationService
-                    .getAdapter(annotationSystemAPIService.getAnnotationLayer(type.getName()));
+                    .getAdapter(annotationSystemAPIService.getAnnotationLayer(
+                            getType(cas, aClientMessage.getAnnotationType()).getName()));
+
             AnnotationFS newAnnotation = null;
+
+            // TODO more adapater instances
             if (adapter instanceof SpanAdapter) {
                 newAnnotation = ((SpanAdapter) adapter).add(
                         documentService.getSourceDocument(aClientMessage.getProject(),
@@ -251,8 +217,6 @@ public class AnnotationSystemAPIImpl
                         aClientMessage.getAnnotationOffsetBegin(),
                         aClientMessage.getAnnotationOffsetEnd());
             }
-
-            // TODO more adapater instances
 
             CasStorageSession.get().close();
 
@@ -285,17 +249,10 @@ public class AnnotationSystemAPIImpl
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
                     aClientMessage.getUsername());
-            Type type = null;
-            for (Iterator<Feature> it = cas.getTypeSystem().getFeatures(); it.hasNext();) {
-
-                Feature s = it.next();
-                if (s.getDomain().getShortName().equals(aClientMessage.getAnnotationType())) {
-                    type = s.getDomain();
-                }
-            }
 
             TypeAdapter adapter = annotationService
-                    .getAdapter(annotationSystemAPIService.getAnnotationLayer(type.getName()));
+                    .getAdapter(annotationSystemAPIService.getAnnotationLayer(
+                            getType(cas, aClientMessage.getAnnotationType()).getName()));
 
             AnnotationMessage message = new AnnotationMessage();
             message.setAnnotationOffsetBegin(
@@ -343,26 +300,6 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void updateCAS(String aUser, long aProject, long aDocument, CAS aCas)
-    {
-        try {
-            CasStorageSession.open();
-            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-            SourceDocument sourceDocument = documentService.getSourceDocument(aProject, aDocument);
-
-            documentService.writeAnnotationCas(aCas, documentService.getAnnotationDocument(
-                    documentService.getSourceDocument(aProject, aDocument), aUser), true);
-            ;
-            CasStorageSession.get().close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            CasStorageSession.get().close();
-        }
-
-    }
-
-    @Override
     public Character[] getViewportText(ClientMessage aClientMessage, CAS aCas)
     {
 
@@ -370,8 +307,8 @@ public class AnnotationSystemAPIImpl
 
         String text = aCas.getDocumentText().replace("\n", "");
 
-        switch (aClientMessage.getOffsetType()) {
-        case OFFSET_TYPE_CHAR:
+        switch (Offsets.valueOf(aClientMessage.getOffsetType())) {
+        case CHAR:
 
             char[] textInChars = aCas.getDocumentText().replace("\n", "").toCharArray();
 
@@ -384,7 +321,7 @@ public class AnnotationSystemAPIImpl
             }
             return visibleSentences.toArray(new Character[0]);
 
-        case OFFSET_TYPE_WORD:
+        case WORD:
             String seperatorWord = " ";
             String[] textInWords = text.split(seperatorWord);
 
@@ -403,7 +340,7 @@ public class AnnotationSystemAPIImpl
             }
             return visibleSentences.toArray(new Character[0]);
 
-        case OFFSET_TYPE_SENTENCE:
+        case SENTENCE:
             String seperatorSentence = "\\.";
             String[] textInSentences = text.split(seperatorSentence);
 
@@ -436,7 +373,6 @@ public class AnnotationSystemAPIImpl
 
         for (AnnotationLayer layer : metadataLayers) {
             if (layer.getUiName().equals("Token")) {
-                // TODO: exception later when calling renderer.getFeatures "lemma"
                 continue;
             }
 
@@ -464,26 +400,17 @@ public class AnnotationSystemAPIImpl
     public List<Annotation> filterAnnotations(List<Annotation> aAnnotations, int[][] aViewport)
     {
         List<Annotation> filteredAnnotations = new ArrayList<>();
-        System.out.println("RUNNIGN");
         for (Annotation annotation : aAnnotations) {
-            boolean found = false;
             for (int i = 0; i < aViewport.length; i++) {
                 for (int j = aViewport[i][0]; j <= aViewport[i][1]; j++) {
                     if (annotation.getBegin() == j) {
-                        System.out.println("SHOWN");
-                        System.out.println(annotation.getBegin());
                         filteredAnnotations.add(annotation);
-                        found = true;
-                        break;
-                    }
-                    if (found) {
                         break;
                     }
                 }
             }
         }
-        System.out.println("DONE");
-        return aAnnotations;
+        return filteredAnnotations;
     }
 
     @Override
@@ -491,5 +418,53 @@ public class AnnotationSystemAPIImpl
     {
         annotationProcessAPI.handleSendErrorMessage(new ErrorMessage(aMessage), aUser);
 
+    }
+
+    @Override
+    public FeatureStructure getFeatureStructure(CAS aCas, long aProject, String aAnnotationType)
+    {
+
+        List<AnnotationLayer> metadataLayers = annotationService
+                .listAnnotationLayer(projectService.getProject(aProject));
+        for (AnnotationLayer layer : metadataLayers) {
+            if (layer.getUiName().equals("Token")) {
+                continue;
+            }
+
+            TypeAdapter adapter = annotationService.getAdapter(layer);
+
+            for (FeatureStructure fs : selectFS(aCas, adapter.getAnnotationType(aCas))) {
+                if (fs.getType().getShortName().equals(aAnnotationType)) {
+                    return fs;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<Feature> getFeaturesForFeatureStructure(FeatureStructure aFeatureStructure)
+    {
+        return aFeatureStructure.getType().getFeatures();
+    }
+
+    @Override
+    public void refreshAnnotationLayers()
+    {
+        this.annotationLayerList = annotationLayers.getAnnotationLayers();
+    }
+
+    @Override
+    public Type getType(CAS aCas, String aAnnotationType)
+    {
+        for (Iterator<Feature> it = aCas.getTypeSystem().getFeatures(); it.hasNext();) {
+
+            Feature s = it.next();
+            if (s.getDomain().getShortName().equals(aAnnotationType)) {
+                return s.getDomain();
+
+            }
+        }
+        return null;
     }
 }
