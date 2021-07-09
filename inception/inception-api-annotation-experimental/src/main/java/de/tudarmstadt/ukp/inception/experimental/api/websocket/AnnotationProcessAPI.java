@@ -23,6 +23,7 @@ import org.springframework.messaging.Message;
 
 import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.message.ErrorMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
 public interface AnnotationProcessAPI
@@ -50,5 +51,7 @@ public interface AnnotationProcessAPI
             String aDocumentID, String aViewport)
         throws IOException;
 
-    String[] purifyData(String aPayload);
+    void handleSendErrorMessage(ErrorMessage aErrorMessage, String aUser)
+        throws IOException;
+
 }

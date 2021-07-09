@@ -30,4 +30,9 @@ public class ExperimentalAnnotationEditorAutoConfiguration
     {
         return new ExperimentalAnnotationEditorFactory();
     }
+    @Bean
+    public ExperimentalAnnotationAdvancedEditorFactory experimentalAnnotationAdvancedEditorFactory()
+    {
+        return new ExperimentalAnnotationAdvancedEditorFactory();
+    }
 }

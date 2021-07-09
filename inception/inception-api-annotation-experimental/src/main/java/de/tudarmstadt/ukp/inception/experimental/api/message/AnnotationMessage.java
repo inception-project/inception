@@ -17,38 +17,81 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.message;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Range;
-
 public class AnnotationMessage
 {
-    private String id;
-    private List<Range> ranges;
+    private String annotationAddress;
+    private int annotationOffsetBegin;
+    private int annotationOffsetEnd;
     private String quote;
     private String color;
-    private String type;
-    private String text;
+    private String annotationType;
+    private String annotationText;
     private boolean delete;
+    private boolean edit;
 
-    public String getId()
+    public AnnotationMessage()
     {
-        return id;
+        // DEFAULT
     }
 
-    public void setId(String aId)
+    public AnnotationMessage(String aAnnotationAddress, int aAnnotationOffsetBegin,
+            int aAnnotationOffsetEnd, String aAnnotationType, String aAnnotationText)
     {
-        id = aId;
+        annotationAddress = aAnnotationAddress;
+        annotationOffsetBegin = aAnnotationOffsetBegin;
+        annotationOffsetEnd = aAnnotationOffsetEnd;
+        annotationType = aAnnotationType;
+        annotationText = aAnnotationText;
     }
 
-    public List<Range> getRanges()
+    public String getAnnotationAddress()
     {
-        return ranges;
+        return annotationAddress;
     }
 
-    public void setRanges(List<Range> aRanges)
+    public void setAnnotationAddress(String annotationAddress)
     {
-        ranges = aRanges;
+        this.annotationAddress = annotationAddress;
+    }
+
+    public int getAnnotationOffsetBegin()
+    {
+        return annotationOffsetBegin;
+    }
+
+    public void setAnnotationOffsetBegin(int annotationOffsetBegin)
+    {
+        this.annotationOffsetBegin = annotationOffsetBegin;
+    }
+
+    public int getAnnotationOffsetEnd()
+    {
+        return annotationOffsetEnd;
+    }
+
+    public void setAnnotationOffsetEnd(int annotationOffsetEnd)
+    {
+        this.annotationOffsetEnd = annotationOffsetEnd;
+    }
+
+    public String getAnnotationType()
+    {
+        return annotationType;
+    }
+
+    public void setAnnotationType(String annotationType)
+    {
+        this.annotationType = annotationType;
+    }
+
+    public String getAnnotationText()
+    {
+        return annotationText;
+    }
+
+    public void setAnnotationText(String annotationText)
+    {
+        this.annotationText = annotationText;
     }
 
     public String getQuote()
@@ -81,21 +124,13 @@ public class AnnotationMessage
         this.delete = aDelete;
     }
 
-    public String getType()
+    public boolean isEdit()
     {
-        return type;
+        return edit;
     }
 
-    public void setType(String aType)
+    public void setEdit(boolean edit)
     {
-        this.type = aType;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
+        this.edit = edit;
     }
 }
