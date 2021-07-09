@@ -19,8 +19,8 @@
 
 == What tokenization does INCEpTION use?
 
-INCEpTION uses the http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/sun/text/resources/BreakIteratorRules.java[Java BreakIterator] internally.
-Note that the linked file is part of a specific version of the Java 8 JDK and may change in other Java versions or for other Java vendors.
+INCEpTION uses the https://github.com/openjdk/jdk11/blob/master/src/java.base/share/classes/sun/text/resources/BreakIteratorRules.java[Java BreakIterator] internally.
+Note that the linked file is part of a specific version of OpenJDK 11 and may change in other Java versions or for other Java vendors.
 
 If you need to provide your own tokenization, then the best choice would be to use a format that supports it, e.g. XMI, WebAnno TSV or CoNLL formats.
 
