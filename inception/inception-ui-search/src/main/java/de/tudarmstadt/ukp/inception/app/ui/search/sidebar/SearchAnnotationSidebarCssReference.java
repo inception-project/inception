@@ -15,17 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.scheduling;
+package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
-public interface MatchableTask
+import de.agilecoders.wicket.sass.SassResourceReference;
+
+public class SearchAnnotationSidebarCssReference
+    extends SassResourceReference
 {
+    private static final long serialVersionUID = 5755999000175373522L;
+
+    private static final SearchAnnotationSidebarCssReference INSTANCE = new SearchAnnotationSidebarCssReference();
+
     /**
-     * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
-     * the given task.
-     * 
-     * @param aTask
-     *            the given scheduling task
-     * @return whether the given task matches this one
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
      */
-    MatchResult matches(Task aTask);
+    public static SearchAnnotationSidebarCssReference get()
+    {
+        return INSTANCE;
+    }
+
+    /**
+     * Private constructor
+     */
+    private SearchAnnotationSidebarCssReference()
+    {
+        super(SearchAnnotationSidebarCssReference.class, "SearchAnnotationSidebar.scss");
+    }
 }
