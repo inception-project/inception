@@ -69,7 +69,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.constituent.Constituent;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.constituent.ROOT;
-import eu.openminted.share.annotations.api.DocumentationResource;
 import javanet.staxutils.IndentingXMLEventWriter;
 
 /**
@@ -79,7 +78,7 @@ import javanet.staxutils.IndentingXMLEventWriter;
  * Can be removed after upgrade to DKPro Core 2.2.1 or higher.
  */
 @ResourceMetaData(name = "TEI XML Writer")
-@DocumentationResource("${docbase}/format-reference.html#format-${command}")
+//@DocumentationResource("${docbase}/format-reference.html#format-${command}")
 @MimeTypeCapability({MimeTypes.APPLICATION_TEI_XML})
 @TypeCapability(
         inputs = {
