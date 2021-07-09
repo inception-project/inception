@@ -18,6 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static org.apache.commons.csv.CSVFormat.EXCEL;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,7 +31,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
@@ -42,8 +43,7 @@ public class SearchResultsExporter
     public InputStream generateCsv(List<ResultsGroup> aSearchResults) throws IOException
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
-                CSVFormat.EXCEL)) {
+        try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"), EXCEL)) {
             toCSV(aSearchResults, printer);
         }
 
@@ -52,8 +52,8 @@ public class SearchResultsExporter
 
     public static void toCSV(List<ResultsGroup> aSearchResults, CSVPrinter aOut) throws IOException
     {
-        aOut.printRecord("text", "context left", "context right", "document name", "begin offset",
-                "end offset");
+        aOut.printRecord("document name", "begin offset", "end offset", "context left", "text",
+                "context right");
         for (int i = 0; i < aSearchResults.size(); i++) {
             for (int j = 0; j < aSearchResults.get(i).getResults().size(); j++) {
                 String text = aSearchResults.get(i).getResults().get(j).getText();
@@ -63,8 +63,8 @@ public class SearchResultsExporter
                 int beginOffset = aSearchResults.get(i).getResults().get(j).getOffsetStart();
                 int endOffset = aSearchResults.get(i).getResults().get(j).getOffsetEnd();
 
-                aOut.printRecord(text, leftContext, rightContext, documentName, beginOffset,
-                        endOffset);
+                aOut.printRecord(documentName, beginOffset, endOffset, leftContext, text,
+                        rightContext);
             }
             // blank line after each ResultsGroup
             aOut.println();
@@ -76,7 +76,7 @@ public class SearchResultsExporter
     {
         List<ResultsGroup> list = new ArrayList<ResultsGroup>();
         Reader reader = Files.newBufferedReader(aDataPath);
-        Iterable<CSVRecord> records = CSVFormat.EXCEL.parse(reader);
+        Iterable<CSVRecord> records = EXCEL.parse(reader);
 
         int i = 0;
         List<SearchResult> inCurrentGroup = new ArrayList<SearchResult>();
@@ -90,12 +90,12 @@ public class SearchResultsExporter
                 }
                 else {
                     SearchResult currentSearchResult = new SearchResult();
-                    currentSearchResult.setText(record.get(0));
-                    currentSearchResult.setLeftContext(record.get(1));
-                    currentSearchResult.setRightContext(record.get(2));
-                    currentSearchResult.setDocumentTitle(record.get(3));
-                    currentSearchResult.setOffsetStart(Integer.parseInt(record.get(4)));
-                    currentSearchResult.setOffsetEnd(Integer.parseInt(record.get(5)));
+                    currentSearchResult.setDocumentTitle(record.get(0));
+                    currentSearchResult.setOffsetStart(Integer.parseInt(record.get(1)));
+                    currentSearchResult.setOffsetEnd(Integer.parseInt(record.get(2)));
+                    currentSearchResult.setLeftContext(record.get(3));
+                    currentSearchResult.setText(record.get(4));
+                    currentSearchResult.setRightContext(record.get(5));
                     inCurrentGroup.add(currentSearchResult);
                 }
             }

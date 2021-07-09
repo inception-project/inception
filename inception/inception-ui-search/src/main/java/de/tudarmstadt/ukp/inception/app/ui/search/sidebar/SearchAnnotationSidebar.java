@@ -180,12 +180,6 @@ public class SearchAnnotationSidebar
         searchForm.add(searchButton);
         searchForm.setDefaultButton(searchButton);
 
-        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults.csv",
-                this::exportSearchResults);
-        exportButton.add(visibleWhen(() -> groupedSearchResults.getObject() != null
-                && !groupedSearchResults.getObject().isEmpty()));
-        searchForm.add(exportButton);
-
         mainContainer.add(searchForm);
 
         WebMarkupContainer searchOptionsPanel = new WebMarkupContainer("searchOptionsPanel");
@@ -219,7 +213,7 @@ public class SearchAnnotationSidebar
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
         resultsGroupContainer.setOutputMarkupId(true);
         mainContainer.add(resultsGroupContainer);
-
+        
         searchResultGroups = new DataView<ResultsGroup>("searchResultGroups", resultsProvider)
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -299,6 +293,12 @@ public class SearchAnnotationSidebar
         LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clearButton",
                 this::actionClearResults);
         annotationForm.add(clearButton);
+
+        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults.csv",
+                this::exportSearchResults);
+        exportButton.add(visibleWhen(() -> groupedSearchResults.getObject() != null
+                && !groupedSearchResults.getObject().isEmpty()));
+        annotationForm.add(exportButton);
 
         mainContainer.add(annotationForm);
     }
