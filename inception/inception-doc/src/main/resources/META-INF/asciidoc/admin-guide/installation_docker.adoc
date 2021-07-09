@@ -119,10 +119,8 @@ The following Compose script sets these containers up.
 include::scripts/docker-compose.yml[]
 ----
 
-Place the script into any folder, change to that folder, and issue the following commands which
-define the username/password you wish to use for {product-name} to talk to the database, the
-folder on the host system where the application data is stored, and the port on which the 
-application will run. The last command starts the containers.
+Place the script into any folder, change to that folder, and issue the following command to start
+the containers.
 
 [source,shell,subs="+attributes"]
 ----
