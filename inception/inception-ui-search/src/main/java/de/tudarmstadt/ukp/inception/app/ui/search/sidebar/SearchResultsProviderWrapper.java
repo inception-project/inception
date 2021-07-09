@@ -151,7 +151,7 @@ public class SearchResultsProviderWrapper
 
     }
 
-    private List<ResultsGroup> getAllResults()
+    public List<ResultsGroup> getAllResults()
     {
         Iterator<ResultsGroup> resultsIterator = searchResultsProvider.iterator(0, Long.MAX_VALUE);
         ArrayList<ResultsGroup> resultsList = new ArrayList<>();
