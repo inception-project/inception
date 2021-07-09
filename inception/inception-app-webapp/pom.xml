@@ -115,10 +115,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-external</artifactId>
     </dependency>
+    <!--  
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-lapps</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
@@ -232,6 +234,12 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-tei-asl</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -240,6 +248,16 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-xml-asl</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.xml.stream</groupId>
+          <artifactId>stax-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>stax</groupId>
+          <artifactId>stax-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -772,7 +790,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
