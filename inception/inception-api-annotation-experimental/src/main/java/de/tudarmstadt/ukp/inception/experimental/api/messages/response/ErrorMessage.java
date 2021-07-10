@@ -15,31 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Annotation} from "./Annotation";
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 
-export class ServerMessage
+public class ErrorMessage
 {
-    document : number;
-    viewport :number[][];
-    viewportText : string[];
-    offsetType : string;
+    private String errorMessage;
 
-    annotations : Annotation [];
-
-    annotationAddress : number;
-    annotationType : string;
-    annotationFeature : string;
-    annotationOffsetBegin : number;
-    annotationOffsetEnd : number;
-    annotationText : string;
-
-    delete : boolean;
-    edit: boolean;
-
-    errorMessage: string;
-
-    constructor()
+    public ErrorMessage(String aMessage)
     {
+        errorMessage = aMessage;
+
     }
 
+    public String getErrormessage()
+    {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String aErrormessage)
+    {
+
+        errorMessage = aErrormessage;
+    }
 }

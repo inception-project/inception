@@ -15,20 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api;
+package de.tudarmstadt.ukp.inception.experimental.api.model;
 
-public class Annotation
+public class Span
 {
     private int id;
-    private String word;
+    private String coveredText;
     private int begin;
     private int end;
     private String type;
 
-    public Annotation(int aId, String aWord, int aBegin, int aEnd, String aType)
+    public Span(int aId, int aBegin, int aEnd, String aType)
     {
         id = aId;
-        word = aWord;
         begin = aBegin;
         end = aEnd;
         type = aType;
@@ -42,16 +41,6 @@ public class Annotation
     public void setId(int aId)
     {
         id = aId;
-    }
-
-    public String getWord()
-    {
-        return word;
-    }
-
-    public void setWord(String aWord)
-    {
-        word = aWord;
     }
 
     public int getBegin()
@@ -82,5 +71,15 @@ public class Annotation
     public void setType(String aType)
     {
         type = aType;
+    }
+
+    public String getCoveredText()
+    {
+        return coveredText;
+    }
+
+    public void setCoveredText(String aCoveredText)
+    {
+        coveredText = aCoveredText;
     }
 }

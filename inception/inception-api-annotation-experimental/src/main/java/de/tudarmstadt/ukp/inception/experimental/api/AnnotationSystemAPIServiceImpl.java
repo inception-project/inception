@@ -18,18 +18,13 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 @Component
@@ -47,31 +42,5 @@ public class AnnotationSystemAPIServiceImpl
     {
         entityManager = aEntityManager;
         schedulingService = aSchedulingService;
-    }
-
-    @Override
-    @Transactional
-    public AnnotationLayer getAnnotationLayer(String aName)
-    {
-        try {
-            return entityManager
-                    .createQuery(
-                            "SELECT al " + "FROM AnnotationLayer al " + "WHERE al.name = :name",
-                            AnnotationLayer.class)
-                    .setParameter("name", aName).getResultList().get(0);
-        }
-        catch (NoResultException e) {
-            System.err.println("ANNOTATION LAYER NOT FOUND. " + Arrays.toString(e.getStackTrace()));
-            return null;
-        }
-    }
-
-    @Override
-    @Transactional
-    public List getAllAnnotationLayers()
-    {
-        return entityManager.createQuery("SELECT name " +
-            "FROM AnnotationLayer " +
-            "GROUP BY name").getResultList();
     }
 }

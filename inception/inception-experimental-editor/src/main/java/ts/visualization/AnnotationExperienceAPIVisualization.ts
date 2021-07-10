@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Annotation} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/util/Annotation";
-import {AnnotationType} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/util/AnnotationTypes";
+
 import {AnnotationExperienceAPI} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
+import {Span} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Span";
 
 export class AnnotationExperienceAPIVisualization {
 
@@ -108,7 +108,7 @@ export class AnnotationExperienceAPIVisualization {
 
         //Highlighting
         if (this.showHighlighting) {
-            svg.appendChild(this.drawAnnotation(this.annotationExperienceAPI.annotations, aElementId));
+            svg.appendChild(this.drawAnnotation(this.annotationExperienceAPI.span, aElementId));
         }
     }
 
@@ -152,7 +152,7 @@ export class AnnotationExperienceAPIVisualization {
 
     }
 
-    drawAnnotation(aAnnotations: Annotation[], aEditor: string) {
+    drawAnnotation(aAnnotations: Span[], aEditor: string) {
         let highlighting = document.createElementNS("http://www.w3.org/2000/svg", "g");
         highlighting.setAttribute("class","annotations")
         highlighting.style.display = "block";
@@ -184,7 +184,7 @@ export class AnnotationExperienceAPIVisualization {
                 let text_row = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 text_row.setAttribute("class", "span")
 
-                for (let annotation of this.annotationExperienceAPI.annotations) {
+                for (let span of this.annotationExperienceAPI.span) {
 
                     let begin: string;
                     let end: string;
@@ -195,25 +195,25 @@ export class AnnotationExperienceAPIVisualization {
 
                     for (let char of child.children) {
 
-                        if (annotation.begin.toString() === char.getAttribute("char_pos")) {
+                        if (span.begin.toString() === char.getAttribute("char_pos")) {
                             begin = char.getAttribute("x");
                             word = word.concat(char.textContent);
                             check = true;
                             continue;
                         }
 
-                        if (annotation.end.toString() === char.getAttribute("char_pos")) {
+                        if (span.end.toString() === char.getAttribute("char_pos")) {
 
-                            if (begin != null && word === annotation.word) {
+                            if (begin != null && word === span.coveredText) {
                                 end = char.getAttribute("x")
                                 let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                                 rect.setAttribute("x", Number(begin).toString());
                                 rect.setAttribute("y", (i * 20).toString());
                                 rect.setAttribute("width", (Number(end) - Number(begin)).toString());
                                 rect.setAttribute("height", "20");
-                                rect.setAttribute("id", annotation.id);
-                                rect.setAttribute("type", annotation.type);
-                                rect.setAttribute("fill", this.getColorForAnnotation(annotation.type));
+                                rect.setAttribute("id", span.id);
+                                rect.setAttribute("type", span.type);
+                                rect.setAttribute("fill", span.color);
                                 rect.style.opacity = "0.5";
                                 text_row.appendChild(rect);
                                 break;
@@ -235,23 +235,6 @@ export class AnnotationExperienceAPIVisualization {
             return highlighting;
         } else {
             return highlighting;
-        }
-    }
-
-    getColorForAnnotation(aType: string) {
-        switch (aType) {
-            case AnnotationType.POS:
-                return "#0088FF";
-            case AnnotationType.CHUNK:
-                return "#4466AA";
-            case AnnotationType.LEMMA:
-                return "#04CCCC";
-            case AnnotationType.NER:
-                return "#228822";
-            case AnnotationType.COREFERENCE:
-                return "#934AA1"
-            default:
-                return "#AAAAAA";
         }
     }
 

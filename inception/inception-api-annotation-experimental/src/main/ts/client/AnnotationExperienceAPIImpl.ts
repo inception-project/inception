@@ -16,29 +16,37 @@
  * limitations under the License.
  */
 import {Client, Stomp} from '@stomp/stompjs';
-import {AnnotationExperienceAPIVisualization} from "../../../../../inception-experimental-editor/src/main/java/ts/visualization/AnnotationExperienceAPIVisualization";
-import {AnnotationExperienceAPIActionHandler} from "../../../../../inception-experimental-editor/src/main/java/ts/actionhandling/AnnotationExperienceAPIActionHandler";
-import {ServerMessage} from "./util/ServerMessage";
 import {AnnotationExperienceAPI} from "./AnnotationExperienceAPI"
-import {Annotation} from "./util/Annotation";
+import {Span} from "./model/Span";
+import {NewDocumentResponse} from "./messages/response/NewDocumentResponse";
+import {NewViewportResponse} from "./messages/response/NewViewportResponse";
+import {SelectAnnotationResponse} from "./messages/response/SelectAnnotationResponse";
+import {ErrorMessage} from "./messages/response/ErrorMessage";
+import {UpdateAnnotationResponse} from "./messages/response/UpdateAnnotationResponse";
+import {CreateAnnotationResponse} from "./messages/response/CreateAnnotationResponse";
+import {DeleteAnnotationResponse} from "./messages/response/DeleteAnnotationResponse";
+import {NewDocumentRequest} from "./messages/request/NewDocumentRequest";
+import {NewViewportRequest} from "./messages/request/NewViewportRequest";
+import {SelectAnnotationRequest} from "./messages/request/SelectAnnotationRequest";
+import {UpdateAnnotationRequest} from "./messages/request/UpdateAnnotationRequest";
+import {CreateAnnotationRequest} from "./messages/request/CreateAnnotationRequest";
+import {DeleteAnnotationRequest} from "./messages/request/DeleteAnnotationRequest";
 
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     //Websocket and stomp broker
     stompClient: Client;
-    connected: boolean = false;
 
     //States to remember by client
-    client: string;
-    projectID: string;
-
-    documentID: string;
+    clientName: string;
+    projectID: number;
+    documentID: number;
 
 
     //Text and annotations
-    text: String[];
-    annotations: Annotation[];
-    selectedAnnotation: Annotation;
+    text: string[];
+    span: Span[];
+    selectedSpan: Span;
 
     //Viewport
     viewport: number[][];
@@ -50,11 +58,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     //CREATE WEBSOCKET CONNECTION
     connect() {
-        if (this.connected) {
-            console.log("You are already connected")
-            return;
-        }
 
+        //TODO find better solution
         this.stompClient = Stomp.over(function () {
             return new WebSocket(localStorage.getItem("url"));
         });
@@ -62,37 +67,36 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         const that = this;
 
         this.stompClient.onConnect = function (frame) {
-            that.connected = true;
 
             //Receive username from inital message exchange header
             const header = frame.headers;
             let data: keyof typeof header;
             for (data in header) {
-                that.client = header[data];
+                that.clientName = header[data];
                 break;
             }
 
             //Receive project and document from URL
 
-            that.projectID = document.location.href.split("/")[5];
-            that.documentID = document.location.href.split("=")[1].split("&")[0];
+            that.projectID = Number(document.location.href.split("/")[5]);
+            that.documentID = Number(document.location.href.split("=")[1].split("&")[0]);
 
             // ------ DEFINE STANDARD SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
 
-            that.stompClient.subscribe("/queue/new_document_for_client/" + that.client, function (msg) {
-                that.receiveNewDocumentMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+            that.stompClient.subscribe("/queue/new_document_for_client/" + that.clientName, function (msg) {
+                that.onNewDocument(Object.assign(new NewDocumentResponse(), JSON.parse(msg.body)));
             }, {id: "new_document"});
 
-            that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.client, function (msg) {
-                that.receiveNewViewportMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+            that.stompClient.subscribe("/queue/new_viewport_for_client/" + that.clientName, function (msg) {
+                that.onNewViewport(Object.assign(new NewViewportResponse(), JSON.parse(msg.body)));
             }, {id: "new_viewport"});
 
-            that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.client, function (msg) {
-                that.receiveSelectedAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+            that.stompClient.subscribe("/queue/selected_annotation_for_client/" + that.clientName, function (msg) {
+                that.onAnnotationSelect(Object.assign(new SelectAnnotationResponse(), JSON.parse(msg.body)));
             }, {id: "selected_annotation"});
 
-            that.stompClient.subscribe("/queue/error_for_client/" + that.client, function (msg) {
-                that.receiveErrorMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+            that.stompClient.subscribe("/queue/error_for_client/" + that.clientName, function (msg) {
+                that.onError(Object.assign(new ErrorMessage(), JSON.parse(msg.body)));
             }, {id: "error_message"});
         };
 
@@ -111,104 +115,56 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.stompClient.unsubscribe(aChannel);
     }
 
-    // ------ DISCONNECT -------- //
     disconnect() {
-        if (this.connected) {
-            console.log("Disconnecting now");
-            this.connected = false;
-            this.stompClient.deactivate();
-        }
+        this.stompClient.deactivate();
     }
 
-    editAnnotation(aId, aAnnotationType) {
-        let json = {
-            username: this.client,
-            clientName: this.client,
-            project: this.projectID,
-            document: this.documentID,
-            annotationAddress: aId,
-            annotationType: aAnnotationType
-        };
-
-        //TODO correct edit
-        //this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
-    }
-
-    sendDocumentMessageToServer(aUsername, aDocument, aOffset, aOffsetType) {
-
-        let json = {
-            clientName: this.client,
-            username: aUsername,
-            project: this.projectID,
-            document: aDocument,
-            viewport: aOffset,
-            offsetType: aOffsetType
-        }
-
-        this.viewport = json.viewport;
-        this.stompClient.publish({destination: "/app/new_document_by_client", body: JSON.stringify(json)});
-    }
-
-    sendViewportMessageToServer(aUsername, aViewport, aOffsetType) {
-        let json = {
-            clientName: this.client,
-            username: aUsername,
-            project: this.projectID,
-            document: this.documentID,
-            viewport: aViewport,
-            offsetType: aOffsetType
-        };
+    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewportType: string, aViewport: number[][], aRecommenderEnabled: boolean) {
         this.viewport = aViewport;
-        this.stompClient.publish({destination: "/app/new_viewport_by_client", body: JSON.stringify(json)});
+        this.stompClient.publish({
+            destination: "/app/new_document_from_client", body: JSON.stringify(
+                new NewDocumentRequest(aClientName, aUserName, aProjectId, aDocumentId, aViewportType, aViewport, aRecommenderEnabled))
+        });
     }
 
-    sendSelectAnnotationMessageToServer(aUsername, aId) {
-        let json = {
-            clientName: this.client,
-            username: aUsername,
-            project: this.projectID,
-            document: this.documentID,
-            annotationAddress: aId
-        };
-        this.stompClient.publish({destination: "/app/select_annotation_by_client", body: JSON.stringify(json)});
+    requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewportType: string, aViewport: number[][], aRecommenderEnabled: boolean) {
+        this.viewport = aViewport;
+        this.stompClient.publish({
+            destination: "/app/new_viewport_from_client",
+            body: JSON.stringify(new NewViewportRequest(aClientName, aUserName, aProjectId, aDocumentId, aViewportType, aViewport, aRecommenderEnabled))
+        });
     }
 
-    sendUpdateAnnotationMessageToServer(aUsername, aDocument, aId, aNewAnnotationType, aNewAnnotationFeature) {
-        let json = {
-            username: aUsername,
-            project: this.projectID,
-            document: aDocument,
-            annotationAddress: aId,
-            annotationType: aNewAnnotationType,
-            annotationFeature: aNewAnnotationFeature
-        };
-        this.stompClient.publish({destination: "/app/update_annotation_by_client", body: JSON.stringify(json)});
+    requestSelectAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number) {
+        this.stompClient.publish({
+            destination: "/app/select_annotation_from_client",
+            body: JSON.stringify(new SelectAnnotationRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress))
+        });
     }
 
-    sendCreateAnnotationMessageToServer(aUsername, aDocument, aBegin, aEnd, aAnnotationType) {
-        let json = {
-            username: aUsername,
-            project: this.projectID,
-            document: this.documentID,
-            annotationOffsetBegin: aBegin,
-            annotationOffsetEnd: aEnd,
-            annotationType: aAnnotationType
-        };
-        this.stompClient.publish({destination: "/app/new_annotation_by_client", body: JSON.stringify(json)});
+    requestUpdateAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number, aNewType: string) {
+        this.stompClient.publish({
+            destination: "/app/update_annotation_from_client",
+            body: JSON.stringify(new UpdateAnnotationRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress, aNewType))
+        });
     }
 
-    sendDeleteAnnotationMessageToServer(aId: string, aAnnotationType: string) {
-        let json = {
-            username: this.client,
-            project: this.projectID,
-            document: this.documentID,
-            annotationAddress: aId,
-            annotationType: aAnnotationType
-        };
-        this.stompClient.publish({destination: "/app/delete_annotation_by_client", body: JSON.stringify(json)});
+    requestCreateAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number) {
+        this.stompClient.publish({
+            destination: "/app/new_annotation_from_client",
+            body: JSON.stringify(new CreateAnnotationRequest(aClientName, aUserName, aProjectId, aDocumentId, aBegin, aEnd))
+        });
     }
 
-    receiveNewDocumentMessageByServer(aMessage: ServerMessage) {
+    requestDeleteAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number) {
+
+        this.stompClient.publish({
+            destination: "/app/delete_annotation_from_client",
+            body: JSON.stringify(new DeleteAnnotationRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress))
+        });
+    }
+
+    onNewDocument(aMessage: NewDocumentResponse) {
         console.log("RECEIVED DOCUMENT");
         console.log(aMessage);
 
@@ -217,9 +173,9 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
         const that = this;
 
-        this.documentID = aMessage.document.toString();
+        this.documentID = aMessage.documentId;
         this.text = aMessage.viewportText;
-        this.annotations = aMessage.annotations;
+        this.span = aMessage.spanAnnotations;
 
         for (let i = 0; i < this.viewport.length; i++) {
             for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
@@ -228,66 +184,61 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
                     this.projectID + "/" +
                     this.documentID + "/" +
                     j, function (msg) {
-                    that.receiveAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+                    that.onAnnotationUpdate(Object.assign(new UpdateAnnotationResponse(), JSON.parse(msg.body)));
                 }, {id: "annotation_update_" + j});
             }
         }
     }
 
-    receiveNewViewportMessageByServer(aMessage: ServerMessage) {
+    onNewViewport(aMessage: NewViewportResponse) {
         console.log('RECEIVED VIEWPORT');
         console.log(aMessage);
 
         const that = this;
 
         this.text = aMessage.viewportText;
-        this.annotations = aMessage.annotations;
+        this.span = aMessage.spanAnnotations;
 
-        for (let i = 0; i < aMessage.viewport.length; i++) {
-            for (let j = aMessage.viewport[i][0]; j <= aMessage.viewport[i][1]; j++) {
+        for (let i = 0; i < this.viewport.length; i++) {
+            for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
 
                 this.stompClient.subscribe("/topic/annotation_update_for_clients/" +
                     this.projectID + "/" +
                     this.documentID + "/" +
                     j, function (msg) {
-                    that.receiveAnnotationMessageByServer(Object.assign(new ServerMessage(), JSON.parse(msg.body)));
+                    that.onAnnotationUpdate(Object.assign(new UpdateAnnotationResponse(), JSON.parse(msg.body)));
                 }, {id: "annotation_update_" + j});
             }
         }
     }
 
-    receiveSelectedAnnotationMessageByServer(aMessage: ServerMessage) {
+    onAnnotationSelect(aMessage: SelectAnnotationResponse) {
         console.log('RECEIVED SELECTED ANNOTATION');
         console.log(aMessage);
-        this.selectedAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType, aMessage.annotationFeature)
+        this.selectedSpan = new Span(aMessage.annotationAddress, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color)
     }
 
-    receiveAnnotationMessageByServer(aMessage: ServerMessage) {
-        console.log('RECEIVED ANNOTATION MESSAGE');
+    onAnnotationUpdate(aMessage: UpdateAnnotationResponse) {
+        console.log('RECEIVED ANNOTATION UPDATE');
         console.log(aMessage);
-
-        //TODO Both toString() necessary, but how to do it better?
-        //RECEIVED DELETE
-        if (aMessage.delete) {
-            console.log("DELETE")
-            this.annotations.forEach((item, index) => {
-                if (item.id.toString() === aMessage.annotationAddress.toString()) {
-                    this.annotations.splice(index, 1);
-                }
-            });
-            //RECEIVED EDIT
-        } else if (aMessage.edit) {
-            console.log("UPDATE")
-            //RECEIVED NEW ANNOTATION
-
-        } else {
-            console.log("NEW")
-            let newAnnotation = new Annotation(aMessage.annotationAddress.toString(), aMessage.annotationText, aMessage.annotationOffsetBegin, aMessage.annotationOffsetEnd, aMessage.annotationType, aMessage.annotationFeature)
-            this.annotations.push(newAnnotation)
-        }
     }
 
-    receiveErrorMessageByServer(aMessage: ServerMessage) {
+    onAnnotationCreate(aMessage: CreateAnnotationResponse) {
+        console.log('RECEIVED CREATE ANNOTATIONS');
+        let newAnnotation = new Span(aMessage.annotationAddress, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color)
+        this.span.push(newAnnotation)
+    }
+
+    onAnnotationDelete(aMessage: DeleteAnnotationResponse) {
+        console.log('RECEIVED ANNOTATION DELETE');
+        this.span.forEach((item, index) => {
+            if (item.id.toString() === aMessage.annotationAddress.toString()) {
+                this.span.splice(index, 1);
+            }
+        });
+    }
+
+    onError(aMessage: ErrorMessage) {
         console.log('RECEIVED ERROR MESSAGE');
         console.log(aMessage);
 

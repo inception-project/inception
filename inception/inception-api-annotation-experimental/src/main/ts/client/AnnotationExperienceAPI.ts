@@ -15,7 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ServerMessage} from "./util/ServerMessage";
+
+import {NewDocumentResponse} from "./messages/response/NewDocumentResponse";
+import {NewViewportResponse} from "./messages/response/NewViewportResponse";
+import {SelectAnnotationResponse} from "./messages/response/SelectAnnotationResponse";
+import {UpdateAnnotationResponse} from "./messages/response/UpdateAnnotationResponse";
+import {ErrorMessage} from "./messages/response/ErrorMessage";
+import {CreateAnnotationResponse} from "./messages/response/CreateAnnotationResponse";
 
 export interface AnnotationExperienceAPI {
 
@@ -25,27 +31,36 @@ export interface AnnotationExperienceAPI {
 
     disconnect();
 
-    editAnnotation(aId, aAnnotationType);
 
+    requestNewDocumentFromServer(aClientName : string, aUserName : string, aProjectId : number,
+                                 aDocumentId : number, aViewportType : string, aViewport : number[][],
+                                 aRecommenderEnabled : boolean);
 
-    sendDocumentMessageToServer(aUsername, aDocument, aOffset, aOffsetType);
+    requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                 aDocumentId: number, aViewportType: string, aViewport: number[][],
+                                 aRecommenderEnabled: boolean);
 
-    sendViewportMessageToServer(aUsername, aViewport, aOffsetType);
+    requestSelectAnnotationFromServer(clientName : string, userName : string, projectId : number,
+                                      documentId : number, annotationAddress : number);
 
-    sendSelectAnnotationMessageToServer(aUsername, aId);
+    requestUpdateAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                      aDocumentId : number, aAnnotationAddress: number, aNewType: string)
 
-    sendCreateAnnotationMessageToServer(aUsername, aDocument, begin, end, aAnnotationType);
+    requestCreateAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                      aDocumentId: number, aBegin: number, aEnd: number);
 
-    sendUpdateAnnotationMessageToServer(aUsername, aDocument, aId, aNewAnnotationType, aNewAnnotationFeature)
+    requestDeleteAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                      aDocumentId: number, aAnnotationAddress: number);
 
-    sendDeleteAnnotationMessageToServer(aId : string, aAnnotationType: string);
+    onNewDocument(aMessage: NewDocumentResponse);
 
+    onNewViewport(aMessage: NewViewportResponse);
 
-    receiveNewDocumentMessageByServer(aMessage: ServerMessage);
+    onAnnotationSelect(aMessage: SelectAnnotationResponse);
 
-    receiveNewViewportMessageByServer(aMessage: ServerMessage);
+    onAnnotationUpdate(aMessage: UpdateAnnotationResponse);
 
-    receiveSelectedAnnotationMessageByServer(aMessage: ServerMessage);
+    onAnnotationCreate(aMessage: CreateAnnotationResponse);
 
-    receiveAnnotationMessageByServer(aMessage: ServerMessage);
+    onError(aMessage: ErrorMessage);
 }

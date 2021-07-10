@@ -17,13 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-
 public interface AnnotationSystemAPIService
 {
-    AnnotationLayer getAnnotationLayer(String aName);
 
-    List<String> getAllAnnotationLayers();
 }

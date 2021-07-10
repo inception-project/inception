@@ -65,10 +65,13 @@ export class AnnotationExperienceAPIActionHandler {
             switch (aAction) {
                 case  "create":
                     for (let item of elements) {
+                        /*
                         item.setAttribute("ondblclick",
                             'annotationExperienceAPI.sendCreateAnnotationMessageToServer(evt.target.attributes[3].value,' +
                             'document.getElementsByClassName("dropdown")[0].children[1].getAttribute("title"),' +
                             'evt.target.parentElement.attributes[1].value)');
+
+                         */
                     }
                     break;
                 default:
@@ -88,7 +91,7 @@ export class AnnotationExperienceAPIActionHandler {
             console.log(elem)
             if (elem.tagName === 'rect') {
                 //TODO for correct user
-                that.annotationExperienceAPI.sendSelectAnnotationMessageToServer("admin", elem.attributes[4].value)
+                that.annotationExperienceAPI.requestSelectAnnotationFromServer("admin", elem.attributes[4].value)
             }
         }
 

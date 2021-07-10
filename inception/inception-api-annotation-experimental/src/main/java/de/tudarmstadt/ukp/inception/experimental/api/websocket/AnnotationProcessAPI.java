@@ -21,39 +21,44 @@ import java.io.IOException;
 
 import org.springframework.messaging.Message;
 
-import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
 
 public interface AnnotationProcessAPI
 {
-    void handleReceiveDocumentRequest(Message<String> aMessage) throws IOException;
+    void receiveNewDocumentRequest(Message<String> aMessage) throws IOException;
 
-    void handleSendDocumentRequest(DocumentMessage documentMessage, String aUser)
+    void sendNewDocumentResponse(NewDocumentResponse aNewDocumentResponse, String aUser)
         throws IOException;
 
-    void handleReceiveViewportRequest(Message<String> aMessage) throws IOException;
+    void receiveNewViewportRequest(Message<String> aMessage) throws IOException;
 
-    void handleSendViewportRequest(ViewportMessage aViewportMessage, String aUser)
+    void sendNewViewportResponse(NewViewportResponse aNewViewportResponse, String aUser)
         throws IOException;
 
-    void handleReceiveSelectAnnotation(Message<String> aMessage) throws IOException;
+    void receiveSelectAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void handleSendSelectAnnotation(AnnotationMessage aAnnotationMessage, String aUser)
+    void sendSelectAnnotationResponse(SelectAnnotationResponse aSelectAnnotationResponse,
+            String aUser)
         throws IOException;
 
-    void handleReceiveUpdateAnnotation(Message<String> aMessage) throws IOException;
+    void receiveUpdateAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void handleReceiveCreateAnnotation(Message<String> aMessage) throws IOException;
-
-    void handleReceiveDeleteAnnotation(Message<String> aMessage) throws IOException;
-
-    void handleSendUpdateAnnotation(AnnotationMessage aAnnotationMessage, String aProjectID,
-            String aDocumentID, String aViewport)
+    void sendUpdateAnnotationResponse(UpdateAnnotationResponse aUpdateAnnotationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
 
-    void handleSendErrorMessage(ErrorMessage aErrorMessage, String aUser)
+    void receiveCreateAnnotationRequest(Message<String> aMessage) throws IOException;
+
+    void sendCreateAnnotationResponse(CreateAnnotationResponse aCreateAnnotationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
+
+    void receiveDeleteAnnotationRequest(Message<String> aMessage) throws IOException;
+
+    void sendDeleteAnnotationResponse(DeleteAnnotationResponse aDeleteAnnotationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException;
+
+    void sendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException;
 
 }

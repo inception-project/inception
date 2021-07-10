@@ -18,58 +18,26 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
-import java.util.List;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
 
 public interface AnnotationSystemAPI
 {
-    void handleDocument(ClientMessage aClientMessage) throws IOException;
+    void handleNewDocument(NewDocumentRequest aNewDocumentRequest) throws IOException;
 
-    void handleViewport(ClientMessage aClientMessage) throws IOException;
+    void handleNewViewport(NewViewportRequest aNewViewportRequest) throws IOException;
 
-    void handleSelectAnnotation(ClientMessage aClientMessage) throws IOException;
+    void handleSelectAnnotation(SelectAnnotationRequest aSelectAnnotationRequest)
+        throws IOException;
 
-    void handleUpdateAnnotation(ClientMessage aClientMessage) throws IOException;
+    void handleUpdateAnnotation(UpdateAnnotationRequest aUpdateAnnotationRequest)
+        throws IOException;
 
-    void handleCreateAnnotation(ClientMessage aClientMessage) throws IOException;
+    void handleCreateAnnotation(CreateAnnotationRequest aCreateAnnotationRequest)
+        throws IOException;
 
-    void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException;
-
-    /**
-     * Returns CAS from websocket message. All three String parameters are contained in the header
-     * of the websocket message
-     *
-     * @param aProject
-     *            long
-     * @param aDocument
-     *            long
-     * @param aUser
-     *            string
-     * @return CAS
-     */
-    CAS getCasForDocument(String aUser, long aProject, long aDocument);
-
-    Character[] getViewportText(ClientMessage aClientMessage, CAS aCas);
-
-    List<Annotation> getAnnotations(CAS aCas, long aProject);
-
-    List<Annotation> filterAnnotations(List <Annotation> aAnnotations, int[][] aViewport);
+    void handleDeleteAnnotation(DeleteAnnotationRequest aDeleteAnnotationRequest) throws IOException;
 
     void createErrorMessage(String aMessage, String aUser) throws IOException;
-
-    FeatureStructure getFeatureStructure(CAS aCas, long aProject, String aAnnotationType);
-
-    List<Feature> getFeaturesForFeatureStructure(FeatureStructure aFeatureStructure);
-
-    void refreshAnnotationLayers();
-
-    Type getType(CAS aCas, String aAnnotationType);
-
 
 }
