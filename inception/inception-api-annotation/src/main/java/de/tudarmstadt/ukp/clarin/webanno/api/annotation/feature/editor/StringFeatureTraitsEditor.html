@@ -19,7 +19,7 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <form wicket:id="form">
-    <div class="form-group form-row">
+    <div class="form-group row">
       <div class="col-sm-8 offset-sm-4">
         <div class="form-check">
           <input wicket:id="multipleRows" class="form-check-input" type="checkbox">
@@ -29,7 +29,7 @@
         </div>
       </div>
     </div>
-    <div class="form-group form-row" wicket:enclosure="dynamicSize">
+    <div class="form-group row" wicket:enclosure="dynamicSize">
       <div class="col-sm-8 offset-sm-4">
         <div class="form-check">
           <input wicket:id="dynamicSize" class="form-check-input" type="checkbox">
@@ -39,7 +39,7 @@
         </div>
       </div>
     </div>
-    <div class="form-group form-row" wicket:enclosure="collapsedRows">
+    <div class="form-group row" wicket:enclosure="collapsedRows">
       <label wicket:for="collapsedRows" class="col-sm-4 col-form-label">
         Collapsed Rows
       </label>
@@ -47,7 +47,7 @@
         <input type="number" style="width:100%;" wicket:id="collapsedRows" data-container="body"></input>
       </div>
     </div>
-    <div class="form-group form-row" wicket:enclosure="expandedRows">
+    <div class="form-group row" wicket:enclosure="expandedRows">
       <label wicket:for="expandedRows" class="col-sm-4 col-form-label">
         Expanded Rows
       </label>
@@ -55,7 +55,7 @@
         <input type="number" style="width:100%;" wicket:id="expandedRows" data-container="body"></input>
       </div>
     </div>
-    <div class="form-group form-row" wicket:enclosure="tagset">
+    <div class="form-group row" wicket:enclosure="tagset">
       <label wicket:for="tagset" class="col-sm-4 col-form-label">
         <wicket:label key="tagset"/>
       </label>
@@ -63,7 +63,7 @@
         <select wicket:id="tagset" class="form-control" data-container="body"></select>
       </div>
     </div>
-    <div class="form-group form-row" wicket:id="editorTypeContainer">
+    <div class="form-group row" wicket:id="editorTypeContainer">
       <label wicket:for="editorType" class="col-sm-4 col-form-label">
         Editor type
       </label>
@@ -72,7 +72,7 @@
       </div>
     </div>
   </form>
-  <div class="form-group form-row">
+  <div class="form-group row">
     <label class="col-sm-4 col-form-label">
       Key bindings
     </label>
