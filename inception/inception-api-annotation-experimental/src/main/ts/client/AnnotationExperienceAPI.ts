@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {NewDocumentResponse} from "./messages/response/NewDocumentResponse";
 import {NewViewportResponse} from "./messages/response/NewViewportResponse";
 import {SelectAnnotationResponse} from "./messages/response/SelectAnnotationResponse";
@@ -24,8 +23,6 @@ import {ErrorMessage} from "./messages/response/ErrorMessage";
 import {CreateAnnotationResponse} from "./messages/response/CreateAnnotationResponse";
 
 export interface AnnotationExperienceAPI {
-
-    //TODO Type safety
 
     unsubscribe(aChannel: string);
 

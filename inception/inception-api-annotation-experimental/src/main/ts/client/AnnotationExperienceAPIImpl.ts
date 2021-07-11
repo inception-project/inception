@@ -246,3 +246,5 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     }
 }
+
+let annotationExperienceAPI = new AnnotationExperienceAPIImpl();

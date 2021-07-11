@@ -19,7 +19,12 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.CreateAnnotationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DeleteAnnotationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.SelectAnnotationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.UpdateAnnotationRequest;
 
 public interface AnnotationSystemAPI
 {

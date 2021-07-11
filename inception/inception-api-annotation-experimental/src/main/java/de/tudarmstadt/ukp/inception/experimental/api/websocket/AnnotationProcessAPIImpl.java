@@ -34,8 +34,19 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIImpl;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIService;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.CreateAnnotationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DeleteAnnotationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.SelectAnnotationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.UpdateAnnotationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.CreateAnnotationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DeleteAnnotationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.SelectAnnotationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateAnnotationResponse;
 
 @Controller
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")

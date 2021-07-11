@@ -21,7 +21,13 @@ import java.io.IOException;
 
 import org.springframework.messaging.Message;
 
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.CreateAnnotationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DeleteAnnotationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.SelectAnnotationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateAnnotationResponse;
 
 public interface AnnotationProcessAPI
 {

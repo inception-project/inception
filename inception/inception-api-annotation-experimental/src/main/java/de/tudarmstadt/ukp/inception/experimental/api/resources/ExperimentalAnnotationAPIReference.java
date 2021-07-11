@@ -15,22 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class CreateAnnotationRequest
-{
-    clientName : string;
-    userName : string;
-    projectId : number;
-    documentId : number;
-    begin : number;
-    end : number;
+package de.tudarmstadt.ukp.inception.experimental.api.resources;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number)
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
+
+public class ExperimentalAnnotationAPIReference extends JavaScriptResourceReference
+{
+    private static final long serialVersionUID = 1L;
+
+    private static final ExperimentalAnnotationAPIReference INSTANCE = new ExperimentalAnnotationAPIReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static ExperimentalAnnotationAPIReference get()
     {
-        this.clientName = aClientName;
-        this.userName = aUserName;
-        this.projectId = aProjectId;
-        this.documentId = aDocumentId;
-        this.begin = aBegin;
-        this.end = aEnd;
+        return INSTANCE;
+    }
+
+    /**
+     * Private constructor
+     */
+    private ExperimentalAnnotationAPIReference()
+    {
+        super(ExperimentalAnnotationAPIReference.class, "AnnotationExperienceAPI.js");
     }
 }
