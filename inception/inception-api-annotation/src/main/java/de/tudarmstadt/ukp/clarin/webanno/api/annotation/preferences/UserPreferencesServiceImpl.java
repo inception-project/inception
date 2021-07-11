@@ -128,7 +128,15 @@ public class UserPreferencesServiceImpl
         // TODO Use modular preference loading once it is available and if there is a corresponding
         // data file. Otherwise, fall back to loading the legacy preferences
 
-        return loadLegacyPreferences(aProject, aUsername, aMode);
+        AnnotationPreference pref = loadLegacyPreferences(aProject, aUsername, aMode);
+
+        // If the choice for remember layer is not enabled, hard-set to "true" which is the default
+        // and in the future the only option ;)
+        if (!annotationEditorProperties.isRememberLayerEnabled()) {
+            pref.setRememberLayer(true);
+        }
+
+        return pref;
     }
 
     @Override

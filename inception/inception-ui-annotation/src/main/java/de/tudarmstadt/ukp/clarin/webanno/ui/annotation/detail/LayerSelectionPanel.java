@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorP
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -68,7 +67,6 @@ public class LayerSelectionPanel
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserPreferencesService userPreferencesService;
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
     private @SpringBean UserDao userDao;
     private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 

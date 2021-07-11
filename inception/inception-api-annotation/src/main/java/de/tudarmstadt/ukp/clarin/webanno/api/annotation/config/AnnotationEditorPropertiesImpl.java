@@ -30,6 +30,8 @@ public class AnnotationEditorPropertiesImpl
 {
     private boolean tokenLayerEditable;
     private boolean sentenceLayerEditable;
+    private boolean rememberLayerEnabled = false;
+    private boolean forwardAnnotationEnabled = false;
 
     @ManagedAttribute
     @Override
@@ -55,5 +57,27 @@ public class AnnotationEditorPropertiesImpl
     public void setSentenceLayerEditable(boolean aSentenceLayerEditable)
     {
         sentenceLayerEditable = aSentenceLayerEditable;
+    }
+
+    @Override
+    public boolean isForwardAnnotationEnabled()
+    {
+        return forwardAnnotationEnabled;
+    }
+
+    public void setForwardAnnotationEnabled(boolean aForwardAnnotationEnabled)
+    {
+        forwardAnnotationEnabled = aForwardAnnotationEnabled;
+    }
+
+    @Override
+    public boolean isRememberLayerEnabled()
+    {
+        return rememberLayerEnabled;
+    }
+
+    public void setRememberLayerEnabled(boolean aRememberLayerEnabled)
+    {
+        rememberLayerEnabled = aRememberLayerEnabled;
     }
 }

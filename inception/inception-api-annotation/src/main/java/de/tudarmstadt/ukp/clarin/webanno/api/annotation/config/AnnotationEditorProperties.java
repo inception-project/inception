@@ -27,6 +27,17 @@ public interface AnnotationEditorProperties
 
     boolean isSentenceLayerEditable();
 
+    /**
+     * @return whether the "forward annotation" setting is available to annotators.
+     */
+    boolean isForwardAnnotationEnabled();
+
+    /**
+     * @return whether the "remember layer" setting is configurable by the user as preference. When
+     *         disabled, {@link #isRememberLayer} always returns true.
+     */
+    boolean isRememberLayerEnabled();
+
     default boolean isLayerBlocked(AnnotationLayer aLayer)
     {
         if (!isTokenLayerEditable() && Token.class.getName().equals(aLayer.getName())) {
