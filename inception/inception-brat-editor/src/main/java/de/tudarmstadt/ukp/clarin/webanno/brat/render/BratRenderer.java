@@ -30,11 +30,13 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -100,8 +102,6 @@ public class BratRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
 
-    private static final boolean DEBUG = false;
-
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
     private final BratAnnotationEditorProperties properties;
@@ -136,13 +136,18 @@ public class BratRenderer
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());
 
-        // Render invisible baseline annotations (sentence, tokens)
         renderText(aCas, aResponse, aState);
+
         // The rows need to be rendered first because we use the row boundaries to split
         // cross-row spans into multiple ranges
-        renderUnitsAsRows(aResponse, aState);
+        renderBratRowsFromUnits(aResponse, aState);
 
-        renderTokens(aCas, aResponse, aState);
+        if (properties.isUseCasTokens()) {
+            renderBratTokensFromTokens(aCas, aResponse, aState);
+        }
+        else {
+            renderBratTokensFromText(aCas, aResponse, aState);
+        }
 
         Map<AnnotationFS, Integer> sentenceIndexes = null;
 
@@ -300,7 +305,12 @@ public class BratRenderer
         aResponse.setText(visibleText);
     }
 
-    public static void renderTokens(CAS aCas, GetDocumentResponse aResponse, AnnotatorState aState)
+    /**
+     * @deprecated We want to get away from this any use {@link #renderBratTokensFromText} instead.
+     */
+    @Deprecated
+    private void renderBratTokensFromTokens(CAS aCas, GetDocumentResponse aResponse,
+            AnnotatorState aState)
     {
         int winBegin = aState.getWindowBeginOffset();
         int winEnd = aState.getWindowEndOffset();
@@ -309,6 +319,9 @@ public class BratRenderer
         List<AnnotationFS> tokens = selectCovered(aCas, tokenType, winBegin, winEnd);
         for (AnnotationFS fs : tokens) {
             // attach type such as POS adds non-existing token element for ellipsis annotation
+            // REC 2021-03-27: The bug that empty tokens were being added has been removed long
+            // ago and there is a CAS Doctor check to ensure such tokens no longer exist. Possibly
+            // this can be removed in one of the next refactoring iterations.
             if (fs.getBegin() == fs.getEnd()) {
                 continue;
             }
@@ -319,25 +332,55 @@ public class BratRenderer
         }
     }
 
-    public static void renderUnitsAsRows(GetDocumentResponse aResponse, AnnotatorState aState)
+    private void renderBratTokensFromText(CAS aCas, GetDocumentResponse aResponse,
+            AnnotatorState aState)
+    {
+        int winBegin = aState.getWindowBeginOffset();
+        int winEnd = aState.getWindowEndOffset();
+        List<Offsets> bratTokenOffsets = new ArrayList<>();
+        String visibleText = aCas.getDocumentText().substring(winBegin, winEnd);
+        BreakIterator bi = BreakIterator.getWordInstance(Locale.ROOT);
+        bi.setText(visibleText);
+        int last = bi.first();
+        int cur = bi.next();
+        while (cur != BreakIterator.DONE) {
+            Offsets offsets = new Offsets(last, cur);
+            trim(visibleText, offsets);
+            if (offsets.getBegin() < offsets.getEnd()) {
+                bratTokenOffsets.add(offsets);
+            }
+            last = cur;
+            cur = bi.next();
+        }
+
+        for (Offsets offsets : bratTokenOffsets) {
+            split(aResponse.getSentenceOffsets(),
+                    visibleText.substring(offsets.getBegin(), offsets.getEnd()), offsets.getBegin(),
+                    offsets.getEnd()).forEach(range -> {
+                        aResponse.addToken(range.getBegin(), range.getEnd());
+                    });
+        }
+    }
+
+    private void renderBratRowsFromUnits(GetDocumentResponse aResponse, AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
 
         aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
 
         // Render sentences
-        int sentIdx = aResponse.getSentenceNumberOffset();
+        int unitNum = aResponse.getSentenceNumberOffset();
         for (Unit unit : aState.getVisibleUnits()) {
             aResponse.addSentence(unit.getBegin() - windowBegin, unit.getEnd() - windowBegin);
 
             // If there is a sentence ID, then make it accessible to the user via a sentence-level
             // comment.
             if (isNotBlank(unit.getId())) {
-                aResponse.addComment(new SentenceComment(sentIdx, Comment.ANNOTATOR_NOTES,
+                aResponse.addComment(new SentenceComment(unitNum, Comment.ANNOTATOR_NOTES,
                         String.format("Sentence ID: %s", unit.getId())));
             }
 
-            sentIdx++;
+            unitNum++;
         }
     }
 
@@ -353,7 +396,7 @@ public class BratRenderer
      *            (window-relative positions)
      * @return list of ranges.
      */
-    public static List<Offsets> split(List<Offsets> aRows, String aText, int aBegin, int aEnd)
+    private List<Offsets> split(List<Offsets> aRows, String aText, int aBegin, int aEnd)
     {
         // Zero-width spans never need to be split
         if (aBegin == aEnd) {
