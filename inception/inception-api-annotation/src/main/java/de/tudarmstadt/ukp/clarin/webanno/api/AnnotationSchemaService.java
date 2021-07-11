@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * This interface contains methods which are related to TagSet, Tag and Type for the annotation
@@ -327,6 +328,12 @@ public interface AnnotationSchemaService
      * @return the possible link features.
      */
     List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer layer);
+
+    /**
+     * List all features of the given layer that other span layers attach to. These are primarily
+     * features such as {@code lemma} on the {@link Token} layer.
+     */
+    List<AnnotationFeature> listAttachedSpanFeatures(AnnotationLayer aLayer);
 
     List<AttachedAnnotation> getAttachedLinks(AnnotationLayer aLayer, AnnotationFS aFs);
 

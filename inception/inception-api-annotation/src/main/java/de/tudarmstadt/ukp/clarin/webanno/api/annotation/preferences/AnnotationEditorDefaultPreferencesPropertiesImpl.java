@@ -22,14 +22,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties("annotation.default-preferences")
-public class AnnotationEditorPropertiesImpl
-    implements AnnotationEditorProperties
+public class AnnotationEditorDefaultPreferencesPropertiesImpl
+    implements AnnotationEditorDefaultPreferencesProperties
 {
     private int pageSize = 5;
     private boolean autoScroll = true;
     private boolean rememberLayer = false;
-    private boolean rememberLayerEnabled = false;
-    private boolean forwardAnnotationEnabled = false;
 
     @Override
     public int getPageSize()
@@ -56,37 +54,11 @@ public class AnnotationEditorPropertiesImpl
     @Override
     public boolean isRememberLayer()
     {
-        if (!rememberLayerEnabled) {
-            return true;
-        }
-
         return rememberLayer;
     }
 
     public void setRememberLayer(boolean aRememberLayer)
     {
         rememberLayer = aRememberLayer;
-    }
-
-    @Override
-    public boolean isForwardAnnotationEnabled()
-    {
-        return forwardAnnotationEnabled;
-    }
-
-    public void setForwardAnnotationEnabled(boolean aForwardAnnotationEnabled)
-    {
-        forwardAnnotationEnabled = aForwardAnnotationEnabled;
-    }
-
-    @Override
-    public boolean isRememberLayerEnabled()
-    {
-        return rememberLayerEnabled;
-    }
-
-    public void setRememberLayerEnabled(boolean aRememberLayerEnabled)
-    {
-        rememberLayerEnabled = aRememberLayerEnabled;
     }
 }
