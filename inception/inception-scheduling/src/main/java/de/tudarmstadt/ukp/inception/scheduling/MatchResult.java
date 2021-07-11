@@ -15,32 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
+package de.tudarmstadt.ukp.inception.scheduling;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-public class BratUrlMonitorResourceReference
-    extends JavaScriptResourceReference
+public enum MatchResult
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final BratUrlMonitorResourceReference INSTANCE = new BratUrlMonitorResourceReference();
+    /**
+     * Task does not match.
+     */
+    NO_MATCH,
 
     /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
+     * Unqueue any existing matching tasks. Scheduled and running tasks as left alone. Enqueue the
+     * new task.
      */
-    public static BratUrlMonitorResourceReference get()
-    {
-        return INSTANCE;
-    }
+    UNQUEUE_EXISTING_AND_QUEUE_THIS,
 
     /**
-     * Private constructor
+     * Discard the incoming task if it matches an already enqueued task. If and matching task is
+     * already scheduled or running, then queue the incoming task.
      */
-    private BratUrlMonitorResourceReference()
-    {
-        super(BratUrlMonitorResourceReference.class, "url_monitor.js");
-    }
+    DISCARD_OR_QUEUE_THIS;
 }

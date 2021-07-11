@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
+package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
+import de.agilecoders.wicket.sass.SassResourceReference;
 
-public class BratAnnotationLogResourceReference
-    extends JavaScriptResourceReference
+public class SearchAnnotationSidebarCssReference
+    extends SassResourceReference
 {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 5755999000175373522L;
 
-    private static final BratAnnotationLogResourceReference INSTANCE = new BratAnnotationLogResourceReference();
+    private static final SearchAnnotationSidebarCssReference INSTANCE = new SearchAnnotationSidebarCssReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static BratAnnotationLogResourceReference get()
+    public static SearchAnnotationSidebarCssReference get()
     {
         return INSTANCE;
     }
@@ -39,8 +39,8 @@ public class BratAnnotationLogResourceReference
     /**
      * Private constructor
      */
-    private BratAnnotationLogResourceReference()
+    private SearchAnnotationSidebarCssReference()
     {
-        super(BratAnnotationLogResourceReference.class, "annotation_log.js");
+        super(SearchAnnotationSidebarCssReference.class, "SearchAnnotationSidebar.scss");
     }
 }

@@ -49,10 +49,12 @@ import static java.lang.System.currentTimeMillis;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -84,7 +86,6 @@ import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
@@ -768,7 +769,7 @@ public class CurationPage
 
         boolean allCurated = true;
         curatedDiffSet: for (ConfigurationSet d : diff.getConfigurationSets()) {
-            if (!d.getCasGroupIds().contains(WebAnnoConst.CURATION_USER)) {
+            if (!d.getCasGroupIds().contains(CURATION_USER)) {
                 allCurated = false;
                 break curatedDiffSet;
             }
@@ -793,8 +794,12 @@ public class CurationPage
             return STACKED;
         }
 
-        if (!diff.getIncompleteConfigurationSets().isEmpty()) {
-            return INCOMPLETE;
+        Set<String> usersExceptCurator = new HashSet<>(diff.getCasGroupIds());
+        usersExceptCurator.remove(CURATION_USER);
+        for (ConfigurationSet d : diff.getIncompleteConfigurationSets().values()) {
+            if (!d.getCasGroupIds().containsAll(usersExceptCurator)) {
+                return INCOMPLETE;
+            }
         }
 
         return DISAGREE;

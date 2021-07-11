@@ -154,7 +154,7 @@ span.form-control {
 .flex-centered { align-items: center; }
 .flex-centered > * { margin: 0px; }
 
-.flex-static-item { flex: none; }
+.flex-static-item { flex: none !important; }
 .flex-growing-item { flex: 1; }
 .flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; min-width: 0px; }
 .flex-content { flex: 1; }
