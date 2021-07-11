@@ -38,7 +38,7 @@
       <div wicket:id="resultsContainer" class="card-body small p-0">
         <div class="d-flex flex-row p-2 border-bottom">
           <span wicket:id="sampleUnit" title="Sample granularity"/>
-          <span class="flex-grow-1 text-right">
+          <span class="flex-grow-1 text-end">
             <span title="Sample count in training set"><i class="fas fa-brain text-muted"/>&nbsp;<span wicket:id="trainingSampleCount"/></span>
             <span title="Sample count in evaluation set"><i class="fas fa-vial text-muted ps-2"/>&nbsp;<span wicket:id="testSampleCount"/></span>
           </span>
@@ -47,25 +47,25 @@
           <div class="d-flex flex-fill flex-column px-2 pt-2 border-right">
             <div class="d-flex flex-row">
               <label>F1</label>
-              <span wicket:id="f1Score" class="flex-grow-1 text-right"/>
+              <span wicket:id="f1Score" class="flex-grow-1 text-end"/>
             </div>
             <div class="d-flex flex-row">
               <label>Accuracy</label>
-              <span wicket:id="accuracy" class="flex-grow-1 text-right"/>
+              <span wicket:id="accuracy" class="flex-grow-1 text-end"/>
             </div>
           </div>
           <div class="d-flex flex-fill flex-column px-2 pt-2 ">
             <div class="d-flex flex-row">
               <label>Precision</label>
-              <span wicket:id="precision" class="flex-grow-1 text-right"/>
+              <span wicket:id="precision" class="flex-grow-1 text-end"/>
             </div>
             <div class="d-flex flex-row">
               <label>Recall</label>
-              <span wicket:id="recall" class="flex-grow-1 text-right"/>
+              <span wicket:id="recall" class="flex-grow-1 text-end"/>
             </div>
           </div>
         </div>
-        <div class="card-footer actions text-right">
+        <div class="card-footer actions text-end">
           <button wicket:id="exportModel" class="btn btn-sm btn-secondary">
             <i class="fas fa-download"/>
           </button>
