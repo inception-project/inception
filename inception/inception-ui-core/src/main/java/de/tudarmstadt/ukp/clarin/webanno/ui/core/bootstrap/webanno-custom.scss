@@ -49,7 +49,7 @@ html, body {
   text-align: center; 
   font-size: $font-size-sm; 
   padding-left: ceil(($grid-gutter-width / 2));
-  padding-right: floor(($grid-gutter-width / 2));
+  padding-right: ceil(($grid-gutter-width / 2));
   color: $card-color;
   background-color: $card-bg;
   border-color: $card-border-color;

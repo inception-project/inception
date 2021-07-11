@@ -21,6 +21,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.settings.JavaScriptLibrarySettings;
 
 public class JQueryJavascriptBehavior
@@ -43,7 +44,8 @@ public class JQueryJavascriptBehavior
         JavaScriptLibrarySettings cfg = aComponent.getApplication().getJavaScriptLibrarySettings();
 
         if (cfg.getJQueryReference() != null) {
-            aResponse.render(JavaScriptHeaderItem.forReference(cfg.getJQueryReference()));
+            aResponse.render(new PriorityHeaderItem(
+                    JavaScriptHeaderItem.forReference(cfg.getJQueryReference())));
         }
     }
 }
