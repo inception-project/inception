@@ -103,6 +103,6 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     @Override
     protected String getTabContainerCssClass()
     {
-        return "nav flex-column dashboard-sidebar collapsed dashboard-sidebar-light border border-left-0";
+        return "nav flex-column dashboard-sidebar collapsed dashboard-sidebar-light border border-start-0";
     }
 }

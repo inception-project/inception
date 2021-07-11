@@ -25,7 +25,7 @@
           <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="btn-group" role="group">
               <button wicket:id="newProject" class="btn btn-primary"><wicket:message key="newProject"/></button> 
-              <button class="btn btn-primary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+              <button class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
               <div class="dropdown-menu shadow-lg pt-0 pb-0 w-min-220px" role="menu">
                 <div class="dropdown-header">Instantly create a project using one of these templates.</div>
                 <div wicket:id="templatesContainer">
@@ -39,7 +39,7 @@
             </span>
           </span>
           <span wicket:id="projectImportGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
-            <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" name="projectImport">
+            <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" name="projectImport">
             </button>
             <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
               <wicket:container wicket:id="importProjectPanel" />
@@ -85,7 +85,7 @@
               </div>
               <div wicket:id="actionDropdown" class="flex-h-container">
                 <div class="dropdown flex-content flex-h-container">
-                  <button class="btn dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+                  <button class="btn dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-ellipsis-v"></i>
                   </button>
                   <ul class="dropdown-menu float-end" role="menu">
