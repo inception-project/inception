@@ -134,7 +134,7 @@ span.form-control {
 .flex-h-container.flex-gutter > * { margin-left: ceil($grid-gutter-width / 2) }
 .flex-h-container.flex-no-gutter > .panel { margin-bottom: 0px; }
 .flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
-.flex-h-container.flex-gutter > *:last-child { margin-right: floor($grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > *:last-child { margin-right: ceil($grid-gutter-width / 2) }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:first-child { margin-left: 0px; }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:last-child { margin-right: 0px; }
 .flex-h-container.flex-no-initial-gutter > *:first-child { margin-left: 0px; }
@@ -145,7 +145,7 @@ span.form-control {
 .flex-v-container.flex-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container { display: flex; flex-direction: column; }
 .flex-v-container.flex-gutter > * { margin-top: ($grid-gutter-width / 2) }
-.flex-v-container.flex-gutter > *:last-child { margin-bottom: floor($grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > *:last-child { margin-bottom: ceil($grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:first-child { margin-top: 0px; }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:last-child { margin-bottom: 0px; }
 .flex-v-container.flex-only-internal-gutter > *:first-child { margin-top: 0px; }

@@ -54,18 +54,14 @@
       <div class="flex-h-container flex-gutter justify-content-end flex-only-internal-gutter">
         <div>
           <div wicket:id="roleFilters" class="input-group">
-            <div class="input-group-prepend">
-              <div class="input-group-text">
-                <i class="fas fa-filter"></i>
-              </div>
+            <div class="input-group-text">
+              <i class="fas fa-filter"></i>
             </div>
-            <div class="input-group-append" role="group">
-              <wicket:container wicket:id="roleFilter">
-                <button type="button" class="btn btn-outline-secondary" wicket:id="roleFilterLink">
-                  <wicket:container wicket:id="label"/>
-                  </button>
-              </wicket:container>
-            </div>
+            <wicket:container wicket:id="roleFilter">
+              <button type="button" class="btn btn-outline-secondary" wicket:id="roleFilterLink">
+                <wicket:container wicket:id="label"/>
+                </button>
+            </wicket:container>
           </div>
         </div>
       </div>
@@ -77,7 +73,7 @@
             <div class="flex-h-container flex-gutter flex-only-internal-gutter">
               <div class="flex-content">
                 <div class="float-end">
-                  <span wicket:id="role" class="badge badge-secondary ml-1"><wicket:container wicket:id="label"/></span>
+                  <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
                 </div>
                   <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
                 <div class="list-group-item-text">
