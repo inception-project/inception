@@ -31,10 +31,10 @@
             </button>
             <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
               <div class="container">
-                <div class="form-group row">
+                <div class=" row">
                   <div wicket:id="format" class="small"></div>
                 </div>
-                <div class="form-group row">
+                <div class=" row">
                   <button wicket:id="export" class="btn btn-sm btn-primary col-sm-12">
                     <i class="fas fa-download"></i>&nbsp;
                     <wicket:message key="export"/>
@@ -57,7 +57,7 @@
             </button>
             <div class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
               <div class="container">
-                <div class="form-group row">
+                <div class=" row">
                   <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
                     <i class="fas fa-trash"></i>&nbsp;
                     <wicket:message key="delete"/>
@@ -69,7 +69,7 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="form-group row">
+        <div class=" row">
           <label wicket:for="name" class="col-sm-2 col-form-label">
             <wicket:label key="name"/>
           </label>
@@ -77,7 +77,7 @@
             <input wicket:id="name" type="text" class="form-control"/>
           </div>
         </div>
-        <div class="form-group row">
+        <div class=" row">
           <label wicket:for="language" class="col-sm-2 col-form-label">
             <wicket:label key="language"/>
           </label>
@@ -85,7 +85,7 @@
             <input wicket:id="language" type="text" class="form-control"/>
           </div>
         </div>
-        <div class="form-group row">
+        <div class=" row">
           <label wicket:for="description" class="col-sm-2 col-form-label">
             <wicket:label key="description"/>
           </label>
@@ -93,7 +93,7 @@
             <textarea wicket:id="description" class="form-control" style="resize: vertical;"></textarea>
           </div>
         </div>
-        <div class="form-group row" wicket:enclosure="createTag">
+        <div class=" row" wicket:enclosure="createTag">
           <div class="offset-md-2 col-sm-10">
             <div class="form-check">
               <input class="form-check-input" type="checkbox" wicket:id="createTag">

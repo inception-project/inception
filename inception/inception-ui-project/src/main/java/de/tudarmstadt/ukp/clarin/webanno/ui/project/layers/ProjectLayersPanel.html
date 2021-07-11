@@ -39,7 +39,7 @@
                       <wicket:message key="import.layers"/>
                     </div>
                     <div class="card-body">
-                      <div class="form-group row">
+                      <div class=" row">
                         <label class="col-sm-4 col-form-label">
                           <wicket:message key="filesToImport"/>
                         </label>
@@ -104,10 +104,10 @@
                 </button>
                 <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
                   <div class="container">
-                    <div class="form-group row">
+                    <div class=" row">
                       <div wicket:id="exportMode" class="small"></div>
                     </div>
-                    <div class="form-group row">
+                    <div class=" row">
                       <button wicket:id="export" class="btn btn-sm btn-primary col-sm-12">
                         <i class="fas fa-download"></i>&nbsp;
                         <wicket:message key="export"/>
@@ -130,7 +130,7 @@
                 </button>
                 <div class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
                   <div class="container">
-                    <div class="form-group row">
+                    <div class=" row">
                       <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
                         <i class="fas fa-trash"></i>&nbsp;
                         <wicket:message key="delete"/>
@@ -148,7 +148,7 @@
                 <a wicket:id="propertiesHelpLink"/>
               </div>
               <div class="card-body">
-                <div class="form-group row">
+                <div class=" row">
                   <label wicket:for="uiName" class="col-sm-4 col-form-label">
                     <wicket:label key="name"/>
                   </label>
@@ -156,7 +156,7 @@
                     <input wicket:id="uiName" class="form-control"/>
                   </div>
                 </div>
-                <div class="form-group row">
+                <div class=" row">
                   <label wicket:for="description" class="col-sm-4 col-form-label">
                     <wicket:label key="description"/>
                   </label>
@@ -164,7 +164,7 @@
                     <textarea wicket:id="description" rows="4" class="form-control"></textarea>
                   </div>
                 </div>
-                <div class="form-group row">
+                <div class=" row">
                   <div class="offset-sm-4 col-sm-8">
                     <div class="form-check">
                       <input wicket:id="enabled" class="form-check-input" type="checkbox"> 
@@ -183,7 +183,7 @@
                 <a wicket:id="technicalPropertiesHelpLink"/>
               </div>
               <div class="card-body">
-                <div class="form-group row">
+                <div class=" row">
                   <label class="col-sm-4 col-form-label"> <wicket:message
                       key="internalName" />
                   </label>
@@ -192,7 +192,7 @@
                         wicket:id="name" /></span>
                   </div>
                 </div>
-                <div class="form-group row">
+                <div class=" row">
                   <label wicket:for="type" class="col-sm-4 col-form-label"> <wicket:label
                       key="type" />
                   </label>
@@ -200,7 +200,7 @@
                     <select wicket:id="type" class="form-control" data-container="body"></select>
                   </div>
                 </div>
-                <div class="form-group row" wicket:enclosure="attachType">
+                <div class=" row" wicket:enclosure="attachType">
                   <label wicket:for="attachType" class="col-sm-4 col-form-label"> <wicket:label
                       key="attachToLayer" />
                   </label>
@@ -208,7 +208,7 @@
                     <select wicket:id="attachType" class="form-control" data-container="body"></select>
                   </div>
                 </div>
-                <div class="form-group row" wicket:enclosure="effectiveAttachType">
+                <div class=" row" wicket:enclosure="effectiveAttachType">
                   <label class="col-sm-4 col-form-label"> 
                     <wicket:message key="attachToLayer" />
                   </label>
@@ -226,7 +226,7 @@
               </div>
               <div class="card-body">
                 <div class="col-sm-12">
-                  <div class="form-group row" wicket:enclosure="readonly">
+                  <div class=" row" wicket:enclosure="readonly">
                     <div class="offset-sm-4 col-sm-8">
                       <div class="form-check">
                         <input wicket:id="readonly" class="form-check-input" type="checkbox">
@@ -282,7 +282,7 @@
                 </button>
                 <div class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
                   <div class="container">
-                    <div class="form-group row">
+                    <div class=" row">
                       <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
                         <i class="fas fa-trash"></i>&nbsp;
                         <wicket:message key="delete"/>
@@ -294,7 +294,7 @@
             </div>
           </div>
           <div class="scrolling card-body">
-            <div class="form-group row">
+            <div class=" row">
               <label class="col-sm-4 col-form-label">
                 <wicket:message key="internalName"/>
               </label>
@@ -302,7 +302,7 @@
                 <span class="form-control" readonly><wicket:container wicket:id="name"/></span>
               </div>
             </div>
-            <div class="form-group row">
+            <div class=" row">
               <label wicket:for="uiName" class="col-sm-4 col-form-label">
                 <wicket:label key="name"/>
               </label>
@@ -310,7 +310,7 @@
                 <input wicket:id="uiName" class="form-control"/>
               </div>
             </div>
-            <div class="form-group row">
+            <div class=" row">
               <label wicket:for="type" class="col-sm-4 col-form-label">
                 <wicket:label key="type"/>
               </label>
@@ -318,7 +318,7 @@
                 <select wicket:id="type" class="form-control" data-container="body"></select>
               </div>
             </div>
-            <div class="form-group row">
+            <div class=" row">
               <label wicket:for="description" class="col-sm-4 col-form-label">
                 <wicket:label key="description"/>
               </label>
@@ -326,7 +326,7 @@
                 <textarea wicket:id="description" rows="4" class="form-control"></textarea>
               </div>
             </div>
-            <div class="form-group row">
+            <div class=" row">
               <label class="col-sm-4 col-form-label">
                 <wicket:message key="options"/>
               </label>

@@ -19,9 +19,9 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form" class="form-horizontal">
-    <div class="form-group row">
+    <div class=" row">
       <div class="col-sm-12">
-        <div class="form-group row" wicket:enclosure="url">
+        <div class=" row" wicket:enclosure="url">
           <label class="col-sm-3 col-form-label" wicket:for="url">
             <wicket:message key="url"/>
           </label>
@@ -31,9 +31,9 @@
         </div>
       </div>
     </div>
-    <div class="form-group row">
+    <div class=" row">
       <div class="col-sm-12">
-        <div class="form-group row" wicket:enclosure="apiKey">
+        <div class=" row" wicket:enclosure="apiKey">
           <label class="col-sm-3 col-form-label" wicket:for="apiKey">
             <wicket:message key="apiKey"/>
           </label>
@@ -41,7 +41,7 @@
             <input wicket:id="apiKey" type="text" class="form-control"/>
           </div>
         </div>
-        <div class="form-group row" wicket:enclosure="lastKeyUpdate">
+        <div class=" row" wicket:enclosure="lastKeyUpdate">
           <label class="col-sm-3 col-form-label">
             <wicket:message key="lastKeyUpdate"/>
           </label>
@@ -55,7 +55,7 @@
             </div>
           </div>
         </div>
-        <div class="form-group row" wicket:enclosure="chainInputFormat">
+        <div class=" row" wicket:enclosure="chainInputFormat">
           <label class="col-form-label col-sm-3">
             <wicket:message key="chainInputFormat"/>
           </label>
@@ -63,7 +63,7 @@
             <select wicket:id="chainInputFormat" class="form-control" data-container="body"></select>
           </div>
         </div>
-        <div class="form-group row"  wicket:enclosure="chainInputLanguage">
+        <div class=" row"  wicket:enclosure="chainInputLanguage">
           <label class="col-form-label col-sm-3">
             <wicket:message key="chainInputLanguage"/>
           </label>
@@ -74,7 +74,7 @@
       </div>
     </div>
   </form>
-  <div wicket:id="saveToAddChainAlert" class="form-group row">
+  <div wicket:id="saveToAddChainAlert" class=" row">
     <div class="col-sm-12">
       <div class="offset-sm-3 col-sm-9 alert alert-info" role="alert">
         Please save the recommender to allow uploading a WebLicht chain definition file.
@@ -82,9 +82,9 @@
     </div>
   </div>
   <div class="form-horizontal">
-    <div class="form-group row">
+    <div class=" row">
       <div class="col-sm-12">
-        <div class="form-group row" wicket:enclosure="upload">
+        <div class=" row" wicket:enclosure="upload">
           <label class="col-sm-3 col-form-label">
             <wicket:message key="uploadChain"/>
           </label>
@@ -96,7 +96,7 @@
             then download it and upload it here again.
           </div>
         </div>
-        <div class="form-group row" wicket:enclosure="chain">
+        <div class=" row" wicket:enclosure="chain">
           <label class="col-sm-3 col-form-label">
             <wicket:message key="chain"/>
           </label>
@@ -106,7 +106,7 @@
             </div>
           </div>
         </div>
-        <div wicket:id="missingChainAlert" class="form-group row">
+        <div wicket:id="missingChainAlert" class=" row">
           <div class="offset-sm-3 col-sm-9">
             <div class="alert alert-danger px-2" role="alert">
               Please upload a chain definition to enable the recommender.
