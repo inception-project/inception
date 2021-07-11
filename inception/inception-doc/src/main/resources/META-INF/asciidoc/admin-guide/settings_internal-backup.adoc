@@ -32,13 +32,13 @@ The internal backups are controlled through three properties:
 
 | backup.interval
 | Time between backups (seconds)
-| 0 _(disabled)_
+| 172800 _(60 * 60 * 24 = 24 hours)_
 | 300 _(60 * 5 = 5 minutes)_
 
 | backup.keep.number
 | Maximum number of backups to keep
+| 2
 | 0 _(unlimited)_
-| 5
 
 | backup.keep.time
 | Maximum age of backups to keep (seconds)
