@@ -19,16 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors;
 
 import static java.util.Arrays.asList;
 
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class AnchoringModeSelect
-    extends BootstrapSelect<AnchoringMode>
+    extends DropDownChoice<AnchoringMode>
 {
     private static final long serialVersionUID = -7730878193827899241L;
 

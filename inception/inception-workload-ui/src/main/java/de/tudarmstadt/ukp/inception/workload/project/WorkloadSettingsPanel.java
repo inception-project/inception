@@ -22,13 +22,13 @@ import java.io.IOException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
@@ -49,7 +49,7 @@ public class WorkloadSettingsPanel
 {
     private static final long serialVersionUID = -6220828178550562376L;
 
-    private final BootstrapSelect<WorkloadManagerType> workloadStrategy;
+    private final DropDownChoice<WorkloadManagerType> workloadStrategy;
     private final Project project;
 
     private @SpringBean WorkloadManagementService workloadManagementService;
@@ -70,7 +70,7 @@ public class WorkloadSettingsPanel
         form.add(new DocLink("workloadHelpLink", "sect_workload"));
         
         // Dropdown menu
-        workloadStrategy = new BootstrapSelect<>("workloadStrategy");
+        workloadStrategy = new DropDownChoice<>("workloadStrategy");
         workloadStrategy
                 .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
         workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));

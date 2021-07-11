@@ -30,8 +30,7 @@
             <div class=" row" wicket:enclosure="editor">
               <label wicket:for="editor" class="col-sm-4 col-form-label"><wicket:label key="editor"/></label>
               <div class="col-sm-8">
-                <select wicket:id="editor" class="form-control" 
-                    data-size="10" data-container=".w_content_container"></select>
+                <select wicket:id="editor" class="form-select" data-size="10" data-container=".w_content_container"/>
               </div>
             </div>
             <div class=" row" wicket:enclosure="sidebarSizeLeft">
@@ -113,8 +112,7 @@
                 <wicket:label key="readOnlyPalette"/>
               </label>
               <div class="col-sm-8">
-                <select wicket:id="readonlyLayerColoringBehaviour" class="form-control" 
-                    data-size="10" data-container=".w_content_container"></select>
+                <select wicket:id="readonlyLayerColoringBehaviour" class="form-select" data-size="10" data-container=".w_content_container"/>
               </div>
             </div>
           </div>
@@ -137,7 +135,7 @@
                 <tr wicket:id="annotationLayers" >
                   <td class="vert-aligned"><wicket:container wicket:id="annotationLayerDesc"/></td>
                   <td class="vert-aligned"><input wicket:id="annotationLayerActive" type="checkbox"></input></td>
-                  <td class="vert-aligned"><select wicket:id="layercoloring" class="form-control" 
+                  <td class="vert-aligned"><select wicket:id="layercoloring" class="form-select" 
                       data-size="10" data-container=".w_content_container"></select></td>
                 </tr>
               </tbody>

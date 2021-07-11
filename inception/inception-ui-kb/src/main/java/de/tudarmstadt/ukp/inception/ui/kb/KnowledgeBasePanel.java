@@ -46,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
@@ -118,7 +117,7 @@ public class KnowledgeBasePanel
         kbModel = aKbModel;
 
         // add the selector for the knowledge bases
-        DropDownChoice<KnowledgeBase> ddc = new BootstrapSelect<KnowledgeBase>("knowledgebases",
+        DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
                 LoadableDetachableModel
                         .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
 

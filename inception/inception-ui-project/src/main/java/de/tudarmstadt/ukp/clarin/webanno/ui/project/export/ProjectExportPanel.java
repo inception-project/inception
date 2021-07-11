@@ -52,7 +52,6 @@ import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -114,7 +113,7 @@ public class ProjectExportPanel
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
 
-            DropDownChoice<String> format = new BootstrapSelect<>("format");
+            DropDownChoice<String> format = new DropDownChoice<>("format");
             format.setChoiceRenderer(new ChoiceRenderer<String>()
             {
                 private static final long serialVersionUID = -6139450455463062998L;

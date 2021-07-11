@@ -52,7 +52,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
@@ -130,7 +129,7 @@ public class AnnotationPreferencesDialogContent
         fontZoomField.setMaximum(AnnotationPreference.FONT_ZOOM_MAX);
         form.add(fontZoomField);
 
-        DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor");
+        DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
         editor.add(visibleWhen(() -> editor.getChoices().size() > 1
@@ -156,7 +155,7 @@ public class AnnotationPreferencesDialogContent
         form.add(rememberCheckbox);
 
         // Add global read-only coloring strategy combo box
-        DropDownChoice<ReadonlyColoringBehaviour> readOnlyColor = new BootstrapSelect<>(
+        DropDownChoice<ReadonlyColoringBehaviour> readOnlyColor = new DropDownChoice<>(
                 "readonlyLayerColoringBehaviour");
         readOnlyColor.setChoices(asList(ReadonlyColoringBehaviour.values()));
         readOnlyColor.setChoiceRenderer(new ChoiceRenderer<>("descriptiveName"));
@@ -272,7 +271,7 @@ public class AnnotationPreferencesDialogContent
                 aItem.add(layerVisible);
 
                 // add coloring strategy choice
-                DropDownChoice<ColoringStrategyType> layerColor = new BootstrapSelect<>(
+                DropDownChoice<ColoringStrategyType> layerColor = new DropDownChoice<>(
                         "layercoloring");
                 layerColor.setModel(Model.of(prefs.colorPerLayer.get(layer.getId())));
                 layerColor.setChoiceRenderer(new ChoiceRenderer<>("descriptiveName"));

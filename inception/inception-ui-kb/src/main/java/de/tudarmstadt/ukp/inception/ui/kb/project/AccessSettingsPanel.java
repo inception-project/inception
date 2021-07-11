@@ -25,7 +25,6 @@ import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 
 public class AccessSettingsPanel
@@ -48,9 +47,8 @@ public class AccessSettingsPanel
 
     private DropDownChoice<RepositoryType> createTypeSelection(String id, String property)
     {
-        DropDownChoice<RepositoryType> typeChoice = new BootstrapSelect<>(id,
-                kbModel.bind(property), asList(RepositoryType.values()),
-                new EnumChoiceRenderer<>(this));
+        DropDownChoice<RepositoryType> typeChoice = new DropDownChoice<>(id, kbModel.bind(property),
+                asList(RepositoryType.values()), new EnumChoiceRenderer<>(this));
         typeChoice.setRequired(true);
         return typeChoice;
     }

@@ -49,7 +49,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -120,7 +119,7 @@ public class SimulationLearningCurvePanel
         chartPanel.add(visibleWhen(() -> isNotEmpty(chartPanel.getModelObject())));
         form.add(chartPanel);
 
-        metricChoice = new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>("metric", metric,
+        metricChoice = new DropDownChoice<RecommenderEvaluationScoreMetricEnum>("metric", metric,
                 new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
         metricChoice.setOutputMarkupId(true);
         form.add(metricChoice);
@@ -128,7 +127,7 @@ public class SimulationLearningCurvePanel
         IModel<List<User>> annotatorChoiceModel = LoadableDetachableModel
                 .of(this::getSelectableAnnotators);
         user = Model.of(annotatorChoiceModel.getObject().get(0));
-        annotatorChoice = new BootstrapSelect<User>("annotator", user, annotatorChoiceModel);
+        annotatorChoice = new DropDownChoice<User>("annotator", user, annotatorChoiceModel);
         annotatorChoice.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUiName));
         annotatorChoice.setOutputMarkupId(true);
         form.add(annotatorChoice);

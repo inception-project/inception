@@ -59,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -166,8 +165,7 @@ public class SearchPage
 
             setModel(CompoundPropertyModel.of(new SearchFormModel()));
 
-            DropDownChoice<DocumentRepository> repositoryCombo = new BootstrapSelect<DocumentRepository>(
-                    "repository");
+            DropDownChoice<DocumentRepository> repositoryCombo = new DropDownChoice<>("repository");
             repositoryCombo.setChoices(LoadableDetachableModel
                     .of(() -> externalSearchService.listDocumentRepositories(getProject())));
             repositoryCombo.setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));

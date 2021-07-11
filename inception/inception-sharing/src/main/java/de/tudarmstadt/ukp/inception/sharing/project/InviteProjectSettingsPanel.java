@@ -29,6 +29,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
@@ -42,7 +43,6 @@ import org.wicketstuff.clipboardjs.ClipboardJsBehavior;
 
 import com.googlecode.wicket.kendo.ui.form.datetime.DatePicker;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
@@ -109,7 +109,7 @@ public class InviteProjectSettingsPanel
                 .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()))
                 .add(new LambdaAjaxFormSubmittingBehavior("change", _t -> _t.add(this))));
 
-        BootstrapSelect<Mandatoriness> askForEMail = new BootstrapSelect<>("askForEMail",
+        DropDownChoice<Mandatoriness> askForEMail = new DropDownChoice<>("askForEMail",
                 asList(Mandatoriness.values()), new EnumChoiceRenderer<>(this));
         askForEMail.setOutputMarkupId(true);
         askForEMail.add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()

@@ -16,8 +16,8 @@
   limitations under the License.
 */
 :root {
-  --input-padding-x: 1.5rem;
-  --input-padding-y: 1.5rem;
+  --input-padding-x: 0.75rem;
+  --input-padding-y: 0.75rem;
 }
 
 .login-form {
@@ -27,7 +27,7 @@
   max-width: 30%;
 }
 
-.login-form .form-group input[type=text],input[type=password] {
+.login-form input[type=text],input[type=password] {
   padding: var(--input-padding-y) var(--input-padding-x);
   border-radius: 2rem;
 }
