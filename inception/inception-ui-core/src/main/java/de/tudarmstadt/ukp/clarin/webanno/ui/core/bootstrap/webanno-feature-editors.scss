@@ -40,27 +40,30 @@
  * we gain more horizontal space for the feature name as well as for the feature value 
  */
 .feature-editors-sidebar {
-	.form-row {
-		// display: block;
-		flex-direction: column;
-	}	
+  .row {
+    // display: block;
+    flex-direction: column;
+  }  
 
-	.feature-editor-label {
-		@extend .small;
-		@extend .badge;
-		@extend .bg-light;
-		max-width: none;
-		text-align: left;
-	}
+  .feature-editor-label {
+    @extend .small;
+    @extend .badge;
+    @extend .bg-light;
+    @extend .text-dark;
+    max-width: none;
+    text-align: left;
+    width: 100%;
+    padding-right: calc(var(--bs-gutter-x) / 2);
+    padding-left: calc(var(--bs-gutter-x) / 2);
+  }
 
-	.feature-editor-value {
-	  @include media-breakpoint-up(sm) {
-	    @include make-col(12);
-	  }
-	}
+  .feature-editor-value {
+    @include media-breakpoint-up(sm) {
+      @include make-col(12);
+    }
+  }
 
-	.form-group .k-widget,
-	.form-group .k-textbox {
-	  width: 100%;
-	}
+  .k-widget, .k-textbox {
+    width: 100%;
+  }
 }
