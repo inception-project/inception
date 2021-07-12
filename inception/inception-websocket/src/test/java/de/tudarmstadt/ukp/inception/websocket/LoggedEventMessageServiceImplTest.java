@@ -48,6 +48,9 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
+import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageService;
+import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageServiceImpl;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @ExtendWith(SpringExtension.class)
@@ -56,6 +59,7 @@ public class LoggedEventMessageServiceImplTest
     private @Mock DocumentService docService;
     private @Mock ProjectService projectService;
     private @Mock EventRepository eventRepository;
+    private LoggedEventMessageService loggedEventService;
     private List<EventLoggingAdapter<?>> adapters;
     private TestChannel outboundChannel;
     
@@ -77,9 +81,11 @@ public class LoggedEventMessageServiceImplTest
         
         when(projectService.getProject(1L)).thenReturn(testProject);
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
+        
+        loggedEventService = new LoggedEventMessageServiceImpl(adapters, docService, projectService, eventRepository);
 
         sut = new LoggedEventMessageControllerImpl(new SimpMessagingTemplate(outboundChannel),
-                adapters, docService, projectService, eventRepository);
+                loggedEventService);
     }
     
     @Test

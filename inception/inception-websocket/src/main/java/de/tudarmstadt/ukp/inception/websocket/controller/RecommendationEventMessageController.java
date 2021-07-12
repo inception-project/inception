@@ -15,24 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket.footer;
+package de.tudarmstadt.ukp.inception.websocket.controller;
 
-import org.apache.wicket.Component;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 
-@Order(FooterItem.ORDER_LEFT + 500)
-@org.springframework.stereotype.Component
-@ConditionalOnProperty({"websocket.enabled", "websocket.loggedevent.enabled"})
-public class LoggedEventFooterItem implements FooterItem
+public interface RecommendationEventMessageController
 {
-    
-    @Override
-    public Component create(String aId)
-    {
-        return new LoggedEventFooterPanel(aId);
-    }
-
+    public String handleException(Throwable exception);
+    public void onRecommenderErrorEvent(RecommenderTaskEvent aEvent);
 }

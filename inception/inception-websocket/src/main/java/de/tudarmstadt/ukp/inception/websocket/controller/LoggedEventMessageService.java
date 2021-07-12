@@ -15,24 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket.footer;
+package de.tudarmstadt.ukp.inception.websocket.controller;
 
-import org.apache.wicket.Component;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.annotation.Order;
+import java.util.List;
+import java.util.Set;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
+import org.springframework.context.ApplicationEvent;
 
-@Order(FooterItem.ORDER_LEFT + 500)
-@org.springframework.stereotype.Component
-@ConditionalOnProperty({"websocket.enabled", "websocket.loggedevent.enabled"})
-public class LoggedEventFooterItem implements FooterItem
+import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+
+public interface LoggedEventMessageService
 {
-    
-    @Override
-    public Component create(String aId)
-    {
-        return new LoggedEventFooterPanel(aId);
-    }
-
+    public List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents, int aMaxEvents);
+    public LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent);
 }

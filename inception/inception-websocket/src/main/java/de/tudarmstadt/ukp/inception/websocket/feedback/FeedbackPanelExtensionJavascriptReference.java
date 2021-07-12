@@ -15,24 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket.footer;
+package de.tudarmstadt.ukp.inception.websocket.feedback;
 
-import org.apache.wicket.Component;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.annotation.Order;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
-
-@Order(FooterItem.ORDER_LEFT + 500)
-@org.springframework.stereotype.Component
-@ConditionalOnProperty({"websocket.enabled", "websocket.loggedevent.enabled"})
-public class LoggedEventFooterItem implements FooterItem
+public class FeedbackPanelExtensionJavascriptReference
+    extends JavaScriptResourceReference
 {
-    
-    @Override
-    public Component create(String aId)
+    private static final long serialVersionUID = 1L;
+
+    private static final FeedbackPanelExtensionJavascriptReference INSTANCE = //
+            new FeedbackPanelExtensionJavascriptReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static FeedbackPanelExtensionJavascriptReference get()
     {
-        return new LoggedEventFooterPanel(aId);
+        return INSTANCE;
+    }
+
+    private FeedbackPanelExtensionJavascriptReference()
+    {
+        super(FeedbackPanelExtensionJavascriptReference.class, "FeedbackPanelExtension.js");
     }
 
 }
