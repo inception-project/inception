@@ -23,16 +23,17 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
 
-@Order(FooterItem.ORDER_LEFT + 500)
+@Order(FooterItem.ORDER_RIGHT - 100)
 @org.springframework.stereotype.Component
-@ConditionalOnProperty({"websocket.enabled", "websocket.loggedevent.enabled"})
-public class LoggedEventFooterItem implements FooterItem
+@ConditionalOnProperty("websocket.enabled")
+public class RecommendationEventFooterItem
+    implements FooterItem
 {
-    
+
     @Override
     public Component create(String aId)
     {
-        return new LoggedEventFooterPanel(aId);
+        return new RecommendationEventFooterPanel(aId);
     }
 
 }

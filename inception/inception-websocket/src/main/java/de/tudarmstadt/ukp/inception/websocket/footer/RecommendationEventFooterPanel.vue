@@ -16,37 +16,15 @@
   limitations under the License.
 -->
 
-<template>
-  <div class="float-left">
-    <div class="btn-group dropup">
-      <a role="button" class="ml-1 mr-1" data-boundary="viewport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <i class="fas fa-scroll"></i>
-      </a>
-      <div class="dropdown-menu shadow-lg p-0 m-0" style="z-index: 9999;">
-        <div class="card-header small">
-          Recent logged events
-        </div>
-        <div class="scrolling card-body small p-0">
-        <ul class="list-group list-group-flush">
-          <li v-show="!events.length" class="list-group-item p-1">No recent events</li>
-          <li v-for="event in events" class="list-group-item p-1">{{formatTime(event.timestamp)}}: {{event.eventType}}</li>
-        </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script>
 module.exports = {
   props: {
     wsEndpoint: { type: String, required: true },   // should this be full ws://... url
-    topicChannel: { type: String, required: true },  // this should be /queue/loggedevents
+    topicChannel: { type: String, required: true },  // this should be /queue/recEvents
     feedbackPanelId: { type: String, required: true }
   },
   data() {
     return {
-      events: [],
       socket: null,
       stompClient: null,
       connected: false,
@@ -67,15 +45,9 @@ module.exports = {
           that.stompClient.subscribe('/user/queue/errors', function (msg) {
             console.error('Websocket server error: ' + JSON.stringify(msg.body));
           });
-          that.stompClient.subscribe('/app' + that.topicChannel, function (msg) {
-            that.events = JSON.parse(msg.body);
-          });
-          that.stompClient.subscribe('/topic' + that.topicChannel, function (msg) {
+          that.stompClient.subscribe('/user/queue' + that.topicChannel, function (msg) {
             var msgBody = JSON.parse(msg.body);
-            that.events.unshift(msgBody);
-            that.events.pop();
-            var msg = that.formatTime(msgBody.timestamp) + ': ' + msgBody.eventType;
-            that.feedbackPanelExtension.addInfoToFeedbackPanel(msg);
+            that.feedbackPanelExtension.addErrorToFeedbackPanel(msgBody.eventMsg);
           });
         },
         function(error){
@@ -88,9 +60,6 @@ module.exports = {
         this.stompClient.disconnect();
       }
       this.connected = false;
-    },
-    formatTime(timestamp) {
-      return dayjs(timestamp).format("LLLL")
     }
   },
   mounted(){
@@ -101,6 +70,3 @@ module.exports = {
   }
 }
 </script>
-
-<style scoped>
-</style>
