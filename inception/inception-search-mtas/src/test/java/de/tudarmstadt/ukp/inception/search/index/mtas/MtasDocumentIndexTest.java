@@ -17,41 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.uima.fit.factory.JCasBuilder;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.FileSystemUtils;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
@@ -80,6 +45,40 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.fit.factory.JCasBuilder;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 
 @EnableAutoConfiguration
@@ -452,6 +451,49 @@ public class MtasDocumentIndexTest
 
         assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
+
+    @Test
+    public void testAnnotationQueryStatistics() throws Exception
+    {
+        Project project = new Project();
+        project.setName("TestAnnotationQueryStatistics");
+
+        createProject(project);
+
+        User user = userRepository.get("admin");
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("Annotation document");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(Pair.of(sourceDocument, fileContent));
+        annotateDocument(project, user, sourceDocument);
+
+        String query = "<Named_entity.value=\"LOC\"/>";
+
+        List<SearchResult> results = searchService.query(user, project, query);
+
+        // Test results
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(sourceDocument.getId());
+        expectedResult.setDocumentTitle("Annotation document");
+        // When searching for an annotation, we don't get the matching
+        // text back... not sure why...
+        expectedResult.setText("");
+        expectedResult.setLeftContext("");
+        expectedResult.setRightContext("");
+        expectedResult.setOffsetStart(15);
+        expectedResult.setOffsetEnd(22);
+        expectedResult.setTokenStart(3);
+        expectedResult.setTokenLength(1);
+
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
+    }
+
 
 
     @SpringBootConfiguration
