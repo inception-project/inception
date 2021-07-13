@@ -21,7 +21,8 @@ module.exports = {
   props: {
     wsEndpoint: { type: String, required: true },   // should this be full ws://... url
     topicChannel: { type: String, required: true },  // this should be /queue/recEvents
-    feedbackPanelId: { type: String, required: true }
+    feedbackPanelId: { type: String, required: true },
+    projectId: { type: Number }
   },
   data() {
     return {
@@ -45,7 +46,10 @@ module.exports = {
           that.stompClient.subscribe('/user/queue/errors', function (msg) {
             console.error('Websocket server error: ' + JSON.stringify(msg.body));
           });
-          that.stompClient.subscribe('/user/queue' + that.topicChannel, function (msg) {
+          if (that.projectId == -1){
+            return;
+          }
+          that.stompClient.subscribe('/user/queue' + that.topicChannel + '/' + that.projectId, function (msg) {
             var msgBody = JSON.parse(msg.body);
             that.feedbackPanelExtension.addErrorToFeedbackPanel(msgBody.eventMsg);
           });

@@ -27,6 +27,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
@@ -55,12 +56,14 @@ public class RecommendationEventMessageControllerImpl implements RecommendationE
             return;
         }
         Recommender recommender = aEvent.getRecommender();
-        LoggedEventMessage eventMsg = new LoggedEventMessage(aEvent.getUser(), recommender.getProject().getName(),
+        Project project = recommender.getProject();
+        LoggedEventMessage eventMsg = new LoggedEventMessage(aEvent.getUser(), project.getName(),
                 aEvent.getTimestamp(), aEvent.getClass().getSimpleName());
-        eventMsg.setEventMsg("Error [" + recommender.getName() + "] " + errorMsg);
+        eventMsg.setEventMsg("[" + recommender.getName() + "] " + errorMsg);
         
-        log.debug("Sending websocket event: " + eventMsg.getEventType() + " " + eventMsg.getEventMsg());
-        msgTemplate.convertAndSendToUser(aEvent.getUser(), REC_EVENTS_TOPIC, eventMsg);
+        String channel = REC_EVENTS_TOPIC + "/" + project.getId();
+        log.debug("Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(), eventMsg.getEventMsg(), channel);
+        msgTemplate.convertAndSendToUser(aEvent.getUser(), channel, eventMsg);
     }
     
     @Override
