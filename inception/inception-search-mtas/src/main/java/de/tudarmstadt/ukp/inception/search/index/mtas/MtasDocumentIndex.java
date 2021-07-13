@@ -65,6 +65,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
@@ -102,6 +103,7 @@ import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
+import de.tudarmstadt.ukp.inception.search.StatisticRequest;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -394,6 +396,55 @@ public class MtasDocumentIndex
         throws ExecutionException, IOException
     {
         return _executeQuery(this::doCountResults, aRequest);
+    }
+
+    @Override
+    public long fetchStatistics(StatisticRequest aStatisticRequest)
+        throws ExecutionException, IOException
+    {
+        if (aStatisticRequest.getStatistic() == "NumTokens") {
+
+            IndexSearcher searcher = null;
+            try {
+                searcher = getSearcherManager().acquire();
+                // searcher.maxResults();
+                // return 123L;
+                IndexReader reader = searcher.getIndexReader();
+                //System.out.println(reader.docFreq(new Term(FIELD_CONTENT,"Santiago")));
+                ListIterator<LeafReaderContext> iterator = reader.leaves().listIterator();
+                while (iterator.hasNext()) {
+                    LeafReaderContext lrc = iterator.next();
+                    IndexReader r = lrc.reader();
+                    //r.getDocCount()
+                }
+                System.out.println(
+                        "docCount= " + searcher.collectionStatistics(FIELD_CONTENT).docCount());
+                System.out.println(
+                        "field name= " + searcher.collectionStatistics(FIELD_CONTENT).field());
+                System.out.println(
+                        "maxDoc= " + searcher.collectionStatistics(FIELD_CONTENT).maxDoc());
+                System.out.println(
+                        "sumdocfreq= " + searcher.collectionStatistics(FIELD_CONTENT).sumDocFreq());
+                return searcher.collectionStatistics(FIELD_CONTENT).sumTotalTermFreq();
+
+                // return aRunner.run(searcher, aRequest, mtasSpanQuery);
+            }
+            catch (Exception e) {
+                throw new ExecutionException(
+                        "Unable to fetch statistic [" + aStatisticRequest.getStatistic() + "]", e);
+            }
+            finally {
+                if (searcher != null) {
+                    // Releasing and setting to null per recommendation in JavaDoc of
+                    // release(searcher)
+                    // method
+                    getSearcherManager().release(searcher);
+                    searcher = null;
+                }
+            }
+
+        }
+        return 1L;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)

@@ -17,16 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.search.index;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
+import de.tudarmstadt.ukp.inception.search.StatisticRequest;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public interface PhysicalIndex
 {
@@ -52,6 +53,8 @@ public interface PhysicalIndex
 
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
+
+    long fetchStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 

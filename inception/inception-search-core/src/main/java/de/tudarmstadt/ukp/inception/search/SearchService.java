@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public interface SearchService
 {
@@ -105,6 +105,11 @@ public interface SearchService
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
             AnnotationFeature aAnnotationFeature)
         throws ExecutionException, IOException;
+
+    public long getTokenPerDocumentStatistics(User aUser, Project aProject, String aStatistic,
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, long offset, long count)
+        throws IOException, ExecutionException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);
 }

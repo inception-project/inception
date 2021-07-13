@@ -17,34 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
-import static java.lang.System.currentTimeMillis;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.commons.lang3.Validate;
-import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionalEventListener;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -69,6 +41,32 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocum
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
+import org.apache.commons.lang3.Validate;
+import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * <p>
@@ -525,6 +523,25 @@ public class SearchServiceImpl
 
             return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
                     aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
+        }
+    }
+
+    @Transactional
+    public long getTokenPerDocumentStatistics(User aUser, Project aProject, String aStatistic,
+                                                 SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+                                                 AnnotationFeature aAnnotationFeature, long offset, long count)
+        throws IOException, ExecutionException
+    {
+        log.trace("Statistics [{}] for user [{}] in project [{}]({})", aStatistic, aUser.getUsername(),
+            aProject.getName(), aProject.getId());
+
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            Index index = pooledIndex.get();
+
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            return index.getPhysicalIndex().fetchStatistics(new StatisticRequest(aProject, aUser, aStatistic,
+                 aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
         }
     }
 
