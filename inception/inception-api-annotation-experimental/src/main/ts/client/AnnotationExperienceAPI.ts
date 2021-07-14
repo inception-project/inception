@@ -17,10 +17,14 @@
  */
 import {NewDocumentResponse} from "./messages/response/NewDocumentResponse";
 import {NewViewportResponse} from "./messages/response/NewViewportResponse";
-import {SelectAnnotationResponse} from "./messages/response/SelectAnnotationResponse";
-import {UpdateAnnotationResponse} from "./messages/response/UpdateAnnotationResponse";
 import {ErrorMessage} from "./messages/response/ErrorMessage";
-import {CreateAnnotationResponse} from "./messages/response/CreateAnnotationResponse";
+import {SelectSpanResponse} from "./messages/response/SelectSpanResponse";
+import {UpdateSpanResponse} from "./messages/response/UpdateSpanResponse";
+import {CreateSpanResponse} from "./messages/response/CreateSpanResponse";
+import {DeleteSpanResponse} from "./messages/response/DeleteSpanResponse";
+import {SelectRelationResponse} from "./messages/response/SelectRelationResponse";
+import {UpdateRelationResponse} from "./messages/response/UpdateRelationResponse";
+import {CreateRelationResponse} from "./messages/response/CreateRelationResponse";
 
 export interface AnnotationExperienceAPI {
 
@@ -29,35 +33,57 @@ export interface AnnotationExperienceAPI {
     disconnect();
 
 
-    requestNewDocumentFromServer(aClientName : string, aUserName : string, aProjectId : number,
-                                 aDocumentId : number, aViewportType : string, aViewport : number[][],
-                                 aRecommenderEnabled : boolean);
+    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                 aDocumentId: number, aViewportType: string, aViewport: number[][],
+                                 aRecommenderEnabled: boolean);
 
     requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                  aDocumentId: number, aViewportType: string, aViewport: number[][],
                                  aRecommenderEnabled: boolean);
 
-    requestSelectAnnotationFromServer(clientName : string, userName : string, projectId : number,
-                                      documentId : number, annotationAddress : number);
+    requestSelectSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanAddress: number);
 
-    requestUpdateAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                      aDocumentId : number, aAnnotationAddress: number, aNewType: string)
+    requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanAddress: number, aNewType: string)
 
-    requestCreateAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                      aDocumentId: number, aBegin: number, aEnd: number);
+    requestCreateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string);
 
-    requestDeleteAnnotationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                      aDocumentId: number, aAnnotationAddress: number);
+    requestDeleteSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanAddress: number);
+
+    requestSelectRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number);
+
+    requestUpdateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number)
+
+    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number);
+
+    requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number);
+
+    requestSaveWordAlignment(aClientName: string, aUserName: string, aProjectId: number, sentence: number, alignments: string)
 
     onNewDocument(aMessage: NewDocumentResponse);
 
     onNewViewport(aMessage: NewViewportResponse);
 
-    onAnnotationSelect(aMessage: SelectAnnotationResponse);
+    onSpanSelect(aMessage: SelectSpanResponse);
 
-    onAnnotationUpdate(aMessage: UpdateAnnotationResponse);
+    onSpanUpdate(aMessage: UpdateSpanResponse);
 
-    onAnnotationCreate(aMessage: CreateAnnotationResponse);
+    onSpanCreate(aMessage: CreateSpanResponse);
+
+    onSpanDelete(aMessage: DeleteSpanResponse);
+
+    onRelationSelect(aMessage: SelectRelationResponse);
+
+    onRelationUpdate(aMessage: UpdateRelationResponse);
+
+    onRelationCreate(aMessage: CreateRelationResponse);
 
     onError(aMessage: ErrorMessage);
 }

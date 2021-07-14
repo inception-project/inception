@@ -24,13 +24,18 @@ public class Span
     private int begin;
     private int end;
     private String type;
+    private String feature;
+    private String color;
 
-    public Span(int aId, int aBegin, int aEnd, String aType)
+    public Span(int aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, String aFeature)
     {
         id = aId;
         begin = aBegin;
         end = aEnd;
         type = aType;
+        color = aColor;
+        coveredText = aCoveredText;
+        feature = aFeature;
     }
 
     public int getId()
@@ -82,4 +87,25 @@ public class Span
     {
         coveredText = aCoveredText;
     }
+
+    public String getColor()
+    {
+        return color;
+    }
+
+    public void setColor(String aColor)
+    {
+        color = aColor;
+    }
+
+    public String getFeature()
+    {
+        return feature;
+    }
+
+    public void setFeature(String aFeature)
+    {
+        feature = aFeature;
+    }
 }
+

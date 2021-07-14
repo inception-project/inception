@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIEditorReference;
+import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIBasicEditorReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
 public class ExperimentalAnnotationEditor
@@ -55,7 +55,7 @@ public class ExperimentalAnnotationEditor
         super.renderHead(aResponse);
         aResponse.render(JavaScriptHeaderItem
                 .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
-        aResponse.render(forReference(ExperimentalAPIEditorReference.get()));
+        aResponse.render(forReference(ExperimentalAPIBasicEditorReference.get()));
     }
 
     private String constructEndpointUrl()

@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
 public class DeleteRelationRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
+    private VID relationAddress;
 
     public String getClientName()
     {
@@ -62,5 +65,15 @@ public class DeleteRelationRequest
     public void setDocumentId(long aDocumentId)
     {
         documentId = aDocumentId;
+    }
+
+    public VID getRelationAddress()
+    {
+        return relationAddress;
+    }
+
+    public void setRelationAddress(VID aRelationAddress)
+    {
+        relationAddress = aRelationAddress;
     }
 }

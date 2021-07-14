@@ -19,16 +19,20 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.experimental.api.model.Relation;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 
 public class NewViewportResponse
 {
     private Character[] viewportText;
-    private List<Span> spanAnnotations;
+    private List<Span> spans;
+    private List<Relation> relations;
 
-    public NewViewportResponse()
+    public NewViewportResponse(Character[] aViewportText, List<Span> aSpans, List<Relation> aRelations)
     {
-
+        viewportText = aViewportText;
+        spans = aSpans;
+        relations = aRelations;
     }
 
     public Character[] getViewportText() {
@@ -39,13 +43,13 @@ public class NewViewportResponse
         this.viewportText = aViewportText;
     }
 
-    public List<Span> getSpanAnnotations()
+    public List<Span> getSpans()
     {
-        return spanAnnotations;
+        return spans;
     }
 
-    public void setSpanAnnotations(List<Span> aSpanAnnotations)
+    public void setSpans(List<Span> aSpans)
     {
-        spanAnnotations = aSpanAnnotations;
+        spans = aSpans;
     }
 }

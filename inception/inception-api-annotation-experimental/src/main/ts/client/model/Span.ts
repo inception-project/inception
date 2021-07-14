@@ -24,7 +24,6 @@ export class Span
     end: number;
     type: string;
     feature: string;
-    color: string;
 
     constructor(aId: number, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeature: string, aColor: string)
     {

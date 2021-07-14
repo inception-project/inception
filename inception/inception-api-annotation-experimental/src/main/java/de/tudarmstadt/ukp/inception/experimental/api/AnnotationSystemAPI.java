@@ -19,12 +19,8 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.CreateAnnotationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DeleteAnnotationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.SelectAnnotationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.UpdateAnnotationRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
 
 public interface AnnotationSystemAPI
 {
@@ -32,17 +28,39 @@ public interface AnnotationSystemAPI
 
     void handleNewViewport(NewViewportRequest aNewViewportRequest) throws IOException;
 
-    void handleSelectAnnotation(SelectAnnotationRequest aSelectAnnotationRequest)
+    void handleSelectSpan(SelectSpanRequest aSelectSpanRequest)
         throws IOException;
 
-    void handleUpdateAnnotation(UpdateAnnotationRequest aUpdateAnnotationRequest)
+    void handleUpdateSpan(UpdateSpanRequest aUpdateSpanRequest)
         throws IOException;
 
-    void handleCreateAnnotation(CreateAnnotationRequest aCreateAnnotationRequest)
+    void handleCreateSpan(CreateSpanRequest aCreateSpanRequest)
         throws IOException;
 
-    void handleDeleteAnnotation(DeleteAnnotationRequest aDeleteAnnotationRequest) throws IOException;
+    void handleDeleteSpan(DeleteSpanRequest aDeleteSpanRequest) throws IOException;
+
+    void handleSelectRelation(SelectSpanRequest aSelectSpanRequest)
+        throws IOException;
+
+    void handleUpdateRelation(UpdateSpanRequest aUpdateSpanRequest)
+        throws IOException;
+
+    void handleCreateRelation(CreateSpanRequest aCreateSpanRequest)
+        throws IOException;
+
+    void handleDeleteRelation(DeleteSpanRequest aDeleteSpanRequest) throws IOException;
+
+    void handleSaveWordAlignment(SaveWordAlignmentRequest aSaveWordAlignmentRequest);
 
     void createErrorMessage(String aMessage, String aUser) throws IOException;
 
+    void onSpanUpdatedEventHandler(FeatureValueUpdatedEvent aEvent);
+
+    void onSpanCreatedEventHandler(SpanCreatedEvent aEvent) throws IOException;
+
+    void onSpanDeletedEventHandler(SpanDeletedEvent aEvent) throws IOException;
+
+    void onRelationCreatedEventHandler(RelationCreatedEvent aEvent);
+
+    void onRelationDeletedEventHandler(RelationDeletedEvent aEvent);
 }

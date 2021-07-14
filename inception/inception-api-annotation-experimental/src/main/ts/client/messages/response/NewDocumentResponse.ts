@@ -21,5 +21,5 @@ export class NewDocumentResponse
 {
     documentId : number;
     viewportText : string[];
-    spanAnnotations : Span[];
+    spans : Span[];
 }

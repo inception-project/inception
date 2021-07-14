@@ -17,22 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.lang.Math.toIntExact;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.*;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.inception.experimental.api.model.Relation;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -40,27 +45,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.*;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.CreateAnnotationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DeleteAnnotationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.SelectAnnotationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.UpdateAnnotationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.CreateAnnotationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DeleteAnnotationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.SelectAnnotationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateAnnotationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.util.Offsets;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
@@ -77,14 +74,15 @@ public class AnnotationSystemAPIImpl
     private final RepositoryProperties repositoryProperties;
     private final AnnotationProcessAPI annotationProcessAPI;
     private final AnnotationSystemAPIService annotationSystemAPIService;
-
-    private List<String> annotationLayerList;
+    private final ColoringService coloringService;
+    private final UserPreferencesService userPreferencesService;
 
     public AnnotationSystemAPIImpl(ProjectService aProjectService, DocumentService aDocumentService,
             UserDao aUserDao, RepositoryProperties aRepositoryProperties,
             AnnotationProcessAPI aAnnotationProcessAPI,
             AnnotationSchemaService aAnnotationSchemaService,
-            AnnotationSystemAPIService aAnnotationSystemAPIService)
+            AnnotationSystemAPIService aAnnotationSystemAPIService,
+            ColoringService aColoringService, UserPreferencesService aUserPreferencesService)
     {
         projectService = aProjectService;
         documentService = aDocumentService;
@@ -93,6 +91,8 @@ public class AnnotationSystemAPIImpl
         annotationProcessAPI = aAnnotationProcessAPI;
         annotationService = aAnnotationSchemaService;
         annotationSystemAPIService = aAnnotationSystemAPIService;
+        coloringService = aColoringService;
+        userPreferencesService = aUserPreferencesService;
     }
 
     @Override
@@ -113,8 +113,11 @@ public class AnnotationSystemAPIImpl
             message.setViewportText(getViewportText(cas, aNewDocumentRequest.getViewportType(),
                     aNewDocumentRequest.getViewport()));
 
-            message.setSpanAnnotations(
-                    filterAnnotations(getAnnotations(cas, aNewDocumentRequest.getProjectId()),
+            message.setSpans(filterSpans(getSpans(cas, aNewDocumentRequest.getProjectId()),
+                    aNewDocumentRequest.getViewport()));
+
+            message.setRelations(
+                    filterRelations(getRelations(cas, aNewDocumentRequest.getProjectId()),
                             aNewDocumentRequest.getViewport()));
 
             annotationProcessAPI.sendNewDocumentResponse(message,
@@ -133,47 +136,47 @@ public class AnnotationSystemAPIImpl
         CAS cas = getCasForDocument(aNewViewportRequest.getUserName(),
                 aNewViewportRequest.getProjectId(), aNewViewportRequest.getDocumentId());
 
-        NewViewportResponse message = new NewViewportResponse();
-
-        message.setViewportText(getViewportText(cas, aNewViewportRequest.getViewportType(),
-                aNewViewportRequest.getViewport()));
-
-        message.setSpanAnnotations(
-                filterAnnotations(getAnnotations(cas, aNewViewportRequest.getProjectId()),
+        NewViewportResponse message = new NewViewportResponse(
+                getViewportText(cas, aNewViewportRequest.getViewportType(),
+                        aNewViewportRequest.getViewport()),
+                filterSpans(getSpans(cas, aNewViewportRequest.getProjectId()),
+                        aNewViewportRequest.getViewport()),
+                filterRelations(getRelations(cas, aNewViewportRequest.getProjectId()),
                         aNewViewportRequest.getViewport()));
 
         annotationProcessAPI.sendNewViewportResponse(message, aNewViewportRequest.getClientName());
     }
 
     @Override
-    public void handleSelectAnnotation(SelectAnnotationRequest aSelectAnnotationRequest)
-        throws IOException
+    public void handleSelectSpan(SelectSpanRequest aSelectSpanRequest) throws IOException
     {
-        CAS cas = getCasForDocument(aSelectAnnotationRequest.getUserName(),
-                aSelectAnnotationRequest.getProjectId(), aSelectAnnotationRequest.getDocumentId());
+        CAS cas = getCasForDocument(aSelectSpanRequest.getUserName(),
+                aSelectSpanRequest.getProjectId(), aSelectSpanRequest.getDocumentId());
         AnnotationFS annotation = selectAnnotationByAddr(cas,
-                aSelectAnnotationRequest.getAnnotationAddress().getId());
-        SelectAnnotationResponse message = new SelectAnnotationResponse();
+                aSelectSpanRequest.getSpanAddress().getId());
+
+        // TODO retrieve correct feature
+        SelectSpanResponse message = new SelectSpanResponse(
+                VID.parse(String.valueOf(annotation.getAddress())),
+                annotation.getType().getShortName(), null);
+
         annotationProcessAPI.sendSelectAnnotationResponse(message,
-                aSelectAnnotationRequest.getClientName());
+                aSelectSpanRequest.getClientName());
     }
 
     @Override
-    public void handleUpdateAnnotation(UpdateAnnotationRequest aUpdateAnnotationRequest)
-        throws IOException
+    public void handleUpdateSpan(UpdateSpanRequest aUpdateSpanRequest) throws IOException
     {
         try {
-            CAS cas = getCasForDocument(aUpdateAnnotationRequest.getUserName(),
-                    aUpdateAnnotationRequest.getProjectId(),
-                    aUpdateAnnotationRequest.getDocumentId());
+            CAS cas = getCasForDocument(aUpdateSpanRequest.getUserName(),
+                    aUpdateSpanRequest.getProjectId(), aUpdateSpanRequest.getDocumentId());
 
             AnnotationFS annotation = selectAnnotationByAddr(cas,
-                    aUpdateAnnotationRequest.getAnnotationAddress().getId());
+                    aUpdateSpanRequest.getSpanAddress().getId());
 
             System.out.println("FEATURES for Type " + annotation.getType());
-            for (Feature f : getFeaturesForFeatureStructure(
-                    getFeatureStructure(cas, aUpdateAnnotationRequest.getProjectId(),
-                            aUpdateAnnotationRequest.getNewType().getShortName()))) {
+            for (Feature f : getFeaturesForFeatureStructure(getFeatureStructure(cas,
+                    aUpdateSpanRequest.getProjectId(), aUpdateSpanRequest.getNewFeature()))) {
                 System.out.println(f.getDomain());
                 System.out.println(f.getRange());
                 if (f.getRange().getShortName().equals("String")) {
@@ -181,15 +184,6 @@ public class AnnotationSystemAPIImpl
                 }
 
             }
-
-            UpdateAnnotationResponse message = new UpdateAnnotationResponse();
-            message.setAnnotationAddress(aUpdateAnnotationRequest.getAnnotationAddress());
-            message.setType(aUpdateAnnotationRequest.getNewType());
-
-            annotationProcessAPI.sendUpdateAnnotationResponse(message,
-                    String.valueOf(aUpdateAnnotationRequest.getProjectId()),
-                    String.valueOf(aUpdateAnnotationRequest.getDocumentId()),
-                    String.valueOf(annotation.getBegin()));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -198,97 +192,160 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleCreateAnnotation(CreateAnnotationRequest aCreateAnnotationRequest)
-        throws IOException
+    public void handleCreateSpan(CreateSpanRequest aCreateSpanRequest) throws IOException
     {
         try (CasStorageSession session = CasStorageSession.open()) {
 
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             SourceDocument sourceDocument = documentService.getSourceDocument(
-                    aCreateAnnotationRequest.getProjectId(),
-                    aCreateAnnotationRequest.getDocumentId());
+                    aCreateSpanRequest.getProjectId(), aCreateSpanRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aCreateAnnotationRequest.getUserName());
+                    aCreateSpanRequest.getUserName());
 
-            // TODO get LayerID
-            TypeAdapter adapter = null; // annotationService.getAdapter(annotationService.getLayer(getType(cas,
-                                        // aCreateAnnotationRequest.getNewType().getName()).get);
+            TypeAdapter adapter = annotationService.getAdapter(annotationService.findLayer(
+                    projectService.getProject(aCreateSpanRequest.getProjectId()),
+                    getType(cas, aCreateSpanRequest.getType()).getName()));
 
-            AnnotationFS newAnnotation = null;
-
-            // TODO more adapater instances
-            if (adapter instanceof SpanAdapter) {
-                newAnnotation = ((SpanAdapter) adapter).add(
-                        documentService.getSourceDocument(aCreateAnnotationRequest.getProjectId(),
-                                aCreateAnnotationRequest.getDocumentId()),
-                        aCreateAnnotationRequest.getUserName(), cas,
-                        aCreateAnnotationRequest.getBegin(), aCreateAnnotationRequest.getEnd());
-            }
-
-            CreateAnnotationResponse message = new CreateAnnotationResponse();
-            // TODO get VID from int
-            message.setAnnotationAddress(VID.parse(String.valueOf(newAnnotation.getAddress())));
-            annotationProcessAPI.sendCreateAnnotationResponse(message,
-                    String.valueOf(aCreateAnnotationRequest.getDocumentId()),
-                    String.valueOf(aCreateAnnotationRequest.getDocumentId()),
-                    String.valueOf(newAnnotation.getBegin()));
+            ((SpanAdapter) adapter).add(
+                    documentService.getSourceDocument(aCreateSpanRequest.getProjectId(),
+                            aCreateSpanRequest.getDocumentId()),
+                    aCreateSpanRequest.getUserName(), cas, aCreateSpanRequest.getBegin(),
+                    aCreateSpanRequest.getEnd());
         }
         catch (Exception e) {
             e.printStackTrace();
-            createErrorMessage(e.getMessage(), aCreateAnnotationRequest.getClientName());
+            createErrorMessage(e.getMessage(), aCreateSpanRequest.getClientName());
         }
 
     }
 
     @Override
-    public void handleDeleteAnnotation(DeleteAnnotationRequest aDeleteAnnotationRequest)
-        throws IOException
+    public void handleDeleteSpan(DeleteSpanRequest aDeleteSpanRequest) throws IOException
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             SourceDocument sourceDocument = documentService.getSourceDocument(
-                    aDeleteAnnotationRequest.getProjectId(),
-                    aDeleteAnnotationRequest.getDocumentId());
+                    aDeleteSpanRequest.getProjectId(), aDeleteSpanRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aDeleteAnnotationRequest.getUserName());
+                    aDeleteSpanRequest.getUserName());
 
             AnnotationFS annotation = selectAnnotationByAddr(cas,
-                    aDeleteAnnotationRequest.getAnnotationAddress().getId());
+                    aDeleteSpanRequest.getSpanAddress().getId());
 
-            // TODO get LayerID
-            TypeAdapter adapter = null; // annotationService.getAdapter(annotationService.getLayer(getType(cas,
-                                        // aCreateAnnotationRequest.getNewType().getName()).get);
-
-            DeleteAnnotationResponse message = new DeleteAnnotationResponse();
-            message.setAnnotationAddress(aDeleteAnnotationRequest.getAnnotationAddress());
+            TypeAdapter adapter = annotationService.getAdapter(annotationService.findLayer(
+                    projectService.getProject(aDeleteSpanRequest.getProjectId()),
+                    getType(cas, annotation.getType().getName()).getName()));
 
             adapter.delete(
-                    documentService.getSourceDocument(aDeleteAnnotationRequest.getProjectId(),
-                            aDeleteAnnotationRequest.getDocumentId()),
-                    aDeleteAnnotationRequest.getUserName(), cas,
-                    VID.parse(String.valueOf(aDeleteAnnotationRequest.getAnnotationAddress())));
-
-            annotationProcessAPI.sendDeleteAnnotationResponse(message,
-                    String.valueOf(aDeleteAnnotationRequest.getProjectId()),
-                    String.valueOf(aDeleteAnnotationRequest.getDocumentId()),
-                    String.valueOf(annotation.getBegin()));
-
+                    documentService.getSourceDocument(aDeleteSpanRequest.getProjectId(),
+                            aDeleteSpanRequest.getDocumentId()),
+                    aDeleteSpanRequest.getUserName(), cas,
+                    VID.parse(String.valueOf(aDeleteSpanRequest.getSpanAddress())));
         }
         catch (Exception e) {
             e.printStackTrace();
-            createErrorMessage(e.getMessage(), aDeleteAnnotationRequest.getClientName());
+            createErrorMessage(e.getMessage(), aDeleteSpanRequest.getClientName());
         }
     }
 
+    @Override
+    public void handleSelectRelation(SelectSpanRequest aSelectSpanRequest) throws IOException
+    {
+
+    }
+
+    @Override
+    public void handleUpdateRelation(UpdateSpanRequest aUpdateSpanRequest) throws IOException
+    {
+
+    }
+
+    @Override
+    public void handleCreateRelation(CreateSpanRequest aCreateSpanRequest) throws IOException
+    {
+        // newRelation = ((RelationAdapter) adapter).add()
+    }
+
+    @Override
+    public void handleDeleteRelation(DeleteSpanRequest aDeleteSpanRequest) throws IOException
+    {
+
+    }
+
+    @Override
+    public void handleSaveWordAlignment(SaveWordAlignmentRequest aSaveWordAlignmentRequest)
+    {
+        System.out.println("Backend handles now save_word_alignment");
+        System.out.println("DATA: ");
+        System.out.println(aSaveWordAlignmentRequest.getClientName());
+        System.out.println(aSaveWordAlignmentRequest.getUserName());
+        System.out.println(aSaveWordAlignmentRequest.getProjectId());
+        System.out.println(aSaveWordAlignmentRequest.getSentence());
+        System.out.println(aSaveWordAlignmentRequest.getAlignments());
+    }
+
+    @Override
+    public void onSpanUpdatedEventHandler(FeatureValueUpdatedEvent aEvent)
+    {
+        // TODO Check What event that really is, and retrieve color
+        /*
+         * UpdateSpanResponse response = new UpdateSpanResponse(
+         * VID.parse(String.valueOf(aEvent.getFS().getAddress())), aEvent.getNewValue().toString(),
+         * "#888888");
+         * annotationProcessAPI.sendUpdateAnnotationResponse(response,aEvent.getProject().getId(),
+         * aEvent.getDocument().getId(), aEvent.get);
+         *
+         */
+
+    }
+
+    @EventListener
+    @Override
+    public void onSpanCreatedEventHandler(SpanCreatedEvent aEvent) throws IOException
+    {
+        // TODO Coloring service
+        CreateSpanResponse response = new CreateSpanResponse(
+                VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())),
+                aEvent.getAnnotation().getCoveredText(), aEvent.getAnnotation().getBegin(),
+                aEvent.getAnnotation().getEnd(), aEvent.getAnnotation().getType().getShortName(),
+                "#79313E");
+        annotationProcessAPI.sendCreateAnnotationResponse(response,
+                String.valueOf(aEvent.getProject().getId()),
+                String.valueOf(aEvent.getDocument().getId()),
+                String.valueOf(aEvent.getAnnotation().getBegin()));
+    }
+
+    @Override
+    public void onSpanDeletedEventHandler(SpanDeletedEvent aEvent) throws IOException
+    {
+        DeleteSpanResponse response = new DeleteSpanResponse(
+                VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())));
+        annotationProcessAPI.sendDeleteAnnotationResponse(response,
+                String.valueOf(aEvent.getProject().getId()),
+                String.valueOf(aEvent.getDocument().getId()),
+                String.valueOf(aEvent.getAnnotation().getBegin()));
+
+    }
+
+    @Override
+    public void onRelationCreatedEventHandler(RelationCreatedEvent aEvent)
+    {
+
+    }
+
+    @Override
+    public void onRelationDeletedEventHandler(RelationDeletedEvent aEvent)
+    {
+
+    }
 
     @Override
     public void createErrorMessage(String aMessage, String aUser) throws IOException
     {
         annotationProcessAPI.sendErrorMessage(new ErrorMessage(aMessage), aUser);
     }
-
 
     // ---------- Private support methods ---------- //
 
@@ -297,10 +354,7 @@ public class AnnotationSystemAPIImpl
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             SourceDocument sourceDocument = documentService.getSourceDocument(aProject, aDocument);
-
-            CAS cas = documentService.readAnnotationCas(sourceDocument, aUser);
-
-            return cas;
+            return documentService.readAnnotationCas(sourceDocument, aUser);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -369,7 +423,7 @@ public class AnnotationSystemAPIImpl
         return null;
     }
 
-    public List<Span> getAnnotations(CAS aCas, long aProject)
+    public List<Span> getSpans(CAS aCas, long aProject)
     {
         List<AnnotationLayer> metadataLayers = annotationService
                 .listAnnotationLayer(projectService.getProject(aProject));
@@ -384,20 +438,19 @@ public class AnnotationSystemAPIImpl
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
             for (FeatureStructure fs : selectFS(aCas, adapter.getAnnotationType(aCas))) {
-
                 AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
                         WebAnnoCasUtil.getAddr(fs));
 
                 annotations.add(new Span(annotation._id(), annotation.getBegin(),
-                        annotation.getEnd(), annotation.getType().getShortName()));
+                        annotation.getEnd(), annotation.getType().getShortName(), "#A32A9E",
+                        annotation.getCoveredText(), null));
             }
         }
 
         return annotations;
     }
 
-
-    public List<Span> filterAnnotations(List<Span> aAnnotations, int[][] aViewport)
+    public List<Span> filterSpans(List<Span> aAnnotations, int[][] aViewport)
     {
         List<Span> filteredAnnotations = new ArrayList<>();
         for (Span annotation : aAnnotations) {
@@ -413,9 +466,71 @@ public class AnnotationSystemAPIImpl
         return filteredAnnotations;
     }
 
-    public void getRelations(CAS aCas, long aProject)
+    public String getColorForSpan(Span aAnnotation, Project aProject, String aUser, CAS aCas)
+        throws IOException
     {
+        System.out.println("GET COLOR");
+        // TODO COLORING
+        /*
+        TypeAdapter adapter = annotationService
+                .getAdapter(annotationService.findLayer(projectService.getProject(aProject.getId()),
+                        getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS")
+                                .getName()));
 
+        System.out.println(adapter.getLayer().getName());
+        ColoringRules coloringRules = adapter.getTraits(ColoringRulesTrait.class)
+                .map(ColoringRulesTrait::getColoringRules).orElse(null);
+
+        System.out.println(coloringRules);
+        for (ColoringRule r : coloringRules.getRules()) {
+            System.out.println(r.getPattern());
+            System.out.println(r.getColor());
+        }
+        System.out.println(adapter.getLayer().getTraits());
+        System.out.println("...............");
+        System.out.println(coloringRules.findColor("POS"));
+        System.out.println(
+                coloringRules.findColor("de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS"));
+        System.out.println(coloringRules.findColor(adapter.getLayer().getTraits()));
+        System.out.println(coloringRules.findColor(adapter.getLayer().getType()));
+        System.out.println(coloringRules
+                .findColor(getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS")
+                        .getName()));
+        System.out.println(coloringRules
+                .findColor(getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS")
+                        .getShortName()));
+
+        Map<String[], Queue<String>> colorQueues = new HashMap<>();
+        ColoringStrategy coloringStrategy = coloringService.getStrategy(adapter.getLayer(),
+                userPreferencesService.loadPreferences(aProject, aUser, Mode.ANNOTATION),
+                colorQueues);
+        System.out.println(coloringStrategy);
+        VDocument vdoc = new VDocument();
+        System.out.println(vdoc);
+        System.out.println(vdoc.spans());
+        String color = null;
+        for (VSpan vspan : vdoc.spans()) {
+            System.out.println(vspan);
+
+            String labelText = getUiLabelText(adapter, vspan);
+            System.out.println(labelText);
+            color = coloringStrategy.getColor(vspan, labelText, coloringRules);
+            System.out.println(color);
+        }
+
+         */
+
+        return null;
+    }
+
+    public List<Relation> getRelations(CAS aCas, long aProject)
+    {
+        return null;
+    }
+
+    public List<Relation> filterRelations(List<Relation> relations, int[][] aViewport)
+    {
+        return null;
     }
 
     public void getRecommendations(CAS aCas, long aProject)
@@ -447,18 +562,5 @@ public class AnnotationSystemAPIImpl
     public List<Feature> getFeaturesForFeatureStructure(FeatureStructure aFeatureStructure)
     {
         return aFeatureStructure.getType().getFeatures();
-    }
-
-    public Type getType(CAS aCas, String aAnnotationType)
-    {
-        for (Iterator<Feature> it = aCas.getTypeSystem().getFeatures(); it.hasNext();) {
-
-            Feature s = it.next();
-            if (s.getDomain().getShortName().equals(aAnnotationType)) {
-                return s.getDomain();
-
-            }
-        }
-        return null;
     }
 }

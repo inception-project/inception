@@ -21,6 +21,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import javax.servlet.ServletContext;
 
+import de.tudarmstadt.ukp.inception.experimental.api.resources.ExperimentalAnnotationAPIReference;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -33,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIEditorReference;
+import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIBasicEditorReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
 public class ExperimentalAdvancedEditor
@@ -55,7 +56,8 @@ public class ExperimentalAdvancedEditor
         super.renderHead(aResponse);
         aResponse.render(JavaScriptHeaderItem
             .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
-        aResponse.render(forReference(ExperimentalAPIEditorReference.get()));
+        aResponse.render(forReference(ExperimentalAnnotationAPIReference.get()));
+        aResponse.render(forReference(ExperimentalAPIBasicEditorReference.get()));
     }
 
     private String constructEndpointUrl()

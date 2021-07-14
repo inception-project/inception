@@ -62,5 +62,9 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-api-annotation-experimental</artifactId>
+        </dependency>
     </dependencies>
 </project>

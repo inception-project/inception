@@ -35,4 +35,10 @@ public class ExperimentalAnnotationEditorAutoConfiguration
     {
         return new ExperimentalAnnotationAdvancedEditorFactory();
     }
+
+    @Bean
+    public ExperimentalAnnotationWordAlignmentEditorFactory experimentalAnnotationWordAlignmentEditorFactory()
+    {
+        return new ExperimentalAnnotationWordAlignmentEditorFactory();
+    }
 }
