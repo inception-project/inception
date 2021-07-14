@@ -51,6 +51,7 @@ import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,14 +64,17 @@ import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -82,6 +86,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,6 +107,7 @@ import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
+import de.tudarmstadt.ukp.inception.search.StatisticRequest;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -394,6 +400,100 @@ public class MtasDocumentIndex
         throws ExecutionException, IOException
     {
         return _executeQuery(this::doCountResults, aRequest);
+    }
+
+    @Override
+    public long fetchStatistic(StatisticRequest aStatisticRequest)
+        throws ExecutionException, IOException
+    {
+        if (aStatisticRequest.getStatistic() == "NumTokens") {
+            long docNumberLong = aStatisticRequest.getLimitedToDocument().get().getId();
+            System.out.println(aStatisticRequest.getLimitedToDocument().get().getName());
+            int docNumber = (int) docNumberLong - 1;
+            IndexSearcher searcher = null;
+            try {
+                searcher = getSearcherManager().acquire();
+                /*
+                 * Document document = searcher.doc(docNumber);
+                 * 
+                 * System.out.println(document.getValues(FIELD_CONTENT)); CollectionStatistics
+                 * statistics = searcher.collectionStatistics(FIELD_CONTENT);
+                 * 
+                 * System.out.println("docCount= " + statistics.docCount());
+                 * System.out.println("field name= " + statistics.field());
+                 * System.out.println("maxDoc= " + statistics.maxDoc());
+                 * System.out.println("sumtotaltermfreq= " + statistics.sumTotalTermFreq());
+                 */
+                IndexReader reader = searcher.getIndexReader();
+
+                Document doc = reader.document(docNumber);
+                System.out.println("Processing file: " + doc.get("id"));
+
+                Terms termVector = reader.getTermVector(docNumber, FIELD_CONTENT);
+                TermsEnum itr = termVector.iterator();
+                BytesRef term = null;
+
+                long noOfSents = 0;
+                long noOfTokens = 0;
+                long noOfPunctMarks = 0;
+
+                // Array of prefixes
+                String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
+
+                while ((term = itr.next()) != null) {
+                    String termText = term.utf8ToString();
+                    Term termInstance = new Term(FIELD_CONTENT, term);
+                    long termFreq = reader.totalTermFreq(termInstance);
+                    long docCount = reader.docFreq(termInstance);
+
+                    System.out.println("term: " + termText + ", termFreq = " + termFreq
+                            + ", docCount = " + docCount);
+                    if (termText.startsWith("s")) {
+                        noOfSents = noOfSents + reader.totalTermFreq(termInstance);
+                    }
+                    else if (termText.startsWith("T")) {
+                        if (Stream.of(punctuationMarks).anyMatch(termText::endsWith) && termText
+                                .toCharArray()[termText.toCharArray().length - 3] == 'n') {
+                            noOfPunctMarks = noOfPunctMarks + reader.totalTermFreq(termInstance);
+                        }
+                        else {
+                            noOfTokens = noOfTokens + reader.totalTermFreq(termInstance);
+                        }
+                    }
+                    else {
+                        throw new ExecutionException(
+                                "Found instance which is neither sentence nor token!");
+                    }
+                }
+                System.out.println("# of sentences: " + noOfSents);
+                System.out.println("# of punctuation marks: " + noOfPunctMarks);
+
+                return noOfTokens;
+                /*
+                 * IndexReader reader = searcher.getIndexReader(); Document doc =
+                 * reader.document(docNumber);
+                 * System.out.println("Processing file: "+doc.get("id"));
+                 * System.out.println(reader.getSumDocFreq(FIELD_CONTENT));
+                 * System.out.println(reader.getSumTotalTermFreq(FIELD_CONTENT));
+                 * 
+                 */
+            }
+            catch (Exception e) {
+                throw new ExecutionException(
+                        "Unable to fetch statistic [" + aStatisticRequest.getStatistic() + "]", e);
+            }
+            finally {
+                if (searcher != null) {
+                    // Releasing and setting to null per recommendation in JavaDoc of
+                    // release(searcher)
+                    // method
+                    getSearcherManager().release(searcher);
+                    searcher = null;
+                }
+            }
+
+        }
+        return 1L;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
@@ -909,7 +1009,15 @@ public class MtasDocumentIndex
         doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
         doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
         doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
-        doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
+        FieldType fieldTypeForContent = new FieldType();
+        // fieldTypeForContent.setIndexed(true);
+        fieldTypeForContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+        fieldTypeForContent.setStored(false);
+        fieldTypeForContent.setStoreTermVectors(true);
+        fieldTypeForContent.setStoreTermVectorPositions(true);
+        fieldTypeForContent.setTokenized(true);
+        fieldTypeForContent.freeze();
+        doc.add(new Field(FIELD_CONTENT, encodedCAS, fieldTypeForContent));
 
         // Add document to the Lucene index
         indexWriter.addDocument(doc);
