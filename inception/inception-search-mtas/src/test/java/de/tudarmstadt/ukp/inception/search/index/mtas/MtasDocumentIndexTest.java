@@ -462,20 +462,29 @@ public class MtasDocumentIndexTest
         User user = userRepository.get("admin");
 
         SourceDocument sourceDocument = new SourceDocument();
-
         sourceDocument.setName("Annotation document");
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        // String sourceContent = "Hello World x";
+        String sourceContent = "The capital of Galicia is Santiago de Compostela. Actually, its history is fascinating.";
+        // annotateDocument(project, user, sourceDocument);
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
-        annotateDocument(project, user, sourceDocument);
+        uploadDocument(Pair.of(sourceDocument, sourceContent));
+
+        SourceDocument otherDocument = new SourceDocument();
+        otherDocument.setName("Other document");
+        otherDocument.setProject(project);
+        otherDocument.setFormat("text");
+
+        String otherContent = "Goodbye moon y";
+
+        uploadDocument(Pair.of(otherDocument, otherContent));
 
         String statistic = "NumTokens";
 
-        System.out.println("number of tokkens =" + searchService.getTokenPerDocumentStatistics(user, project, statistic,
-                sourceDocument, null, null, 0, 0));
+        System.out.println("number of tokkens ="
+                + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
 
         assertThat(0).isEqualTo(0);
         /*

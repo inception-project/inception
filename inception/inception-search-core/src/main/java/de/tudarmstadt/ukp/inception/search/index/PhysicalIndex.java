@@ -54,7 +54,7 @@ public interface PhysicalIndex
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
 
-    long fetchStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
+    long fetchStatistic(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 

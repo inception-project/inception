@@ -36,9 +36,6 @@ public class StatisticRequest
     private final AnnotationLayer annotationLayer;
     private final AnnotationFeature annotationFeature;
 
-    private final long offset;
-    private final long count;
-
     public StatisticRequest(Project aProject, User aUser, String aStatistic)
     {
         this(aProject, aUser, aStatistic, null);
@@ -47,12 +44,12 @@ public class StatisticRequest
     public StatisticRequest(Project aProject, User aUser, String aStatistic,
             SourceDocument aLimitedToDocument)
     {
-        this(aProject, aUser, aStatistic, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE);
+        this(aProject, aUser, aStatistic, aLimitedToDocument, null, null);
     }
 
     public StatisticRequest(Project aProject, User aUser, String aStatistic,
             SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
+            AnnotationFeature aAnnotationFeature)
     {
         super();
         project = aProject;
@@ -61,8 +58,6 @@ public class StatisticRequest
         limitedToDocument = aLimitedToDocument;
         annotationLayer = aAnnotationLayer;
         annotationFeature = aAnnotationFeature;
-        offset = aOffset;
-        count = aCount;
     }
 
     public Project getProject()
@@ -95,13 +90,4 @@ public class StatisticRequest
         return annotationFeature;
     }
 
-    public long getOffset()
-    {
-        return offset;
-    }
-
-    public long getCount()
-    {
-        return count;
-    }
 }

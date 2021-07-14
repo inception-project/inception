@@ -106,9 +106,9 @@ public interface SearchService
             AnnotationFeature aAnnotationFeature)
         throws ExecutionException, IOException;
 
-    public long getTokenPerDocumentStatistics(User aUser, Project aProject, String aStatistic,
+    public long getStatistic(User aUser, Project aProject, String aStatistic,
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, long offset, long count)
+            AnnotationFeature aAnnotationFeature)
         throws IOException, ExecutionException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);

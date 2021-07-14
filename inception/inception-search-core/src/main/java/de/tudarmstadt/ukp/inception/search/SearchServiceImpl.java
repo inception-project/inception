@@ -527,9 +527,9 @@ public class SearchServiceImpl
     }
 
     @Transactional
-    public long getTokenPerDocumentStatistics(User aUser, Project aProject, String aStatistic,
+    public long getStatistic(User aUser, Project aProject, String aStatistic,
                                                  SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-                                                 AnnotationFeature aAnnotationFeature, long offset, long count)
+                                                 AnnotationFeature aAnnotationFeature)
         throws IOException, ExecutionException
     {
         log.trace("Statistics [{}] for user [{}] in project [{}]({})", aStatistic, aUser.getUsername(),
@@ -540,8 +540,8 @@ public class SearchServiceImpl
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
-            return index.getPhysicalIndex().fetchStatistics(new StatisticRequest(aProject, aUser, aStatistic,
-                 aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
+            return index.getPhysicalIndex().fetchStatistic(new StatisticRequest(aProject, aUser, aStatistic,
+                 aDocument, aAnnotationLayer, aAnnotationFeature));
         }
     }
 
