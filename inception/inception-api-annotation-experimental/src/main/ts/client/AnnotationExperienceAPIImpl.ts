@@ -217,6 +217,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.documentID = aMessage.documentId;
         this.text = aMessage.viewportText;
         this.spans = aMessage.spans;
+        this.relations = aMessage.relations;
 
         this.multipleSubscriptions()
     }
@@ -228,10 +229,9 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
         this.text = aMessage.viewportText;
         this.spans = aMessage.spans;
+        this.relations = aMessage.relations;
 
-        this.multipleSubscriptions()
-
-
+        this.multipleSubscriptions();
     }
 
     onSpanDelete(aMessage: DeleteSpanResponse) {

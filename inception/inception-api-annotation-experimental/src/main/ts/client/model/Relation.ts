@@ -17,5 +17,21 @@
  */
 export class Relation
 {
+    relationId : number;
+    vidGovernor : number;
+    vidDependent : number;
+    color : string;
+    dependencyType : string;
+    flavor : string;
+
+    constructor(aRelationId: number, aVidGovernor: number, aVidDependent: number, aColor: string, aDependencyType: string, aFlavor: string)
+    {
+        this.relationId = aRelationId;
+        this.vidGovernor = aVidGovernor;
+        this.vidDependent = aVidDependent;
+        this.color = aColor;
+        this.dependencyType = aDependencyType;
+        this.flavor = aFlavor;
+    }
 
 }

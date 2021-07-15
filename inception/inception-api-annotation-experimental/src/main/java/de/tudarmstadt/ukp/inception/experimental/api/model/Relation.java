@@ -22,18 +22,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public class Relation
 {
     private VID relationId;
-    private VID vidFirstSpan;
-    private VID vidRelatedSpan;
+    private VID vidGovernor;
+    private VID vidDependent;
     private String color;
-    private String label;
+    private String dependencyType;
+    private String flavor;
 
-    public Relation(VID aRelationId, VID aVidFirstSpan, VID aVidRelatedSpan, String aColor, String aLabel)
+    public Relation(VID aRelationId, VID aVidGovernor, VID aVidDependent, String aColor,
+            String aDependencyType, String aFlavor)
     {
         relationId = aRelationId;
-        vidFirstSpan = aVidFirstSpan;
-        vidRelatedSpan = aVidRelatedSpan;
+        vidGovernor = aVidGovernor;
+        vidDependent = aVidDependent;
         color = aColor;
-        label = aLabel;
+        dependencyType = aDependencyType;
+        flavor = aFlavor;
     }
 
     public VID getRelationId()
@@ -46,24 +49,24 @@ public class Relation
         relationId = aRelationId;
     }
 
-    public VID getVidFirstSpan()
+    public VID getVidGovernor()
     {
-        return vidFirstSpan;
+        return vidGovernor;
     }
 
-    public void setVidFirstSpan(VID aVidFirstSpan)
+    public void setVidGovernor(VID aVidGovernor)
     {
-        vidFirstSpan = aVidFirstSpan;
+        vidGovernor = aVidGovernor;
     }
 
-    public VID getVidRelatedSpan()
+    public VID getVidDependent()
     {
-        return vidRelatedSpan;
+        return vidDependent;
     }
 
-    public void setVidRelatedSpan(VID aVidRelatedSpan)
+    public void setVidDependent(VID aVidDependent)
     {
-        vidRelatedSpan = aVidRelatedSpan;
+        vidDependent = aVidDependent;
     }
 
     public String getColor()
@@ -76,13 +79,23 @@ public class Relation
         color = aColor;
     }
 
-    public String getLabel()
+    public String getDependencyType()
     {
-        return label;
+        return dependencyType;
     }
 
-    public void setLabel(String aLabel)
+    public void setDependencyType(String aDependencyType)
     {
-        label = aLabel;
+        dependencyType = aDependencyType;
+    }
+
+    public String getFlavor()
+    {
+        return flavor;
+    }
+
+    public void setFlavor(String aFlavor)
+    {
+        flavor = aFlavor;
     }
 }

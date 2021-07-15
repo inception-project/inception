@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 import {Span} from "../../model/Span";
+import {Relation} from "../../model/Relation";
 
 export class NewViewportResponse
 {
     viewportText : string[];
     spans : Span[];
+    relations: Relation[];
 }

@@ -52,4 +52,14 @@ public class NewViewportResponse
     {
         spans = aSpans;
     }
+
+    public List<Relation> getRelations()
+    {
+        return relations;
+    }
+
+    public void setRelations(List<Relation> aRelations)
+    {
+        relations = aRelations;
+    }
 }

@@ -17,20 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.lang.Math.toIntExact;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
+import static org.apache.uima.fit.util.CasUtil.*;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.*;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.inception.experimental.api.model.Relation;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -43,8 +37,10 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.*;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
@@ -58,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
+import de.tudarmstadt.ukp.inception.experimental.api.model.Relation;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.util.Offsets;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
@@ -116,10 +113,11 @@ public class AnnotationSystemAPIImpl
             message.setSpans(filterSpans(getSpans(cas, aNewDocumentRequest.getProjectId()),
                     aNewDocumentRequest.getViewport()));
 
-            message.setRelations(
-                    filterRelations(getRelations(cas, aNewDocumentRequest.getProjectId()),
-                            aNewDocumentRequest.getViewport()));
+            int[] min_max = getMinimumOffset(aNewDocumentRequest.getViewportType(), aNewDocumentRequest.getViewport(), cas);
+            System.out.println(min_max[0]);
+            System.out.println(min_max[1]);
 
+            message.setRelations(getRelations(cas, aNewDocumentRequest.getProjectId(), min_max[0], min_max[1]));
             annotationProcessAPI.sendNewDocumentResponse(message,
                     aNewDocumentRequest.getClientName());
         }
@@ -141,8 +139,9 @@ public class AnnotationSystemAPIImpl
                         aNewViewportRequest.getViewport()),
                 filterSpans(getSpans(cas, aNewViewportRequest.getProjectId()),
                         aNewViewportRequest.getViewport()),
-                filterRelations(getRelations(cas, aNewViewportRequest.getProjectId()),
-                        aNewViewportRequest.getViewport()));
+                null);
+
+        getRelations(cas, aNewViewportRequest.getProjectId(), 0, 30);
 
         annotationProcessAPI.sendNewViewportResponse(message, aNewViewportRequest.getClientName());
     }
@@ -472,65 +471,86 @@ public class AnnotationSystemAPIImpl
         System.out.println("GET COLOR");
         // TODO COLORING
         /*
-        TypeAdapter adapter = annotationService
-                .getAdapter(annotationService.findLayer(projectService.getProject(aProject.getId()),
-                        getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS")
-                                .getName()));
-
-        System.out.println(adapter.getLayer().getName());
-        ColoringRules coloringRules = adapter.getTraits(ColoringRulesTrait.class)
-                .map(ColoringRulesTrait::getColoringRules).orElse(null);
-
-        System.out.println(coloringRules);
-        for (ColoringRule r : coloringRules.getRules()) {
-            System.out.println(r.getPattern());
-            System.out.println(r.getColor());
-        }
-        System.out.println(adapter.getLayer().getTraits());
-        System.out.println("...............");
-        System.out.println(coloringRules.findColor("POS"));
-        System.out.println(
-                coloringRules.findColor("de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS"));
-        System.out.println(coloringRules.findColor(adapter.getLayer().getTraits()));
-        System.out.println(coloringRules.findColor(adapter.getLayer().getType()));
-        System.out.println(coloringRules
-                .findColor(getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS")
-                        .getName()));
-        System.out.println(coloringRules
-                .findColor(getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS")
-                        .getShortName()));
-
-        Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        ColoringStrategy coloringStrategy = coloringService.getStrategy(adapter.getLayer(),
-                userPreferencesService.loadPreferences(aProject, aUser, Mode.ANNOTATION),
-                colorQueues);
-        System.out.println(coloringStrategy);
-        VDocument vdoc = new VDocument();
-        System.out.println(vdoc);
-        System.out.println(vdoc.spans());
-        String color = null;
-        for (VSpan vspan : vdoc.spans()) {
-            System.out.println(vspan);
-
-            String labelText = getUiLabelText(adapter, vspan);
-            System.out.println(labelText);
-            color = coloringStrategy.getColor(vspan, labelText, coloringRules);
-            System.out.println(color);
-        }
-
+         * TypeAdapter adapter = annotationService
+         * .getAdapter(annotationService.findLayer(projectService.getProject(aProject.getId()),
+         * getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS") .getName()));
+         * 
+         * System.out.println(adapter.getLayer().getName()); ColoringRules coloringRules =
+         * adapter.getTraits(ColoringRulesTrait.class)
+         * .map(ColoringRulesTrait::getColoringRules).orElse(null);
+         * 
+         * System.out.println(coloringRules); for (ColoringRule r : coloringRules.getRules()) {
+         * System.out.println(r.getPattern()); System.out.println(r.getColor()); }
+         * System.out.println(adapter.getLayer().getTraits());
+         * System.out.println("...............");
+         * System.out.println(coloringRules.findColor("POS")); System.out.println(
+         * coloringRules.findColor("de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS"));
+         * System.out.println(coloringRules.findColor(adapter.getLayer().getTraits()));
+         * System.out.println(coloringRules.findColor(adapter.getLayer().getType()));
+         * System.out.println(coloringRules .findColor(getType(aCas,
+         * "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS") .getName()));
+         * System.out.println(coloringRules .findColor(getType(aCas,
+         * "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS") .getShortName()));
+         * 
+         * Map<String[], Queue<String>> colorQueues = new HashMap<>(); ColoringStrategy
+         * coloringStrategy = coloringService.getStrategy(adapter.getLayer(),
+         * userPreferencesService.loadPreferences(aProject, aUser, Mode.ANNOTATION), colorQueues);
+         * System.out.println(coloringStrategy); VDocument vdoc = new VDocument();
+         * System.out.println(vdoc); System.out.println(vdoc.spans()); String color = null; for
+         * (VSpan vspan : vdoc.spans()) { System.out.println(vspan);
+         * 
+         * String labelText = getUiLabelText(adapter, vspan); System.out.println(labelText); color =
+         * coloringStrategy.getColor(vspan, labelText, coloringRules); System.out.println(color); }
+         * 
          */
 
         return null;
     }
 
-    public List<Relation> getRelations(CAS aCas, long aProject)
+    public List<Relation> getRelations(CAS aCas, long aProject, int aViewportBegin,
+            int aViewportEnd)
     {
-        return null;
-    }
+        List<AnnotationLayer> metadataLayers = annotationService
+                .listAnnotationLayer(projectService.getProject(aProject));
 
-    public List<Relation> filterRelations(List<Relation> relations, int[][] aViewport)
-    {
-        return null;
+        List<Relation> relations = new ArrayList<>();
+
+        for (AnnotationLayer layer : metadataLayers) {
+            if (layer.getUiName().equals("Token")) {
+                continue;
+            }
+            TypeAdapter adapter = annotationService.getAdapter(layer);
+            for (AnnotationFS fs : selectCovered(aCas, adapter.getAnnotationType(aCas),
+                    aViewportBegin, aViewportEnd)) {
+
+                if (adapter instanceof RelationAdapter) {
+
+                    String attachedFeature = adapter.getAttachFeatureName();
+                    FeatureStructure governor = fs
+                            .getFeatureValue(fs.getType().getFeatureByBaseName(
+                                    ((RelationAdapter) adapter).getSourceFeatureName()));
+                    FeatureStructure dependent = fs
+                            .getFeatureValue(fs.getType().getFeatureByBaseName(
+                                    ((RelationAdapter) adapter).getTargetFeatureName()));
+
+                    String dependencyType = fs
+                            .getFeatureValueAsString(fs.getType().getFeatures().get(5));
+                    String flavor = fs.getFeatureValueAsString(fs.getType().getFeatures().get(6));
+
+                    // TODO color
+                    Relation relation = new Relation(VID.parse(String.valueOf(fs._id())),
+                            VID.parse(String.valueOf(governor.getFeatureValue(
+                                    governor.getType().getFeatureByBaseName(attachedFeature))._id())),
+                            VID.parse(String.valueOf(dependent.getFeatureValue(
+                                    dependent.getType().getFeatureByBaseName(attachedFeature))._id())),
+                            "#888888", dependencyType, flavor);
+
+                    relations.add(relation);
+                }
+            }
+        }
+
+        return relations;
     }
 
     public void getRecommendations(CAS aCas, long aProject)
@@ -562,5 +582,55 @@ public class AnnotationSystemAPIImpl
     public List<Feature> getFeaturesForFeatureStructure(FeatureStructure aFeatureStructure)
     {
         return aFeatureStructure.getType().getFeatures();
+    }
+
+    public int[] getMinimumOffset(String aOffsetType, int[][] aViewport, CAS aCas) {
+        int[] min_max = new int[2];
+
+        String text = aCas.getDocumentText();
+
+        for (int i = 0; i < aViewport.length; i++) {
+            if (min_max[0] > aViewport[i][0]) {
+                min_max[0] = aViewport[i][0];
+            }
+            if (min_max[1] < aViewport[i][1]) {
+                min_max[1] = aViewport[i][1];
+            }
+        }
+
+        switch (Offsets.valueOf(aOffsetType)) {
+            case CHAR:
+                break;
+            case WORD:
+                String[] words = text.split(" ");
+                int offsetWords = 0;
+
+                for (int i = 0; i < min_max[1]; i++) {
+                    if (i == min_max[0]) {
+                        min_max[0] = offsetWords;
+                    }
+                    offsetWords += words[i].length();
+                }
+                min_max[1] = offsetWords;
+                break;
+            case SENTENCE:
+                String[] sentences = text.split("\\.");
+                int offsetSentences = 0;
+
+                for (int i = 0; i < min_max[1]; i++) {
+                    if (i == min_max[0]) {
+                        min_max[0] = offsetSentences;
+                    }
+                    offsetSentences += sentences[i].length();
+                }
+                min_max[1] = offsetSentences;
+
+                break;
+            default:
+                System.err.println("Offset type not found");
+
+        }
+
+        return min_max;
     }
 }
