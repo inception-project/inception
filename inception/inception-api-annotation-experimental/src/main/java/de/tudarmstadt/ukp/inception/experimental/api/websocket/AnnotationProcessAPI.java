@@ -19,15 +19,16 @@ package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
 
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.UpdateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanResponse;
 import org.springframework.messaging.Message;
-
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.CreateSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DeleteSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.SelectSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateSpanResponse;
 
 public interface AnnotationProcessAPI
 {
@@ -43,26 +44,48 @@ public interface AnnotationProcessAPI
 
     void receiveSelectAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void sendSelectAnnotationResponse(SelectSpanResponse aSelectSpanResponse,
-                                      String aUser)
+    void receiveSelectRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendSelectAnnotationResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
+        throws IOException;
+
+    void sendSelectRelationResponse(SelectRelationResponse aSelectRelationResponse, String aUser)
         throws IOException;
 
     void receiveUpdateAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void sendUpdateAnnotationResponse(UpdateSpanResponse aUpdateSpanResponse,
-                                      String aProjectID, String aDocumentID, String aViewport)
+    void receiveUpdateRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendUpdateAnnotationResponse(UpdateSpanResponse aUpdateSpanResponse, String aProjectID,
+            String aDocumentID, String aViewport)
+        throws IOException;
+
+    void sendUpdateRelationResponse(UpdateRelationResponse aUpdateRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
 
     void receiveCreateAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void sendCreateAnnotationResponse(CreateSpanResponse aCreateSpanResponse,
-                                      String aProjectID, String aDocumentID, String aViewport)
+    void sendCreateAnnotationResponse(CreateSpanResponse aCreateSpanResponse, String aProjectID,
+            String aDocumentID, String aViewport)
+        throws IOException;
+
+    void receiveCreateRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendCreateRelationResponse(CreateRelationResponse aCreateRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
 
     void receiveDeleteAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void sendDeleteAnnotationResponse(DeleteSpanResponse aDeleteSpanResponse,
-                                      String aProjectID, String aDocumentID, String aViewport)
+    void sendDeleteAnnotationResponse(DeleteSpanResponse aDeleteSpanResponse, String aProjectID,
+            String aDocumentID, String aViewport)
+        throws IOException;
+
+    void receiveDeleteRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendDeleteRelationResponse(DeleteRelationResponse aDeleteRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
 
     void receiveSaveWordAlignmentRequest(Message<String> aMessage) throws IOException;

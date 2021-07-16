@@ -1,3 +1,6 @@
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.span;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 /*
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
@@ -15,14 +18,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
-
-public class CreateRelationRequest
+public class DeleteSpanRequest
 {
     private String clientName;
     private String userName;
-    private long projectId;
     private long documentId;
+    private long projectId;
+    private VID spanAddress;
 
     public String getClientName()
     {
@@ -62,5 +64,14 @@ public class CreateRelationRequest
     public void setDocumentId(long aDocumentId)
     {
         documentId = aDocumentId;
+    }
+
+    public VID getSpanAddress()
+    {
+        return spanAddress;
+    }
+
+    public void setSpanAddress(VID aSpanAddress) {
+        spanAddress = aSpanAddress;
     }
 }

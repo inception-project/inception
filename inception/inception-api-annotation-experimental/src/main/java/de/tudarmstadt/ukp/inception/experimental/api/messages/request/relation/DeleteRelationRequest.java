@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class SelectSpanRequest
+public class DeleteRelationRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
-    private VID spanAddress;
+    private VID relationAddress;
 
     public String getClientName()
     {
@@ -67,12 +67,13 @@ public class SelectSpanRequest
         documentId = aDocumentId;
     }
 
-    public VID getSpanAddress()
+    public VID getRelationAddress()
     {
-        return spanAddress;
+        return relationAddress;
     }
 
-    public void setSpanAddress(VID aSpanAddress) {
-        spanAddress = aSpanAddress;
+    public void setRelationAddress(VID aRelationAddress)
+    {
+        relationAddress = aRelationAddress;
     }
 }

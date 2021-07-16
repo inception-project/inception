@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.lang.Math.toIntExact;
 import static org.apache.uima.fit.util.CasUtil.*;
 
@@ -52,8 +53,26 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.SaveWordAlignmentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Relation;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.util.Offsets;
@@ -113,11 +132,11 @@ public class AnnotationSystemAPIImpl
             message.setSpans(filterSpans(getSpans(cas, aNewDocumentRequest.getProjectId()),
                     aNewDocumentRequest.getViewport()));
 
-            int[] min_max = getMinimumOffset(aNewDocumentRequest.getViewportType(), aNewDocumentRequest.getViewport(), cas);
-            System.out.println(min_max[0]);
-            System.out.println(min_max[1]);
+            int[] min_max = getMinimumOffset(aNewDocumentRequest.getViewportType(),
+                    aNewDocumentRequest.getViewport(), cas);
 
-            message.setRelations(getRelations(cas, aNewDocumentRequest.getProjectId(), min_max[0], min_max[1]));
+            message.setRelations(
+                    getRelations(cas, aNewDocumentRequest.getProjectId(), min_max[0], min_max[1]));
             annotationProcessAPI.sendNewDocumentResponse(message,
                     aNewDocumentRequest.getClientName());
         }
@@ -216,7 +235,6 @@ public class AnnotationSystemAPIImpl
             e.printStackTrace();
             createErrorMessage(e.getMessage(), aCreateSpanRequest.getClientName());
         }
-
     }
 
     @Override
@@ -250,27 +268,114 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleSelectRelation(SelectSpanRequest aSelectSpanRequest) throws IOException
+    public void handleSelectRelation(SelectRelationRequest aSelectRelationRequest)
+        throws IOException
     {
+        try (CasStorageSession session = CasStorageSession.open()) {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            SourceDocument sourceDocument = documentService.getSourceDocument(
+                    aSelectRelationRequest.getProjectId(), aSelectRelationRequest.getDocumentId());
 
+            CAS cas = documentService.readAnnotationCas(sourceDocument,
+                    aSelectRelationRequest.getUserName());
+
+            FeatureStructure relation = selectFsByAddr(cas,
+                    aSelectRelationRequest.getRelationAddress().getId());
+
+            // TODO retrieve covered texts
+            SelectRelationResponse message = new SelectRelationResponse(
+                    VID.parse(String.valueOf(relation._id())), "TEST", "TEST",
+                    relation.getFeatureValueAsString(relation.getType().getFeatures().get(5)),
+                    relation.getFeatureValueAsString(relation.getType().getFeatures().get(6)));
+
+            annotationProcessAPI.sendSelectRelationResponse(message,
+                    aSelectRelationRequest.getClientName());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            createErrorMessage(e.getMessage(), aSelectRelationRequest.getClientName());
+        }
     }
 
     @Override
-    public void handleUpdateRelation(UpdateSpanRequest aUpdateSpanRequest) throws IOException
+    public void handleUpdateRelation(UpdateRelationRequest aUpdateRelationRequest)
+        throws IOException
     {
-
+        try (CasStorageSession session = CasStorageSession.open()) {
+            // TODO
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            createErrorMessage(e.getMessage(), aUpdateRelationRequest.getClientName());
+        }
     }
 
     @Override
-    public void handleCreateRelation(CreateSpanRequest aCreateSpanRequest) throws IOException
+    public void handleCreateRelation(CreateRelationRequest aCreateRelationRequest)
+        throws IOException
     {
-        // newRelation = ((RelationAdapter) adapter).add()
+        try (CasStorageSession session = CasStorageSession.open()) {
+
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            SourceDocument sourceDocument = documentService.getSourceDocument(
+                    aCreateRelationRequest.getProjectId(), aCreateRelationRequest.getDocumentId());
+
+            CAS cas = documentService.readAnnotationCas(sourceDocument,
+                    aCreateRelationRequest.getUserName());
+
+            AnnotationFS governor = selectAnnotationByAddr(cas,
+                    aCreateRelationRequest.getGovernorId().getId());
+            AnnotationFS dependent = selectAnnotationByAddr(cas,
+                    aCreateRelationRequest.getDependentId().getId());
+
+            // TODO get correct type name
+            TypeAdapter adapter = annotationService.getAdapter(annotationService.findLayer(
+                    projectService.getProject(aCreateRelationRequest.getProjectId()),
+                    getType(cas,
+                            "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency")
+                                    .getName()));
+
+            ((RelationAdapter) adapter).add(
+                    documentService.getSourceDocument(aCreateRelationRequest.getProjectId(),
+                            aCreateRelationRequest.getDocumentId()),
+                    aCreateRelationRequest.getUserName(), governor, dependent, cas);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            createErrorMessage(e.getMessage(), aCreateRelationRequest.getClientName());
+        }
     }
 
     @Override
-    public void handleDeleteRelation(DeleteSpanRequest aDeleteSpanRequest) throws IOException
+    public void handleDeleteRelation(DeleteRelationRequest aDeleteRelationRequest)
+        throws IOException
     {
+        try (CasStorageSession session = CasStorageSession.open()) {
+            System.out.println("HANDLE DELETE NOW");
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            SourceDocument sourceDocument = documentService.getSourceDocument(
+                    aDeleteRelationRequest.getProjectId(), aDeleteRelationRequest.getDocumentId());
 
+            CAS cas = documentService.readAnnotationCas(sourceDocument,
+                    aDeleteRelationRequest.getUserName());
+
+            FeatureStructure relation = selectFsByAddr(cas,
+                    aDeleteRelationRequest.getRelationAddress().getId());
+
+            TypeAdapter adapter = annotationService.getAdapter(annotationService.findLayer(
+                    projectService.getProject(aDeleteRelationRequest.getProjectId()),
+                    getType(cas, relation.getType().getName()).getName()));
+
+            adapter.delete(
+                    documentService.getSourceDocument(aDeleteRelationRequest.getProjectId(),
+                            aDeleteRelationRequest.getDocumentId()),
+                    aDeleteRelationRequest.getUserName(), cas,
+                    VID.parse(String.valueOf(aDeleteRelationRequest.getRelationAddress())));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            createErrorMessage(e.getMessage(), aDeleteRelationRequest.getClientName());
+        }
     }
 
     @Override
@@ -286,8 +391,10 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void onSpanUpdatedEventHandler(FeatureValueUpdatedEvent aEvent)
+    public void onFeatureUpdatedEventHandler(FeatureValueUpdatedEvent aEvent)
     {
+        System.out.println("FEATURE UPDATED EVENT: ");
+        System.out.println(aEvent);
         // TODO Check What event that really is, and retrieve color
         /*
          * UpdateSpanResponse response = new UpdateSpanResponse(
@@ -300,10 +407,12 @@ public class AnnotationSystemAPIImpl
 
     }
 
-    @EventListener
     @Override
+    @EventListener
     public void onSpanCreatedEventHandler(SpanCreatedEvent aEvent) throws IOException
     {
+        System.out.println("SPAN CREATED EVENT:");
+        System.out.println(aEvent);
         // TODO Coloring service
         CreateSpanResponse response = new CreateSpanResponse(
                 VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())),
@@ -317,27 +426,48 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
+    @EventListener
     public void onSpanDeletedEventHandler(SpanDeletedEvent aEvent) throws IOException
     {
+        System.out.println("SPAN DELETED EVENT:");
+        System.out.println(aEvent);
         DeleteSpanResponse response = new DeleteSpanResponse(
                 VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())));
         annotationProcessAPI.sendDeleteAnnotationResponse(response,
                 String.valueOf(aEvent.getProject().getId()),
                 String.valueOf(aEvent.getDocument().getId()),
                 String.valueOf(aEvent.getAnnotation().getBegin()));
-
     }
 
     @Override
-    public void onRelationCreatedEventHandler(RelationCreatedEvent aEvent)
+    @EventListener
+    public void onRelationCreatedEventHandler(RelationCreatedEvent aEvent) throws IOException
     {
-
+        // TODO Coloring service
+        System.out.println("RELATION CREATED EVENT:");
+        System.out.println(aEvent);
+        CreateRelationResponse response = null; // new CreateRelationResponse();
+        annotationProcessAPI.sendCreateRelationResponse(response,
+                String.valueOf(aEvent.getProject().getId()),
+                String.valueOf(aEvent.getDocument().getId()),
+                String.valueOf(aEvent.getAnnotation().getBegin()));
     }
 
     @Override
-    public void onRelationDeletedEventHandler(RelationDeletedEvent aEvent)
+    @EventListener
+    public void onRelationDeletedEventHandler(RelationDeletedEvent aEvent) throws IOException
     {
-
+        System.out.println("RELATION DELETED EVENT:");
+        System.out.println(aEvent);
+        // TODO Get correct data from event
+        System.out.println("TODO _ ");
+        System.out.println(aEvent.getSource());
+        DeleteRelationResponse response = new DeleteRelationResponse(
+                VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())));
+        annotationProcessAPI.sendDeleteRelationResponse(response,
+                String.valueOf(aEvent.getProject().getId()),
+                String.valueOf(aEvent.getDocument().getId()),
+                String.valueOf(aEvent.getAnnotation().getBegin()));
     }
 
     @Override
@@ -520,10 +650,9 @@ public class AnnotationSystemAPIImpl
                 continue;
             }
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            for (AnnotationFS fs : selectCovered(aCas, adapter.getAnnotationType(aCas),
-                    aViewportBegin, aViewportEnd)) {
-
-                if (adapter instanceof RelationAdapter) {
+            if (adapter instanceof RelationAdapter) {
+                for (AnnotationFS fs : selectCovered(aCas, adapter.getAnnotationType(aCas),
+                        aViewportBegin, aViewportEnd)) {
 
                     String attachedFeature = adapter.getAttachFeatureName();
                     FeatureStructure governor = fs
@@ -537,13 +666,25 @@ public class AnnotationSystemAPIImpl
                             .getFeatureValueAsString(fs.getType().getFeatures().get(5));
                     String flavor = fs.getFeatureValueAsString(fs.getType().getFeatures().get(6));
 
+                    AnnotationFS governorAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                            WebAnnoCasUtil.getAddr(governor));
+                    AnnotationFS dependentAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                            WebAnnoCasUtil.getAddr(dependent));
+
                     // TODO color
                     Relation relation = new Relation(VID.parse(String.valueOf(fs._id())),
                             VID.parse(String.valueOf(governor.getFeatureValue(
-                                    governor.getType().getFeatureByBaseName(attachedFeature))._id())),
-                            VID.parse(String.valueOf(dependent.getFeatureValue(
-                                    dependent.getType().getFeatureByBaseName(attachedFeature))._id())),
-                            "#888888", dependencyType, flavor);
+                                    governor.getType().getFeatureByBaseName(attachedFeature))
+                                    ._id())),
+                            VID.parse(
+                                    String.valueOf(
+                                            dependent
+                                                    .getFeatureValue(dependent.getType()
+                                                            .getFeatureByBaseName(attachedFeature))
+                                                    ._id())),
+                            governorAnnotation.getCoveredText(),
+                            dependentAnnotation.getCoveredText(), "#888888", dependencyType,
+                            flavor);
 
                     relations.add(relation);
                 }
@@ -584,7 +725,8 @@ public class AnnotationSystemAPIImpl
         return aFeatureStructure.getType().getFeatures();
     }
 
-    public int[] getMinimumOffset(String aOffsetType, int[][] aViewport, CAS aCas) {
+    public int[] getMinimumOffset(String aOffsetType, int[][] aViewport, CAS aCas)
+    {
         int[] min_max = new int[2];
 
         String text = aCas.getDocumentText();
@@ -599,35 +741,35 @@ public class AnnotationSystemAPIImpl
         }
 
         switch (Offsets.valueOf(aOffsetType)) {
-            case CHAR:
-                break;
-            case WORD:
-                String[] words = text.split(" ");
-                int offsetWords = 0;
+        case CHAR:
+            break;
+        case WORD:
+            String[] words = text.split(" ");
+            int offsetWords = 0;
 
-                for (int i = 0; i < min_max[1]; i++) {
-                    if (i == min_max[0]) {
-                        min_max[0] = offsetWords;
-                    }
-                    offsetWords += words[i].length();
+            for (int i = 0; i < min_max[1]; i++) {
+                if (i == min_max[0]) {
+                    min_max[0] = offsetWords;
                 }
-                min_max[1] = offsetWords;
-                break;
-            case SENTENCE:
-                String[] sentences = text.split("\\.");
-                int offsetSentences = 0;
+                offsetWords += words[i].length();
+            }
+            min_max[1] = offsetWords;
+            break;
+        case SENTENCE:
+            String[] sentences = text.split("\\.");
+            int offsetSentences = 0;
 
-                for (int i = 0; i < min_max[1]; i++) {
-                    if (i == min_max[0]) {
-                        min_max[0] = offsetSentences;
-                    }
-                    offsetSentences += sentences[i].length();
+            for (int i = 0; i < min_max[1]; i++) {
+                if (i == min_max[0]) {
+                    min_max[0] = offsetSentences;
                 }
-                min_max[1] = offsetSentences;
+                offsetSentences += sentences[i].length();
+            }
+            min_max[1] = offsetSentences;
 
-                break;
-            default:
-                System.err.println("Offset type not found");
+            break;
+        default:
+            System.err.println("Offset type not found");
 
         }
 

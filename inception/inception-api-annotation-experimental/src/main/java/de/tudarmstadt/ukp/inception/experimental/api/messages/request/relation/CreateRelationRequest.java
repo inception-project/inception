@@ -15,19 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation;
 
-public class CreateSpanRequest
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
+public class CreateRelationRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
-
-    private int begin;
-    private int end;
-
-    private String type;
+    private VID governorId;
+    private VID dependentId;
+    private String dependencyType;
+    private String flavor;
 
     public String getClientName()
     {
@@ -69,34 +70,43 @@ public class CreateSpanRequest
         documentId = aDocumentId;
     }
 
-    public int getBegin()
+    public VID getGovernorId()
     {
-        return begin;
+        return governorId;
     }
 
-    public void setBegin(int aBegin)
+    public void setGovernorId(VID aGovernorId)
     {
-        begin = aBegin;
+        governorId = aGovernorId;
     }
 
-    public int getEnd()
+    public VID getDependentId()
     {
-        return end;
+        return dependentId;
     }
 
-    public void setEnd(int aEnd)
+    public void setDependentId(VID aDependentId)
     {
-        end = aEnd;
+        dependentId = aDependentId;
     }
 
-    public String getType()
+    public String getDependencyType()
     {
-        return type;
+        return dependencyType;
     }
 
-    public void setType(String aType)
+    public void setDependencyType(String aDependencyType)
     {
-        type = aType;
+        dependencyType = aDependencyType;
     }
 
+    public String getFlavor()
+    {
+        return flavor;
+    }
+
+    public void setFlavor(String aFlavor)
+    {
+        flavor = aFlavor;
+    }
 }

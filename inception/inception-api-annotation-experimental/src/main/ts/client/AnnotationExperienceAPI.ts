@@ -18,13 +18,13 @@
 import {NewDocumentResponse} from "./messages/response/NewDocumentResponse";
 import {NewViewportResponse} from "./messages/response/NewViewportResponse";
 import {ErrorMessage} from "./messages/response/ErrorMessage";
-import {SelectSpanResponse} from "./messages/response/SelectSpanResponse";
-import {UpdateSpanResponse} from "./messages/response/UpdateSpanResponse";
-import {CreateSpanResponse} from "./messages/response/CreateSpanResponse";
-import {DeleteSpanResponse} from "./messages/response/DeleteSpanResponse";
-import {SelectRelationResponse} from "./messages/response/SelectRelationResponse";
-import {UpdateRelationResponse} from "./messages/response/UpdateRelationResponse";
-import {CreateRelationResponse} from "./messages/response/CreateRelationResponse";
+import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
+import {UpdateSpanResponse} from "./messages/response/span/UpdateSpanResponse";
+import {CreateSpanResponse} from "./messages/response/span/CreateSpanResponse";
+import {DeleteSpanResponse} from "./messages/response/span/DeleteSpanResponse";
+import {SelectRelationResponse} from "./messages/response/relation/SelectRelationResponse";
+import {UpdateRelationResponse} from "./messages/response/relation/UpdateRelationResponse";
+import {CreateRelationResponse} from "./messages/response/relation/CreateRelationResponse";
 
 export interface AnnotationExperienceAPI {
 
@@ -54,16 +54,15 @@ export interface AnnotationExperienceAPI {
                                 aDocumentId: number, aSpanAddress: number);
 
     requestSelectRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number);
+                                    aDocumentId: number, aRelationAddress: number);
 
     requestUpdateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number)
+                                    aDocumentId: number, aRelationAddress: number, aNewFlavor: string, aNewRelation: string)
 
-    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number);
+    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
 
     requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number);
+                                    aDocumentId: number, aRelationAddress: number);
 
     requestSaveWordAlignment(aClientName: string, aUserName: string, aProjectId: number, sentence: number, alignments: string)
 

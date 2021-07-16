@@ -15,43 +15,87 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.model;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class Relation
+public class CreateRelationResponse
 {
-    private VID id;
+    private VID relationAddress;
+    private String clientName;
+    private String userName;
+    private long projectId;
+    private long documentId;
     private VID governorId;
     private VID dependentId;
     private String governorCoveredText;
     private String dependentCoveredText;
-    private String color;
     private String dependencyType;
     private String flavor;
 
-    public Relation(VID aId, VID aGovernorId, VID aDependentId, String aColor,
-            String aDependencyType, String aFlavor, String aGovernorCoveredText,
-            String aDependentCoveredText)
+    public CreateRelationResponse(VID aRelationAddress, String aClientName, String aUserName, long aProjectId, long aDocumentId, VID aGovernorId, VID aDependentId, String aGovernorCoveredText, String aDependentCoveredText, String aDependencyType, String aFlavor)
     {
-        id = aId;
+        relationAddress = aRelationAddress;
+        clientName = aClientName;
+        userName = aUserName;
+        projectId = aProjectId;
+        documentId = aDocumentId;
         governorId = aGovernorId;
         dependentId = aDependentId;
-        color = aColor;
-        dependencyType = aDependencyType;
-        flavor = aFlavor;
         governorCoveredText = aGovernorCoveredText;
         dependentCoveredText = aDependentCoveredText;
+        dependencyType = aDependencyType;
+        flavor = aFlavor;
     }
 
-    public VID getId()
+    public VID getRelationAddress()
     {
-        return id;
+        return relationAddress;
     }
 
-    public void setId(VID aId)
+    public void setRelationAddress(VID aRelationAddress)
     {
-        id = aId;
+        relationAddress = aRelationAddress;
+    }
+
+    public String getClientName()
+    {
+        return clientName;
+    }
+
+    public void setClientName(String aClientName)
+    {
+        clientName = aClientName;
+    }
+
+    public String getUserName()
+    {
+        return userName;
+    }
+
+    public void setUserName(String aUserName)
+    {
+        userName = aUserName;
+    }
+
+    public long getProjectId()
+    {
+        return projectId;
+    }
+
+    public void setProjectId(long aProjectId)
+    {
+        projectId = aProjectId;
+    }
+
+    public long getDocumentId()
+    {
+        return documentId;
+    }
+
+    public void setDocumentId(long aDocumentId)
+    {
+        documentId = aDocumentId;
     }
 
     public VID getGovernorId()
@@ -92,16 +136,6 @@ public class Relation
     public void setDependentCoveredText(String aDependentCoveredText)
     {
         dependentCoveredText = aDependentCoveredText;
-    }
-
-    public String getColor()
-    {
-        return color;
-    }
-
-    public void setColor(String aColor)
-    {
-        color = aColor;
     }
 
     public String getDependencyType()

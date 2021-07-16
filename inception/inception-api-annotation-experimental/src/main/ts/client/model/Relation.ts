@@ -17,18 +17,22 @@
  */
 export class Relation
 {
-    relationId : number;
-    vidGovernor : number;
-    vidDependent : number;
+    id : number;
+    governorId : number;
+    dependentId : number;
+    governorCoveredText : string;
+    dependentCoveredText : string
     color : string;
     dependencyType : string;
     flavor : string;
 
-    constructor(aRelationId: number, aVidGovernor: number, aVidDependent: number, aColor: string, aDependencyType: string, aFlavor: string)
+    constructor(aId: number, aGovernorId: number, aDependentId: number, aGovernorCoveredText: string, aDependentCoveredText: string, aColor: string, aDependencyType: string, aFlavor: string)
     {
-        this.relationId = aRelationId;
-        this.vidGovernor = aVidGovernor;
-        this.vidDependent = aVidDependent;
+        this.id = aId;
+        this.governorId = aGovernorId;
+        this.dependentId = aDependentId;
+        this.governorCoveredText = aGovernorCoveredText;
+        this.dependentCoveredText = aDependentCoveredText;
         this.color = aColor;
         this.dependencyType = aDependencyType;
         this.flavor = aFlavor;

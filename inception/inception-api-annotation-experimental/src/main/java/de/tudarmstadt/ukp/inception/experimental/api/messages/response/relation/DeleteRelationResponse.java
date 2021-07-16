@@ -15,8 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation;
 
-public class CreateRelationResponse
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
+public class DeleteRelationResponse
 {
+    private VID relationAddress;
+
+    public DeleteRelationResponse(VID aRelationAddress) {
+        relationAddress = aRelationAddress;
+    }
+
+    public VID getRelationAddress()
+    {
+        return relationAddress;
+    }
+
+    public void setRelationAddress(VID aRelationAddress)
+    {
+        relationAddress = aRelationAddress;
+    }
 }

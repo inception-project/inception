@@ -23,19 +23,23 @@ import {NewViewportResponse} from "./messages/response/NewViewportResponse";
 import {ErrorMessage} from "./messages/response/ErrorMessage";
 import {NewDocumentRequest} from "./messages/request/NewDocumentRequest";
 import {NewViewportRequest} from "./messages/request/NewViewportRequest";
-import {SelectSpanRequest} from "./messages/request/SelectSpanRequest";
-import {UpdateSpanRequest} from "./messages/request/UpdateSpanRequest";
-import {CreateSpanRequest} from "./messages/request/CreateSpanRequest";
-import {DeleteSpanRequest} from "./messages/request/DeleteSpanRequest";
-import {SelectSpanResponse} from "./messages/response/SelectSpanResponse";
-import {UpdateSpanResponse} from "./messages/response/UpdateSpanResponse";
-import {CreateSpanResponse} from "./messages/response/CreateSpanResponse";
-import {DeleteSpanResponse} from "./messages/response/DeleteSpanResponse";
+import {SelectSpanRequest} from "./messages/request/span/SelectSpanRequest";
+import {UpdateSpanRequest} from "./messages/request/span/UpdateSpanRequest";
+import {CreateSpanRequest} from "./messages/request/span/CreateSpanRequest";
+import {DeleteSpanRequest} from "./messages/request/span/DeleteSpanRequest";
+import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
+import {UpdateSpanResponse} from "./messages/response/span/UpdateSpanResponse";
+import {CreateSpanResponse} from "./messages/response/span/CreateSpanResponse";
+import {DeleteSpanResponse} from "./messages/response/span/DeleteSpanResponse";
 import {Relation} from "./model/Relation";
-import {UpdateRelationResponse} from "./messages/response/UpdateRelationResponse";
-import {CreateRelationResponse} from "./messages/response/CreateRelationResponse";
-import {SelectRelationResponse} from "./messages/response/SelectRelationResponse";
+import {UpdateRelationResponse} from "./messages/response/relation/UpdateRelationResponse";
+import {CreateRelationResponse} from "./messages/response/relation/CreateRelationResponse";
+import {SelectRelationResponse} from "./messages/response/relation/SelectRelationResponse";
 import {SaveWordAlignmentRequest} from "./messages/request/SaveWordAlignmentRequest";
+import {SelectRelationRequest} from "./messages/request/relation/SelectRelationRequest";
+import {DeleteRelationRequest} from "./messages/request/relation/DeleteRelationRequest";
+import {UpdateRelationRequest} from "./messages/request/relation/UpdateRelationRequest";
+import {CreateRelationRequest} from "./messages/request/relation/CreateRelationRequest";
 
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
@@ -104,6 +108,10 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
                 that.onSpanSelect(Object.assign(new SelectSpanResponse(), JSON.parse(msg.body)));
             }, {id: "selected_annotation"});
 
+            that.stompClient.subscribe("/queue/selected_relation_for_client/" + that.clientName, function (msg) {
+                that.onRelationSelect(Object.assign(new SelectRelationResponse(), JSON.parse(msg.body)));
+            }, {id: "selected_relation"});
+
             that.stompClient.subscribe("/queue/error_for_client/" + that.clientName, function (msg) {
                 that.onError(Object.assign(new ErrorMessage(), JSON.parse(msg.body)));
             }, {id: "error_message"});
@@ -126,12 +134,12 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         for (let i = 0; i < this.viewport.length; i++) {
             for (let j = this.viewport[i][0]; j <= this.viewport[i][1]; j++) {
 
-                this.stompClient.subscribe("/topic/annotation_update_for_clients/" +
+                this.stompClient.subscribe("/topic/update_for_clients/" +
                     this.projectID + "/" +
                     this.documentID + "/" +
                     j, function (msg) {
                     that.onSpanUpdate(Object.assign(new UpdateSpanResponse(), JSON.parse(msg.body)));
-                }, {id: "annotation_update_" + j});
+                }, {id: "update_" + j});
             }
         }
     }
@@ -162,14 +170,27 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     }
 
 
+    requestSelectSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number)
+    {
+        this.stompClient.publish({
+            destination: "/app/select_annotation_from_client",
+            body: JSON.stringify(new SelectSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress))
+        });
+    }
+
+    requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number, aNewType: string)
+    {
+        this.stompClient.publish({
+            destination: "/app/update_annotation_from_client",
+            body: JSON.stringify(new UpdateSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress, aNewType))
+        });
+    }
+
     requestCreateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string) {
         this.stompClient.publish({
             destination: "/app/new_annotation_from_client",
             body: JSON.stringify(new CreateSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aBegin, aEnd, aType, aFeature))
         });
-    }
-
-    requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number) {
     }
 
     requestDeleteSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number) {
@@ -179,25 +200,36 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-    requestSelectRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number) {
-    }
-
-    requestSelectSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number)
+    requestSelectRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aRelationAddress: number)
     {
         this.stompClient.publish({
-            destination: "/app/select_annotation_from_client",
-            body: JSON.stringify(new SelectSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress))
+            destination: "/app/select_relation_from_client",
+            body: JSON.stringify(new SelectRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aRelationAddress))
         });
     }
 
-    requestUpdateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number) {
-    }
 
-    requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number, aNewType: string)
+    requestUpdateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aRelationAddress: number, aNewFlavor: string, aNewRelation: string)
     {
         this.stompClient.publish({
-            destination: "/app/update_annotation_from_client",
-            body: JSON.stringify(new UpdateSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress, aNewType))
+        destination: "/app/update_relation_from_client",
+        body: JSON.stringify(new UpdateRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aRelationAddress, aNewFlavor, aNewRelation))
+    });
+    }
+
+    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
+    {
+        this.stompClient.publish({
+            destination: "/app/new_relation_from_client",
+            body: JSON.stringify(new CreateRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aGovernorId, aDependentId, aDependencyType, aFlavor))
+        });
+    }
+
+    requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aRelationAddress: number)
+    {
+        this.stompClient.publish({
+            destination: "/app/delete_relation_from_client",
+            body: JSON.stringify(new DeleteRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aRelationAddress))
         });
     }
 
@@ -244,14 +276,24 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     }
 
 
-    onRelationSelect(aMessage: SelectRelationResponse) {
+    onRelationSelect(aMessage: SelectRelationResponse)
+    {
+        console.log('RECEIVED SELECT RELATION');
+        console.log(aMessage);
     }
 
-    onRelationCreate(aMessage: CreateRelationResponse) {
+    onRelationCreate(aMessage: CreateRelationResponse)
+    {
+        console.log('RECEIVED CREATE RELATION');
+        console.log(aMessage);
     }
 
-    onRelationUpdate(aMessage: UpdateRelationResponse) {
+    onRelationUpdate(aMessage: UpdateRelationResponse)
+    {
+        console.log('RECEIVED UPDATE RELATION');
+        console.log(aMessage);
     }
+
 
     onSpanCreate(aMessage: CreateSpanResponse) {
         console.log('RECEIVED CREATE ANNOTATIONS');
@@ -268,9 +310,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     onSpanUpdate(aMessage: UpdateSpanResponse) {
         console.log('RECEIVED ANNOTATION UPDATE');
         console.log(aMessage);
-    }
-
-    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number) {
     }
 
     onError(aMessage: ErrorMessage) {

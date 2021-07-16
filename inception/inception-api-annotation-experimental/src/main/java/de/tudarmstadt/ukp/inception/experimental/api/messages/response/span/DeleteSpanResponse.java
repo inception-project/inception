@@ -15,21 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class UpdateSpanResponse
+public class DeleteSpanResponse
 {
     private VID spanAddress;
-    private String feature;
-    private String color;
 
-    public UpdateSpanResponse(VID aSpanAddress, String aFeature, String aColor)
+    public DeleteSpanResponse(VID aSpanAddress)
     {
         spanAddress = aSpanAddress;
-        feature = aFeature;
-        color = aColor;
     }
 
     public VID getSpanAddress()
@@ -39,26 +35,5 @@ public class UpdateSpanResponse
 
     public void setSpanAddress(VID aSpanAddress) {
         spanAddress = aSpanAddress;
-    }
-
-
-    public String getFeature()
-    {
-        return feature;
-    }
-
-    public void setFeature(String aFeature)
-    {
-        feature = aFeature;
-    }
-
-    public String getColor()
-    {
-        return color;
-    }
-
-    public void setColor(String aColor)
-    {
-        color = aColor;
     }
 }

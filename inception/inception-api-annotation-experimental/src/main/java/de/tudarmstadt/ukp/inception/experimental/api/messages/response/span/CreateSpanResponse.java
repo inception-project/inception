@@ -15,21 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class SelectSpanResponse
+public class CreateSpanResponse
 {
     private VID spanAddress;
+    private String coveredText;
+    private int begin;
+    private int end;
     private String type;
-    private String feature;
+    private String color;
 
-    public SelectSpanResponse(VID aSpanAddress, String aType, String aFeature)
+    public CreateSpanResponse(VID aSpanAddress, String aCoveredText, int aBegin, int aEnd,
+            String aType, String aColor)
     {
         spanAddress = aSpanAddress;
+        coveredText = aCoveredText;
+        begin = aBegin;
+        end = aEnd;
         type = aType;
-        feature = aFeature;
+        color = aColor;
     }
 
     public VID getSpanAddress()
@@ -37,8 +44,39 @@ public class SelectSpanResponse
         return spanAddress;
     }
 
-    public void setSpanAddress(VID aSpanAddress) {
+    public void setSpanAddress(VID aSpanAddress)
+    {
         spanAddress = aSpanAddress;
+    }
+
+    public String getCoveredText()
+    {
+        return coveredText;
+    }
+
+    public void setCoveredText(String aCoveredText)
+    {
+        coveredText = aCoveredText;
+    }
+
+    public int getBegin()
+    {
+        return begin;
+    }
+
+    public void setBegin(int aBegin)
+    {
+        begin = aBegin;
+    }
+
+    public int getEnd()
+    {
+        return end;
+    }
+
+    public void setEnd(int aEnd)
+    {
+        end = aEnd;
     }
 
     public String getType()
@@ -51,14 +89,13 @@ public class SelectSpanResponse
         type = aType;
     }
 
-    public String getFeature()
+    public String getColor()
     {
-        return feature;
+        return color;
     }
 
-    public void setFeature(String aFeature)
+    public void setColor(String aColor)
     {
-        feature = aFeature;
+        color = aColor;
     }
-
 }

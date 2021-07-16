@@ -15,18 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.span;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-
-public class UpdateSpanRequest
+public class CreateSpanRequest
 {
-   private String clientName;
-   private String userName;
-   private long projectId;
-   private long documentId;
-   private VID spanAddress;
-   private String newFeature;
+    private String clientName;
+    private String userName;
+    private long projectId;
+    private long documentId;
+
+    private int begin;
+    private int end;
+
+    private String type;
 
     public String getClientName()
     {
@@ -68,22 +69,34 @@ public class UpdateSpanRequest
         documentId = aDocumentId;
     }
 
-    public VID getSpanAddress()
+    public int getBegin()
     {
-        return spanAddress;
+        return begin;
     }
 
-    public void setSpanAddress(VID aSpanAddress) {
-        spanAddress = aSpanAddress;
+    public void setBegin(int aBegin)
+    {
+        begin = aBegin;
     }
 
-    public String getNewFeature()
+    public int getEnd()
     {
-        return newFeature;
+        return end;
     }
 
-    public void setNewFeature(String aNewFeature)
+    public void setEnd(int aEnd)
     {
-        newFeature = aNewFeature;
+        end = aEnd;
     }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String aType)
+    {
+        type = aType;
+    }
+
 }

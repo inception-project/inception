@@ -15,27 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class CreateSpanResponse
+public class UpdateSpanResponse
 {
     private VID spanAddress;
-    private String coveredText;
-    private int begin;
-    private int end;
-    private String type;
+    private String feature;
     private String color;
 
-    public CreateSpanResponse(VID aSpanAddress, String aCoveredText, int aBegin, int aEnd,
-            String aType, String aColor)
+    public UpdateSpanResponse(VID aSpanAddress, String aFeature, String aColor)
     {
         spanAddress = aSpanAddress;
-        coveredText = aCoveredText;
-        begin = aBegin;
-        end = aEnd;
-        type = aType;
+        feature = aFeature;
         color = aColor;
     }
 
@@ -44,49 +37,19 @@ public class CreateSpanResponse
         return spanAddress;
     }
 
-    public void setSpanAddress(VID aSpanAddress)
-    {
+    public void setSpanAddress(VID aSpanAddress) {
         spanAddress = aSpanAddress;
     }
 
-    public String getCoveredText()
+
+    public String getFeature()
     {
-        return coveredText;
+        return feature;
     }
 
-    public void setCoveredText(String aCoveredText)
+    public void setFeature(String aFeature)
     {
-        coveredText = aCoveredText;
-    }
-
-    public int getBegin()
-    {
-        return begin;
-    }
-
-    public void setBegin(int aBegin)
-    {
-        begin = aBegin;
-    }
-
-    public int getEnd()
-    {
-        return end;
-    }
-
-    public void setEnd(int aEnd)
-    {
-        end = aEnd;
-    }
-
-    public String getType()
-    {
-        return type;
-    }
-
-    public void setType(String aType)
-    {
-        type = aType;
+        feature = aFeature;
     }
 
     public String getColor()
