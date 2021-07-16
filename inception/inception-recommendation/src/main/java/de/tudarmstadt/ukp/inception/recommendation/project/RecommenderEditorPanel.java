@@ -239,8 +239,8 @@ public class RecommenderEditorPanel
                         .add(new LambdaAjaxFormSubmittingBehavior("change",
                                 t -> t.add(activationContainer.get(MID_THRESHOLD)))));
 
-        activationContainer.add(new NumberTextField<>(MID_THRESHOLD, Float.class).setMinimum(0.0f)
-                .setMaximum(100.0f).setStep(0.01f).setOutputMarkupPlaceholderTag(true)
+        activationContainer.add(new NumberTextField<>(MID_THRESHOLD, Double.class).setMinimum(0.0d)
+                .setMaximum(100.0d).setStep(0.01d).setOutputMarkupPlaceholderTag(true)
                 .add(visibleWhen(() -> !recommenderModel.map(Recommender::isAlwaysSelected)
                         .orElse(false).getObject())));
 
