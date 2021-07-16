@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -93,7 +92,7 @@ public class ProjectDetailPanel
 
         form.add(new TextArea<String>("description").setOutputMarkupId(true));
 
-        DropDownChoice<ScriptDirection> scriptDirection = new BootstrapSelect<>("scriptDirection");
+        DropDownChoice<ScriptDirection> scriptDirection = new DropDownChoice<>("scriptDirection");
         scriptDirection.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         scriptDirection.setChoices(Arrays.asList(ScriptDirection.values()));
         form.add(scriptDirection);

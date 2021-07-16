@@ -52,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
@@ -311,7 +310,7 @@ public class ExternalSearchAnnotationSidebar
         {
             super(aId);
 
-            DropDownChoice<DocumentRepository> repositoryCombo = new BootstrapSelect<DocumentRepository>(
+            DropDownChoice<DocumentRepository> repositoryCombo = new DropDownChoice<DocumentRepository>(
                     "repositoryCombo",
                     new PropertyModel<DocumentRepository>(ExternalSearchAnnotationSidebar.this,
                             "currentRepository"),

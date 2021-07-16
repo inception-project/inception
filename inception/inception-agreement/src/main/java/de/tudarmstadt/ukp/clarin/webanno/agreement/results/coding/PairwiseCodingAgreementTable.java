@@ -67,7 +67,6 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementReportExportFormat;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
@@ -132,7 +131,7 @@ public class PairwiseCodingAgreementTable
             return raters;
         });
 
-        add(formatField = new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
+        add(formatField = new DropDownChoice<AgreementReportExportFormat>("exportFormat",
                 Model.of(CSV), asList(AgreementReportExportFormat.values()),
                 new EnumChoiceRenderer<>(this)));
         formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));

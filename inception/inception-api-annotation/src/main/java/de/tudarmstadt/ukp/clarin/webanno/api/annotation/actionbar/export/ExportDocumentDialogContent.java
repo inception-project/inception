@@ -35,7 +35,6 @@ import org.apache.wicket.util.resource.FileResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -75,7 +74,7 @@ public class ExportDocumentDialogContent
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
         add(form);
 
-        DropDownChoice<String> format = new BootstrapSelect<>("format", writeableFormats);
+        DropDownChoice<String> format = new DropDownChoice<>("format", writeableFormats);
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         form.add(format);
 

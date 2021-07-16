@@ -76,7 +76,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -186,7 +185,7 @@ public class SearchAnnotationSidebar
         searchOptionsPanel.add(new CheckBox("limitedToCurrentDocument").setOutputMarkupId(true));
         searchOptionsPanel.add(createLayerDropDownChoice("groupingLayer",
                 annotationService.listAnnotationLayer(getModelObject().getProject())));
-        groupingFeature = new BootstrapSelect<>("groupingFeature", emptyList(),
+        groupingFeature = new DropDownChoice<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
         groupingFeature.setNullValid(true);
 
@@ -213,7 +212,7 @@ public class SearchAnnotationSidebar
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
         resultsGroupContainer.setOutputMarkupId(true);
         mainContainer.add(resultsGroupContainer);
-        
+
         searchResultGroups = new DataView<ResultsGroup>("searchResultGroups", resultsProvider)
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -346,13 +345,13 @@ public class SearchAnnotationSidebar
     {
         List<Long> choices = Arrays.stream(searchProperties.getPageSizes()).boxed()
                 .collect(Collectors.toList());
-        return new BootstrapSelect<>(aId, choices);
+        return new DropDownChoice<>(aId, choices);
     }
 
     private DropDownChoice<AnnotationLayer> createLayerDropDownChoice(String aId,
             List<AnnotationLayer> aChoices)
     {
-        DropDownChoice<AnnotationLayer> layerChoice = new BootstrapSelect<>(aId, aChoices,
+        DropDownChoice<AnnotationLayer> layerChoice = new DropDownChoice<>(aId, aChoices,
                 new ChoiceRenderer<>("uiName"));
 
         layerChoice.add(new AjaxFormComponentUpdatingBehavior("change")

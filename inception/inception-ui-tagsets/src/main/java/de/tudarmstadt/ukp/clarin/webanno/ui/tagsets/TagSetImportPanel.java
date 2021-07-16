@@ -34,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -46,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
@@ -83,7 +83,7 @@ public class TagSetImportPanel
 
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
 
-        BootstrapSelect<String> format = new BootstrapSelect<>("format",
+        DropDownChoice<String> format = new DropDownChoice<>("format",
                 asList(JSON_FORMAT, TAB_FORMAT));
         form.add(format);
         format.setModelObject(JSON_FORMAT); // Set after adding to form to have access to for model

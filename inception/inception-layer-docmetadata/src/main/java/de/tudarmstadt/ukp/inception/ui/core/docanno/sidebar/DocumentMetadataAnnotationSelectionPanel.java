@@ -55,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -146,7 +145,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         annotationsContainer.add(createAnnotationList());
         content.add(annotationsContainer);
 
-        DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>(CID_LAYER);
+        DropDownChoice<AnnotationLayer> layer = new DropDownChoice<>(CID_LAYER);
         layer.setModel(selectedLayer);
         layer.setChoices(availableLayersModel);
         layer.setChoiceRenderer(new ChoiceRenderer<>("uiName"));

@@ -42,14 +42,14 @@
     <div>
       <div class="px-2 pt-2">
         <label>Evaluation datapoints</label>
-        <span class="float-right">
+        <span class="float-end">
           <wicket:container wicket:id="totalDatapoints"/> @ 
           <wicket:container wicket:id="datapointUnit"/>
         </span>
       </div>
       <div class="px-2">
         <label>Ignored as expected</label>
-        <span class="float-right" wicket:id="ignoredLabels"/>
+        <span class="float-end" wicket:id="ignoredLabels"/>
       </div>
     </div>
   </div>
@@ -61,7 +61,7 @@
     <th class="headers text-center"><wicket:container wicket:id="label"/></th>
   </wicket:fragment>
   <wicket:fragment wicket:id="th-right">
-    <th class="headers text-right"><wicket:container wicket:id="label"/></th>
+    <th class="headers text-end"><wicket:container wicket:id="label"/></th>
   </wicket:fragment>
   <wicket:fragment wicket:id="td">
     <td wicket:id="cellContent" class="text-center"><span wicket:id="label"/></td>

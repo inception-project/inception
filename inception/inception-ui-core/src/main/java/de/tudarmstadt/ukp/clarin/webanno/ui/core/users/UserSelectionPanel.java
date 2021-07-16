@@ -31,12 +31,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -57,7 +57,7 @@ class UserSelectionPanel
     private @SpringBean ProjectService projectService;
 
     private final OverviewListChoice<User> overviewList;
-    private final BootstrapSelect<Realm> realm;
+    private final DropDownChoice<Realm> realm;
     private final CheckBox showDisabled;
     private final LambdaAjaxLink createButton;
 
@@ -101,7 +101,7 @@ class UserSelectionPanel
                 this::toggleShowDisabled));
         add(showDisabled);
 
-        realm = new BootstrapSelect<>("realm");
+        realm = new DropDownChoice<>("realm");
         realm.setChoices(LoadableDetachableModel.of(this::listRealms));
         realm.setChoiceRenderer(new ChoiceRenderer<>("name"));
         realm.setModel(Model.of(realm.getChoicesModel().getObject().get(0)));

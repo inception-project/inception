@@ -45,7 +45,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -153,7 +152,7 @@ public class LayerSelectionPanel
 
     private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
-        DropDownChoice<AnnotationLayer> selector = new BootstrapSelect<>("defaultAnnotationLayer");
+        DropDownChoice<AnnotationLayer> selector = new DropDownChoice<>("defaultAnnotationLayer");
         selector.setChoices(LoadableDetachableModel.of(this::getSelectableLayers));
         selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         selector.setOutputMarkupId(true);

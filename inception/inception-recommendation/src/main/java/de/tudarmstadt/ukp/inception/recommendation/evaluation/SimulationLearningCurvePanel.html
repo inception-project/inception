@@ -23,25 +23,25 @@
       <wicket:message key="simulation" />
     </div>
     <div class="scrolling card-body">
-      <div class="form-group form-row" wicket:enclosure="metric">
+      <div class="row form-row" wicket:enclosure="metric">
         <label wicket:for="metric" class="col-sm-3 col-form-label">
           <wicket:label key="metric" />
         </label>
         <div class="col-sm-9">
-          <select wicket:id="metric" class="form-control" data-container="body"></select>
+          <select wicket:id="metric" class="form-select" data-container="body"/>
         </div>
       </div>
-      <div class="form-group form-row" wicket:enclosure="annotator">
+      <div class="row form-row" wicket:enclosure="annotator">
         <label wicket:for="annotator" class="col-sm-3 col-form-label">
           <wicket:label key="annotator" />
         </label>
         <div class="col-sm-9">
-          <select wicket:id="annotator" class="form-control" data-container="body"></select>
+          <select wicket:id="annotator" class="form-select" data-container="body"/>
         </div>
       </div>
       <div wicket:id="chart-container"></div>
     </div>
-    <div class="card-footer text-right">
+    <div class="card-footer text-end">
       <button wicket:id="simulation-start-button" class="btn btn-primary">
         <wicket:message key="start" />
       </button>

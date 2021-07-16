@@ -18,31 +18,31 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:extend>
-  <div class="form-group form-row" wicket:enclosure="validationMode">
+  <div class="row form-row" wicket:enclosure="validationMode">
     <label wicket:for="validationMode" class="col-sm-4 col-form-label"> <wicket:label
         key="validationMode" />
     </label>
     <div class="col-sm-8">
-      <select wicket:id="validationMode" class="form-control" data-container="body"></select>
+      <select wicket:id="validationMode" class="form-select" data-container="body"/>
     </div>
   </div>
-  <div class="form-group form-row" wicket:enclosure="anchoringMode">
+  <div class="row form-row" wicket:enclosure="anchoringMode">
     <label wicket:for="anchoringMode" class="col-sm-4 col-form-label"> <wicket:label
         key="anchoringMode" />
     </label>
     <div class="col-sm-8">
-      <select wicket:id="anchoringMode" class="form-control" data-container="body"></select>
+      <select wicket:id="anchoringMode" class="form-select" data-container="body"/>
     </div>
   </div>
-  <div class="form-group form-row" wicket:enclosure="overlapMode">
+  <div class="row form-row" wicket:enclosure="overlapMode">
     <label wicket:for="overlapMode" class="col-sm-4 col-form-label"> <wicket:label
         key="overlapMode" />
     </label>
     <div class="col-sm-8">
-      <select wicket:id="overlapMode" class="form-control" data-container="body"></select>
+      <select wicket:id="overlapMode" class="form-select" data-container="body"/>
     </div>
   </div>
-  <div class="form-group form-row" wicket:enclosure="crossSentence">
+  <div class="row form-row" wicket:enclosure="crossSentence">
     <div class="offset-sm-4 col-sm-8">
       <div class="form-check">
         <input wicket:id="crossSentence" class="form-check-input" type="checkbox"/>
@@ -52,7 +52,7 @@
       </div>
     </div>
   </div>
-  <div class="form-group form-row" wicket:enclosure="showTextInHover">
+  <div class="row form-row" wicket:enclosure="showTextInHover">
     <div class="offset-sm-4 col-sm-8">
       <div class="form-check">
         <input wicket:id="showTextInHover" class="form-check-input" type="checkbox"/>
@@ -62,13 +62,13 @@
       </div>
     </div>
   </div>
-  <div class="form-group form-row">
+  <div class="row form-row">
     <label class="col-sm-4 col-form-label">Coloring rules</label>
     <div class="col-sm-8">
       <div wicket:id="coloringRules"/>
     </div>
   </div>
-  <div class="form-group form-row" wicket:enclosure="onClickJavascriptAction">
+  <div class="row form-row" wicket:enclosure="onClickJavascriptAction">
     <label wicket:for="onClickJavascriptAction"><wicket:label key="onClickJavascriptAction"/></label>
     <textarea wicket:id="onClickJavascriptAction" rows="6" class="form-control"></textarea>
   </div>

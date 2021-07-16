@@ -37,7 +37,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.UimaPrimitiveFeatureSupport_ImplBase;
@@ -103,7 +102,7 @@ public class NumberFeatureTraitsEditor
         }
         }
 
-        DropDownChoice<NumberFeatureTraits.EDITOR_TYPE> editorType = new BootstrapSelect<>(
+        DropDownChoice<NumberFeatureTraits.EDITOR_TYPE> editorType = new DropDownChoice<>(
                 CID_EDITOR_TYPE);
         editorType.setModel(PropertyModel.of(traits, "editorType"));
         editorType.setChoices(Arrays.asList(NumberFeatureTraits.EDITOR_TYPE.values()));

@@ -19,15 +19,15 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form">
-    <div class="form-group form-row" wicket:enclosure="service">
+    <div class="row form-row" wicket:enclosure="service">
       <label class="col-sm-3 col-form-label">
         <wicket:message key="service"/>
       </label>
       <div class="col-sm-9">
-        <select wicket:id="service" class="form-control" data-container="body"></select>
+        <select wicket:id="service" class="form-select" data-container="body"/>
       </div>
     </div>
-    <div class="form-group form-row" wicket:enclosure="url">
+    <div class="row form-row" wicket:enclosure="url">
       <label class="col-sm-3 col-form-label">
         <wicket:message key="url"/>
       </label>

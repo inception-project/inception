@@ -26,7 +26,7 @@ $dashboard-border-left: 3em;
 
 .dashboard-sidebar {
   overflow-x: hidden;
-  background-color: var(--gray-dark);
+  background-color: var(--bs-gray-dark);
   position: relative;
   padding-right: $dashboard-border-left;
   width: min-content;
@@ -37,12 +37,12 @@ $dashboard-border-left: 3em;
     top: 5px;
     display: inline;
     white-space: nowrap;
-    color: var(--gray);
+    color: var(--bs-gray);
     transition: color .1s ease-in, transform .3s ease-in-out .6s;
     transform: rotate(45deg);
     
     &:hover {
-      color: var(--light);
+      color: var(--bs-light);
       transform: rotate(0deg);
     }
   
@@ -106,8 +106,8 @@ $dashboard-border-left: 3em;
 
   .sidebar-item {
     font-size: 18px;
-    color: var(--gray);
-    border-left: solid 0.2rem var(--gray-dark);
+    color: var(--bs-gray);
+    border-left: solid 0.2rem var(--bs-gray-dark);
 
     .icon {
       font-size: 160%;
@@ -118,22 +118,22 @@ $dashboard-border-left: 3em;
   
     .active {
       .icon {
-        color: var(--light) !important;
+        color: var(--bs-light) !important;
       }
     }
   
     .label {
       justify-content: center;
-      color: var(--light) !important;
+      color: var(--bs-light) !important;
     }
     
     &:hover {
-      color: var(--light);
+      color: var(--bs-light);
     }
   
     &.active {
-      background-color: var(--gray-dark) !important;
-      border-left-color: var(--light);
+      background-color: var(--bs-gray-dark) !important;
+      border-left-color: var(--bs-light);
     }
     
     a {
@@ -142,37 +142,37 @@ $dashboard-border-left: 3em;
   }
 
   &.dashboard-sidebar-light { 
-    background-color: var(--light);
+    background-color: var(--bs-light);
     
     &.collapsed {
       .pin {
         &:hover {
-          color: var(--gray-dark);
+          color: var(--bs-gray-dark);
         }
       }
     }
     
     .sidebar-item {
-      color: var(--gray);
-      border-left-color:  var(--light);
+      color: var(--bs-gray);
+      border-left-color:  var(--bs-light);
   
       .active {
         .icon {
-          color: var(--dark) !important;
+          color: var(--bs-dark) !important;
         }
       }
     
       .label {
-        color: var(--dark) !important;
+        color: var(--bs-dark) !important;
       }
       
       &:hover {
-        color: var(--dark);
+        color: var(--bs-dark);
       }
     
       &.active {
-        background-color: var(--light) !important;
-        border-left-color: var(--dark);
+        background-color: var(--bs-light) !important;
+        border-left-color: var(--bs-dark);
       }
     }
   }

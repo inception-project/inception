@@ -56,7 +56,6 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -151,7 +150,7 @@ public class RecommenderEditorPanel
 
         form.add(new CheckBox(MID_ENABLED).setOutputMarkupId(true));
 
-        layerChoice = new BootstrapSelect<>(MID_LAYER, this::listLayers);
+        layerChoice = new DropDownChoice<>(MID_LAYER, this::listLayers);
         layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layerChoice.setRequired(true);
         // The features and tools depend on the layer, so reload them when the layer is changed
@@ -166,7 +165,7 @@ public class RecommenderEditorPanel
         }));
         form.add(layerChoice);
 
-        featureChoice = new BootstrapSelect<>(MID_FEATURE, this::listFeatures);
+        featureChoice = new DropDownChoice<>(MID_FEATURE, this::listFeatures);
         featureChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         featureChoice.setRequired(true);
         featureChoice.setOutputMarkupId(true);
@@ -192,7 +191,7 @@ public class RecommenderEditorPanel
             return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
         }, (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
 
-        toolChoice = new BootstrapSelect<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
+        toolChoice = new DropDownChoice<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
             private static final long serialVersionUID = -1869081847783375166L;
 

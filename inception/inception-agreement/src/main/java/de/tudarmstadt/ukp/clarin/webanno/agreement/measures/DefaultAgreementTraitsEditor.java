@@ -28,7 +28,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -59,7 +58,7 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
             }
         };
 
-        linkCompareBehaviorDropDown = new BootstrapSelect<>("linkCompareBehavior",
+        linkCompareBehaviorDropDown = new DropDownChoice<>("linkCompareBehavior",
                 asList(LinkCompareBehavior.values()), new EnumChoiceRenderer<>(this));
         linkCompareBehaviorDropDown.add(visibleWhen(() -> aFeature
                 .map(f -> !LinkMode.NONE.equals(f.getLinkMode())).orElse(false).getObject()));

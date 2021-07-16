@@ -129,20 +129,20 @@ public class RecommenderInfoPanel
                         state.add(new Icon("icon", FontAwesome5IconType.play_circle_s));
                         state.add(AttributeModifier.replace("title", "[Active]"));
                         state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
-                        state.add(AttributeModifier.append("class", "badge-success"));
+                        state.add(AttributeModifier.append("class", "bg-success"));
                     }
                     else {
                         state.add(new Icon("icon", FontAwesome5IconType.stop_circle_s));
                         state.add(AttributeModifier.replace("title", "[Inactive]"));
                         state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
                         state.add(AttributeModifier.append("style", "; cursor: help"));
-                        state.add(AttributeModifier.append("class", "badge-danger"));
+                        state.add(AttributeModifier.append("class", "bg-danger"));
                     }
                 }
                 else {
                     state.add(new Icon("icon", FontAwesome5IconType.hourglass_half_s));
                     state.add(AttributeModifier.replace("title", "Pending..."));
-                    state.add(AttributeModifier.append("class", "badge-light"));
+                    state.add(AttributeModifier.append("class", "bg-light"));
                 }
                 item.add(state);
 

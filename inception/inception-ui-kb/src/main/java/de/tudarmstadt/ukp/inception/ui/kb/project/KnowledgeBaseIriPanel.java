@@ -41,7 +41,6 @@ import org.eclipse.rdf4j.model.IRI;
 
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -101,7 +100,7 @@ public class KnowledgeBaseIriPanel
                 propertyDescriptionField);
 
         // RadioGroup to select the IriSchemaType
-        DropDownChoice<SchemaProfile> iriSchemaChoice = new BootstrapSelect<SchemaProfile>(
+        DropDownChoice<SchemaProfile> iriSchemaChoice = new DropDownChoice<SchemaProfile>(
                 "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
                 new EnumChoiceRenderer<>(this))
         {
@@ -161,7 +160,7 @@ public class KnowledgeBaseIriPanel
 
     private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
     {
-        DropDownChoice<Reification> reificationDropDownChoice = new BootstrapSelect<>(id,
+        DropDownChoice<Reification> reificationDropDownChoice = new DropDownChoice<>(id,
                 kbModel.bind(property), asList(Reification.values()));
         reificationDropDownChoice.setRequired(true);
         reificationDropDownChoice.setOutputMarkupPlaceholderTag(true);
