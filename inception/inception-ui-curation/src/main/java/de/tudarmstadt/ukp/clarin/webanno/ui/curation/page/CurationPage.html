@@ -165,15 +165,17 @@
       </div>
 
       <div wicket:id="centerArea" class="flex-content flex-v-container pt-3 pb-3">
-        <div wicket:id="splitter" class="flex-content border-0">
-          <div class="card">
-            <div class="card-header border-bottom-0">
-              <span wicket:id="documentNamePanel"/> 
-              <span wicket:id="numberOfPages" class="small text-muted float-end"/>
-            </div>
-            <div class="card-body flex-v-container" style="padding: 0px;">
-              <nav wicket:id="actionBar" class="action-bar"/>
-              <div wicket:id="annotationEditor" class="text-center flex-content flex-v-container"/>
+        <div wicket:id="splitter" class="flex-content border-0 shadow-none">
+          <div class="pb-2 flex-content flex-v-container">
+            <div class="card flex-content">
+              <div class="card-header border-bottom-0">
+                <span wicket:id="documentNamePanel"/> 
+                <span wicket:id="numberOfPages" class="small text-muted float-end"/>
+              </div>
+              <div class="card-body flex-v-container" style="padding: 0px;">
+                <nav wicket:id="actionBar" class="action-bar"/>
+                <div wicket:id="annotationEditor" class="text-center flex-content flex-v-container"/>
+              </div>
             </div>
           </div>
           <div wicket:id="annotatorsPanel" class="pt-2"/>

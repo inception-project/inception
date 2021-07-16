@@ -32,7 +32,6 @@ import java.util.TreeMap;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -128,20 +127,22 @@ public class RecommenderInfoPanel
                     EvaluatedRecommender evalRec = evaluatedRecommender.get();
                     if (evalRec.isActive()) {
                         state.add(new Icon("icon", FontAwesome5IconType.play_circle_s));
-                        state.add(AttributeAppender.append("title", "active"));
-                        state.add(AttributeAppender.append("class", "badge-success"));
+                        state.add(AttributeModifier.replace("title", "[Active]"));
+                        state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
+                        state.add(AttributeModifier.append("class", "badge-success"));
                     }
                     else {
                         state.add(new Icon("icon", FontAwesome5IconType.stop_circle_s));
-                        state.add(AttributeModifier.replace("title",
-                                evalRec.getDeactivationReason()));
+                        state.add(AttributeModifier.replace("title", "[Inactive]"));
+                        state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
                         state.add(AttributeModifier.append("style", "; cursor: help"));
-                        state.add(AttributeAppender.append("class", "badge-danger"));
+                        state.add(AttributeModifier.append("class", "badge-danger"));
                     }
                 }
                 else {
                     state.add(new Icon("icon", FontAwesome5IconType.hourglass_half_s));
-                    state.add(AttributeAppender.append("class", "badge-light"));
+                    state.add(AttributeModifier.replace("title", "Pending..."));
+                    state.add(AttributeModifier.append("class", "badge-light"));
                 }
                 item.add(state);
 
@@ -186,8 +187,11 @@ public class RecommenderInfoPanel
 
                 item.add(resultsContainer);
 
-                item.add(new WebMarkupContainer("noEvaluationMessage")
-                        .add(visibleWhen(() -> !resultsContainer.isVisible())));
+                item.add(
+                        new Label("noEvaluationMessage",
+                                evaluatedRecommender.map(EvaluatedRecommender::getReasonForState)
+                                        .orElse("")).add(
+                                                visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
         IModel<List<Recommender>> recommenders = LoadableDetachableModel

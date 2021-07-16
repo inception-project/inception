@@ -122,8 +122,7 @@ public class CurationDocumentServiceImpl
                 "FROM AnnotationDocument AS adoc ", //
                 "WHERE adoc.project = :project", //
                 "AND user in (:users)", //
-                "AND adoc.state = (:state) ", //
-                "AND adoc.document.trainingDocument = false");
+                "AND adoc.state = (:state)");
 
         List<SourceDocument> docs = entityManager.createQuery(query, SourceDocument.class) //
                 .setParameter("project", aProject) //
