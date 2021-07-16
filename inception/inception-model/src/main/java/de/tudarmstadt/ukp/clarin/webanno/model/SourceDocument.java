@@ -78,20 +78,6 @@ public class SourceDocument
     @Column(nullable = true)
     private Date updated;
 
-    /*
-     * This field are only here because we still may have the non-nullable columns in the DB. Once
-     * we can properly migrate the database schema, this can go away.
-     */
-    @Deprecated
-    private boolean trainingDocument = false;
-
-    /*
-     * This field are only here because we still may have the non-nullable columns in the DB. Once
-     * we can properly migrate the database schema, this can go away.
-     */
-    @Deprecated
-    private boolean processed = false;
-
     public SourceDocument()
     {
         // Nothing to do
