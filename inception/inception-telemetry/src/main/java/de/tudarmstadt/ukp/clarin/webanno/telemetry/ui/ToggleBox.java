@@ -77,11 +77,11 @@ public class ToggleBox
     {
         return WicketUtil.wrapInTryCatch(String.join("\n",
                 "$('.checkboxx-toggle-button .fa-question').each((idx, item) => "
-                        + "$(item).closest('.cbx-container').css('background-color', '#fff3cd'))",
+                        + "$(item).closest('.cbx').css('background-color', '#fff3cd'))",
                 "$('.checkboxx-toggle-button .fa-check').each((idx, item) => "
-                        + "$(item).closest('.cbx-container').css('background-color', '#d4edda'))",
+                        + "$(item).closest('.cbx').css('background-color', '#d4edda'))",
                 "$('.checkboxx-toggle-button .fa-ban').each((idx, item) => "
-                        + "$(item).closest('.cbx-container').css('background-color', '#f8d7da'))"));
+                        + "$(item).closest('.cbx').css('background-color', '#f8d7da'))"));
     }
 
     private class ChoiceRequiredValidator

@@ -27,20 +27,22 @@
               Welcome!
             </h5>
             <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
-            <div class=" row mb-3">
+            <div class="row mb-3 form-floating">
               <input wicket:id="username" type="text" class="form-control" placeholder="User ID"/>
+              <label wicket:for="username">User ID</label>
             </div>
-            <div class=" row mb-3">
+            <div class="row mb-3 form-floating">
               <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+              <label wicket:for="password">Password</label>
             </div>
-            <div class=" row justify-content-md-center">
+            <div class="row justify-content-md-center">
               <input wicket:id="signInBtn" type="submit" class="btn btn-login btn-primary w-100" wicket:message="value:signIn"/>
             </div>
-            <div class=" row mt-3" wicket:enclosure="loginMessage">
+            <div class="row mt-3" wicket:enclosure="loginMessage">
               <span wicket:id="loginMessage"></span>
             </div>
             <wicket:enclosure>
-              <div class=" row mt-3" wicket:id="usersLabel" style="color:red">
+              <div class="row mt-3" wicket:id="usersLabel" style="color:red">
                 <wicket:message key="tooManyUsers"/>
               </div>
             </wicket:enclosure>

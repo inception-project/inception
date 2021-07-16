@@ -21,12 +21,12 @@
 <body>
 <wicket:panel>
   <div class=" col-xs-12">
-    <div class=" row">
+    <div class="row form-row">
       <h4 class="col-sm-12">
         <wicket:message key="kb.settings.access"/>
       </h4>
     </div>
-    <div class=" row">
+    <div class="row form-row">
       <label wicket:for="type" class="col-form-label col-sm-3">
         <wicket:message key="kb.wizard.steps.type.type"/>
       </label>
@@ -34,7 +34,7 @@
         <select wicket:id="type" class="form-select" data-size="5"/>
       </div>
     </div>
-    <div class=" row" wicket:enclosure="writeprotection">
+    <div class="row form-row" wicket:enclosure="writeprotection">
       <div class="offset-sm-3 col-sm-9">
         <div class="form-check">
           <input wicket:id="writeprotection" class="form-check-input" type="checkbox">

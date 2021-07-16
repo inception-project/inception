@@ -19,7 +19,7 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:extend>
   <form wicket:id="form">
-    <div class=" row" wicket:enclosure="remoteUrl">
+    <div class="row form-row" wicket:enclosure="remoteUrl">
       <label class="col-sm-3 col-form-label" wicket:for="remoteUrl">
         <wicket:message key="remoteUrl"/>
       </label>
@@ -27,7 +27,7 @@
         <input wicket:id="remoteUrl" type="text" class="form-control"></input>
       </div>
     </div>
-    <div class=" row" wicket:enclosure="trainable">
+    <div class="row form-row" wicket:enclosure="trainable">
       <div class="offset-sm-3 col-sm-9">
         <div class="form-check">
           <input wicket:id="trainable" class="form-check-input" type="checkbox"/>

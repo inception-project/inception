@@ -24,12 +24,12 @@
         <wicket:message key="projects.import.title" />
       </div>
       <div class="card-body">
-        <div class=" row">
+        <div class="row form-row">
           <div class="col-sm-12">
             <input wicket:id="content" type="file" multiple/>
           </div>
         </div>
-        <div class=" row"  wicket:enclosure="importPermissions">
+        <div class="row form-row"  wicket:enclosure="importPermissions">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" wicket:id="importPermissions">
             <label class="form-check-label" wicket:for="importPermissions">
@@ -37,7 +37,7 @@
             </label>
           </div>
         </div>
-        <div class=" row" wicket:enclosure="generateUsers">
+        <div class="row form-row" wicket:enclosure="generateUsers">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" wicket:id="generateUsers">
             <label class="form-check-label" wicket:for="generateUsers">

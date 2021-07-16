@@ -70,12 +70,16 @@
         <div wicket:id="projects" class="flex-content list-group">
           <div wicket:id="emptyListLabel" class="no-data-notice flex-content"></div>
           <div wicket:id="project" class="list-group-item">
-            <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-              <div class="flex-content">
-                <div class="float-end">
-                  <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
+            <div class="d-flex">
+              <div class="flex-grow-1 d-flex flex-column">
+                <div class="flex-grow-1">
+                  <div class="float-end">
+                    <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
+                  </div>
+                  <a wicket:id="projectLink">
+                    <wicket:container wicket:id="name"/>
+                  </a>
                 </div>
-                  <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
                 <div class="list-group-item-text">
                   <div class="text-end">
                     <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
@@ -83,7 +87,7 @@
                   </div>
                 </div>
               </div>
-              <div wicket:id="actionDropdown" class="flex-h-container">
+              <div wicket:id="actionDropdown" class="d-flex">
                 <div class="dropdown flex-content flex-h-container">
                   <button class="btn dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-ellipsis-v"></i>

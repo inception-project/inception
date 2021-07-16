@@ -77,7 +77,7 @@ $( document ).ready(function() {
                   <wicket:message key="filterHeader" />
                 </div>
                 <div class="card-body">
-                  <div class=" row">
+                  <div class="row form-row">
                     <label class="col-form-label col-sm-3"> <wicket:message
                         key="userFilterText" />
                     </label>
@@ -85,7 +85,7 @@ $( document ).ready(function() {
                       <input wicket:id="userFilter" type="text" class="form-control" />
                     </div>
                   </div>
-                  <div class=" row">
+                  <div class="row form-row">
                     <label class="col-form-label col-sm-3"> <wicket:message
                         key="documentFilterText" />
                     </label>
@@ -93,7 +93,7 @@ $( document ).ready(function() {
                       <input wicket:id="documentFilter" type="text" class="form-control" />
                     </div>
                   </div>
-                  <div class=" row">
+                  <div class="row form-row">
                     <label class="col-form-label col-sm-3"> <wicket:message
                         key="dateFilterText" />
                     </label>
@@ -101,14 +101,14 @@ $( document ).ready(function() {
                       <span wicket:id="date"></span>
                     </div>
                   </div>
-                  <div class=" row">
+                  <div class="row form-row">
                     <div class="offset-sm-3 col-sm-9">
                       <input class="bootstrap-datetimepicker-widget" wicket:id="from"
                         type="date" /> <input class="bootstrap-datetimepicker-widget"
                         wicket:id="to" type="date" />
                     </div>
                   </div>
-                  <div class=" row">
+                  <div class="row form-row">
                     <div class="offset-sm-3 col-sm-9">
                       <div class="form-check">
                         <input wicket:id="unused" class="form-check-input" type="checkbox">
@@ -211,7 +211,7 @@ $( document ).ready(function() {
                     <wicket:message key="settings" />
                   </div>
                   <div class="card-body">
-                    <div class=" row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-7"> <wicket:message
                           key="defaultDocumentsLabel" />
                       </label>
@@ -220,7 +220,7 @@ $( document ).ready(function() {
                           class="form-control" />
                       </div>
                     </div>
-                    <div class=" row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="workflow" />
                         <a wicket:id="workflowHelpLink"/>
@@ -229,7 +229,7 @@ $( document ).ready(function() {
                         <select wicket:id="workflowType" data-container="body" class="w-100"/>
                       </div>
                     </div>
-                    <div class=" row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="abandonationToggle" />
                       </label>
@@ -239,7 +239,7 @@ $( document ).ready(function() {
                         </div>
                       </div>
                     </div>
-                    <div class=" row" wicket:enclosure="abandonationTimeout">
+                    <div class="row form-row" wicket:enclosure="abandonationTimeout">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="abandonationTimeout" />
                       </label>
@@ -256,7 +256,7 @@ $( document ).ready(function() {
                         </div>
                       </div>
                     </div>
-                    <div class=" row" wicket:enclosure="abandonationState">
+                    <div class="row form-row" wicket:enclosure="abandonationState">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="abandonationState" />
                       </label>

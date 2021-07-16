@@ -45,3 +45,7 @@
 .w-min-440px {
   min-width: 440px;
 }
+
+.form-row {
+  @extend .mb-2;
+}
