@@ -67,8 +67,6 @@ public class RecommendationSidebar
 {
     private static final long serialVersionUID = 4306746527837380863L;
 
-    private static final String LEARNING_CURVE = "learningCurve";
-
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annoService;
     private @SpringBean UserDao userRepository;
