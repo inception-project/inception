@@ -17,3 +17,5 @@ idea/
 .gradle
 inception/inception-html-editor/src/main/js/annotatorjs/lib
 inception/inception-app-webapp/src/main/resources/log4j2-dev.xml
+*/.apt_generated/
+*/.apt_generated_tests/
