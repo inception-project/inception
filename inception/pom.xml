@@ -150,6 +150,7 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    -->
     <repository>
       <id>oss.sonatype.org-snapshot</id>
       <url>http://oss.sonatype.org/content/repositories/snapshots</url>
@@ -160,17 +161,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-    <repository>
-      <id>ext-staging</id>
-      <url>https://repository.apache.org/content/repositories/orgapacheuima-1261</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    -->
   </repositories>
   <pluginRepositories>
     <!--
