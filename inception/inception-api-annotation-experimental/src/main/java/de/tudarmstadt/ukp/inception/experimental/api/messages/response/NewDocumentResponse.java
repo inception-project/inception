@@ -29,6 +29,15 @@ public class NewDocumentResponse
     private List<Span> spans;
     private List<Relation> relations;
 
+    public NewDocumentResponse(int aDocumentId, Character[] aViewportText, List<Span> aSpans,
+            List<Relation> aRelations)
+    {
+        documentId = aDocumentId;
+        viewportText = aViewportText;
+        spans = aSpans;
+        relations = aRelations;
+    }
+
     public int getDocumentId()
     {
         return documentId;
