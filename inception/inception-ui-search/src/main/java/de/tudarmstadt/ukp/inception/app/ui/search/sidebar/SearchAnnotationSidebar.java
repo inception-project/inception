@@ -36,7 +36,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -214,7 +213,7 @@ public class SearchAnnotationSidebar
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
         resultsGroupContainer.setOutputMarkupId(true);
         mainContainer.add(resultsGroupContainer);
-        
+
         searchResultGroups = new DataView<ResultsGroup>("searchResultGroups", resultsProvider)
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -651,10 +650,8 @@ public class SearchAnnotationSidebar
 
         // create a new annotation if not already there or if stacking is enabled and the
         // new annotation has different features than the existing one
-        Stream<AnnotationFS> annoFSs = selectAt(aCas, type, aSearchResult.getOffsetStart(),
-                aSearchResult.getOffsetEnd()).stream();
-
-        for (AnnotationFS eannoFS : annoFSs.collect(Collectors.toList())) {
+        for (AnnotationFS eannoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
             if (overrideExisting) {
                 setFeatureValues(aDocument, aCas, aAdapter, state, eannoFS);
                 aBulkResult.updated++;
@@ -699,10 +696,9 @@ public class SearchAnnotationSidebar
             SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
     {
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
-        Stream<AnnotationFS> annoFSs = selectAt(aCas, type, aSearchResult.getOffsetStart(),
-                aSearchResult.getOffsetEnd()).stream();
 
-        for (AnnotationFS annoFS : annoFSs.collect(Collectors.toList())) {
+        for (AnnotationFS annoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
             if ((annoFS != null && featureValuesMatchCurrentState(annoFS))
                     || !deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
                 aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
