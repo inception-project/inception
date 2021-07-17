@@ -20,27 +20,44 @@ package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 import java.io.IOException;
 import java.util.Arrays;
 
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIImpl;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIService;
-import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.SaveWordAlignmentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.UpdateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanResponse;
 
 @Controller
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
@@ -53,41 +70,53 @@ public class AnnotationProcessAPIImpl
     /**
      * ----------------- PUB / SUB CHANNELS ---------------
      **/
-    private static final String SERVER_RECEIVE_CLIENT_NEW_DOCUMENT = "/new_document_by_client";
+    // NEXT DOCUMENT
+    private static final String SERVER_RECEIVE_CLIENT_NEW_DOCUMENT = "/new_document_from_client";
     private static final String SERVER_SEND_CLIENT_NEW_DOCUMENT = "/queue/new_document_for_client/";
 
-    private static final String SERVER_RECEIVE_CLIENT_NEW_VIEWPORT = "/new_viewport_by_client";
+    // VIEWPORT
+    private static final String SERVER_RECEIVE_CLIENT_NEW_VIEWPORT = "/new_viewport_from_client";
     private static final String SERVER_SEND_CLIENT_NEW_VIEWPORT = "/queue/new_viewport_for_client/";
 
-    private static final String SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION = "/select_annotation_by_client";
+    // SELECT
+    private static final String SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION = "/select_annotation_from_client";
+    private static final String SERVER_RECEIVE_CLIENT_SELECTED_RELATION = "/select_relation_from_client";
+
     private static final String SERVER_SEND_CLIENT_SELECTED_ANNOTATION = "/queue/selected_annotation_for_client/";
+    private static final String SERVER_SEND_CLIENT_SELECTED_RELATION = "/queue/selected_relation_for_client/";
 
-    private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_by_client";
-    private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_by_client";
+    // CREATE
+    private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_from_client";
+    private static final String SERVER_RECEIVE_CLIENT_NEW_RELATION = "/new_relation_from_client";
 
-    private static final String SERVER_SEND_CLIENT_UPDATE_ANNOTATION = "/topic/annotation_update_for_clients/";
+    // DELETE
+    private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_from_client";
+    private static final String SERVER_RECEIVE_CLIENT_DELETE_RELATION = "/delete_relation_from_client";
+
+    // UPDATE
+    private static final String SERVER_RECEIVE_CLIENT_UPDATE_ANNOTATION = "/update_annotation_from_client";
+    private static final String SERVER_RECEIVE_CLIENT_UPDATE_RELATION = "/update_relation_from_client";
+
+    // RETURN CHANNEL FOR ANY KIND OF UPDATE {CREATE , DELETE , UPDATE} -> {SPAN , RELATION}
+    private static final String SERVER_SEND_CLIENTS_UPDATE = "/topic/update_for_clients/";
 
     private static final String SERVER_SEND_CLIENT_ERROR_MESSAGE = "/queue/error_message/";
+
+    // WORD_ALIGNMENT EDITOR
+    private static final String SERVER_RECEIVE_SAVE_WORD_ALIGNMENT = "/update_word_alignment_from_client";
 
     public AnnotationProcessAPIImpl(ProjectService aProjectService,
             DocumentService aDocumentService, UserDao aUserDao,
             RepositoryProperties aRepositoryProperties,
             SimpMessagingTemplate aSimpMessagingTemplate,
             AnnotationSchemaService aAnnotationSchemaService,
-            AnnotationSystemAPIService aAnnotationSystemAPIService)
+            AnnotationSystemAPIService aAnnotationSystemAPIService,
+            ColoringService aColoringService, UserPreferencesService aUserPreferencesService)
     {
         this.simpMessagingTemplate = aSimpMessagingTemplate;
         this.annotationSystemAPIImpl = new AnnotationSystemAPIImpl(aProjectService,
                 aDocumentService, aUserDao, aRepositoryProperties, this, aAnnotationSchemaService,
-                aAnnotationSystemAPIService);
-    }
-
-    // ----------- ERROR HANDLER ------------- //
-    @MessageExceptionHandler
-    @SendToUser("/queue/errors")
-    public String handleException(Throwable aException)
-    {
-        return aException.getMessage();
+                aAnnotationSystemAPIService, aColoringService, aUserPreferencesService);
     }
 
     /**
@@ -96,97 +125,223 @@ public class AnnotationProcessAPIImpl
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_DOCUMENT)
-    public void handleReceiveDocumentRequest(Message<String> aMessage) throws IOException
+    public void receiveNewDocumentRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW DOCUMENT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleDocument(
-                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
+        annotationSystemAPIImpl.handleNewDocument(
+                JSONUtil.fromJsonString(NewDocumentRequest.class, aMessage.getPayload()));
 
     }
 
     @Override
-    public void handleSendDocumentRequest(DocumentMessage aDocumentMessage, String aUser)
+    public void sendNewDocumentResponse(NewDocumentResponse aNewDocumentResponse, String aUser)
         throws IOException
     {
         System.out.println("SENDING NOW DOCUMENT UPDATE TO CLIENT "
-                + Arrays.toString(aDocumentMessage.getViewportText()));
+                + Arrays.toString(aNewDocumentResponse.getViewportText()));
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_DOCUMENT + aUser,
-                JSONUtil.toJsonString(aDocumentMessage));
+                JSONUtil.toJsonString(aNewDocumentResponse));
     }
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_VIEWPORT)
-    public void handleReceiveViewportRequest(Message<String> aMessage) throws IOException
+    public void receiveNewViewportRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleViewport(
-                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
+        annotationSystemAPIImpl.handleNewViewport(
+                JSONUtil.fromJsonString(NewViewportRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void handleSendViewportRequest(ViewportMessage aViewportMessage, String aUser)
+    public void sendNewViewportResponse(NewViewportResponse aNewViewportResponse, String aUser)
         throws IOException
     {
         System.out.println("SENDING NOW VIEWPORT TO CLIENT: "
-                + Arrays.toString(aViewportMessage.getViewportText()));
+                + Arrays.toString(aNewViewportResponse.getViewportText()));
 
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + aUser,
-                JSONUtil.toJsonString(aViewportMessage));
+                JSONUtil.toJsonString(aNewViewportResponse));
     }
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION)
-    public void handleReceiveSelectAnnotation(Message<String> aMessage) throws IOException
+    public void receiveSelectAnnotationRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleSelectAnnotation(
-                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
+        annotationSystemAPIImpl.handleSelectSpan(
+                JSONUtil.fromJsonString(SelectSpanRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void handleSendSelectAnnotation(AnnotationMessage aAnnotationMessage, String aUser)
+    @MessageMapping(SERVER_RECEIVE_CLIENT_SELECTED_RELATION)
+    public void receiveSelectRelationRequest(Message<String> aMessage) throws IOException
+    {
+        System.out.println("RECEIVED SELECT_RELATION BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleSelectRelation(
+                JSONUtil.fromJsonString(SelectRelationRequest.class, aMessage.getPayload()));
+    }
+
+    @Override
+    public void sendSelectAnnotationResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
         throws IOException
     {
         System.out.println("SENDING NOW ANNOTATION SELECT TO CLIENT: " + aUser);
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_ANNOTATION + aUser,
-                JSONUtil.toJsonString(aAnnotationMessage));
+                JSONUtil.toJsonString(aSelectSpanResponse));
+    }
+
+    @Override
+    public void sendSelectRelationResponse(SelectRelationResponse aSelectRelationResponse,
+            String aUser)
+        throws IOException
+    {
+        System.out.println("SENDING NOW ANNOTATION SELECT TO CLIENT: " + aUser);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_RELATION + aUser,
+                JSONUtil.toJsonString(aSelectRelationResponse));
+    }
+
+    @Override
+    @MessageMapping(SERVER_RECEIVE_CLIENT_UPDATE_ANNOTATION)
+    public void receiveUpdateAnnotationRequest(Message<String> aMessage) throws IOException
+    {
+        System.out.println("RECEIVED UPDATE ANNOTATION BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleUpdateSpan(
+                JSONUtil.fromJsonString(UpdateSpanRequest.class, aMessage.getPayload()));
+    }
+
+    @Override
+    @MessageMapping(SERVER_RECEIVE_CLIENT_UPDATE_RELATION)
+    public void receiveUpdateRelationRequest(Message<String> aMessage) throws IOException
+    {
+        System.out.println("RECEIVED UPDATE RELATION BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleUpdateRelation(
+            JSONUtil.fromJsonString(UpdateRelationRequest.class, aMessage.getPayload()));
+    }
+
+    @Override
+    public void sendUpdateAnnotationResponse(UpdateSpanResponse aUpdateSpanResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException
+    {
+        System.out.println("SENDING NOW ANNOTATION UPDATE TO CLIENTS listening to: "
+                + SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport);
+        simpMessagingTemplate.convertAndSend(
+                SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport,
+                JSONUtil.toJsonString(aUpdateSpanResponse));
+    }
+
+    @Override
+    public void sendUpdateRelationResponse(UpdateRelationResponse aUpdateRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException
+    {
+        System.out.println("SENDING NOW RELATION UPDATE TO CLIENTS listening to: "
+            + SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport);
+        simpMessagingTemplate.convertAndSend(
+            SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport,
+            JSONUtil.toJsonString(aUpdateRelationResponse));
     }
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_ANNOTATION)
-    public void handleReceiveCreateAnnotation(Message<String> aMessage) throws IOException
+    public void receiveCreateAnnotationRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED NEW ANNOTATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleCreateAnnotation(
-                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
+        annotationSystemAPIImpl.handleCreateSpan(
+                JSONUtil.fromJsonString(CreateSpanRequest.class, aMessage.getPayload()));
+    }
+
+    @Override
+    public void sendCreateAnnotationResponse(CreateSpanResponse aCreateSpanResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException
+    {
+        System.out.println("SENDING NOW CREATE ANNOTATION TO CLIENTS listening to: "
+                + SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport);
+        simpMessagingTemplate.convertAndSend(
+                SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport,
+                JSONUtil.toJsonString(aCreateSpanResponse));
+    }
+
+    @Override
+    @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_RELATION)
+    public void receiveCreateRelationRequest(Message<String> aMessage) throws IOException
+    {
+        System.out.println("RECEIVED NEW RELATION BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleCreateRelation(
+                JSONUtil.fromJsonString(CreateRelationRequest.class, aMessage.getPayload()));
+    }
+
+    @Override
+    public void sendCreateRelationResponse(CreateRelationResponse aCreateRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException
+    {
+        System.out.println("SENDING NOW CREATE RELATION TO CLIENTS listening to: "
+                + SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport);
+        simpMessagingTemplate.convertAndSend(
+                SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport,
+                JSONUtil.toJsonString(aCreateRelationResponse));
     }
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION)
-    public void handleReceiveDeleteAnnotation(Message<String> aMessage) throws IOException
+    public void receiveDeleteAnnotationRequest(Message<String> aMessage) throws IOException
     {
         System.out.println("RECEIVED DELETE ANNOTATION BY CLIENT");
-        annotationSystemAPIImpl.handleDeleteAnnotation(
-                JSONUtil.fromJsonString(ClientMessage.class, aMessage.getPayload()));
+        annotationSystemAPIImpl.handleDeleteSpan(
+                JSONUtil.fromJsonString(DeleteSpanRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void handleSendUpdateAnnotation(AnnotationMessage aAnnotationMessage, String aProjectID,
-            String aDocumentID, String aViewport)
+    public void sendDeleteAnnotationResponse(DeleteSpanResponse aDeleteSpanResponse,
+            String aProjectID, String aDocumentID, String aViewport)
         throws IOException
     {
-        System.out.println("SENDING NOW ANNOTATION UPDATE TO CLIENTS to: " + SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/"
-                            + aDocumentID + "/" + aViewport);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/"
-                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aAnnotationMessage));
+        System.out.println("SENDING NOW DELETE ANNOTATION TO CLIENTS listening to: "
+                + SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport);
+        simpMessagingTemplate.convertAndSend(
+                SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport,
+                JSONUtil.toJsonString(aDeleteSpanResponse));
     }
 
     @Override
-    public void handleSendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException
+
+    @MessageMapping(SERVER_RECEIVE_CLIENT_DELETE_RELATION)
+    public void receiveDeleteRelationRequest(Message<String> aMessage) throws IOException
+    {
+        System.out.println("RECEIVED DELETE RELATION BY CLIENT");
+        annotationSystemAPIImpl.handleDeleteRelation(
+                JSONUtil.fromJsonString(DeleteRelationRequest.class, aMessage.getPayload()));
+    }
+
+    @Override
+    public void sendDeleteRelationResponse(DeleteRelationResponse aDeleteRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException
+    {
+        System.out.println("SENDING NOW DELETE RELATION TO CLIENTS listening to: "
+                + SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport);
+        simpMessagingTemplate.convertAndSend(
+                SERVER_SEND_CLIENTS_UPDATE + aProjectID + "/" + aDocumentID + "/" + aViewport,
+                JSONUtil.toJsonString(aDeleteRelationResponse));
+    }
+
+    @Override
+    @MessageMapping(SERVER_RECEIVE_SAVE_WORD_ALIGNMENT)
+    public void receiveSaveWordAlignmentRequest(Message<String> aMessage) throws IOException
+    {
+        System.out.println("RECEIVED SAVE WORD ALIGNMENT FROM SERVER");
+        annotationSystemAPIImpl.handleSaveWordAlignment(
+                JSONUtil.fromJsonString(SaveWordAlignmentRequest.class, aMessage.getPayload()));
+    }
+
+    @Override
+    public void sendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException
     {
         System.out.println("SENDING NOW ERROR MESSAGE TO CLIENT: " + aUser);
         simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_ERROR_MESSAGE + aUser,
-            JSONUtil.toJsonString(aErrorMessage));
+                JSONUtil.toJsonString(aErrorMessage));
 
     }
 }

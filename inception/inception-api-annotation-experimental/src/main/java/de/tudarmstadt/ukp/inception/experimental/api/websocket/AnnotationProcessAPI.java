@@ -19,39 +19,77 @@ package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
 
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.UpdateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanResponse;
 import org.springframework.messaging.Message;
-
-import de.tudarmstadt.ukp.inception.experimental.api.message.AnnotationMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.DocumentMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.message.ViewportMessage;
 
 public interface AnnotationProcessAPI
 {
-    void handleReceiveDocumentRequest(Message<String> aMessage) throws IOException;
+    void receiveNewDocumentRequest(Message<String> aMessage) throws IOException;
 
-    void handleSendDocumentRequest(DocumentMessage documentMessage, String aUser)
+    void sendNewDocumentResponse(NewDocumentResponse aNewDocumentResponse, String aUser)
         throws IOException;
 
-    void handleReceiveViewportRequest(Message<String> aMessage) throws IOException;
+    void receiveNewViewportRequest(Message<String> aMessage) throws IOException;
 
-    void handleSendViewportRequest(ViewportMessage aViewportMessage, String aUser)
+    void sendNewViewportResponse(NewViewportResponse aNewViewportResponse, String aUser)
         throws IOException;
 
-    void handleReceiveSelectAnnotation(Message<String> aMessage) throws IOException;
+    void receiveSelectAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void handleSendSelectAnnotation(AnnotationMessage aAnnotationMessage, String aUser)
+    void receiveSelectRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendSelectAnnotationResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
         throws IOException;
 
-    void handleReceiveCreateAnnotation(Message<String> aMessage) throws IOException;
+    void sendSelectRelationResponse(SelectRelationResponse aSelectRelationResponse, String aUser)
+        throws IOException;
 
-    void handleReceiveDeleteAnnotation(Message<String> aMessage) throws IOException;
+    void receiveUpdateAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void handleSendUpdateAnnotation(AnnotationMessage aAnnotationMessage, String aProjectID,
+    void receiveUpdateRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendUpdateAnnotationResponse(UpdateSpanResponse aUpdateSpanResponse, String aProjectID,
             String aDocumentID, String aViewport)
         throws IOException;
 
-    void handleSendErrorMessage(ErrorMessage aErrorMessage, String aUser)
+    void sendUpdateRelationResponse(UpdateRelationResponse aUpdateRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
+
+    void receiveCreateAnnotationRequest(Message<String> aMessage) throws IOException;
+
+    void sendCreateAnnotationResponse(CreateSpanResponse aCreateSpanResponse, String aProjectID,
+            String aDocumentID, String aViewport)
+        throws IOException;
+
+    void receiveCreateRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendCreateRelationResponse(CreateRelationResponse aCreateRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException;
+
+    void receiveDeleteAnnotationRequest(Message<String> aMessage) throws IOException;
+
+    void sendDeleteAnnotationResponse(DeleteSpanResponse aDeleteSpanResponse, String aProjectID,
+            String aDocumentID, String aViewport)
+        throws IOException;
+
+    void receiveDeleteRelationRequest(Message<String> aMessage) throws IOException;
+
+    void sendDeleteRelationResponse(DeleteRelationResponse aDeleteRelationResponse,
+            String aProjectID, String aDocumentID, String aViewport)
+        throws IOException;
+
+    void receiveSaveWordAlignmentRequest(Message<String> aMessage) throws IOException;
+
+    void sendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException;
 
 }

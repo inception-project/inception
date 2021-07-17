@@ -18,45 +18,57 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
-import java.util.List;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.inception.experimental.api.message.ClientMessage;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
 
 public interface AnnotationSystemAPI
 {
-    void handleDocument(ClientMessage aClientMessage) throws IOException;
+    void handleNewDocument(NewDocumentRequest aNewDocumentRequest) throws IOException;
 
-    void handleViewport(ClientMessage aClientMessage) throws IOException;
+    void handleNewViewport(NewViewportRequest aNewViewportRequest) throws IOException;
 
-    void handleSelectAnnotation(ClientMessage aClientMessage) throws IOException;
+    void handleSelectSpan(SelectSpanRequest aSelectSpanRequest)
+        throws IOException;
 
-    void handleCreateAnnotation(ClientMessage aClientMessage) throws IOException;
+    void handleUpdateSpan(UpdateSpanRequest aUpdateSpanRequest)
+        throws IOException;
 
-    void handleDeleteAnnotation(ClientMessage aClientMessage) throws IOException;
+    void handleCreateSpan(CreateSpanRequest aCreateSpanRequest)
+        throws IOException;
 
-    /**
-     * Returns CAS from websocket message. All three String parameters are contained in the header
-     * of the websocket message
-     *
-     * @param aProject
-     *            long
-     * @param aDocument
-     *            long
-     * @param aUser
-     *            string
-     * @return CAS
-     */
-    CAS getCasForDocument(String aUser, long aProject, long aDocument);
+    void handleDeleteSpan(DeleteSpanRequest aDeleteSpanRequest) throws IOException;
 
-    Character[] getViewportText(ClientMessage aClientMessage, CAS aCas);
+    void handleSelectRelation(SelectRelationRequest aSelectSpanRequest)
+        throws IOException;
 
-    List<Annotation> getAnnotations(CAS aCas, long aProject);
+    void handleUpdateRelation(UpdateRelationRequest aUpdateRelationRequest)
+        throws IOException;
 
-    List<Annotation> filterAnnotations(List <Annotation> aAnnotations, int[][] aViewport);
+    void handleCreateRelation(CreateRelationRequest aCreateRelationRequest)
+        throws IOException;
 
-    void updateCAS(String aUser, long aProject, long aDocument,CAS aCas);
+    void handleDeleteRelation(DeleteRelationRequest aDeleteRelationRequest) throws IOException;
+
+    void handleSaveWordAlignment(SaveWordAlignmentRequest aSaveWordAlignmentRequest);
 
     void createErrorMessage(String aMessage, String aUser) throws IOException;
+
+    void onFeatureUpdatedEventHandler(FeatureValueUpdatedEvent aEvent);
+
+    void onSpanCreatedEventHandler(SpanCreatedEvent aEvent) throws IOException;
+
+    void onSpanDeletedEventHandler(SpanDeletedEvent aEvent) throws IOException;
+
+    void onRelationCreatedEventHandler(RelationCreatedEvent aEvent) throws IOException;
+
+    void onRelationDeletedEventHandler(RelationDeletedEvent aEvent) throws IOException;
 }

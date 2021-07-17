@@ -94,16 +94,8 @@
             <artifactId>uimafit-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-spring</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -111,11 +103,11 @@
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-review-editor</artifactId>
+            <artifactId>inception-scheduling</artifactId>
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-scheduling</artifactId>
+            <artifactId>inception-log</artifactId>
         </dependency>
     </dependencies>
 </project>

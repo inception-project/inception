@@ -15,37 +15,74 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ServerMessage} from "./util/ServerMessage";
+import {NewDocumentResponse} from "./messages/response/NewDocumentResponse";
+import {NewViewportResponse} from "./messages/response/NewViewportResponse";
+import {ErrorMessage} from "./messages/response/ErrorMessage";
+import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
+import {UpdateSpanResponse} from "./messages/response/span/UpdateSpanResponse";
+import {CreateSpanResponse} from "./messages/response/span/CreateSpanResponse";
+import {DeleteSpanResponse} from "./messages/response/span/DeleteSpanResponse";
+import {SelectRelationResponse} from "./messages/response/relation/SelectRelationResponse";
+import {UpdateRelationResponse} from "./messages/response/relation/UpdateRelationResponse";
+import {CreateRelationResponse} from "./messages/response/relation/CreateRelationResponse";
 
 export interface AnnotationExperienceAPI {
-
-    //TODO Type safety
 
     unsubscribe(aChannel: string);
 
     disconnect();
 
-    editAnnotation(aId, aAnnotationType);
 
+    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                 aDocumentId: number, aViewportType: string, aViewport: number[][],
+                                 aRecommenderEnabled: boolean);
 
-    sendDocumentMessageToServer(aUsername, aDocument, aOffset, aOffsetType);
+    requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                 aDocumentId: number, aViewportType: string, aViewport: number[][],
+                                 aRecommenderEnabled: boolean);
 
-    sendViewportMessageToServer(aUsername, aViewport, aOffsetType);
+    requestSelectSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanAddress: number);
 
-    sendSelectAnnotationMessageToServer(aUsername, aId);
+    requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanAddress: number, aNewType: string)
 
-    sendCreateAnnotationMessageToServer(aUsername, aDocument, begin, end, aAnnotationType);
+    requestCreateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string);
 
-    sendUpdateAnnotationMessageToServer(aId, aAnnotationType);
+    requestDeleteSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanAddress: number);
 
-    sendDeleteAnnotationMessageToServer(aId : string, aAnnotationType: string);
+    requestSelectRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number, aRelationAddress: number);
 
+    requestUpdateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number, aRelationAddress: number, aNewFlavor: string, aNewRelation: string)
 
-    receiveNewDocumentMessageByServer(aMessage: ServerMessage);
+    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
 
-    receiveNewViewportMessageByServer(aMessage: ServerMessage);
+    requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number, aRelationAddress: number);
 
-    receiveSelectedAnnotationMessageByServer(aMessage: ServerMessage);
+    requestSaveWordAlignment(aClientName: string, aUserName: string, aProjectId: number, sentence: number, alignments: string)
 
-    receiveAnnotationMessageByServer(aMessage: ServerMessage);
+    onNewDocument(aMessage: NewDocumentResponse);
+
+    onNewViewport(aMessage: NewViewportResponse);
+
+    onSpanSelect(aMessage: SelectSpanResponse);
+
+    onSpanUpdate(aMessage: UpdateSpanResponse);
+
+    onSpanCreate(aMessage: CreateSpanResponse);
+
+    onSpanDelete(aMessage: DeleteSpanResponse);
+
+    onRelationSelect(aMessage: SelectRelationResponse);
+
+    onRelationUpdate(aMessage: UpdateRelationResponse);
+
+    onRelationCreate(aMessage: CreateRelationResponse);
+
+    onError(aMessage: ErrorMessage);
 }
