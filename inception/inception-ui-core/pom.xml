@@ -167,7 +167,7 @@
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.bit3</groupId>
+      <groupId>ua.kasta</groupId>
       <artifactId>jsass</artifactId>
       <exclusions>
         <exclusion>
