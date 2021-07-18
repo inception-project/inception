@@ -980,7 +980,7 @@ var Visualizer = (function ($, window, undefined) {
         //                        (id,         type,       offsets,    generalType)
         var triggerSpan = new Span(trigger[0], trigger[1], trigger[2], 'trigger');
 
-        triggerSpan.splitMultilineOffsets(data.text);
+        triggerSpan.splitMultilineOffsets(this.data.text);
 
         triggerHash[trigger[0]] = [triggerSpan, []]; // triggerSpan, eventlist
       });
@@ -1282,7 +1282,7 @@ var Visualizer = (function ($, window, undefined) {
 
         if (!origin) {
           // TODO: include missing trigger ID in error message
-          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found in ' + this.data.document + '<br/>(please correct the source data)', 'error', 5]]]);
           return;
         }
 
@@ -1290,7 +1290,7 @@ var Visualizer = (function ($, window, undefined) {
         eventDesc.roles.map(role => {
           let target = spans[role.targetId];
           if (!target) {
-            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found in ' + data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found in ' + this.data.document + '<br/>(please correct the source data)', 'error', 5]]]);
             return;
           }
 
