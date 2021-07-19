@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.controller.RecommendationEventMessageControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
 
-@AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER", deny = "ROLE_ADMIN")
+@AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
 public class RecommendationEventFooterPanel
     extends VueComponent
 {
