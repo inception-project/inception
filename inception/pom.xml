@@ -171,6 +171,11 @@
       </snapshots>
     </repository>
     -->
+    <!-- For a jsass version that works on Apple Silicon -->
+    <repository>
+      <id>clojars.org</id>
+      <url>https://repo.clojars.org</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <!--
@@ -854,6 +859,10 @@
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>io.bit3</groupId>
+            <artifactId>jsass</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -905,9 +914,9 @@
         <version>${hover.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.bit3</groupId>
+        <groupId>ua.kasta</groupId>
         <artifactId>jsass</artifactId>
-        <version>5.10.3</version>
+        <version>5.10.5</version>
       </dependency>
       <dependency>
         <groupId>org.sharegov</groupId>
