@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.websocket;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -67,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
-import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 
@@ -172,7 +170,7 @@ public class WebSocketIntegrationTest
         
         assertThat(receivedMessages.size()).isEqualTo(1);
         LoggedEventMessage msg1 = receivedMessages.get(0);
-        assertThat(msg1.getEventMsg()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());    
+        assertThat(msg1.getEventType()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());    
     }
 
 
@@ -200,11 +198,11 @@ public class WebSocketIntegrationTest
     "de.tudarmstadt.ukp.clarin.webanno.security.model",
     "de.tudarmstadt.ukp.inception.log.model"})
     public static class WebSocketTestConfig
-    {
+    {        
         @Bean
-        public List<EventLoggingAdapter<?>> eventLoggingAdapter()
+        public DocumentStateChangedEventAdapter documentStateChangedEventAdapter()
         {
-            return asList(new DocumentStateChangedEventAdapter());
+            return new DocumentStateChangedEventAdapter();
         }
     }
 }

@@ -21,6 +21,7 @@ package de.tudarmstadt.ukp.inception.websocket.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -33,6 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Controller
+@ConditionalOnProperty("websocket.enabled")
 public class RecommendationEventMessageControllerImpl implements RecommendationEventMessageController
 {
     private final Logger log = LoggerFactory.getLogger(RecommendationEventMessageControllerImpl.class);

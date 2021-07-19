@@ -262,12 +262,6 @@ public class TrainingTask
 
                         ctx.close();
                         recommendationService.putContext(user, recommender, ctx);
-                        
-                        //TODO: delete
-                        appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                user.getUsername(),
-                                "TestError",
-                                recommender));
                     }
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.

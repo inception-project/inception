@@ -99,7 +99,7 @@ public class LoggedEventMessageServiceImplTest
         assertThat(msg.getDocumentName()).isEqualTo(testDoc.getName());
         assertThat(msg.getProjectName()).isEqualTo(testProject.getName());
         assertThat(msg.getActorName()).isEqualTo(testAdmin.getUsername());
-        assertThat(msg.getEventMsg()).isEqualTo(SpanCreatedEvent.class.getSimpleName());
+        assertThat(msg.getEventType()).isEqualTo(SpanCreatedEvent.class.getSimpleName());
     }
     
     @SpringBootConfiguration

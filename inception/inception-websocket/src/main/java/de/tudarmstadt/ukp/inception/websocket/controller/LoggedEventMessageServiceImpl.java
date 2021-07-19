@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Service
@@ -66,7 +67,12 @@ public class LoggedEventMessageServiceImpl implements LoggedEventMessageService
     @Override
     public LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent) {
         EventLoggingAdapter<ApplicationEvent> adapter = getSpecificAdapter(aEvent);
-
+    
+        // If no adapter could be found, check if the generic adapter applies
+        if (adapter == null && GenericEventAdapter.INSTANCE.accepts(aEvent)) {
+            adapter = GenericEventAdapter.INSTANCE;
+        }
+        
         if (adapter == null) {
             return null;
         }
