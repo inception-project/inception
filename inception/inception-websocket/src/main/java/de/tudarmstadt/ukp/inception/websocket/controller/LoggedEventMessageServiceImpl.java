@@ -37,13 +37,14 @@ import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Service
-public class LoggedEventMessageServiceImpl implements LoggedEventMessageService
+public class LoggedEventMessageServiceImpl
+    implements LoggedEventMessageService
 {
     private final ProjectService projectService;
     private final DocumentService docService;
     private final EventRepository eventRepo;
     private final List<EventLoggingAdapter<?>> eventAdapters;
-    
+
     public LoggedEventMessageServiceImpl(@Lazy @Autowired List<EventLoggingAdapter<?>> aAdapters,
             @Autowired DocumentService aDocService, @Autowired ProjectService aProjectService,
             @Autowired EventRepository aEventRepository)
@@ -53,8 +54,10 @@ public class LoggedEventMessageServiceImpl implements LoggedEventMessageService
         projectService = aProjectService;
         eventRepo = aEventRepository;
     }
-    
-    public List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents, int aMaxEvents)
+
+    @Override
+    public List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents,
+            int aMaxEvents)
     {
         List<LoggedEventMessage> recentEvents = eventRepo
                 .listFilteredRecentActivity(aFilteredEvents, aMaxEvents).stream()
@@ -63,16 +66,17 @@ public class LoggedEventMessageServiceImpl implements LoggedEventMessageService
                 .collect(toList());
         return recentEvents;
     }
-    
+
     @Override
-    public LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent) {
+    public LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent)
+    {
         EventLoggingAdapter<ApplicationEvent> adapter = getSpecificAdapter(aEvent);
-    
+
         // If no adapter could be found, check if the generic adapter applies
         if (adapter == null && GenericEventAdapter.INSTANCE.accepts(aEvent)) {
             adapter = GenericEventAdapter.INSTANCE;
         }
-        
+
         if (adapter == null) {
             return null;
         }
@@ -103,15 +107,13 @@ public class LoggedEventMessageServiceImpl implements LoggedEventMessageService
                 aCreated, aEventType);
         return eventMsg;
     }
-    
+
     @SuppressWarnings("unchecked")
     private EventLoggingAdapter<ApplicationEvent> getSpecificAdapter(ApplicationEvent aEvent)
     {
         Optional<EventLoggingAdapter<?>> eventAdapter = eventAdapters.stream() //
-                .filter(adapter -> adapter.accepts(aEvent))
-                .findFirst();
+                .filter(adapter -> adapter.accepts(aEvent)).findFirst();
 
         return (EventLoggingAdapter<ApplicationEvent>) eventAdapter.orElse(null);
     }
-
 }

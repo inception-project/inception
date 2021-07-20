@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 public interface LoggedEventMessageService
 {
-    public List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents, int aMaxEvents);
-    public LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent);
+    List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents, int aMaxEvents);
+
+    LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent);
 }
