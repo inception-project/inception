@@ -17,16 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.controller;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.SetUtils.unmodifiableSet;
 
 import java.security.Principal;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
@@ -45,6 +49,11 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.inception.log.EventRepository;
+import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Controller
@@ -72,21 +81,29 @@ public class LoggedEventMessageControllerImpl
     public static final String LOGGED_EVENTS_TOPIC = "/topic" + LOGGED_EVENTS;
 
     private final SimpMessagingTemplate msgTemplate;
-    private final LoggedEventMessageService loggedEventService;
+    private final ProjectService projectService;
+    private final DocumentService docService;
+    private final EventRepository eventRepo;
+    private final List<EventLoggingAdapter<?>> eventAdapters;
 
-    public LoggedEventMessageControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate,
-            @Autowired LoggedEventMessageService aLoggedEventService)
+    @Autowired
+    public LoggedEventMessageControllerImpl(SimpMessagingTemplate aMsgTemplate,
+            @Lazy List<EventLoggingAdapter<?>> aAdapters, DocumentService aDocService,
+            ProjectService aProjectService, EventRepository aEventRepository)
     {
         msgTemplate = aMsgTemplate;
-        loggedEventService = aLoggedEventService;
+        eventAdapters = aAdapters;
+        docService = aDocService;
+        projectService = aProjectService;
+        eventRepo = aEventRepository;
     }
 
     @EventListener
     @Override
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
-        LoggedEventMessage eventMsg = loggedEventService.applicationEventToLoggedEventMessage(aEvent);
-        
+        LoggedEventMessage eventMsg = applicationEventToLoggedEventMessage(aEvent);
+
         if (eventMsg == null) {
             return;
         }
@@ -99,8 +116,8 @@ public class LoggedEventMessageControllerImpl
     @Override
     public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal)
     {
-        List<LoggedEventMessage> recentEvents = loggedEventService
-                .getMostRecentLoggedEvents(GENERIC_EVENTS, MAX_EVENTS);
+        List<LoggedEventMessage> recentEvents = getMostRecentLoggedEvents(GENERIC_EVENTS,
+                MAX_EVENTS);
         return recentEvents;
     }
 
@@ -110,5 +127,65 @@ public class LoggedEventMessageControllerImpl
     public String handleException(Throwable exception)
     {
         return exception.getMessage();
+    }
+
+    public List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents,
+            int aMaxEvents)
+    {
+        List<LoggedEventMessage> recentEvents = eventRepo
+                .listFilteredRecentActivity(aFilteredEvents, aMaxEvents).stream()
+                .map(event -> createLoggedEventMessage(event.getUser(), event.getProject(),
+                        event.getCreated(), event.getEvent(), event.getDocument()))
+                .collect(toList());
+        return recentEvents;
+    }
+
+    public LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent)
+    {
+        EventLoggingAdapter<ApplicationEvent> adapter = getSpecificAdapter(aEvent);
+
+        // If no adapter could be found, check if the generic adapter applies
+        if (adapter == null && GenericEventAdapter.INSTANCE.accepts(aEvent)) {
+            adapter = GenericEventAdapter.INSTANCE;
+        }
+
+        if (adapter == null) {
+            return null;
+        }
+
+        // FIXME: Why are we fetching the annotator user here? Why is the actual user not ok?
+        String user = adapter.getAnnotator(aEvent);
+        if (user == null) {
+            user = adapter.getUser(aEvent);
+        }
+
+        LoggedEventMessage eventMsg = createLoggedEventMessage(user, adapter.getProject(aEvent),
+                adapter.getCreated(aEvent), adapter.getEvent(aEvent), adapter.getDocument(aEvent));
+        return eventMsg;
+    }
+
+    private LoggedEventMessage createLoggedEventMessage(String aUsername, long aProjectId,
+            Date aCreated, String aEventType, long aDocId)
+    {
+        String projectName = null;
+        String docName = null;
+        if (aProjectId > -1) {
+            projectName = projectService.getProject(aProjectId).getName();
+            if (aDocId > -1) {
+                docName = docService.getSourceDocument(aProjectId, aDocId).getName();
+            }
+        }
+        LoggedEventMessage eventMsg = new LoggedEventMessage(aUsername, projectName, docName,
+                aCreated, aEventType);
+        return eventMsg;
+    }
+
+    @SuppressWarnings("unchecked")
+    private EventLoggingAdapter<ApplicationEvent> getSpecificAdapter(ApplicationEvent aEvent)
+    {
+        Optional<EventLoggingAdapter<?>> eventAdapter = eventAdapters.stream() //
+                .filter(adapter -> adapter.accepts(aEvent)).findFirst();
+
+        return (EventLoggingAdapter<ApplicationEvent>) eventAdapter.orElse(null);
     }
 }

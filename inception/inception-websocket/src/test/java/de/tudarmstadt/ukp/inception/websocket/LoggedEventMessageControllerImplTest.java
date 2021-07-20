@@ -49,28 +49,26 @@ import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageService;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageServiceImpl;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @ExtendWith(SpringExtension.class)
-public class LoggedEventMessageServiceImplTest
+public class LoggedEventMessageControllerImplTest
 {
     private @Mock DocumentService docService;
     private @Mock ProjectService projectService;
     private @Mock EventRepository eventRepository;
-    private LoggedEventMessageService loggedEventService;
     private List<EventLoggingAdapter<?>> adapters;
     private TestChannel outboundChannel;
-    
+
     private Project testProject;
     private SourceDocument testDoc;
     private User testAdmin;
-    
+
     private LoggedEventMessageControllerImpl sut;
-    
+
     @BeforeEach
-    public void setup() {
+    public void setup()
+    {
         outboundChannel = new TestChannel();
         adapters = asList(new SpanEventAdapter());
         testProject = new Project("testProject");
@@ -78,38 +76,38 @@ public class LoggedEventMessageServiceImplTest
         testDoc = new SourceDocument("testDoc", testProject, "text");
         testDoc.setId(2L);
         testAdmin = new User("testAdmin", Role.ROLE_USER, Role.ROLE_ADMIN);
-        
+
         when(projectService.getProject(1L)).thenReturn(testProject);
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
-        
-        loggedEventService = new LoggedEventMessageServiceImpl(adapters, docService, projectService, eventRepository);
 
         sut = new LoggedEventMessageControllerImpl(new SimpMessagingTemplate(outboundChannel),
-                loggedEventService);
+                adapters, docService, projectService, eventRepository);
     }
-    
+
     @Test
-    public void thatSpanCreatedEventIsRelayedToUser() {
-        sut.onApplicationEvent(new SpanCreatedEvent(getClass(), testDoc, testAdmin.getUsername(), null, null));
-        
+    public void thatSpanCreatedEventIsRelayedToUser()
+    {
+        sut.onApplicationEvent(
+                new SpanCreatedEvent(getClass(), testDoc, testAdmin.getUsername(), null, null));
+
         List<Message<?>> messages = outboundChannel.getMessages();
         LoggedEventMessage msg = (LoggedEventMessage) messages.get(0).getPayload();
-        
+
         assertThat(messages).hasSize(1);
         assertThat(msg.getDocumentName()).isEqualTo(testDoc.getName());
         assertThat(msg.getProjectName()).isEqualTo(testProject.getName());
         assertThat(msg.getActorName()).isEqualTo(testAdmin.getUsername());
         assertThat(msg.getEventType()).isEqualTo(SpanCreatedEvent.class.getSimpleName());
     }
-    
+
     @SpringBootConfiguration
-    @EnableAutoConfiguration(exclude = {EventLoggingAutoConfiguration.class, 
-            LiquibaseAutoConfiguration.class})
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.websocket"})
+    @EnableAutoConfiguration(exclude = { EventLoggingAutoConfiguration.class,
+            LiquibaseAutoConfiguration.class })
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.websocket" })
     public static class SpringConfig
     {
     }
-    
+
     public class TestChannel
         extends AbstractMessageChannel
     {
@@ -133,5 +131,5 @@ public class LoggedEventMessageServiceImplTest
             messages.clear();
         }
     }
-    
+
 }
