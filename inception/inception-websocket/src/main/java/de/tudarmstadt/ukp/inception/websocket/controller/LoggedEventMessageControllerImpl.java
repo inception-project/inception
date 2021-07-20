@@ -108,7 +108,6 @@ public class LoggedEventMessageControllerImpl
             return;
         }
 
-        // System.out.printf("Sending: %s%n", eventMsg.getEventMsg());
         msgTemplate.convertAndSend(LOGGED_EVENTS_TOPIC, eventMsg);
     }
 
@@ -129,7 +128,7 @@ public class LoggedEventMessageControllerImpl
         return exception.getMessage();
     }
 
-    public List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents,
+    private List<LoggedEventMessage> getMostRecentLoggedEvents(Set<String> aFilteredEvents,
             int aMaxEvents)
     {
         List<LoggedEventMessage> recentEvents = eventRepo
@@ -140,7 +139,7 @@ public class LoggedEventMessageControllerImpl
         return recentEvents;
     }
 
-    public LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent)
+    private LoggedEventMessage applicationEventToLoggedEventMessage(ApplicationEvent aEvent)
     {
         EventLoggingAdapter<ApplicationEvent> adapter = getSpecificAdapter(aEvent);
 
