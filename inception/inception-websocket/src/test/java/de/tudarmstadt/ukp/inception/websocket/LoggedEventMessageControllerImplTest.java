@@ -35,6 +35,7 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.support.AbstractMessageChannel;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -45,7 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
-import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
@@ -54,10 +55,11 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 @ExtendWith(SpringExtension.class)
 public class LoggedEventMessageControllerImplTest
 {
+    private static final String TEST_ADMIN_USERNAME = "testAdmin";
     private @Mock DocumentService docService;
     private @Mock ProjectService projectService;
     private @Mock EventRepository eventRepository;
-    private List<EventLoggingAdapter<?>> adapters;
+    private EventLoggingAdapterRegistryImpl adapterRegistry;
     private TestChannel outboundChannel;
 
     private Project testProject;
@@ -70,21 +72,23 @@ public class LoggedEventMessageControllerImplTest
     public void setup()
     {
         outboundChannel = new TestChannel();
-        adapters = asList(new SpanEventAdapter());
+        adapterRegistry = new EventLoggingAdapterRegistryImpl(asList(new SpanEventAdapter()));
+        adapterRegistry.onContextRefreshedEvent(null);
         testProject = new Project("testProject");
         testProject.setId(1L);
         testDoc = new SourceDocument("testDoc", testProject, "text");
         testDoc.setId(2L);
-        testAdmin = new User("testAdmin", Role.ROLE_USER, Role.ROLE_ADMIN);
+        testAdmin = new User(TEST_ADMIN_USERNAME, Role.ROLE_USER, Role.ROLE_ADMIN);
 
         when(projectService.getProject(1L)).thenReturn(testProject);
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
 
         sut = new LoggedEventMessageControllerImpl(new SimpMessagingTemplate(outboundChannel),
-                adapters, docService, projectService, eventRepository);
+                adapterRegistry, docService, projectService, eventRepository);
     }
 
     @Test
+    @WithMockUser(TEST_ADMIN_USERNAME)
     public void thatSpanCreatedEventIsRelayedToUser()
     {
         sut.onApplicationEvent(
@@ -131,5 +135,4 @@ public class LoggedEventMessageControllerImplTest
             messages.clear();
         }
     }
-
 }
