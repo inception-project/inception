@@ -1296,8 +1296,9 @@ public class RecommendationServiceImpl
                                         username, document.getName(), document.getId(),
                                         document.getProject().getName(),
                                         document.getProject().getId(), e);
-                                applicationEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                        username, "Cannot read annotation CAS... skipping", recommender));
+                                applicationEventPublisher.publishEvent(new RecommenderTaskEvent(
+                                        this, username, "Cannot read annotation CAS... skipping",
+                                        recommender));
                                 continue nextDocument;
                             }
                         }
@@ -1387,6 +1388,7 @@ public class RecommendationServiceImpl
                                 if (!suggestions.isEmpty()) {
                                     predictions.putPredictions(suggestions);
                                 }
+
                                 predictions.log(LogMessage.info(r.getRecommender().getName(),
                                         "Inherited [%d] predictions from previous run",
                                         suggestions.size()));

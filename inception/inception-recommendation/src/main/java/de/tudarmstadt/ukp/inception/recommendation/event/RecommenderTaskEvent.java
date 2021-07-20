@@ -25,41 +25,28 @@ public class RecommenderTaskEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 777340980838549414L;
-    
+
     private final String user;
-    private String errorMsg;
-    private String eventMsg;
     private final Recommender recommender;
-    
-    public RecommenderTaskEvent(Object aSource, String aUser, String aError, 
-            String aMsg, Recommender aRecommender) 
+    private String errorMsg;
+
+    public RecommenderTaskEvent(Object aSource, String aUser, String aError,
+            Recommender aRecommender)
     {
         super(aSource);
         user = aUser;
         errorMsg = aError;
-        eventMsg = aMsg;
         recommender = aRecommender;
     }
-    
-    public RecommenderTaskEvent(Object aSource, String aUser, Recommender aRecommender) 
+
+    public RecommenderTaskEvent(Object aSource, String aUser, Recommender aRecommender)
     {
-        this(aSource, aUser, null, null, aRecommender);
-    }
-    
-    public RecommenderTaskEvent(Object aSource, String aUser, String aError,
-            Recommender aRecommender)
-    {
-        this(aSource, aUser, aError, null, aRecommender);
+        this(aSource, aUser, null, aRecommender);
     }
 
     public String getErrorMsg()
     {
         return errorMsg;
-    }
-    
-    public String getEventMsg()
-    {
-        return eventMsg;
     }
 
     public String getUser()
@@ -72,14 +59,8 @@ public class RecommenderTaskEvent
         errorMsg = aErrorMsg;
     }
 
-    public void setEventMsg(String aEventMsg)
-    {
-        eventMsg = aEventMsg;
-    }
-
     public Recommender getRecommender()
     {
         return recommender;
     }
-    
 }

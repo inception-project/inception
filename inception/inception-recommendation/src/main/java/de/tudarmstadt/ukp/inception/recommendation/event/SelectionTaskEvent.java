@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
-
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
@@ -25,37 +24,30 @@ public class SelectionTaskEvent
     extends RecommenderTaskEvent
 {
     private static final long serialVersionUID = -6979755126995087515L;
-    
+
     private final EvaluationResult result;
-    
-    public SelectionTaskEvent(Object aSource, Recommender aRecommender, String aUser, String aError, 
-            String aMsg, EvaluationResult aResult) 
+
+    public SelectionTaskEvent(Object aSource, Recommender aRecommender, String aUser, String aError)
     {
-        super(aSource, aUser, aError, aMsg, aRecommender);
+        this(aSource, aRecommender, aUser, aError, null);
+    }
+
+    public SelectionTaskEvent(Object aSource, Recommender aRecommender, String aUser,
+            EvaluationResult aResult)
+    {
+        this(aSource, aRecommender, aUser, null, aResult);
+    }
+
+    public SelectionTaskEvent(Object aSource, Recommender aRecommender, String aUser, String aError,
+            EvaluationResult aResult)
+    {
+        super(aSource, aUser, aError, aRecommender);
+
         result = aResult;
-    }
-    
-    public SelectionTaskEvent(Object aSource, Recommender aRecommender,
-            String aUser, String aError)
-    {
-        this(aSource, aRecommender, aUser, aError, null, null);
-    }
-
-    public SelectionTaskEvent(Object aSource, Recommender aRecommender,
-            String aUser, String aError, EvaluationResult aResult)
-    {
-        this(aSource, aRecommender, aUser, aError, null, aResult);
-    }
-
-    public SelectionTaskEvent(Object aSource, Recommender aRecommender,
-            String aUser, EvaluationResult aResult)
-    {
-        this(aSource, aRecommender, aUser, null, null, aResult);
     }
 
     public EvaluationResult getResult()
     {
         return result;
     }
-
 }
