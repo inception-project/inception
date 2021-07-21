@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImpo
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -211,6 +212,7 @@ public class MtasDocumentIndexTest
         // Create annotation document
         AnnotationDocument annotationDocument = documentService
                 .createOrGetAnnotationDocument(aSourceDocument, aUser);
+
 
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
@@ -466,11 +468,16 @@ public class MtasDocumentIndexTest
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setName("Named Entity");
+        String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
+
         // String sourceContent = "Hello World x";
-        String sourceContent = "The capital of Galicia is Santiago de Compostela. Actually, its history is fascinating.";
-        // annotateDocument(project, user, sourceDocument);
+        //String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its history is fascinating; nonetheless: Madrid is Spain's capital?";
+        String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, sourceContent));
+        annotateDocument(project, user, sourceDocument);
 
         SourceDocument otherDocument = new SourceDocument();
         otherDocument.setName("Other document");
@@ -483,24 +490,60 @@ public class MtasDocumentIndexTest
 
         String statistic = "NumTokens";
 
-        System.out.println("number of tokkens ="
-                + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
+        //System.out.println("number of tokens ="
+        //        + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
+
+        System.out.println("number of tokens ="
+                    + searchService.getProjectTextStatistics(user, project, statistic, sourceDocument, layer, null, punctuationMarks));
 
         assertThat(0).isEqualTo(0);
-        /*
-         * // Test results SearchResult expectedResult = new SearchResult();
-         * expectedResult.setDocumentId(sourceDocument.getId());
-         * expectedResult.setDocumentTitle("Annotation document"); // When searching for an
-         * annotation, we don't get the matching // text back... not sure why...
-         * expectedResult.setText(""); expectedResult.setLeftContext("");
-         * expectedResult.setRightContext(""); expectedResult.setOffsetStart(15);
-         * expectedResult.setOffsetEnd(22); expectedResult.setTokenStart(3);
-         * expectedResult.setTokenLength(1);
-         * 
-         * assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
-         * 
-         */
     }
+
+    @Test
+    public void testMtas() throws Exception
+    {
+        Project project = new Project();
+        project.setName("TestMtas");
+
+        createProject(project);
+
+        User user = userRepository.get("admin");
+
+        SourceDocument sourceDocument = new SourceDocument();
+        sourceDocument.setName("Annotation document");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        //AnnotationLayer layer = new AnnotationLayer();
+        //layer.setName("Named Entity");
+        //String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
+
+        // String sourceContent = "Hello World x";
+        //String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its history is fascinating; nonetheless: Madrid is Spain's capital?";
+        String sourceContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(Pair.of(sourceDocument, sourceContent));
+        //annotateDocument(project, user, sourceDocument);
+
+        SourceDocument otherDocument = new SourceDocument();
+        otherDocument.setName("Other document");
+        otherDocument.setProject(project);
+        otherDocument.setFormat("text");
+
+        String otherContent = "Goodbye moon y";
+
+        uploadDocument(Pair.of(otherDocument, otherContent));
+
+        String statistic = "NumTokens";
+
+        //System.out.println("number of tokens ="
+        //        + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
+
+        searchService.executeTest(user, project, statistic, sourceDocument, null, null);
+
+        assertThat(0).isEqualTo(0);
+    }
+
 
     @SpringBootConfiguration
     public static class TestContext

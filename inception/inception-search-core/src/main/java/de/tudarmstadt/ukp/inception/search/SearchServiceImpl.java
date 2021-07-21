@@ -17,6 +17,35 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.apache.commons.lang3.Validate;
+import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionalEventListener;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -41,32 +70,6 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocum
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
-import org.apache.commons.lang3.Validate;
-import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionalEventListener;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
-import static java.lang.System.currentTimeMillis;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * <p>
@@ -526,23 +529,132 @@ public class SearchServiceImpl
         }
     }
 
-    @Transactional
-    public long getStatistic(User aUser, Project aProject, String aStatistic,
-                                                 SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-                                                 AnnotationFeature aAnnotationFeature)
+    public void executeTest(User aUser, Project aProject, String aStatistic,
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature)
         throws IOException, ExecutionException
     {
-        log.trace("Statistics [{}] for user [{}] in project [{}]({})", aStatistic, aUser.getUsername(),
-            aProject.getName(), aProject.getId());
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            Index index = pooledIndex.get();
+
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            index.getPhysicalIndex().testMtas(new StatisticRequest(aProject, aUser, aStatistic,
+                    aDocument, aAnnotationLayer, aAnnotationFeature));
+        }
+    }
+
+    @Override
+    @Transactional
+    public HashMap<String, HashMap<String, Double>> getProjectTextStatistics(User aUser,
+            Project aProject, String aStatistic, SourceDocument aDocument,
+            AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature,
+            String[] aPunctuationMarks)
+        throws IOException, ExecutionException
+    {
+        log.trace("Statistics for user [{}] in project [{}]({})", aUser.getUsername(),
+                aProject.getName(), aProject.getId());
+
+        // TODO : irgendwie diese zahl aus aProject rauskriegen
+        int noOfTextDocuments = 2;
+
+        HashMap<String, HashMap<String, Double>> textStatisticsTable = new HashMap<String, HashMap<String, Double>>();
+
+        HashMap<String, Double> averages = new HashMap<String, Double>();
+        HashMap<String, Double> minima = new HashMap<String, Double>();
+        HashMap<String, Double> maxima = new HashMap<String, Double>();
+        HashMap<String, Double> medians = new HashMap<String, Double>();
+        // uses unbiased sample variance, i.e. we divide by (n-1) and not by n
+        HashMap<String, Double> standardDeviations = new HashMap<String, Double>();
+
+        ArrayList<Double> tokenCounts = new ArrayList<Double>();
+        ArrayList<Double> sentenceCounts = new ArrayList<Double>();
+        ArrayList<Double> typeCounts = new ArrayList<Double>();
+        ArrayList<Double> punctuationCounts = new ArrayList<Double>();
+        ArrayList<Double> typeTokenCounts = new ArrayList<Double>();
+        ArrayList<Double> tokenSentenceCounts = new ArrayList<Double>();
 
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
             Index index = pooledIndex.get();
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
-            return index.getPhysicalIndex().fetchStatistic(new StatisticRequest(aProject, aUser, aStatistic,
-                 aDocument, aAnnotationLayer, aAnnotationFeature));
+            for (int i = 0; i < noOfTextDocuments; i++) {
+                // TODO: Textdokument aus aProject rauskriegen
+                SourceDocument currentDocument = aDocument;
+
+                HashMap<String, Double> currentResults = index.getPhysicalIndex()
+                        .fetchTextStatistics(aDocument, aPunctuationMarks);
+
+                Double currentTypeToken = currentResults.get("Number of Types")
+                        / currentResults.get("Number of Tokens");
+                Double currentTokenSentence = currentResults.get("Number of Tokens")
+                        / currentResults.get("Number of Sentences");
+
+                currentResults.put("Type-Token Ratio", currentTypeToken);
+                currentResults.put("Token-Sentence Ratio", currentTokenSentence);
+
+                tokenCounts.add(currentResults.get("Number of Tokens"));
+                sentenceCounts.add(currentResults.get("Number of Sentences"));
+                typeCounts.add(currentResults.get("Number of Types"));
+                punctuationCounts.add(currentResults.get("Number of Punctuation Marks"));
+                typeTokenCounts.add(currentTypeToken);
+                tokenSentenceCounts.add(currentTokenSentence);
+
+                textStatisticsTable.put("Doc" + String.valueOf(i), currentResults);
+
+            }
+            HashMap<String, ArrayList<Double>> calculationList = new HashMap<String, ArrayList<Double>>();
+            calculationList.put("Number of Tokens", tokenCounts);
+            calculationList.put("Number of Sentences", sentenceCounts);
+            calculationList.put("Number of Types", typeCounts);
+            calculationList.put("Number of Punctuation Marks", punctuationCounts);
+            calculationList.put("Type-Token Ratio", typeTokenCounts);
+            calculationList.put("Token-Sentence Ratio", tokenSentenceCounts);
+
+            for (String dataName : calculationList.keySet()) {
+                ArrayList<Double> data = calculationList.get(dataName);
+                Collections.sort(data);
+
+                minima.put(dataName, data.get(0));
+                maxima.put(dataName, data.get(data.size() - 1));
+
+                if (data.size() % 2 == 0) {
+                    medians.put(dataName,
+                            (data.get(data.size() / 2) + data.get(data.size() / 2 + 1)) / 2);
+                }
+                else {
+                    medians.put(dataName, data.get((data.size() - 1) / 2));
+                }
+
+                double total = 0;
+                for (double num : data) {
+                    total = total + num;
+                }
+                double avg = total / data.size();
+                averages.put(dataName, avg);
+
+                if (data.size() == 1) {
+                    standardDeviations.put(dataName, 0.0);
+                }
+                else {
+                    double diffs = 0;
+                    for (double num : data) {
+                        diffs = diffs + Math.pow((num - avg), 2);
+                    }
+                    standardDeviations.put(dataName, Math.pow(diffs / (data.size() - 1), 0.5));
+                }
+
+            }
+
         }
+        textStatisticsTable.put("Minimum", minima);
+        textStatisticsTable.put("Maximum", maxima);
+        textStatisticsTable.put("Median", medians);
+        textStatisticsTable.put("Average", averages);
+        textStatisticsTable.put("Standard Deviation", standardDeviations);
+
+        return textStatisticsTable;
     }
 
     /**

@@ -17,16 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public interface SearchService
 {
@@ -106,9 +107,15 @@ public interface SearchService
             AnnotationFeature aAnnotationFeature)
         throws ExecutionException, IOException;
 
-    public long getStatistic(User aUser, Project aProject, String aStatistic,
-            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature)
+    public HashMap<String, HashMap<String, Double>> getProjectTextStatistics(User aUser,
+            Project aProject, String aStatistic, SourceDocument aDocument,
+            AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature,
+            String[] aPunctuationMarks)
+        throws IOException, ExecutionException;
+
+    public void executeTest(User aUser, Project aProject, String aStatistic,
+                            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+                            AnnotationFeature aAnnotationFeature)
         throws IOException, ExecutionException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);

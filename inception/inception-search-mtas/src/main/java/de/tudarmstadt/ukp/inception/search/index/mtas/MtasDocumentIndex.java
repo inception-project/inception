@@ -39,6 +39,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -113,8 +115,10 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
+import mtas.codec.util.CodecComponent;
 import mtas.codec.util.CodecInfo;
 import mtas.codec.util.CodecUtil;
+import mtas.codec.util.collector.MtasDataItem;
 import mtas.parser.cql.MtasCQLParser;
 import mtas.parser.cql.ParseException;
 import mtas.search.spans.util.MtasSpanQuery;
@@ -403,97 +407,226 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public long fetchStatistic(StatisticRequest aStatisticRequest)
-        throws ExecutionException, IOException
+    public void testMtas(StatisticRequest aStatisticRequest)
     {
-        if (aStatisticRequest.getStatistic() == "NumTokens") {
-            long docNumberLong = aStatisticRequest.getLimitedToDocument().get().getId();
-            System.out.println(aStatisticRequest.getLimitedToDocument().get().getName());
-            int docNumber = (int) docNumberLong - 1;
-            IndexSearcher searcher = null;
-            try {
-                searcher = getSearcherManager().acquire();
-                /*
-                 * Document document = searcher.doc(docNumber);
-                 * 
-                 * System.out.println(document.getValues(FIELD_CONTENT)); CollectionStatistics
-                 * statistics = searcher.collectionStatistics(FIELD_CONTENT);
-                 * 
-                 * System.out.println("docCount= " + statistics.docCount());
-                 * System.out.println("field name= " + statistics.field());
-                 * System.out.println("maxDoc= " + statistics.maxDoc());
-                 * System.out.println("sumtotaltermfreq= " + statistics.sumTotalTermFreq());
-                 */
-                IndexReader reader = searcher.getIndexReader();
+        System.out.println("Hallo?");
+        IndexSearcher searcher = null;
 
-                Document doc = reader.document(docNumber);
-                System.out.println("Processing file: " + doc.get("id"));
+        long docId = aStatisticRequest.getLimitedToDocument().get().getId();
+        int docNumber = (int) docId - 1;
 
-                Terms termVector = reader.getTermVector(docNumber, FIELD_CONTENT);
-                TermsEnum itr = termVector.iterator();
-                BytesRef term = null;
+        try {
+            searcher = getSearcherManager().acquire();
+            IndexReader indexReader = searcher.getIndexReader();
+            System.out.println(indexReader.getDocCount("is"));
 
-                long noOfSents = 0;
-                long noOfTokens = 0;
-                long noOfPunctMarks = 0;
+            // IndexReader indexReader = DirectoryReader.open(directory);
+            // IndexSearcher searcher = new IndexSearcher(indexReader);
+            // ComponentField fieldStats = new ComponentField(CreateIndex.FIELD_CONTENT,
+            // CreateIndex.FIELD_ID);
+            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
+                    FIELD_CONTENT);
 
-                // Array of prefixes
-                String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
-
-                while ((term = itr.next()) != null) {
-                    String termText = term.utf8ToString();
-                    Term termInstance = new Term(FIELD_CONTENT, term);
-                    long termFreq = reader.totalTermFreq(termInstance);
-                    long docCount = reader.docFreq(termInstance);
-
-                    System.out.println("term: " + termText + ", termFreq = " + termFreq
-                            + ", docCount = " + docCount);
-                    if (termText.startsWith("s")) {
-                        noOfSents = noOfSents + reader.totalTermFreq(termInstance);
-                    }
-                    else if (termText.startsWith("T")) {
-                        if (Stream.of(punctuationMarks).anyMatch(termText::endsWith) && termText
-                                .toCharArray()[termText.toCharArray().length - 3] == 'n') {
-                            noOfPunctMarks = noOfPunctMarks + reader.totalTermFreq(termInstance);
-                        }
-                        else {
-                            noOfTokens = noOfTokens + reader.totalTermFreq(termInstance);
-                        }
-                    }
-                    else {
-                        throw new ExecutionException(
-                                "Found instance which is neither sentence nor token!");
-                    }
+            ArrayList<Integer> fullDocSet = new ArrayList<Integer>(
+                    Arrays.asList(new Integer[] { 0, 1, 2 }));
+            //ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
+            //fullDocSet.add(0);
+            ArrayList<Integer> fullDocList = new ArrayList<Integer>();
+            Collections.sort(fullDocList);
+            //fullDocList.add(0);
+                // fieldStats.termVectorList.add(new CodecComponent.ComponentTermVector("wordList",
+                // ));
+                fieldStats.termVectorList.add(new CodecComponent.ComponentTermVector("wordList",
+                       DEFAULT_PREFIX, null, null, null, null, null, null, "n,sum",
+                      false, null, CodecUtil.STATS_TYPE_SUM , CodecUtil.SORT_DESC, null, 0, null, null, null, null, null, null,
+                       null, null, null));
+                if (fullDocSet == null) {
+                    System.out.println("ist null");
+                } else {
+                    System.out.println("ist nicht null");
                 }
-                System.out.println("# of sentences: " + noOfSents);
-                System.out.println("# of punctuation marks: " + noOfPunctMarks);
-
-                return noOfTokens;
-                /*
-                 * IndexReader reader = searcher.getIndexReader(); Document doc =
-                 * reader.document(docNumber);
-                 * System.out.println("Processing file: "+doc.get("id"));
-                 * System.out.println(reader.getSumDocFreq(FIELD_CONTENT));
-                 * System.out.println(reader.getSumTotalTermFreq(FIELD_CONTENT));
-                 * 
-                 */
-            }
-            catch (Exception e) {
-                throw new ExecutionException(
-                        "Unable to fetch statistic [" + aStatisticRequest.getStatistic() + "]", e);
-            }
-            finally {
-                if (searcher != null) {
-                    // Releasing and setting to null per recommendation in JavaDoc of
-                    // release(searcher)
-                    // method
-                    getSearcherManager().release(searcher);
-                    searcher = null;
+                CodecUtil.collectField(FIELD_CONTENT, searcher, indexReader, fullDocList,
+                        fullDocSet, fieldStats, null);
+                for (CodecComponent.ComponentTermVector ct : fieldStats.termVectorList) {
+                    HashMap<String, Map<String, Object>> tvList = new HashMap<String, Map<String, Object>>();
+                    Map<String, ?> tcList = ct.subComponentFunction.dataCollector.getResult()
+                            .getList();
+                    for (String key : tcList.keySet()) {
+                        tvList.put(key, ((MtasDataItem<?, ?>) tcList.get(key)).rewrite(false));
+                    }
+                    System.out.println(tvList);
                 }
-            }
 
         }
-        return 1L;
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public HashMap<String, Double> fetchTextStatistics(SourceDocument aSourceDocument,
+            String[] aPunctuationMarks)
+        throws ExecutionException, IOException
+    {
+        HashMap<String, Double> textStatistics = new HashMap<String, Double>();
+        String[] punctuationMarks = aPunctuationMarks;
+
+        // long docNumberLong = aStatisticRequest.getLimitedToDocument().get().getId();
+        long docNumberLong = aSourceDocument.getId();
+
+        int docNumber = (int) docNumberLong - 1;
+
+        IndexSearcher searcher = null;
+        try {
+            searcher = getSearcherManager().acquire();
+            IndexReader reader = searcher.getIndexReader();
+            // Document doc = reader.document(docNumber);
+
+            Terms termVector = reader.getTermVector(docNumber, FIELD_CONTENT);
+            TermsEnum itr = termVector.iterator();
+            BytesRef term = null;
+
+            double noOfSents = 0;
+            double noOfTokens = 0;
+            double noOfPunctMarks = 0;
+            // Types are unique tokens
+            double noOfTypes = 0;
+
+            while ((term = itr.next()) != null) {
+                String termText = term.utf8ToString();
+                Term termInstance = new Term(FIELD_CONTENT, term);
+                long termFreq = reader.totalTermFreq(termInstance);
+                long docCount = reader.docFreq(termInstance);
+
+                System.out.println("term: " + termText + ", termFreq = " + termFreq
+                        + ", docCount = " + docCount);
+                // Is it a sentence?
+                if (termText.startsWith("s")) {
+                    noOfSents = noOfSents + reader.totalTermFreq(termInstance);
+                }
+                else if (termText.startsWith("T")) {
+                    // Is it a punctuation mark from the list?
+                    if (Stream.of(punctuationMarks).anyMatch(termText::endsWith)
+                            && termText.toCharArray()[termText.toCharArray().length - 3] == 'n') {
+                        noOfPunctMarks = noOfPunctMarks + reader.totalTermFreq(termInstance);
+                    }
+                    else {
+                        noOfTokens = noOfTokens + reader.totalTermFreq(termInstance);
+                        noOfTypes = noOfTypes + 1;
+                    }
+                }
+                else {
+                    throw new ExecutionException(
+                            "Found instance which is neither sentence nor token!");
+                }
+
+            }
+
+            textStatistics.put("Number of Sentences", noOfSents);
+            textStatistics.put("Number of Tokens", noOfTokens);
+            textStatistics.put("Number of Types", noOfTypes);
+            textStatistics.put("Number of Punctuation Marks", noOfPunctMarks);
+
+            return textStatistics;
+
+        }
+        catch (Exception e) {
+            throw new ExecutionException(
+                    "Unable to fetch text statistics, exception message: [" + e.getMessage() + "]",
+                    e);
+        }
+        finally {
+            if (searcher != null) {
+                // Releasing and setting to null per recommendation in JavaDoc of
+                // release(searcher)
+                // method
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+    }
+
+    @Override
+    public long fetchAnnotationStatistic(StatisticRequest aStatisticRequest)
+        throws ExecutionException, IOException
+    {
+        System.out.println("we are in fetchannostats");
+        long docNumberLong = aStatisticRequest.getLimitedToDocument().get().getId();
+        System.out.println(aStatisticRequest.getLimitedToDocument().get().getName());
+        int docNumber = (int) docNumberLong - 1;
+        System.out.println("DocNumber: " + docNumber);
+        IndexSearcher searcher = null;
+        try {
+            searcher = getSearcherManager().acquire();
+
+            IndexReader reader = searcher.getIndexReader();
+
+            Document doc = reader.document(docNumber);
+            // Document doc = reader.document(1);
+            System.out.println("Processing file: " + doc.get("id"));
+
+            Terms termVector = reader.getTermVector(docNumber, FIELD_CONTENT);
+            // Terms termVector = reader.getTermVector(1, FIELD_CONTENT);
+            TermsEnum itr = termVector.iterator();
+            BytesRef term = null;
+
+            long noOfSents = 0;
+            long noOfTokens = 0;
+            long noOfPunctMarks = 0;
+            long noOfTypes = 0;
+
+            // Array of punctuation marks
+            String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
+
+            while ((term = itr.next()) != null) {
+                String termText = term.utf8ToString();
+                Term termInstance = new Term(FIELD_CONTENT, term);
+                long termFreq = reader.totalTermFreq(termInstance);
+                long docCount = reader.docFreq(termInstance);
+
+                System.out.println("term: " + termText + ", termFreq = " + termFreq
+                        + ", docCount = " + docCount);
+
+                if (termText.startsWith("s")) {
+                    noOfSents = noOfSents + reader.totalTermFreq(termInstance);
+                }
+                else if (termText.startsWith("T")) {
+                    if (Stream.of(punctuationMarks).anyMatch(termText::endsWith)
+                            && termText.toCharArray()[termText.toCharArray().length - 3] == 'n') {
+                        noOfPunctMarks = noOfPunctMarks + reader.totalTermFreq(termInstance);
+                    }
+                    else {
+                        noOfTokens = noOfTokens + reader.totalTermFreq(termInstance);
+                        noOfTypes = noOfTypes + 1;
+                    }
+                }
+                else {
+                    throw new ExecutionException(
+                            "Found instance which is neither sentence nor token!");
+                }
+
+            }
+            System.out.println("# of sentences: " + noOfSents);
+            System.out.println("# of punctuation marks: " + noOfPunctMarks);
+            System.out.println("# of tokens per sentence: " + ((double) noOfTokens) / noOfSents);
+
+            return noOfTokens;
+
+        }
+        catch (Exception e) {
+            throw new ExecutionException(
+                    "Unable to fetch statistic [" + aStatisticRequest.getStatistic() + "]", e);
+        }
+        finally {
+            if (searcher != null) {
+                // Releasing and setting to null per recommendation in JavaDoc of
+                // release(searcher)
+                // method
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
