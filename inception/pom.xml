@@ -85,7 +85,6 @@
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.1</mariadb.driver.version>
-    <mysql-driver.version>8.0.20</mysql-driver.version>
     <hibernate.version>5.4.30.Final</hibernate.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
@@ -1073,12 +1072,6 @@
         <groupId>com.github.openjson</groupId>
         <artifactId>openjson</artifactId>
         <version>1.0.10</version>
-      </dependency>
-
-      <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-        <version>${mysql-driver.version}</version>
       </dependency>
 
       <dependency>
