@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.controller;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,20 +34,22 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Controller
 @ConditionalOnProperty("websocket.enabled")
-public class RecommendationEventMessageControllerImpl implements RecommendationEventMessageController
+public class RecommendationEventMessageControllerImpl
+    implements RecommendationEventMessageController
 {
-    private final Logger log = LoggerFactory.getLogger(RecommendationEventMessageControllerImpl.class);
-    
+    private final Logger log = LoggerFactory
+            .getLogger(RecommendationEventMessageControllerImpl.class);
+
     public static final String REC_EVENTS = "/recEvents";
     public static final String REC_EVENTS_TOPIC = "/queue" + REC_EVENTS;
-    
+
     private final SimpMessagingTemplate msgTemplate;
 
     public RecommendationEventMessageControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate)
     {
         msgTemplate = aMsgTemplate;
     }
-    
+
     @EventListener
     @Override
     public void onRecommenderErrorEvent(RecommenderTaskEvent aEvent)
@@ -62,12 +63,13 @@ public class RecommendationEventMessageControllerImpl implements RecommendationE
         LoggedEventMessage eventMsg = new LoggedEventMessage(aEvent.getUser(), project.getName(),
                 aEvent.getTimestamp(), aEvent.getClass().getSimpleName());
         eventMsg.setEventMsg("[" + recommender.getName() + "] " + errorMsg);
-        
+
         String channel = REC_EVENTS_TOPIC + "/" + project.getId();
-        log.debug("Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(), eventMsg.getEventMsg(), channel);
+        log.debug("Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(),
+                eventMsg.getEventMsg(), channel);
         msgTemplate.convertAndSendToUser(aEvent.getUser(), channel, eventMsg);
     }
-    
+
     @Override
     @MessageExceptionHandler
     @SendToUser("/queue/errors")
@@ -75,5 +77,4 @@ public class RecommendationEventMessageControllerImpl implements RecommendationE
     {
         return exception.getMessage();
     }
-
 }

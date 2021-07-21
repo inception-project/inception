@@ -40,7 +40,8 @@ import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Controller
-@ConditionalOnProperty({ "websocket.enabled", "websocket.loggedevent.enabled" })
+@ConditionalOnProperty(name = { "websocket.enabled", "websocket.loggedevent.enabled",
+        "event-logging.enabled" }, havingValue = "true", matchIfMissing = false)
 public class LoggedEventMessageControllerImpl
     implements LoggedEventMessageController
 {
