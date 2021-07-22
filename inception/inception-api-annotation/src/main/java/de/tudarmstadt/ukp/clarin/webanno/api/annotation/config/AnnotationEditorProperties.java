@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -34,7 +35,7 @@ public interface AnnotationEditorProperties
 
     /**
      * @return whether the "remember layer" setting is configurable by the user as preference. When
-     *         disabled, {@link #isRememberLayer} always returns true.
+     *         disabled, {@link AnnotationPreference#setRememberLayer} is set to true.
      */
     boolean isRememberLayerEnabled();
 
