@@ -213,7 +213,7 @@ public class SearchAnnotationSidebar
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
         resultsGroupContainer.setOutputMarkupId(true);
         mainContainer.add(resultsGroupContainer);
-        
+
         searchResultGroups = new DataView<ResultsGroup>("searchResultGroups", resultsProvider)
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -646,9 +646,22 @@ public class SearchAnnotationSidebar
             return;
         }
 
+        boolean match = false;
+
         // create a new annotation if not already there or if stacking is enabled and the
         // new annotation has different features than the existing one
-        if (annoFS == null || (!overrideExisting && !featureValuesMatchCurrentState(annoFS))) {
+        for (AnnotationFS eannoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
+            if (overrideExisting) {
+                setFeatureValues(aDocument, aCas, aAdapter, state, eannoFS);
+                aBulkResult.updated++;
+            }
+            else if (featureValuesMatchCurrentState(eannoFS)) {
+                match = true;
+            }
+        }
+
+        if (annoFS == null || (!match && !overrideExisting)) {
             try {
                 annoFS = aAdapter.add(aDocument, currentUser.getUsername(), aCas,
                         aSearchResult.getOffsetStart(), aSearchResult.getOffsetEnd());
@@ -658,12 +671,15 @@ public class SearchAnnotationSidebar
                 aBulkResult.conflict++;
                 return;
             }
-        }
-        else {
-            aBulkResult.updated++;
-        }
 
-        // set values for all features according to current state
+            // set values for all features according to current state
+            setFeatureValues(aDocument, aCas, aAdapter, state, annoFS);
+        }
+    }
+
+    private void setFeatureValues(SourceDocument aDocument, CAS aCas, SpanAdapter aAdapter,
+            AnnotatorState state, AnnotationFS annoFS)
+    {
         int addr = getAddr(annoFS);
         List<FeatureState> featureStates = state.getFeatureStates();
         for (FeatureState featureState : featureStates) {
@@ -680,16 +696,15 @@ public class SearchAnnotationSidebar
             SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
     {
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
-                aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
 
-        if (annoFS == null || !featureValuesMatchCurrentState(annoFS)
-                && deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
-            return;
+        for (AnnotationFS annoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
+            if ((annoFS != null && featureValuesMatchCurrentState(annoFS))
+                    || !deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
+                aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
+                aBulkResult.deleted++;
+            }
         }
-
-        aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
-        aBulkResult.deleted++;
     }
 
     private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aCas)
