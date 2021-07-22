@@ -914,6 +914,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     applyNormalizations(normalizations) {
+      if (!normalizations) {
+        return;
+      }
+
       normalizations.map(norm => {
         let target = norm[0];
         let refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
@@ -939,6 +943,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     buildSpansFromEntities(documentText, entities) {
+      if (!entities) {
+        return {};
+      }
+
       let spans = {};
       entities.map(entity => {
         let id = entity[0];
@@ -975,6 +983,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     buildSpansFromTriggers(triggers) {
+      if (!triggers) {
+        return {};
+      }
+
       let triggerHash = {};
       triggers.map(trigger => {
         //                        (id,         type,       offsets,    generalType)
@@ -988,6 +1000,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     buildEventDescsFromTriggers(triggerHash) {
+      if (!triggerHash) {
+        return;
+      }
+
       this.sourceData.events.map(eventRow => {
         let id = eventRow[0];
         let triggerId = eventRow[1];
@@ -1002,10 +1018,18 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     splitSpansIntoFragments(spans) {
+      if (!spans) {
+        return;
+      }
+
       spans.map(span => span.buildFragments());
     }
 
     buildEventDescsFromEquivs(equivs, spans, eventDescs) {
+      if (!equivs) {
+        return;
+      }
+
       $.each(equivs, (equivNo, equiv) => {
         // equiv: ['*', 'Equiv', spanId...]
         equiv[0] = "*" + equivNo;
@@ -1037,6 +1061,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     buildEventDescsFromRelations(relations, eventDescs) {
+      if (!relations) {
+        return;
+      }
+
       relations.map(rel => {
         // rel[2] is args, rel[2][a][0] is role and rel[2][a][1] is value for a in (0,1)
         var argsDesc = this.relationTypesHash[rel[1]];
@@ -1070,6 +1098,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     assignAttributesToSpans(attributes, spans) {
+      if (!attributes) {
+        return;
+      }
+
       attributes.map(attr => {
         // attr: [id, name, spanId, value, cueSpanId
         // TODO: might wish to check what's appropriate for the type
@@ -1102,8 +1134,12 @@ var Visualizer = (function ($, window, undefined) {
       });
     }
 
-    assignComments(triggerHash) {
-      this.sourceData.comments.map(comment => {
+    assignComments(comments, triggerHash) {
+      if (!comments) {
+        return;
+      }
+
+      comments.map(comment => {
         // comment: [entityId, type, text]
         // TODO error handling
         // sentence id: ['sent', sentId]
@@ -1151,10 +1187,15 @@ var Visualizer = (function ($, window, undefined) {
       });
     }
 
-    buildSortedFragments() {
+    buildSortedFragments(spans) {
+      if (!spans) {
+        return [];
+      }
+
+
       var sortedFragments = [];
 
-      Object.values(this.data.spans).map(span => span.fragments.map(
+      Object.values(spans).map(span => span.fragments.map(
         fragment => sortedFragments.push(fragment)));
 
       sortedFragments.sort(function (a, b) {
@@ -1171,6 +1212,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     buildChunksFromTokenOffsets(tokenOffsets, sortedFragments) {
+      if (!tokenOffsets) {
+        return [];
+      }
+
       let currentFragmentId = 0;
       let startFragmentId = 0;
       let numFragments = sortedFragments.length;
@@ -1221,6 +1266,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     assignSentenceNumbersToChunks(firstSentence, sentenceOffsets, chunks) {
+      if (!sentenceOffsets) {
+        return;
+      }
+
       let numChunks = chunks.length;
       let chunkNo = 0;
       let sentenceNo = firstSentence;
@@ -1255,6 +1304,10 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     assignFragmentsToChunks(sortedFragments) {
+      if (!sortedFragments) {
+        return;
+      }
+
       let currentChunkId = 0;
       let chunk;
       sortedFragments.map(fragment => {
@@ -1275,6 +1328,10 @@ var Visualizer = (function ($, window, undefined) {
      * - data.arcById index is populated.
      */
     assignArcsToSpans(eventDescs, spans) {
+      if (!eventDescs || !spans) {
+        return [];
+      }
+
       let arcs = [];
 
       Object.entries(eventDescs).map(([eventNo, eventDesc]) => {
@@ -1343,11 +1400,11 @@ var Visualizer = (function ($, window, undefined) {
       this.buildEventDescsFromEquivs(this.sourceData.equivs, this.data.spans, this.data.eventDescs);
       this.buildEventDescsFromRelations(this.sourceData.relations, this.data.eventDescs);
       this.assignAttributesToSpans(this.sourceData.attributes, this.data.spans);
-      this.assignComments(triggerHash);
+      this.assignComments(this.sourceData.comments, triggerHash);
 
       // prepare span boundaries for token containment testing
       // sort fragments by beginning, then by end
-      var sortedFragments = this.buildSortedFragments();
+      var sortedFragments = this.buildSortedFragments(this.data.spans);
 
       // token containment testing (chunk recognition)
       this.data.chunks = this.buildChunksFromTokenOffsets(this.sourceData.token_offsets, sortedFragments);
@@ -1359,9 +1416,10 @@ var Visualizer = (function ($, window, undefined) {
       this.applyNormalizations(this.sourceData.normalizations);
       this.applyHighlighting();
 
-      this.calculateAverageArcDistances(Object.values(this.data.spans));
-
-      this.collectFragmentTextsIntoSpanTexts(Object.values(this.data.spans));
+      if (this.data.spans) {
+        this.calculateAverageArcDistances(Object.values(this.data.spans));
+        this.collectFragmentTextsIntoSpanTexts(Object.values(this.data.spans));
+      }
 
       for (var i = 0; i < 2; i++) {
         // preliminary sort to assign heights for basic cases
