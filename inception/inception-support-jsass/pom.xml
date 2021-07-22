@@ -89,6 +89,23 @@
         </executions>
       </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <ignoredDependency>org.apache.commons:commons-lang3</ignoredDependency>
+              <ignoredDependency>commons-io:commons-io</ignoredDependency>
+              <ignoredDependency>org.apache.commons:commons-text</ignoredDependency>
+              <ignoredDependency>org.slf4j:slf4j-api</ignoredDependency>
+              <ignoredDependency>org.sharegov:mjson</ignoredDependency>
+            </ignoredDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
   <profiles>
     <profile>
@@ -118,5 +135,4 @@
       </build>
     </profile>
   </profiles>
-
 </project>
