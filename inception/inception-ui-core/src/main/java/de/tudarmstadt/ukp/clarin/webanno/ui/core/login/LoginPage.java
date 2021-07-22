@@ -96,10 +96,10 @@ public class LoginPage
         setStatelessHint(true);
         setVersioned(false);
 
-        redirectIfAlreadyLoggedIn();
-
         add(form = new LoginForm("loginForm"));
         form.add(enabledWhen(() -> !isTooManyUsers()));
+
+        redirectIfAlreadyLoggedIn();
 
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
         tooManyUsersLabel.add(visibleWhen(this::isTooManyUsers));
@@ -129,7 +129,7 @@ public class LoginPage
                         + ADMIN_DEFAULT_PASSWORD + ". Login has been disabled for security "
                         + "reasons. Please restart the application without the password "
                         + "resetting parameter.";
-                info(msg);
+                warn(msg);
                 log.info(msg);
             }
             else {
@@ -138,7 +138,7 @@ public class LoginPage
                         + "/" + ADMIN_DEFAULT_PASSWORD + ". Login has "
                         + "been disabled for security reasons. Please restart the application "
                         + "without the password resetting parameter.";
-                info(msg);
+                warn(msg);
                 log.info(msg);
             }
         }
