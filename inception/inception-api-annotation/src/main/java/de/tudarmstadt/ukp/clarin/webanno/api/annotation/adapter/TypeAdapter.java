@@ -185,7 +185,7 @@ public interface TypeAdapter
      * is mainly called when a layer is created through the UI, in other cases (e.g. during import)
      * all necessary information should be included in the imported data.
      */
-    void initialize(AnnotationSchemaService aSchemaService);
+    void initializeLayerConfiguration(AnnotationSchemaService aSchemaService);
 
     /**
      * Check if all annotations of this layer conform with the layer configuration. This is usually

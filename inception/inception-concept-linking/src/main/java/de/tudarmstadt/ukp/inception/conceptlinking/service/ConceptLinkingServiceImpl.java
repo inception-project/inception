@@ -52,7 +52,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
@@ -125,10 +125,12 @@ public class ConceptLinkingServiceImpl
             AnnotationAwareOrderComparator.sort(generators);
 
             for (EntityRankingFeatureGenerator generator : generators) {
-                log.info("Found entity ranking feature generator: {}",
+                log.debug("Found entity ranking feature generator: {}",
                         ClassUtils.getAbbreviatedName(generator.getClass(), 20));
             }
         }
+
+        log.info("Found [{}] entity ranking feature generators", generators.size());
 
         featureGenerators = unmodifiableList(generators);
     }

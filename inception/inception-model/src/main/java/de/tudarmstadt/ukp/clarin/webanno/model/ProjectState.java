@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
+import java.util.List;
+import java.util.stream.Stream;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
@@ -28,41 +33,49 @@ public enum ProjectState
     /**
      * All annotations of all documents are in state new.
      */
-    NEW("NEW", "black"),
+    NEW("NEW", "black", false),
 
     /**
      * At least one annotation document has been created for the document
      */
-    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black"),
+    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black", false),
 
     /**
      * All annotations have marked their annotation document as finished
-     * 
-     * @deprecated This is not used and should not be used. Will be removed in future versions. If
-     *             you want to tell whether all annotators have marked a document as finished, you
-     *             have to manually check if all annotators assigned to annotate this document have
-     *             marked their annotation documents as done. This is nothing we can record
-     *             statically in the source document.
      */
-    ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
-
-    /**
-     * All documents have been curated
-     */
-    CURATION_FINISHED("CURATION_FINISHED", "red"),
+    ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green", true),
 
     /**
      * Curation on at least one document has started.
      */
-    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue");
+    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue", true),
+
+    /**
+     * All documents have been curated
+     */
+    CURATION_FINISHED("CURATION_FINISHED", "red", true);
+
+    private static final List<ProjectState> ANNOTATION_FINAL_STATES;
+
+    static {
+        ANNOTATION_FINAL_STATES = Stream.of(values()) //
+                .filter(ProjectState::isAnnotationFinal) //
+                .collect(toUnmodifiableList());
+    }
 
     private final String id;
     private final String color;
 
-    ProjectState(String aId, String aColor)
+    /**
+     * An annotation-final state indicates that no changes to the annotations are allowed anymore.
+     */
+    private final boolean annotationFinal;
+
+    ProjectState(String aId, String aColor, boolean aAnnotationFinal)
     {
         id = aId;
         color = aColor;
+        annotationFinal = aAnnotationFinal;
     }
 
     public String getName()
@@ -81,9 +94,24 @@ public enum ProjectState
         return color;
     }
 
+    public boolean isAnnotationFinal()
+    {
+        return annotationFinal;
+    }
+
     @Override
     public String toString()
     {
         return getId();
+    }
+
+    public static ProjectState defaultState()
+    {
+        return NEW;
+    }
+
+    public static List<ProjectState> annotationFinalStates()
+    {
+        return ANNOTATION_FINAL_STATES;
     }
 }

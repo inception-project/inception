@@ -128,9 +128,8 @@ public abstract class TextFeatureEditorBase
 
     public StringFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
     {
-        FeatureSupport<StringFeatureTraits> fs = featureSupportRegistry
-                .getFeatureSupport(aAnnotationFeature);
-        StringFeatureTraits traits = fs.readTraits(aAnnotationFeature);
-        return traits;
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(aAnnotationFeature)
+                .orElseThrow();
+        return (StringFeatureTraits) fs.readTraits(aAnnotationFeature);
     }
 }

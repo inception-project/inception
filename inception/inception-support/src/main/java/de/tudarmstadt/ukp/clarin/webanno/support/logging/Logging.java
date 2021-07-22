@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.logging;
 
-import org.slf4j.MDC;
-
 public final class Logging
 {
     public static final String KEY_PROJECT_ID = "projectId";
@@ -28,17 +26,5 @@ public final class Logging
     private Logging()
     {
         // No instances
-    }
-
-    public static void setMDC(long aProjectId, String aUsername)
-    {
-        MDC.put(KEY_PROJECT_ID, String.valueOf(aProjectId));
-        MDC.put(KEY_USERNAME, aUsername);
-    }
-
-    public static void clearMDC()
-    {
-        MDC.remove(KEY_PROJECT_ID);
-        MDC.remove(KEY_USERNAME);
     }
 }

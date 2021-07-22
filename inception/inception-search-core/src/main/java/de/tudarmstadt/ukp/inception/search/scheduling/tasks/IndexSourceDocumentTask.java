@@ -21,33 +21,41 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * Document indexer task. Indexes the given document in a project
  */
 public class IndexSourceDocumentTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
 
-    public IndexSourceDocumentTask(SourceDocument aSourceDocument, byte[] aBinaryCas)
+    public IndexSourceDocumentTask(SourceDocument aSourceDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aSourceDocument, aBinaryCas);
+        super(aSourceDocument, aTrigger, aBinaryCas);
     }
 
-    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
+    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aAnnotationDocument, aBinaryCas);
+        super(aAnnotationDocument, aTrigger, aBinaryCas);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getSourceDocument(), super.getBinaryCas());
@@ -55,12 +63,24 @@ public class IndexSourceDocumentTask
     }
 
     @Override
-    public boolean matches(Task aTask)
+    public MatchResult matches(Task aTask)
     {
-        if (!(aTask instanceof IndexSourceDocumentTask)) {
-            return false;
+        // If a re-indexing task for the project is scheduled, we do not need to schedule a new
+        // source indexing task
+        if (aTask instanceof ReindexTask) {
+            if (((ReindexTask) aTask).getProject().getId() == getSourceDocument().getProject()
+                    .getId()) {
+                return DISCARD_OR_QUEUE_THIS;
+            }
         }
 
-        return getSourceDocument().getId() == aTask.getSourceDocument().getId();
+        if (aTask instanceof IndexSourceDocumentTask) {
+            if (getSourceDocument().getId() == ((IndexSourceDocumentTask) aTask).getSourceDocument()
+                    .getId()) {
+                return UNQUEUE_EXISTING_AND_QUEUE_THIS;
+            }
+        }
+
+        return NO_MATCH;
     }
 }

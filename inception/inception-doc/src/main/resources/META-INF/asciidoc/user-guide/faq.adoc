@@ -1,0 +1,45 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_faq]]
+= Frequently Asked Questions (FAQs)
+
+== What tokenization does INCEpTION use?
+
+INCEpTION uses the https://github.com/openjdk/jdk11/blob/master/src/java.base/share/classes/sun/text/resources/BreakIteratorRules.java[Java BreakIterator] internally.
+Note that the linked file is part of a specific version of OpenJDK 11 and may change in other Java versions or for other Java vendors.
+
+If you need to provide your own tokenization, then the best choice would be to use a format that supports it, e.g. XMI, WebAnno TSV or CoNLL formats.
+
+== How can I annotate discontinuous spans?
+
+The is no immediate support for discontinuous spans in INCEpTION.
+
+However, you can emulate them using either a relations or link features.
+
+You can define a relation layer on top of your span layer.
+When you have multiple spans that should be considered as one, you can use a relation to connect them.
+
+Or you can add a _Link: XXX_ feature to your span layer which either points to the same layer or which points to a new layer you might call e.g. _Extension_.
+
+So when you have a discontinuous span, you could annotate the first span with your normal span layer and then add one or more links to the other spans.
+
+== What is the relation between WebAnno and INCEpTION?
+
+INCEpTION is the successor of WebAnno and evolved from the WebAnno code base. Both INCEpTION and WebAnno are currently developed/maintained by the same team at the UKP Lab at the Technical University of Darmstadt.
+
+INCEpTION has all the flexibility and many more exciting features including a completely new human-in-the-loop annotation assistance support, the ability to search texts and annotations, support for RDF/SPARQL knowledge bases for entity linking, and much more.
+And best: it can import your WebAnno annotation projects (Projects of type _automation_ or _correction_ are not supported).

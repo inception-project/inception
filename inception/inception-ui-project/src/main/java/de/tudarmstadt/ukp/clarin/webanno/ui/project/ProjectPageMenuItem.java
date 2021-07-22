@@ -45,7 +45,7 @@ public class ProjectPageMenuItem
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.book_s;
+        return FontAwesome5IconType.archive_s;
     }
 
     @Override

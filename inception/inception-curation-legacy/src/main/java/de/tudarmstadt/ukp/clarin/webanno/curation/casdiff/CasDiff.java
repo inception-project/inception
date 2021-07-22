@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -41,8 +42,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -76,8 +79,6 @@ public class CasDiff
     private Map<String, List<CAS>> cases = new LinkedHashMap<>();
 
     private final Map<Position, ConfigurationSet> configSets = new TreeMap<>();
-
-    private final Map<String, String[]> sortedFeaturesCache = new HashMap<>();
 
     private int begin;
 
@@ -251,6 +252,11 @@ public class CasDiff
     public Map<String, DiffAdapter> getTypeAdapters()
     {
         return typeAdapters;
+    }
+
+    public Map<String, List<CAS>> getCasMap()
+    {
+        return cases;
     }
 
     /**
@@ -538,6 +544,18 @@ public class CasDiff
             return configurations;
         }
 
+        public Optional<Configuration> findConfiguration(String aCasGroupId, FeatureStructure aFS)
+        {
+            return configurations.stream().filter(cfg -> cfg.contains(aCasGroupId, aFS))
+                    .findFirst();
+        }
+
+        public Optional<Configuration> findConfiguration(String aCasGroupId, AID aAID)
+        {
+            return configurations.stream().filter(cfg -> cfg.contains(aCasGroupId, aAID))
+                    .findFirst();
+        }
+
         /**
          * @param aCasGroupId
          *            a CAS ID
@@ -615,21 +633,6 @@ public class CasDiff
             return false;
         }
 
-        assert type1.getNumberOfFeatures() == type2.getNumberOfFeatures();
-
-        // Sort features by name to be independent over implementation details that may change the
-        // order of the features as returned from Type.getFeatures().
-        String[] cachedSortedFeatures = sortedFeaturesCache.get(type1.getName());
-        if (cachedSortedFeatures == null) {
-            cachedSortedFeatures = new String[type1.getNumberOfFeatures()];
-            int i = 0;
-            for (Feature f : aFS1.getType().getFeatures()) {
-                cachedSortedFeatures[i] = f.getShortName();
-                i++;
-            }
-            sortedFeaturesCache.put(type1.getName(), cachedSortedFeatures);
-        }
-
         DiffAdapter adapter = typeAdapters.get(type1.getName());
 
         if (adapter == null) {
@@ -638,10 +641,17 @@ public class CasDiff
         }
 
         // Only consider label features. In particular these must not include position features
-        // such as begin, end, etc.
-        List<String> sortedFeatures = new ArrayList<>(asList(cachedSortedFeatures));
+        // such as begin, end, etc. Mind that the types may come from different CASes at different
+        // levels of upgrading, so it could be that the types actually have slightly different
+        // features.
         Set<String> labelFeatures = adapter.getLabelFeatures();
-        sortedFeatures.removeIf(f -> !labelFeatures.contains(f));
+        List<String> sortedFeatures = Stream
+                .concat(type1.getFeatures().stream().map(Feature::getShortName),
+                        type2.getFeatures().stream().map(Feature::getShortName)) //
+                .filter(labelFeatures::contains) //
+                .sorted() //
+                .distinct() //
+                .collect(toList());
 
         if (!recurseIntoLinkFeatures) {
             // #1795 Chili REC: We can/should change CasDiff2 such that it does not recurse into
@@ -815,6 +825,11 @@ public class CasDiff
          */
         private boolean stacked = false;
 
+        public String getRepresentativeCasGroupId()
+        {
+            return fsAddresses.entrySet().iterator().next().getKey();
+        }
+
         public Set<String> getCasGroupIds()
         {
             return fsAddresses.keySet();
@@ -872,6 +887,16 @@ public class CasDiff
         public AID getAID(String aCasGroupId)
         {
             return fsAddresses.get(aCasGroupId);
+        }
+
+        public boolean contains(String aCasGroupId, FeatureStructure aFS)
+        {
+            return new AID(getAddr(aFS)).equals(fsAddresses.get(aCasGroupId));
+        }
+
+        public boolean contains(String aCasGroupId, AID aAID)
+        {
+            return aAID.equals(fsAddresses.get(aCasGroupId));
         }
 
         public <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, int aCasId,
@@ -950,6 +975,11 @@ public class CasDiff
             cachedHasDifferences = !getDifferingConfigurationSets().isEmpty();
         }
 
+        public Set<String> getCasGroupIds()
+        {
+            return casGroupIds;
+        }
+
         public boolean hasDifferences()
         {
             return cachedHasDifferences;
@@ -973,6 +1003,19 @@ public class CasDiff
         public ConfigurationSet getConfigurationSet(Position aPosition)
         {
             return data.get(aPosition);
+        }
+
+        public Optional<Configuration> findConfiguration(String aRepresentativeCasGroupId, AID aAid)
+        {
+            for (ConfigurationSet cfgSet : getConfigurationSets()) {
+                Optional<Configuration> cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId,
+                        aAid);
+                if (cfg.isPresent()) {
+                    return cfg;
+                }
+            }
+
+            return Optional.empty();
         }
 
         /**

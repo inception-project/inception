@@ -25,13 +25,13 @@ import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.app.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.QuickProjectInitializer;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectInitializersAutoConfiguration#basicProjectInitializer}.
+ * {@link InceptionProjectInitializersAutoConfiguration#basicProjectInitializer}.
  * </p>
  */
 public class BasicProjectInitializer
@@ -65,6 +65,10 @@ public class BasicProjectInitializer
 
         if (context.getBeanNamesForType(BasicSpanRecommenderInitializer.class).length > 0) {
             dependencies.add(BasicSpanRecommenderInitializer.class);
+        }
+
+        if (context.getBeanNamesForType(BasicRelationRecommenderInitializer.class).length > 0) {
+            dependencies.add(BasicRelationRecommenderInitializer.class);
         }
 
         return dependencies;

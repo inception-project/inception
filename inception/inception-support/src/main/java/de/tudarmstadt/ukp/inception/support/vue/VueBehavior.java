@@ -89,7 +89,7 @@ public class VueBehavior
         }
 
         StringBuilder script = new StringBuilder();
-        script.append("const { loadModule } = window['vue3-sfc-loader'];\n");
+        script.append("{const { loadModule } = window['vue3-sfc-loader'];\n");
         script.append("const options = {\n");
         script.append("  moduleCache: {\n");
         script.append("    vue: Vue\n");
@@ -114,7 +114,7 @@ public class VueBehavior
         script.append("});\n");
         script.append(
                 "document.addEventListener('DOMContentLoaded', () => { const vm = app.mount('#"
-                        + aComponent.getMarkupId() + "') });\n");
+                        + aComponent.getMarkupId() + "') });\n}");
 
         aResponse.render(forScript(script, aComponent.getMarkupId() + "-vue"));
     }

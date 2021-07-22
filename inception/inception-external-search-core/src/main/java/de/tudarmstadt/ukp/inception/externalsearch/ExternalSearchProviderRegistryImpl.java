@@ -70,10 +70,12 @@ public class ExternalSearchProviderRegistryImpl
             AnnotationAwareOrderComparator.sort(exts);
 
             for (ExternalSearchProviderFactory fs : exts) {
-                log.info("Found external search provider: {}",
+                log.debug("Found external search provider: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
+
+        log.info("Found [{}] external search providers", exts.size());
 
         providers = Collections.unmodifiableList(exts);
     }

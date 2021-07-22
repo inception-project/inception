@@ -78,20 +78,6 @@ public class SourceDocument
     @Column(nullable = true)
     private Date updated;
 
-    /*
-     * This field are only here because we still may have the non-nullable columns in the DB. Once
-     * we can properly migrate the database schema, this can go away.
-     */
-    @Deprecated
-    private boolean trainingDocument = false;
-
-    /*
-     * This field are only here because we still may have the non-nullable columns in the DB. Once
-     * we can properly migrate the database schema, this can go away.
-     */
-    @Deprecated
-    private boolean processed = false;
-
     public SourceDocument()
     {
         // Nothing to do
@@ -171,7 +157,7 @@ public class SourceDocument
     {
         // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
-        if (created != null) {
+        if (created == null) {
             created = new Date();
             updated = created;
         }
@@ -228,13 +214,7 @@ public class SourceDocument
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("[");
-        builder.append(name);
-        builder.append("](");
-        builder.append(id);
-        builder.append(")");
-        return builder.toString();
+        return "[" + name + "](" + id + ")";
     }
 
     public static final Comparator<SourceDocument> NAME_COMPARATOR = Comparator

@@ -21,6 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -35,12 +37,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.config.WeblichtRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtChain;
@@ -90,30 +90,22 @@ public class WeblichtChainServiceImpl
 
     @Override
     @Transactional
-    public void createOrUpdateChain(WeblichtChain aGazeteer)
+    public void createOrUpdateChain(WeblichtChain aChain)
     {
-        if (aGazeteer.getId() == null) {
-            entityManager.persist(aGazeteer);
+        try (var logCtx = withProjectLogger(aChain.getRecommender().getProject())) {
+            if (aChain.getId() == null) {
+                entityManager.persist(aChain);
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
-                log.info("Created chain [{}] for recommender [{}]({}) in project [{}]({})",
-                        aGazeteer.getName(), aGazeteer.getRecommender().getName(),
-                        aGazeteer.getRecommender().getId(),
-                        aGazeteer.getRecommender().getProject().getName(),
-                        aGazeteer.getRecommender().getProject().getId());
+                log.info("Created processing chain [{}] for recommender {} in project {}",
+                        aChain.getName(), aChain.getRecommender(),
+                        aChain.getRecommender().getProject());
             }
-        }
-        else {
-            entityManager.merge(aGazeteer);
+            else {
+                entityManager.merge(aChain);
 
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
-                log.info("Updated chain [{}] for recommender [{}]({}) in project [{}]({})",
-                        aGazeteer.getName(), aGazeteer.getRecommender().getName(),
-                        aGazeteer.getRecommender().getId(),
-                        aGazeteer.getRecommender().getProject().getName(),
-                        aGazeteer.getRecommender().getProject().getId());
+                log.info("Updated processing chain [{}] for recommender {} in project {}",
+                        aChain.getName(), aChain.getRecommender(),
+                        aChain.getRecommender().getProject());
             }
         }
     }
@@ -148,19 +140,17 @@ public class WeblichtChainServiceImpl
     @Transactional
     public void deleteChain(WeblichtChain aChain) throws IOException
     {
-        entityManager.remove(entityManager.contains(aChain) ? aChain : entityManager.merge(aChain));
+        try (var logCtx = withProjectLogger(aChain.getRecommender().getProject())) {
+            entityManager
+                    .remove(entityManager.contains(aChain) ? aChain : entityManager.merge(aChain));
 
-        File gaz = getChainFile(aChain);
-        if (gaz.exists()) {
-            gaz.delete();
-        }
+            File gaz = getChainFile(aChain);
+            if (gaz.exists()) {
+                gaz.delete();
+            }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aChain.getRecommender().getProject().getId()))) {
-            log.info("Removed chain [{}] from recommender [{}]({}) in project [{}]({})",
-                    aChain.getName(), aChain.getRecommender().getName(),
-                    aChain.getRecommender().getId(), aChain.getRecommender().getProject().getName(),
-                    aChain.getRecommender().getProject().getId());
+            log.info("Removed processing chain [{}] from recommender {} in project {}",
+                    aChain.getName(), aChain.getRecommender(), aChain.getRecommender());
         }
     }
 

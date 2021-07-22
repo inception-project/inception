@@ -21,6 +21,7 @@ import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * A Model comprises of document and collection brat responses together with the username that will
@@ -33,8 +34,13 @@ public class AnnotatorSegment
 
     private String documentResponse;
     private String collectionData = "{}";
-    private String username = "";
+    private User user;
     private AnnotatorState state;
+
+    public AnnotatorSegment()
+    {
+        // Nothing to do
+    }
 
     public String getDocumentResponse()
     {
@@ -56,14 +62,14 @@ public class AnnotatorSegment
         collectionData = aCollectionData;
     }
 
-    public String getUsername()
+    public User getUser()
     {
-        return username;
+        return user;
     }
 
-    public void setUsername(String aUsername)
+    public void setUser(User aUser)
     {
-        username = aUsername;
+        user = aUser;
     }
 
     public AnnotatorState getAnnotatorState()

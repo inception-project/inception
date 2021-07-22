@@ -23,7 +23,7 @@ package de.tudarmstadt.ukp.inception.curation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 

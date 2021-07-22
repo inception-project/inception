@@ -17,17 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
@@ -50,7 +53,7 @@ public class ProjectExportCuratedDocumentsTask
 
     private @Autowired ProjectExportService exportService;
     private @Autowired DocumentService documentService;
-    private @Autowired ImportExportService importExportService;
+    private @Autowired DocumentImportExportService importExportService;
 
     public ProjectExportCuratedDocumentsTask(ProjectExportTaskHandle aHandle,
             ProjectExportTaskMonitor aMonitor, ProjectExportRequest aRequest, String aUsername)
@@ -156,11 +159,12 @@ public class ProjectExportCuratedDocumentsTask
             if ((aIncludeInProgress
                     && SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
                     || SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                File curationCasFile = documentService.getCasFile(sourceDocument,
-                        WebAnnoConst.CURATION_USER);
-                if (curationCasFile.exists()) {
+                if (documentService.existsCas(sourceDocument, CURATION_USER)) {
                     // Copy CAS - this is used when importing the project again
-                    FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
+                    try (OutputStream os = new FileOutputStream(
+                            new File(curationDir, CURATION_USER + ".ser"))) {
+                        documentService.exportCas(sourceDocument, CURATION_USER, os);
+                    }
 
                     // Copy secondary export format for convenience - not used during import
                     try {

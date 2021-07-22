@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WeblichtRecommenderTraits
     implements Serializable
 {

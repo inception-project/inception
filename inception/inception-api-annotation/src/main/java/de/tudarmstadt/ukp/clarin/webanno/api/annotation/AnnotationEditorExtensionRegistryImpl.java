@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -73,12 +74,14 @@ public class AnnotationEditorExtensionRegistryImpl
             AnnotationAwareOrderComparator.sort(exts);
 
             for (AnnotationEditorExtension fs : exts) {
-                log.info("Found annotation editor extension: {}",
+                log.debug("Found annotation editor extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        extensions = Collections.unmodifiableList(exts);
+        log.info("Found [{}] annotation editor extensions", exts.size());
+
+        extensions = unmodifiableList(exts);
     }
 
     @Override
@@ -114,11 +117,19 @@ public class AnnotationEditorExtensionRegistryImpl
     }
 
     @Override
-    public void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
-            int aWindowBeginOffset, int aWindowEndOffset)
+    public void fireRenderRequested(AnnotatorState aState)
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.render(aCas, aModelObject, aVdoc, aWindowBeginOffset, aWindowEndOffset);
+            ext.renderRequested(aState);
+        }
+    }
+
+    @Override
+    public void fireRender(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
+            int aWindowEndOffset)
+    {
+        for (AnnotationEditorExtension ext : getExtensions()) {
+            ext.render(aCas, aState, aVdoc, aWindowBeginOffset, aWindowEndOffset);
         }
     }
 

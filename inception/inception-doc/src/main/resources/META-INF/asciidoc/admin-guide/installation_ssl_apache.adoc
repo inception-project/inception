@@ -1,0 +1,181 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Apache HTTPD as reverse proxy
+
+This assumes that you already have the following packages installed:
+
+* Apache Web Server
+* mod_proxy
+* mod_proxy_ajp
+* mod_ssl (optional)
+
+You can enable the two modules with
+
+[source,bash]
+----
+$ a2enmod proxy proxy_ajp
+----
+
+and check that they are enabled with
+
+[source,bash]
+----
+$ apachectl -M
+----
+
+* Add the following lines to `/srv/inception/settings.properties` (`server.ajp.secret` might not be supported by your server version, in this case add `server.ajp.secret-required=false` instead)
++
+[source,text]
+----
+server.ajp.port=18009
+server.ajp.secret=SECRET_STRING_YOU_CHOOSE
+server.ajp.address=127.0.0.1
+server.servlet.context-path=/inception
+server.use-forward-headers=true
+----
++
+* Edit `/etc/apache2/conf-available/inception.local.conf` (alternatively, you may want to configure a new virtual host for {product-name})
++
+[source,xml]
+----
+ProxyPreserveHost On
+
+<Proxy ajp://localhost/inception >
+  Order Deny,Allow
+  Deny from none
+  Allow from all
+</Proxy>
+
+<Location /inception >
+  ProxyPass ajp://localhost:18009/inception timeout=1200 secret="SECRET_STRING_YOU_CHOOSE"
+  ProxyPassReverse http://localhost/inception
+</Location>
+----
+
+* Enable the configuration with
++
+[source,bash]
+----
+$ a2enconf inception.local
+----
+
+* Restart Apache web server
++
+[source,bash]
+----
+$ service apache2 restart
+----
+
+NOTE: The `secret` option is supported e.g. in https://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html[Apache HTTP 2.5 mod_proxy_ajp].
+If you are using a reverse proxy which does not support passing along a secret, you may set `server.ajp.secret-required=false` in the
+`settings.properties` file.
+
+== Obtaining a Let's Encrypt certificate
+
+The Certification Authority (CA) _Let's Encrypt_ provides free TLS/SSL certificates.
+These certificates allow for secure HTTPS connections on web servers.
+_Let's Encrypt_ provides the software Certbot which automates the obtaining process for Apache.
+
+* link:https://backports.debian.org/Instructions/[Enable the Stretch backports repo] if needed
+
+* Enable mod_ssl
+
+----
+$ sudo a2enmod ssl
+----
+
+* Install Certbot preconfigured for Apache
+
+----
+$ apt-get install python-certbot-apache -t stretch-backports
+----
+
+* Obtain the certificates for your domain `example.com`
+
+----
+$ certbot --apache certonly -d example.com
+----
+
+* You will be prompted to enter your e-mail address and asked to agree to the terms of service.
+Certificate renewal information will be sent to this e-mail.
+If the certification process is successful it will yield the information where your certificates can be found.
+
+----
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at
+   /etc/letsencrypt/live/example.com/fullchain.pem. Your cert will
+   expire on 2019-04-22. To obtain a new or tweaked version of this
+   certificate in the future, simply run certbot again with the
+   "certonly" option. To non-interactively renew *all* of your
+   certificates, run "certbot renew"
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+----
+
+NOTE: Certificates issued by _Let's Encrypt_ are valid for 90 days.
+You will receive an expiry notification to the e-mail address you provided during the certification process.
+
+* Run Certbot with the command `renew` to renew all certificates that are due.
+You can also create a cron job for this purpose.
+The command for renewal is
+
+----
+$ certbot --apache renew
+----
+
+* You can simulate the certificate renewal process with the command
+
+----
+$ certbot --apache renew --dry-run
+----
+
+* The directory `/etc/letsencrypt/live/example.com/` now contains the necessary certificates to proceed
+
+----
+$ ls /etc/letsencrypt/live/example.com
+Output:
+cert.pem  chain.pem  fullchain.pem  privkey.pem
+----
+
+Then the configuration of the web server only needs this:
+
+[source,bash]
+----
+<VirtualHost *:443>
+    ServerName example.com
+    DocumentRoot /var/www/html
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName example.com
+    Redirect / https://example.com/
+    RewriteEngine on
+    RewriteCond %{SERVER_NAME} =example.com
+    RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
+----

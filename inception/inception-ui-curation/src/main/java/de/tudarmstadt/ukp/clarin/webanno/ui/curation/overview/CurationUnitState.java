@@ -27,47 +27,37 @@ public enum CurationUnitState
     /**
      * No conflicts of annotation in this sentence, no color - null- white
      */
-    AGREE(null),
+    AGREE("agree"),
+
+    /**
+     * Stacked annotations
+     */
+    STACKED("stacked"),
+
+    /**
+     * Incomplete annotations
+     */
+    INCOMPLETE("incomplete"),
 
     /**
      * Conflicts of annotation found in this sentence, mark background in red
      */
-    DISAGREE("#FF9999"),
-
-    /**
-     * Curator resolved conflicts - mark background in yellow
-     */
-    RESOLVED("#FFFF99"),
-
-    /**
-     * Current sentence, where all annotators agree
-     */
-    SELECTED_AGREE("#58FAF4"),
-
-    /**
-     * Current sentence, where all annotators disagree
-     */
-    SELECTED_DISAGREE("#C736D1"),
-
-    /**
-     * In the range of current display window
-     */
-    SELECTED_RANGE("#FFFF00"),
+    DISAGREE("disagree"),
 
     /**
      * Confirmed annotation.
      */
-    CONFIRMED("#99FF99");
+    CURATED("curated");
 
-    private String colorCode;
+    private String cssClass;
 
-    CurationUnitState(String aColorCode)
+    CurationUnitState(String aCssClass)
     {
-        colorCode = aColorCode;
+        cssClass = aCssClass;
     }
 
-    public String getColor()
+    public String getCssClass()
     {
-        return colorCode;
+        return cssClass;
     }
 }

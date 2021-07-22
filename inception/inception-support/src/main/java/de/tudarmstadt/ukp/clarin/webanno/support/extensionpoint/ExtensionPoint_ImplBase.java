@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint;
 
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,12 +60,14 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
             AnnotationAwareOrderComparator.sort(extensions);
 
             for (E fs : extensions) {
-                log.info("Found {} extension: {}", getClass().getSimpleName(),
+                log.debug("Found {} extension: {}", getClass().getSimpleName(),
                         getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        extensionsList = Collections.unmodifiableList(extensions);
+        log.debug("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
+
+        extensionsList = unmodifiableList(extensions);
     }
 
     @Override
@@ -81,9 +84,9 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
 
     @SuppressWarnings("unchecked")
     @Override
-    public <X extends E> X getExtension(String aId)
+    public <X extends E> Optional<X> getExtension(String aId)
     {
-        return (X) getExtensions().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
-                .orElse(null);
+        return (Optional<X>) getExtensions().stream().filter(fs -> fs.getId().equals(aId))
+                .findFirst();
     }
 }

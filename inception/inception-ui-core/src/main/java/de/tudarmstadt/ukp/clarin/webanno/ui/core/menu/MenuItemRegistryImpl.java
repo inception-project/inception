@@ -65,7 +65,7 @@ public class MenuItemRegistryImpl
             AnnotationAwareOrderComparator.sort(exts);
 
             for (MenuItem fs : exts) {
-                log.info("Found menu item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                log.debug("Found menu item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
 
                 if (fs.getPageClass() == null) {
                     throw new IllegalStateException("Menu item [" + fs.getClass().getName()
@@ -73,6 +73,8 @@ public class MenuItemRegistryImpl
                 }
             }
         }
+
+        log.info("Found [{}] menu items", exts.size());
 
         extensions = Collections.unmodifiableList(exts);
     }

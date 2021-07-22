@@ -25,9 +25,7 @@
           <div class="card-header">
             <wicket:message key="layers"/>
             <span>
-              <a target="_blank" wicket:message="href:layers.help.link">
-                <i class="fas fa-question-circle"></i>
-              </a>
+              <a wicket:id="helpLinkLayers"/>
             </span>
             <div class="actions">
               <span class="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -147,9 +145,7 @@
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="properties"/>
-                <a target="_blank" wicket:message="href:properties.help.link">
-                  <i class="fas fa-question-circle"></i>
-                </a>
+                <a wicket:id="propertiesHelpLink"/>
               </div>
               <div class="card-body">
                 <div class="form-group form-row">
@@ -184,9 +180,7 @@
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="technicalProperties"/>
-                <a target="_blank" wicket:message="href:properties.help.link">
-                  <i class="fas fa-question-circle"></i>
-                </a>
+                <a wicket:id="technicalPropertiesHelpLink"/>
               </div>
               <div class="card-body">
                 <div class="form-group form-row">
@@ -228,9 +222,7 @@
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="behaviors"/>
-                <a target="_blank" wicket:message="href:behaviours.help.link">
-                  <i class="fas fa-question-circle"></i>
-                </a>
+                <a wicket:id="behavioursHelpLink"/>
               </div>
               <div class="card-body">
                 <div class="col-sm-12">
@@ -258,9 +250,7 @@
         <form wicket:id="featureSelectionForm" class="card">
           <div class="card-header">
             <wicket:message key="features"/>
-            <a target="_blank" wicket:message="href:features.help.link">
-              <i class="fas fa-question-circle"></i>
-            </a>
+            <a wicket:id="featuresHelpLink"/>
             <div class="actions">
               <button wicket:id="new" class="btn btn-primary">
                 <i class="fas fa-plus-square"></i>&nbsp;
@@ -277,9 +267,6 @@
           <div wicket:id="confirmationDialog"></div>
           <div class="card-header">
             <wicket:message key="feature.details"/>
-            <a target="_blank" wicket:message="href:features.help.link">
-              <i class="fas fa-question-circle"></i>
-            </a>
             <div class="actions">
               <button wicket:id="save" class="btn btn-primary">
                 <i class="fas fa-save"></i>&nbsp;

@@ -20,10 +20,12 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenNlpNerRecommenderTraits
     implements Serializable
 {

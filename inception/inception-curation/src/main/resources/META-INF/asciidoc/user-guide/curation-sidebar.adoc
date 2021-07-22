@@ -1,5 +1,9 @@
 = Curation
 
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `curation.sidebar.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
 Curation i.e. the process of combining finished annotated documents into a final curated document,
 can be done via the *Curation Page* in INCEpTION (see <<sect_curation, Curation>>) 
 but also via the *Curation Sidebar* on the *Annotation Page*.
@@ -19,6 +23,3 @@ Curation settings i.e. the selected users and the opened target document are cle
 The user can always copy annotations *manually* from other users into the curation document by clicking on them.
 The *automatic* merge can be triggered by clicking the *Re-Merge* button (sync icon). It will copy all annotations that 
 all selected users agree on into the curation document.
-
-NOTE: This is an experimental feature not recommended for serious use. However, you can try it out
-      and enable it by adding `curation.sidebar.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>). 

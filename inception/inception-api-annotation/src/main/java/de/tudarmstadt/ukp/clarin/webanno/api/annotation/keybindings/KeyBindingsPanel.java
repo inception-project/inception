@@ -112,7 +112,7 @@ public class KeyBindingsPanel
             {
                 AnnotationFeature feature = aModel.getObject().feature;
                 String value = aItem.getModelObject().getValue();
-                FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+                FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
 
                 LambdaAjaxLink link = new LambdaAjaxLink("shortcut",
                         _target -> actionInvokeShortcut(_target, aItem.getModelObject()));
@@ -148,7 +148,7 @@ public class KeyBindingsPanel
     {
         CAS cas = actionHandler.getEditorCas();
         AnnotationFeature feature = getModelObject().feature;
-        FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         getModelObject().value = fs.wrapFeatureValue(feature, cas, aKeyBinding.getValue());
         actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
     }

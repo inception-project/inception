@@ -39,8 +39,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAttachmentBehavior;
@@ -76,7 +76,7 @@ public class RelationRendererTest
     private String username;
     private List<RelationLayerBehavior> behaviors;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         if (jcas == null) {

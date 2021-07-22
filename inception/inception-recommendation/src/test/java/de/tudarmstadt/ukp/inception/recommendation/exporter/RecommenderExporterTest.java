@@ -29,7 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.HashSet;
@@ -37,8 +37,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipFile;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -63,10 +63,10 @@ public class RecommenderExporterTest
 
     private RecommenderExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
-        initMocks(this);
+        openMocks(this);
 
         layer = new AnnotationLayer();
         layer.setName("Layer");

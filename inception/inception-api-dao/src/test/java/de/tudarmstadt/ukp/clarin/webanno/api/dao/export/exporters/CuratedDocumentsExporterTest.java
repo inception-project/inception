@@ -28,26 +28,32 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageDriver;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -57,11 +63,10 @@ import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
 public class CuratedDocumentsExporterTest
 {
-    public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
+    public @TempDir File tempFolder;
 
     private RepositoryProperties repositoryProperties;
-    private BackupProperties backupProperties;
-    private ImportExportService importExportSerivce;
+    private DocumentImportExportService importExportSerivce;
     private CasStorageService casStorageService;
 
     private @Mock DocumentService documentService;
@@ -73,34 +78,40 @@ public class CuratedDocumentsExporterTest
 
     private CuratedDocumentsExporter sut;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         initMocks(this);
 
-        workFolder = tempFolder.newFolder();
+        workFolder = tempFolder;
 
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
 
-        backupProperties = new BackupProperties();
+        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(workFolder);
 
-        casStorageService = spy(new CasStorageServiceImpl(null, schemaService, repositoryProperties,
-                backupProperties));
+        CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
+                new BackupProperties());
 
-        importExportSerivce = new ImportExportServiceImpl(repositoryProperties,
-                asList(new XmiFormatSupport()), casStorageService, schemaService);
+        casStorageService = spy(new CasStorageServiceImpl(driver, null, schemaService,
+                new CasStoragePropertiesImpl()));
 
-        // documentService.getCasFile() is just a stupid wrapper around storageService.getCasFile()
+        importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
+                asList(new XmiFormatSupport()), casStorageService, schemaService, properties);
+
+        // documentService.exportCas() is just a stupid wrapper around storageService.exportCas()
         // and it is easiest we emulate it here
-        when(documentService.getCasFile(any(), any())).thenAnswer(invocation -> {
-            return casStorageService.getCasFile(invocation.getArgument(0, SourceDocument.class),
-                    invocation.getArgument(1, String.class));
-        });
+        Mockito.doAnswer(invocation -> {
+            casStorageService.exportCas( //
+                    invocation.getArgument(0, SourceDocument.class),
+                    invocation.getArgument(1, String.class),
+                    invocation.getArgument(2, OutputStream.class));
+            return null;
+        }).when(documentService).exportCas(any(), any(), any());
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
         when(documentService.getSourceDocument(any(), any())).then(invocation -> {
@@ -139,8 +150,8 @@ public class CuratedDocumentsExporterTest
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         sut.importData(importRequest, project, exProject, aZipFile);
 
-        verify(casStorageService, atLeastOnce()).getCasFile(sourceDocCaptor.capture(),
-                usernameCaptor.capture());
+        verify(documentService, atLeastOnce()).importCas(sourceDocCaptor.capture(),
+                usernameCaptor.capture(), any());
 
         List<Pair<SourceDocument, String>> importedCases = new ArrayList<>();
         List<SourceDocument> docs = sourceDocCaptor.getAllValues();

@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,14 +47,8 @@ public class AdminDashboardPage
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
 
-    private DashboardMenu menu;
-
     public AdminDashboardPage()
     {
-        if (!adminAreaAccessRequired(userRepository, projectService)) {
-            setResponsePage(getApplication().getHomePage());
-        }
-
         setStatelessHint(true);
         setVersioned(false);
 
@@ -68,14 +59,12 @@ public class AdminDashboardPage
             setResponsePage(LoginPage.class);
         }
 
-        // if not either a curator or annotator, display warning message
-        if (!annotationEnabeled(projectService, user)
-                && !curationEnabeled(projectService, user)) {
-            info("You are not member of any projects to annotate or curate");
+        // Admins need access to the admin area to manage projects
+        if (!userRepository.isAdministrator(user)) {
+            setResponsePage(getApplication().getHomePage());
         }
 
-        menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
-        add(menu);
+        add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
 
         add(new SystemStatusDashlet("systemStatusDashlet"));
     }
@@ -85,22 +74,5 @@ public class AdminDashboardPage
         return menuItemService.getMenuItems().stream()
                 .filter(item -> item.getPath().matches("/admin/[^/]+"))
                 .collect(Collectors.toList());
-    }
-
-    public static boolean adminAreaAccessRequired(UserDao aUserRepo, ProjectService aProjectService)
-    {
-        User user = aUserRepo.getCurrentUser();
-
-        // Project managers need access to the admin area to manage projects
-        if (aProjectService.managesAnyProject(user)) {
-            return true;
-        }
-
-        // Admins need access to the admin area to manage projects
-        if (aUserRepo.isAdministrator(user)) {
-            return true;
-        }
-
-        return false;
     }
 }

@@ -89,11 +89,28 @@ public class ExternalSearchServiceImpl
     @Transactional
     public List<DocumentRepository> listDocumentRepositories(Project aProject)
     {
-        List<DocumentRepository> settings = entityManager
-                .createQuery("FROM DocumentRepository WHERE project = :project ORDER BY name ASC",
-                        DocumentRepository.class)
-                .setParameter("project", aProject).getResultList();
-        return settings;
+        String query = String.join("\n", //
+                "FROM DocumentRepository", //
+                "WHERE project = :project", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, DocumentRepository.class)
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public boolean existsEnabledDocumentRepository(Project aProject)
+    {
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM DocumentRepository", //
+                "WHERE project = :project");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("project", aProject) //
+                .getSingleResult() > 0;
     }
 
     @Override

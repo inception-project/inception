@@ -26,4 +26,6 @@ public interface AnnotationEditorRegistry
     AnnotationEditorFactory getEditorFactory(String aId);
 
     AnnotationEditorFactory getDefaultEditorFactory();
+
+    AnnotationEditorFactory getPreferredEditorFactory(String aFormat);
 }

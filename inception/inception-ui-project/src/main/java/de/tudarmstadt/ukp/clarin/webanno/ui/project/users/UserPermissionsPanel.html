@@ -27,12 +27,16 @@
               <wicket:message key="permissions.for"/> "<wicket:container wicket:id="username"/>"
             </div>
             <button wicket:id="save" class="btn btn-primary">
-              <i class="fas fa-save"></i>&nbsp;
-              <wicket:message key="save"/>
+              <i class="fas fa-save"></i>
+              <span class="d-none d-lg-inline">
+                &nbsp;<wicket:message key="save"/>
+              </span>
             </button>
             <button wicket:id="cancel" class="btn btn-secondary">
-              <i class="fas fa-times"></i>&nbsp;
-              <wicket:message key="cancel"/>
+              <i class="fas fa-times"></i>
+              <span class="d-none d-lg-inline">
+                &nbsp;<wicket:message key="cancel"/>
+              </span>
             </button>
           </div>
         </div>

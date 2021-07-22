@@ -17,13 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static javax.servlet.DispatcherType.ASYNC;
+import static javax.servlet.DispatcherType.FORWARD;
 import static javax.servlet.DispatcherType.REQUEST;
 
+import java.io.IOException;
 import java.util.EnumSet;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -31,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
 @Configuration
@@ -43,12 +51,26 @@ public class InceptionWebInitializer
     @Override
     public void onStartup(ServletContext aServletContext) throws ServletException
     {
+        FilterRegistration coepFilter = aServletContext.addFilter("coep", new Filter()
+        {
+            @Override
+            public void doFilter(ServletRequest aServletRequest, ServletResponse aServletResponse,
+                    FilterChain aFilterChain)
+                throws IOException, ServletException
+            {
+                // We need this in particular for non-Wicket resources served by Spring MVC
+                HttpServletResponse response = (HttpServletResponse) aServletResponse;
+                response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+                response.setHeader("Cross-Origin-Resource-Policy", "same-site");
+                aFilterChain.doFilter(aServletRequest, aServletResponse);
+            }
+        });
+        coepFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
+
         // Make username / repository accessible to logging framework
         FilterRegistration loggingFilter = aServletContext.addFilter("logging",
-                LoggingFilter.class);
-        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
-        loggingFilter.setInitParameter(LoggingFilter.PARAM_REPOSITORY_PATH,
-                repoProperties.getPath().getAbsolutePath().toString());
+                new LoggingFilter(repoProperties.getPath().getAbsolutePath().toString()));
+        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
 
         // Make sure we have one JPA session/transaction per request. Closes session at the
         // end, without this, changed data may not be automatically saved to the DB.

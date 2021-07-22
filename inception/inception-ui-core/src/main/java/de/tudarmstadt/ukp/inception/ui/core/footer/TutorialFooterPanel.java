@@ -48,7 +48,7 @@ public class TutorialFooterPanel
     {
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
 
-        // TODO move it back to web jars after latest release
+        // TODO move it back to web jars after latest release (last checked 3.1.0, onSkip bug)
         aResponse.render(JavaScriptHeaderItem.forReference(EnjoyHintJsReference.get()));
         // aResponse.render(JavaScriptHeaderItem
         // .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/enjoyhint.js")));
@@ -65,10 +65,14 @@ public class TutorialFooterPanel
 
         aResponse.render(JavaScriptHeaderItem.forReference(TutorialJavascriptReference.get()));
         // add top-margin to next button to fix label and buttons overlapping
+        // move canvas in front of dashboard sidebar
         aResponse.render(CssHeaderItem.forCSS(//
                 ".enjoyhint_next_btn{\n" + //
                         "  margin-top: 8px;\n" + //
-                        "}", //
+                        "}\n" + //
+                ".enjoyhint{\n" + //
+                        "  z-index: 10000;\n" + //
+                "}", //
                 "enjoyhint"));
         // check if the tutorial will need to be run
         aResponse.render(OnLoadHeaderItem.forScript(

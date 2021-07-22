@@ -34,8 +34,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
@@ -62,7 +62,7 @@ public class SpanAdapterTest
     private String username;
     private List<SpanLayerBehavior> behaviors;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         if (jcas == null) {

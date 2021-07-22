@@ -26,17 +26,19 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.exporter.GazeteerExporter;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerServiceImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner.StringMatchingNerClassificationToolFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.pos.StringMatchingPosClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerServiceImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.exporter.GazeteerExporter;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.ner.StringMatchingNerClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.pos.StringMatchingPosClassificationToolFactory;
 
 @Configuration
 @ConditionalOnBean(RecommendationService.class)
@@ -77,5 +79,12 @@ public class StringMatchingRecommenderAutoConfiguration
             GazeteerService aGazeteerService)
     {
         return new StringMatchingRecommenderFactory(aGazeteerService);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "recommender.string-matching.relation", name = "enabled", havingValue = "true")
+    public StringMatchingRelationRecommenderFactory stringMatchingRelationRecommenderFactory()
+    {
+        return new StringMatchingRelationRecommenderFactory();
     }
 }

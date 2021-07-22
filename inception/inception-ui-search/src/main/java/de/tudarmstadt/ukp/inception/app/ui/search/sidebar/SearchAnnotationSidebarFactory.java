@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -38,9 +38,6 @@ import de.tudarmstadt.ukp.inception.app.ui.search.config.SearchServiceUIAutoConf
 public class SearchAnnotationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
-    private static final ResourceReference ICON = new PackageResourceReference(
-            SearchAnnotationSidebarFactory.class, "magnifier.png");
-
     @Override
     public String getDisplayName()
     {
@@ -48,9 +45,9 @@ public class SearchAnnotationSidebarFactory
     }
 
     @Override
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
-        return ICON;
+        return FontAwesome5IconType.search_s;
     }
 
     @Override

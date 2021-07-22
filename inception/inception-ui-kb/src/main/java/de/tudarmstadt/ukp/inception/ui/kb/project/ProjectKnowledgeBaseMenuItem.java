@@ -19,13 +19,18 @@ package de.tudarmstadt.ukp.inception.ui.kb.project;
 
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#projectKnowledgeBaseMenuItem}.
+ * </p>
+ */
 @Order(KnowledgeBaseProjectSettingsPanelFactory.ORDER)
 public class ProjectKnowledgeBaseMenuItem
     extends ProjectSettingsMenuItemBase

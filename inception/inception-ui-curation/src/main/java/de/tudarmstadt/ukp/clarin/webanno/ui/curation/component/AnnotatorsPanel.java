@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -99,6 +100,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -138,6 +141,8 @@ public class AnnotatorsPanel
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
+    private @SpringBean BratAnnotationEditorProperties bratProperties;
+    private @SpringBean UserDao userService;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegment>> aModel)
     {
@@ -389,7 +394,7 @@ public class AnnotatorsPanel
     private CAS readAnnotatorCas(AnnotatorSegment aSegment) throws IOException
     {
         return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
-                aSegment.getUsername());
+                aSegment.getUser().getUsername());
     }
 
     /**
@@ -426,7 +431,7 @@ public class AnnotatorsPanel
                 aBratAnnotatorModel.getWindowEndOffset(), aCas, layersToRender);
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer renderer = new BratRenderer(schemaService, coloringService);
+        BratRenderer renderer = new BratRenderer(schemaService, coloringService, bratProperties);
         renderer.render(response, aBratAnnotatorModel, vdoc, aCas, aCurationColoringStrategy);
         return JSONUtil.toInterpretableJsonString(response);
     }
@@ -486,6 +491,8 @@ public class AnnotatorsPanel
         List<AnnotatorSegment> segments = new ArrayList<>();
         for (String username : casses.keySet().stream().sorted().collect(toList())) {
             if ((!username.equals(CURATION_USER) && mode.equals(Mode.CURATION))) {
+                User user = userService.get(username);
+
                 CAS cas = casses.get(username);
 
                 ColoringStrategy curationColoringStrategy = makeColoringStrategy(
@@ -493,7 +500,7 @@ public class AnnotatorsPanel
 
                 // Create curation view for the current user
                 AnnotatorSegment seg = new AnnotatorSegment();
-                seg.setUsername(username);
+                seg.setUser(user);
                 seg.setAnnotatorState(state);
                 seg.setCollectionData(getCollectionInformation(schemaService, state));
                 seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
@@ -582,7 +589,7 @@ public class AnnotatorsPanel
             BratSuggestionVisualizer vis = (BratSuggestionVisualizer) v;
             AnnotatorSegment seg = vis.getModelObject();
 
-            CAS cas = casses.get(seg.getUsername());
+            CAS cas = casses.get(seg.getUser().getUsername());
 
             if (cas == null) {
                 // This may happen if a user has not yet finished document
@@ -591,7 +598,7 @@ public class AnnotatorsPanel
 
             // Set up coloring strategy
             ColoringStrategy curationColoringStrategy = makeColoringStrategy(
-                    annoStates.get(seg.getUsername()));
+                    annoStates.get(seg.getUser().getUsername()));
 
             // Create curation view for the current user
             try {

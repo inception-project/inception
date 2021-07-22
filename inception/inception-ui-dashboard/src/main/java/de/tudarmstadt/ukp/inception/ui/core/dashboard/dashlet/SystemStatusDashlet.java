@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -38,6 +41,9 @@ public class SystemStatusDashlet
 
         add(new Label("activeUsers",
                 LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().size())));
+        add(new Label("activeUsersDetail",
+                LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().stream()
+                        .map(Objects::toString).collect(Collectors.joining(", ")))));
     }
 
     @Override

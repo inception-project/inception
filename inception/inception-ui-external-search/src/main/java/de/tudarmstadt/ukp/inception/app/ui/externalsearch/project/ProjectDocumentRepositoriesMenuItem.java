@@ -19,13 +19,19 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.project;
 
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
-@Component
+/**
+ * Project settings panel to configure document repositories for the external search.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchUIAutoConfiguration#projectDocumentRepositoriesMenuItem}.
+ * </p>
+ */
 @Order(DocumentRepositoryProjectSettingsPanelFactory.ORDER)
 public class ProjectDocumentRepositoriesMenuItem
     extends ProjectSettingsMenuItemBase
@@ -39,7 +45,7 @@ public class ProjectDocumentRepositoriesMenuItem
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.layer_group_s;
+        return FontAwesome5IconType.database_s;
     }
 
     @Override

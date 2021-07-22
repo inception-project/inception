@@ -239,4 +239,10 @@ public class KnowledgeBaseProfile
         return Objects.hash(name, disabled, type, access, mapping, rootConcepts, info, reification,
                 defaultLanguage, defaultDataset);
     }
+
+    @Override
+    public String toString()
+    {
+        return "[" + name + "]";
+    }
 }

@@ -105,4 +105,6 @@ public interface SearchService
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
             AnnotationFeature aAnnotationFeature)
         throws ExecutionException, IOException;
+
+    void enqueueReindexTask(Project aProject, String aTrigger);
 }

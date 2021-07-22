@@ -53,26 +53,45 @@ public class Entity
 
     public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor)
     {
-        this(aId, aType, asList(aOffsets), aLabelText, aColor);
+        this(aId, aType, asList(aOffsets), aLabelText, aColor, false);
     }
 
     public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
     {
-        this(new VID(aId), aType, aOffsets, aLabelText, aColor);
+        this(new VID(aId), aType, aOffsets, aLabelText, aColor, false);
+    }
+
+    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
+            boolean aActionButtons)
+    {
+        this(new VID(aId), aType, aOffsets, aLabelText, aColor, aActionButtons);
+    }
+
+    public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor,
+            boolean aActionButtons)
+    {
+        this(aVid, aType, asList(aOffsets), aLabelText, aColor, aActionButtons);
     }
 
     public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor)
     {
-        this(aVid, aType, asList(aOffsets), aLabelText, aColor);
+        this(aVid, aType, asList(aOffsets), aLabelText, aColor, false);
     }
 
     public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
+    {
+        this(aVid, aType, aOffsets, aLabelText, aColor, false);
+    }
+
+    public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
+            boolean aActionButtons)
     {
         vid = aVid;
         type = aType;
         offsets = aOffsets;
         attributes.setLabelText(aLabelText);
         attributes.setColor(aColor);
+        attributes.setActionButtons(aActionButtons);
     }
 
     @Deprecated

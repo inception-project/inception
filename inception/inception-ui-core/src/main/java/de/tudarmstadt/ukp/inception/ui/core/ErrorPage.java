@@ -89,8 +89,7 @@ public class ErrorPage
         Label exceptionStackTrace = new Label("exceptionStackTrace",
                 LoadableDetachableModel.of(this::getExceptionStackTrace));
         exceptionStackTrace
-                .add(visibleWhen(() -> exceptionStackTrace.getDefaultModelObject() != null
-                        && (isDeveloper() || isAdministrator())));
+                .add(visibleWhen(() -> exceptionStackTrace.getDefaultModelObject() != null));
         add(exceptionStackTrace);
 
         Label appVersion = new Label("appVersion", SettingsUtil.getVersionString());
@@ -207,11 +206,15 @@ public class ErrorPage
     {
         Throwable e = getException();
 
-        if (e != null) {
-            return String.join("\n", ExceptionUtils.getRootCauseStackTrace(e));
+        if (e == null) {
+            return null;
         }
 
-        return null;
+        if (!(isDeveloper() || isAdministrator())) {
+            return "Exception as been recorded in the log files. Please ask your administrator.";
+        }
+
+        return String.join("\n", ExceptionUtils.getRootCauseStackTrace(e));
     }
 
     private Throwable getException()

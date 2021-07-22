@@ -34,6 +34,12 @@
   border: 1px solid #4D4D4D;
 }
 
+.ui-description-tooltip {
+  min-width: 400px !important;
+  max-width: 65% !important;
+  padding: 0px !important;
+}
+
 /* -------------------------------------------------------------------------------------------------
  * DescriptionTooltipBehavior
  */
@@ -48,6 +54,7 @@
 }
 
 .ui-tooltip .tooltip-content {
+  font-size: 75%;
   padding: 4px;
 }
 

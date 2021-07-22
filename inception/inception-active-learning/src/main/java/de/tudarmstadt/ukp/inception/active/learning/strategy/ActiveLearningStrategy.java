@@ -21,11 +21,12 @@ import java.util.List;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public interface ActiveLearningStrategy
 {
-    public Optional<Delta> generateNextSuggestion(Preferences aPreferences,
-            List<SuggestionGroup> suggestions);
+    public Optional<Delta<SpanSuggestion>> generateNextSuggestion(Preferences aPreferences,
+            List<SuggestionGroup<SpanSuggestion>> suggestions);
 }

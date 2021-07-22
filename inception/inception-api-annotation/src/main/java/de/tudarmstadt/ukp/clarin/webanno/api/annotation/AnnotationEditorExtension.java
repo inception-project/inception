@@ -53,6 +53,11 @@ public interface AnnotationEditorExtension
         // Do nothing by default
     }
 
+    default void renderRequested(AnnotatorState aState)
+    {
+        // Do nothing by default
+    }
+
     /**
      * Post-process the output during rendering.
      */

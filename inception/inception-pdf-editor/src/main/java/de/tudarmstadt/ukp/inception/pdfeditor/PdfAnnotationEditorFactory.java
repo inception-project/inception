@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
 /**
@@ -44,6 +45,17 @@ public class PdfAnnotationEditorFactory
     public String getDisplayName()
     {
         return "PDF";
+    }
+
+    @Override
+    public int accepts(String aFormat)
+    {
+        switch (aFormat) {
+        case PdfFormatSupport.ID:
+            return PREFERRED;
+        default:
+            return NOT_SUITABLE;
+        }
     }
 
     @Override

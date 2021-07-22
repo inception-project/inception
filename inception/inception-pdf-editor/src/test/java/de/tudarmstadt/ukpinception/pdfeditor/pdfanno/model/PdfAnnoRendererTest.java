@@ -39,8 +39,8 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.tcf.TcfReader;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -86,7 +86,7 @@ public class PdfAnnoRendererTest
 
     private PreRenderer preRenderer;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         initMocks(this);

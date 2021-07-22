@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,12 +84,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
@@ -124,7 +127,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 public class BratAnnotationEditor
     extends AnnotationEditorBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = -1537506294440056609L;
 
     private static final String PARAM_ACTION = "action";
@@ -133,7 +137,9 @@ public class BratAnnotationEditor
     private static final String PARAM_OFFSETS = "offsets";
     private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    private static final String PARAM_SPAN_TYPE = "type";
+    private static final String PARAM_TYPE = "type";
+    private static final String PARAM_LAZY_DETAIL_DATABASE = "database";
+    private static final String PARAM_LAZY_DETAIL_KEY = "key";
 
     private static final String ACTION_CONTEXT_MENU = "contextMenu";
 
@@ -215,7 +221,8 @@ public class BratAnnotationEditor
                 // Make sure we load the CAS only once here in case of an annotation action.
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
                         || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action)
-                        || DoActionResponse.is(action);
+                        || DoActionResponse.is(action) || AcceptActionResponse.is(action)
+                        || RejectActionResponse.is(action);
                 final CAS cas;
                 if (requiresCasLoading) {
                     try {
@@ -323,13 +330,13 @@ public class BratAnnotationEditor
 
         // We interpret the databaseParam as the feature which we need to look up the feature
         // support
-        StringValue databaseParam = request.getParameterValue("database");
+        StringValue databaseParam = request.getParameterValue(PARAM_LAZY_DETAIL_DATABASE);
 
         // We interpret the key as the feature value or as a kind of query to be handled by the
         // feature support
-        StringValue keyParam = request.getParameterValue("key");
+        StringValue keyParam = request.getParameterValue(PARAM_LAZY_DETAIL_KEY);
 
-        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
 
         if (layerParam.isEmpty() || databaseParam.isEmpty()) {
             return response;
@@ -372,8 +379,8 @@ public class BratAnnotationEditor
             // Is it a feature-level lazy detail?
             else {
                 AnnotationFeature feature = annotationService.getFeature(database, layer);
-                details = featureSupportRegistry.findExtension(feature).renderLazyDetails(feature,
-                        keyParam.toString());
+                details = featureSupportRegistry.findExtension(feature).orElseThrow()
+                        .renderLazyDetails(feature, keyParam.toString());
             }
 
             response.setResults(details.stream()
@@ -409,7 +416,7 @@ public class BratAnnotationEditor
             VID paramId)
         throws AnnotationException, IOException
     {
-        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
 
         if (!layerParam.isEmpty()) {
             long layerId = decodeTypeName(layerParam.toString());
@@ -476,10 +483,17 @@ public class BratAnnotationEditor
             CAS aCas, VID paramId)
         throws IOException, AnnotationException
     {
-        AnnotationFS originFs = selectAnnotationByAddr(aCas,
-                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
-        AnnotationFS targetFs = selectAnnotationByAddr(aCas,
-                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
+        VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
+        VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
+
+        if (origin.isSynthetic() || target.isSynthetic()) {
+            error("Relations cannot be created from/to synthetic annotations");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return null;
+        }
+
+        AnnotationFS originFs = selectAnnotationByAddr(aCas, origin.getId());
+        AnnotationFS targetFs = selectAnnotationByAddr(aCas, target.getId());
 
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
@@ -749,7 +763,8 @@ public class BratAnnotationEditor
     {
         AnnotatorState aState = getModelObject();
         VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-        BratRenderer renderer = new BratRenderer(annotationService, coloringService);
+        BratRenderer renderer = new BratRenderer(annotationService, coloringService,
+                bratProperties);
         renderer.render(response, aState, vdoc, aCas);
     }
 

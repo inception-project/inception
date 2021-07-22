@@ -17,38 +17,11 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<head>
-  <wicket:head>
-    <style>
-      :root {
-        --input-padding-x: 1.5rem;
-        --input-padding-y: 1.5rem;
-      }
-      
-      .form-group input[type=text],input[type=password] {
-        padding: var(--input-padding-y) var(--input-padding-x);
-        border-radius: 2rem;
-      }
-      
-      .btn-login {
-        font-size: 0.9rem !important;
-        letter-spacing: 0.05rem !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: 2rem !important;
-      }
-    </style>
-  </wicket:head>
-</head>
 <body>
   <wicket:extend>
-    <script>
-      $(document).ready(function() {
-        $("#urlfragment").attr("value", unescape(self.document.location.hash.substring(1)));
-      });    
-    </script>
     <div class="scrolling flex-content flex-h-container flex-centered">
       <div class="flex-content flex-v-container flex-centered">
-        <form wicket:id="loginForm" class="card hvr-shadow-radial" style="background: white; padding: 3rem 3rem; min-width: 440px; max-width: 30%;">
+        <form wicket:id="loginForm" class="card hvr-shadow-radial login-form">
           <div class="card-body container-sm">
             <h5 class="card-title mb-3 text-center">
               Welcome!

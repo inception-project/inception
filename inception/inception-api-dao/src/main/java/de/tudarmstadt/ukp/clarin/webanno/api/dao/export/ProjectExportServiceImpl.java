@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.NOT_STARTED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.RUNNING;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.File;
@@ -28,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -59,11 +60,11 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -77,7 +78,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ProjectExportServiceAutoConfiguration#projectExportService}.
+ * </p>
+ */
 public class ProjectExportServiceImpl
     implements ProjectExportService, DisposableBean
 {
@@ -133,7 +139,7 @@ public class ProjectExportServiceImpl
             Set<Class<? extends ProjectExporter>> exporterClasses = new HashSet<>();
             for (ProjectExporter init : exps) {
                 if (exporterClasses.add(init.getClass())) {
-                    log.info("Found project exporter: {}",
+                    log.debug("Found project exporter: {}",
                             ClassUtils.getAbbreviatedName(init.getClass(), 20));
                 }
                 else {
@@ -144,7 +150,9 @@ public class ProjectExportServiceImpl
             }
         }
 
-        exporters = Collections.unmodifiableList(exps);
+        log.info("Found [{}] project exporters", exps.size());
+
+        exporters = unmodifiableList(exps);
     }
 
     @Override
@@ -154,7 +162,7 @@ public class ProjectExportServiceImpl
     {
         boolean success = false;
         File exportTempDir = null;
-        try {
+        try (var logCtx = withProjectLogger(aRequest.getProject())) {
             // Directory to store source documents and annotation documents
             exportTempDir = File.createTempFile("webanno-project", "export");
             exportTempDir.delete();

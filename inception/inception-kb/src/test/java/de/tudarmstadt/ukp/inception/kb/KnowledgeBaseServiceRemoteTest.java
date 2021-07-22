@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,18 +38,14 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -52,11 +53,9 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
@@ -65,103 +64,153 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
-@RunWith(Parameterized.class)
+@Tag("slow")
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceRemoteTest
 {
-    private final String PROJECT_NAME = "Test project";
-
-    private static Map<String, KnowledgeBaseProfile> PROFILES;
-
-    private final TestConfiguration sutConfig;
 
     private KnowledgeBaseServiceImpl sut;
 
-    private Project project;
-    private TestFixtures testFixtures;
-
-    @Rule
-    public TestWatcher watcher = new TestWatcher()
-    {
-        @Override
-        protected void starting(org.junit.runner.Description aDescription)
-        {
-            String methodName = aDescription.getMethodName();
-            System.out.printf("\n=== " + methodName + " =====================\n");
-        };
-    };
-
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    File repoPath;
 
     @Autowired
     private TestEntityManager testEntityManager;
 
-    @ClassRule
-    public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
-
-    @Rule
-    public SpringMethodRule springMethodRule = new SpringMethodRule();
-
-    @BeforeClass
+    @BeforeAll
     public static void setUpOnce() throws Exception
     {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
-    @Before
-    public void setUp() throws Exception
+    @BeforeEach
+    public void testWatcher(TestInfo aTestInfo)
     {
-        Assume.assumeTrue("Remote repository at [" + sutConfig.getDataUrl() + "] is not reachable",
-                sutConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
-                        || TestFixtures.isReachable(sutConfig.getDataUrl()));
+        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        System.out.printf("\n=== %s === %s=====================\n", methodName,
+                aTestInfo.getDisplayName());
 
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
+        suspendSslVerification();
+    }
+
+    public void setUp(TestConfiguration aSutConfig) throws Exception
+    {
+        assumeTrue(
+                aSutConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
+                        || TestFixtures.isReachable(aSutConfig.getDataUrl()),
+                "Remote repository at [" + aSutConfig.getDataUrl() + "] is not reachable");
+
+        KnowledgeBase kb = aSutConfig.getKnowledgeBase();
 
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
+        repoProps.setPath(repoPath);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
-        testFixtures = new TestFixtures(testEntityManager);
+        TestFixtures testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
-        project = testFixtures.createProject(PROJECT_NAME);
+        String PROJECT_NAME = "Test project";
+        Project project = testFixtures.createProject(PROJECT_NAME);
         kb.setProject(project);
         if (kb.getType() == RepositoryType.LOCAL) {
             sut.registerKnowledgeBase(kb, sut.getNativeConfig());
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
-            importKnowledgeBase(sutConfig.getDataUrl());
+            importKnowledgeBase(aSutConfig.getKnowledgeBase(), aSutConfig.getDataUrl());
         }
         else if (kb.getType() == RepositoryType.REMOTE) {
-            assumeEndpointIsAvailable(sutConfig.getDataUrl());
-            sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sutConfig.getDataUrl()));
+            assumeEndpointIsAvailable(aSutConfig.getDataUrl());
+            sut.registerKnowledgeBase(kb, sut.getRemoteConfig(aSutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
         }
         else {
             throw new IllegalStateException(
-                    "Unknown type: " + sutConfig.getKnowledgeBase().getType());
+                    "Unknown type: " + aSutConfig.getKnowledgeBase().getType());
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
-        testEntityManager.clear();
-        sut.destroy();
+        if (testEntityManager != null) {
+            testEntityManager.clear();
+        }
+
+        if (sut != null) {
+            sut.destroy();
+        }
+
+        restoreSslVerification();
     }
 
-    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
+    @ParameterizedTest(name = "{index}: KB = {0}")
+    @MethodSource("data")
+    public void thatRootConceptsCanBeRetrieved(TestConfiguration aSutConfig) throws Exception
     {
-        sutConfig = aConfig;
+        setUp(aSutConfig);
+
+        KnowledgeBase kb = aSutConfig.getKnowledgeBase();
+
+        long duration = System.currentTimeMillis();
+        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
+        duration = System.currentTimeMillis() - duration;
+
+        System.out.printf("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
+        System.out.printf("Time required           : %d ms%n", duration);
+        rootConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
+                .isNotEmpty();
+        for (String expectedRoot : aSutConfig.getRootIdentifier()) {
+            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier))
+                    .as("Check that root concept is retreived").contains(expectedRoot);
+        }
     }
 
-    @Parameterized.Parameters(name = "KB = {0}")
-    public static List<Object[]> data() throws Exception
+    @ParameterizedTest(name = "{index}: KB = {0}")
+    @MethodSource("data")
+    public void thatPropertyListCanBeRetrieved(TestConfiguration aSutConfig) throws Exception
     {
-        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+        setUp(aSutConfig);
+
+        KnowledgeBase kb = aSutConfig.getKnowledgeBase();
+
+        long duration = System.currentTimeMillis();
+        List<KBProperty> propertiesKBHandle = sut.listProperties(kb, true);
+        duration = System.currentTimeMillis() - duration;
+
+        System.out.printf("Properties retrieved : %d%n", propertiesKBHandle.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+        assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
+    }
+
+    @ParameterizedTest(name = "{index}: KB = {0}")
+    @MethodSource("data")
+    public void thatParentListCanBeRetireved(TestConfiguration aSutConfig) throws Exception
+    {
+        setUp(aSutConfig);
+
+        KnowledgeBase kb = aSutConfig.getKnowledgeBase();
+
+        long duration = System.currentTimeMillis();
+        List<KBHandle> parentList = sut.getParentConceptList(kb, aSutConfig.getTestIdentifier(),
+                true);
+        duration = System.currentTimeMillis() - duration;
+
+        System.out.printf("Parents for          : %s%n", aSutConfig.getTestIdentifier());
+        System.out.printf("Parents retrieved    : %d%n", parentList.size());
+        System.out.printf("Time required        : %d ms%n", duration);
+        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+
+        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
+    }
+
+    public static List<TestConfiguration> data() throws Exception
+    {
+        Map<String, KnowledgeBaseProfile> PROFILES = KnowledgeBaseProfile
+                .readKnowledgeBaseProfiles();
         int maxResults = 1000;
 
         Set<String> rootConcepts;
@@ -327,76 +376,18 @@ public class KnowledgeBaseServiceRemoteTest
         // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
         // }
 
-        List<Object[]> dataList = new ArrayList<>();
-        for (TestConfiguration kb : kbList) {
-            dataList.add(new Object[] { kb });
-        }
-        return dataList;
-    }
-
-    @Test
-    public void thatRootConceptsCanBeRetrieved()
-    {
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
-
-        long duration = System.currentTimeMillis();
-        List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
-        duration = System.currentTimeMillis() - duration;
-
-        System.out.printf("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
-        System.out.printf("Time required           : %d ms%n", duration);
-        rootConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
-
-        assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
-                .isNotEmpty();
-        for (String expectedRoot : sutConfig.getRootIdentifier()) {
-            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier))
-                    .as("Check that root concept is retreived").contains(expectedRoot);
-        }
-    }
-
-    @Test
-    public void thatPropertyListCanBeRetrieved()
-    {
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
-
-        long duration = System.currentTimeMillis();
-        List<KBProperty> propertiesKBHandle = sut.listProperties(kb, true);
-        duration = System.currentTimeMillis() - duration;
-
-        System.out.printf("Properties retrieved : %d%n", propertiesKBHandle.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
-
-        assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
-    }
-
-    @Test
-    public void thatParentListCanBeRetireved()
-    {
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
-
-        long duration = System.currentTimeMillis();
-        List<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(),
-                true);
-        duration = System.currentTimeMillis() - duration;
-
-        System.out.printf("Parents for          : %s%n", sutConfig.getTestIdentifier());
-        System.out.printf("Parents retrieved    : %d%n", parentList.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
-
-        assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
+        return kbList;
     }
 
     // Helper
 
-    private void importKnowledgeBase(String resourceName) throws Exception
+    private void importKnowledgeBase(KnowledgeBase aKnowledgeBase, String resourceName)
+        throws Exception
     {
         ClassLoader classLoader = KnowledgeBaseServiceRemoteTest.class.getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            sut.importData(sutConfig.getKnowledgeBase(), fileName, is);
+            sut.importData(aKnowledgeBase, fileName, is);
         }
     }
 

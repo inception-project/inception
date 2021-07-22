@@ -25,6 +25,7 @@
     "url": "https://github.com/paperai/pdfextract/releases/download/v0.3.0/pdfextract-0.3.0.jar"
   },
   "devDependencies": {
+    "acorn": "^6.0.0",
     "babel-eslint": "^7.2.3",
     "concurrently": "^3.5.1",
     "copy": "^0.3.0",

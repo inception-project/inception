@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -37,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -54,7 +53,7 @@ public class ExportDocumentDialogContent
 
     private static final Logger LOG = LoggerFactory.getLogger(ExportDocumentDialogContent.class);
 
-    private @SpringBean ImportExportService importExportService;
+    private @SpringBean DocumentImportExportService importExportService;
 
     private IModel<AnnotatorState> state;
     private IModel<Preferences> preferences;
@@ -96,11 +95,8 @@ public class ExportDocumentDialogContent
         }
         catch (Exception e) {
             LOG.error("Export failed", e);
-            error("Export failed:" + ExceptionUtils.getRootCauseMessage(e));
-            // This will cause the open dialog to pop up again, but at least
-            // the error feedback message will be visible. With the
-            // RestartResponseException the feedback message only flashes.
-            throw new NonResettingRestartException(getPage().getPageClass());
+            getSession().error("Export failed: " + ExceptionUtils.getRootCauseMessage(e));
+            return null;
         }
     }
 

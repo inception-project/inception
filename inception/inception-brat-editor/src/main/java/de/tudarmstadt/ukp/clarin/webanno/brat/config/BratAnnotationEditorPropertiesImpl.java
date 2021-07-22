@@ -32,6 +32,8 @@ public class BratAnnotationEditorPropertiesImpl
     private boolean deferredRendering = false;
     private boolean clientSideProfiling = false;
     private boolean clientSideTraceLog = false;
+    private String whiteSpaceReplacementCharacter = REPLACEMENT_CHARACTER;
+    private boolean useCasTokens = false;
 
     @ManagedAttribute
     @Override
@@ -83,5 +85,29 @@ public class BratAnnotationEditorPropertiesImpl
     public void setClientSideTraceLog(boolean aClientSideTraceLog)
     {
         clientSideTraceLog = aClientSideTraceLog;
+    }
+
+    @Override
+    public String getWhiteSpaceReplacementCharacter()
+    {
+        return whiteSpaceReplacementCharacter;
+    }
+
+    public void setWhiteSpaceReplacementCharacter(String aWhiteSpaceReplacementCharacter)
+    {
+        whiteSpaceReplacementCharacter = aWhiteSpaceReplacementCharacter;
+    }
+
+    @ManagedAttribute
+    public void setUseCasTokens(boolean aIgnoreCasTokens)
+    {
+        useCasTokens = aIgnoreCasTokens;
+    }
+
+    @ManagedAttribute
+    @Override
+    public boolean isUseCasTokens()
+    {
+        return useCasTokens;
     }
 }

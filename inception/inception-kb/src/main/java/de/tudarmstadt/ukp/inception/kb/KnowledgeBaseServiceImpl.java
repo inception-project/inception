@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.stream.Collectors.toList;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
@@ -51,7 +55,6 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -62,9 +65,11 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
+import org.eclipse.rdf4j.repository.base.RepositoryConnectionWrapper;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
@@ -101,8 +106,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
@@ -116,6 +121,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.Path;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
@@ -141,8 +147,7 @@ public class KnowledgeBaseServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
     private final File kbRepositoriesRoot;
-
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private final KnowledgeBaseProperties properties;
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
 
@@ -150,6 +155,8 @@ public class KnowledgeBaseServiceImpl
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
             KnowledgeBaseProperties aKBProperties)
     {
+        properties = aKBProperties;
+
         Caffeine<QueryKey, List<KBHandle>> cacheBuilder = Caffeine.newBuilder()
                 .maximumWeight(aKBProperties.getCacheSize())
                 .expireAfterAccess(aKBProperties.getCacheExpireDelay())
@@ -190,6 +197,9 @@ public class KnowledgeBaseServiceImpl
         }
 
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
+        repoManager.setHttpClient(PerThreadSslCheckingHttpClientUtils
+                .newPerThreadSslCheckingHttpClientBuilder().build());
+
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
     }
 
@@ -228,8 +238,15 @@ public class KnowledgeBaseServiceImpl
         }
 
         if (!orphanedIDs.isEmpty()) {
-            log.info("Found orphaned KB repositories: {}",
-                    orphanedIDs.stream().sorted().collect(Collectors.toList()));
+            log.info("Found [{}] orphaned KB repositories: {}", orphanedIDs.size(),
+                    orphanedIDs.stream().sorted().collect(toList()));
+
+            if (properties.isRemoveOrphansOnStart()) {
+                for (String id : orphanedIDs) {
+                    repoManager.removeRepository(id);
+                    log.info("Deleted orphaned KB repository: {}", id);
+                }
+            }
         }
 
         repoManager.refresh();
@@ -423,7 +440,24 @@ public class KnowledgeBaseServiceImpl
     public RepositoryConnection getConnection(KnowledgeBase kb)
     {
         assertRegistration(kb);
-        return repoManager.getRepository(kb.getRepositoryId()).getConnection();
+        Repository repo = repoManager.getRepository(kb.getRepositoryId());
+        return new RepositoryConnectionWrapper(repo, repo.getConnection())
+        {
+            {
+                skipCertificateChecks(kb.isSkipSslValidation());
+            }
+
+            @Override
+            public void close() throws RepositoryException
+            {
+                try {
+                    super.close();
+                }
+                finally {
+                    restoreSslVerification();
+                }
+            };
+        };
     }
 
     @SuppressWarnings("resource")
@@ -1319,6 +1353,21 @@ public class KnowledgeBaseServiceImpl
         queryCache.asMap().keySet().stream()
                 .filter(key -> key.kb.getProject().equals(aEvent.getProject()))
                 .forEach(key -> queryCache.invalidate(key));
+    }
+
+    @EventListener
+    @Transactional
+    public void onBeforeProjectRemovedEvent(BeforeProjectRemovedEvent aEvent)
+    {
+        Project project = aEvent.getProject();
+
+        for (KnowledgeBase kb : getKnowledgeBases(project)) {
+            removeKnowledgeBase(kb);
+        }
+
+        try (var logCtx = withProjectLogger(project)) {
+            log.info("Removed all knowledge bases from project {} being deleted", project);
+        }
     }
 
     private static final class QueryKey

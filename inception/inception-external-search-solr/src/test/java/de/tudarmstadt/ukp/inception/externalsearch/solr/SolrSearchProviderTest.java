@@ -26,9 +26,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -40,14 +40,14 @@ import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProvide
  * collection, setup the name of the collection, names of the fields and provide an existing id for
  * the method 'thatDocumentTextCanBeRetrieved()'
  */
-@Ignore("Server not publicly accessible")
+@Disabled("Server not publicly accessible")
 public class SolrSearchProviderTest
 {
     private SolrSearchProvider sut;
     private DocumentRepository repo;
     private SolrSearchProviderTraits traits;
 
-    @Before
+    @BeforeEach
     public void setup()
     {
         sut = new SolrSearchProvider();

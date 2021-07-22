@@ -642,6 +642,11 @@ public class WebAnnoCasUtil
 
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
+        if (feature == null) {
+            throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] the feature ["
+                    + aFeature.getName() + "] does not exist.");
+        }
+
         switch (aFeature.getMultiValueMode()) {
         case NONE: {
             String effectiveType = aFeature.getType();

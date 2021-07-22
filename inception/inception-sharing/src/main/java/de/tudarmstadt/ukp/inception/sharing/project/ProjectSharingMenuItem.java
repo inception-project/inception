@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.sharing.project;
 
 import org.apache.wicket.Page;
+import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMe
  * {@link InviteServiceAutoConfiguration#projectSharingMenuItem()}.
  * </p>
  */
+@Order(InviteProjectSettingsPanelFactory.ORDER)
 public class ProjectSharingMenuItem
     extends ProjectSettingsMenuItemBase
 {

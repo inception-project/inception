@@ -225,8 +225,9 @@ public class Tsv3XCasDocumentBuilder
                         doc.mapFS2Unit(annotation, t);
                         t.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
                     }
+
                     // If not the sub-token is ID-defining, then the begin token is ID-defining
-                    else {
+                    if (begin <= beginToken.getBegin() && beginToken.getEnd() <= end) {
                         beginToken.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
                         doc.mapFS2Unit(annotation, beginToken);
                     }

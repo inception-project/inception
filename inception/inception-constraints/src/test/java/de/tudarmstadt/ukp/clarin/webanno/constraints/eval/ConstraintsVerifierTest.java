@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.eval;
 
 import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parse;
 import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.LinkedHashMap;
@@ -27,15 +27,15 @@ import java.util.Map;
 
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsVerifier;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Verifiable;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 
-@Ignore("Not fully implemented yet")
+@Disabled("Not fully implemented yet")
 public class ConstraintsVerifierTest
 {
     @Test

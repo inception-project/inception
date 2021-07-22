@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 
@@ -62,6 +63,7 @@ public class PairwiseUnitizingAgreementTable
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userRepository;
 
     private final RefreshingView<String> rows;
 
@@ -127,11 +129,13 @@ public class PairwiseUnitizingAgreementTable
                         }
                         // Raters header horizontally
                         else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
-                            cell.add(new Label("label", Model.of(aCellItem.getModelObject())));
+                            cell.add(new Label("label",
+                                    userRepository.get(aCellItem.getModelObject()).getUiName()));
                         }
                         // Raters header vertically
                         else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
-                            cell.add(new Label("label", Model.of(aRowItem.getModelObject())));
+                            cell.add(new Label("label",
+                                    userRepository.get(aRowItem.getModelObject()).getUiName()));
                         }
                         // Upper diagonal
                         else if (aCellItem.getIndex() > aRowItem.getIndex()) {
@@ -235,7 +239,7 @@ public class PairwiseUnitizingAgreementTable
                         getNonNullCount(result, 0), result.getStudy().getUnitCount(0))
                 + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(1),
                         getNonNullCount(result, 1), result.getStudy().getUnitCount(1))
-                + String.format("Distinct labels used: %d%n", result.getStudy().getCategoryCount());
+                + String.format("Distinct labels: %d%n", result.getStudy().getCategoryCount());
 
         Label l = new Label("label", Model.of(label));
         DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(tooltipTitle,

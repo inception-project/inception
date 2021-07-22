@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.FactLayerInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.ui.kb.project.ProjectKnowledgeBaseMenuItem;
 import de.tudarmstadt.ukp.inception.ui.kb.search.ConceptFeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.DefaultColoringStrategyImpl;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.DescriptionColoringStrategyImpl;
@@ -158,11 +159,16 @@ public class KnowledgeBaseServiceUIAutoConfiguration
     }
 
     @Bean
-    @Autowired
     public KnowledgeBasePageMenuItem knowledgeBasePageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, KnowledgeBaseService aKbService)
     {
         return new KnowledgeBasePageMenuItem(aUserRepo, aProjectService, aKbService);
+    }
+
+    @Bean
+    public ProjectKnowledgeBaseMenuItem projectKnowledgeBaseMenuItem()
+    {
+        return new ProjectKnowledgeBaseMenuItem();
     }
 
     @ConditionalOnProperty(prefix = "fact-layer", name = "enabled", havingValue = "true", matchIfMissing = false)

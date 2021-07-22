@@ -18,12 +18,20 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@code AnnotationSchemaServiceAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties("annotation.feature-support.string")
 public class PrimitiveUimaFeatureSupportProperties
 {
+    /**
+     * If the tagset is larger than the threshold, a combo-box is used instead of a radio choice.
+     */
+    private int comboBoxThreshold = 6;
+
     /**
      * If the tagset is larger than the threshold, an auto-complete field is used instead of a
      * standard combobox.
@@ -35,6 +43,16 @@ public class PrimitiveUimaFeatureSupportProperties
      * dropdown menu.
      */
     private int autoCompleteMaxResults = 100;
+
+    public int getComboBoxThreshold()
+    {
+        return comboBoxThreshold;
+    }
+
+    public void setComboBoxThreshold(int aComboBoxThreshold)
+    {
+        comboBoxThreshold = aComboBoxThreshold;
+    }
 
     public int getAutoCompleteThreshold()
     {

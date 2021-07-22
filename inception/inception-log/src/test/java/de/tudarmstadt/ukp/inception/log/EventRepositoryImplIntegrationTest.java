@@ -22,27 +22,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
@@ -64,7 +62,7 @@ public class EventRepositoryImplIntegrationTest
     private User user;
     private LoggedEvent le;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         sut = new EventRepositoryImpl(testEntityManager.getEntityManager());
@@ -72,7 +70,7 @@ public class EventRepositoryImplIntegrationTest
         user = createUser(USERNAME);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         testEntityManager.clear();
@@ -247,6 +245,23 @@ public class EventRepositoryImplIntegrationTest
                 user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, otherRecommenderId);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+
+    @Test
+    public void getFilteredRecentLoggedEvents_ShouldReturnEvent()
+    {
+        LoggedEvent evalEvent = buildLoggedEvent(project, user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT,
+                new Date(), -1, DETAIL_JSON);
+        LoggedEvent spanEvent = buildLoggedEvent(project, user.getUsername(), SPAN_CREATED_EVENT,
+                new Date(), -1, "");
+        sut.create(evalEvent);
+        sut.create(spanEvent);
+
+        List<LoggedEvent> loggedEvents = sut.listFilteredRecentActivity(
+                Arrays.asList(EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT), 3);
+
+        assertThat(loggedEvents).hasSize(1);
+        assertThat(loggedEvents).contains(spanEvent);
     }
 
     // Helper

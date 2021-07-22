@@ -17,45 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
-import org.apache.uima.cas.CAS;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 public class PredictionsSwitchedEvent
 {
-    private final IPartialPageRequestHandler requestHandler;
-    private final CAS cas;
+    private final AjaxRequestTarget requestHandler;
     private final AnnotatorState state;
-    private final VDocument vdoc;
 
-    public PredictionsSwitchedEvent(IPartialPageRequestHandler aTarget, CAS aCas,
-            AnnotatorState aState, VDocument aVDoc)
+    public PredictionsSwitchedEvent(AjaxRequestTarget aTarget, AnnotatorState aState)
     {
         requestHandler = aTarget;
-        cas = aCas;
         state = aState;
-        vdoc = aVDoc;
     }
 
-    public IPartialPageRequestHandler getRequestHandler()
+    public AjaxRequestTarget getRequestHandler()
     {
         return requestHandler;
-    }
-
-    public CAS getCas()
-    {
-        return cas;
     }
 
     public AnnotatorState getState()
     {
         return state;
-    }
-
-    public VDocument getVDocument()
-    {
-        return vdoc;
     }
 }

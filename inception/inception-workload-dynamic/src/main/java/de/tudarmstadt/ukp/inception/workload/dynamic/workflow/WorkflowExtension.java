@@ -19,16 +19,9 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.workflow;
 
 import java.util.List;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * Extensions for the workflow.
@@ -48,30 +41,4 @@ public interface WorkflowExtension
      * @return List of {@link SourceDocument} changed as required by the specific workflow strategy
      */
     List<SourceDocument> rankDocuments(List<SourceDocument> aSourceDocuments);
-
-    /**
-     * @return true when a new document has been loaded, otherwise false
-     *
-     *         Next document will be loaded, same for all workflow extensions
-     */
-    default boolean loadNextDocument(List<SourceDocument> aSourceDocuments, Project aProject,
-            WorkloadManager aCurrentWorkload, AnnotationPageBase aPage, AjaxRequestTarget aTarget,
-            WorkloadManagementService aWorkloadManagementService, DynamicWorkloadTraits aTraits,
-            DocumentService documentService)
-    {
-        // Go through all documents of the list
-        for (SourceDocument doc : aSourceDocuments) {
-            // Check if there are less annotators working on the selected document than
-            // the default number of annotation set by the project manager
-            if ((aWorkloadManagementService.getNumberOfUsersWorkingOnADocument(doc,
-                    aProject)) < (aTraits.getDefaultNumberOfAnnotations())) {
-                // This was the case, so load the document and return
-                aPage.getModelObject().setDocument(doc,
-                        documentService.listSourceDocuments(aProject));
-                aPage.actionLoadDocument(aTarget);
-                return true;
-            }
-        }
-        return false;
-    }
 }

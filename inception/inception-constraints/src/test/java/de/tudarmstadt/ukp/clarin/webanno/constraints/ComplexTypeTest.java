@@ -31,8 +31,8 @@ import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
@@ -47,7 +47,7 @@ public class ComplexTypeTest
     private CAS cas;
     private Evaluator sut;
 
-    @Before
+    @BeforeEach
     public void setup() throws ResourceInitializationException
     {
         TypeSystemDescription tsd = TypeSystemDescriptionFactory

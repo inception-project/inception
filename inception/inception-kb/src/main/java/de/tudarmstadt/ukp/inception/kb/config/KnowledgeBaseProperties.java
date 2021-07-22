@@ -26,19 +26,24 @@ public interface KnowledgeBaseProperties
     int getHardMaxResults();
 
     /**
-     * The cache size in terms of KB items that are being cached. A single query may return a large
-     * number of such items.
+     * @return the cache size in terms of KB items that are being cached. A single query may return
+     *         a large number of such items.
      */
     long getCacheSize();
 
     /**
-     * The time before KB items are dropped from the cache if they have not been accessed (in
-     * minutes).
+     * @return the time before KB items are dropped from the cache if they have not been accessed
+     *         (in minutes).
      */
     Duration getCacheExpireDelay();
 
     /**
-     * The time before KB items are asynchronously refreshed (in minutes).
+     * @return the time before KB items are asynchronously refreshed (in minutes).
      */
     Duration getCacheRefreshDelay();
+
+    /**
+     * @return whether do delete orphaned knowledge bases during startup.
+     */
+    boolean isRemoveOrphansOnStart();
 }

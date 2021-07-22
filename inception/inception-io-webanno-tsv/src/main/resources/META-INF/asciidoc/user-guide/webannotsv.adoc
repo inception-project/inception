@@ -197,6 +197,21 @@ Here `1` indicates the sentence number, `2` indicates the token number (here, th
 in the first sentence) and `4` is the begin offset of the token and `8` is the end offset of the
 token while `Haag` is the token.
 
+The begin offset of the first token in a sentence must coincide with the offset at which the first
+`#Text` line starts in the original document text.
+
+.Example: Valid sentence text header / token offsets
+----
+#Text=Hello
+1-1	0-6	Hello
+----
+
+.Example: Invalid sentence text header / token offsets
+----
+#Text= Hello
+1-1	1-7	Hello
+----
+
 Sub-token representations are affixed with a `.` and a number starts from 1 to N. 
 
 .Example: Sub-token positions
@@ -276,7 +291,7 @@ The disambiguation ID is attached as a suffix `[N]` to the annotation value. Sta
 1-2	4-8	Haag	NNP	PER[1]
 ----
 
-Here, `PER[1]` indicates that token `1-1` and `1-2` have the same annotation (multi-token annotations) while `PERpart[2]` is the second (stacked) annotation on token  `1-1` separated by `|` character.
+Here, `PER[1]` indicates that token `1-1` and `1-2` have the same annotation (multi-token annotations) while `PERpart[2]` is the second (stacked) annotation on token `1-1` separated by `|` character.
 
 NOTE: On chain layers, the number in brackets is *not* a disambiguation ID but rather a chain ID!
 
@@ -305,7 +320,7 @@ Unlike other span layer features (which are separated by `|` character), multipl
 2-7	59-60	.	_	_	_	_
 ----
 
-Here, for example, at token `2-2`, we have three slot annotations for feature `Roles` that are `seller`, `goods`, and `buyer`. The targets are on token `2-1 `, `2-3[4]`, and `2-6` respectively which are on annotations of the layer `webanno.custom.Lu` which are `bob`, `clock` and `john`. 
+Here, for example, at token `2-2`, we have three slot annotations for feature `Roles` that are `seller`, `goods`, and `buyer`. The targets are on token `2-1`, `2-3[4]`, and `2-6` respectively which are on annotations of the layer `webanno.custom.Lu` which are `bob`, `clock` and `john`. 
 
 === Chain Annotations
 

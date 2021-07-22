@@ -18,35 +18,87 @@
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
- * Implementation of methods defined in the {@link UserDao} interface
+ * <p>
+ * This class is exposed as a Spring Component via {@link SecurityAutoConfiguration#userService}.
+ * </p>
  */
-@Component("userRepository")
 public class UserDaoImpl
     implements UserDao
 {
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private final EntityManager entityManager;
+    private final SecurityProperties securityProperties;
+    private final PlatformTransactionManager transactionManager;
+    private final SessionRegistry sessionRegistry;
+
+    public UserDaoImpl(EntityManager aEntityManager, SecurityProperties aSecurityProperties,
+            PlatformTransactionManager aTransactionManager, SessionRegistry aSessionRegistry)
+    {
+        entityManager = aEntityManager;
+        securityProperties = aSecurityProperties;
+        transactionManager = aTransactionManager;
+        sessionRegistry = aSessionRegistry;
+    }
+
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        if (securityProperties == null || securityProperties.getDefaultAdminPassword() == null) {
+            return;
+        }
+
+        if (transactionManager == null) {
+            return;
+        }
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
+            if (list().isEmpty()) {
+                User admin = new User();
+                admin.setUsername(ADMIN_DEFAULT_USERNAME);
+                admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
+                admin.setEnabled(true);
+                if (securityProperties.isDefaultAdminRemoteAccess()) {
+                    admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER, ROLE_REMOTE));
+                }
+                else {
+                    admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER));
+                }
+                create(admin);
+            }
+        });
+    }
 
     @Override
     @Transactional
@@ -59,10 +111,12 @@ public class UserDaoImpl
 
     @Override
     @Transactional
-    public void create(User aUser)
+    public User create(User aUser)
     {
         entityManager.persist(aUser);
         entityManager.flush();
+        log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
+        return aUser;
     }
 
     @Override
@@ -76,6 +130,11 @@ public class UserDaoImpl
     @Transactional
     public int delete(String aUsername)
     {
+        if (sessionRegistry != null) {
+            sessionRegistry.getAllSessions(aUsername, false)
+                    .forEach(_session -> _session.expireNow());
+        }
+
         User toDelete = get(aUsername);
         if (toDelete == null) {
             return 0;
@@ -90,7 +149,51 @@ public class UserDaoImpl
     @Transactional
     public void delete(User aUser)
     {
+        if (sessionRegistry != null) {
+            sessionRegistry.getAllSessions(aUser.getUsername(), false)
+                    .forEach(_session -> _session.expireNow());
+        }
+
         entityManager.remove(entityManager.merge(aUser));
+    }
+
+    @Override
+    @Transactional
+    public List<User> listAllUsersFromRealm(String aRealm)
+    {
+        String query = String.join("\n", //
+                "FROM " + User.class.getName(), //
+                "WHERE realm = :realm");
+
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("realm", aRealm) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public int deleteAllUsersFromRealm(String aRealm)
+    {
+        if (sessionRegistry != null) {
+            List<User> usersInRealm = listAllUsersFromRealm(aRealm);
+
+            for (User user : usersInRealm) {
+                sessionRegistry.getAllSessions(user.getUsername(), false)
+                        .forEach(_session -> _session.expireNow());
+                entityManager.remove(user);
+            }
+
+            return usersInRealm.size();
+        }
+        else {
+            String query = String.join("\n", //
+                    "DELETE FROM " + User.class.getName(), //
+                    "WHERE realm = :realm");
+
+            return entityManager.createQuery(query) //
+                    .setParameter("realm", aRealm) //
+                    .executeUpdate();
+        }
     }
 
     @Override
@@ -100,6 +203,33 @@ public class UserDaoImpl
         Validate.notBlank(aUsername, "User must be specified");
 
         return entityManager.find(User.class, aUsername);
+    }
+
+    @Override
+    @Transactional
+    public User getUserByRealmAndUiName(String aRealm, String aUiName)
+    {
+        Validate.notBlank(aUiName, "User must be specified");
+
+        String query = String.join("\n", //
+                "FROM " + User.class.getName(), //
+                "WHERE ((:realm is null and realm is null) or realm = :realm)", //
+                "AND   uiName = :uiName");
+
+        List<User> users = entityManager.createQuery(query, User.class) //
+                .setParameter("realm", aRealm) //
+                .setParameter("uiName", aUiName) //
+                .getResultList();
+
+        switch (users.size()) {
+        case 0:
+            return null;
+        case 1:
+            return users.get(0);
+        default:
+            throw new IllegalStateException(
+                    "UI name [" + aUiName + "] is not unique within realm [" + aRealm + "]");
+        }
     }
 
     @Override
@@ -116,7 +246,8 @@ public class UserDaoImpl
     {
         String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
-        return entityManager.createQuery(query, User.class).setParameter("enabled", true)
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("enabled", true) //
                 .getResultList();
     }
 
@@ -126,7 +257,18 @@ public class UserDaoImpl
     {
         String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
-        return entityManager.createQuery(query, User.class).setParameter("enabled", false)
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("enabled", false) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<String> listRealms()
+    {
+        String query = "SELECT DISTINCT realm FROM " + User.class.getName();
+
+        return entityManager.createQuery(query, String.class) //
                 .getResultList();
     }
 
@@ -158,14 +300,24 @@ public class UserDaoImpl
     @Transactional
     public boolean isAdministrator(User aUser)
     {
-        boolean roleAdmin = false;
+        return hasRole(aUser, Role.ROLE_ADMIN);
+    }
+
+    @Override
+    @Transactional
+    public boolean hasRole(User aUser, Role aRole)
+    {
+        if (aUser == null) {
+            return false;
+        }
+
         for (String role : getRoles(aUser)) {
-            if (Role.ROLE_ADMIN.name().equals(role)) {
-                roleAdmin = true;
-                break;
+            if (aRole.name().equals(role)) {
+                return true;
             }
         }
-        return roleAdmin;
+
+        return false;
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
@@ -32,8 +33,8 @@ public class UncertaintySamplingStrategy
     private static final long serialVersionUID = 5664120040399862552L;
 
     @Override
-    public Optional<Delta> generateNextSuggestion(Preferences aPreferences,
-            List<SuggestionGroup> suggestions)
+    public Optional<Delta<SpanSuggestion>> generateNextSuggestion(Preferences aPreferences,
+            List<SuggestionGroup<SpanSuggestion>> suggestions)
     {
         return suggestions.stream()
                 // Fetch the top deltas per recommender

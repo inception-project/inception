@@ -9,7 +9,7 @@ image::activeLearning2.png[select, 350, 350, align="center"]
 
 The system will start showing recommendations, one by one, according to the
 <<developer-guide.adoc#sect_activeLearning_uncertaintySampling,uncertainty sampling>> learning strategy. For every recommendation, it shows the related text, the
-suggested annotation, the confidence score and a delta that represents the difference between the
+suggested annotation, the score and a delta that represents the difference between the
 given score and the closest score calculated for another suggestion made by the same recommender to that text. Additionally, there is a field which shows the suggested label and which allows changing that label - i.e. to correct the suggestion provided by the system. The recommendation is also highlighted in the central annotation editor.
 
 One can now _Annotate_, _Reject_ or _Skip_ this recommendation in the Active Learning sidebar:

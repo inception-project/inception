@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
@@ -61,9 +61,7 @@ import com.github.openjson.JSONObject;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -171,31 +169,30 @@ public class MtasUimaParser
     public MtasTokenCollection createTokenCollection(Reader aReader)
         throws MtasParserException, MtasConfigException
     {
-        try (CasStorageSession session = CasStorageSession.openNested()) {
-            long start = System.currentTimeMillis();
-            LOG.debug("Starting creation of token collection");
+        // try (CasStorageSession session = CasStorageSession.openNested(true)) {
+        long start = System.currentTimeMillis();
+        LOG.debug("Starting creation of token collection");
 
-            CAS cas;
-            try {
-                cas = readCas(aReader);
-                session.add(CAS_BEING_INDEXED, EXCLUSIVE_WRITE_ACCESS, cas);
-            }
-            catch (Exception e) {
-                LOG.error("Unable to decode CAS", e);
-                return new MtasTokenCollection();
-            }
-
-            try {
-                createTokenCollection(cas);
-                LOG.debug("Created token collection in {} ms",
-                        (System.currentTimeMillis() - start));
-                return tokenCollection;
-            }
-            catch (Exception e) {
-                LOG.error("Unable to create token collection", e);
-                return new MtasTokenCollection();
-            }
+        CAS cas;
+        try {
+            cas = readCas(aReader);
+            // session.add(CAS_BEING_INDEXED, EXCLUSIVE_WRITE_ACCESS, cas);
         }
+        catch (Exception e) {
+            LOG.error("Unable to decode CAS", e);
+            return new MtasTokenCollection();
+        }
+
+        try {
+            createTokenCollection(cas);
+            LOG.debug("Created token collection in {} ms", (System.currentTimeMillis() - start));
+            return tokenCollection;
+        }
+        catch (Exception e) {
+            LOG.error("Unable to create token collection", e);
+            return new MtasTokenCollection();
+        }
+        // }
     }
 
     private CAS readCas(Reader aReader) throws UIMAException, IOException, SAXException
@@ -206,7 +203,7 @@ public class MtasUimaParser
             CasIOUtils.load(in, getRealCas(cas));
         }
 
-        return cas;
+        return getRealCas(cas);
     }
 
     public MtasTokenCollection createTokenCollection(CAS aJCas)
@@ -292,7 +289,7 @@ public class MtasUimaParser
                 return mtasId;
             }
 
-            if (WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
+            if (RELATION_TYPE.equals(layer.getType())) {
                 RelationAdapter adapter = (RelationAdapter) annotationSchemaService
                         .getAdapter(layer);
 
@@ -302,18 +299,24 @@ public class MtasUimaParser
                 AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
                         adapter.getTargetFeatureName(), AnnotationFS.class);
 
+                // If the relation layer uses an attach-feature, index the annotation
+                // referenced by that feature
+                if (layer.getAttachFeature() != null) {
+                    if (sourceFs != null) {
+                        sourceFs = FSUtil.getFeature(sourceFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                    }
+
+                    if (targetFs != null) {
+                        targetFs = FSUtil.getFeature(targetFs, layer.getAttachFeature().getName(),
+                                AnnotationFS.class);
+                    }
+                }
+
                 if (sourceFs != null && targetFs != null &&
                 // MTAS cannot index zero-width annotations, so we skip them here.
                         sourceFs.getBegin() != sourceFs.getEnd()
                         && targetFs.getBegin() != targetFs.getEnd()) {
-                    // If the relation layer uses an attach-feature, index the annotation
-                    // referenced by that feature
-                    if (layer.getAttachFeature() != null) {
-                        sourceFs = FSUtil.getFeature(sourceFs, layer.getAttachFeature().getName(),
-                                AnnotationFS.class);
-                        targetFs = FSUtil.getFeature(targetFs, layer.getAttachFeature().getName(),
-                                AnnotationFS.class);
-                    }
 
                     Range range = getRange(targetFs);
 

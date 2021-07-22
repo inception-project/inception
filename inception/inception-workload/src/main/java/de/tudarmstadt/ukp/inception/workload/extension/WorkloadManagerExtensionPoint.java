@@ -29,10 +29,10 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfig
  * {@link WorkloadManagementAutoConfiguration#workloadExtensionPoint}.
  * </p>
  */
-public interface WorkloadManagerExtensionPoint<T>
-    extends ExtensionPoint<Project, WorkloadManagerExtension<T>>
+public interface WorkloadManagerExtensionPoint
+    extends ExtensionPoint<Project, WorkloadManagerExtension<?>>
 {
-    WorkloadManagerExtension<T> getDefault();
+    WorkloadManagerExtension<?> getDefault();
 
     List<WorkloadManagerType> getTypes();
 }

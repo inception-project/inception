@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Comparator.comparing;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -62,12 +64,14 @@ public class AnnotationEditorRegistryImpl
             AnnotationAwareOrderComparator.sort(exts);
 
             for (AnnotationEditorFactory fs : exts) {
-                log.info("Found annotation editor: {}",
+                log.debug("Found annotation editor: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        extensions = Collections.unmodifiableList(exts);
+        log.info("Found [{}] annotation editors", exts.size());
+
+        extensions = unmodifiableList(exts);
     }
 
     @Override
@@ -92,5 +96,13 @@ public class AnnotationEditorRegistryImpl
     public AnnotationEditorFactory getDefaultEditorFactory()
     {
         return getEditorFactories().get(0);
+    }
+
+    @Override
+    public AnnotationEditorFactory getPreferredEditorFactory(String aFormat)
+    {
+        return getEditorFactories().stream() //
+                .max(comparing(factory -> factory.accepts(aFormat))) //
+                .orElseGet(this::getDefaultEditorFactory);
     }
 }

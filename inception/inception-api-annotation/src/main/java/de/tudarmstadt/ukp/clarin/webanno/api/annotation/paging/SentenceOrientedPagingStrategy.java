@@ -69,7 +69,13 @@ public class SentenceOrientedPagingStrategy
     {
         // If there is a sentence ID, then make it accessible to the user via a sentence-level
         // comment.
-        String sentId = FSUtil.getFeature(aSentence, "id", String.class);
+        String sentId = null;
+        try {
+            sentId = FSUtil.getFeature(aSentence, "id", String.class);
+        }
+        catch (IllegalArgumentException e) {
+            // Ignore if there is no "id" feature on the sentence
+        }
         return new Unit(sentId, aIndex, aSentence.getBegin(), aSentence.getEnd());
     }
 

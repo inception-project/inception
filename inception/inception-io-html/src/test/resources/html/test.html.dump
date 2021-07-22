@@ -1,0 +1,36 @@
+======== CAS 0 begin ==================================
+
+-------- View _InitialView begin ----------------------------------
+
+DocumentMetaData
+   sofa: _InitialView
+   begin: 0
+   end: 68
+   language: "en"
+   documentTitle: "test.html"
+   documentId: "test.html"
+   isLastSegment: false
+
+CAS-Text:
+ Heading This is the first paragraph. This is the second paragraph. 
+[Heading]
+Heading
+   sofa: _InitialView
+   begin: 1
+   end: 8
+   divType: "h1"
+[This is the first paragraph.]
+Paragraph
+   sofa: _InitialView
+   begin: 9
+   end: 37
+   divType: "p"
+[This is the second paragraph.]
+Paragraph
+   sofa: _InitialView
+   begin: 38
+   end: 67
+   divType: "p"
+-------- View _InitialView end ----------------------------------
+
+======== CAS 0 end ==================================

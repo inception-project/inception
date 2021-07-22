@@ -17,6 +17,10 @@
 [[sect_versioning]]
 = Project Versioning
 
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `versioning.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
 Project managers can create snapshots of all documents in the project as well as its layer configuration via the versioning panel.
 This is done via a git repository stored in the `+.inception+` folder.
 This git repository can also be used to push to a remote repository, e.g. saving on Github or Gitlab.
@@ -25,6 +29,3 @@ We currently only support pushing via HTTPS.
 image::versioning_settings.png[align="center"]
 
 If you want to roll back to an earlier version, then you need to manually check out the old version in the local or remote git repository, load the old layer configuration manually in the layer settings and replace source and annotation documents via the remote API (see the <<admin-guide.adoc#sect_remote_api, Admin Guide>>).
-
-NOTE: This feature is not enabled by default.
-However, you can enable it by adding `versioning.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).

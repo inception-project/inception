@@ -48,8 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
@@ -73,7 +73,7 @@ public class ProjectCasDoctorPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationService;
     private @SpringBean CasStorageService casStorageService;
-    private @SpringBean ImportExportService importExportService;
+    private @SpringBean DocumentImportExportService importExportService;
 
     // Data properties
     private FormModel formModel = new FormModel();
@@ -214,7 +214,7 @@ public class ProjectCasDoctorPanel
 
             // Repair regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
-                if (documentService.existsAnnotationCas(ad)) {
+                if (documentService.existsCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
@@ -305,7 +305,7 @@ public class ProjectCasDoctorPanel
 
             // Check regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
-                if (documentService.existsAnnotationCas(ad)) {
+                if (documentService.existsCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {

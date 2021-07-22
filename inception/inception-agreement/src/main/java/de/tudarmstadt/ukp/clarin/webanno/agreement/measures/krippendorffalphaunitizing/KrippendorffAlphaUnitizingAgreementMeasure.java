@@ -107,19 +107,23 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
         // them to the unitizing study based on character offsets.
         for (Entry<String, List<CAS>> set : aCasMap.entrySet()) {
             int raterIdx = study.addRater(set.getKey());
-            nextCas: for (CAS cas : set.getValue()) {
-                if (cas == null) {
-                    // If a user has never worked on a source document, its CAS is null here - we
-                    // skip it.
-                    continue nextCas;
+            int docOffset = 0;
+            int i = 0;
+            for (CAS cas : set.getValue()) {
+                // If a user has never worked on a source document, its CAS is null here - we
+                // skip it.
+                if (cas != null) {
+                    Type t = cas.getTypeSystem().getType(typeName);
+                    Feature f = t.getFeatureByBaseName(getFeature().getName());
+                    int currentDocOffset = docOffset;
+                    cas.select(t).map(fs -> (AnnotationFS) fs).forEach(fs -> {
+                        study.addUnit(currentDocOffset + fs.getBegin(), fs.getEnd() - fs.getBegin(),
+                                raterIdx, FSUtil.getFeature(fs, f, Object.class));
+                    });
                 }
 
-                Type t = cas.getTypeSystem().getType(typeName);
-                Feature f = t.getFeatureByBaseName(getFeature().getName());
-                cas.select(t).map(fs -> (AnnotationFS) fs).forEach(fs -> {
-                    study.addUnit(fs.getBegin(), fs.getEnd() - fs.getBegin(), raterIdx,
-                            FSUtil.getFeature(fs, f, Object.class));
-                });
+                docOffset += docSizes[i];
+                i++;
             }
         }
 

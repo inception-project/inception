@@ -29,7 +29,8 @@ public class NumberFeatureTraits
 
     public enum EDITOR_TYPE
     {
-        SPINNER("Spinner"), RADIO_BUTTONS("Radio Buttons");
+        SPINNER("Spinner"), //
+        RADIO_BUTTONS("Radio Buttons");
 
         private final String name;
 

@@ -39,8 +39,8 @@ import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -73,7 +73,7 @@ public class MtasUimaParserTest
     private FeatureIndexingSupportRegistryImpl featureIndexingSupportRegistry;
     private JCas jcas;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         initMocks(this);
@@ -244,10 +244,10 @@ public class MtasUimaParserTest
         depLayer.setId(3l);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenLayerPos);
-        AnnotationFeature dependencyLayerGovernor = new AnnotationFeature(2l, depLayer, "Governor",
-                Token.class.getName());
+        AnnotationFeature dependencyLayerGovernor = new AnnotationFeature(2l, depLayer,
+                FEAT_REL_SOURCE, Token.class.getName());
         AnnotationFeature dependencyLayerDependent = new AnnotationFeature(3l, depLayer,
-                "Dependent", Token.class.getName());
+                FEAT_REL_TARGET, Token.class.getName());
 
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(tokenLayer, posLayer, depLayer));

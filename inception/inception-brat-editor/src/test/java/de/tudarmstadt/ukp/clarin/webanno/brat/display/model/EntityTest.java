@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
@@ -34,14 +34,15 @@ public class EntityTest
     public void toJsonTest() throws IOException
     {
         String json = JSONUtil.toPrettyJsonString(
-                new Entity(new VID(1, 2), "type", new Offsets(1, 2), "label", "color"));
+                new Entity(new VID(1, 2), "type", new Offsets(1, 2), "label", "color", true));
 
         // @formatter:off
         assertEquals(
                 String.join("\n",
                         "[ \"1.2\", \"type\", [ [ 1, 2 ] ], {",
                         "  \"l\" : \"label\",",
-                        "  \"c\" : \"color\"",
+                        "  \"c\" : \"color\",",
+                        "  \"a\" : 1",
                         "} ]"),
                 json);
         // @formatter:on

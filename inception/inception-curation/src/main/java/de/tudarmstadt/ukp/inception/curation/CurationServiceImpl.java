@@ -37,7 +37,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -50,7 +49,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -64,36 +62,43 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CurationServiceAutoConfiguration#curationService}.
+ * </p>
+ */
 public class CurationServiceImpl
     implements CurationService
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationStateKey, CurationState> curationStates;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
+    private final DocumentService documentService;
+    private final SessionRegistry sessionRegistry;
+    private final ProjectService projectService;
+    private final UserDao userRegistry;
+    private final CasStorageService casStorageService;
 
-    private @Autowired DocumentService documentService;
-    private @Autowired SessionRegistry sessionRegistry;
-    private @Autowired ProjectService projectService;
-    private @Autowired UserDao userRegistry;
-    private @Autowired CasStorageService casStorageService;
-
-    public CurationServiceImpl()
+    @Autowired
+    public CurationServiceImpl(EntityManager aEntityManager, DocumentService aDocumentService,
+            SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
+            CasStorageService aCasStorageService)
     {
         curationStates = new ConcurrentHashMap<>();
-    }
-
-    public CurationServiceImpl(EntityManager aEntityManager)
-    {
-        this();
         entityManager = aEntityManager;
+        documentService = aDocumentService;
+        sessionRegistry = aSessionRegistry;
+        projectService = aProjectService;
+        userRegistry = aUserRegistry;
+        casStorageService = aCasStorageService;
     }
 
     /**
@@ -189,6 +194,7 @@ public class CurationServiceImpl
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
         private MergeStrategy selectedStrategy;
+        private boolean showAll;
 
         public CurationState(String aUser)
         {
@@ -231,6 +237,16 @@ public class CurationServiceImpl
         public MergeStrategy getMergeStrategy()
         {
             return selectedStrategy;
+        }
+
+        public boolean isShowAll()
+        {
+            return showAll;
+        }
+
+        public void setShowAll(boolean aShowAll)
+        {
+            showAll = aShowAll;
         }
     }
 
@@ -332,7 +348,6 @@ public class CurationServiceImpl
     {
         synchronized (curationStates) {
             getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);
-            ;
         }
     }
 
@@ -341,7 +356,6 @@ public class CurationServiceImpl
     {
         synchronized (curationStates) {
             getCurationState(aCurrentUser, aProjectId).setMergeStrategy(aStrategy);
-            ;
         }
     }
 
@@ -427,6 +441,22 @@ public class CurationServiceImpl
     {
         synchronized (curationStates) {
             getCurationState(aUsername, aProjectId).setSelectedUsers(new ArrayList<>());
+        }
+    }
+
+    @Override
+    public boolean isShowAll(String aUsername, Long aProjectId)
+    {
+        synchronized (curationStates) {
+            return getCurationState(aUsername, aProjectId).isShowAll();
+        }
+    }
+
+    @Override
+    public void setShowAll(String aUsername, Long aProjectId, boolean aValue)
+    {
+        synchronized (curationStates) {
+            getCurationState(aUsername, aProjectId).setShowAll(aValue);
         }
     }
 

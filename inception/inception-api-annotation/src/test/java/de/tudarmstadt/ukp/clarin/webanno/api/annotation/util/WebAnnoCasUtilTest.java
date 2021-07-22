@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.DocumentAnnotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 

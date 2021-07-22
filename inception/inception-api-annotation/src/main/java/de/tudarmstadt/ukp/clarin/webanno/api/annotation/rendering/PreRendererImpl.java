@@ -25,6 +25,8 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -44,6 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public class PreRendererImpl
     implements PreRenderer
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final AnnotationSchemaService annotationService;
     private final LayerSupportRegistry layerSupportRegistry;
 
@@ -57,16 +61,22 @@ public class PreRendererImpl
         layerSupportRegistry = aLayerSupportRegistry;
         annotationService = aAnnotationService;
 
-        supportedFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(annotationService::listSupportedFeatures);
-        allFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(annotationService::listAnnotationFeature);
+        supportedFeaturesCache = Caffeine.newBuilder() //
+                .expireAfterAccess(5, MINUTES) //
+                .maximumSize(10 * 1024) //
+                .build(annotationService::listSupportedFeatures);
+        allFeaturesCache = Caffeine.newBuilder() //
+                .expireAfterAccess(5, MINUTES) //
+                .maximumSize(10 * 1024) //
+                .build(annotationService::listAnnotationFeature);
     }
 
     @Override
     public void render(VDocument aResponse, int windowBegin, int windowEnd, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
+        log.trace("render()");
+
         Validate.notNull(aCas, "CAS cannot be null");
 
         if (aLayers.isEmpty()) {
@@ -103,6 +113,8 @@ public class PreRendererImpl
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         supportedFeaturesCache.asMap().keySet()
+                .removeIf(key -> Objects.equals(key.getId(), aEvent.getProject().getId()));
+        allFeaturesCache.asMap().keySet()
                 .removeIf(key -> Objects.equals(key.getId(), aEvent.getProject().getId()));
     }
 }

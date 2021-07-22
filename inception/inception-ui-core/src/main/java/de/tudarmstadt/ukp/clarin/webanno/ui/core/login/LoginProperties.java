@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
 public interface LoginProperties
 {
-    public long getMaxConcurrentSessions();
+    long getMaxConcurrentSessions();
 
-    public void setMaxConcurrentSessions(long aMaxConcurrentSessions);
+    String getMessage();
 }

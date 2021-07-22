@@ -27,8 +27,10 @@
           </label>
           <select class="flex-content" wicket:id="usersToAdd"></select>
           <button wicket:id="add" class="btn btn-primary">
-            <i class="fas fa-plus-square"></i>&nbsp;
-            <wicket:message key="add"/>
+            <i class="fas fa-plus-square"></i>
+            <span class="d-none d-lg-inline">
+              &nbsp;<wicket:message key="add"/>
+            </span>
           </button>
         </div>
       </form>

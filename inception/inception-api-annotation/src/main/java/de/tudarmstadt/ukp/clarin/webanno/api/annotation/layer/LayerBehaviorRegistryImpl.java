@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,11 +31,15 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@code AnnotationServiceAutoConfiguration#layerBehaviorRegistry}.
+ * </p>
+ */
 public class LayerBehaviorRegistryImpl
     implements LayerBehaviorRegistry
 {
@@ -65,12 +70,14 @@ public class LayerBehaviorRegistryImpl
             AnnotationAwareOrderComparator.sort(lsp);
 
             for (LayerBehavior fs : lsp) {
-                log.info("Found layer behavior: {}",
+                log.debug("Found layer behavior: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        layerBehaviors = Collections.unmodifiableList(lsp);
+        log.info("Found [{}] layer behaviors", lsp.size());
+
+        layerBehaviors = unmodifiableList(lsp);
     }
 
     @Override

@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference.SIDEBAR_SIZE_MAX;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference.SIDEBAR_SIZE_MIN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -27,6 +29,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -82,10 +85,12 @@ public class AnnotationPreferencesDialogContent
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean UserDao userDao;
     private @SpringBean UserPreferencesService userPreferencesService;
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     private final ModalWindow modalWindow;
     private final Form<Preferences> form;
     private final IModel<AnnotatorState> stateModel;
+    private final List<Pair<String, String>> editorChoices;
 
     public AnnotationPreferencesDialogContent(String aId, final ModalWindow aModalWindow,
             IModel<AnnotatorState> aModel)
@@ -95,6 +100,11 @@ public class AnnotationPreferencesDialogContent
         stateModel = aModel;
         modalWindow = aModalWindow;
 
+        editorChoices = annotationEditorRegistry.getEditorFactories().stream()
+                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
+                .collect(Collectors.toList());
+        editorChoices.add(0, Pair.of(null, "Auto (based on document format)"));
+
         form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
         NumberTextField<Integer> windowSizeField = new NumberTextField<>("windowSize");
@@ -102,11 +112,17 @@ public class AnnotationPreferencesDialogContent
         windowSizeField.setMinimum(1);
         form.add(windowSizeField);
 
-        NumberTextField<Integer> sidebarSizeField = new NumberTextField<>("sidebarSize");
-        sidebarSizeField.setType(Integer.class);
-        sidebarSizeField.setMinimum(AnnotationPreference.SIDEBAR_SIZE_MIN);
-        sidebarSizeField.setMaximum(AnnotationPreference.SIDEBAR_SIZE_MAX);
-        form.add(sidebarSizeField);
+        NumberTextField<Integer> sidebarSizeLeftField = new NumberTextField<>("sidebarSizeLeft");
+        sidebarSizeLeftField.setType(Integer.class);
+        sidebarSizeLeftField.setMinimum(SIDEBAR_SIZE_MIN);
+        sidebarSizeLeftField.setMaximum(SIDEBAR_SIZE_MAX);
+        form.add(sidebarSizeLeftField);
+
+        NumberTextField<Integer> sidebarSizeRightField = new NumberTextField<>("sidebarSizeRight");
+        sidebarSizeRightField.setType(Integer.class);
+        sidebarSizeRightField.setMinimum(SIDEBAR_SIZE_MIN);
+        sidebarSizeRightField.setMaximum(SIDEBAR_SIZE_MAX);
+        form.add(sidebarSizeRightField);
 
         NumberTextField<Integer> fontZoomField = new NumberTextField<>("fontZoom");
         fontZoomField.setType(Integer.class);
@@ -114,9 +130,6 @@ public class AnnotationPreferencesDialogContent
         fontZoomField.setMaximum(AnnotationPreference.FONT_ZOOM_MAX);
         form.add(fontZoomField);
 
-        List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
-                .collect(Collectors.toList());
         DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
@@ -139,6 +152,7 @@ public class AnnotationPreferencesDialogContent
 
         CheckBox rememberCheckbox = new CheckBox("rememberLayer");
         rememberCheckbox.setOutputMarkupId(true);
+        rememberCheckbox.setVisible(annotationEditorProperties.isRememberLayerEnabled());
         form.add(rememberCheckbox);
 
         // Add global read-only coloring strategy combo box
@@ -164,7 +178,8 @@ public class AnnotationPreferencesDialogContent
             prefs.setScrollPage(model.scrollPage);
             prefs.setRememberLayer(model.rememberLayer);
             prefs.setWindowSize(model.windowSize);
-            prefs.setSidebarSize(model.sidebarSize);
+            prefs.setSidebarSizeLeft(model.sidebarSizeLeft);
+            prefs.setSidebarSizeRight(model.sidebarSizeRight);
             prefs.setFontZoom(model.fontZoom);
             prefs.setColorPerLayer(model.colorPerLayer);
             prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
@@ -199,7 +214,8 @@ public class AnnotationPreferencesDialogContent
         // Import current settings from the annotator
         Preferences model = new Preferences();
         model.windowSize = Math.max(prefs.getWindowSize(), 1);
-        model.sidebarSize = prefs.getSidebarSize();
+        model.sidebarSizeLeft = prefs.getSidebarSizeLeft();
+        model.sidebarSizeRight = prefs.getSidebarSizeRight();
         model.fontZoom = prefs.getFontZoom();
         model.scrollPage = prefs.isScrollPage();
         model.colorPerLayer = prefs.getColorPerLayer();
@@ -207,12 +223,13 @@ public class AnnotationPreferencesDialogContent
         model.rememberLayer = prefs.isRememberLayer();
         model.collapseArcs = prefs.isCollapseArcs();
 
-        AnnotationEditorFactory editorFactory = annotationEditorRegistry
-                .getEditorFactory(state.getPreferences().getEditor());
-        if (editorFactory == null) {
-            editorFactory = annotationEditorRegistry.getDefaultEditorFactory();
-        }
-        model.editor = Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
+        model.editor = editorChoices.stream().filter(
+                editor -> Objects.equals(editor.getKey(), state.getPreferences().getEditor()))
+                .findFirst().orElseGet(() -> {
+                    AnnotationEditorFactory editorFactory = annotationEditorRegistry
+                            .getDefaultEditorFactory();
+                    return Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
+                });
 
         model.annotationLayers = annotationService.listAnnotationLayer(state.getProject()).stream()
                 // hide disabled Layers
@@ -282,7 +299,8 @@ public class AnnotationPreferencesDialogContent
 
         private Pair<String, String> editor;
         private int windowSize;
-        private int sidebarSize;
+        private int sidebarSizeLeft;
+        private int sidebarSizeRight;
         private int fontZoom;
         private boolean scrollPage;
         private boolean rememberLayer;

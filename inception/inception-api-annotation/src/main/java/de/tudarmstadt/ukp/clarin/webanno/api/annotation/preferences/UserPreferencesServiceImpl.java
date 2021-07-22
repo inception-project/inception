@@ -45,10 +45,10 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -218,6 +218,12 @@ public class UserPreferencesServiceImpl
                 colorPerLayer.put(layer.getId(),
                         coloringService.getBestInitialStrategy(layer, preference));
             }
+        }
+
+        // Upgrade from single sidebar width setting to split setting
+        if (preference.getSidebarSizeLeft() == 0 && preference.getSidebarSizeRight() == 0) {
+            preference.setSidebarSizeLeft(preference.getSidebarSize());
+            preference.setSidebarSizeRight(preference.getSidebarSize());
         }
 
         return preference;

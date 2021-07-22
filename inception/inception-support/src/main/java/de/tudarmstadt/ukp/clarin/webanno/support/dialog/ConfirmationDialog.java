@@ -22,6 +22,7 @@ import java.io.Serializable;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -84,6 +85,15 @@ public class ConfirmationDialog
             onCancelInternal(_target);
             return true;
         });
+    }
+
+    @Override
+    protected void onComponentTag(final ComponentTag tag)
+    {
+        super.onComponentTag(tag);
+        // CSP doesn't like the style attribute being used, so we use the Bootstrap d-none class
+        tag.remove("style");
+        tag.append("class", "d-none", " ");
     }
 
     public IModel<String> getTitleModel()

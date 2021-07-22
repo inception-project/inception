@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.19.0-SNAPSHOT</version>
+    <version>0.21.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-ui-core</artifactId>
   <name>INCEpTION - UI - Core</name>
@@ -41,6 +41,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support-jsass</artifactId>
     </dependency>
 
     <dependency>
@@ -166,14 +170,44 @@
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
+    <!--
     <dependency>
-      <groupId>io.bit3</groupId>
+      <groupId>ua.kasta</groupId>
       <artifactId>jsass</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+    -->
     
     <dependency>
       <groupId>org.webjars.bower</groupId>
       <artifactId>hover</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+      <artifactId>enjoyhint</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.webjars.bowergithub.flesler</groupId>
+          <artifactId>jquery.scrollto</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.webjars.bowergithub.jquery</groupId>
+          <artifactId>jquery-dist</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>kinetic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>jquery.scrollTo</artifactId>
     </dependency>
     
     <dependency>
@@ -195,6 +229,9 @@
                 - no actual code dependency
               -->
               <usedDependency>org.webjars.bower:hover</usedDependency>
+              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
+              <usedDependency>org.webjars.npm:kinetic</usedDependency>
+              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

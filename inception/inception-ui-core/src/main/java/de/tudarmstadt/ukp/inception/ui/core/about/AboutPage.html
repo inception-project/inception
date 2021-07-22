@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:extend>
+    <div class="scrolling flex-content flex-h-container" style="min-width: 30em;">
+      <div class="flex-content flex-v-container flex-centered text-center" style="min-height: 20em;">
+        <h1 class="display-1 mt-5 pt-5"><wicket:message key="product.name"/></h1>
+        <p class="lead mb-4">your friendly neighborhood semantic text annotation tool</p>
+        <p class="mb-3">
+          <wicket:message key="shortDescription"/>
+        </p>
+        <p class="mb-3">
+          <wicket:message key="license"/>
+        </p>
+        <p class="mb-3">
+          <wicket:container wicket:id="copyright"/>
+        </p>
+        <p class="mb-3">
+          <a wicket:id="home" class="btn btn-secondary">Back to work</a>
+        </p>
+        <div class="flex-content panel card w-75 m-3 small text-left" wicket:enclosure="dependencies">
+          <div class="card-header">
+            Dependencies
+          </div>
+          <div class="scrolling card-body fit-child-snug flex-v-container p-0 m-0">
+            <pre class="p-3 m-0"><wicket:container wicket:id="dependencies"/></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </wicket:extend>
+</body>
+</html>

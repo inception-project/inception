@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -178,6 +179,29 @@ public class EventRepositoryImpl
         }
 
         return reducedResults;
+    }
+    
+    @Override
+    @Transactional
+    public List<LoggedEvent> listFilteredRecentActivity(Collection<String> aEventTypes, int aMaxSize)
+    {
+        String query = join("\n", //
+                "FROM  LoggedEvent", //
+                "WHERE event not in (:eventTypes)", //
+                "ORDER BY created DESC");
+
+        List<LoggedEvent> result = new ArrayList<>();
+        try {
+            result = entityManager.createQuery(query, LoggedEvent.class) //
+                    .setParameter("eventTypes", aEventTypes) //
+                    .setMaxResults(aMaxSize) //
+                    .getResultList();
+        }
+        catch (NoResultException e) {
+            log.debug(e.getMessage());
+        }
+
+        return result;
     }
 
     @Override

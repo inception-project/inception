@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.kb.util;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.INCEPTION_NAMESPACE;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -53,7 +55,6 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.Assume;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -142,12 +143,11 @@ public class TestFixtures
             return repo;
         }
         case REMOTE: {
-            Assume.assumeTrue(
-                    "Remote repository at [" + profile.getAccess().getAccessUrl()
-                            + "] is not reachable",
-                    isReachable(profile.getAccess().getAccessUrl()));
+            assumeTrue(isReachable(profile.getAccess().getAccessUrl()), "Remote repository at ["
+                    + profile.getAccess().getAccessUrl() + "] is not reachable");
 
             SPARQLRepository repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
+            repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
             repo.init();
             return repo;
         }
@@ -251,6 +251,7 @@ public class TestFixtures
         }
 
         SPARQLRepository r = new SPARQLRepository(aUrl);
+        r.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
         r.init();
         try (RepositoryConnection conn = r.getConnection()) {
             TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
@@ -269,15 +270,15 @@ public class TestFixtures
 
     /**
      * Tries to connect to the given endpoint url and assumes that the connection is successful with
-     * {@link org.junit.Assume#assumeTrue(String, boolean)}
+     * {@link org.junit.jupiter.api.Assumptions#assumeTrue(boolean, String)}
      * 
      * @param aEndpointURL
      *            the url to check
      */
     public static void assumeEndpointIsAvailable(String aEndpointURL)
     {
-        Assume.assumeTrue("Remote repository at [" + aEndpointURL + "] is not reachable",
-                isReachable(aEndpointURL));
+        assumeTrue(isReachable(aEndpointURL),
+                "Remote repository at [" + aEndpointURL + "] is not reachable");
     }
 
     @SuppressWarnings("resource")

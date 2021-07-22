@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenNlpDoccatRecommenderTraits
     implements Serializable
 {

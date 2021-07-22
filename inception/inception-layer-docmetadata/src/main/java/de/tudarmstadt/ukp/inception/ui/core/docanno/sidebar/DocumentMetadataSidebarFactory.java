@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -28,19 +29,24 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 /**
  * Support for document-level annotations through a sidebar.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataSidebarFactory()}.
+ * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataSidebarFactory}.
  * </p>
  */
 public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
-    private static final ResourceReference ICON = new PackageResourceReference(
-            DocumentMetadataSidebarFactory.class, "three_tags.png");
+    private final AnnotationSchemaService schemaService;
+
+    public DocumentMetadataSidebarFactory(AnnotationSchemaService aSchemaService)
+    {
+        schemaService = aSchemaService;
+    }
 
     @Override
     public String getDisplayName()
@@ -49,9 +55,16 @@ public class DocumentMetadataSidebarFactory
     }
 
     @Override
-    public ResourceReference getIcon()
+    public IconType getIcon()
     {
-        return ICON;
+        return FontAwesome5IconType.tags_s;
+    }
+
+    @Override
+    public boolean applies(AnnotatorState aState)
+    {
+        return schemaService.existsEnabledLayerOfType(aState.getProject(),
+                DocumentMetadataLayerSupport.TYPE);
     }
 
     @Override

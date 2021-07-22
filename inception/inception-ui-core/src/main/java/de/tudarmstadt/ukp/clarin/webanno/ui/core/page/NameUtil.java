@@ -17,8 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import static org.apache.commons.lang3.StringUtils.containsNone;
+
 public class NameUtil
 {
+    public static final String WEBANNO_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
+
+    public static final String BAD_FOR_FILENAMES = "#%&{}\\<>*?/ $!'\":@+`|=";
+
     /**
      * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
      * will conflict with file naming system
@@ -29,14 +35,6 @@ public class NameUtil
      */
     public static boolean isNameValid(String aName)
     {
-        if (aName == null || aName.contains("^") || aName.contains("/") || aName.contains("\\")
-                || aName.contains("&") || aName.contains("*") || aName.contains("?")
-                || aName.contains("+") || aName.contains("$") || aName.contains("!")
-                || aName.contains("[") || aName.contains("]")) {
-            return false;
-        }
-        else {
-            return true;
-        }
+        return aName != null && containsNone(aName, WEBANNO_ILLEGAL_CHARACTERS);
     }
 }

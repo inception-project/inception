@@ -21,27 +21,34 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
  * (Re)indexes the annotation document for a specific user.
  */
 public class IndexAnnotationDocumentTask
-    extends Task
+    extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
 
-    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
+    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
+            byte[] aBinaryCas)
     {
-        super(aAnnotationDocument, aBinaryCas);
+        super(aAnnotationDocument, aTrigger, aBinaryCas);
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
@@ -49,13 +56,24 @@ public class IndexAnnotationDocumentTask
     }
 
     @Override
-    public boolean matches(Task aTask)
+    public MatchResult matches(Task aTask)
     {
-        if (!(aTask instanceof IndexAnnotationDocumentTask)) {
-            return false;
+        // If a re-indexing task for the project is scheduled, we do not need to schedule a new
+        // annotation indexing task
+        if (aTask instanceof ReindexTask) {
+            if (((ReindexTask) aTask).getProject().getId() == getAnnotationDocument().getProject()
+                    .getId()) {
+                return DISCARD_OR_QUEUE_THIS;
+            }
         }
 
-        return getAnnotationDocument().getId() == aTask.getAnnotationDocument().getId();
-    }
+        if (aTask instanceof IndexAnnotationDocumentTask) {
+            if (getAnnotationDocument().getId() == ((IndexAnnotationDocumentTask) aTask)
+                    .getAnnotationDocument().getId()) {
+                return UNQUEUE_EXISTING_AND_QUEUE_THIS;
+            }
+        }
 
+        return NO_MATCH;
+    }
 }

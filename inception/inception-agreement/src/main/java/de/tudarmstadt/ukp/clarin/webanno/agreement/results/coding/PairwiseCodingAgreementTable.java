@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toCollection;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,8 +31,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -76,6 +79,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
@@ -92,6 +97,7 @@ public class PairwiseCodingAgreementTable
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userRepository;
 
     private final RefreshingView<String> rows;
     private final AjaxDownloadLink exportAllButton;
@@ -175,11 +181,13 @@ public class PairwiseCodingAgreementTable
                         }
                         // Raters header horizontally
                         else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
-                            cell.add(new Label("label", Model.of(aCellItem.getModelObject())));
+                            cell.add(new Label("label",
+                                    userRepository.get(aCellItem.getModelObject()).getUiName()));
                         }
                         // Raters header vertically
                         else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
-                            cell.add(new Label("label", Model.of(aRowItem.getModelObject())));
+                            cell.add(new Label("label",
+                                    userRepository.get(aRowItem.getModelObject()).getUiName()));
                         }
                         // Upper diagonal
                         else if (aCellItem.getIndex() > aRowItem.getIndex()) {
@@ -280,7 +288,7 @@ public class PairwiseCodingAgreementTable
                 + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(1),
                         getNonNullCount(result, result.getCasGroupIds().get(1)),
                         result.getStudy().getItemCount())
-                + String.format("Distinct labels used: %d%n", result.getStudy().getCategoryCount());
+                + String.format("Distinct labels: %d%n", result.getStudy().getCategoryCount());
 
         Label l = new Label("label", Model.of(label));
         l.add(makeDownloadBehavior(aRater1, aRater2));
@@ -411,13 +419,16 @@ public class PairwiseCodingAgreementTable
 
                 CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
 
+                Set<String> tagset = annotationService.listTags(feature.getTagset()).stream()
+                        .map(Tag::getName).collect(toCollection(LinkedHashSet::new));
+
                 // AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
                 // feature.getLayer().getName(), feature.getName(),
                 // pref.excludeIncomplete, casMap);
                 // TODO: for the moment, we always include incomplete annotations during this
                 // export.
                 CodingAgreementResult agreementResult = makeCodingStudy(diff,
-                        feature.getLayer().getName(), feature.getName(), false, casMap);
+                        feature.getLayer().getName(), feature.getName(), tagset, false, casMap);
 
                 try {
                     return AgreementUtils.generateCsvReport(agreementResult);

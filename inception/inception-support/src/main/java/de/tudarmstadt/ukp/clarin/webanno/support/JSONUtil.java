@@ -32,9 +32,17 @@ import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class JSONUtil
 {
+    private static final ObjectMapper OBJECT_MAPPER;
+
+    static {
+        OBJECT_MAPPER = new ObjectMapper();
+        OBJECT_MAPPER.registerModule(new JavaTimeModule());
+    }
+
     /**
      * Convert Java objects into JSON format and write it to a file
      *
@@ -103,7 +111,7 @@ public class JSONUtil
 
     public static ObjectMapper getObjectMapper()
     {
-        return new ObjectMapper();
+        return OBJECT_MAPPER;
     }
 
     public static String toInterpretableJsonString(Object aObject) throws IOException

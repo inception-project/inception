@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -52,8 +51,8 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
             List<AnnotationFeature> aFeatures)
     {
         for (AnnotationFeature feature : aFeatures) {
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
+            featureSupportRegistry.findExtension(feature)
+                    .ifPresent(fs -> fs.generateFeature(aTSD, aTD, feature));
         }
     }
 

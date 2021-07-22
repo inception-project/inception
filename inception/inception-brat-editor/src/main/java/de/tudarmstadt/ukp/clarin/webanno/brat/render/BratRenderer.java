@@ -25,15 +25,18 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -64,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
@@ -84,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -97,15 +102,16 @@ public class BratRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
 
-    private static final boolean DEBUG = false;
-
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
+    private final BratAnnotationEditorProperties properties;
 
-    public BratRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
+    public BratRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService,
+            BratAnnotationEditorProperties aProperties)
     {
         schemaService = aSchemaService;
         coloringService = aColoringService;
+        properties = aProperties;
     }
 
     public void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
@@ -130,13 +136,18 @@ public class BratRenderer
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());
 
-        // Render invisible baseline annotations (sentence, tokens)
         renderText(aCas, aResponse, aState);
+
         // The rows need to be rendered first because we use the row boundaries to split
         // cross-row spans into multiple ranges
-        renderUnitsAsRows(aResponse, aState);
+        renderBratRowsFromUnits(aResponse, aState);
 
-        renderTokens(aCas, aResponse, aState);
+        if (properties.isUseCasTokens()) {
+            renderBratTokensFromTokens(aCas, aResponse, aState);
+        }
+        else {
+            renderBratTokensFromText(aCas, aResponse, aState);
+        }
 
         Map<AnnotationFS, Integer> sentenceIndexes = null;
 
@@ -165,14 +176,20 @@ public class BratRenderer
                                 aCas.getDocumentText().substring(aState.getWindowBeginOffset(),
                                         aState.getWindowEndOffset()),
                                 range.getBegin(), range.getEnd()).stream())
-                        .collect(toList());
+                        .map(range -> {
+                            int[] span = { range.getBegin(), range.getEnd() };
+                            TrimUtils.trim(aResponse.getText(), span);
+                            range.setBegin(span[0]);
+                            range.setEnd(span[1]);
+                            return range;
+                        }).collect(toList());
 
                 String labelText = getUiLabelText(typeAdapter, vspan);
 
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
-                        color);
+                        color, vspan.isActionButtons());
                 if (!layer.isShowTextInHover()) {
                     // If the layer is configured not to display the span text in the popup, then
                     // we simply set the popup to the empty string here.
@@ -182,6 +199,12 @@ public class BratRenderer
                     // response for *every annotation on this layer*!)
                     entity.getAttributes().setHoverText("");
                 }
+
+                entity.getAttributes()
+                        .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
+                entity.getAttributes().setClippedAtEnd(
+                        vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+
                 aResponse.addEntity(entity);
 
                 vspan.getLazyDetails().stream()
@@ -272,7 +295,7 @@ public class BratRenderer
         return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
     }
 
-    public static void renderText(CAS aCas, GetDocumentResponse aResponse, AnnotatorState aState)
+    public void renderText(CAS aCas, GetDocumentResponse aResponse, AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
         int windowEnd = aState.getWindowEndOffset();
@@ -282,7 +305,12 @@ public class BratRenderer
         aResponse.setText(visibleText);
     }
 
-    public static void renderTokens(CAS aCas, GetDocumentResponse aResponse, AnnotatorState aState)
+    /**
+     * @deprecated We want to get away from this any use {@link #renderBratTokensFromText} instead.
+     */
+    @Deprecated
+    private void renderBratTokensFromTokens(CAS aCas, GetDocumentResponse aResponse,
+            AnnotatorState aState)
     {
         int winBegin = aState.getWindowBeginOffset();
         int winEnd = aState.getWindowEndOffset();
@@ -291,41 +319,68 @@ public class BratRenderer
         List<AnnotationFS> tokens = selectCovered(aCas, tokenType, winBegin, winEnd);
         for (AnnotationFS fs : tokens) {
             // attach type such as POS adds non-existing token element for ellipsis annotation
+            // REC 2021-03-27: The bug that empty tokens were being added has been removed long
+            // ago and there is a CAS Doctor check to ensure such tokens no longer exist. Possibly
+            // this can be removed in one of the next refactoring iterations.
             if (fs.getBegin() == fs.getEnd()) {
                 continue;
             }
 
             split(aResponse.getSentenceOffsets(), fs.getCoveredText(), fs.getBegin() - winBegin,
-                    fs.getEnd() - winBegin).forEach(range -> {
+                    fs.getEnd() - winBegin)
+                            .forEach(range -> aResponse.addToken(range.getBegin(), range.getEnd()));
+        }
+    }
+
+    private void renderBratTokensFromText(CAS aCas, GetDocumentResponse aResponse,
+            AnnotatorState aState)
+    {
+        int winBegin = aState.getWindowBeginOffset();
+        int winEnd = aState.getWindowEndOffset();
+        List<Offsets> bratTokenOffsets = new ArrayList<>();
+        String visibleText = aCas.getDocumentText().substring(winBegin, winEnd);
+        BreakIterator bi = BreakIterator.getWordInstance(Locale.ROOT);
+        bi.setText(visibleText);
+        int last = bi.first();
+        int cur = bi.next();
+        while (cur != BreakIterator.DONE) {
+            Offsets offsets = new Offsets(last, cur);
+            trim(visibleText, offsets);
+            if (offsets.getBegin() < offsets.getEnd()) {
+                bratTokenOffsets.add(offsets);
+            }
+            last = cur;
+            cur = bi.next();
+        }
+
+        for (Offsets offsets : bratTokenOffsets) {
+            split(aResponse.getSentenceOffsets(),
+                    visibleText.substring(offsets.getBegin(), offsets.getEnd()), offsets.getBegin(),
+                    offsets.getEnd()).forEach(range -> {
                         aResponse.addToken(range.getBegin(), range.getEnd());
-                        if (DEBUG) {
-                            aResponse.addEntity(new Entity(new VID(fs), "Token",
-                                    new Offsets(range.getBegin(), range.getEnd()),
-                                    fs.getCoveredText(), "#d9d9d9"));
-                        }
                     });
         }
     }
 
-    public static void renderUnitsAsRows(GetDocumentResponse aResponse, AnnotatorState aState)
+    private void renderBratRowsFromUnits(GetDocumentResponse aResponse, AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
 
         aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
 
         // Render sentences
-        int sentIdx = aResponse.getSentenceNumberOffset();
+        int unitNum = aResponse.getSentenceNumberOffset();
         for (Unit unit : aState.getVisibleUnits()) {
             aResponse.addSentence(unit.getBegin() - windowBegin, unit.getEnd() - windowBegin);
 
             // If there is a sentence ID, then make it accessible to the user via a sentence-level
             // comment.
             if (isNotBlank(unit.getId())) {
-                aResponse.addComment(new SentenceComment(sentIdx, Comment.ANNOTATOR_NOTES,
+                aResponse.addComment(new SentenceComment(unitNum, Comment.ANNOTATOR_NOTES,
                         String.format("Sentence ID: %s", unit.getId())));
             }
 
-            sentIdx++;
+            unitNum++;
         }
     }
 
@@ -341,7 +396,7 @@ public class BratRenderer
      *            (window-relative positions)
      * @return list of ranges.
      */
-    public static List<Offsets> split(List<Offsets> aRows, String aText, int aBegin, int aEnd)
+    private List<Offsets> split(List<Offsets> aRows, String aText, int aBegin, int aEnd)
     {
         // Zero-width spans never need to be split
         if (aBegin == aEnd) {
@@ -647,12 +702,14 @@ public class BratRenderer
         }
     }
 
-    private static String sanitizeVisibleText(String aText)
+    private String sanitizeVisibleText(String aText)
     {
         // NBSP is recognized by Firefox as a proper addressable character in
         // SVGText.getNumberOfChars()
-        // char whiteplaceReplacementChar = '\u00A0'; // NBSP
-        char whiteplaceReplacementChar = '\uFFFD'; // NBSP
+        char whiteplaceReplacementChar = '\u00A0'; // NBSP
+        if (isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
+            whiteplaceReplacementChar = properties.getWhiteSpaceReplacementCharacter().charAt(0);
+        }
 
         char[] chars = aText.toCharArray();
         for (int i = 0; i < chars.length; i++) {

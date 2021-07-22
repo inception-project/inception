@@ -37,7 +37,9 @@ import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -62,9 +64,9 @@ import org.springframework.stereotype.Component;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -94,12 +96,13 @@ public class AnnotationDocumentExporter
 
     private final DocumentService documentService;
     private final UserDao userRepository;
-    private final ImportExportService importExportService;
+    private final DocumentImportExportService importExportService;
     private final RepositoryProperties repositoryProperties;
 
     @Autowired
     public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
-            ImportExportService aImportExportService, RepositoryProperties aRepositoryProperties)
+            DocumentImportExportService aImportExportService,
+            RepositoryProperties aRepositoryProperties)
     {
         documentService = aDocumentService;
         userRepository = aUserRepository;
@@ -138,6 +141,7 @@ public class AnnotationDocumentExporter
             ExportedAnnotationDocument exAnnotationDocument = new ExportedAnnotationDocument();
             exAnnotationDocument.setName(annotationDocument.getName());
             exAnnotationDocument.setState(annotationDocument.getState());
+            exAnnotationDocument.setAnnotatorState(annotationDocument.getAnnotatorState());
             exAnnotationDocument.setUser(annotationDocument.getUser());
             exAnnotationDocument.setTimestamp(annotationDocument.getTimestamp());
             exAnnotationDocument.setSentenceAccessed(annotationDocument.getSentenceAccessed());
@@ -195,9 +199,10 @@ public class AnnotationDocumentExporter
                 File targetDir = new File(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName());
                 forceMkdir(targetDir);
 
-                File initialCasFile = documentService.getCasFile(srcDoc, INITIAL_CAS_PSEUDO_USER);
-
-                copyFileToDirectory(initialCasFile, targetDir);
+                try (OutputStream os = new FileOutputStream(
+                        new File(targetDir, INITIAL_CAS_PSEUDO_USER + ".ser"))) {
+                    documentService.exportCas(srcDoc, INITIAL_CAS_PSEUDO_USER, os);
+                }
 
                 log.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
                         + "] for source document [" + srcDoc.getId() + "] in project ["
@@ -229,28 +234,29 @@ public class AnnotationDocumentExporter
                     // copy annotation document only for existing users and the state of the
                     // annotation document is not NEW/IGNORE
                     if (usersCache.get(annDoc.getUser()) != null
+                            && documentService.existsCas(annDoc)
                             && !annDoc.getState().equals(AnnotationDocumentState.NEW)
                             && !annDoc.getState().equals(AnnotationDocumentState.IGNORE)) {
+
                         File annSerDir = new File(aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
                                 + srcDoc.getName());
+                        forceMkdir(annSerDir);
+                        try (OutputStream os = new FileOutputStream(
+                                new File(annSerDir, annDoc.getUser() + ".ser"))) {
+                            documentService.exportCas(srcDoc, annDoc.getUser(), os);
+                        }
+
                         File annDocDir = new File(aStage.getAbsolutePath()
                                 + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-
-                        forceMkdir(annSerDir);
-                        forceMkdir(annDocDir);
-
-                        File annSerFile = documentService.getCasFile(srcDoc, annDoc.getUser());
-
                         File annFile = null;
-                        if (annSerFile.exists()) {
+                        try {
                             annFile = importExportService.exportAnnotationDocument(srcDoc,
                                     annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
                                     bulkOperationContext);
-                        }
-
-                        if (annSerFile.exists()) {
-                            copyFileToDirectory(annSerFile, annSerDir);
+                            forceMkdir(annDocDir);
                             copyFileToDirectory(annFile, annDocDir);
+                        }
+                        finally {
                             forceDelete(annFile);
                         }
 
@@ -305,6 +311,7 @@ public class AnnotationDocumentExporter
             AnnotationDocument annotationDocument = new AnnotationDocument();
             annotationDocument.setName(exAnnotationDocument.getName());
             annotationDocument.setState(exAnnotationDocument.getState());
+            annotationDocument.setAnnotatorState(exAnnotationDocument.getAnnotatorState());
             annotationDocument.setProject(aProject);
             annotationDocument.setUser(exAnnotationDocument.getUser());
             annotationDocument.setTimestamp(exAnnotationDocument.getTimestamp());

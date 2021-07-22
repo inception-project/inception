@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Paths;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
@@ -34,7 +34,7 @@ public class PdfExtractFileTest
 {
     private PdfExtractFile pdfExtractFile;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception
     {
         String pdftxt = new String(readAllBytes(Paths.get("src/test/resources/pdfextract.txt")),

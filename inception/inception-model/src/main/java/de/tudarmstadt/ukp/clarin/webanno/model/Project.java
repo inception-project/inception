@@ -179,7 +179,7 @@ public class Project
     {
         // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
-        if (created != null) {
+        if (created == null) {
             created = new Date();
             updated = created;
         }
@@ -267,12 +267,6 @@ public class Project
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Project [id=");
-        builder.append(id);
-        builder.append(", name=");
-        builder.append(name);
-        builder.append("]");
-        return builder.toString();
+        return "[" + name + "](" + id + ")";
     }
 }

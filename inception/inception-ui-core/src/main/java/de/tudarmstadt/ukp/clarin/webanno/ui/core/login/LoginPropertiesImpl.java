@@ -25,9 +25,10 @@ import org.springframework.stereotype.Component;
 public class LoginPropertiesImpl
     implements LoginProperties
 {
-
     private long maxConcurrentSessions;
+    private String message;
 
+    @Override
     public long getMaxConcurrentSessions()
     {
         return maxConcurrentSessions;
@@ -38,4 +39,14 @@ public class LoginPropertiesImpl
         maxConcurrentSessions = aMaxConcurrentSessions;
     }
 
+    @Override
+    public String getMessage()
+    {
+        return message;
+    }
+
+    public void setMessage(String aMessage)
+    {
+        message = aMessage;
+    }
 }

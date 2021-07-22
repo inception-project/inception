@@ -50,7 +50,7 @@ public class ExtensibleClasspathEnabledWarLayoutFactory
         {
             return "de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLauncher";
         }
-        
+
         @Deprecated
         @Override
         public String getLibraryDestination(String aLibraryName, LibraryScope aScope)
@@ -59,7 +59,7 @@ public class ExtensibleClasspathEnabledWarLayoutFactory
                 // Boot loader classes go to the root of the JAR
                 return "";
             }
-            
+
             return super.getLibraryDestination(aLibraryName, aScope);
         }
 
@@ -70,7 +70,7 @@ public class ExtensibleClasspathEnabledWarLayoutFactory
                 // Boot loader classes go to the root of the JAR
                 return "";
             }
-            
+
             return super.getLibraryLocation(aLibraryName, aScope);
         }
 
@@ -79,11 +79,19 @@ public class ExtensibleClasspathEnabledWarLayoutFactory
         {
             // Package the default Spring Boot loader classes
             aWriter.writeLoaderClasses();
-            
-            // Package our own custom launcher class
-            String classResourceName = "de/tudarmstadt/ukp/inception/bootloader/ExtensibleClasspathEnabledWarLauncher.class";
-            try (InputStream is = getClass().getResourceAsStream("/" + classResourceName)) {
-                aWriter.writeEntry(classResourceName, is);
+
+            // Package our own custom launcher classes
+            registerClassResource(aWriter,
+                    "de/tudarmstadt/ukp/inception/bootloader/ExtensibleClasspathEnabledWarLauncher.class");
+            registerClassResource(aWriter,
+                    "de/tudarmstadt/ukp/inception/bootloader/UIMessage.class");
+        }
+
+        private void registerClassResource(LoaderClassesWriter aWriter, String aClassResourceName)
+            throws IOException
+        {
+            try (InputStream is = getClass().getResourceAsStream("/" + aClassResourceName)) {
+                aWriter.writeEntry(aClassResourceName, is);
             }
         }
     }

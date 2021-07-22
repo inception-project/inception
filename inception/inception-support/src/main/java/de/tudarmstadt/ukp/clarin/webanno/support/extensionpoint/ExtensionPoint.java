@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ExtensionPoint<C, E extends Extension<C>>
 {
@@ -25,5 +26,5 @@ public interface ExtensionPoint<C, E extends Extension<C>>
 
     List<E> getExtensions(C aContext);
 
-    <X extends E> X getExtension(String aId);
+    <X extends E> Optional<X> getExtension(String aId);
 }

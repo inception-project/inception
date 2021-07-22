@@ -248,10 +248,9 @@ public class ConceptFeatureEditor
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
     {
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                .getFeatureSupport(aAnnotationFeature);
-        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
-        return traits;
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(aAnnotationFeature)
+                .orElseThrow();
+        return (ConceptFeatureTraits) fs.readTraits(aAnnotationFeature);
     }
 
     @Override

@@ -14,7 +14,7 @@ The work of the annotators is managed and controlled by monitoring. Here, the pe
 to assign the workload. For example, in order to prevent redundant annotation, documents which are
 already annotated by several other annotators and need not be annotated by another person, can be
 blocked for others. The person in charge is also able to follow the progress of individual
-annotators. All these tasks are demonstrated in <<sect_monitoring>> in more detail. The person in charge should not only control the quantity, but also the quality of annotation by looking closer into the
+annotators. All these tasks are demonstrated in <<sect_workload>> in more detail. The person in charge should not only control the quantity, but also the quality of annotation by looking closer into the
 annotations of individual annotators. This can be done by logging in with the credentials of the
 annotators.
 

@@ -24,6 +24,7 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEve
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
+import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
@@ -58,6 +60,7 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
  * Provides all back-end Spring beans for the recommendation functionality.
  */
 @Configuration
+@EnableConfigurationProperties(RecommenderPropertiesImpl.class)
 @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RecommenderServiceAutoConfiguration
 {
@@ -129,9 +132,16 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RecommendationSidebarFactory recommendationSidebarFactory()
+    public ProjectRecommendersMenuItem projectRecommendersMenuItem()
     {
-        return new RecommendationSidebarFactory();
+        return new ProjectRecommendersMenuItem();
+    }
+
+    @Bean
+    public RecommendationSidebarFactory recommendationSidebarFactory(
+            RecommendationService aRecommendationService)
+    {
+        return new RecommendationSidebarFactory(aRecommendationService);
     }
 
     @Bean(name = RecommendationEditorExtension.BEAN_NAME)
@@ -141,12 +151,12 @@ public class RecommenderServiceAutoConfiguration
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService,
-            UserDao aUserService)
+            FeatureSupportRegistry aFsRegistry, UserDao aUserService,
+            RecommenderProperties aProperties)
     {
         return new RecommendationEditorExtension(aAnnotationService, aRecommendationService,
-                aLearningRecordService, aApplicationEventPublisher, aFsRegistry, aDocumentService,
-                aUserService);
+                aLearningRecordService, aApplicationEventPublisher, aFsRegistry, aUserService,
+                aProperties);
     }
 
     @Bean

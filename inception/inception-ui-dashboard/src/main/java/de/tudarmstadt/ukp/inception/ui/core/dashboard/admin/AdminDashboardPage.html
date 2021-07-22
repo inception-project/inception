@@ -19,9 +19,7 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div class="dashboard-sidebar flex-sidebar scrolling">
-      <wicket:container wicket:id="menu" />
-    </div>
+    <div wicket:id="menu" class="dashboard-menu"/>
     <div class="dashboard-content flex-content scrolling">
       <div class="flex-tile-container">
         <div class="flex-tile flex-v-container" wicket:id="systemStatusDashlet" />

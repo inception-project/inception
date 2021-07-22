@@ -21,8 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 
@@ -32,7 +32,7 @@ public class RecommenderContextTest
 
     private RecommenderContext sut;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         sut = new RecommenderContext();

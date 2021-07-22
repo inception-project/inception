@@ -19,7 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -53,18 +57,33 @@ public abstract class ProjectPageBase
     public ProjectPageBase(final PageParameters aParameters)
     {
         super(aParameters);
+
+        if (getProjectModel().getObject() == null) {
+            getSession().error(
+                    format("[%s] requires a project to be selected", getClass().getSimpleName()));
+            throw new RestartResponseException(getApplication().getHomePage());
+        }
     }
 
     protected final void requireProjectRole(User aUser, PermissionLevel... aRoles)
     {
         Project project = getProjectModel().getObject();
 
+        Set<PermissionLevel> roles = aRoles != null ? new LinkedHashSet<>(asList(aRoles))
+                : emptySet();
+
         // Check access to project
-        if (!projectService.hasRole(aUser, project, aRoles)) {
-            getSession().error(format(
-                    "You require any of the [%s] roles to access the [%s] for project [%s]",
-                    asList(aRoles).stream().map(PermissionLevel::getId).collect(joining(", ")),
-                    getClass().getSimpleName(), project.getName()));
+        if (aUser == null || !projectService.hasRole(aUser, project, aRoles)) {
+            if (roles.isEmpty()) {
+                getSession()
+                        .error(format("To access the [%s] you need to be a member of the project",
+                                getClass().getSimpleName()));
+            }
+            else {
+                getSession().error(format("To access the [%s] you require any of these roles: [%s]",
+                        getClass().getSimpleName(),
+                        roles.stream().map(PermissionLevel::getId).collect(joining(", "))));
+            }
 
             backToProjectPage();
         }
@@ -75,7 +94,7 @@ public abstract class ProjectPageBase
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
 
-        setResponsePage(projectDashboard,
+        throw new RestartResponseException(projectDashboard,
                 new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
     }
 

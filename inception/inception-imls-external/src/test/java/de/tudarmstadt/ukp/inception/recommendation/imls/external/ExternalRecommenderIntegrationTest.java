@@ -35,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -49,12 +50,11 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -63,17 +63,22 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.config.ExternalRecommenderPropertiesImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
-import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.QueueDispatcher;
 import okhttp3.mockwebserver.RecordedRequest;
 
 public class ExternalRecommenderIntegrationTest
 {
     private static final String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    private static final File cache = DkproTestHelper.getCacheFolder();
+    private static final DatasetFactory loader = new DatasetFactory(cache);
 
     private static final String USER_NAME = "test_user";
     private static final long PROJECT_ID = 42L;
@@ -89,7 +94,7 @@ public class ExternalRecommenderIntegrationTest
     private List<String> requestBodies;
     private CasStorageSession casStorageSession;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception
     {
         casStorageSession = CasStorageSession.open();
@@ -97,7 +102,7 @@ public class ExternalRecommenderIntegrationTest
         context = new RecommenderContext();
 
         traits = new ExternalRecommenderTraits();
-        sut = new ExternalRecommender(recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
 
         remoteRecommender = new RemoteStringMatchingNerRecommender(recommender);
 
@@ -111,7 +116,7 @@ public class ExternalRecommenderIntegrationTest
         traits.setRemoteUrl(url);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception
     {
         casStorageSession.close();
@@ -254,9 +259,9 @@ public class ExternalRecommenderIntegrationTest
         return recommender;
     }
 
-    private Dispatcher buildDispatcher()
+    private QueueDispatcher buildDispatcher()
     {
-        return new Dispatcher()
+        return new QueueDispatcher()
         {
             @Override
             public MockResponse dispatch(RecordedRequest request)
@@ -265,7 +270,7 @@ public class ExternalRecommenderIntegrationTest
                     String body = request.getBody().readUtf8();
                     requestBodies.add(body);
 
-                    if (request.getPath().equals("/train")) {
+                    if (Objects.equals(request.getPath(), "/train")) {
                         remoteRecommender.train(body);
                         return new MockResponse().setResponseCode(204);
                     }

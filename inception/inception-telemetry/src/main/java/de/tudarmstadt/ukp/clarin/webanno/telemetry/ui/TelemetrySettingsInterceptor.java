@@ -23,18 +23,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptor;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoConfiguration;
 
 /**
  * Make sure that administrator users are force to provide valid choices for telemetry collection
  * before they can use the application.
+ *
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link TelemetryServiceAutoConfiguration#telemetrySettingsInterceptor}.
+ * </p>
  */
-@Component
 public class TelemetrySettingsInterceptor
     implements GlobalInterceptor
 {
@@ -76,7 +80,7 @@ public class TelemetrySettingsInterceptor
             return;
         }
 
-        for (TelemetrySupport<?> support : telemetryService.getTelemetrySupports()) {
+        for (TelemetrySupport support : telemetryService.getTelemetrySupports()) {
             if (!support.hasValidSettings()) {
                 throw new RestartResponseException(TelemetrySettingsPage.class);
             }

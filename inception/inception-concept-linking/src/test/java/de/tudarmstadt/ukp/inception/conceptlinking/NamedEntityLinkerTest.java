@@ -47,10 +47,9 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -69,18 +68,19 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class NamedEntityLinkerTest
 {
-    private static File cache = DkproTestContext.getCacheFolder();
-    private static DatasetFactory loader = new DatasetFactory(cache);
+    private static final File cache = DkproTestHelper.getCacheFolder();
+    private static final DatasetFactory loader = new DatasetFactory(cache);
 
     private RecommenderContext context;
     private Recommender recommender;
     private CasStorageSession casStorageSession;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         casStorageSession = CasStorageSession.open();
@@ -88,7 +88,7 @@ public class NamedEntityLinkerTest
         recommender = buildRecommender();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         CasStorageSession.get().close();
@@ -133,8 +133,8 @@ public class NamedEntityLinkerTest
 
         FeatureSupportRegistry fsRegistry = mock(FeatureSupportRegistry.class);
         FeatureSupport fs = mock(FeatureSupport.class);
-        when(fsRegistry.getFeatureSupport(recommender.getFeature())).thenReturn(fs);
-        when(fs.readTraits(recommender.getFeature())).thenReturn(new ConceptFeatureTraits());
+        when(fsRegistry.findExtension(recommender.getFeature())).thenReturn(Optional.of(fs));
+        when(fsRegistry.readTraits(any(), any())).thenReturn(new ConceptFeatureTraits());
 
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 kbService, clService, fsRegistry, new ConceptFeatureTraits());

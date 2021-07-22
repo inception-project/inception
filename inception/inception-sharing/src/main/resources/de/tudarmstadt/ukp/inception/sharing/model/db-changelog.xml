@@ -47,4 +47,60 @@
     <addUniqueConstraint constraintName="UK_project_invite_project" 
       tableName="project_invite" columnNames="project" />
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210409-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210128-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="created" type="datetime(6)">
+        <constraints nullable="true" />
+      </column>
+      <column name="updated" type="datetime(6)">
+        <constraints nullable="true" />
+      </column>
+      <column name="invitationText" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+      <column name="guestAccessible" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210416-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210409-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="userIdPlaceholder" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210427-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210416-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="askForEMail" type="VARCHAR(255)" defaultValue="not-allowed">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210427-2">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="INCEpTION Team" id="20210427-1"/>
+    </preConditions>
+    <addColumn tableName="project_invite">
+      <column name="disableOnAnnotationComplete" type="BOOLEAN" defaultValueBoolean="true">
+        <constraints nullable="false"/>
+      </column>
+      <column name="maxAnnotatorCount" type="INT" defaultValueNumeric="0">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

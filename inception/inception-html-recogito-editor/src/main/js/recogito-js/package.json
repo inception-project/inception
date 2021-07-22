@@ -1,0 +1,60 @@
+{
+  "name": "@recogito/recogito-js",
+  "version": "1.2.3",
+  "description": "A JavaScript library for text annotation",
+  "main": "dist/recogito.min.js",
+  "scripts": {
+    "start": "webpack serve --open --mode=development",
+    "build": "webpack --mode=production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/recogito/recogito-js.git"
+  },
+  "keywords": [
+    "RecogitoJS",
+    "Annotation"
+  ],
+  "author": "Rainer Simon",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/recogito/recogito-js/issues"
+  },
+  "homepage": "https://github.com/recogito/recogito-js#readme",
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-proposal-class-properties"
+      ]
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-env": "^7.14.4",
+    "@babel/preset-react": "^7.13.13",
+    "babel-loader": "^8.2.2",
+    "css-loader": "^5.2.4",
+    "glob-parent": ">=5.1.2",
+    "html-webpack-plugin": "^4.5.2",
+    "mini-css-extract-plugin": "^1.6.0",
+    "node-sass": "^4.14.1",
+    "normalize-url": ">=4.5.1",
+    "sass-loader": "^10.2.0",
+    "terser-webpack-plugin": "^4.2.3",
+    "webpack": "^4.46.0",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.10.4",
+    "@recogito/recogito-client-core": "1.2.3",
+    "axios": "^0.21.1",
+    "preact": "^10.5.13",
+    "tiny-emitter": "^2.1.0"
+  }
+}

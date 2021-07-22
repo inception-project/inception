@@ -21,9 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
-import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,11 +44,13 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -65,30 +65,26 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRe
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridService;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import nl.ru.test.category.SlowTests;
 
-@Category(SlowTests.class)
-@RunWith(JUnitParamsRunner.class)
+@Tag("slow")
 public class LappsGridRecommenderConformityTest
 {
     private CasStorageSession casStorageSession;
 
-    @Before
-    public void setup() throws Exception
+    @BeforeEach
+    public void setup()
     {
         casStorageSession = CasStorageSession.open();
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         CasStorageSession.get().close();
     }
 
-    @Test
-    @Parameters(method = "getNerServices")
+    @ParameterizedTest
+    @MethodSource("getNerServices")
     public void testNerConformity(LappsGridService aService) throws Exception
     {
         CAS cas = loadData();
@@ -104,8 +100,9 @@ public class LappsGridRecommenderConformityTest
         softly.assertAll();
     }
 
-    @Test
-    @Parameters(method = "getPosServices")
+    @ParameterizedTest
+    @MethodSource("getPosServices")
+    @Disabled("No pos")
     public void testPosConformity(LappsGridService aService) throws Exception
     {
         CAS cas = loadData();
@@ -123,7 +120,7 @@ public class LappsGridRecommenderConformityTest
 
     private void predict(String aUrl, CAS aCas) throws Exception
     {
-        assumeTrue(isReachable(aUrl));
+        Assumptions.assumeTrue(isReachable(aUrl));
 
         LappsGridRecommenderTraits traits = new LappsGridRecommenderTraits();
         traits.setUrl(aUrl);
@@ -211,7 +208,7 @@ public class LappsGridRecommenderConformityTest
 
             // should be open to all users (no password auth.),
             // this is an indicator for the service being down
-            if (status == HTTP_UNAUTHORIZED) {
+            if (status >= 400) {
                 return false;
             }
 

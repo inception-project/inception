@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -34,7 +35,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -46,10 +46,9 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.CssContentHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -72,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -82,14 +82,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.Selectio
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -128,33 +126,6 @@ public class AnnotationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
-
-    // public AnnotationPage()
-    // {
-    // super();
-    // LOG.debug("Setting up annotation page without parameters");
-    //
-    // setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-    // // Ensure that a user is set
-    // getModelObject().setUser(userRepository.getCurrentUser());
-    //
-    // Map<String, StringValue> fragmentParameters = Session.get()
-    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-    // StringValue focus = StringValue.valueOf(0);
-    // if (fragmentParameters != null) {
-    // // Clear the URL fragment parameters - we only use them once!
-    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-    //
-    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-    // StringValue projectName = fragmentParameters.get(PAGE_PARAM_PROJECT_NAME);
-    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-    // StringValue name = fragmentParameters.get(PAGE_PARAM_DOCUMENT_NAME);
-    // focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-    //
-    // handleParameters(project, projectName, document, name, focus, false);
-    // }
-    // commonInit(focus);
-    // }
 
     public AnnotationPage(final PageParameters aPageParameters)
     {
@@ -203,7 +174,7 @@ public class AnnotationPage
     @Override
     public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
-        return LambdaModel.of(() -> {
+        return LoadableDetachableModel.of(() -> {
             User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
@@ -312,7 +283,12 @@ public class AnnotationPage
 
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
-            factory = editorRegistry.getDefaultEditorFactory();
+            if (state.getDocument() != null) {
+                factory = editorRegistry.getPreferredEditorFactory(state.getDocument().getFormat());
+            }
+            else {
+                factory = editorRegistry.getDefaultEditorFactory();
+            }
         }
 
         annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
@@ -320,21 +296,10 @@ public class AnnotationPage
 
         centerArea.addOrReplace(annotationEditor);
 
-        // Give the new editor an opportunity to configure the current paging strategy
+        // Give the new editor an opportunity to configure the current paging strategy,
+        // this does not configure the paging for a document yet
+        // this would require loading the cas which might not have been upgraded yet
         factory.initState(state);
-        if (state.getDocument() != null) {
-            try {
-                state.getPagingStrategy().recalculatePage(state, getEditorCas());
-            }
-            catch (Exception e) {
-                LOG.info("Error reading CAS: {}", e.getMessage());
-                error("Error reading CAS " + e.getMessage());
-                if (aTarget != null) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
-            }
-        }
-
         // Use the proper position labels for the current paging strategy
         centerArea.addOrReplace(
                 state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
@@ -343,12 +308,10 @@ public class AnnotationPage
 
     private SidebarPanel createLeftSidebar()
     {
-        SidebarPanel leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor,
-                () -> getEditorCas(), AnnotationPage.this);
-        // Override sidebar width from preferences
-        leftSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
-                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
-        return leftSidebar;
+        return new SidebarPanel("leftSidebar", getModel(),
+                getModel().map(AnnotatorState::getPreferences)
+                        .map(AnnotationPreference::getSidebarSizeLeft),
+                detailEditor, () -> getEditorCas(), AnnotationPage.this);
     }
 
     private WebMarkupContainer createRightSidebar()
@@ -356,8 +319,9 @@ public class AnnotationPage
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupId(true);
         // Override sidebar width from preferences
-        rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
-                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
+        rightSidebar.add(new AttributeModifier("style",
+                LoadableDetachableModel.of(() -> String.format("flex-basis: %d%%;",
+                        getModelObject().getPreferences().getSidebarSizeRight()))));
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
         return rightSidebar;
@@ -369,21 +333,6 @@ public class AnnotationPage
         AnnotatorState state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
-    }
-
-    /**
-     * for the first time, open the <b>open document dialog</b>
-     */
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        aResponse
-                .render(CssContentHeaderItem.forCSS(
-                        String.format(Locale.US, ".sidebarCell { flex-basis: %d%%; }",
-                                getModelObject().getPreferences().getSidebarSize()),
-                        "sidebar-width"));
     }
 
     @Override
@@ -420,19 +369,6 @@ public class AnnotationPage
         }
     }
 
-    // private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
-    // {
-    // // If the page has loaded and there is no document open yet, show the open-document
-    // // dialog.
-    // if (getModelObject().getDocument() == null) {
-    // actionShowOpenDocumentDialog(aTarget);
-    // }
-    // else {
-    // // Make sure the URL fragement parameters are up-to-date
-    // updateUrlFragment(aTarget);
-    // }
-    // }
-
     @Override
     public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
@@ -463,8 +399,14 @@ public class AnnotationPage
             state.reset();
 
             if (isEditable()) {
-                // After creating an new CAS or upgrading the CAS, we need to save it
-                documentService.writeAnnotationCas(editorCas, annotationDocument, false);
+                // After creating an new CAS or upgrading the CAS, we need to save it. If the
+                // document is accessed for the first time and thus will transition from NEW to
+                // IN_PROGRESS, then we use this opportunity also to set the timestamp of the
+                // annotation document - this ensures that e.g. the dynamic workflow considers the
+                // document to be "active" for the given user so that it won't be considered as
+                // abandoned immediately after having been opened for the first time
+                documentService.writeAnnotationCas(editorCas, annotationDocument,
+                        AnnotationDocumentState.NEW.equals(annotationDocument.getState()));
 
                 // Initialize timestamp in state
                 updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(
@@ -487,6 +429,18 @@ public class AnnotationPage
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
             createAnnotationEditor(aTarget);
+            // update paging, only do it during document load so we load the cas after it has been
+            // upgraded
+            try {
+                state.getPagingStrategy().recalculatePage(state, getEditorCas());
+            }
+            catch (Exception e) {
+                LOG.info("Error reading CAS: {}", e.getMessage());
+                error("Error reading CAS " + e.getMessage());
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
 
             // Initialize the visible content - this has to happen after the annotation editor
             // component has been created because only then the paging strategy is known
@@ -500,8 +454,8 @@ public class AnnotationPage
                 }
 
                 if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
-                    documentService.transitionAnnotationDocumentState(annotationDocument,
-                            AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+                    documentService.setAnnotationDocumentState(annotationDocument,
+                            AnnotationDocumentState.IN_PROGRESS, EXPLICIT_ANNOTATOR_USER_ACTION);
                 }
 
                 if (state.getUser().getUsername().equals(CURATION_USER)) {
@@ -554,7 +508,12 @@ public class AnnotationPage
         }
 
         // Update URL for current document
-        updateUrlFragment(aTarget);
+        try {
+            updateUrlFragment(aTarget);
+        }
+        catch (Exception e) {
+            LOG.warn("Unable to request URL fragment update anymore", e);
+        }
     }
 
     @Override
@@ -681,25 +640,25 @@ public class AnnotationPage
     }
 
     @Override
-    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject, User aUser)
+    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
+            User aUser)
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
 
-        // Remove from the list source documents that are in IGNORE state OR
-        // that do not have at least one annotation document marked as
-        // finished for curation dialog
+        // FIXME: This should be changed to call getListOfDocs or getListOfDocs should base on
+        // this call - in any case, the selection/filtering code should only be there once
         Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
                 aUser);
 
+        User user = userRepository.getCurrentUser();
         for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
             DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
             if (e.getValue() != null) {
-                AnnotationDocument adoc = e.getValue();
-                AnnotationDocumentState docState = adoc.getState();
+                AnnotationDocumentState docState = e.getValue().getState();
                 dsd.setColor(docState.getColor());
 
-                boolean userIsSelected = aUser.equals(userRepository.getCurrentUser());
                 // if current user is opening her own docs, don't let her see locked ones
+                boolean userIsSelected = aUser.equals(user);
                 if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
                     continue;
                 }

@@ -22,6 +22,8 @@ import static io.bit3.jsass.OutputStyle.NESTED;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
+import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
+import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,7 +32,6 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
@@ -45,10 +46,6 @@ import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
-import org.apache.wicket.settings.ExceptionSettings;
-import org.slf4j.MDC;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.context.ApplicationContext;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
@@ -59,11 +56,8 @@ import de.agilecoders.wicket.sass.BootstrapSass;
 import de.agilecoders.wicket.sass.SassCacheManager;
 import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
@@ -72,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 import io.bit3.jsass.Options;
 
 /**
@@ -82,8 +75,6 @@ import io.bit3.jsass.Options;
 public abstract class WicketApplicationBase
     extends WicketBootSecuredWebApplication
 {
-    protected boolean isInitialized = false;
-
     @Override
     protected void init()
     {
@@ -95,13 +86,17 @@ public abstract class WicketApplicationBase
 
         getCspSettings().blocking().disabled();
 
+        // if (DEVELOPMENT == getConfigurationType()) {
+        // getCspSettings().reporting().strict().reportBack();
+        // getCspSettings().reporting().unsafeInline().reportBack();
+        // }
+
+        getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING);
+        getSecuritySettings().setCrossOriginOpenerPolicyConfiguration(SAME_ORIGIN);
+
         initStatelessChecker();
 
-        if (!isInitialized) {
-            initOnce();
-
-            isInitialized = true;
-        }
+        initOnce();
     }
 
     protected void initOnce()
@@ -109,18 +104,9 @@ public abstract class WicketApplicationBase
         // Allow nested string resource resolving using "#(key)"
         initNestedStringResourceLoader();
 
-        // // This should avoid some application-reloading while working on I18N
-        // getResourceSettings().setThrowExceptionOnMissingResource(false);
-        // getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
-
         initWebFrameworks();
 
         initLogoReference();
-
-        // Display stack trace instead of internal error
-        initShowExceptionPage();
-
-        initMDCLifecycle();
 
         // Allow fetching the current page from non-Wicket code
         initPageRequestTracker();
@@ -154,7 +140,7 @@ public abstract class WicketApplicationBase
     {
         SassCompilerOptionsFactory sassOptionsFactory = () -> {
             Options options = new Options();
-            options.setOutputStyle(DEPLOYMENT.equals(getConfigurationType()) ? EXPANDED : NESTED);
+            options.setOutputStyle(DEPLOYMENT == getConfigurationType() ? EXPANDED : NESTED);
             return options;
         };
 
@@ -223,41 +209,6 @@ public abstract class WicketApplicationBase
         });
     }
 
-    protected void initMDCLifecycle()
-    {
-        getRequestCycleListeners().add(new IRequestCycleListener()
-        {
-            @Override
-            public void onBeginRequest(RequestCycle cycle)
-            {
-                ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-                try {
-                    DocumentService repo = ctx.getBean(DocumentService.class);
-                    MDC.put(Logging.KEY_REPOSITORY_PATH, repo.getDir().getAbsolutePath());
-                }
-                catch (NoSuchBeanDefinitionException e) {
-                    // Well, if the document service is not there, then we don't need to
-                    // configure the logging placeholder
-                }
-            }
-
-            @Override
-            public void onEndRequest(RequestCycle cycle)
-            {
-                MDC.remove(Logging.KEY_REPOSITORY_PATH);
-            }
-        });
-    }
-
-    protected void initShowExceptionPage()
-    {
-        Properties settings = SettingsUtil.getSettings();
-        if ("true".equalsIgnoreCase(settings.getProperty("debug.showExceptionPage"))) {
-            getExceptionSettings()
-                    .setUnexpectedExceptionDisplay(ExceptionSettings.SHOW_EXCEPTION_PAGE);
-        }
-    }
-
     protected void initLogoReference()
     {
         Properties settings = SettingsUtil.getSettings();
@@ -304,7 +255,7 @@ public abstract class WicketApplicationBase
     protected void initServerTimeReporting()
     {
         Properties settings = SettingsUtil.getSettings();
-        if (!DEVELOPMENT.equals(getConfigurationType())
+        if (DEVELOPMENT != getConfigurationType()
                 && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
             return;
         }
@@ -328,10 +279,5 @@ public abstract class WicketApplicationBase
     protected Class<? extends ApplicationSession> getWebSessionClass()
     {
         return ApplicationSession.class;
-    }
-
-    public Class<? extends Component> getMenubarClass()
-    {
-        return MenuBar.class;
     }
 }

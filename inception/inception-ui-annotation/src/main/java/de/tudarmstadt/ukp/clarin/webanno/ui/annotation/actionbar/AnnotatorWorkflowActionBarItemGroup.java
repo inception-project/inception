@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -112,8 +113,8 @@ public class AnnotatorWorkflowActionBarItemGroup
             AnnotationDocument annotationDocument = documentService
                     .getAnnotationDocument(state.getDocument(), state.getUser());
 
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+            documentService.setAnnotationDocumentState(annotationDocument, FINISHED,
+                    EXPLICIT_ANNOTATOR_USER_ACTION);
 
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
@@ -133,7 +134,8 @@ public class AnnotatorWorkflowActionBarItemGroup
     protected void actionResetDocument(AjaxRequestTarget aTarget) throws Exception
     {
         AnnotatorState state = page.getModelObject();
-        documentService.resetAnnotationCas(state.getDocument(), state.getUser());
+        documentService.resetAnnotationCas(state.getDocument(), state.getUser(),
+                EXPLICIT_ANNOTATOR_USER_ACTION);
         page.actionLoadDocument(aTarget);
     }
 }

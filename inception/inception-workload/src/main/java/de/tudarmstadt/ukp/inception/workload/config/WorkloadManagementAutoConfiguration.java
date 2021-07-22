@@ -21,10 +21,12 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
@@ -36,17 +38,19 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 public class WorkloadManagementAutoConfiguration<T>
 {
     @Bean
-    public WorkloadManagerExtensionPoint<T> workloadExtensionPoint(
-            List<WorkloadManagerExtension<T>> aWorkloadExtensions)
+    public WorkloadManagerExtensionPoint workloadExtensionPoint(
+            @Lazy @Autowired(required = false) List<WorkloadManagerExtension<?>> aWorkloadExtensions)
     {
-        return new WorkloadManagerExtensionPointImpl<>(aWorkloadExtensions);
+        return new WorkloadManagerExtensionPointImpl(aWorkloadExtensions);
     }
 
     @Bean
     public WorkloadManagementService workloadManagementService(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint,
+            SchedulingService aSchedulingService)
     {
-        return new WorkloadManagementServiceImpl(aEntityManager, aWorkloadManagerExtensionPoint);
+        return new WorkloadManagementServiceImpl(aEntityManager, aWorkloadManagerExtensionPoint,
+                aSchedulingService);
     }
 
     @Bean

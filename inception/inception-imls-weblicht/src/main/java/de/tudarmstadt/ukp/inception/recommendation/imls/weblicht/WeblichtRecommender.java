@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht;
 
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -25,11 +28,23 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -52,29 +67,20 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.Weblicht
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusStored;
 import eu.clarin.weblicht.wlfxb.xb.WLData;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class WeblichtRecommender
     extends RecommendationEngine
 {
     private static final Logger LOG = LoggerFactory.getLogger(WeblichtRecommender.class);
 
-    private static final MediaType TCF = MediaType.parse("text/tcf+xml");
-    private static final MediaType XML = MediaType.parse("application/xml");
-    private static final MediaType TEXT = MediaType.parse("text/plain");
-    private static final long CONNECT_TIMEOUT = 30;
-    private static final long WRITE_TIMEOUT = 30;
-    private static final long READ_TIMEOUT = 30;
+    private static final ContentType TCF = ContentType.create("text/tcf+xml");
+    private static final ContentType XML = ContentType.create("application/xml");
+    private static final ContentType TEXT = ContentType.create("text/plain");
+    private static final Duration CONNECT_TIMEOUT = Duration.of(30, SECONDS);
 
     private final WeblichtChainService chainService;
     private final WeblichtRecommenderTraits traits;
-    private final OkHttpClient client;
+    private final HttpClient client;
 
     public WeblichtRecommender(Recommender aRecommender, WeblichtRecommenderTraits aTraits,
             WeblichtChainService aChainService)
@@ -83,9 +89,15 @@ public class WeblichtRecommender
 
         traits = aTraits;
         chainService = aChainService;
-        client = new OkHttpClient.Builder().connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
-                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS).build();
+
+        HttpClientBuilder builder = HttpClientBuilder.create();
+
+        builder.setDefaultRequestConfig(RequestConfig.custom() //
+                .setConnectTimeout((int) CONNECT_TIMEOUT.toMillis()) //
+                .setConnectionRequestTimeout((int) CONNECT_TIMEOUT.toMillis()) //
+                .setSocketTimeout((int) CONNECT_TIMEOUT.toMillis()).build());
+
+        client = builder.build();
     }
 
     @Override
@@ -105,11 +117,11 @@ public class WeblichtRecommender
             String documentText = aCas.getDocumentText();
             String documentLanguage = aCas.getDocumentLanguage();
 
-            HttpUrl url = HttpUrl.parse(traits.getUrl()).newBuilder().build();
-
-            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("apikey", traits.getApiKey()).addFormDataPart("chains",
-                            "chains.xml", RequestBody.create(XML, getChainFile()));
+            // build http request and assign multipart upload data
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create() //
+                    .setMode(HttpMultipartMode.BROWSER_COMPATIBLE) //
+                    .addTextBody("apikey", traits.getApiKey(), MULTIPART_FORM_DATA) //
+                    .addBinaryBody("chains", getChainFile(), XML, "chains.xml");
 
             TextCorpusStored textCorpus;
             switch (traits.getChainInputFormat()) {
@@ -120,8 +132,8 @@ public class WeblichtRecommender
                 textCorpus = new TextCorpusStored(traits.getChainInputLanguage());
                 // Create text annotation layer and add the string of the text into the layer
                 textCorpus.createTextLayer().addText(aCas.getDocumentText());
-                builder.addFormDataPart("content", "content.txt",
-                        RequestBody.create(TEXT, aCas.getDocumentText()));
+                builder.addBinaryBody("content", aCas.getDocumentText().getBytes(UTF_8), TEXT,
+                        "content.txt");
                 // Copy the tokens because we will clear the CAS later but then we want to restore
                 // the original tokens...
                 new DKPro2Tcf().writeTokens(aCas.getJCas(), textCorpus);
@@ -144,25 +156,23 @@ public class WeblichtRecommender
                     WLDObjector.write(wldata, os);
                     bodyData = os.toByteArray();
                 }
-                builder.addFormDataPart("content", "content.tcf",
-                        RequestBody.create(TCF, bodyData));
+                builder.addBinaryBody("content", bodyData, TCF, "content.tcf");
                 break;
             default:
                 throw new IllegalArgumentException(
                         "Unknown format [" + traits.getChainInputFormat() + "]");
             }
 
-            RequestBody body = builder.build();
-
-            Request request = new Request.Builder().url(url).addHeader("Accept", "*/*").post(body)
+            HttpUriRequest request = RequestBuilder.post(traits.getUrl())//
+                    .addHeader("Accept", "*/*").setEntity(builder.build()) //
                     .build();
 
-            Response response = sendRequest(request);
+            HttpResponse response = sendRequest(request);
 
             // If the response indicates that the request was not successful,
             // then it does not make sense to go on and try to decode the XMI
-            if (!response.isSuccessful()) {
-                int code = response.code();
+            if (response.getStatusLine().getStatusCode() >= 400) {
+                int code = response.getStatusLine().getStatusCode();
                 String responseBody = getResponseBody(response);
                 String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
                 throw new RecommendationException(msg);
@@ -229,21 +239,25 @@ public class WeblichtRecommender
         return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
     }
 
-    private Response sendRequest(Request aRequest) throws RecommendationException
+    private HttpResponse sendRequest(HttpUriRequest aRequest) throws RecommendationException
     {
         try {
-            return client.newCall(aRequest).execute();
+            return client.execute(aRequest);
         }
         catch (IOException e) {
             throw new RecommendationException("Error while sending request!", e);
         }
     }
 
-    private String getResponseBody(Response response) throws RecommendationException
+    private String getResponseBody(HttpResponse response) throws RecommendationException
     {
         try {
-            if (response.body() != null) {
-                return response.body().string();
+            if (response.getEntity() != null) {
+                try (InputStream is = response.getEntity().getContent()) {
+                    Header encoding = response.getEntity().getContentEncoding();
+                    return IOUtils.toString(is,
+                            encoding != null ? Charset.forName(encoding.getValue()) : UTF_8);
+                }
             }
             else {
                 return "";
@@ -254,9 +268,10 @@ public class WeblichtRecommender
         }
     }
 
-    private WLData deserializePredictionResponse(Response response) throws RecommendationException
+    private WLData deserializePredictionResponse(HttpResponse response)
+        throws RecommendationException
     {
-        try (InputStream is = response.body().byteStream()) {
+        try (InputStream is = response.getEntity().getContent()) {
             return WLDObjector.read(is);
         }
         catch (IOException e) {

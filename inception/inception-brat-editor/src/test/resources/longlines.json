@@ -1,0 +1,10 @@
+{
+  "action" : "getDocument",
+  "text" : "Zero  One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty. One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty.  One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty. ",
+  "args" : { },
+  "rtl_mode" : false,
+  "font_zoom" : 100,
+  "sentence_number_offset" : 1,
+  "token_offsets" : [ [ 0, 4 ], [ 6, 9 ], [ 10, 13 ], [ 14, 19 ], [ 20, 24 ], [ 25, 29 ], [ 30, 33 ], [ 34, 39 ], [ 40, 45 ], [ 46, 50 ], [ 51, 54 ], [ 55, 61 ], [ 62, 68 ], [ 69, 77 ], [ 78, 86 ], [ 87, 94 ], [ 95, 102 ], [ 103, 112 ], [ 113, 121 ], [ 122, 130 ], [ 131, 137 ], [ 137, 138 ], [ 139, 142 ], [ 143, 146 ], [ 147, 152 ], [ 153, 157 ], [ 158, 162 ], [ 163, 166 ], [ 167, 172 ], [ 173, 178 ], [ 179, 183 ], [ 184, 187 ], [ 188, 194 ], [ 195, 201 ], [ 202, 210 ], [ 211, 219 ], [ 220, 227 ], [ 228, 235 ], [ 236, 245 ], [ 246, 254 ], [ 255, 263 ], [ 264, 270 ], [ 270, 271 ], [ 273, 276 ], [ 277, 280 ], [ 281, 286 ], [ 287, 291 ], [ 292, 296 ], [ 297, 300 ], [ 301, 306 ], [ 307, 312 ], [ 313, 317 ], [ 318, 321 ], [ 322, 328 ], [ 329, 335 ], [ 336, 344 ], [ 345, 353 ], [ 354, 361 ], [ 362, 369 ], [ 370, 379 ], [ 380, 388 ], [ 389, 397 ], [ 398, 404 ], [ 404, 405 ] ],
+  "sentence_offsets" : [ [ 0, 4 ], [ 5, 5 ], [ 6, 86 ], [ 87, 138 ], [ 139, 219 ], [ 220, 271 ], [ 272, 272 ], [ 273, 353 ], [ 354, 405 ], [ 406, 406 ] ]
+}

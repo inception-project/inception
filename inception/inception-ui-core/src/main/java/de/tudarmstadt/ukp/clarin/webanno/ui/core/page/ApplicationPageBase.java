@@ -33,6 +33,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
@@ -132,7 +133,7 @@ public abstract class ApplicationPageBase
         try {
             Class<? extends Component> menubarClass = getApplication().getMetaData(MENUBAR_CLASS);
             if (menubarClass == null) {
-                menubarClass = MenuBar.class;
+                menubarClass = EmptyPanel.class;
             }
             add(ConstructorUtils.invokeConstructor(menubarClass, "menubar"));
         }

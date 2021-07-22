@@ -1,9 +1,11 @@
 = Document metadata
 
-NOTE: This is an experimental feature not recommended for serious use. In 
-      particular, curation of document metadata annotations is not possible and they are not supported
-      by the TSV format. They can be im-/exported via XMI or Binary CAS though. However, you can try it out
-      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file (see <<admin-guide.adoc#sect_settings_documentmetadata>>). 
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `documentmetadata.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_documentmetadata, Admin Guide>>).
+
+Curation of document metadata annotations is not possible. Import and export of document metadata
+annotations is only supported in the UIMA CAS formats, but not in WebAnno TSV.
+====
 
 Before being able to configure document-level annotations, you need to define an annotation layer of 
 type *Document metadata* on the project *Settings*, *Layers* tab. For this:

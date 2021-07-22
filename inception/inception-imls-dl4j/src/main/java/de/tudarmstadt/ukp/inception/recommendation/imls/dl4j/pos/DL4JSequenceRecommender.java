@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -84,6 +85,9 @@ public class DL4JSequenceRecommender
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String NO_LABEL = "*NO-LABEL*";
+
+    private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
+    private static final Class<Token> DATAPOINT_UNIT = Token.class;
 
     public static final Key<String[]> KEY_TAGSET = new Key<>("labelDict");
     public static final Key<MultiLayerNetwork> KEY_MODEL = new Key<>("model");
@@ -175,12 +179,12 @@ public class DL4JSequenceRecommender
         List<Sample> data = new ArrayList<>();
 
         for (CAS cas : aCasses) {
-            Type sentenceType = getType(cas, Sentence.class);
-            Type tokenType = getType(cas, Token.class);
+            Type sampleUnitType = getType(cas, SAMPLE_UNIT);
+            Type datapointUnitType = getType(cas, DATAPOINT_UNIT);
             Type annotationType = getType(cas, layerName);
 
-            for (AnnotationFS sentence : select(cas, sentenceType)) {
-                List<AnnotationFS> tokenFSes = selectCovered(tokenType, sentence);
+            for (AnnotationFS sentence : select(cas, sampleUnitType)) {
+                List<AnnotationFS> tokenFSes = selectCovered(datapointUnitType, sentence);
                 List<AnnotationFS> annotationFSes = selectCovered(annotationType, sentence);
 
                 List<String> tokens = CasUtil.toText(tokenFSes);
@@ -523,8 +527,8 @@ public class DL4JSequenceRecommender
                     "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
                     trainingSetSize, testSetSize, data.size());
             log.info(info);
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
-                    trainRatio);
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -564,8 +568,10 @@ public class DL4JSequenceRecommender
                     }
                 }
             }
-            return labelPairs.stream().collect(
-                    EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
+            return labelPairs.stream()
+                    .collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                            SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio,
+                            NO_LABEL));
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);

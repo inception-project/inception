@@ -132,6 +132,12 @@ public class TagSet
     }
 
     @Override
+    public String toString()
+    {
+        return "[" + name + "](" + id + ")";
+    }
+
+    @Override
     public int hashCode()
     {
         final int prime = 31;

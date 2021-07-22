@@ -27,12 +27,17 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.conll.Conll2003Reader;
 import org.dkpro.core.io.conll.Conll2003Writer;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ConllFormatsAutoConfiguration#conll2003FormatSupport}.
+ * </p>
+ */
 public class Conll2003FormatSupport
     implements FormatSupport
 {

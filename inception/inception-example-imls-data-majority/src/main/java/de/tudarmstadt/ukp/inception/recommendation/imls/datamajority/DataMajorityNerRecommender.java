@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -51,6 +52,8 @@ public class DataMajorityNerRecommender
     extends RecommendationEngine
 {
     public static final Key<DataMajorityModel> KEY_MODEL = new Key<>("model");
+
+    private static final Class<Token> DATAPOINT_UNIT = Token.class;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -120,9 +123,9 @@ public class DataMajorityNerRecommender
 
         String majorityLabel = entry.getKey();
         int numberOfAnnotations = model.values().stream().reduce(Integer::sum).get();
-        double confidence = (float) entry.getValue() / numberOfAnnotations;
+        double score = (float) entry.getValue() / numberOfAnnotations;
 
-        return new DataMajorityModel(majorityLabel, confidence, numberOfAnnotations);
+        return new DataMajorityModel(majorityLabel, score, numberOfAnnotations);
     }
     // end::trainModel[]
 
@@ -134,7 +137,7 @@ public class DataMajorityNerRecommender
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         // Make the predictions
-        Type tokenType = CasUtil.getAnnotationType(aCas, Token.class);
+        Type tokenType = CasUtil.getAnnotationType(aCas, DATAPOINT_UNIT);
         Collection<AnnotationFS> candidates = CasUtil.select(aCas, tokenType);
         List<Annotation> predictions = predict(candidates, model);
 
@@ -169,7 +172,7 @@ public class DataMajorityNerRecommender
             int begin = token.getBegin();
             int end = token.getEnd();
 
-            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.confidence,
+            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.score,
                     aModel.numberOfAnnotations, begin, end);
             result.add(annotation);
         }
@@ -207,7 +210,8 @@ public class DataMajorityNerRecommender
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
-            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    getRecommender().getLayer().getUiName(), trainingSetSize, testSetSize,
                     trainRatio);
             result.setEvaluationSkipped(true);
             return result;
@@ -218,7 +222,9 @@ public class DataMajorityNerRecommender
         // evaluation: collect predicted and gold labels for evaluation
         EvaluationResult result = testData.stream()
                 .map(anno -> new LabelPair(anno.label, model.majorityLabel))
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
+                .collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                        getRecommender().getLayer().getUiName(), trainingSetSize, testSetSize,
+                        trainRatio));
 
         return result;
     }
@@ -234,14 +240,13 @@ public class DataMajorityNerRecommender
     private static class DataMajorityModel
     {
         private final String majorityLabel;
-        private final double confidence;
+        private final double score;
         private final int numberOfAnnotations;
 
-        private DataMajorityModel(String aMajorityLabel, double aConfidence,
-                int aNumberOfAnnotations)
+        private DataMajorityModel(String aMajorityLabel, double aScore, int aNumberOfAnnotations)
         {
             majorityLabel = aMajorityLabel;
-            confidence = aConfidence;
+            score = aScore;
             numberOfAnnotations = aNumberOfAnnotations;
         }
     }

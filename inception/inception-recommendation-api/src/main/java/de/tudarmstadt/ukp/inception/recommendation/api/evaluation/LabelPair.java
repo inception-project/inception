@@ -22,13 +22,25 @@ package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
  */
 public class LabelPair
 {
+    private final String unit;
     private final String goldLabel;
     private final String predictedLabel;
 
     public LabelPair(String aGoldLabel, String aPredictedLabel)
     {
+        this(null, aGoldLabel, aPredictedLabel);
+    }
+
+    public LabelPair(String aUnit, String aGoldLabel, String aPredictedLabel)
+    {
+        unit = aUnit;
         goldLabel = aGoldLabel;
         predictedLabel = aPredictedLabel;
+    }
+
+    public String getUnit()
+    {
+        return unit;
     }
 
     public String getGoldLabel()
@@ -41,4 +53,10 @@ public class LabelPair
         return predictedLabel;
     }
 
+    @Override
+    public String toString()
+    {
+        return "[" + goldLabel + " - " + predictedLabel
+                + (unit != null ? (" : " + unit + "]") : "]");
+    }
 }

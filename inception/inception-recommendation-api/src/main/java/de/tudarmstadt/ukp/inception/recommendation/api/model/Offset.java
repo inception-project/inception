@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,17 +20,23 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import java.io.Serializable;
 
 public class Offset
-    implements Comparable<Offset>, Serializable
+    implements Comparable<Offset>, Serializable, Position
 {
     private static final long serialVersionUID = -3084534351646334021L;
 
-    private int begin = -1;
-    private int end = -1;
+    private final int begin;
+    private final int end;
 
-    public Offset(int beginCharacter, int endCharacter)
+    public Offset(int aBeginCharacter, int aEndCharacter)
     {
-        this.begin = beginCharacter;
-        this.end = endCharacter;
+        begin = aBeginCharacter;
+        end = aEndCharacter;
+    }
+
+    public Offset(Offset aOffset)
+    {
+        begin = aOffset.begin;
+        end = aOffset.end;
     }
 
     @Override
@@ -50,21 +52,9 @@ public class Offset
     }
 
     @Deprecated
-    public void setBeginCharacter(int beginCharacter)
-    {
-        setBegin(beginCharacter);
-    }
-
-    @Deprecated
     public int getEndCharacter()
     {
         return getEnd();
-    }
-
-    @Deprecated
-    public void setEndCharacter(int endCharacter)
-    {
-        setEnd(endCharacter);
     }
 
     @Deprecated
@@ -73,19 +63,9 @@ public class Offset
         return getBegin();
     }
 
-    public void setBegin(int aBegin)
-    {
-        begin = aBegin;
-    }
-
     public int getBegin()
     {
         return begin;
-    }
-
-    public void setEnd(int aEnd)
-    {
-        end = aEnd;
     }
 
     public int getEnd()

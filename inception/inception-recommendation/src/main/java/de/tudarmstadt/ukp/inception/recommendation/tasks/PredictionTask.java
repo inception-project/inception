@@ -21,10 +21,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,15 +57,14 @@ public class PredictionTask
     private final SourceDocument currentDocument;
     private final List<LogMessage> logMessages = new ArrayList<>();
 
-    public PredictionTask(User aUser, Project aProject, String aTrigger,
-            SourceDocument aCurrentDocument)
+    public PredictionTask(User aUser, String aTrigger, SourceDocument aCurrentDocument)
     {
-        super(aUser, aProject, aTrigger);
+        super(aUser, aCurrentDocument.getProject(), aTrigger);
         currentDocument = aCurrentDocument;
     }
 
     @Override
-    public void run()
+    public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             User user = getUser();
@@ -76,9 +77,10 @@ public class PredictionTask
 
             // Limit prediction to a single document and inherit the rest?
             if (!recommendationService.isPredictForAllDocuments(username, project)) {
-                inherit = docs.stream().filter(d -> !d.equals(currentDocument))
-                        .collect(Collectors.toList());
-                docs = Collections.singletonList(currentDocument);
+                inherit = docs.stream() //
+                        .filter(d -> !d.equals(currentDocument)) //
+                        .collect(toList());
+                docs = singletonList(currentDocument);
                 log.debug("[{}][{}]: Limiting prediction to [{}]", getId(), username,
                         currentDocument.getName());
             }
@@ -97,6 +99,11 @@ public class PredictionTask
                     (System.currentTimeMillis() - startTime));
 
             recommendationService.putIncomingPredictions(user, project, predictions);
+
+            // We reset this in case the state was not properly cleared, e.g. the AL session
+            // was started but then the browser closed. Places where it is set include
+            // - ActiveLearningSideBar::moveToNextRecommendation
+            recommendationService.setPredictForAllDocuments(username, project, false);
         }
     }
 

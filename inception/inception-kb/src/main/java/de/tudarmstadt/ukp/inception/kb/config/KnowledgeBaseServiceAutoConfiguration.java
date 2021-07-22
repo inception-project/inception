@@ -20,14 +20,13 @@ package de.tudarmstadt.ukp.inception.kb.config;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
@@ -40,7 +39,6 @@ public class KnowledgeBaseServiceAutoConfiguration
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
-    @Autowired
     public KnowledgeBaseExporter knowledgeBaseExporter(KnowledgeBaseService aKbService,
             KnowledgeBaseProperties aKbProperties, AnnotationSchemaService aSchemaService)
     {
@@ -48,7 +46,6 @@ public class KnowledgeBaseServiceAutoConfiguration
     }
 
     @Bean
-    @Autowired
     public KnowledgeBaseService knowledgeBaseService(RepositoryProperties aRepoProperties,
             KnowledgeBaseProperties aKbProperties)
     {

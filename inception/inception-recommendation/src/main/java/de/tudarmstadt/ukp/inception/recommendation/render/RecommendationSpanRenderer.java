@@ -20,14 +20,15 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -37,16 +38,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 
 /**
  * Render spans.
@@ -54,11 +55,22 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 public class RecommendationSpanRenderer
     implements RecommendationTypeRenderer
 {
-    private SpanAdapter typeAdapter;
+    private final SpanAdapter typeAdapter;
+    private final RecommendationService recommendationService;
+    private final AnnotationSchemaService annotationService;
+    private final FeatureSupportRegistry fsRegistry;
+    private final RecommenderProperties recommenderProperties;
 
-    public RecommendationSpanRenderer(SpanAdapter aTypeAdapter)
+    public RecommendationSpanRenderer(SpanAdapter aTypeAdapter,
+            RecommendationService aRecommendationService,
+            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+            RecommenderProperties aRecommenderProperties)
     {
         typeAdapter = aTypeAdapter;
+        recommendationService = aRecommendationService;
+        annotationService = aAnnotationService;
+        fsRegistry = aFsRegistry;
+        recommenderProperties = aRecommenderProperties;
     }
 
     /**
@@ -73,11 +85,8 @@ public class RecommendationSpanRenderer
      *            Data model for brat annotations
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, AnnotationLayer layer,
-            RecommendationService recommendationService,
-            LearningRecordService learningRecordService, AnnotationSchemaService aAnnotationService,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService,
-            int aWindowBeginOffset, int aWindowEndOffset)
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, int aWindowBeginOffset,
+            int aWindowEndOffset)
     {
         if (aCas == null || recommendationService == null) {
             return;
@@ -90,34 +99,44 @@ public class RecommendationSpanRenderer
             return;
         }
 
+        AnnotationLayer layer = typeAdapter.getLayer();
+
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
-        SuggestionDocumentGroup groups = predictions.getPredictions(sourceDocumentName, layer,
-                aWindowBeginOffset, aWindowEndOffset);
+        SuggestionDocumentGroup<SpanSuggestion> groups = predictions.getGroupedPredictions(
+                SpanSuggestion.class, sourceDocumentName, layer, aWindowBeginOffset,
+                aWindowEndOffset);
 
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
             return;
         }
 
-        String color = "#cccccc";
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        recommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), layer,
-                groups, aWindowBeginOffset, aWindowEndOffset);
+        recommendationService.calculateSpanSuggestionVisibility(aCas,
+                aState.getUser().getUsername(), layer, groups, aWindowBeginOffset,
+                aWindowEndOffset);
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        Map<String, AnnotationFeature> features = aAnnotationService.listSupportedFeatures(layer)
+        Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
                 .stream()
                 .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
-        for (SuggestionGroup suggestionGroup : groups) {
+        for (SuggestionGroup<SpanSuggestion> suggestionGroup : groups) {
             // Render annotations for each label
-            for (AnnotationSuggestion ao : suggestionGroup.bestSuggestions(pref)) {
+            for (SpanSuggestion ao : suggestionGroup.bestSuggestions(pref)) {
+                Optional<VRange> range = VRange.clippedRange(aWindowBeginOffset, aWindowEndOffset,
+                        ao.getBegin(), ao.getEnd());
+
+                if (!range.isPresent()) {
+                    continue;
+                }
+
                 VID vid = ao.getVID();
 
                 // Here, we generate a visual suggestion representation based on the first
@@ -126,18 +145,26 @@ public class RecommendationSpanRenderer
                 AnnotationFeature feature = features.get(ao.getFeature());
 
                 // Retrieve the UI display label for the given feature value
-                FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
+                FeatureSupport<?> featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                 String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());
 
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(ao.getFeature(), annotation);
 
-                VSpan v = new VSpan(layer, vid, bratTypeName,
-                        new VRange(ao.getBegin() - aWindowBeginOffset,
-                                ao.getEnd() - aWindowBeginOffset),
-                        featureAnnotation, color);
-                v.addLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
-                v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
+                VSpan v = new VSpan(layer, vid, bratTypeName, range.get(), featureAnnotation,
+                        COLOR);
+
+                v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
+
+                List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
+                        ao.getLabel());
+                if (!lazyDetails.isEmpty()) {
+                    v.addLazyDetails(lazyDetails);
+                }
+                else {
+                    v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
+                }
+
                 vdoc.add(v);
             }
         }

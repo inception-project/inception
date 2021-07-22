@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.tsv;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +30,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
-import org.dkpro.core.testing.DkproTestContext;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -45,7 +43,7 @@ public class WebAnnoTsv2ReaderWriterTest
     @Test
     public void test() throws Exception
     {
-        String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
+        String targetFolder = "target/test-output/" + getClass().getSimpleName();
 
         // @formatter:off
         CollectionReader reader = createCollectionReader(
@@ -98,7 +96,4 @@ public class WebAnnoTsv2ReaderWriterTest
         assertEquals(JCasUtil.select(cas2.getJCas(), Sentence.class).size(),
                 JCasUtil.select(cas1.getJCas(), Sentence.class).size());
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }

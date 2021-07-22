@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static java.util.stream.Collectors.toList;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -61,7 +63,6 @@ public class QuerySettingsPanel
         maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
         add(maxQueryLimitCheckBox);
         add(ftsField("fullTextSearchIri", "kb.fullTextSearchIri"));
-
     }
 
     private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> aModel)
@@ -109,10 +110,10 @@ public class QuerySettingsPanel
         return queryLimit;
     }
 
-    private DropDownChoice<IRI> ftsField(String aId, String aProperty)
+    private DropDownChoice<String> ftsField(String aId, String aProperty)
     {
-        DropDownChoice<IRI> ftsField = new BootstrapSelect<>(aId, kbModel.bind(aProperty),
-                IriConstants.FTS_IRIS);
+        DropDownChoice<String> ftsField = new BootstrapSelect<>(aId, kbModel.bind(aProperty),
+                IriConstants.FTS_IRIS.stream().map(IRI::stringValue).collect(toList()));
         ftsField.setOutputMarkupId(true);
         ftsField.setNullValid(true);
         return ftsField;
