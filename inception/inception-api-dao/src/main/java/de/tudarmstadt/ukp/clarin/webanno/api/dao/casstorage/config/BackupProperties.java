@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -27,7 +29,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("backup")
 public class BackupProperties
 {
-    private long interval;
+    private long interval = Duration.ofHours(24).toSeconds();
     private final KeepOptions keep = new KeepOptions();
 
     public void setInterval(long aInterval)
@@ -48,7 +50,7 @@ public class BackupProperties
     public static class KeepOptions
     {
         private long time;
-        private int number;
+        private int number = 2;
 
         public long getTime()
         {

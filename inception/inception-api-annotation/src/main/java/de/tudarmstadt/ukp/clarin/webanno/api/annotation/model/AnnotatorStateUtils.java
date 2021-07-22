@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
+
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Optional;
 
 public class AnnotatorStateUtils
@@ -30,8 +33,11 @@ public class AnnotatorStateUtils
         Optional<Long> stateTimestamp = aState.getAnnotationDocumentTimestamp();
         if (stateTimestamp.isPresent() && aDiskTimestamp.isPresent()
                 && aDiskTimestamp.get() > stateTimestamp.get()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
             throw new IOException("There was a concurrent change to the document. Re-open the "
-                    + "document to continue editing.");
+                    + "document to continue editing (expected: " + sdf.format(stateTimestamp.get())
+                    + " actual on storage: " + sdf.format(aDiskTimestamp.get()) + ", delta: "
+                    + formatDurationHMS(aDiskTimestamp.get() - stateTimestamp.get()) + ")");
         }
 
         if (aDiskTimestamp.isPresent()) {

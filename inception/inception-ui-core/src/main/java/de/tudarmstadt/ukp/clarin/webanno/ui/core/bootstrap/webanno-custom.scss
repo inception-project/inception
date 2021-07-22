@@ -30,6 +30,7 @@ html, body {
   margin: 0px;
   padding: 0px;
   flex: none;
+  z-index: 30000; // Display above modal dialogs
 }
 
 .page-content {
@@ -53,7 +54,8 @@ html, body {
   background-color: $card-bg;
   border-color: $card-border-color;
   border-top: 1px solid;
-  
+  z-index: 30000; // Display above modal dialogs
+
   a, a:hover, a:focus {
   	color: black;
   }
@@ -152,7 +154,7 @@ span.form-control {
 .flex-centered { align-items: center; }
 .flex-centered > * { margin: 0px; }
 
-.flex-static-item { flex: none; }
+.flex-static-item { flex: none !important; }
 .flex-growing-item { flex: 1; }
 .flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; min-width: 0px; }
 .flex-content { flex: 1; }

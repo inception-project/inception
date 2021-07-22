@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.htmleditor.annotatorjs;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,6 +82,9 @@ public class AnnotatorJsRenderer
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 String labelText = getUiLabelText(typeAdapter, vspan);
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
+
+                labelText = "[" + layer.getUiName() + "] "
+                        + (isBlank(labelText) ? "no label" : labelText);
 
                 Annotation anno = new Annotation();
                 anno.setId(vspan.getVid().toString());

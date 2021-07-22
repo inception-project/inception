@@ -81,6 +81,7 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 
+
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
@@ -451,6 +452,7 @@ public class MtasDocumentIndexTest
 
         assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
+
 
     @SpringBootConfiguration
     public static class TestContext

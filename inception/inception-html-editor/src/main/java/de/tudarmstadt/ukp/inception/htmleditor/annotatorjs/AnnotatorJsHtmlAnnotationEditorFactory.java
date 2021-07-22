@@ -24,6 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
@@ -61,5 +62,11 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         return new AnnotatorJsHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+    }
+
+    @Override
+    public void initState(AnnotatorState aModelObject)
+    {
+        aModelObject.setPagingStrategy(new NoPagingStrategy());
     }
 }

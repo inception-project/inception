@@ -24,6 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.inception.recogitojseditor.config.RecogitoHtmlAnnotationEditorSupportAutoConfiguration;
 
 /**
@@ -47,5 +48,11 @@ public class RecogitoHtmlAnnotationEditorFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         return new RecogitoHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+    }
+    
+    @Override
+    public void initState(AnnotatorState aModelObject)
+    {
+        aModelObject.setPagingStrategy(new NoPagingStrategy());
     }
 }

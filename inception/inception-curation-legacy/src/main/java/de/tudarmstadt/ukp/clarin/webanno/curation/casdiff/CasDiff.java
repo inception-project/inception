@@ -975,6 +975,11 @@ public class CasDiff
             cachedHasDifferences = !getDifferingConfigurationSets().isEmpty();
         }
 
+        public Set<String> getCasGroupIds()
+        {
+            return casGroupIds;
+        }
+
         public boolean hasDifferences()
         {
             return cachedHasDifferences;

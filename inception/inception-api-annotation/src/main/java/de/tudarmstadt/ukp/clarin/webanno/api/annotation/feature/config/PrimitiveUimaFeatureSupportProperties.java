@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@code AnnotationSchemaServiceAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties("annotation.feature-support.string")
 public class PrimitiveUimaFeatureSupportProperties
 {
