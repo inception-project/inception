@@ -662,6 +662,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-support-jsass</artifactId>
+        <version>0.20.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support-standalone</artifactId>
         <version>0.20.0-SNAPSHOT</version>
       </dependency>
@@ -1708,6 +1713,7 @@
     <!-- Core -->
     <module>inception-support</module>
     <module>inception-support-standalone</module>
+    <module>inception-support-jsass</module>
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
