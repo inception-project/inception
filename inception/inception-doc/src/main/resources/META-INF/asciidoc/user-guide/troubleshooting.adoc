@@ -17,10 +17,30 @@
 [[sect_troubleshooting]]
 = Troubleshooting
 
+We are collecting error reports to improve the tool. For this, the error must be reproducible: 
+If you find a way how to produce the error, please open an issue and describe it.
+
+== Session timeout
+
 If the tool is kept open in the browser, but not used for a long period of time, you will have to
 log in again. For this, press the reload button of your browser.
+
+== Application is hanging
 
 If the tool does not react for more than 1 minute, please also reload and re-login. 
 
 We are collecting error reports to improve the tool. For this, the error must be reproducible: 
 If you find a way how to produce the error, please open an issue and describe it.
+
+== Forgot admin password
+
+If you locked yourself out of {product-name}, you can reset/recreated the default admin account. In order to do so, first stop {product-name} if it is still running. Then specify the system property `restoreDefaultAdminAccount` when you start {product-name} (note that the value of the property does not matter and can be omitted!). For example, if you are using the standalone version of {product-name}, you can start it as 
+
+[source,bash,subs="+attributes"]
+----
+$ java -DrestoreDefaultAdminAccount -jar inception-app-webapp-{revnumber}-standalone.jar.jar
+----
+
+NOTE: Mind that if you are using a non-default `inception.home`, you also have to specify this system property.
+
+When {product-name} has started, try opening it in your browser. The login page will show, but it will not allow you to log in. Instead a message will be shown stating that the default admin account has been reset or recreated. In order to resume normal operations, stop {product-name} again and restart it without the `restoreDefaultAdminAccount` system property.

@@ -77,6 +77,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 public class LoginPage
     extends ApplicationPageBase
 {
+    private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
+
     private static final long serialVersionUID = -333578034707672294L;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -94,6 +96,8 @@ public class LoginPage
         setStatelessHint(true);
         setVersioned(false);
 
+        redirectIfAlreadyLoggedIn();
+
         add(form = new LoginForm("loginForm"));
         form.add(enabledWhen(() -> !isTooManyUsers()));
 
@@ -101,10 +105,45 @@ public class LoginPage
         tooManyUsersLabel.add(visibleWhen(this::isTooManyUsers));
         form.add(tooManyUsersLabel);
 
-        redirectIfAlreadyLoggedIn();
-
+        // Reset/recreated default admin account if requested
+        if (System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null) {
+            form.setVisible(false);
+            User admin;
+            boolean exists;
+            if (userRepository.exists(ADMIN_DEFAULT_USERNAME)) {
+                admin = userRepository.get(ADMIN_DEFAULT_USERNAME);
+                exists = true;
+            }
+            else {
+                admin = new User();
+                admin.setUsername(ADMIN_DEFAULT_USERNAME);
+                exists = false;
+            }
+            admin.setPassword(ADMIN_DEFAULT_PASSWORD);
+            admin.setEnabled(true);
+            admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER));
+            if (exists) {
+                userRepository.update(admin);
+                String msg = "Default admin account has been reset to the default permissions "
+                        + "and credentials: " + ADMIN_DEFAULT_USERNAME + "/"
+                        + ADMIN_DEFAULT_PASSWORD + ". Login has been disabled for security "
+                        + "reasons. Please restart the application without the password "
+                        + "resetting parameter.";
+                info(msg);
+                log.info(msg);
+            }
+            else {
+                userRepository.create(admin);
+                String msg = "Default admin account has been recreated: " + ADMIN_DEFAULT_USERNAME
+                        + "/" + ADMIN_DEFAULT_PASSWORD + ". Login has "
+                        + "been disabled for security reasons. Please restart the application "
+                        + "without the password resetting parameter.";
+                info(msg);
+                log.info(msg);
+            }
+        }
         // Create admin user if there is no user yet
-        if (userRepository.list().isEmpty()) {
+        else if (userRepository.list().isEmpty()) {
             User admin = new User();
             admin.setUsername(ADMIN_DEFAULT_USERNAME);
             admin.setPassword(ADMIN_DEFAULT_PASSWORD);
