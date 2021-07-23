@@ -39,6 +39,81 @@
   </dependencies>
   <profiles>
     <profile>
+      <id>docker-buildx-amd64</id>
+      <properties>
+        <!-- This property us referenced in the Dockerfile -->
+        <docker.jarfile>inception-app-webapp-${project.version}-standalone.jar</docker.jarfile>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+              <execution>
+                <id>stage-jar</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-dependencies</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}/buildx</outputDirectory>
+                  <includeArtifactIds>inception-app-webapp</includeArtifactIds>
+                  <includeClassifiers>standalone</includeClassifiers>
+                  <excludeTransitive>true</excludeTransitive>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>stage-dockerfile</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}/buildx</outputDirectory>
+                  <delimiters>
+                    <delimiter>@</delimiter>
+                  </delimiters>
+                  <resources>
+                    <resource>
+                      <directory>src/main/docker</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+              <execution>
+                <id>build-docker-image</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <workingDirectory>${project.build.directory}/buildx</workingDirectory>
+                  <executable>docker</executable>
+                  <commandlineArgs>buildx build --platform=linux/amd64 -t ${docker.image.name}:latest -t ${docker.image.name}:${project.version} .</commandlineArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>docker</id>
       <activation>
         <property>
@@ -47,7 +122,7 @@
       </activation>
       <properties>
         <!-- This property us referenced in the Dockerfile -->
-        <docker.jarfile>maven/inception-app-standalone-${project.version}.jar</docker.jarfile>
+        <docker.jarfile>maven/inception-app-webapp-${project.version}-standalone.jar</docker.jarfile>
       </properties>
       <build>
         <plugins>
@@ -74,7 +149,7 @@
                             </includes>
                             <useTransitiveFiltering>false</useTransitiveFiltering>
                             <outputDirectory>.</outputDirectory>
-                            <outputFileNameMapping>inception-app-standalone-${project.version}.jar</outputFileNameMapping>
+                            <outputFileNameMapping>inception-app-webapp-${project.version}-standalone.jar</outputFileNameMapping>
                           </dependencySet>
                         </dependencySets>
                       </inline>
