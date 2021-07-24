@@ -26,7 +26,6 @@ import static org.apache.uima.fit.util.CasUtil.selectAllFS;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -58,20 +57,16 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.*;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.AllRelationResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.AllSpanResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
@@ -116,16 +111,19 @@ public class AnnotationSystemAPIImpl
     public void handleNewDocument(NewDocumentRequest aNewDocumentRequest) throws IOException
     {
         try {
-            CAS cas = getCasForDocument(aNewDocumentRequest.getUserName(),
-                    aNewDocumentRequest.getProjectId(), aNewDocumentRequest.getDocumentId());
 
-            NewDocumentResponse message = new NewDocumentResponse(
-                    toIntExact(documentService.getSourceDocument(aNewDocumentRequest.getProjectId(),
-                            aNewDocumentRequest.getDocumentId()).getId()),
+            // TODO server decide on next document
+            long documentID = 41714;
+
+            CAS cas = getCasForDocument(aNewDocumentRequest.getUserName(),
+                    aNewDocumentRequest.getProjectId(), documentID);
+
+            NewDocumentResponse message = new NewDocumentResponse(toIntExact(documentService
+                    .getSourceDocument(aNewDocumentRequest.getProjectId(), documentID).getId()),
                     getViewportText(cas, aNewDocumentRequest.getViewport()),
                     filterSpans(getSpans(cas, aNewDocumentRequest.getProjectId()),
                             aNewDocumentRequest.getViewport()),
-                    getRelations(cas, aNewDocumentRequest.getProjectId(),
+                    filterRelations(getRelations(cas, aNewDocumentRequest.getProjectId()), cas,
                             aNewDocumentRequest.getViewport()));
             annotationProcessAPI.sendNewDocumentResponse(message,
                     aNewDocumentRequest.getClientName());
@@ -147,7 +145,7 @@ public class AnnotationSystemAPIImpl
                 getViewportText(cas, aNewViewportRequest.getViewport()),
                 filterSpans(getSpans(cas, aNewViewportRequest.getProjectId()),
                         aNewViewportRequest.getViewport()),
-                getRelations(cas, aNewViewportRequest.getProjectId(),
+                filterRelations(getRelations(cas, aNewViewportRequest.getProjectId()), cas,
                         aNewViewportRequest.getViewport()));
 
         annotationProcessAPI.sendNewViewportResponse(message, aNewViewportRequest.getClientName());
@@ -265,31 +263,31 @@ public class AnnotationSystemAPIImpl
             FeatureStructure relation = selectFsByAddr(cas,
                     aSelectRelationRequest.getRelationAddress().getId());
 
-            //TODO combine with getRelations and simplify
-            
+            // TODO combine with getRelations and simplify
+
             String flavor = null;
             String dependencyType = null;
             FeatureStructure governor = null;
             FeatureStructure dependent = null;
             String governorCoveredText = null;
             String dependentCoveredText = null;
-            
+
             for (Feature f : relation.getType().getFeatures()) {
 
                 if (f.getName().equals(
-                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Governor")) {
+                        "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Governor")) {
                     governor = relation.getFeatureValue(f);
                 }
                 if (f.getName().equals(
-                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Dependent")) {
+                        "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Dependent")) {
                     dependent = relation.getFeatureValue(f);
                 }
                 if (f.getName().equals(
-                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:DependencyType")) {
+                        "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:DependencyType")) {
                     dependencyType = relation.getStringValue(f);
                 }
                 if (f.getName().equals(
-                    "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:flavor")) {
+                        "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:flavor")) {
                     flavor = relation.getStringValue(f);
                 }
             }
@@ -298,27 +296,26 @@ public class AnnotationSystemAPIImpl
             for (int i = 3; i < 8; i++) {
                 if (governor.getFeatureValue(features.get(i)) != null) {
                     AnnotationFS govAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(cas,
-                        WebAnnoCasUtil.getAddr(governor));
+                            WebAnnoCasUtil.getAddr(governor));
                     governorCoveredText = govAnnotation.getCoveredText();
                     break;
                 }
             }
             features.clear();
             features = dependent.getType().getFeatures();
-            
+
             for (int i = 3; i < 8; i++) {
                 if (dependent.getFeatureValue(features.get(i)) != null) {
                     AnnotationFS depAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(cas,
-                        WebAnnoCasUtil.getAddr(dependent));
+                            WebAnnoCasUtil.getAddr(dependent));
                     dependentCoveredText = depAnnotation.getCoveredText();
                     break;
                 }
             }
 
             SelectRelationResponse message = new SelectRelationResponse(
-                    VID.parse(String.valueOf(relation._id())), governorCoveredText, dependentCoveredText,
-                    dependencyType,
-                    flavor);
+                    VID.parse(String.valueOf(relation._id())), governorCoveredText,
+                    dependentCoveredText, dependencyType, flavor);
 
             annotationProcessAPI.sendSelectRelationResponse(message,
                     aSelectRelationRequest.getClientName());
@@ -406,6 +403,46 @@ public class AnnotationSystemAPIImpl
             e.printStackTrace();
             createErrorMessage(e.getMessage(), aDeleteRelationRequest.getClientName());
         }
+    }
+
+    @Override
+    public void handleAllSpans(AllSpanRequest aAllSpanRequest) throws IOException
+    {
+        try {
+            CAS cas = getCasForDocument(aAllSpanRequest.getUserName(),
+                    aAllSpanRequest.getProjectId(), aAllSpanRequest.getDocumentId());
+
+            AllSpanResponse message = new AllSpanResponse(
+                    getSpans(cas, aAllSpanRequest.getProjectId()));
+
+            annotationProcessAPI.sendAllSpansResponse(message, aAllSpanRequest.getClientName());
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            createErrorMessage(e.getMessage(), aAllSpanRequest.getClientName());
+        }
+    }
+
+    @Override
+    public void handleAllRelations(AllRelationRequest aAllRelationRequest) throws IOException
+    {
+        try {
+            CAS cas = getCasForDocument(aAllRelationRequest.getUserName(),
+                    aAllRelationRequest.getProjectId(), aAllRelationRequest.getDocumentId());
+
+            AllRelationResponse message = new AllRelationResponse(
+                    getRelations(cas, aAllRelationRequest.getProjectId()));
+
+            annotationProcessAPI.sendAllRelationsResponse(message,
+                    aAllRelationRequest.getClientName());
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            createErrorMessage(e.getMessage(), aAllRelationRequest.getClientName());
+        }
+
     }
 
     @Override
@@ -497,8 +534,9 @@ public class AnnotationSystemAPIImpl
     }
 
     /**
-     * --------------------------------------------- ---------- Private support methods ----------
-     * ---------------------------------------------
+     *
+     * Private support methods
+     *
      **/
 
     public CAS getCasForDocument(String aUser, long aProject, long aDocument)
@@ -584,6 +622,26 @@ public class AnnotationSystemAPIImpl
         return filteredAnnotations;
     }
 
+    public List<Relation> filterRelations(List<Relation> aRelations, CAS aCas, int[][] aViewport)
+    {
+        List<Relation> filteredRelations = new ArrayList<>();
+
+        for (Relation relation : aRelations) {
+            AnnotationFS annotation = selectAnnotationByAddr(aCas,
+                    relation.getGovernorId().getId());
+
+            for (int i = 0; i < aViewport.length; i++) {
+                for (int j = aViewport[i][0]; j <= aViewport[i][1]; j++) {
+                    if (annotation.getBegin() == j) {
+                        filteredRelations.add(relation);
+                        break;
+                    }
+                }
+            }
+        }
+        return filteredRelations;
+    }
+
     public String getColorForAnnotation(AnnotationFS aAnnotation, Project aProject)
     {
         // TODO proper coloring strategy (without VTypes)
@@ -599,21 +657,10 @@ public class AnnotationSystemAPIImpl
         }
     }
 
-    public List<Relation> getRelations(CAS aCas, long aProject, int[][] aViewport)
+    public List<Relation> getRelations(CAS aCas, long aProject)
     {
         List<Relation> relations = new ArrayList<>();
 
-        int min = aViewport[0][0];
-        int max = aViewport[0][1];
-
-        for (int i = 0; i < aViewport.length; i++) {
-            if (aViewport[i][0] < min) {
-                min = aViewport[i][0];
-            }
-            if (aViewport[i][1] > max) {
-                max = aViewport[i][1];
-            }
-        }
         for (FeatureStructure fs : selectAllFS(aCas)) {
             if (fs.getType().getShortName().equals("Dependency")) {
                 AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,

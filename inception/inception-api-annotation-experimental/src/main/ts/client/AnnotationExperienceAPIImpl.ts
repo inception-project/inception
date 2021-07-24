@@ -41,6 +41,10 @@ import {DeleteRelationRequest} from "./messages/request/relation/DeleteRelationR
 import {UpdateRelationRequest} from "./messages/request/relation/UpdateRelationRequest";
 import {CreateRelationRequest} from "./messages/request/relation/CreateRelationRequest";
 import {DeleteRelationResponse} from "./messages/response/relation/DeleteRelationResponse";
+import {AllSpanResponse} from "./messages/response/span/AllSpanResponse";
+import {AllRelationResponse} from "./messages/response/relation/AllRelationResponse";
+import {AllSpanRequest} from "./messages/request/span/AllSpanRequest";
+import {AllRelationRequest} from "./messages/request/relation/AllRelationRequest";
 
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
@@ -115,6 +119,14 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             that._stompClient.subscribe("/queue/error_for_client/" + that._clientName, function (msg) {
                 that.onError(Object.assign(new ErrorMessage(), JSON.parse(msg.body)));
             }, {id: "error_message"});
+
+            that._stompClient.subscribe("/queue/all_spans_for_client/" + that._clientName, function (msg) {
+                that.onAllSpans(Object.assign(new AllSpanResponse(), JSON.parse(msg.body)));
+            }, {id: "all_spans"});
+
+            that._stompClient.subscribe("/queue/all_relations_for_client/" + that._clientName, function (msg) {
+                that.onAllRelations(Object.assign(new AllRelationResponse(), JSON.parse(msg.body)));
+            }, {id: "error_message"});
         };
 
 
@@ -187,12 +199,12 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this._stompClient.deactivate();
     }
 
-    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewport: number[][]) {
+    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number, aViewport: number[][]) {
         const that = this;
         this._viewport = aViewport;
         that._stompClient.publish({
             destination: "/app/new_document_from_client", body: JSON.stringify(
-                new NewDocumentRequest(aClientName, aUserName, aProjectId, aDocumentId, aViewport))
+                new NewDocumentRequest(aClientName, aUserName, aProjectId, aViewport))
         });
     }
 
@@ -268,13 +280,22 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-    requestSaveWordAlignment(aClientName: string, aUserName: string, aProjectId: number, aSentence: number, aAlignments: string)
+    requestAllSpansFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number)
     {
         this._stompClient.publish({
-            destination: "/app/update_word_alignment_from_client",
-            body: JSON.stringify(new SaveWordAlignmentRequest(aClientName, aUserName, aProjectId, aSentence, aAlignments))
+            destination: "/app/all_spans_from_client",
+            body: JSON.stringify(new AllSpanRequest(aClientName, aUserName, aProjectId, aDocumentId))
         });
     }
+
+    requestAllRelationsFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number)
+    {
+        this._stompClient.publish({
+        destination: "/app/all_relations_from_client",
+        body: JSON.stringify(new AllRelationRequest(aClientName, aUserName, aProjectId, aDocumentId))
+    });
+    }
+
 
     onNewDocument(aMessage: NewDocumentResponse)
     {
@@ -358,6 +379,22 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         console.log('RECEIVED UPDATE RELATION');
         console.log(aMessage);
     }
+
+    onAllSpans(aMessage: AllSpanResponse)
+    {
+
+        console.log('RECEIVED ALL SPANS');
+        console.log(aMessage);
+        this.spans = aMessage.span;
+    }
+
+    onAllRelations(aMessage: AllRelationResponse)
+    {
+        console.log('RECEIVED ALL RELATIONS');
+        console.log(aMessage);
+        this.relations = aMessage.relation;
+    }
+
 
     onError(aMessage: ErrorMessage) {
         console.log('RECEIVED ERROR MESSAGE');

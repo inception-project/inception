@@ -21,14 +21,8 @@ import java.io.IOException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.*;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.*;
 
 public interface AnnotationSystemAPI
 {
@@ -57,6 +51,10 @@ public interface AnnotationSystemAPI
         throws IOException;
 
     void handleDeleteRelation(DeleteRelationRequest aDeleteRelationRequest) throws IOException;
+
+    void handleAllSpans(AllSpanRequest aAllSpanRequest) throws IOException;
+
+    void handleAllRelations(AllRelationRequest aAllRelationRequest) throws IOException;
 
     void createErrorMessage(String aMessage, String aUser) throws IOException;
 

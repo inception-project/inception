@@ -22,7 +22,6 @@ public class NewDocumentRequest
     private String clientName;
     private String userName;
     private long projectId;
-    private long documentId;
     private int[][] viewport;
 
     public String getClientName()
@@ -53,16 +52,6 @@ public class NewDocumentRequest
     public void setProjectId(long aProjectId)
     {
         projectId = aProjectId;
-    }
-
-    public long getDocumentId()
-    {
-        return documentId;
-    }
-
-    public void setDocumentId(long aDocumentId)
-    {
-        documentId = aDocumentId;
     }
 
     public int[][] getViewport()

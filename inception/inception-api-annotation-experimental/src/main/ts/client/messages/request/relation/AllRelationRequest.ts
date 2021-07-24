@@ -15,16 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class NewDocumentRequest {
-    clientName: string;
-    userName: string;
-    projectId: number;
-    viewport: number[][];
+export class AllRelationRequest
+{
+    clientName : string;
+    userName : string;
+    projectId : number;
+    documentId : number;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aViewport: number[][]) {
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number)
+    {
         this.clientName = aClientName;
         this.userName = aUserName;
         this.projectId = aProjectId;
-        this.viewport = aViewport;
+        this.documentId = aDocumentId;
     }
 }

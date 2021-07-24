@@ -28,6 +28,8 @@ import {CreateRelationResponse} from "./messages/response/relation/CreateRelatio
 import {Span} from "./model/Span";
 import {Relation} from "./model/Relation";
 import {DeleteRelationResponse} from "./messages/response/relation/DeleteRelationResponse";
+import {AllRelationResponse} from "./messages/response/relation/AllRelationResponse";
+import {AllSpanResponse} from "./messages/response/span/AllSpanResponse";
 
 export interface AnnotationExperienceAPI
 {
@@ -48,7 +50,7 @@ export interface AnnotationExperienceAPI
 
 
     requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                 aDocumentId: number, aViewport: number[][]);
+                                 aViewport: number[][]);
 
     requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                  aDocumentId: number, aViewport: number[][]);
@@ -76,7 +78,11 @@ export interface AnnotationExperienceAPI
     requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                     aDocumentId: number, aRelationAddress: number);
 
-    requestSaveWordAlignment(aClientName: string, aUserName: string, aProjectId: number, sentence: number, alignments: string)
+    requestAllSpansFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                               aDocumentId: number);
+
+    requestAllRelationsFromServer(aClientName: string, aUserName: string, aProjectId: number,
+                                  aDocumentId: number);
 
     onNewDocument(aMessage: NewDocumentResponse);
 
@@ -97,6 +103,10 @@ export interface AnnotationExperienceAPI
     onRelationUpdate(aMessage: UpdateRelationResponse);
 
     onRelationCreate(aMessage: CreateRelationResponse);
+
+    onAllSpans(aMessage: AllSpanResponse);
+
+    onAllRelations(aMessage: AllRelationResponse);
 
     onError(aMessage: ErrorMessage);
 }
