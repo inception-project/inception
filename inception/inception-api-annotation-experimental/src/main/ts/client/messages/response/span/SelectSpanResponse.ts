@@ -18,6 +18,10 @@
 export class SelectSpanResponse
 {
     spanAddress: number;
+    coveredText : string;
+    begin : number;
+    end : number;
     type: string;
-    feature: string;
+    feature: string[];
+    color: string;
 }

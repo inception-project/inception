@@ -88,8 +88,6 @@ public interface AnnotationProcessAPI
             String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
 
-    void receiveSaveWordAlignmentRequest(Message<String> aMessage) throws IOException;
-
     void sendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException;
 
 }

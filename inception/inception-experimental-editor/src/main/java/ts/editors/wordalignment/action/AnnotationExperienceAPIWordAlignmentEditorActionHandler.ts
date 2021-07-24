@@ -33,19 +33,20 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
             let elem = <Element>aEvent.target;
             console.log(elem)
             if (elem.id === 'next_sentence') {
-                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41718, "SENTENCE", [[that.annotationExperienceAPIWordAlignmentEditor.currentSentenceCount]], false)
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41718, [[0,15]])
+
                 setTimeout(function () {
-                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPIVisualization.showText("sentence")
-                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41717, "SENTENCE", [[that.annotationExperienceAPIWordAlignmentEditor.currentSentenceCount]], false)
+                    that.annotationExperienceAPIWordAlignmentEditor.originalLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
+                    that.annotationExperienceAPIWordAlignmentEditor.originalDocument = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID
+                    that.annotationExperienceAPIWordAlignmentEditor.originalUser = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName
+                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41717,  [[0,16]])
+
                     setTimeout(function () {
-                        that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPIVisualization.showText("alignment")
-                    }, 1000)
-                }, 1000)
-
-                setTimeout(function () {
-                    ++that.annotationExperienceAPIWordAlignmentEditor.currentSentenceCount;
-                }, 3000);
-
+                        that.annotationExperienceAPIWordAlignmentEditor.translatedLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
+                        that.annotationExperienceAPIWordAlignmentEditor.translatedDocument = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID;
+                        that.annotationExperienceAPIWordAlignmentEditor.translatedUser = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName
+                    }, 2000)
+                }, 2000)
             }
 
             if (elem.id === 'save_alignment') {

@@ -17,32 +17,47 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<style>
+    .card {
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+    .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    }
+    .container {
+        padding: 2px 16px;
+    }
+</style>
 <body>
 <wicket:panel>
     <div class="scrolling flex-content fit-child-loose text-center" style="min-height: unset;">
         <form class="editor" onsubmit="return false">
-            <button id="next_sentence">
-                Next Sentence
-            </button>
-            <button id="save_alignment">
-                Save Alignment
-            </button>
-
-            <div id="sentences" style="display:block;">
-                <div>
-                    <div id="sent_words"  style="display: block; width: auto; height: auto; text-align: center"></div>
-                    <div id="sentence" style="display: block; width: auto; height: auto; text-align: center"></div>
+            <div class="container card" style="width: 50%">
+                <div id="sentences" class="container card" style="display:block;">
+                    <div>
+                        <div style="float:left; width: 100px">
+                            &nbsp;
+                        </div>
+                        <div id="container_english" class="container card" style="float:left; width: 300px;"></div>
+                        <div style="float:left; width: 100px">
+                            &nbsp;
+                        </div>
+                        <div id="container_german" class="container card" style="float:left; width: 300px"></div>
+                    </div>
                 </div>
+                &nbsp;
                 <div>
-                    <div id="alignment" style="display: block; width: auto; height: auto; text-align: center"></div>
-                    <div id="align_words" style="display: block; width: auto; height: auto; text-align: center"></div>
+                    <button id="next_sentence">
+                        Next Sentence
+                    </button>
+                    <button id="save_alignment">
+                        Save Alignment
+                    </button>
                 </div>
-
             </div>
         </form>
     </div>
 </wicket:panel>
 </body>
 </html>
-
-

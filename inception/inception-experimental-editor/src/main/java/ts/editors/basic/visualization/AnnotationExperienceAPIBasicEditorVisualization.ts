@@ -49,7 +49,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         textArea.innerHTML = '';
 
         //Sentences
-        let sentences = this.annotationExperienceAPI.text.join("").split("|");
+        let sentences = this.annotationExperienceAPI.text;
         this.sentenceCount = sentences.length - 1;
 
         //SVG element
@@ -85,14 +85,11 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
             sentence.setAttribute("sentence-id", (i + 1).toString());
 
             for (let j = 0; j < sentences[i].length; j++, k++) {
-                if (sentences[i][j] === "|") {
-                    break;
-                }
                 let char = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 char.textContent = sentences[i][j];
                 char.setAttribute("x", xPrev.toString());
                 char.setAttribute("y", ((i + 1) * 20 - 5).toString());
-                char.setAttribute("char_pos", (this.annotationExperienceAPI.viewport[i][0] + j).toString());
+                char.setAttribute("char_pos", ((this.annotationExperienceAPI.viewport[i][0]) + j).toString());
                 xPrev += this.CHARACTER_WIDTH;
                 sentence.appendChild(char);
             }

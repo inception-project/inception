@@ -25,11 +25,11 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 public class NewDocumentResponse
 {
     private int documentId;
-    private Character[] viewportText;
+    private List<String> viewportText;
     private List<Span> spans;
     private List<Relation> relations;
 
-    public NewDocumentResponse(int aDocumentId, Character[] aViewportText, List<Span> aSpans,
+    public NewDocumentResponse(int aDocumentId, List<String> aViewportText, List<Span> aSpans,
             List<Relation> aRelations)
     {
         documentId = aDocumentId;
@@ -48,12 +48,12 @@ public class NewDocumentResponse
         documentId = aDocumentId;
     }
 
-    public Character[] getViewportText()
+    public List<String> getViewportText()
     {
         return viewportText;
     }
 
-    public void setViewportText(Character[] aViewportText)
+    public void setViewportText(List<String> aViewportText)
     {
         this.viewportText = aViewportText;
     }

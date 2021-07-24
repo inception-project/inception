@@ -23,9 +23,7 @@ public class NewViewportRequest
     private String userName;
     private long projectId;
     private long documentId;
-    private String viewportType;
     private int[][] viewport;
-    private boolean recommenderEnabled;
 
     public String getClientName()
     {
@@ -67,17 +65,6 @@ public class NewViewportRequest
         documentId = aDocumentId;
     }
 
-    public String getViewportType()
-    {
-        return viewportType;
-    }
-
-    public void setViewportType(String aViewportType)
-    {
-        viewportType = aViewportType;
-    }
-
-
     public int[][] getViewport()
     {
         return viewport;
@@ -86,14 +73,5 @@ public class NewViewportRequest
     public void setViewport(int[][] aViewport)
     {
         viewport = aViewport;
-    }
-
-    public boolean isRecommenderEnabled()
-    {
-        return recommenderEnabled;
-    }
-
-    public void setRecommenderEnabled(boolean aRecommenderEnabled) {
-        recommenderEnabled = aRecommenderEnabled;
     }
 }

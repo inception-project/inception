@@ -22,116 +22,128 @@ import {AnnotationExperienceAPIWordAlignmentEditor} from "../AnnotationExperienc
 
 export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
 
-    annotationExperienceAPIWordAlignmentEditor : AnnotationExperienceAPIWordAlignmentEditor;
-    sentenceCount : number = 0;
-    wordBegins : number[];
+    annotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor;
 
-    CHARACTER_WIDTH = 18;
-
-    constructor(aAnnotationExperienceAPIWordAlignmentEditor : AnnotationExperienceAPIWordAlignmentEditor)
-    {
+    constructor(aAnnotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor) {
         this.annotationExperienceAPIWordAlignmentEditor = aAnnotationExperienceAPIWordAlignmentEditor;
     }
 
-    showText(aElementId: string)
-    {
-        let textArea = document.getElementById(aElementId.toString())
+    showText(aElementId: string) {
+        let words;
+
+        let container = document.getElementById(aElementId.toString())
+
+        let relations = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.relations;
+        let spans = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.spans;
+
         //Reset previous text
-        textArea.innerHTML = '';
-        //Sentences
-        let sent = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text.join("").split("|");
-        let words = sent[0].split(".")[0].split(" ");
+        container.innerHTML = '';
 
-        let field;
-        if (aElementId === "sentence") {
-            field = document.getElementById("sent_words")
-            this.annotationExperienceAPIWordAlignmentEditor.currentSentence = words;
+        let language = document.createElement("b")
+
+        if (aElementId === "container_english") {
+            language.innerText = "English";
+            words = this.annotationExperienceAPIWordAlignmentEditor.originalLanguageSentence.split(" ");
+
         } else {
-            field = document.getElementById("align_words")
-            this.annotationExperienceAPIWordAlignmentEditor.currentAlignment = words;
+            language.innerText = "Deutsch";
+            words = this.annotationExperienceAPIWordAlignmentEditor.translatedLanguageSentence.split(" ");
         }
-        field.innerHTML = '';
 
-        //SVG element
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("version", "1.2");
-        svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + 20);
-        svg.setAttribute("style","font-size: 150%; width: " + textArea.offsetWidth+ "px; height: " + 40 + "px");
+        container.setAttribute("style", "float:left; width: 200px");
 
-        let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        textElement.setAttribute("class", "sentences");
-        textElement.style.display = "block";
+        container.appendChild(language);
+        container.appendChild(document.createElement("hr"))
 
-        let xPrev: number = 0;
+        let prevOffset = 0;
 
-            let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            sentence.setAttribute("class", "text-row");
 
-            for (let j = 0; j < words.length; j++) {
-                if (words[j] === "|") {
+        for (let i = 0; i < words.length; i++) {
+            let wordDIV = document.createElement("div");
+            wordDIV.className = "form-group";
+
+            let wordLABEL = document.createElement("label");
+            wordLABEL.setAttribute("style", "text-align: right")
+            wordLABEL.id = "word_offset_" + (prevOffset).toString() + "_" + (prevOffset + words[i].length).toString();
+            wordLABEL.innerText = words[i];
+
+            for (let i = 0; i < spans.length; i++) {
+                if (spans[i].begin === Number(wordLABEL.id.split("_")[2]) &&
+                    spans[i].end === Number(wordLABEL.id.split("_")[3])) {
+                    console.log("FOUND for: " + wordLABEL.innerText + ", COLOR: " +  spans[i].color)
+                    wordLABEL.style.border = "2px solid " + spans[i].color;
                     break;
                 }
-                let word = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                word.textContent = words[j];
-                word.setAttribute("x", ((this.CHARACTER_WIDTH * words[j].length) + xPrev).toString());
-                word.setAttribute("y", "15");
-                xPrev += (this.CHARACTER_WIDTH * words[j].length) + 15;
-                sentence.appendChild(word);
-                sentence.appendChild(this.drawRect(word.getAttribute("x"),this.CHARACTER_WIDTH * words[j].length))
-
-                let space = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                space.textContent = " ";
-                space.setAttribute("x", (xPrev + this.CHARACTER_WIDTH).toString());
-                word.setAttribute("y", "15");
-                xPrev += this.CHARACTER_WIDTH;
-                sentence.appendChild(space);
-                this.addTextField(aElementId, word.getAttribute("x"),this.CHARACTER_WIDTH * words[j].length, j);
             }
-            textElement.appendChild(sentence);
 
-        svg.appendChild(textElement);
+            prevOffset = prevOffset + words[i].length + 1;
 
-        textArea.appendChild(svg);
+            let wordINPUT = document.createElement("input");
+            wordINPUT.setAttribute("size", "1")
+            wordINPUT.setAttribute("maxlength", "2")
 
-    }
+            if (aElementId === "container_english") {
+                wordINPUT.setAttribute("style", "float:left; text-align: center")
+                wordINPUT.id = "original_word_" + i;
+                wordINPUT.value = String(i);
+                wordDIV.appendChild(wordINPUT);
+                wordDIV.appendChild(wordLABEL);
 
-    drawRect(aX: string, width: number) {
-       let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-       rect.setAttribute("x", (Number(aX) - 4).toString());
-       rect.setAttribute("y", "-8");
-       rect.setAttribute("width", (width - 5).toString());
-       rect.setAttribute("height", "30");
-       rect.setAttribute("fill", "none");
-       rect.setAttribute("stroke", "black");
-       return rect;
-    }
+            } else {
+                wordINPUT.setAttribute("style", "float:right; text-align: center")
+                wordINPUT.id = "translated_word_" + i;
+                wordDIV.appendChild(wordLABEL);
+                wordDIV.appendChild(wordINPUT);
 
-    addTextField(aElementId: string, aX: string, width: number, i : number) {
-        let field;
+            }
 
-        let textField = document.createElement("input");
-        if (aElementId === "sentence") {
-            field = document.getElementById("sent_words")
-            textField.id = "sent_word_id_" + i;
-            textField.value =  i.toString();
-
-        } else {
-            field = document.getElementById("align_words")
-            textField.id = "align_word_id_" + i;
+            container.appendChild(wordDIV);
         }
-        textField.setAttribute("x", aX);
-        textField.setAttribute("y", "0");
-        textField.setAttribute("size", "1");
-        textField.setAttribute("maxlength", "2");
-
-        field.appendChild(textField)
-
     }
 
-
-    refreshEditor(aEditor: string)
+    showDependencies()
     {
-        this.showText(aEditor);
+        let spans = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.spans;
+
+        for (let i = 0; i < document.getElementById("container_english").children.length - 2; i++) {
+            for (let j = 0; j < spans.length; j++) {
+                console.log(spans[j].begin)
+                console.log(spans[j].end)
+                console.log(Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[2]))
+                console.log(Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[3]))
+                if (spans[j].begin === Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[2]) &&
+                    spans[j].end === Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[3])) {
+                    document.getElementById("container_english").children[i + 2].children[1].setAttribute("style", "border = 2px solid " + spans[i].color);
+                    console.log("FOUND");
+                    break;
+                }
+            }
+        }
+
+        console.log("_______________________________")
+        for (let i = 0; i < document.getElementById("container_german").children.length - 2; i++) {
+            for (let j = 0; j < spans.length; j++) {
+                console.log(spans[j].begin)
+                console.log(spans[j].end)
+                console.log(Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[2]))
+                console.log(Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[3]))
+                if (spans[j].begin === Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[2]) &&
+                    spans[j].end === Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[3])) {
+                    document.getElementById("container_german").children[i + 2].children[1].style = "border = 2px solid " + spans[i].color;
+                    console.log("FOUND");
+                    break;
+                }
+            }
+        }
+
     }
+
+    refreshEditor()
+    {
+        this.showText("container_english");
+        this.showText("container_german");
+    }
+
+
 
 }

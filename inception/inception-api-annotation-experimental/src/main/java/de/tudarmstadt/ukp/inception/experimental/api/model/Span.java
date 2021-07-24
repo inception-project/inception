@@ -24,10 +24,10 @@ public class Span
     private int begin;
     private int end;
     private String type;
-    private String feature;
+    private String[] feature;
     private String color;
 
-    public Span(int aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, String aFeature)
+    public Span(int aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, String[] aFeature)
     {
         id = aId;
         begin = aBegin;
@@ -98,12 +98,12 @@ public class Span
         color = aColor;
     }
 
-    public String getFeature()
+    public String[] getFeature()
     {
         return feature;
     }
 
-    public void setFeature(String aFeature)
+    public void setFeature(String[] aFeature)
     {
         feature = aFeature;
     }

@@ -58,8 +58,6 @@ public interface AnnotationSystemAPI
 
     void handleDeleteRelation(DeleteRelationRequest aDeleteRelationRequest) throws IOException;
 
-    void handleSaveWordAlignment(SaveWordAlignmentRequest aSaveWordAlignmentRequest);
-
     void createErrorMessage(String aMessage, String aUser) throws IOException;
 
     void onFeatureUpdatedEventHandler(FeatureValueUpdatedEvent aEvent);

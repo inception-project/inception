@@ -25,8 +25,22 @@ import {DeleteSpanResponse} from "./messages/response/span/DeleteSpanResponse";
 import {SelectRelationResponse} from "./messages/response/relation/SelectRelationResponse";
 import {UpdateRelationResponse} from "./messages/response/relation/UpdateRelationResponse";
 import {CreateRelationResponse} from "./messages/response/relation/CreateRelationResponse";
+import {Span} from "./model/Span";
+import {Relation} from "./model/Relation";
+import {DeleteRelationResponse} from "./messages/response/relation/DeleteRelationResponse";
 
-export interface AnnotationExperienceAPI {
+export interface AnnotationExperienceAPI
+{
+    //Text and annotations
+    text: string[];
+    spans: Span[];
+    selectedSpan: Span;
+
+    relations: Relation[];
+    selectedRelation: Relation;
+
+    //Viewport
+    viewport: number[][];
 
     unsubscribe(aChannel: string);
 
@@ -34,12 +48,10 @@ export interface AnnotationExperienceAPI {
 
 
     requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                 aDocumentId: number, aViewportType: string, aViewport: number[][],
-                                 aRecommenderEnabled: boolean);
+                                 aDocumentId: number, aViewport: number[][]);
 
     requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                 aDocumentId: number, aViewportType: string, aViewport: number[][],
-                                 aRecommenderEnabled: boolean);
+                                 aDocumentId: number, aViewport: number[][]);
 
     requestSelectSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                 aDocumentId: number, aSpanAddress: number);
@@ -79,6 +91,8 @@ export interface AnnotationExperienceAPI {
     onSpanDelete(aMessage: DeleteSpanResponse);
 
     onRelationSelect(aMessage: SelectRelationResponse);
+
+    onRelationDelete(aMessage: DeleteRelationResponse);
 
     onRelationUpdate(aMessage: UpdateRelationResponse);
 

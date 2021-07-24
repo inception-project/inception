@@ -22,5 +22,6 @@ export class CreateSpanResponse
     begin : number;
     end : number;
     type : string;
+    feature : string[];
     color: string;
 }

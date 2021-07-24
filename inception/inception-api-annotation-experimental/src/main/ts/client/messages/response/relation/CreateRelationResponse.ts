@@ -2,13 +2,14 @@
 export class CreateRelationResponse
 {
 
-    relationAddress : string;
+    relationAddress : number;
     clientName : string;
     userName : string;
     projectId : number;
     documentId : number;
     governorId : number;
     dependentId : number;
+    color: string;
     governorCoveredText: string;
     dependentCoveredText: string;
     dependencyType : string;

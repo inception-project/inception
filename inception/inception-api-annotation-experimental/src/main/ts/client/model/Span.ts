@@ -23,9 +23,9 @@ export class Span
     begin: number;
     end: number;
     type: string;
-    feature: string;
+    feature: string[];
 
-    constructor(aId: number, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeature: string, aColor: string)
+    constructor(aId: number, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeature: string[], aColor: string)
     {
         this.id = aId;
         this.coveredText = aCoveredText;

@@ -24,22 +24,22 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 
 public class NewViewportResponse
 {
-    private Character[] viewportText;
+    private List<String> viewportText;
     private List<Span> spans;
     private List<Relation> relations;
 
-    public NewViewportResponse(Character[] aViewportText, List<Span> aSpans, List<Relation> aRelations)
+    public NewViewportResponse(List<String> aViewportText, List<Span> aSpans, List<Relation> aRelations)
     {
         viewportText = aViewportText;
         spans = aSpans;
         relations = aRelations;
     }
 
-    public Character[] getViewportText() {
+    public List<String> getViewportText() {
         return viewportText;
     }
 
-    public void setViewportText(Character[] aViewportText) {
+    public void setViewportText(List<String> aViewportText) {
         this.viewportText = aViewportText;
     }
 

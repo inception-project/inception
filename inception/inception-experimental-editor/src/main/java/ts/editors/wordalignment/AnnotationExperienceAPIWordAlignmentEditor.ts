@@ -24,9 +24,18 @@ export class AnnotationExperienceAPIWordAlignmentEditor
     annotationExperienceAPI: AnnotationExperienceAPIImpl;
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
     annotationExperienceAPIWordAlignmentEditorActionHandler: AnnotationExperienceAPIWordAlignmentEditorActionHandler
-    currentSentence : string[];
-    currentAlignment : string[];
-    currentSentenceCount : number = 0;
+    projectId: number;
+    clientName: string;
+
+    pairs : [string, string][];
+
+    originalLanguageSentence : string;
+    originalUser: string;
+    originalDocument: number;
+
+    translatedLanguageSentence: string;
+    translatedUser: string;
+    translatedDocument : number;
 
     constructor()
     {
@@ -34,22 +43,75 @@ export class AnnotationExperienceAPIWordAlignmentEditor
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler.registerDefaultActionHandler();
+
     }
 
     saveAlignments()
     {
-        let pairs : string = "";
-        for (let i = 0; i < document.getElementById("align_words").children.length; i++) {
-            for (let j = 0; j < document.getElementById("align_words").children.length; j++) {
-                if (document.getElementById("align_words").children[j].value == '') {
-                    continue;
-                }
-                if (document.getElementById("align_words").children[j].value == i) {
-                    pairs = pairs.concat(this.currentSentence[i] + ":" + this.currentAlignment[j] + ",")
+        let values = []
+        const that = this;
+        for (let i = 0; i < document.getElementById("container_german").children.length - 2; i++) {
+             if (values.indexOf(document.getElementById("container_german").children[i+2].children[1].value) > -1) {
+                 alert("Word alignment is not 1:1.")
+                 return;
+             }
+             values.push(document.getElementById("container_german").children[i+2].children[1].value)
+        }
+
+
+        this.projectId = this.annotationExperienceAPI.projectID
+        for (let i = 0; i < document.getElementById("container_english").children.length - 2; i++) {
+            for (let j = 0; j < document.getElementById("container_german").children.length - 2; j++) {
+                if ((document.getElementById("container_english").children[i + 2].children[0].value) ===
+                    (document.getElementById("container_german").children[j + 2].children[1].value)) {
+                    this.pairs.push([document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2],
+                        (document.getElementById("container_german").children[j + 2].children[0].id.split("_")[2])]);
+                    this.annotationExperienceAPI.requestCreateSpanFromServer(
+                        this.clientName,
+                        this.originalUser,
+                        this.projectId,
+                        this.originalDocument,
+                        Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2]),
+                        Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[3]),
+                        "Word_Alignment_Span",
+                        "Word_Alignment_Span")
+
+                    this.annotationExperienceAPI.requestCreateSpanFromServer(
+                        this.clientName,
+                        this.translatedUser,
+                        this.projectId,
+                        this.translatedDocument,
+                        Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[2]),
+                        Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[3]),
+                        "Word_Alignment_Span",
+                        "Word_Alignment_Span")
                 }
             }
         }
-        this.annotationExperienceAPI.requestSaveWordAlignment("admin","admin",
-            this.annotationExperienceAPI.projectID, this.currentSentenceCount, pairs)
+
+        console.log("-------------------------")
+       setTimeout(function () {
+           console.log(that.pairs);
+           let spans = that.annotationExperienceAPI.spans;
+           for (let i = 0; i < that.pairs.length; i++) {
+               for (let j = 0; j < spans.length; j++) {
+                   let gov, dep;
+                   console.log(that.pairs[i])
+                   console.log(spans[j])
+               }
+           }
+        /*
+           that.annotationExperienceAPI.requestCreateRelationFromServer(
+               that.clientName,
+               that.clientName,
+               that.projectId,
+               that.translatedDocument,null,null, "Word_Alignment_Relation", "Relation")
+
+         */
+       }, 4000)
+
     }
+//requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
+
+  //
 }

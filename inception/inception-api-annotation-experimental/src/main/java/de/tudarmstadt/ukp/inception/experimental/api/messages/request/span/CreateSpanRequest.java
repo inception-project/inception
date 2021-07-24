@@ -28,6 +28,7 @@ public class CreateSpanRequest
     private int end;
 
     private String type;
+    private String feature;
 
     public String getClientName()
     {
@@ -99,4 +100,13 @@ public class CreateSpanRequest
         type = aType;
     }
 
+    public String getFeature()
+    {
+        return feature;
+    }
+
+    public void setFeature(String aFeature)
+    {
+        feature = aFeature;
+    }
 }

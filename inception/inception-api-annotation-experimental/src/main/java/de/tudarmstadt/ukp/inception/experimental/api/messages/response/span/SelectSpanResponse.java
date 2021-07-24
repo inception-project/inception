@@ -23,9 +23,9 @@ public class SelectSpanResponse
 {
     private VID spanAddress;
     private String type;
-    private String feature;
+    private String[] feature;
 
-    public SelectSpanResponse(VID aSpanAddress, String aType, String aFeature)
+    public SelectSpanResponse(VID aSpanAddress, String aType, String[] aFeature)
     {
         spanAddress = aSpanAddress;
         type = aType;
@@ -51,12 +51,12 @@ public class SelectSpanResponse
         type = aType;
     }
 
-    public String getFeature()
+    public String[] getFeature()
     {
         return feature;
     }
 
-    public void setFeature(String aFeature)
+    public void setFeature(String[] aFeature)
     {
         feature = aFeature;
     }
