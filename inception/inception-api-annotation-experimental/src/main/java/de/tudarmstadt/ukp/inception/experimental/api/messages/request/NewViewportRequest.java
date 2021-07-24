@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
+import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
+
 public class NewViewportRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
-    private int[][] viewport;
+    private Viewport viewport;
 
     public String getClientName()
     {
@@ -65,12 +67,12 @@ public class NewViewportRequest
         documentId = aDocumentId;
     }
 
-    public int[][] getViewport()
+    public Viewport getViewport()
     {
         return viewport;
     }
 
-    public void setViewport(int[][] aViewport)
+    public void setViewport(Viewport aViewport)
     {
         viewport = aViewport;
     }

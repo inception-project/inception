@@ -35,7 +35,6 @@ import {Relation} from "./model/Relation";
 import {UpdateRelationResponse} from "./messages/response/relation/UpdateRelationResponse";
 import {CreateRelationResponse} from "./messages/response/relation/CreateRelationResponse";
 import {SelectRelationResponse} from "./messages/response/relation/SelectRelationResponse";
-import {SaveWordAlignmentRequest} from "./messages/request/SaveWordAlignmentRequest";
 import {SelectRelationRequest} from "./messages/request/relation/SelectRelationRequest";
 import {DeleteRelationRequest} from "./messages/request/relation/DeleteRelationRequest";
 import {UpdateRelationRequest} from "./messages/request/relation/UpdateRelationRequest";
@@ -45,6 +44,7 @@ import {AllSpanResponse} from "./messages/response/span/AllSpanResponse";
 import {AllRelationResponse} from "./messages/response/relation/AllRelationResponse";
 import {AllSpanRequest} from "./messages/request/span/AllSpanRequest";
 import {AllRelationRequest} from "./messages/request/relation/AllRelationRequest";
+import {Viewport} from "./model/Viewport";
 
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
@@ -65,7 +65,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     private _selectedRelation: Relation;
 
     //Viewport
-    private _viewport: number[][];
+    private _viewport: Viewport;
 
     constructor() {
         this.connect();
@@ -80,6 +80,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this._stompClient = Stomp.over(function () {
             return new WebSocket(localStorage.getItem("url"));
         });
+
+        this._viewport = new Viewport([[30,40],[40,50],[0,12],[17,18],[19,19]]);
 
         const that = this;
 
@@ -143,8 +145,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     multipleSubscriptions()
     {
         const that = this;
-        for (let i = 0; i < this._viewport.length; i++) {
-            for (let j = this._viewport[i][0]; j <= this._viewport[i][1]; j++) {
+        for (let i = 0; i < this._viewport._viewports.length; i++) {
+            for (let j = this._viewport._viewports[i][0]; j <= this._viewport._viewports[i][1]; j++) {
 
                 this._stompClient.subscribe("/topic/span_update_for_clients/" +
                     this._projectID + "/" +
@@ -199,7 +201,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this._stompClient.deactivate();
     }
 
-    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number, aViewport: number[][]) {
+    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number, aViewport: Viewport) {
         const that = this;
         this._viewport = aViewport;
         that._stompClient.publish({
@@ -208,7 +210,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-    requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewport: number[][]) {
+    requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport) {
         this._viewport = aViewport;
         this._stompClient.publish({
             destination: "/app/new_viewport_from_client",
@@ -471,11 +473,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this._selectedRelation = value;
     }
 
-    get viewport(): number[][] {
+    get viewport(): Viewport {
         return this._viewport;
     }
 
-    set viewport(value: number[][]) {
+    set viewport(value: Viewport) {
         this._viewport = value;
     }
 }

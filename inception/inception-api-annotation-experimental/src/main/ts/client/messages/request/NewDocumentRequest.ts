@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Viewport} from "../../model/Viewport";
+
 export class NewDocumentRequest {
     clientName: string;
     userName: string;
     projectId: number;
-    viewport: number[][];
+    viewport: Viewport;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aViewport: number[][]) {
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aViewport: Viewport) {
         this.clientName = aClientName;
         this.userName = aUserName;
         this.projectId = aProjectId;

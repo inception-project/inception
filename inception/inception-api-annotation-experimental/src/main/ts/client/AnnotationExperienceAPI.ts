@@ -30,6 +30,7 @@ import {Relation} from "./model/Relation";
 import {DeleteRelationResponse} from "./messages/response/relation/DeleteRelationResponse";
 import {AllRelationResponse} from "./messages/response/relation/AllRelationResponse";
 import {AllSpanResponse} from "./messages/response/span/AllSpanResponse";
+import {Viewport} from "./model/Viewport";
 
 export interface AnnotationExperienceAPI
 {
@@ -42,7 +43,7 @@ export interface AnnotationExperienceAPI
     selectedRelation: Relation;
 
     //Viewport
-    viewport: number[][];
+    viewport: Viewport;
 
     unsubscribe(aChannel: string);
 
@@ -50,10 +51,10 @@ export interface AnnotationExperienceAPI
 
 
     requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                 aViewport: number[][]);
+                                 aViewport: Viewport);
 
     requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                 aDocumentId: number, aViewport: number[][]);
+                                 aDocumentId: number, aViewport: Viewport);
 
     requestSelectSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                 aDocumentId: number, aSpanAddress: number);

@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.Dele
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Relation;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
+import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
 
 @Component
@@ -554,13 +555,14 @@ public class AnnotationSystemAPIImpl
         }
     }
 
-    public List<String> getViewportText(CAS aCas, int[][] aViewport)
+    public List<String> getViewportText(CAS aCas, Viewport aViewport)
     {
         List<String> viewport = new ArrayList<>();
         String text = aCas.getDocumentText();
 
-        for (int i = 0; i < aViewport.length; i++) {
-            String sentence = text.substring(aViewport[i][0], aViewport[i][1]);
+        for (int i = 0; i < aViewport.getViewport().size(); i++) {
+            String sentence = text.substring(aViewport.getViewport().get(i).get(0),
+                    aViewport.getViewport().get(i).get(1));
             viewport.add(sentence);
         }
         return viewport;
@@ -606,12 +608,13 @@ public class AnnotationSystemAPIImpl
         return feature.toArray(new String[0]);
     }
 
-    public List<Span> filterSpans(List<Span> aAnnotations, int[][] aViewport)
+    public List<Span> filterSpans(List<Span> aAnnotations, Viewport aViewport)
     {
         List<Span> filteredAnnotations = new ArrayList<>();
         for (Span annotation : aAnnotations) {
-            for (int i = 0; i < aViewport.length; i++) {
-                for (int j = aViewport[i][0]; j <= aViewport[i][1]; j++) {
+            for (int i = 0; i < aViewport.getViewport().size(); i++) {
+                for (int j = aViewport.getViewport().get(i).get(0); j <= aViewport.getViewport()
+                        .get(i).get(1); j++) {
                     if (annotation.getBegin() == j) {
                         filteredAnnotations.add(annotation);
                         break;
@@ -622,7 +625,7 @@ public class AnnotationSystemAPIImpl
         return filteredAnnotations;
     }
 
-    public List<Relation> filterRelations(List<Relation> aRelations, CAS aCas, int[][] aViewport)
+    public List<Relation> filterRelations(List<Relation> aRelations, CAS aCas, Viewport aViewport)
     {
         List<Relation> filteredRelations = new ArrayList<>();
 
@@ -630,8 +633,9 @@ public class AnnotationSystemAPIImpl
             AnnotationFS annotation = selectAnnotationByAddr(aCas,
                     relation.getGovernorId().getId());
 
-            for (int i = 0; i < aViewport.length; i++) {
-                for (int j = aViewport[i][0]; j <= aViewport[i][1]; j++) {
+            for (int i = 0; i < aViewport.getViewport().size(); i++) {
+                for (int j = aViewport.getViewport().get(i).get(0); j <= aViewport.getViewport()
+                        .get(i).get(1); j++) {
                     if (annotation.getBegin() == j) {
                         filteredRelations.add(relation);
                         break;
