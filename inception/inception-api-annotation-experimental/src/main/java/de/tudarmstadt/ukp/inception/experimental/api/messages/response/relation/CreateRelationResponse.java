@@ -33,7 +33,10 @@ public class CreateRelationResponse
     private String dependencyType;
     private String flavor;
 
-    public CreateRelationResponse(VID aRelationAddress, String aClientName, String aUserName, long aProjectId, long aDocumentId, VID aGovernorId, VID aDependentId, String aGovernorCoveredText, String aDependentCoveredText, String aDependencyType, String aFlavor)
+    public CreateRelationResponse(VID aRelationAddress, String aClientName, String aUserName,
+            long aProjectId, long aDocumentId, VID aGovernorId, VID aDependentId,
+            String aGovernorCoveredText, String aDependentCoveredText, String aDependencyType,
+            String aFlavor)
     {
         relationAddress = aRelationAddress;
         clientName = aClientName;

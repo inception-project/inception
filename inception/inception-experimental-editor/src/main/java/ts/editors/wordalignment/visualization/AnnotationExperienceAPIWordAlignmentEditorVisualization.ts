@@ -70,7 +70,6 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
             for (let i = 0; i < spans.length; i++) {
                 if (spans[i].begin === Number(wordLABEL.id.split("_")[2]) &&
                     spans[i].end === Number(wordLABEL.id.split("_")[3])) {
-                    console.log("FOUND for: " + wordLABEL.innerText + ", COLOR: " +  spans[i].color)
                     wordLABEL.style.border = "2px solid " + spans[i].color;
                     break;
                 }
@@ -107,30 +106,20 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
 
         for (let i = 0; i < document.getElementById("container_english").children.length - 2; i++) {
             for (let j = 0; j < spans.length; j++) {
-                console.log(spans[j].begin)
-                console.log(spans[j].end)
-                console.log(Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[2]))
-                console.log(Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[3]))
                 if (spans[j].begin === Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[2]) &&
                     spans[j].end === Number(document.getElementById("container_english").children[i+2].children[1].id.split("_")[3])) {
                     document.getElementById("container_english").children[i + 2].children[1].setAttribute("style", "border = 2px solid " + spans[i].color);
-                    console.log("FOUND");
                     break;
                 }
             }
         }
 
-        console.log("_______________________________")
         for (let i = 0; i < document.getElementById("container_german").children.length - 2; i++) {
             for (let j = 0; j < spans.length; j++) {
-                console.log(spans[j].begin)
-                console.log(spans[j].end)
-                console.log(Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[2]))
-                console.log(Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[3]))
                 if (spans[j].begin === Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[2]) &&
                     spans[j].end === Number(document.getElementById("container_german").children[i+2].children[0].id.split("_")[3])) {
                     document.getElementById("container_german").children[i + 2].children[1].style = "border = 2px solid " + spans[i].color;
-                    console.log("FOUND");
+
                     break;
                 }
             }

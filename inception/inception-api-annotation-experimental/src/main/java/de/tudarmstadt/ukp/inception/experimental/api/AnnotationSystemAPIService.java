@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api;
 
+//TODO will be deleted
+//however remains until I am sure I that I do never need such a service class
 public interface AnnotationSystemAPIService
 {
 

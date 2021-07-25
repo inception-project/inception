@@ -89,9 +89,7 @@ export class AnnotationExperienceAPIWordAlignmentEditor
             }
         }
 
-        console.log("-------------------------")
        setTimeout(function () {
-           console.log(that.pairs);
            let spans = that.annotationExperienceAPI.spans;
            for (let i = 0; i < that.pairs.length; i++) {
                for (let j = 0; j < spans.length; j++) {

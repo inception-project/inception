@@ -19,10 +19,23 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.*;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.AllRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.AllSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
 
 public interface AnnotationSystemAPI
 {

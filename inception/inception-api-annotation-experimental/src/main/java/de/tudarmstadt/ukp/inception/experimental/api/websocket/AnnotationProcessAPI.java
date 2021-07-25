@@ -19,10 +19,22 @@ package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.*;
 import org.springframework.messaging.Message;
+
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.AllRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.UpdateRelationResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.AllSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanResponse;
+
 
 public interface AnnotationProcessAPI
 {

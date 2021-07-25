@@ -24,7 +24,6 @@ public class ErrorMessage
     public ErrorMessage(String aMessage)
     {
         errorMessage = aMessage;
-
     }
 
     public String getErrormessage()
@@ -34,7 +33,6 @@ public class ErrorMessage
 
     public void setErrorMessage(String aErrormessage)
     {
-
         errorMessage = aErrormessage;
     }
 }

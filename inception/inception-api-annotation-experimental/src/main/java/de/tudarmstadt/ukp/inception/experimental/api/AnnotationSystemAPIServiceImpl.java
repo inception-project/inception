@@ -27,6 +27,9 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
+
+//TODO will be deleted
+//however remains until I am sure I that I do never need such a service class
 @Component
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
 public class AnnotationSystemAPIServiceImpl

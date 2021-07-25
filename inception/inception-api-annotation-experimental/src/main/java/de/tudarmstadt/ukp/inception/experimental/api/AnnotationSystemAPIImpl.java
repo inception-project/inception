@@ -23,8 +23,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.lang.Math.toIntExact;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectAllFS;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +34,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
@@ -44,7 +47,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.*;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -57,8 +64,16 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.*;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.*;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.AllRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.AllSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
@@ -80,6 +95,8 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
 public class AnnotationSystemAPIImpl
     implements AnnotationSystemAPI
 {
+    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
+
     private final AnnotationSchemaService annotationService;
     private final ProjectService projectService;
     private final DocumentService documentService;
@@ -112,7 +129,6 @@ public class AnnotationSystemAPIImpl
     public void handleNewDocument(NewDocumentRequest aNewDocumentRequest) throws IOException
     {
         try {
-
             // TODO server decide on next document
             long documentID = 41714;
 
@@ -130,7 +146,8 @@ public class AnnotationSystemAPIImpl
                     aNewDocumentRequest.getClientName());
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleNewDocument()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aNewDocumentRequest.getClientName());
         }
 
@@ -139,37 +156,55 @@ public class AnnotationSystemAPIImpl
     @Override
     public void handleNewViewport(NewViewportRequest aNewViewportRequest) throws IOException
     {
-        CAS cas = getCasForDocument(aNewViewportRequest.getUserName(),
-                aNewViewportRequest.getProjectId(), aNewViewportRequest.getDocumentId());
+        try {
+            CAS cas = getCasForDocument(aNewViewportRequest.getUserName(),
+                    aNewViewportRequest.getProjectId(), aNewViewportRequest.getDocumentId());
 
-        NewViewportResponse message = new NewViewportResponse(
-                getViewportText(cas, aNewViewportRequest.getViewport()),
-                filterSpans(getSpans(cas, aNewViewportRequest.getProjectId()),
-                        aNewViewportRequest.getViewport()),
-                filterRelations(getRelations(cas, aNewViewportRequest.getProjectId()), cas,
-                        aNewViewportRequest.getViewport()));
+            NewViewportResponse message = new NewViewportResponse(
+                    getViewportText(cas, aNewViewportRequest.getViewport()),
+                    filterSpans(getSpans(cas, aNewViewportRequest.getProjectId()),
+                            aNewViewportRequest.getViewport()),
+                    filterRelations(getRelations(cas, aNewViewportRequest.getProjectId()), cas,
+                            aNewViewportRequest.getViewport()));
 
-        annotationProcessAPI.sendNewViewportResponse(message, aNewViewportRequest.getClientName());
+            annotationProcessAPI.sendNewViewportResponse(message,
+                    aNewViewportRequest.getClientName());
+
+        }
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during handleNewViewport()");
+            LOG.error("CAUSE: " + e.getCause());
+            createErrorMessage(e.getMessage(), aNewViewportRequest.getClientName());
+        }
+
     }
 
     @Override
     public void handleSelectSpan(SelectSpanRequest aSelectSpanRequest) throws IOException
     {
-        CAS cas = getCasForDocument(aSelectSpanRequest.getUserName(),
-                aSelectSpanRequest.getProjectId(), aSelectSpanRequest.getDocumentId());
-        AnnotationFS span = selectAnnotationByAddr(cas,
-                aSelectSpanRequest.getSpanAddress().getId());
+        try {
+            CAS cas = getCasForDocument(aSelectSpanRequest.getUserName(),
+                    aSelectSpanRequest.getProjectId(), aSelectSpanRequest.getDocumentId());
+            AnnotationFS span = selectAnnotationByAddr(cas,
+                    aSelectSpanRequest.getSpanAddress().getId());
 
-        SelectSpanResponse message = new SelectSpanResponse(
-                VID.parse(String.valueOf(span.getAddress())), span.getType().getShortName(),
-                getFeatureForSpan(span));
+            SelectSpanResponse message = new SelectSpanResponse(
+                    VID.parse(String.valueOf(span.getAddress())), span.getType().getShortName(),
+                    getFeatureForSpan(span));
 
-        annotationProcessAPI.sendSelectAnnotationResponse(message,
-                aSelectSpanRequest.getClientName());
+            annotationProcessAPI.sendSelectAnnotationResponse(message,
+                    aSelectSpanRequest.getClientName());
+
+        }
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during handleSelectSpan()");
+            LOG.error("CAUSE: " + e.getCause());
+            createErrorMessage(e.getMessage(), aSelectSpanRequest.getClientName());
+        }
     }
 
     @Override
-    public void handleUpdateSpan(UpdateSpanRequest aUpdateSpanRequest)
+    public void handleUpdateSpan(UpdateSpanRequest aUpdateSpanRequest) throws IOException
     {
         try {
             CAS cas = getCasForDocument(aUpdateSpanRequest.getUserName(),
@@ -180,9 +215,10 @@ public class AnnotationSystemAPIImpl
             // TODO update feature
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleUpdateSpan()");
+            LOG.error("CAUSE: " + e.getCause());
+            createErrorMessage(e.getMessage(), aUpdateSpanRequest.getClientName());
         }
-
     }
 
     @Override
@@ -202,7 +238,6 @@ public class AnnotationSystemAPIImpl
                 if (a.getName().contains(aCreateSpanRequest.getType())) {
                     layer = a.getName();
                 }
-                System.out.println(a.getName());
             }
 
             TypeAdapter adapter = annotationService.getAdapter(annotationService.findLayer(
@@ -215,7 +250,8 @@ public class AnnotationSystemAPIImpl
                     aCreateSpanRequest.getEnd());
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleCreateSpan()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aCreateSpanRequest.getClientName());
         }
     }
@@ -244,7 +280,8 @@ public class AnnotationSystemAPIImpl
                     VID.parse(String.valueOf(aDeleteSpanRequest.getSpanAddress())));
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleDeleteSpan()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aDeleteSpanRequest.getClientName());
         }
     }
@@ -305,6 +342,7 @@ public class AnnotationSystemAPIImpl
             features.clear();
             features = dependent.getType().getFeatures();
 
+            // TODO to be optimzed
             for (int i = 3; i < 8; i++) {
                 if (dependent.getFeatureValue(features.get(i)) != null) {
                     AnnotationFS depAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(cas,
@@ -322,7 +360,8 @@ public class AnnotationSystemAPIImpl
                     aSelectRelationRequest.getClientName());
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleSelectRelation()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aSelectRelationRequest.getClientName());
         }
     }
@@ -335,7 +374,8 @@ public class AnnotationSystemAPIImpl
             // TODO
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleUpdateRelation()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aUpdateRelationRequest.getClientName());
         }
     }
@@ -370,7 +410,8 @@ public class AnnotationSystemAPIImpl
                     aCreateRelationRequest.getUserName(), governor, dependent, cas);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleCreateRelation()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aCreateRelationRequest.getClientName());
         }
     }
@@ -401,7 +442,8 @@ public class AnnotationSystemAPIImpl
                     VID.parse(String.valueOf(aDeleteRelationRequest.getRelationAddress())));
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleDeleteRelation()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aDeleteRelationRequest.getClientName());
         }
     }
@@ -420,7 +462,8 @@ public class AnnotationSystemAPIImpl
 
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleAllSpans()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aAllSpanRequest.getClientName());
         }
     }
@@ -440,7 +483,8 @@ public class AnnotationSystemAPIImpl
 
         }
         catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Exception has been thrown during handleAllRelations()");
+            LOG.error("CAUSE: " + e.getCause());
             createErrorMessage(e.getMessage(), aAllRelationRequest.getClientName());
         }
 
@@ -517,8 +561,6 @@ public class AnnotationSystemAPIImpl
     @EventListener
     public void onRelationDeletedEventHandler(RelationDeletedEvent aEvent) throws IOException
     {
-        System.out.println(aEvent.getRequestTarget().toString());
-        System.out.println(aEvent.getSource());
         DeleteRelationResponse response = new DeleteRelationResponse(
                 VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())));
 
@@ -540,7 +582,7 @@ public class AnnotationSystemAPIImpl
      *
      **/
 
-    public CAS getCasForDocument(String aUser, long aProject, long aDocument)
+    public CAS getCasForDocument(String aUser, long aProject, long aDocument) throws Exception
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
@@ -550,100 +592,140 @@ public class AnnotationSystemAPIImpl
             return cas;
         }
         catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            LOG.error("Exception has been thrown during getCasForDocument()");
+            LOG.error("CAUSE: " + e.getCause());
+            throw new Exception();
         }
     }
 
-    public List<String> getViewportText(CAS aCas, Viewport aViewport)
+    public List<String> getViewportText(CAS aCas, Viewport aViewport) throws Exception
     {
-        List<String> viewport = new ArrayList<>();
-        String text = aCas.getDocumentText();
+        try {
+            List<String> viewport = new ArrayList<>();
+            String text = aCas.getDocumentText();
 
-        for (int i = 0; i < aViewport.getViewport().size(); i++) {
-            String sentence = text.substring(aViewport.getViewport().get(i).get(0),
-                    aViewport.getViewport().get(i).get(1));
-            viewport.add(sentence);
-        }
-        return viewport;
-    }
-
-    public List<Span> getSpans(CAS aCas, long aProject)
-    {
-        List<Span> annotations = new ArrayList<>();
-
-        for (FeatureStructure fs : selectAllFS(aCas)) {
-            if (fs.getType().getShortName().equals("Token")
-                    || fs.getType().getShortName().equals("DocumentMetaData")
-                    || fs.getType().getShortName().equals("Sentence")
-                    || fs.getType().getShortName().equals("CoreferenceChain")
-                    || fs.getType().getShortName().equals("CASMetadata")) {
-                continue;
-            }
-            AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
-                    WebAnnoCasUtil.getAddr(fs));
-
-            Span span = new Span(annotation._id(), annotation.getBegin(), annotation.getEnd(),
-                    annotation.getType().getShortName(),
-                    getColorForAnnotation(annotation, projectService.getProject(aProject)),
-                    annotation.getCoveredText(), getFeatureForSpan(annotation));
-            span.setColor(getColorForAnnotation(annotation, projectService.getProject(aProject)));
-            annotations.add(span);
-        }
-
-        return annotations;
-    }
-
-    public String[] getFeatureForSpan(AnnotationFS aSpan)
-    {
-        List<String> feature = new ArrayList<>();
-
-        for (Feature f : aSpan.getType().getFeatures()) {
-            if (f.getRange().getName().equals("uima.cas.String")) {
-                if (aSpan.getStringValue(f) != null) {
-                    feature.add(aSpan.getStringValue(f));
-                }
-            }
-        }
-        return feature.toArray(new String[0]);
-    }
-
-    public List<Span> filterSpans(List<Span> aAnnotations, Viewport aViewport)
-    {
-        List<Span> filteredAnnotations = new ArrayList<>();
-        for (Span annotation : aAnnotations) {
             for (int i = 0; i < aViewport.getViewport().size(); i++) {
-                for (int j = aViewport.getViewport().get(i).get(0); j <= aViewport.getViewport()
-                        .get(i).get(1); j++) {
-                    if (annotation.getBegin() == j) {
-                        filteredAnnotations.add(annotation);
-                        break;
+                String sentence = text.substring(aViewport.getViewport().get(i).get(0),
+                        aViewport.getViewport().get(i).get(1));
+                viewport.add(sentence);
+            }
+            return viewport;
+        }
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during getViewportText()");
+            LOG.error("CAUSE: " + e.getCause());
+            throw new Exception();
+        }
+    }
+
+    public List<Span> getSpans(CAS aCas, long aProject) throws Exception
+    {
+        try {
+            List<Span> annotations = new ArrayList<>();
+
+            for (FeatureStructure fs : selectAllFS(aCas)) {
+                if (fs.getType().getShortName().equals("Token")
+                        || fs.getType().getShortName().equals("DocumentMetaData")
+                        || fs.getType().getShortName().equals("Sentence")
+                        || fs.getType().getShortName().equals("CoreferenceChain")
+                        || fs.getType().getShortName().equals("CASMetadata")) {
+                    continue;
+                }
+                AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                        WebAnnoCasUtil.getAddr(fs));
+
+                Span span = new Span(annotation._id(), annotation.getBegin(), annotation.getEnd(),
+                        annotation.getType().getShortName(),
+                        getColorForAnnotation(annotation, projectService.getProject(aProject)),
+                        annotation.getCoveredText(), getFeatureForSpan(annotation));
+                span.setColor(
+                        getColorForAnnotation(annotation, projectService.getProject(aProject)));
+                annotations.add(span);
+            }
+
+            return annotations;
+
+        }
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during getSpans()");
+            LOG.error("CAUSE: " + e.getCause());
+            throw new Exception();
+        }
+    }
+
+    public String[] getFeatureForSpan(AnnotationFS aSpan) throws Exception
+    {
+        try {
+            List<String> feature = new ArrayList<>();
+
+            for (Feature f : aSpan.getType().getFeatures()) {
+                if (f.getRange().getName().equals("uima.cas.String")) {
+                    if (aSpan.getStringValue(f) != null) {
+                        feature.add(aSpan.getStringValue(f));
                     }
                 }
             }
+            return feature.toArray(new String[0]);
         }
-        return filteredAnnotations;
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during getFeatureForSpan()");
+            LOG.error("CAUSE: " + e.getCause());
+            throw new Exception();
+        }
+    }
+
+    public List<Span> filterSpans(List<Span> aAnnotations, Viewport aViewport) throws Exception
+    {
+        try {
+            List<Span> filteredAnnotations = new ArrayList<>();
+            for (Span annotation : aAnnotations) {
+                for (int i = 0; i < aViewport.getViewport().size(); i++) {
+                    for (int j = aViewport.getViewport().get(i).get(0); j <= aViewport.getViewport()
+                            .get(i).get(1); j++) {
+                        if (annotation.getBegin() == j) {
+                            filteredAnnotations.add(annotation);
+                            break;
+                        }
+                    }
+                }
+            }
+            return filteredAnnotations;
+        }
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during filterSpans()");
+            LOG.error("CAUSE: " + e.getCause());
+            throw new Exception();
+        }
     }
 
     public List<Relation> filterRelations(List<Relation> aRelations, CAS aCas, Viewport aViewport)
+        throws Exception
     {
-        List<Relation> filteredRelations = new ArrayList<>();
+        try {
+            List<Relation> filteredRelations = new ArrayList<>();
 
-        for (Relation relation : aRelations) {
-            AnnotationFS annotation = selectAnnotationByAddr(aCas,
-                    relation.getGovernorId().getId());
+            for (Relation relation : aRelations) {
+                AnnotationFS annotation = selectAnnotationByAddr(aCas,
+                        relation.getGovernorId().getId());
 
-            for (int i = 0; i < aViewport.getViewport().size(); i++) {
-                for (int j = aViewport.getViewport().get(i).get(0); j <= aViewport.getViewport()
-                        .get(i).get(1); j++) {
-                    if (annotation.getBegin() == j) {
-                        filteredRelations.add(relation);
-                        break;
+                for (int i = 0; i < aViewport.getViewport().size(); i++) {
+                    for (int j = aViewport.getViewport().get(i).get(0); j <= aViewport.getViewport()
+                            .get(i).get(1); j++) {
+                        if (annotation.getBegin() == j) {
+                            filteredRelations.add(relation);
+                            break;
+                        }
                     }
                 }
             }
+            return filteredRelations;
+
         }
-        return filteredRelations;
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during filterRelations()");
+            LOG.error("CAUSE: " + e.getCause());
+            throw new Exception();
+        }
     }
 
     public String getColorForAnnotation(AnnotationFS aAnnotation, Project aProject)
@@ -657,78 +739,90 @@ public class AnnotationSystemAPIImpl
                     % PALETTE_NORMAL_FILTERED.length];
         }
         catch (Exception e) {
+            LOG.error("Exception has been thrown during getColorForAnnotation()");
+            LOG.error("CAUSE: " + e.getCause());
+            LOG.info(
+                    "First entry of PALETTE_NORMAL_FILTERED WAS PICKED DUE TO ERROR. SEE SERVER LOG FOR FURTHER DETAILS.");
             return PALETTE_NORMAL_FILTERED[0];
         }
     }
 
-    public List<Relation> getRelations(CAS aCas, long aProject)
+    public List<Relation> getRelations(CAS aCas, long aProject) throws Exception
     {
-        List<Relation> relations = new ArrayList<>();
+        try {
+            List<Relation> relations = new ArrayList<>();
 
-        for (FeatureStructure fs : selectAllFS(aCas)) {
-            if (fs.getType().getShortName().equals("Dependency")) {
-                AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
-                        WebAnnoCasUtil.getAddr(fs));
+            for (FeatureStructure fs : selectAllFS(aCas)) {
+                if (fs.getType().getShortName().equals("Dependency")) {
+                    AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                            WebAnnoCasUtil.getAddr(fs));
 
-                String flavor = null;
-                String dependencyType = null;
-                FeatureStructure governor = null;
-                FeatureStructure dependent = null;
-                VID governorID = null;
-                VID dependentID = null;
-                String governorCoveredText = null;
-                String dependentCoveredText = null;
-                String color = getColorForAnnotation(annotation,
-                        projectService.getProject(aProject));
+                    String flavor = null;
+                    String dependencyType = null;
+                    FeatureStructure governor = null;
+                    FeatureStructure dependent = null;
+                    VID governorID = null;
+                    VID dependentID = null;
+                    String governorCoveredText = null;
+                    String dependentCoveredText = null;
+                    String color = getColorForAnnotation(annotation,
+                            projectService.getProject(aProject));
 
-                for (Feature f : annotation.getType().getFeatures()) {
+                    for (Feature f : annotation.getType().getFeatures()) {
 
-                    if (f.getName().equals(
-                            "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Governor")) {
-                        governor = fs.getFeatureValue(f);
+                        if (f.getName().equals(
+                                "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Governor")) {
+                            governor = fs.getFeatureValue(f);
+                        }
+                        if (f.getName().equals(
+                                "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Dependent")) {
+                            dependent = fs.getFeatureValue(f);
+                        }
+                        if (f.getName().equals(
+                                "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:DependencyType")) {
+                            dependencyType = fs.getStringValue(f);
+                        }
+                        if (f.getName().equals(
+                                "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:flavor")) {
+                            flavor = fs.getStringValue(f);
+                        }
                     }
-                    if (f.getName().equals(
-                            "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:Dependent")) {
-                        dependent = fs.getFeatureValue(f);
+
+                    List<Feature> features = governor.getType().getFeatures();
+                    for (int i = 3; i < 8; i++) {
+                        if (governor.getFeatureValue(features.get(i)) != null) {
+                            AnnotationFS govAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                                    WebAnnoCasUtil.getAddr(governor));
+                            governorID = VID.parse(String.valueOf(govAnnotation._id()));
+                            governorCoveredText = govAnnotation.getCoveredText();
+                            break;
+                        }
                     }
-                    if (f.getName().equals(
-                            "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:DependencyType")) {
-                        dependencyType = fs.getStringValue(f);
+                    features.clear();
+                    features = dependent.getType().getFeatures();
+                    for (int i = 3; i < 8; i++) {
+                        if (dependent.getFeatureValue(features.get(i)) != null) {
+                            AnnotationFS depAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                                    WebAnnoCasUtil.getAddr(dependent));
+                            dependentID = VID.parse(String.valueOf(depAnnotation._id()));
+                            dependentCoveredText = depAnnotation.getCoveredText();
+                            break;
+                        }
                     }
-                    if (f.getName().equals(
-                            "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:flavor")) {
-                        flavor = fs.getStringValue(f);
-                    }
+
+                    relations.add(new Relation(VID.parse(String.valueOf(annotation._id())),
+                            governorID, dependentID, color, dependencyType, flavor,
+                            governorCoveredText, dependentCoveredText));
                 }
-
-                List<Feature> features = governor.getType().getFeatures();
-                for (int i = 3; i < 8; i++) {
-                    if (governor.getFeatureValue(features.get(i)) != null) {
-                        AnnotationFS govAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
-                                WebAnnoCasUtil.getAddr(governor));
-                        governorID = VID.parse(String.valueOf(govAnnotation._id()));
-                        governorCoveredText = govAnnotation.getCoveredText();
-                        break;
-                    }
-                }
-                features.clear();
-                features = dependent.getType().getFeatures();
-                for (int i = 3; i < 8; i++) {
-                    if (dependent.getFeatureValue(features.get(i)) != null) {
-                        AnnotationFS depAnnotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
-                                WebAnnoCasUtil.getAddr(dependent));
-                        dependentID = VID.parse(String.valueOf(depAnnotation._id()));
-                        dependentCoveredText = depAnnotation.getCoveredText();
-                        break;
-                    }
-                }
-
-                relations.add(new Relation(VID.parse(String.valueOf(annotation._id())), governorID,
-                        dependentID, color, dependencyType, flavor, governorCoveredText,
-                        dependentCoveredText));
             }
+            return relations;
+
         }
-        return relations;
+        catch (Exception e) {
+            LOG.error("Exception has been thrown during getRelations()");
+            LOG.error("CAUSE: " + e.getCause());
+            throw new Exception();
+        }
     }
 
     public void getRecommendations(CAS aCas, long aProject)

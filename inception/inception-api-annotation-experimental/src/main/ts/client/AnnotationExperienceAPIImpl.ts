@@ -145,8 +145,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     multipleSubscriptions()
     {
         const that = this;
-        for (let i = 0; i < this._viewport._viewports.length; i++) {
-            for (let j = this._viewport._viewports[i][0]; j <= this._viewport._viewports[i][1]; j++) {
+        for (let i = 0; i < this._viewport.viewport.length; i++) {
+            for (let j = this._viewport.viewport[i][0]; j <= this._viewport.viewport[i][1]; j++) {
 
                 this._stompClient.subscribe("/topic/span_update_for_clients/" +
                     this._projectID + "/" +
@@ -301,9 +301,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     onNewDocument(aMessage: NewDocumentResponse)
     {
-        console.log("RECEIVED DOCUMENT");
-        console.log(aMessage);
-
         this._documentID = aMessage.documentId;
         this._text = aMessage.viewportText;
         this._spans = aMessage.spans;
@@ -314,9 +311,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     onNewViewport(aMessage: NewViewportResponse)
     {
-        console.log('RECEIVED VIEWPORT');
-        console.log(aMessage);
-
         this._text = aMessage.viewportText;
         this._spans = aMessage.spans;
         this._relations = aMessage.relations;
@@ -325,7 +319,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     }
 
     onSpanDelete(aMessage: DeleteSpanResponse) {
-        console.log('RECEIVED ANNOTATION DELETE');
         this._spans.forEach((item, index) => {
             if (item.id.toString() === aMessage.spanAddress.toString()) {
                 this._spans.splice(index, 1);
@@ -334,14 +327,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     }
 
     onSpanCreate(aMessage: CreateSpanResponse) {
-        console.log('RECEIVED CREATE ANNOTATIONS');
         let span = new Span(aMessage.spanAddress, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color)
         this.spans.push(span)
     }
 
     onSpanSelect(aMessage: SelectSpanResponse) {
-        console.log('RECEIVED SELECTED ANNOTATION');
-        console.log(aMessage);
         this._selectedSpan = new Span(aMessage.spanAddress, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color)
     }
 
@@ -353,23 +343,17 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     onRelationSelect(aMessage: SelectRelationResponse)
     {
-        console.log('RECEIVED SELECT RELATION');
-        console.log(aMessage);
         this.selectedRelation = new Relation(aMessage.relationAddress,aMessage.governorId, aMessage.dependentId,aMessage.governorCoveredText, aMessage.dependentCoveredText, aMessage.color, aMessage.dependencyType, aMessage.flavor)
     }
 
     onRelationCreate(aMessage: CreateRelationResponse)
     {
-        console.log('RECEIVED CREATE RELATION');
-        console.log(aMessage);
         let relation = new Relation(aMessage.relationAddress, aMessage.governorId, aMessage.dependentId,aMessage.governorCoveredText, aMessage.dependentCoveredText, aMessage.color, aMessage.dependencyType, aMessage.flavor)
         this.relations.push(relation)
     }
 
     onRelationDelete(aMessage: DeleteRelationResponse)
     {
-        console.log('RECEIVED DELETE RELATION');
-        console.log(aMessage);
         this._relations.forEach((item, index) => {
             if (item.id.toString() === aMessage.relationAddress.toString()) {
                 this._spans.splice(index, 1);
@@ -384,16 +368,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     onAllSpans(aMessage: AllSpanResponse)
     {
-
-        console.log('RECEIVED ALL SPANS');
-        console.log(aMessage);
         this.spans = aMessage.span;
     }
 
     onAllRelations(aMessage: AllRelationResponse)
     {
-        console.log('RECEIVED ALL RELATIONS');
-        console.log(aMessage);
         this.relations = aMessage.relation;
     }
 
@@ -401,8 +380,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     onError(aMessage: ErrorMessage) {
         console.log('RECEIVED ERROR MESSAGE');
         console.log(aMessage);
-
-        console.log(aMessage.errorMessage)
     }
 
     /**

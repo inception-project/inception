@@ -18,6 +18,7 @@
 
 import {AnnotationExperienceAPI} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
 import {AnnotationExperienceAPIWordAlignmentEditor} from "../AnnotationExperienceAPIWordAlignmentEditor";
+import {Viewport} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Viewport";
 
 export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
     annotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor;
@@ -31,15 +32,14 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
         let that = this;
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
-            console.log(elem)
             if (elem.id === 'next_sentence') {
-                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41718, [[0,15]])
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, new Viewport([[0,15]]));
 
                 setTimeout(function () {
                     that.annotationExperienceAPIWordAlignmentEditor.originalLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
                     that.annotationExperienceAPIWordAlignmentEditor.originalDocument = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID
                     that.annotationExperienceAPIWordAlignmentEditor.originalUser = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName
-                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41717,  [[0,16]])
+                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, new Viewport([[0,16]]));
 
                     setTimeout(function () {
                         that.annotationExperienceAPIWordAlignmentEditor.translatedLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];

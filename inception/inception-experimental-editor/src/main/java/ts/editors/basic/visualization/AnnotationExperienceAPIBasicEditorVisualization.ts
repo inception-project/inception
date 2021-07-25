@@ -201,7 +201,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
                                 rect.setAttribute("y", (i * 20).toString());
                                 rect.setAttribute("width", (Number(end) - Number(begin)).toString());
                                 rect.setAttribute("height", "20");
-                                rect.setAttribute("id", span.id);
+                                rect.setAttribute("id", String(span.id));
                                 rect.setAttribute("type", span.type);
                                 rect.setAttribute("fill", span.color);
                                 rect.style.opacity = "0.5";
